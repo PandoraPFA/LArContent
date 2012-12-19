@@ -1,0 +1,126 @@
+/**
+ *  @file   SeedLengthGrowingAlgorithm.cc
+ * 
+ *  @brief  Implementation of the seed length growing algorithm class.
+ * 
+ *  $Log: $
+ */
+
+#include "Pandora/AlgorithmHeaders.h"
+
+#include "LArClusterHelper.h"
+#include "LArVertexHelper.h"
+#include "SeedLengthGrowingAlgorithm.h"
+
+using namespace pandora;
+
+namespace lar
+{
+
+StatusCode SeedLengthGrowingAlgorithm::Run()
+{
+    m_pointingClusterMap.clear();
+
+    const ClusterList *pSeedClusterList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
+
+    const ClusterList *pNonSeedClusterList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+
+    ClusterVector candidateClusters;
+    this->GetCandidateClusters(pSeedClusterList, candidateClusters);
+    this->GetCandidateClusters(pNonSeedClusterList, candidateClusters);
+
+    for (ClusterVector::const_iterator iter = candidateClusters.begin(), iterEnd = candidateClusters.end(); iter != iterEnd; ++iter)
+    {
+        if (!m_pointingClusterMap.insert(PointingClusterMap::value_type(*iter, LArPointingCluster(*iter))).second)
+            return STATUS_CODE_FAILURE;
+    }
+
+    return SeedGrowingAlgorithm::Run();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
+{
+    // Parent and daughter directions
+    const ClusterDirection seedDirection(LArVertexHelper::GetDirectionInZ(pClusterSeed));
+    const ClusterDirection clusterDirection(LArVertexHelper::GetDirectionInZ(pCluster));
+
+    if ((DIRECTION_AMBIGUOUS == seedDirection) || (DIRECTION_UNKNOWN == seedDirection) || (DIRECTION_UNKNOWN == clusterDirection))
+        return NONE;
+
+    // Parent and daughter pointing information
+    PointingClusterMap::const_iterator iterSeed = m_pointingClusterMap.find(pClusterSeed);
+    PointingClusterMap::const_iterator iterCluster = m_pointingClusterMap.find(pCluster);
+
+    if ((m_pointingClusterMap.end() == iterSeed) || (m_pointingClusterMap.end() == iterCluster))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const LArPointingCluster *const pPointingSeed(&(iterSeed->second));
+    const LArPointingCluster *const pPointingCluster(&(iterCluster->second));
+
+    // Investigate associations by considering pairs of vertices, note forbidden associations
+    const bool isNodeII((BACKWARD != clusterDirection) && LArClusterHelper::IsNode(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetInnerVertex().GetPosition()));
+    const bool isNodeIO((FORWARD  != clusterDirection) && LArClusterHelper::IsNode(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetOuterVertex().GetPosition()));
+    const bool isNodeOI((BACKWARD != clusterDirection) && LArClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetInnerVertex().GetPosition()));
+    const bool isNodeOO((FORWARD  != clusterDirection) && LArClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetOuterVertex().GetPosition()));
+
+    const bool isEmissionII((BACKWARD == seedDirection) && (FORWARD  == clusterDirection) && LArClusterHelper::IsEmission(pPointingSeed->GetInnerVertex(), pPointingCluster->GetInnerVertex().GetPosition()));
+    const bool isEmissionIO((BACKWARD == seedDirection) && (BACKWARD == clusterDirection) && LArClusterHelper::IsEmission(pPointingSeed->GetInnerVertex(), pPointingCluster->GetOuterVertex().GetPosition()));
+    const bool isEmissionOI((FORWARD  == seedDirection) && (FORWARD  == clusterDirection) && LArClusterHelper::IsEmission(pPointingSeed->GetOuterVertex(), pPointingCluster->GetInnerVertex().GetPosition()));
+    const bool isEmissionOO((FORWARD  == seedDirection) && (BACKWARD == clusterDirection) && LArClusterHelper::IsEmission(pPointingSeed->GetOuterVertex(), pPointingCluster->GetOuterVertex().GetPosition()));
+
+    if (!isNodeII && !isNodeIO && !isNodeOI && !isNodeOO && !isEmissionII && !isEmissionIO && !isEmissionOI && !isEmissionOO)
+        return NONE;
+
+    // Find best association, with smallest turning angle
+    float thetaII(std::acos(-1.f * pPointingSeed->GetInnerVertex().GetDirection().GetCosOpeningAngle(pPointingCluster->GetInnerVertex().GetDirection())));
+    float thetaIO(std::acos(-1.f * pPointingSeed->GetInnerVertex().GetDirection().GetCosOpeningAngle(pPointingCluster->GetOuterVertex().GetDirection())));
+    float thetaOI(std::acos(-1.f * pPointingSeed->GetOuterVertex().GetDirection().GetCosOpeningAngle(pPointingCluster->GetInnerVertex().GetDirection())));
+    float thetaOO(std::acos(-1.f * pPointingSeed->GetOuterVertex().GetDirection().GetCosOpeningAngle(pPointingCluster->GetOuterVertex().GetDirection())));
+
+    if (FORWARD == seedDirection)
+        thetaII = M_PI - thetaII;
+
+    if (FORWARD == seedDirection)
+        thetaIO = M_PI - thetaIO;
+
+    if (BACKWARD == seedDirection)
+        thetaOI = M_PI - thetaOI;
+
+    if (BACKWARD == seedDirection)
+        thetaOO = M_PI - thetaOO;
+
+    // Best node-related association type
+    const float nodeThetaII(isNodeII ? thetaII : std::numeric_limits<float>::max());
+    const float nodeThetaIO(isNodeIO ? thetaIO : std::numeric_limits<float>::max());
+    const float nodeThetaOI(isNodeOI ? thetaOI : std::numeric_limits<float>::max());
+    const float nodeThetaOO(isNodeOO ? thetaOO : std::numeric_limits<float>::max());
+    const float bestNodeTheta(std::min(nodeThetaII, std::min(nodeThetaIO, std::min(nodeThetaOI, nodeThetaOO))));
+    const AssociationType nodeAssociationType((bestNodeTheta < 0.174f) ? STRONG : (bestNodeTheta < 1.047f) ? SINGLE_ORDER : NONE);
+
+    // Best emission-related association type
+    const float emissionThetaII(isEmissionII ? thetaII : std::numeric_limits<float>::max());
+    const float emissionThetaIO(isEmissionIO ? thetaIO : std::numeric_limits<float>::max());
+    const float emissionThetaOI(isEmissionOI ? thetaOI : std::numeric_limits<float>::max());
+    const float emissionThetaOO(isEmissionOO ? thetaOO : std::numeric_limits<float>::max());
+    const float bestEmissionTheta(std::min(emissionThetaII, std::min(emissionThetaIO, std::min(emissionThetaOI, emissionThetaOO))));
+    const AssociationType emissionAssociationType((bestEmissionTheta < 0.174f) ? STANDARD : NONE);
+
+//if (std::max(nodeAssociationType, emissionAssociationType) > NONE)
+//{
+//std::cout << " nodeAssociationType " << nodeAssociationType << " bestNodeTheta " << bestNodeTheta << " nodeThetaII " << nodeThetaII << " nodeThetaIO " << nodeThetaIO << " nodeThetaOI " << nodeThetaOI << " nodeThetaOO " << nodeThetaOO << std::endl;
+//std::cout << " emissionAssociationType " << emissionAssociationType << " bestEmissionTheta " << bestEmissionTheta << " emissionThetaII " << nodeThetaII << " emissionThetaIO " << emissionThetaIO << " emissionThetaOI " << emissionThetaOI << " emissionThetaOO " << emissionThetaOO << std::endl;
+//ClusterList parent, daughter; parent.insert(const_cast<Cluster*>(pClusterSeed)); daughter.insert(const_cast<Cluster*>(pCluster));
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
+//PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", GREEN);
+//PandoraMonitoringApi::ViewEvent();
+//}
+
+    return std::max(nodeAssociationType, emissionAssociationType);
+}
+
+} // namespace lar
