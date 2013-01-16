@@ -17,42 +17,44 @@ namespace lar
 
 StatusCode EventPreparationAlgorithm::Run()
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessMCParticles() );
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessCaloHits() );
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, this->ProcessMCParticles());
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, this->ProcessCaloHits());
 
     return STATUS_CODE_SUCCESS;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode EventPreparationAlgorithm::ProcessMCParticles()
 {
     // Split input MC particles into different views
-    const MCParticleList* pMCParticleList = NULL;
+    const MCParticleList *pMCParticleList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentMCParticleList(*this, pMCParticleList));
 
-    MCParticleList mcParticleListU, mcParticleListV, mcParticleListW;  
-    
+    if (pMCParticleList->empty())
+        return STATUS_CODE_NOT_INITIALIZED;
+
+    MCParticleList mcParticleListU, mcParticleListV, mcParticleListW;
+
     for (MCParticleList::const_iterator mcIter = pMCParticleList->begin(), mcIterEnd = pMCParticleList->end(); mcIter != mcIterEnd; ++mcIter)
     {
-        MCParticle* pMCParticle = *mcIter;
+        MCParticle *pMCParticle = *mcIter;
 
         if (MC_VIEW_U == (*mcIter)->GetMCParticleType())
-	{
-	    if (!mcParticleListU.insert(*mcIter).second)
+        {
+            if (!mcParticleListU.insert(*mcIter).second)
                 return STATUS_CODE_ALREADY_PRESENT;
-	}
-
+        }
         else if (MC_VIEW_V == (*mcIter)->GetMCParticleType())
-	{
+        {
             if (!mcParticleListV.insert(*mcIter).second)
                 return STATUS_CODE_ALREADY_PRESENT;
-	}
-
+        }
         else if (MC_VIEW_W == (*mcIter)->GetMCParticleType())
-	{
+        {
             if (!mcParticleListW.insert(*mcIter).second)
                 return STATUS_CODE_ALREADY_PRESENT;
-	}
+        }
     }
 
     // Save the lists
@@ -71,11 +73,16 @@ StatusCode EventPreparationAlgorithm::ProcessMCParticles()
     return STATUS_CODE_SUCCESS;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode EventPreparationAlgorithm::ProcessCaloHits()
 {
     // Split input calo hit list into different views
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList));
+
+    if (pCaloHitList->empty())
+        return STATUS_CODE_NOT_INITIALIZED;
 
     CaloHitList caloHitListU, caloHitListV, caloHitListW;
 
