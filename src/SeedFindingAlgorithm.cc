@@ -27,7 +27,8 @@ StatusCode SeedFindingAlgorithm::Run()
 
     if (STATUS_CODE_SUCCESS == PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pVertexSeedClusterList))
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this,
+            m_nonSeedClusterListName, pNonSeedClusterList));
     }
     else
     {
@@ -36,9 +37,10 @@ StatusCode SeedFindingAlgorithm::Run()
 
     // Particle seed formation
     ClusterList vertexSeedClusters((NULL != pVertexSeedClusterList) ? ClusterList(*pVertexSeedClusterList) : ClusterList());
+    ClusterList nonSeedClusters((NULL != pNonSeedClusterList) ? ClusterList(*pNonSeedClusterList) : ClusterList());
 
     ParticleSeedVector particleSeedVector;
-    this->GetParticleSeeds(vertexSeedClusters, *pNonSeedClusterList, particleSeedVector);
+    this->GetParticleSeeds(vertexSeedClusters, nonSeedClusters, particleSeedVector);
 
     if (particleSeedVector.empty())
         return STATUS_CODE_SUCCESS;
@@ -54,7 +56,7 @@ StatusCode SeedFindingAlgorithm::Run()
     ClusterList finalSeedClusters;
     this->MakeClusterMerges(particleSeedVector, finalSeedClusters);
 
-    if (NULL == pVertexSeedClusterList)
+    if ((NULL == pVertexSeedClusterList) && (NULL != pNonSeedClusterList))
     {
         ClusterList finalNonSeedClusters(*pNonSeedClusterList);
 

@@ -20,16 +20,20 @@ namespace lar
 StatusCode SeedLengthGrowingAlgorithm::Run()
 {
     m_pointingClusterMap.clear();
+    ClusterVector candidateClusters;
 
     const ClusterList *pSeedClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
+    this->GetCandidateClusters(pSeedClusterList, candidateClusters);
 
     const ClusterList *pNonSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
 
-    ClusterVector candidateClusters;
-    this->GetCandidateClusters(pSeedClusterList, candidateClusters);
-    this->GetCandidateClusters(pNonSeedClusterList, candidateClusters);
+    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
+        return statusCode;
+
+    if (STATUS_CODE_SUCCESS == statusCode)
+        this->GetCandidateClusters(pNonSeedClusterList, candidateClusters);
 
     for (ClusterVector::const_iterator iter = candidateClusters.begin(), iterEnd = candidateClusters.end(); iter != iterEnd; ++iter)
     {

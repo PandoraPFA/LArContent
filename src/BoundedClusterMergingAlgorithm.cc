@@ -23,35 +23,36 @@ StatusCode BoundedClusterMergingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
 
     const ClusterList *pNonSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+
+    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
+        return statusCode;
+
+    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+        return STATUS_CODE_SUCCESS;
 
     // Form Associations
-    PrepareAssociations();
- 
-    for( ClusterList::const_iterator iterI = pSeedClusterList->begin(), iterEndI = pSeedClusterList->end(); iterI != iterEndI; ++iterI )
-      {
-        Cluster* seedCluster = *iterI;
-        
-        ConstructBoundingBox( seedCluster );
+    this->PrepareAssociations();
 
-        for( ClusterList::const_iterator iterJ = pNonSeedClusterList->begin(), iterEndJ = pNonSeedClusterList->end(); iterJ != iterEndJ; ++iterJ )
-	  {
-            Cluster* candidateCluster = *iterJ; 
+    for (ClusterList::const_iterator iterI = pSeedClusterList->begin(), iterEndI = pSeedClusterList->end(); iterI != iterEndI; ++iterI)
+    {
+        Cluster *pSeedCluster = *iterI;
 
-            if( PassesVertexVeto( seedCluster, candidateCluster ) 
-	     && PassesLengthVeto( seedCluster, candidateCluster ) )
-	      {
-                MakeAssociation( seedCluster, candidateCluster,
-                                 ApplyBoundingBox(candidateCluster) ); 
-	      }
-	  }
-      }
-   
+        this->ConstructBoundingBox(pSeedCluster);
+
+        for (ClusterList::const_iterator iterJ = pNonSeedClusterList->begin(), iterEndJ = pNonSeedClusterList->end(); iterJ != iterEndJ; ++iterJ)
+        {
+            Cluster *pCandidateCluster = *iterJ;
+
+            if (this->PassesVertexVeto(pSeedCluster, pCandidateCluster) && this->PassesLengthVeto(pSeedCluster, pCandidateCluster))
+            {
+                this->MakeAssociation(pSeedCluster, pCandidateCluster, this->ApplyBoundingBox(pCandidateCluster));
+            }
+        }
+    }
 
     // Prepare Merges 
-    PrepareMerges();
-   
-    
+    this->PrepareMerges();
 
     /*
     ClusterList bTempList;
@@ -82,190 +83,193 @@ StatusCode BoundedClusterMergingAlgorithm::Run()
     }
     */
 
-    
-
     // Make Merges
-    for( ClusterMergeMap::const_iterator iter = fClusterMergeMap.begin(), iterEnd = fClusterMergeMap.end(); iter != iterEnd; ++iter )
-      {
-        for( ClusterList::const_iterator dauIter = iter->second.begin(), dauIterEnd = iter->second.end(); dauIter != dauIterEnd; ++dauIter )
-          {
-	      PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *dauIter,
-                   m_seedClusterListName, m_nonSeedClusterListName));
-          }
-      }
-   
+    for (ClusterMergeMap::const_iterator iter = fClusterMergeMap.begin(), iterEnd = fClusterMergeMap.end(); iter != iterEnd; ++iter)
+    {
+        for (ClusterList::const_iterator dauIter = iter->second.begin(), dauIterEnd = iter->second.end(); dauIter != dauIterEnd; ++dauIter)
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *dauIter,
+                m_seedClusterListName, m_nonSeedClusterListName));
+        }
+    }
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMergingAlgorithm::ConstructBoundingBox( const Cluster* seedCluster ) 
+void BoundedClusterMergingAlgorithm::ConstructBoundingBox(const Cluster *seedCluster)
 {
-  return fBoundingBox.BuildBoundingBox( seedCluster );
+    return fBoundingBox.BuildBoundingBox(seedCluster);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int BoundedClusterMergingAlgorithm::ApplyBoundingBox( const Cluster* candidateCluster ) 
+unsigned int BoundedClusterMergingAlgorithm::ApplyBoundingBox(const Cluster *candidateCluster)
 {
-  return fBoundingBox.NumberOfEnclosedEnds( candidateCluster );
+    return fBoundingBox.NumberOfEnclosedEnds(candidateCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool BoundedClusterMergingAlgorithm::PassesLengthVeto( const Cluster* seedCluster, const Cluster* candCluster ) 
+bool BoundedClusterMergingAlgorithm::PassesLengthVeto(const Cluster *seedCluster, const Cluster *candCluster)
 {
-  if( seedCluster->GetNCaloHits()>=m_minClusterSize
-   && candCluster->GetNCaloHits()>=m_minClusterSize ){
-    return true;
-  }
-  else{
+    if (seedCluster->GetNCaloHits() >= m_minClusterSize && candCluster->GetNCaloHits()>=m_minClusterSize)
+        return true;
+
     return false;
-  }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool BoundedClusterMergingAlgorithm::PassesVertexVeto( const Cluster* seedCluster, const Cluster* candCluster ) 
+bool BoundedClusterMergingAlgorithm::PassesVertexVeto(const Cluster *seedCluster, const Cluster *candCluster)
 {
-  const CartesianVector seedInnerVertex = seedCluster->GetCentroid( seedCluster->GetInnerPseudoLayer() );
-  const CartesianVector seedOuterVertex = seedCluster->GetCentroid( seedCluster->GetOuterPseudoLayer() );
+    const CartesianVector seedInnerVertex = seedCluster->GetCentroid(seedCluster->GetInnerPseudoLayer());
+    const CartesianVector seedOuterVertex = seedCluster->GetCentroid(seedCluster->GetOuterPseudoLayer());
 
-  const CartesianVector candInnerVertex = candCluster->GetCentroid( candCluster->GetInnerPseudoLayer() );
-  const CartesianVector candOuterVertex = candCluster->GetCentroid( candCluster->GetOuterPseudoLayer() );
+    const CartesianVector candInnerVertex = candCluster->GetCentroid(candCluster->GetInnerPseudoLayer());
+    const CartesianVector candOuterVertex = candCluster->GetCentroid(candCluster->GetOuterPseudoLayer());
 
-  if( (seedInnerVertex-candInnerVertex).GetMagnitude()>m_vertexVetoRadius
-   && (seedOuterVertex-candOuterVertex).GetMagnitude()>m_vertexVetoRadius ){ 
-    return true;
-  }
-  else{
+    if ((seedInnerVertex-candInnerVertex).GetMagnitude() > m_vertexVetoRadius && (seedOuterVertex-candOuterVertex).GetMagnitude() > m_vertexVetoRadius)
+        return true;
+
     return false;
-  }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void BoundedClusterMergingAlgorithm::PrepareAssociations()
 {
-  fGoodAssociations.clear();
-  fBadAssociations.clear();
+    fGoodAssociations.clear();
+    fBadAssociations.clear();
 
-  fSingleAssociations.clear();
-  fRepeatedSingleAssociations.clear();
+    fSingleAssociations.clear();
+    fRepeatedSingleAssociations.clear();
 
-  fDoubleAssociations.clear();
-  fRepeatedDoubleAssociations.clear();
+    fDoubleAssociations.clear();
+    fRepeatedDoubleAssociations.clear();
 
-  return;
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMergingAlgorithm::MakeAssociation( Cluster* pSeedCluster, Cluster* pCandidateCluster, unsigned int numEnds )
-{ 
-
-  if( numEnds==0 ) return;
-
-  else if( numEnds==1 ) {
-    ClusterAssociationMap::const_iterator iter1 = fSingleAssociations.find( pCandidateCluster );
-    if( iter1==fSingleAssociations.end() ){
-      fSingleAssociations.insert( std::pair<Cluster*,Cluster*>(pCandidateCluster,pSeedCluster) ); 
-    }
-    else{
-      ClusterAssociationMap::const_iterator iter2 = fRepeatedSingleAssociations.find( pCandidateCluster );
-      if( iter2==fRepeatedSingleAssociations.end() ){
-        fRepeatedSingleAssociations.insert( std::pair<Cluster*,Cluster*>(pCandidateCluster,NULL) ); 
-      }
-    }
-  }
-
-  else if( numEnds==2 ) {
-    ClusterAssociationMap::const_iterator iter1 = fDoubleAssociations.find( pCandidateCluster );
-    if( iter1==fDoubleAssociations.end() ){
-      fDoubleAssociations.insert( std::pair<Cluster*,Cluster*>(pCandidateCluster,pSeedCluster) ); 
-    }
-    else{
-      ClusterAssociationMap::const_iterator iter2 = fRepeatedDoubleAssociations.find( pCandidateCluster );
-      if( iter2==fRepeatedDoubleAssociations.end() ){
-        fRepeatedDoubleAssociations.insert( std::pair<Cluster*,Cluster*>(pCandidateCluster,NULL) ); 
-      }
-    }
-  }
-
-  return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void BoundedClusterMergingAlgorithm::SetGoodAssociation( Cluster* pCandidateCluster )
+void BoundedClusterMergingAlgorithm::MakeAssociation(Cluster *pSeedCluster, Cluster *pCandidateCluster, unsigned int numEnds)
 {
-  ClusterAssociationMap::const_iterator iter = fGoodAssociations.find( pCandidateCluster );
+  if (numEnds == 0)
+    return;
 
-  if( iter==fGoodAssociations.end() ){
-    fGoodAssociations.insert( std::pair<Cluster*,Cluster*>(pCandidateCluster,NULL) ); 
-  }
+  if (numEnds == 1)
+  {
+        ClusterAssociationMap::const_iterator iter1 = fSingleAssociations.find(pCandidateCluster);
 
-  return;
+        if (iter1 == fSingleAssociations.end())
+        {
+            fSingleAssociations.insert(std::pair<Cluster*, Cluster*>(pCandidateCluster, pSeedCluster));
+        }
+        else
+        {
+            ClusterAssociationMap::const_iterator iter2 = fRepeatedSingleAssociations.find(pCandidateCluster);
+
+            if (iter2 == fRepeatedSingleAssociations.end())
+                fRepeatedSingleAssociations.insert( std::pair<Cluster*,Cluster*>(pCandidateCluster,NULL) ); 
+        }
+    }
+
+    else if (numEnds==2)
+    {
+        ClusterAssociationMap::const_iterator iter1 = fDoubleAssociations.find(pCandidateCluster);
+
+        if (iter1 == fDoubleAssociations.end())
+        {
+            fDoubleAssociations.insert(std::pair<Cluster*, Cluster*>(pCandidateCluster,pSeedCluster));
+        }
+        else
+        {
+            ClusterAssociationMap::const_iterator iter2 = fRepeatedDoubleAssociations.find(pCandidateCluster);
+
+            if (iter2 == fRepeatedDoubleAssociations.end())
+                fRepeatedDoubleAssociations.insert(std::pair<Cluster*, Cluster*>(pCandidateCluster,NULL));
+        }
+    }
+
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMergingAlgorithm::SetBadAssociation( Cluster* pCandidateCluster )
+void BoundedClusterMergingAlgorithm::SetGoodAssociation(Cluster *pCandidateCluster)
 {
-  ClusterAssociationMap::const_iterator iter = fBadAssociations.find( pCandidateCluster );
+    ClusterAssociationMap::const_iterator iter = fGoodAssociations.find(pCandidateCluster);
 
-  if( iter==fBadAssociations.end() ){
-    fBadAssociations.insert( std::pair<Cluster*,Cluster*>(pCandidateCluster,NULL) ); 
-  }
-
-  return;
+    if (iter == fGoodAssociations.end())
+        fGoodAssociations.insert(std::pair<Cluster*, Cluster*>(pCandidateCluster, NULL));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMergingAlgorithm::PrepareMerges( )
+void BoundedClusterMergingAlgorithm::SetBadAssociation(Cluster *pCandidateCluster)
 {
-  fClusterMergeMap.clear();
+    ClusterAssociationMap::const_iterator iter = fBadAssociations.find(pCandidateCluster);
 
-  for( ClusterAssociationMap::const_iterator iter = fDoubleAssociations.begin(), iterEnd = fDoubleAssociations.end(); iter != iterEnd; ++iter ) {
-    Cluster* pCandidateCluster = iter->first;
-    Cluster* pSeedCluster      = iter->second;
+    if (iter == fBadAssociations.end())
+        fBadAssociations.insert(std::pair<Cluster*, Cluster*>(pCandidateCluster, NULL));
+}
 
-    ClusterAssociationMap::const_iterator iter2A = fGoodAssociations.find( pCandidateCluster );
-    ClusterAssociationMap::const_iterator iter2B = fBadAssociations.find( pCandidateCluster );
-    if( iter2A == fGoodAssociations.end() 
-     && iter2B == fBadAssociations.end() ){
-      ClusterAssociationMap::const_iterator iter3 = fRepeatedDoubleAssociations.find( pCandidateCluster );
-      if( iter3 == fRepeatedDoubleAssociations.end() ){
-        fClusterMergeMap[pSeedCluster].insert(pCandidateCluster);
-        SetGoodAssociation(pCandidateCluster); 
-      }
-      else{
-        SetBadAssociation(pCandidateCluster); 
-      }
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void BoundedClusterMergingAlgorithm::PrepareMerges()
+{
+    fClusterMergeMap.clear();
+
+    for (ClusterAssociationMap::const_iterator iter = fDoubleAssociations.begin(), iterEnd = fDoubleAssociations.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCandidateCluster = iter->first;
+        Cluster *pSeedCluster = iter->second;
+
+        ClusterAssociationMap::const_iterator iter2A = fGoodAssociations.find(pCandidateCluster);
+        ClusterAssociationMap::const_iterator iter2B = fBadAssociations.find(pCandidateCluster);
+
+        if (iter2A == fGoodAssociations.end() && iter2B == fBadAssociations.end())
+        {
+            ClusterAssociationMap::const_iterator iter3 = fRepeatedDoubleAssociations.find(pCandidateCluster);
+
+            if (iter3 == fRepeatedDoubleAssociations.end())
+            {
+                fClusterMergeMap[pSeedCluster].insert(pCandidateCluster);
+                SetGoodAssociation(pCandidateCluster); 
+            }
+            else
+            {
+                SetBadAssociation(pCandidateCluster); 
+            }
+        }
     }
-  }
 
-  for( ClusterAssociationMap::const_iterator iter = fSingleAssociations.begin(), iterEnd = fSingleAssociations.end(); iter != iterEnd; ++iter ) {
-    Cluster* pCandidateCluster = iter->first;
-    Cluster* pSeedCluster      = iter->second;
+    for (ClusterAssociationMap::const_iterator iter = fSingleAssociations.begin(), iterEnd = fSingleAssociations.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCandidateCluster = iter->first;
+        Cluster *pSeedCluster = iter->second;
 
-    ClusterAssociationMap::const_iterator iter2A = fGoodAssociations.find( pCandidateCluster );
-    ClusterAssociationMap::const_iterator iter2B = fBadAssociations.find( pCandidateCluster );
-    if( iter2A == fGoodAssociations.end() 
-     && iter2B == fBadAssociations.end() ){
-      ClusterAssociationMap::const_iterator iter3 = fRepeatedSingleAssociations.find( pCandidateCluster );
-      if( iter3 == fRepeatedSingleAssociations.end() ){
-        fClusterMergeMap[pSeedCluster].insert(pCandidateCluster);
-        SetGoodAssociation(pCandidateCluster); 
-      }
-      else{
-        SetBadAssociation(pCandidateCluster); 
-      }
+        ClusterAssociationMap::const_iterator iter2A = fGoodAssociations.find(pCandidateCluster);
+        ClusterAssociationMap::const_iterator iter2B = fBadAssociations.find(pCandidateCluster);
+
+        if (iter2A == fGoodAssociations.end() && iter2B == fBadAssociations.end())
+        {
+            ClusterAssociationMap::const_iterator iter3 = fRepeatedSingleAssociations.find( pCandidateCluster );
+
+            if (iter3 == fRepeatedSingleAssociations.end())
+            {
+                fClusterMergeMap[pSeedCluster].insert(pCandidateCluster);
+                SetGoodAssociation(pCandidateCluster); 
+            }
+            else
+            {
+                SetBadAssociation(pCandidateCluster); 
+            }
+        }
     }
-  }
-         
-  return;
+
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

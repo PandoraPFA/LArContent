@@ -19,7 +19,13 @@ StatusCode RemnantClusteringAlgorithm::Run()
 {
     // Get the non-seed cluster list
     const ClusterList *pNonSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+
+    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
+        return statusCode;
+
+    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+        return STATUS_CODE_SUCCESS;
 
     // ----- Draw OldClusters ----- 
     // ClusterList drawOldClusters(*pNonSeedClusterList);
@@ -41,10 +47,10 @@ StatusCode RemnantClusteringAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList));
 
     // Run a simple clustering algorithm over the available hits
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, FindClusters(pCaloHitList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindClusters(pCaloHitList));
 
     // Build the new clusters
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, BuildClusters(pCaloHitList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildClusters(pCaloHitList));
 
     // ----- Draw New Clusters -----
     // ClusterList drawNewClusters(*pClusterList);
@@ -53,8 +59,9 @@ StatusCode RemnantClusteringAlgorithm::Run()
     // PandoraMonitoringApi::ViewEvent();
     // -----------------------------
 
-    // Copy the new clusters into the old list
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this,clusterListName, m_nonSeedClusterListName));
+    // Copy any new clusters into the old list
+    if (!pClusterList->empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, clusterListName, m_nonSeedClusterListName));
 
     // ----- Draw Replaced Clusters ----- 
     // const ClusterList *pNonSeedClusterListAgain = NULL;

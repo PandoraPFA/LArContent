@@ -23,7 +23,13 @@ StatusCode ParallelClusterMergingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
 
     const ClusterList *pNonSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+
+    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
+        return statusCode;
+
+    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+        return STATUS_CODE_SUCCESS;
 
     bool foundAssociations(true);
     unsigned int nIterations(0);

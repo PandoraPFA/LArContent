@@ -26,7 +26,13 @@ StatusCode ConeBasedMergingAlgorithm::Run()
     std::sort(seedClusterVector.begin(), seedClusterVector.end(), Cluster::SortByInnerLayer);
 
     const ClusterList *pNonSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+
+    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
+        return statusCode;
+
+    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+        return STATUS_CODE_SUCCESS;
 
     ClusterVector nonSeedClusterVector(pNonSeedClusterList->begin(), pNonSeedClusterList->end());
     std::sort(nonSeedClusterVector.begin(), nonSeedClusterVector.end(), Cluster::SortByInnerLayer);

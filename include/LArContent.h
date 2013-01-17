@@ -26,12 +26,14 @@
 #include "SeedLengthGrowingAlgorithm.h"
 #include "SeedRelegationAlgorithm.h"
 #include "ShowerMipSeparationAlgorithm.h"
+#include "ThreeDParticleCreationAlgorithm.h"
 #include "TwoDParticleCreationAlgorithm.h"
 #include "VertexFindingAlgorithm.h"
 #include "VertexSeedFindingAlgorithm.h"
 #include "VisualMonitoringAlgorithm.h"
 
 #include "LArClusterHelper.h"
+#include "LArGeometryHelper.h"
 #include "LArParticleId.h"
 #include "LArVertexHelper.h"
 
@@ -63,6 +65,7 @@ public:
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
         d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
+        d("LArThreeDParticleCreation",              lar::ThreeDParticleCreationAlgorithm::Factory)                              \
         d("LArTwoDParticleCreation",                lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArVertexFinding",                       lar::VertexFindingAlgorithm::Factory)                                       \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
@@ -76,6 +79,7 @@ public:
 
     #define LAR_SETTINGS_LIST(d)                                                                                                \
         d("LArClusterHelper",                       &lar::LArClusterHelper::ReadSettings)                                       \
+        d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
         d("LArParticleId",                          &lar::LArParticleId::ReadSettings)                                          \
         d("LArVertexHelper",                        &lar::LArVertexHelper::ReadSettings)
 
