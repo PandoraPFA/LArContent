@@ -90,6 +90,13 @@ public:
     static bool DoesCurrentVertexExist();
 
     /**
+     *  @brief  Ask if a particular vertex exists
+     *
+     *  @return boolean
+     */
+    static bool DoesVertexExist(const std::string &vertexName);
+
+    /**
      *  @brief  Ask for cluster propagation direction
      * 
      *  @param  pCluster address of the cluster
@@ -236,9 +243,16 @@ inline void LArVertexHelper::Reset()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline bool LArVertexHelper::DoesVertexExist(const std::string &vertexName)
+{
+    return (m_nameToVertexMap.end() != m_nameToVertexMap.find(vertexName));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline bool LArVertexHelper::DoesCurrentVertexExist()
 {
-    return (m_nameToVertexMap.end() != m_nameToVertexMap.find(m_currentVertexName));
+    return DoesVertexExist(m_currentVertexName);
 }
 
 } // namespace lar

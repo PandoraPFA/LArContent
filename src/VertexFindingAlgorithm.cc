@@ -11,6 +11,7 @@
 #include "VertexFindingAlgorithm.h"
 
 #include "LArVertexHelper.h"
+#include "LArGeometryHelper.h"
 #include "LArClusterHelper.h"
 #include "LArParticleId.h"
 
@@ -27,21 +28,124 @@ StatusCode VertexFindingAlgorithm::Run()
     // Cheat the vertex
     if ( m_useTrueVertex ) return SetTrueVertex();
 
-    const ClusterList* pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
 
-    CartesianVector recoVertex(0.f,0.f,0.f);
+    const ClusterList *pClusterListU = NULL;    
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_clusterListNameU, pClusterListU));
 
-    // Set a first pass vertex
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, GetFirstPassVertex(pClusterList,recoVertex)); 
+    const ClusterList *pClusterListV = NULL;    
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_clusterListNameV, pClusterListV));
+
+    const ClusterList *pClusterListW = NULL;    
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_clusterListNameW, pClusterListW));
 
 
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(pClusterList, "CLUSTERS", GREEN);
-// PandoraMonitoringApi::AddMarkerToVisualization(&recoVertex, "RECO", RED, 1.);
-// PandoraMonitoringApi::ViewEvent();
+    // Process individual views
+    VertexFigureOfMeritList theFigureOfMeritListU;
+    VertexFigureOfMeritList theFigureOfMeritListV;
+    VertexFigureOfMeritList theFigureOfMeritListW;
 
+    ProcessSingleView( pClusterListU, theFigureOfMeritListU ); 
+
+    ProcessSingleView( pClusterListV, theFigureOfMeritListV ); 
+
+    ProcessSingleView( pClusterListW, theFigureOfMeritListW ); 
+
+
+
+
+    // Process individual vertices
+    CartesianVector recoVertexU(0.f,0.f,0.f);
+    CartesianVector recoVertexV(0.f,0.f,0.f);
+    CartesianVector recoVertexW(0.f,0.f,0.f);
+
+    ProcessSingleVertex( pClusterListU, theFigureOfMeritListU, recoVertexU ); 
+
+    ProcessSingleVertex( pClusterListV, theFigureOfMeritListV, recoVertexV ); 
+
+    ProcessSingleVertex( pClusterListW, theFigureOfMeritListW, recoVertexW ); 
+
+
+
+
+    // Big Nested Loop 
+    CartesianVector mergedVertexU(0.f,0.f,0.f);
+    CartesianVector mergedVertexV(0.f,0.f,0.f);
+    CartesianVector mergedVertexW(0.f,0.f,0.f);
+
+    CartesianVector bestMergedVertexU(0.f,0.f,0.f);
+    CartesianVector bestMergedVertexV(0.f,0.f,0.f);
+    CartesianVector bestMergedVertexW(0.f,0.f,0.f);
+
+    float chiSquared(0.f);
+    float mergedFigureOfMerit(0.f);
+    float bestMergedFigureOfMerit(-99999.f);
+
+    float theMagicNumber(0.1);
+
+    for( VertexFigureOfMeritList::const_iterator iterU = theFigureOfMeritListU.begin(), iterEndU = theFigureOfMeritListU.end(); iterU != iterEndU; ++iterU )
+    {
+        const CartesianVector vertexU = (iterU->first)->GetPosition();
+        float          figureOfMeritU = iterU->second;
+
+        for( VertexFigureOfMeritList::const_iterator iterV = theFigureOfMeritListV.begin(), iterEndV = theFigureOfMeritListV.end(); iterV != iterEndV; ++iterV )
+        {
+            const CartesianVector vertexV = (iterV->first)->GetPosition();
+            float          figureOfMeritV = iterV->second;
+
+            for( VertexFigureOfMeritList::const_iterator iterW = theFigureOfMeritListW.begin(), iterEndW = theFigureOfMeritListW.end(); iterW != iterEndW; ++iterW )
+            {
+                const CartesianVector vertexW = (iterW->first)->GetPosition();
+                float          figureOfMeritW = iterW->second;
+
+                LArGeometryHelper::MergeThreeViews( vertexU, vertexV, vertexW,
+                                                    mergedVertexU, mergedVertexV, mergedVertexW,
+                                                    chiSquared );
+
+                mergedFigureOfMerit = figureOfMeritU + figureOfMeritV + figureOfMeritW - theMagicNumber * chiSquared;
+
+                if( mergedFigureOfMerit>bestMergedFigureOfMerit )
+                {
+                    bestMergedVertexU = mergedVertexU;
+                    bestMergedVertexV = mergedVertexV;
+                    bestMergedVertexW = mergedVertexW;
+                    bestMergedFigureOfMerit = mergedFigureOfMerit;
+		}
+	    }
+	}
+    }
+        
+
+    // Clean up
+    this->CleanUp( theFigureOfMeritListU ); 
     
+    this->CleanUp( theFigureOfMeritListV ); 
+
+    this->CleanUp( theFigureOfMeritListW ); 
+
+   
+    // Set vertices
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( bestMergedVertexU, m_vertexNameU ));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( bestMergedVertexV, m_vertexNameV ));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( bestMergedVertexW, m_vertexNameW ));
+
+
+
+    return STATUS_CODE_SUCCESS;
+}
+
+void VertexFindingAlgorithm::CleanUp( VertexFigureOfMeritList& figureOfMeritList )
+{
+    for( VertexFigureOfMeritList::const_iterator iter = figureOfMeritList.begin(), iterEnd = figureOfMeritList.end(); iter != iterEnd; ++iter ){
+        const LArPointingVertex* thisVertex  = iter->first;
+        if( thisVertex ) delete thisVertex;
+    }
+}
+
+void VertexFindingAlgorithm::ProcessSingleView( const pandora::ClusterList* const pClusterList, VertexFigureOfMeritList& outputFigureOfMeritList )
+{
+ 
     // Select a set of clean clusters
     ClusterVector clusterVector;
     this->GetListOfCleanClusters(pClusterList, clusterVector);
@@ -70,81 +174,49 @@ StatusCode VertexFindingAlgorithm::Run()
     this->GetListOfCleanVertexClusters( pointingClusterVertexList, pointingClusterVertexCandidateList );
 
 
-// ClusterList inputClusterVertexList, outputClusterVertexList;
-// CollectClusters( pointingClusterVertexList, inputClusterVertexList );
-// CollectClusters( pointingClusterVertexCandidateList, outputClusterVertexList );
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&inputClusterVertexList, "CLEAN CLUSTERS, FIRST PASS", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&outputClusterVertexList, "CLEAN CLUSTERS, SECOND PASS", BLUE);
-// PandoraMonitoringApi::ViewEvent();
+    //ClusterList inputClusterVertexList, outputClusterVertexList;
+    //CollectClusters( pointingClusterVertexList, inputClusterVertexList );
+    //CollectClusters( pointingClusterVertexCandidateList, outputClusterVertexList );
+    //PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+    //PandoraMonitoringApi::VisualizeClusters(&inputClusterVertexList, "CLEAN CLUSTERS, FIRST PASS", GREEN);
+    //PandoraMonitoringApi::VisualizeClusters(&outputClusterVertexList, "CLEAN CLUSTERS, SECOND PASS", BLUE);
+    //PandoraMonitoringApi::ViewEvent();
 
-
-    // The figure of merit
-    float figureOfMerit(0.f);
-    
-    static const float epsilon(0.05);
-
-    // Find the best connected vertex
-    float bestConnectedEnergy(0.f);
-    float bestConnectedFigureOfMerit(0.f);
-    CartesianVector bestConnectedVertex(0.f,0.f,0.f);
-    CartesianVector bestConnectedMomentum(0.f,0.f,0.f);
-    LArPointingClusterVertexList bestConnectedClusterVertexList;
  
-    this->FindBestConnectedVertex( pointingClusterMap, pointingClusterVertexCandidateList, bestConnectedClusterVertexList,
-                                   bestConnectedVertex, bestConnectedEnergy, bestConnectedMomentum, bestConnectedFigureOfMerit );
+    // find connected vertices
+    this->FindPossibleConnectedVertices( pointingClusterMap, pointingClusterVertexCandidateList, outputFigureOfMeritList );
 
-    if ( bestConnectedFigureOfMerit > figureOfMerit )
-    {
-        figureOfMerit = bestConnectedFigureOfMerit;
-        recoVertex = bestConnectedVertex;   
-    }
+    // find displaced vertices
+    this->FindPossibleDisplacedVertices( pointingClusterMap, pointingClusterVertexCandidateList, outputFigureOfMeritList );
 
-
-    // Find the best displaced vertex
-    float bestDisplacedEnergy(0.f);
-    float bestDisplacedFigureOfMerit(0.f);
-    CartesianVector bestDisplacedVertex(0.f,0.f,0.f);
-    CartesianVector bestDisplacedMomentum(0.f,0.f,0.f);
-    LArPointingClusterVertexList bestDisplacedClusterVertexList;
-
-    this->FindBestDisplacedVertex( pointingClusterMap, pointingClusterVertexCandidateList, bestDisplacedClusterVertexList,
-                                   bestDisplacedVertex, bestDisplacedEnergy, bestDisplacedMomentum, bestDisplacedFigureOfMerit );
-
-    if ( bestDisplacedFigureOfMerit > (1.f + epsilon) * figureOfMerit )
-    {
-        figureOfMerit = bestDisplacedFigureOfMerit;
-        recoVertex = bestDisplacedVertex;   
-    }
-
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex(recoVertex));
-
-
-// ClusterList cleanClusterList;
-// ClusterList cleanVertexClusterList;
-// for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
-// {
-// Cluster* pCluster = *iter;
-// if ( LArVertexHelper::IsConnectedToCurrentVertex(pCluster) ) cleanVertexClusterList.insert(pCluster);
-// else cleanClusterList.insert(pCluster);
-// }
-// const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&cleanClusterList, "CLUSTERS", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&cleanVertexClusterList, "VERTEX CLUSTERS", BLUE);
-// PandoraMonitoringApi::AddMarkerToVisualization(&theVertex, "RECO", RED, 1.);
-// PandoraMonitoringApi::AddMarkerToVisualization(&trueVertex, "TRUE", BLUE, 1.);
-// PandoraMonitoringApi::ViewEvent();
-
-
-    return STATUS_CODE_SUCCESS;
 }
 
-StatusCode VertexFindingAlgorithm::GetFirstPassVertex( const ClusterList* const pClusterList, CartesianVector& firstVertex )
+void VertexFindingAlgorithm::ProcessSingleVertex( const ClusterList* const pClusterList, const VertexFigureOfMeritList theFigureOfMeritList, pandora::CartesianVector& bestVertex )
 {
-    if ( pClusterList->empty() )
-        return STATUS_CODE_NOT_INITIALIZED;
+
+
+    // set first pass vertex    
+    GetFirstPassVertex(pClusterList,bestVertex); 
+
+    // loop over figure of merit list
+    float bestFigureOfMerit(0.f);
+   
+    for( VertexFigureOfMeritList::const_iterator iter = theFigureOfMeritList.begin(), iterEnd = theFigureOfMeritList.end(); iter != iterEnd; ++iter ){
+      const LArPointingVertex* thisVertex  = iter->first;
+      float              thisFigureOfMerit = iter->second;
+
+      if( thisFigureOfMerit>bestFigureOfMerit ){
+        bestFigureOfMerit = thisFigureOfMerit;
+        bestVertex        = thisVertex->GetPosition();
+      }
+    }
+
+}
+
+void VertexFindingAlgorithm::GetFirstPassVertex( const ClusterList* const pClusterList, CartesianVector& firstVertex )
+{
+    if ( pClusterList->empty() ) return;
+        
 
     ClusterVector clusterVector;
     for ( ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter ) 
@@ -163,10 +235,10 @@ StatusCode VertexFindingAlgorithm::GetFirstPassVertex( const ClusterList* const 
 		      + pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()) ) * 0.5;
     }
 
-    return STATUS_CODE_SUCCESS;
+    
 }
 
-void VertexFindingAlgorithm::FindBestConnectedVertex(const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingClusterVertexCandidateList, LArPointingClusterVertexList& outputClusterVertexList, CartesianVector& outputVertex, float& outputEnergy, CartesianVector& outputMomentum, float& outputFigureOfMerit )
+void VertexFindingAlgorithm::FindPossibleConnectedVertices( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingClusterVertexCandidateList, VertexFigureOfMeritList& outputFigureOfMeritList )
 {
 
     // Start by calculating the total energy 
@@ -183,13 +255,7 @@ void VertexFindingAlgorithm::FindBestConnectedVertex(const LArPointingClusterMap
         totalEnergySquared += 0.5 * thisEnergy * thisEnergy;
     }
      
-    // Loop over clean clusters to identify the best candidate vertex position    
-    float bestEnergy(0.f);
-    float bestMomentumModulus(0.f);
-    CartesianVector bestMomentum(0.f,0.f,0.f);
-    CartesianVector bestVertex(0.f,0.f,0.f);
-    LArPointingClusterVertexList bestClusterVertexList;
-
+    // Loop over clean clusters to identify possible vertex positions    
     for (LArPointingClusterVertexList::const_iterator iter = pointingClusterVertexCandidateList.begin(), iterEnd = pointingClusterVertexCandidateList.end(); iter != iterEnd; ++iter)
     {
         const LArPointingCluster::Vertex &clusterVertex = *iter;
@@ -199,7 +265,6 @@ void VertexFindingAlgorithm::FindBestConnectedVertex(const LArPointingClusterMap
         const float thisEnergy = GetEnergy( pCluster );
         const float thisEnergySquared = thisEnergy * thisEnergy;
         
-
 	// Find associated clusters
         float primaryEnergy(0.f);
         float associatedEnergy(0.f);
@@ -224,17 +289,15 @@ void VertexFindingAlgorithm::FindBestConnectedVertex(const LArPointingClusterMap
 	 && thisEnergySquared / totalEnergySquared < 0.25 ) 
             continue; 
 
-       
-        // Best candidate vertex
-        if ( associatedEnergy*associatedMomentumModulus > bestEnergy*bestMomentumModulus )
-	{
-            bestVertex = clusterVertex.GetPosition();
-            bestEnergy = associatedEnergy;
-            bestMomentum = associatedMomentum;
-            bestMomentumModulus = associatedMomentumModulus;
-            bestClusterVertexList = associatedClusterVertexList;
-	}
-	      
+        // Fill the output list
+        float thisFigureOfMerit(0.f);
+
+        if( totalEnergy > 0.f )
+            thisFigureOfMerit = (associatedEnergy*associatedMomentumModulus)/(totalEnergy*totalEnergy);
+	
+        outputFigureOfMeritList.insert( std::pair<const LArPointingVertex*,float>
+	    ( new LArPointingVertex(clusterVertex.GetPosition(),clusterVertex.GetDirection()),thisFigureOfMerit) );
+       	      
 // std::cout << "  thisVertex: energyFrac=" << thisEnergy/totalEnergy << " energySquaredFrac=" << thisEnergySquared/totalEnergySquared << " numPrimaryClusters=" << primaryClusters << " primaryEnergyFrac=" << primaryEnergy/totalEnergy << " associatedEnergyFrac=" << associatedEnergy/totalEnergy << " FigureOfMerit=" << (associatedEnergy*associatedMomentumModulus)/(totalEnergy*totalEnergy) << std::endl;
 // CartesianVector thisVertex = clusterVertex.GetPosition();
 // ClusterList clusterList;
@@ -245,36 +308,11 @@ void VertexFindingAlgorithm::FindBestConnectedVertex(const LArPointingClusterMap
 // PandoraMonitoringApi::ViewEvent();
 
     }
-
-    outputVertex = bestVertex;
-    outputEnergy = bestEnergy;
-    outputMomentum = bestMomentum;
-    outputClusterVertexList = bestClusterVertexList;
-
-    if( totalEnergy > 0.f )
-        outputFigureOfMerit = (bestEnergy*bestMomentumModulus)/(totalEnergy*totalEnergy);
-    else
-        outputFigureOfMerit = 0.f;
-
-// std::cout << " bestVertex: bestMomentumFrac=" << bestMomentumModulus/totalEnergy << " bestEnergyFrac=" << bestEnergy/totalEnergy << " FigureOfMerit=" << (bestMomentumModulus*bestEnergy) / (totalEnergy*totalEnergy) << std::endl;
-// ClusterList clusterList;
-// CartesianPointList pointList;
-// CollectClusters( bestClusterVertexList, clusterList );
-// CollectMarkers( bestClusterVertexList, pointList );
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&clusterList, "CLUSTERS", GREEN);
-// for( unsigned int n=0; n<pointList.size(); ++n ){
-//    CartesianVector myPoint = pointList.at(n);
-//    PandoraMonitoringApi::AddMarkerToVisualization(&myPoint, "CLUSTERS", BLUE, 1.);
-// }
-// PandoraMonitoringApi::AddMarkerToVisualization(&bestVertex, "VERTEX", RED, 1.);
-// PandoraMonitoringApi::ViewEvent();
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
   
-void VertexFindingAlgorithm::FindBestDisplacedVertex( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingClusterVertexCandidateList, LArPointingClusterVertexList& outputClusterVertexList, CartesianVector& outputVertex, float& outputEnergy, CartesianVector& outputMomentum, float& outputFigureOfMerit )
+void VertexFindingAlgorithm::FindPossibleDisplacedVertices( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingClusterVertexCandidateList, VertexFigureOfMeritList& outputFigureOfMeritList )
 {
     
     // Start by calculating the total energy 
@@ -292,13 +330,7 @@ void VertexFindingAlgorithm::FindBestDisplacedVertex( const LArPointingClusterMa
         totalEnergySquared += 0.5 * thisEnergy * thisEnergy;
     }
    
-    // Loop over pairs of clean clusters to identify the best displaced vertex position    
-    float bestEnergy(0.f);
-    float bestMomentumModulus(0.f);
-    CartesianVector bestMomentum(0.f,0.f,0.f);
-    CartesianVector bestVertex(0.f,0.f,0.f);
-    LArPointingClusterVertexList bestClusterVertexList;
-
+    // Loop over pairs of clean clusters to identify possible displaced vertex positions   
     for (LArPointingClusterVertexList::const_iterator iterI = pointingClusterVertexCandidateList.begin(), iterEndI = pointingClusterVertexCandidateList.end(); iterI != iterEndI; ++iterI)
     {
         const LArPointingCluster::Vertex& clusterI = *iterI;
@@ -362,17 +394,17 @@ void VertexFindingAlgorithm::FindBestDisplacedVertex( const LArPointingClusterMa
             if ( primaryEnergy / totalEnergy < 0.05 * ( 5.f - static_cast<float>(primaryClusters) ) ) 
                 continue; 
 
-       
-            // Best candidate vertex
-            if ( associatedEnergy*associatedMomentumModulus > bestEnergy*bestMomentumModulus )
-	    {
-                bestVertex = intersectPosition;
-                bestEnergy = associatedEnergy;
-                bestMomentum = associatedMomentum;
-                bestMomentumModulus = associatedMomentumModulus;
-                bestClusterVertexList = associatedClusterVertexList;
-	    }
+            // Fill the output list
+            float thisFigureOfMerit = 0.f;
 
+            static const float epsilon(0.05);
+
+            if( totalEnergy > 0.f )
+	      thisFigureOfMerit = (associatedEnergy*associatedMomentumModulus)/((1.f+epsilon)*totalEnergy*totalEnergy);
+
+            outputFigureOfMeritList.insert( std::pair<const LArPointingVertex*,float>
+	       ( new LArPointingVertex(intersectPosition,intersectDirection),thisFigureOfMerit) );
+           
 // std::cout << "  thisVertex: numPrimaryClusters=" << primaryClusters << " primaryEnergyFrac=" << primaryEnergy/totalEnergy << " associatedEnergyFrac=" << associatedEnergy/totalEnergy << " FigureOfMerit=" << (associatedEnergy*associatedMomentumModulus)/(totalEnergy*totalEnergy) << std::endl;
 // ClusterList clusterList2;
 // CollectClusters( associatedClusterVertexList, clusterList2 );
@@ -383,32 +415,6 @@ void VertexFindingAlgorithm::FindBestDisplacedVertex( const LArPointingClusterMa
 
 	}
     }
-
-  
-    outputVertex = bestVertex;
-    outputEnergy = bestEnergy;
-    outputMomentum = bestMomentum;
-    outputClusterVertexList = bestClusterVertexList;
-
-    if( totalEnergy > 0.f )
-        outputFigureOfMerit = (bestEnergy*bestMomentumModulus)/(totalEnergy*totalEnergy);
-    else
-        outputFigureOfMerit = 0.f;
-
-// std::cout << " bestVertex: bestMomentumFrac=" << bestMomentumModulus/totalEnergy << " bestEnergyFrac=" << bestEnergy/totalEnergy << " FigureOfMerit=" << (bestMomentumModulus*bestEnergy) / (totalEnergy*totalEnergy) << std::endl;
-// ClusterList clusterList;
-// CartesianPointList pointList;
-// CollectClusters( bestClusterVertexList, clusterList );
-// CollectMarkers( bestClusterVertexList, pointList );
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&clusterList, "CLUSTERS", GREEN);
-// for( unsigned int n=0; n<pointList.size(); ++n ){
-//    CartesianVector myPoint = pointList.at(n);
-//    PandoraMonitoringApi::AddMarkerToVisualization(&myPoint, "CLUSTERS", BLUE, 1.);
-// }
-// PandoraMonitoringApi::AddMarkerToVisualization(&bestVertex, "VERTEX", RED, 1.);
-// PandoraMonitoringApi::ViewEvent();   
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -871,20 +877,25 @@ float VertexFindingAlgorithm::GetLength( const Cluster* const pCluster ) const
 
 StatusCode VertexFindingAlgorithm::SetTrueVertex()
 {
-    CartesianVector trueVertex(130.5f, 0.f, 100.f); // 128.2f,0.f,100.f 
+    CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f,0.f,151.f 
+    CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f,0.f,151.f
+    CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f,0.f,100.f 
 
-    LArVertexHelper::AddVertex(m_vertexName, trueVertex);
-    LArVertexHelper::SetCurrentVertex(m_vertexName);
+    LArVertexHelper::AddVertex(m_vertexNameU, trueVertexU);
+    LArVertexHelper::AddVertex(m_vertexNameV, trueVertexV);
+    LArVertexHelper::AddVertex(m_vertexNameW, trueVertexW);
+    
+    LArVertexHelper::SetCurrentVertex(m_vertexNameW);
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode VertexFindingAlgorithm::SetVertex(const CartesianVector& eventVertex)
+StatusCode VertexFindingAlgorithm::SetVertex(const CartesianVector& eventVertex, std::string vertexName)
 {
-    LArVertexHelper::AddVertex(m_vertexName, eventVertex);
-    LArVertexHelper::SetCurrentVertex(m_vertexName);
+    LArVertexHelper::AddVertex(vertexName, eventVertex);
+    LArVertexHelper::SetCurrentVertex(vertexName);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -893,7 +904,29 @@ StatusCode VertexFindingAlgorithm::SetVertex(const CartesianVector& eventVertex)
 
 StatusCode VertexFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexName", m_vertexName));
+    m_vertexNameU = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "VertexNameU", m_vertexNameU));
+
+    m_vertexNameV = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "VertexNameV", m_vertexNameV));
+
+    m_vertexNameW = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "VertexNameW", m_vertexNameW));
+
+    m_clusterListNameU = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ClusterListNameU", m_clusterListNameU));
+
+    m_clusterListNameV = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ClusterListNameV", m_clusterListNameV));
+
+    m_clusterListNameW = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ClusterListNameW", m_clusterListNameW));
 
     m_useTrueVertex = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
@@ -906,343 +939,6 @@ StatusCode VertexFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     return STATUS_CODE_SUCCESS;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////////
-// 
-
-StatusCode VertexFindingAlgorithm::RunOldMethod(const ClusterList *const pClusterList)
-{
-  PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PrepareData(pClusterList));
-  
-  PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, FindVertex());
-
-  return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode VertexFindingAlgorithm::PrepareData(const ClusterList *const pClusterList)
-{
-  nClusters = 0;
-  nClusterHits = 0;
-
-  ClusterVector clusterVector;
-  GetListOfCleanClusters(pClusterList, clusterVector);
-  std::sort(clusterVector.begin(), clusterVector.end(), Cluster::SortByInnerLayer);
-
-  unsigned int ctr0 = 0;
-
-  for( ClusterVector::const_iterator iter = clusterVector.begin(); iter != clusterVector.end(); ++iter ) {
-    Cluster* pCluster = *iter;
-    OrderedCaloHitList clusterHitList = pCluster->GetOrderedCaloHitList();
-
-    PseudoLayer innerLayer = pCluster->GetInnerPseudoLayer();
-    PseudoLayer outerLayer = pCluster->GetOuterPseudoLayer();
-
-    ClusterHelper::ClusterFitResult innerLayerFit;
-    ClusterHelper::ClusterFitResult outerLayerFit;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pCluster, 50, innerLayerFit));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pCluster, 50, outerLayerFit));
-
-    MyCluster* newCluster = NewCluster();
-    (*newCluster).icluster = ctr0;
-    (*newCluster).vx       = pCluster->GetCentroid(innerLayer).GetX();
-    (*newCluster).vz       = pCluster->GetCentroid(innerLayer).GetZ();
-    (*newCluster).ex       = pCluster->GetCentroid(outerLayer).GetX();
-    (*newCluster).ez       = pCluster->GetCentroid(outerLayer).GetZ();
-    (*newCluster).px       = innerLayerFit.GetDirection().GetX();
-    (*newCluster).pz       = innerLayerFit.GetDirection().GetZ();
-    (*newCluster).qx       = outerLayerFit.GetDirection().GetX();
-    (*newCluster).qz       = outerLayerFit.GetDirection().GetZ();
-    (*newCluster).n        = 1+outerLayer-innerLayer;
-
-    for ( OrderedCaloHitList::const_iterator clusterHitIter = clusterHitList.begin(); clusterHitIter != clusterHitList.end(); ++clusterHitIter ) {
-      PseudoLayer  layer         = clusterHitIter->first;
-      CaloHitList* layerHitList  = clusterHitIter->second;
-
-      unsigned int ctr1 = 0;
-
-      for( CaloHitList::const_iterator layerHitIter = layerHitList->begin(); layerHitIter != layerHitList->end(); ++layerHitIter ) {
-        CaloHit* pCaloHit = *layerHitIter;
-
-        MyClusterHit* newHit = NewClusterHit();
-        (*newHit).icluster = ctr0;
-        (*newHit).ilayer   = layer;
-        (*newHit).ihit     = ctr1;
-        (*newHit).x        = pCaloHit->GetPositionVector().GetX();
-        (*newHit).z        = pCaloHit->GetPositionVector().GetZ();
-        (*newHit).n1       = 1+outerLayer-layer; 
-        (*newHit).n2       = 1+layer-innerLayer; 
-      }
-      ++ctr1;
-    }
-    ++ctr0;
-  }
-
-  return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode VertexFindingAlgorithm::FindVertex()
-{
-  CartesianVector eventVertex(CalcNearestHitToVertex());
-
-  PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex(eventVertex));
-
-  return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CartesianVector VertexFindingAlgorithm::CalcNearestHitToVertex()
-{
-  // Fit Parameters
-  double vtx_x = 0.0;
-  double vtx_z = 0.0;
-
-  double lnl_best = 0.0;
-  double lnl = 0.0;
-
-  double x = 0.0;
-  double z = 0.0;
-
-  // Loop over all hits
-  for( unsigned int i=0; i<nClusterHits; ++i ){
-    MyClusterHit* hit = (MyClusterHit*)(vClusterHits.at(i));
-
-    x = (*hit).x;
-    z = (*hit).z;
-    lnl = CalcLikelihoodFunction( x, z );
-
-    if( lnl<lnl_best ){
-      vtx_x = x;
-      vtx_z = z;
-      lnl_best = lnl;
-    }
-  }
-
-  return CartesianVector(vtx_x, 0., vtx_z);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-double VertexFindingAlgorithm::CalcLikelihoodFunction( double vtxX, double vtxZ )
-{
-  return CalcLikelihoodFunctionMethod1( vtxX, vtxZ );
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-double VertexFindingAlgorithm::CalcLikelihoodFunctionMethod1( double vtxX, double vtxZ )
-{
-  double f  = 0.0;
-
-  double vx  = 0.0;
-  double vz  = 0.0;
-  double ex  = 0.0;
-  double ez  = 0.0;
-  double px = 0.0;
-  double pz = 0.0;
-  double qx = 0.0;
-  double qz = 0.0;
-  double n  = 0;
-
-  double dx = 0.0;
-  double dz = 0.0;
-  double dr = 0.0;
-
-  double costh = 0.0;
-  double pcosth = 0.0;
-  double qcosth = 0.0;
-
-  double dz1 = 0.0;
-  double dz2 = 0.0;
-
-  for( unsigned i=0; i<nClusters; ++i ){
-    MyCluster* cluster = (MyCluster*)(vClusters.at(i));
-  
-    vx = (*cluster).vx;
-    vz = (*cluster).vz;
-    ex = (*cluster).ex;
-    ez = (*cluster).ez;
-    px = (*cluster).px;
-    pz = (*cluster).pz;
-    qx = (*cluster).qx;
-    qz = (*cluster).qz;
-    n  = (*cluster).n;
-
-    dx = (vx-vtxX);
-    dz = (vz-vtxZ);
-    dr = sqrt(dx*dx+dz*dz);
-    if( dr>0.0 ) pcosth = +(dx*px+dz*pz)/dr;
-    else         pcosth = 1.0;  
-      
-    dx = (ex-vtxX);
-    dz = (ez-vtxZ);
-    dr = sqrt(dx*dx+dz*dz);
-    if( dr>0.0 ) qcosth = -(dx*px+dz*pz)/dr;
-    else         qcosth = 1.0;  
-
-    costh = std::max(pcosth,qcosth);
-
-    dz1 = ez-vz;
-    dz2 = ez-vz;
-    if( vtxZ>vz && vtxZ<ez ){
-      dz1 = +(vtxZ-vz);
-      dz2 = -(vtxZ-ez);
-    }
-
-    f += dz1*dz2*costh;
-  }
-
-  return -f;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-double VertexFindingAlgorithm::CalcLikelihoodFunctionMethod2( double vtxX, double vtxZ )
-{
-  double f  = 0.0;
-
-  double vx = 0.0;
-  double vz = 0.0;
-  double et = 0.0;
-  double ex = 0.0;
-  double ez = 0.0;
-  double px = 0.0;
-  double pz = 0.0;
-  double qx = 0.0;
-  double qz = 0.0;
-  double n  = 0;
-
-  double dx = 0.0;
-  double dz = 0.0;
-
-  double vT = 0.0;
-  double vL = 0.0;
-  double eT = 0.0;
-  double eL = 0.0;
-  double dT = 0.0;
-  double dL = 0.0;
-
-  double L2 = 0.0;
-  double X2 = 0.0;
-  double T2 = 2.0*2.0;
-  
-  double k = 2.0;
-  double x = 0.0;
-
-  for( unsigned i=0; i<nClusters; ++i ){
-    MyCluster* cluster = (MyCluster*)(vClusters.at(i));
-  
-    vx = (*cluster).vx;
-    vz = (*cluster).vz;
-    ex = (*cluster).ex;
-    ez = (*cluster).ez;
-    px = (*cluster).px;
-    pz = (*cluster).pz;
-    qx = (*cluster).qx;
-    qz = (*cluster).qz;
-    n  = (*cluster).n;
-
-    vL = (vx-vtxX)*px + (vz-vtxZ)*pz;
-    vT = (vx-vtxX)*pz - (vz-vtxZ)*px;
-
-    eL = (ex-vtxX)*qx + (ez-vtxZ)*qz;
-    eT = (ex-vtxX)*qz - (ez-vtxZ)*qx;
-
-    L2 = (ex-vx)*(ex-vx) + (ez-vz)*(ez-vz); 
-
-    // project back from start of cluster
-         if( vtxZ<vz ) x = 0.0;
-    else if( vtxZ<ez ) x = (vtxZ-vz)/(ez-vz);
-    else               x = 1.0;
-
-    X2 = T2*(1.0+k*vL*vL/L2);
-
-    if( 1.0-(vT*vT)/X2>0.0 ){
-      f += 0.573*L2*( 1.0/(1.0+7.0*x*x)-0.125 )
-                   *( 1.0-(vT*vT)/X2 )/sqrt(X2);
-    }
-
-    // project forward from end of cluster
-         if( vtxZ>ez ) x = 0.0;
-    else if( vtxZ>vz ) x = (ez-vtxZ)/(ez-vz);
-    else               x = 1.0;
-
-    X2 = T2*(1.0+k*eL*eL/L2);
-
-    if( 1.0-(eT*eT)/X2>0.0 ){
-      f += 0.573*L2*( 1.0/(1.0+7.0*(x-1.0)*(x-1.0))-0.125 )
-                   *( 1.0-(eT*eT)/X2 )/sqrt(X2);
-    }
-
-  }
-
-  return -f;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-VertexFindingAlgorithm::MyCluster* VertexFindingAlgorithm::NewCluster()
-{
-  MyCluster* cluster = NULL;
-
-  if( nClusters<vClusters.size() ){
-    cluster = (MyCluster*)(vClusters.at(nClusters));                 
-  }
-  else{
-    cluster = new MyCluster();
-    vClusters.push_back(cluster);
-  }
-
-  (*cluster).icluster = -1;
-  (*cluster).vx       = 0.0;
-  (*cluster).vz       = 0.0;
-  (*cluster).ex       = 0.0;
-  (*cluster).ez       = 0.0;
-  (*cluster).px       = 0.0;
-  (*cluster).pz       = 0.0;
-  (*cluster).qx       = 0.0;
-  (*cluster).qz       = 0.0;
-  (*cluster).n        = 0;
-
-  ++nClusters;
-
-  return cluster;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-    
-VertexFindingAlgorithm::MyClusterHit* VertexFindingAlgorithm::NewClusterHit()
-{
-  MyClusterHit* hit = NULL;
-
-  if( nClusterHits<vClusterHits.size() ){
-    hit = (MyClusterHit*)(vClusterHits.at(nClusterHits));                 
-  }
-  else{
-    hit = new MyClusterHit();
-    vClusterHits.push_back(hit);
-  }
-
-  (*hit).icluster = -1;
-  (*hit).ilayer   = -1;
-  (*hit).ihit     = -1;
-  (*hit).x        = 0.0;
-  (*hit).z        = 0.0;
-  (*hit).n1       = 0; 
-  (*hit).n2       = 0; 
-
-  ++nClusterHits;
-
-  return hit;
-}
-
-//
-///////////////////////////////////////////////////////////////////////////////////
 
 
 } // namespace lar

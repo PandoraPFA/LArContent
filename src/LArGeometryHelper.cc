@@ -51,13 +51,13 @@ float LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType vi
     }
 
     if (newView == VIEW_W)
-        return (U * m_sinV + V * m_sinU - m_H * m_sinU * m_sinV) / m_sinUV;
+        return (U * m_sinV + V * m_sinU - m_H * m_sinU * m_sinV) / m_sinUplusV;
 
     if (newView == VIEW_U)
-        return (W * m_sinUV - V * m_sinU + m_H * m_sinU * m_sinV) / m_sinV;
+        return (W * m_sinUplusV - V * m_sinU + m_H * m_sinU * m_sinV) / m_sinV;
 
     if (newView == VIEW_V)
-        return (W * m_sinUV - U * m_sinV + m_H * m_sinU * m_sinV) / m_sinU;
+        return (W * m_sinUplusV - U * m_sinV + m_H * m_sinU * m_sinV) / m_sinU;
 
     throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 }
@@ -105,19 +105,67 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const HitType view1, const
 
     if (view1 == VIEW_W && view2 == VIEW_V)
     {
-        pW = s1 * direction1.GetZ(); pV = s2 * direction2.GetZ(); newView = VIEW_U;//
+        pW = s1 * direction1.GetZ(); pV = s2 * direction2.GetZ(); newView = VIEW_U;
     }
 
     if (newView == VIEW_W)
-        return CartesianVector(pX, 0.f, (pU * m_sinV + pV * m_sinU) / m_sinUV).GetUnitVector();
+        return CartesianVector(pX, 0.f, (pU * m_sinV + pV * m_sinU) / m_sinUplusV).GetUnitVector();
 
     if (newView == VIEW_U)
-        return CartesianVector(pX, 0.f, (pW * m_sinUV - pV * m_sinU) / m_sinV).GetUnitVector();
+        return CartesianVector(pX, 0.f, (pW * m_sinUplusV - pV * m_sinU) / m_sinV).GetUnitVector();
 
     if (newView == VIEW_V)
-        return CartesianVector(pX, 0.f, (pW * m_sinUV - pU * m_sinV) / m_sinU).GetUnitVector();
+        return CartesianVector(pX, 0.f, (pW * m_sinUplusV - pU * m_sinV) / m_sinU).GetUnitVector();
 
     throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGeometryHelper::MergeThreeViews(const CartesianVector &positionU, const CartesianVector &positionV, const CartesianVector &positionW, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared )
+{
+    float m_sigmaUVW = 1.0; // TODO: FIXME...
+
+    float YfromUV(0.f);
+    float WfromUV(0.f);
+
+    LArGeometryHelper::UVtoYZ( positionU.GetZ(), positionV.GetZ(), YfromUV, WfromUV );
+
+    float aveX = ( positionU.GetX() + positionV.GetX() + positionW.GetX() ) / 3.0;
+    float aveY = YfromUV;
+    float aveW = ( positionW.GetZ() + 2.0 * WfromUV ) / 3.0;
+
+    float aveU(0.f);
+    float aveV(0.f);
+
+    LArGeometryHelper::YZtoUV( aveY, aveW, aveU, aveV );
+
+    outputU.SetValues( aveX, 0.f, aveU );
+    outputV.SetValues( aveX, 0.f, aveV );
+    outputW.SetValues( aveX, 0.f, aveW );
+
+    chiSquared = ( ( outputU.GetX()-positionU.GetX() )*( outputU.GetX()-positionU.GetX() )
+                 + ( outputV.GetX()-positionV.GetX() )*( outputV.GetX()-positionV.GetX() )
+                 + ( outputW.GetX()-positionW.GetX() )*( outputW.GetX()-positionW.GetX() )
+                 + ( outputU.GetZ()-positionU.GetZ() )*( outputU.GetZ()-positionU.GetZ() )
+                 + ( outputV.GetZ()-positionV.GetZ() )*( outputV.GetZ()-positionV.GetZ() )
+	         + ( outputW.GetZ()-positionW.GetZ() )*( outputW.GetZ()-positionW.GetZ() ) ) / ( m_sigmaUVW * m_sigmaUVW );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGeometryHelper::UVtoYZ( const float &U, const float &V, float &Y, float &Z )
+{
+    Y = ( U * m_cosV - V * m_cosU - 0.5 * m_H * m_sinUminusV ) / m_sinUplusV;
+    Z = ( U * m_sinV + V * m_sinU - m_H * m_sinU * m_sinV ) / m_sinUplusV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGeometryHelper::YZtoUV( const float &Y, const float &Z, float &U, float &V )
+{
+    U = Z * m_cosU + ( Y + 0.5 * m_H ) * m_sinU;
+    V = Z * m_cosV - ( Y - 0.5 * m_H ) * m_sinV;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,9 +174,14 @@ float LArGeometryHelper::m_thetaU = M_PI / 3.f;
 float LArGeometryHelper::m_thetaV = M_PI / 3.f;
 float LArGeometryHelper::m_H = 233.f;
 
+float LArGeometryHelper::m_cosU  = std::cos(LArGeometryHelper::m_thetaU);
+float LArGeometryHelper::m_cosV  = std::cos(LArGeometryHelper::m_thetaV);
+
 float LArGeometryHelper::m_sinU  = std::sin(LArGeometryHelper::m_thetaU);
 float LArGeometryHelper::m_sinV  = std::sin(LArGeometryHelper::m_thetaV);
-float LArGeometryHelper::m_sinUV = std::sin(LArGeometryHelper::m_thetaU + LArGeometryHelper::m_thetaV);
+
+float LArGeometryHelper::m_sinUplusV = std::sin(LArGeometryHelper::m_thetaU + LArGeometryHelper::m_thetaV);
+float LArGeometryHelper::m_sinUminusV = std::sin(LArGeometryHelper::m_thetaU - LArGeometryHelper::m_thetaV);
 
 StatusCode LArGeometryHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -137,6 +190,7 @@ StatusCode LArGeometryHelper::ReadSettings(const TiXmlHandle xmlHandle)
     {
         m_thetaU = thetaU_degrees * (M_PI / 180.f);
         m_sinU = std::sin(m_thetaU);
+        m_cosU = std::cos(m_thetaU);
     }
 
     float thetaV_degrees = 60.f;
@@ -144,9 +198,11 @@ StatusCode LArGeometryHelper::ReadSettings(const TiXmlHandle xmlHandle)
     {
         m_thetaV = thetaV_degrees * (M_PI / 180.f);
         m_sinV = std::sin(m_thetaV);
+        m_cosV = std::cos(m_thetaV);
     }
 
-    m_sinUV = std::sin(m_thetaU + m_thetaV);
+    m_sinUplusV = std::sin(m_thetaU + m_thetaV);
+    m_sinUminusV = std::sin(m_thetaU - m_thetaV);
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Height", m_H));

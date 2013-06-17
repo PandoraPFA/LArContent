@@ -32,6 +32,7 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    std::string     m_inputClusterListName;                 ///< The input cluster list name 
     std::string     m_outputPfoListName;                    ///< The output pfo list name
     unsigned int    m_minHitsInCluster;                     ///< Min number of hits for clusters to form pfos
     float           m_minClusterEnergy;                     ///< Min energy for clusters to form pfos

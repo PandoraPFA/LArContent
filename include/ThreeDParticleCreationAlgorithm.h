@@ -48,6 +48,20 @@ private:
         ClusterOverlapInfo(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
         /**
+         *  @brief  Whether cluster overlap info object is initialized
+         * 
+         *  @return boolean
+         */
+        bool IsInitialized() const;
+
+        /**
+         *  @brief  Get the x overlap
+         * 
+         *  @return the x overlap
+         */
+        float GetXOverlap() const;
+
+        /**
          *  @brief  Get chi2 calculated using cluster centroids u,v->w
          * 
          *  @return chi2 calculated using cluster centroids u,v->w
@@ -69,17 +83,18 @@ private:
         float GetChi2VWU() const;
 
         /**
-         *  @brief  Get the x overlap
+         *  @brief  Get sum of three different chi2 calculated using cluster centroids u,v->w, u,w->v and v,w->u
          * 
-         *  @return the x overlap
+         *  @return sum of three different chi2 calculated using cluster centroids u,v->w, u,w->v and v,w->u
          */
-        float GetXOverlap() const;
+        float GetChi2Sum() const;
 
     private:
+        bool            m_isInitialized;            ///< Whether cluster overlap info object is initialized
+        float           m_xOverlap;                 ///< The x overlap
         float           m_chi2UVW;                  ///< Chi2 calculated using cluster centroids u,v->w
         float           m_chi2UWV;                  ///< Chi2 calculated using cluster centroids u,w->v
         float           m_chi2VWU;                  ///< Chi2 calculated using cluster centroids v,w->u
-        float           m_xOverlap;                 ///< The x overlap
     };
 
     typedef std::map<pandora::Cluster*, ClusterOverlapInfo> ClusterOverlapList;
@@ -88,7 +103,7 @@ private:
     /**
      *  @brief  ClusterOverlapTensor class
      */
-    class ClusterOverlapTensor
+    class ClusterOverlapTensor : public std::map<pandora::Cluster*, ClusterOverlapMatrix>
     {
     public:
         /**
@@ -129,11 +144,6 @@ private:
          *  @param  pClusterW address of cluster w
          */
         void SetClusterOverlapInfo(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
-
-    private:
-        typedef std::map<pandora::Cluster*, ClusterOverlapMatrix> OverlapTensor;
-
-        OverlapTensor   m_overlapTensor;                ///< The cluster overlap tensor
     };
 
     std::string         m_inputClusterListNameU;        ///< The name of the view U cluster list
@@ -150,6 +160,20 @@ inline pandora::Algorithm *ThreeDParticleCreationAlgorithm::Factory::CreateAlgor
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool ThreeDParticleCreationAlgorithm::ClusterOverlapInfo::IsInitialized() const
+{
+    return m_isInitialized;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float ThreeDParticleCreationAlgorithm::ClusterOverlapInfo::GetXOverlap() const
+{
+    return m_xOverlap;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float ThreeDParticleCreationAlgorithm::ClusterOverlapInfo::GetChi2UVW() const
@@ -173,9 +197,9 @@ inline float ThreeDParticleCreationAlgorithm::ClusterOverlapInfo::GetChi2VWU() c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ThreeDParticleCreationAlgorithm::ClusterOverlapInfo::GetXOverlap() const
+inline float ThreeDParticleCreationAlgorithm::ClusterOverlapInfo::GetChi2Sum() const
 {
-    return m_xOverlap;
+    return (m_chi2UVW + m_chi2UWV + m_chi2VWU);
 }
 
 } // namespace lar

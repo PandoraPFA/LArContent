@@ -14,6 +14,7 @@
 #include "ClusterExtensionAlgorithm.h"
 #include "ClusteringParentAlgorithm.h"
 #include "ConeBasedMergingAlgorithm.h"
+#include "EventDisplayAlgorithm.h"
 #include "EventPreparationAlgorithm.h"
 #include "IsolatedHitMergingAlgorithm.h"
 #include "KinkSplittingAlgorithm.h"
@@ -27,7 +28,9 @@
 #include "SeedRelegationAlgorithm.h"
 #include "ShowerMipSeparationAlgorithm.h"
 #include "ThreeDParticleCreationAlgorithm.h"
+#include "TransverseClusteringAlgorithm.h"
 #include "TwoDParticleCreationAlgorithm.h"
+#include "TwoDPreparationAlgorithm.h"
 #include "VertexFindingAlgorithm.h"
 #include "VertexSeedFindingAlgorithm.h"
 #include "VisualMonitoringAlgorithm.h"
@@ -53,6 +56,7 @@ public:
         d("LArClusterExtension",                    lar::ClusterExtensionAlgorithm::Factory)                                    \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
+        d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
@@ -66,7 +70,9 @@ public:
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
         d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
         d("LArThreeDParticleCreation",              lar::ThreeDParticleCreationAlgorithm::Factory)                              \
+        d("LArTransverseClustering",                lar::TransverseClusteringAlgorithm::Factory)                                \
         d("LArTwoDParticleCreation",                lar::TwoDParticleCreationAlgorithm::Factory)                                \
+        d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
         d("LArVertexFinding",                       lar::VertexFindingAlgorithm::Factory)                                       \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)

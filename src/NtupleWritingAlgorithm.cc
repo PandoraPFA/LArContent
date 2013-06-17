@@ -30,9 +30,12 @@ StatusCode NtupleWritingAlgorithm::Run()
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
     }
-    else 
+    else if ( STATUS_CODE_SUCCESS != PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList) )
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pNonSeedClusterList));
+    }
+    else{
+      // would be bad to reach here...
     }
 
     // Get view
@@ -96,10 +99,10 @@ StatusCode NtupleWritingAlgorithm::Run()
     ntupleWriter.NewEntry( eventNumber, viewType );
 
 
-    // Add the current vertex 
-    if ( LArVertexHelper::DoesCurrentVertexExist() )
+    // Add the vertex 
+    if ( LArVertexHelper::DoesVertexExist( m_vertexName ) )
     {
-        ntupleWriter.SetVertex( LArVertexHelper::GetCurrentVertex() );
+        ntupleWriter.SetVertex( LArVertexHelper::GetVertex( m_vertexName ) );
     }
 
     // Add the seed clusters
@@ -410,6 +413,7 @@ StatusCode NtupleWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexName", m_vertexName));
 
     m_outputFileName = "LArRecoResults.root";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

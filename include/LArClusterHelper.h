@@ -21,6 +21,17 @@ namespace lar
 class LArClusterHelper
 {
 public:
+
+    /**
+     *  @brief  Get closest distance between the layer centroids of a pair of clusters
+     * 
+     *  @param  pCluster1 address of the first cluster
+     *  @param  pCluster2 address of the second cluster
+     * 
+     *  @return the closest distance
+     */
+    static float GetClosestDistance(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
+
     /**
      *  @brief  Get closest distance between a specified position vector and the layer centroids of a specified cluster
      * 
