@@ -77,39 +77,6 @@ public:
          */
         void GetVertex( const unsigned int nLayersToSkip, pandora::CartesianVector& position, pandora::CartesianVector& direction, float& rms ) const;
 
-        /**
-         *  @brief  Get intersection of two vertices
-         * 
-         *  @param  firstVertex the first vertex
-         *  @param  secondVertex the second vertex
-         *  @param  intersectPosition the position of the intersection
-         *  @param  isPhysical do they obey causality
-         */
-        static void GetIntersection( const Vertex& firstVertex, const Vertex& secondVertex, pandora::CartesianVector& intersectPosition, bool& isPhysical );
-
-        /**
-         *  @brief  Get average direction of two vertices
-         * 
-         *  @param  firstVertex the first vertex
-         *  @param  secondVertex the second vertex
-         *  @param  averageDirection the average direction
-         */
-        static void GetAverageDirection( const Vertex& firstVertex, const Vertex& secondVertex, pandora::CartesianVector& averageDirection );
-
-        /**
-         *  @brief  Get intersection of two vertices
-         * 
-         *  @param  firstPosition the position of the first vertex
-         *  @param  firstDirection the direction of the first vertex
-         *  @param  secondPosition the position of the second vertex
-         *  @param  secondDirection the direction of the second vertex
-         *  @param  intersectPosition the position of the intersection
-         *  @param  isPhysical do they obey causality
-         */
-        static void GetIntersection( const pandora::CartesianVector& firstPosition, const pandora::CartesianVector& firstDirection,
-	    const pandora::CartesianVector& secondPosition, const pandora::CartesianVector& secondDirection,
-            pandora::CartesianVector& intersectPosition, bool& isPhysical );
-
     private:
         pandora::Cluster*           m_pCluster;             ///< The address of the cluster
         pandora::CartesianVector    m_position;             ///< The vertex position
@@ -146,6 +113,13 @@ public:
      *  @return the outer vertex
      */
     const Vertex &GetOuterVertex() const;
+
+    /**
+     *  @brief  Get length squared of pointing cluster
+     * 
+     *  @return the length squared
+     */
+    float GetLengthSquared() const;
 
     /**
      *  @brief  Get length of pointing cluster

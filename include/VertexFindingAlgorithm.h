@@ -95,6 +95,10 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
 
 
+    void GetListOfCandidateVertexPositions( const LArPointingClusterVertexList& pointingVertexList, pandora::CartesianPointList& candidateVertexList );
+
+
+
     void CollectMarkers( const LArPointingClusterVertexList& inputList, pandora::CartesianPointList& outputList );
 
     void CollectClusters( const LArPointingClusterVertexList& inputList, pandora::ClusterList& outputList );

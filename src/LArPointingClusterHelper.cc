@@ -64,6 +64,63 @@ bool LArPointingClusterHelper::IsPointing(const pandora::CartesianVector &vertex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPointingClusterHelper::GetAverageDirection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, CartesianVector& averageDirection )
+{
+    const Cluster* pFirstCluster = firstVertex.GetCluster();
+    const Cluster* pSecondCluster = secondVertex.GetCluster();
+
+    if ( pFirstCluster==pSecondCluster )
+        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    const float E1 = pFirstCluster->GetHadronicEnergy();
+    const float E2 = pSecondCluster->GetHadronicEnergy();
+
+    if ( E1 < std::numeric_limits<float>::epsilon() || E2 < std::numeric_limits<float>::epsilon() )
+        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    // calculate average direction
+    averageDirection = ( firstVertex.GetDirection() * E1 + secondVertex.GetDirection() * E2 ).GetUnitVector();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, CartesianVector& intersectPosition, bool& isPhysical )
+{ 
+    const Cluster* pFirstCluster = firstVertex.GetCluster();
+    const Cluster* pSecondCluster = secondVertex.GetCluster();
+
+    if ( pFirstCluster==pSecondCluster )
+        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    return LArPointingClusterHelper::GetIntersection( firstVertex.GetPosition(), firstVertex.GetDirection(), 
+	secondVertex.GetPosition(), secondVertex.GetDirection(), intersectPosition, isPhysical );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetIntersection( const CartesianVector& a1, const CartesianVector& a2, const CartesianVector& b1, const CartesianVector& b2, CartesianVector& intersectPosition, bool& isPhysical )
+{  
+    // note: input lines are r = a1 + P * a2 and r = b1 + Q * b2
+
+    // relative angle between direction vector
+    const float cosTheta = a2.GetDotProduct(b2);
+
+    // lines must be non-parallel
+    if ( 1.f - std::fabs(cosTheta) < std::numeric_limits<float>::epsilon() )
+        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    // calculate the intersection (by minimising the distance between the lines)
+    const float P = ( (a2 - b2 * cosTheta).GetDotProduct(b1-a1) ) / (1.0 - cosTheta*cosTheta);
+    const float Q = ( (a2 * cosTheta - b2).GetDotProduct(b1-a1) ) / (1.0 - cosTheta*cosTheta);
+
+    intersectPosition = ( a1 + a2 * P + b1 + b2 * Q ) * 0.5;
+    isPhysical = ( P < +1.f && Q < +1.f );
+
+    return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArPointingClusterHelper::m_maxNodeRadiusSquared = 2.5f * 2.5f;
 float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 20.f;
 float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.5f;

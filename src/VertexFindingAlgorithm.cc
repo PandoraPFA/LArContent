@@ -13,6 +13,7 @@
 #include "LArVertexHelper.h"
 #include "LArGeometryHelper.h"
 #include "LArClusterHelper.h"
+#include "LArPointingClusterHelper.h"
 
 #include <fstream>
 #include <cmath>
@@ -58,7 +59,14 @@ StatusCode VertexFindingAlgorithm::Run()
 
 
     // Generate list of candidate vertex positions (independently for each view)
-    
+    CartesianPointList candidateVertexListU, candidateVertexListV,  candidateVertexListW; 
+
+    this->GetListOfCandidateVertexPositions( pointingVertexListU, candidateVertexListU );
+    this->GetListOfCandidateVertexPositions( pointingVertexListV, candidateVertexListV );
+    this->GetListOfCandidateVertexPositions( pointingVertexListW, candidateVertexListW );
+
+
+
 
 
 
@@ -192,15 +200,13 @@ CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f, 0.f, 100.f
 
 
 ClusterList clusterListU;
-CartesianPointList vertexListU;
 CollectClusters( pointingVertexListU, clusterListU );
-CollectMarkers( pointingVertexListU, vertexListU );
 
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 PandoraMonitoringApi::VisualizeClusters(&clusterListU, "CLEAN CLUSTERS (U)", GREEN);
 PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexU, "vertexU", BLUE, 1.75);
 
-for( CartesianPointList::const_iterator iter = vertexListU.begin(), iterEnd = vertexListU.end(); iter != iterEnd; ++iter ){
+for( CartesianPointList::const_iterator iter = candidateVertexListU.begin(), iterEnd = candidateVertexListU.end(); iter != iterEnd; ++iter ){
   const CartesianVector& candidateVertex = *iter;
   PandoraMonitoringApi::AddMarkerToVisualization(&candidateVertex, "vertexU", RED, 1.5);
 }
@@ -215,15 +221,13 @@ PandoraMonitoringApi::ViewEvent();
 
 
 ClusterList clusterListV;
-CartesianPointList vertexListV;
 CollectClusters( pointingVertexListV, clusterListV );
-CollectMarkers( pointingVertexListV, vertexListV );
 
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 PandoraMonitoringApi::VisualizeClusters(&clusterListV, "CLEAN CLUSTERS (V)", GREEN);
 PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexV, "vertexV", BLUE, 1.75);
 
-for( CartesianPointList::const_iterator iter = vertexListV.begin(), iterEnd = vertexListV.end(); iter != iterEnd; ++iter ){
+for( CartesianPointList::const_iterator iter = candidateVertexListV.begin(), iterEnd = candidateVertexListV.end(); iter != iterEnd; ++iter ){
   const CartesianVector& candidateVertex = *iter;
   PandoraMonitoringApi::AddMarkerToVisualization(&candidateVertex, "vertexV", RED, 1.5);
 }
@@ -238,15 +242,13 @@ PandoraMonitoringApi::ViewEvent();
 
 
 ClusterList clusterListW;
-CartesianPointList vertexListW;
 CollectClusters( pointingVertexListW, clusterListW );
-CollectMarkers( pointingVertexListW, vertexListW );
 
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 PandoraMonitoringApi::VisualizeClusters(&clusterListW, "CLEAN CLUSTERS (W)", GREEN);
 PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexW, "vertexW", BLUE, 1.75);
 
-for( CartesianPointList::const_iterator iter = vertexListW.begin(), iterEnd = vertexListW.end(); iter != iterEnd; ++iter ){
+for( CartesianPointList::const_iterator iter = candidateVertexListW.begin(), iterEnd = candidateVertexListW.end(); iter != iterEnd; ++iter ){
   const CartesianVector& candidateVertex = *iter;
   PandoraMonitoringApi::AddMarkerToVisualization(&candidateVertex, "vertexW", RED, 1.5);
 }
@@ -468,6 +470,19 @@ void VertexFindingAlgorithm::GetListOfCleanVertexClusters( const LArPointingClus
 // PandoraMonitoringApi::VisualizeClusters(&outputClusterVertexList, "CLEAN CLUSTERS, SECOND PASS", BLUE);
 // PandoraMonitoringApi::ViewEvent();
 
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointingClusterVertexList& pointingVertexList, CartesianPointList& candidateVertexList )
+{
+    for (LArPointingClusterVertexList::const_iterator iter = pointingVertexList.begin(), iterEnd = pointingVertexList.end(); iter != iterEnd; ++iter)
+    {
+        const LArPointingCluster::Vertex &thisVertex = *iter;
+
+        candidateVertexList.push_back( thisVertex.GetPosition() );
+
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -896,8 +911,8 @@ void VertexFindingAlgorithm::GetIntersection( const LArPointingCluster::Vertex& 
 
     if ( std::fabs(cosRelativeAngle) < cosAlmostParallelAngle ) // good pointing
     {
-        LArPointingCluster::Vertex::GetIntersection( firstCluster, secondCluster, intersectPosition, isPhysical );
-	LArPointingCluster::Vertex::GetAverageDirection( firstCluster, secondCluster, intersectDirection );
+        LArPointingClusterHelper::GetIntersection( firstCluster, secondCluster, intersectPosition, isPhysical );
+	LArPointingClusterHelper::GetAverageDirection( firstCluster, secondCluster, intersectDirection );
     }
     else if ( cosRelativeAngle < -cosAlmostParallelAngle ) // anti-parallel (bad)
     {

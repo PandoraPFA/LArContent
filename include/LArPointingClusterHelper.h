@@ -63,6 +63,39 @@ public:
     static bool IsPointing(const pandora::CartesianVector &vertex, const LArPointingCluster::Vertex &pointingVertex);
 
     /**
+     *  @brief  Get intersection of two vertices
+     * 
+     *  @param  firstVertex the first vertex
+     *  @param  secondVertex the second vertex
+     *  @param  intersectPosition the position of the intersection
+     *  @param  isPhysical do they obey causality
+     */
+    static void GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, pandora::CartesianVector& intersectPosition, bool& isPhysical );
+
+    /**
+     *  @brief  Get average direction of two vertices
+     * 
+     *  @param  firstVertex the first vertex
+     *  @param  secondVertex the second vertex
+     *  @param  averageDirection the average direction
+     */
+    static void GetAverageDirection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, pandora::CartesianVector& averageDirection );
+
+    /**
+     *  @brief  Get intersection of two vertices
+     * 
+     *  @param  firstPosition the position of the first vertex
+     *  @param  firstDirection the direction of the first vertex
+     *  @param  secondPosition the position of the second vertex
+     *  @param  secondDirection the direction of the second vertex
+     *  @param  intersectPosition the position of the intersection
+     *  @param  isPhysical do they obey causality
+     */
+    static void GetIntersection( const pandora::CartesianVector& firstPosition, const pandora::CartesianVector& firstDirection,
+        const pandora::CartesianVector& secondPosition, const pandora::CartesianVector& secondDirection,
+        pandora::CartesianVector& intersectPosition, bool& isPhysical );
+
+    /**
      *  @brief  Read the vertex helper settings
      * 
      *  @param  xmlHandle the relevant xml handle
