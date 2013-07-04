@@ -29,6 +29,7 @@
 #include "ShowerMipSeparationAlgorithm.h"
 #include "ThreeDParticleCreationAlgorithm.h"
 #include "ThreeDParticleMatchingAlgorithm.h"
+#include "ThreeDTrackSegmentsAlgorithm.h"
 #include "TransverseClusteringAlgorithm.h"
 #include "TwoDParticleCreationAlgorithm.h"
 #include "TwoDPreparationAlgorithm.h"
@@ -73,6 +74,7 @@ public:
         d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
         d("LArThreeDParticleCreation",              lar::ThreeDParticleCreationAlgorithm::Factory)                              \
         d("LArThreeDParticleMatching",              lar::ThreeDParticleMatchingAlgorithm::Factory)                              \
+        d("LArThreeDTrackSegments",                 lar::ThreeDTrackSegmentsAlgorithm::Factory)                                 \
         d("LArTransverseClustering",                lar::TransverseClusteringAlgorithm::Factory)                                \
         d("LArTwoDParticleCreation",                lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \

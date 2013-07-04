@@ -34,9 +34,9 @@ StatusCode ThreeDBaseAlgorithm::Run()
 {
     try
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameU, m_pInputClusterListU));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameV, m_pInputClusterListV));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameW, m_pInputClusterListW));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameU, m_pInputClusterListU));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameV, m_pInputClusterListV));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameW, m_pInputClusterListW));
 
         this->SelectInputClusters();
         this->ModifyInputClusters();
@@ -61,11 +61,11 @@ StatusCode ThreeDBaseAlgorithm::Run()
             this->UpdateTensor();
         }
 
-        this->TidyMemberVariables();
+        this->TidyUp();
     }
     catch (StatusCodeException &statusCodeException)
     {
-        this->TidyMemberVariables();
+        this->TidyUp();
         throw statusCodeException;
     }
 
@@ -103,6 +103,13 @@ void ThreeDBaseAlgorithm::CreateThreeDParticles()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDBaseAlgorithm::UpdateTensor()
+{
+    m_protoParticleVector.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDBaseAlgorithm::TidyUp()
 {
     m_protoParticleVector.clear();
@@ -114,8 +121,6 @@ void ThreeDBaseAlgorithm::TidyUp()
     m_clusterVectorU.clear();
     m_clusterVectorV.clear();
     m_clusterVectorW.clear();
-
-    this->TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

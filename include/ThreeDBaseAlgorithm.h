@@ -30,6 +30,8 @@ public:
     virtual ~ThreeDBaseAlgorithm();
 
 protected:
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
      */
@@ -62,14 +64,19 @@ protected:
     virtual bool ExamineTensor() = 0;
 
     /**
+     *  @brief  Create particles using findings from recent algorithm processing
+     */
+    virtual void CreateThreeDParticles();
+
+    /**
      *  @brief  Update tensor to reflect changes made during recent processing
      */
-    virtual void UpdateTensor() = 0;
+    virtual void UpdateTensor();
 
     /**
      *  @brief  Tidy member variables in derived class
      */
-    virtual void TidyUp() = 0;
+    virtual void TidyUp();
 
     /**
      *  @brief  OverlapTensor class
@@ -89,9 +96,9 @@ protected:
          * 
          *  @return the address of the overlap result
          */
-        const OverlapResult *GetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW) const;
+        const OverlapResult &GetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW) const;
 
-        typedef std::map<pandora::Cluster*, T*> OverlapList;
+        typedef std::map<pandora::Cluster*, T> OverlapList;
 
         /**
          *  @brief  Get the  overlap list for a specified pair of clusters
@@ -115,19 +122,55 @@ protected:
         const OverlapMatrix &GetOverlapMatrix(pandora::Cluster *pClusterU) const;
 
         /**
+         *  @brief  Get the cluster list U
+         * 
+         *  @return the cluster list U
+         */
+        const pandora::ClusterList &GetClusterListU() const;
+
+        /**
+         *  @brief  Get the cluster list V
+         * 
+         *  @return the cluster list V
+         */
+        const pandora::ClusterList &GetClusterListV() const;
+
+        /**
+         *  @brief  Get the cluster list W
+         * 
+         *  @return the cluster list W
+         */
+        const pandora::ClusterList &GetClusterListW() const;
+
+        /**
          *  @brief  Set overlap result
          * 
          *  @param  pClusterU address of cluster u
          *  @param  pClusterV address of cluster v
          *  @param  pClusterW address of cluster w
-         *  @param  pOverlapResult address of the overlap result
+         *  @param  overlapResult the overlap result
          */
-        void SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW, OverlapResult *pOverlapResult);
+        void SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW, const OverlapResult &overlapResult);
+
+        /**
+         *  @brief  Remove entries from tensor corresponding to specified cluster
+         * 
+         *  @param  pCluster address of the cluster
+         */
+        void RemoveCluster(pandora::Cluster *pCluster);
+
+        /**
+         *  @brief  Clear overlap tensor
+         */
+        void Clear();
 
     private:
         typedef std::map<pandora::Cluster*, OverlapMatrix> TheTensor;
 
         TheTensor               m_overlapTensor;                ///< The overlap tensor
+        pandora::ClusterList    m_clusterListU;                 ///< The cluster list U
+        pandora::ClusterList    m_clusterListV;                 ///< The cluster list V
+        pandora::ClusterList    m_clusterListW;                 ///< The cluster list W
     };
 
     /**
@@ -154,17 +197,6 @@ protected:
 
 private:
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Create particles using findings from recent algorithm processing
-     */
-    void CreateThreeDParticles();
-
-    /**
-     *  @brief  Tidy member variables in base class
-     */
-    void TidyMemberVariables();
 
     std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
     std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
@@ -175,7 +207,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapResult *ThreeDBaseAlgorithm::OverlapTensor<T>::GetOverlapResult(
+inline const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapResult &ThreeDBaseAlgorithm::OverlapTensor<T>::GetOverlapResult(
     pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW) const
 {
     const OverlapList &overlapList(this->GetOverlapList(pClusterU, pClusterV));
@@ -190,7 +222,7 @@ const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapResult *ThreeDBaseA
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapList &ThreeDBaseAlgorithm::OverlapTensor<T>::GetOverlapList(
+inline const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapList &ThreeDBaseAlgorithm::OverlapTensor<T>::GetOverlapList(
     pandora::Cluster *pClusterU, pandora::Cluster *pClusterV) const
 {
     const OverlapMatrix &overlapMatrix(this->GetOverlapMatrix(pClusterU));
@@ -205,7 +237,7 @@ const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapList &ThreeDBaseAlg
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapMatrix &ThreeDBaseAlgorithm::OverlapTensor<T>::GetOverlapMatrix(
+inline const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapMatrix &ThreeDBaseAlgorithm::OverlapTensor<T>::GetOverlapMatrix(
     pandora::Cluster *pClusterU) const
 {
     typename TheTensor::const_iterator iter = m_overlapTensor.find(pClusterU);
@@ -219,8 +251,32 @@ const typename ThreeDBaseAlgorithm::OverlapTensor<T>::OverlapMatrix &ThreeDBaseA
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm::OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV,
-    pandora::Cluster *pClusterW, OverlapResult *pOverlapResult)
+inline const pandora::ClusterList &ThreeDBaseAlgorithm::OverlapTensor<T>::GetClusterListU() const
+{
+    return m_clusterListU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm::OverlapTensor<T>::GetClusterListV() const
+{
+    return m_clusterListV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm::OverlapTensor<T>::GetClusterListW() const
+{
+    return m_clusterListW;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline void ThreeDBaseAlgorithm::OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV,
+    pandora::Cluster *pClusterW, const OverlapResult &overlapResult)
 {
     OverlapList &overlapList = m_overlapTensor[pClusterU][pClusterV];
     typename OverlapList::const_iterator iter = overlapList.find(pClusterW);
@@ -228,8 +284,62 @@ void ThreeDBaseAlgorithm::OverlapTensor<T>::SetOverlapResult(pandora::Cluster *p
     if (overlapList.end() != iter)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_ALREADY_PRESENT);
 
-    if (!overlapList.insert(OverlapList::value_type(pClusterW, pOverlapResult)).second)
+    if (!overlapList.insert(typename OverlapList::value_type(pClusterW, overlapResult)).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+    m_clusterListU.insert(pClusterU);
+    m_clusterListV.insert(pClusterV);
+    m_clusterListW.insert(pClusterW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline void ThreeDBaseAlgorithm::OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
+{
+    if (m_clusterListU.erase(pCluster) > 0)
+    {
+        typename TheTensor::iterator iter = m_overlapTensor.find(pCluster);
+
+        if (m_overlapTensor.end() != iter)
+            m_overlapTensor.erase(iter);
+    }
+
+    if (m_clusterListV.erase(pCluster) > 0)
+    {
+        for (typename TheTensor::iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
+        {
+            typename OverlapMatrix::iterator iter = iterU->second.find(pCluster);
+
+            if (iterU->second.end() != iter)
+                iterU->second.erase(iter);
+        }
+    }
+
+    if (m_clusterListW.erase(pCluster) > 0)
+    {
+        for (typename TheTensor::iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
+        {
+            for (typename OverlapMatrix::iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
+            {
+                typename OverlapList::iterator iter = iterV->second.find(pCluster);
+
+                if (iterV->second.end() != iter)
+                    iterV->second.erase(iter);
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline void ThreeDBaseAlgorithm::OverlapTensor<T>::Clear()
+{
+    m_overlapTensor.clear();
+    m_clusterListU.clear();
+    m_clusterListV.clear();
+    m_clusterListW.clear();
 }
 
 } // namespace lar

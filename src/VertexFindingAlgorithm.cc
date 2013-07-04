@@ -183,7 +183,7 @@ StatusCode VertexFindingAlgorithm::Run()
 
 
 
-    std::cout << " FOUND: " << pairedVertexListU.size() << " POSSIBILITIES " << std::endl;
+    //std::cout << " FOUND: " << pairedVertexListU.size() << " POSSIBILITIES " << std::endl;
 
    
 
