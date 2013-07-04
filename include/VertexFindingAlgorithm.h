@@ -102,9 +102,6 @@ class VertexFindingAlgorithm : public pandora::Algorithm
     
     
     
-
-    
-
     
     void GetListOfCleanClusters( const pandora::ClusterList* const pClusterList, pandora::ClusterVector &clusterVector);  
 
@@ -112,15 +109,14 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
     void GetListOfCleanVertexClusters( const LArPointingClusterMap& pointingClusterMap, LArPointingClusterVertexList& cleanClusterList );
 
+
+
+
     void GetListOfCandidateVertexPositions( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& cleanClusterList,
                                             pandora::CartesianPointList& candidateVertexList );
  
     void GetListOfCleanVertexPositions( const LArPointingClusterMap& pointingClusterMap, const pandora::CartesianPointList& inputVertexList,
                                         pandora::CartesianPointList& outputVertexList );
-
-
-
-    
 
     void GetListOfMatchedVertexPositions( const LArPointingClusterMap& pointingClusterMapU, const LArPointingClusterMap& pointingClusterMapV, 
                                           const LArPointingClusterMap& pointingClusterMapW,
@@ -131,14 +127,13 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
     void GetListOfMatchedVertexPositions2D( const pandora::HitType view1, const pandora::HitType view2, 
                                             const pandora::CartesianPointList& inputList1, const pandora::CartesianPointList& inputList2,
-                                            const pandora::CartesianPointList& inputList3, pandora::CartesianPointList& matchedList3, 
                                             pandora::CartesianPointList& projectedList3 );
 
     void GetListOfMatchedVertexPositions3D( const pandora::CartesianPointList& inputListU, const pandora::CartesianPointList& inputListV,
                                             const pandora::CartesianPointList& inputListW, pandora::CartesianPointList& outputListU, 
                                             pandora::CartesianPointList& outputListV, pandora::CartesianPointList& outputListW );
 
-
+    void GetReducedListOfVertexPositions( const pandora::CartesianPointList& inputList, pandora::CartesianPointList& outputList );
 
 
     void CollectMarkers( const LArPointingClusterVertexList& inputList, pandora::CartesianPointList& outputList );
@@ -150,28 +145,23 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
 
 
-
-    void CleanUp( VertexFigureOfMeritMap& figureOfMeritMap );     
-
-
-    void ProcessSingleView( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingVertexList,
+    void ProcessView1D( const LArPointingClusterMap& pointingClusterMap, const pandora::CartesianPointList& inputVertexList,
                             VertexFigureOfMeritMap& outputFigureOfMeritMap );
 
-    void ProcessSingleVertex( const pandora::ClusterList* const pClusterList, const VertexFigureOfMeritMap figureOfMeritMap, 
-                              pandora::CartesianVector& bestVertex );
+    void ProcessView1D( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingVertexList,
+                            VertexFigureOfMeritMap& outputFigureOfMeritMap );
+
+    void ProcessVertex1D( const VertexFigureOfMeritMap figureOfMeritMap, pandora::CartesianVector& bestVertex );
+
+    void ProcessVertex3D( const VertexFigureOfMeritMap figureOfMeritMapU, const VertexFigureOfMeritMap figureOfMeritMapV, 
+                          const VertexFigureOfMeritMap figureOfMeritMapW, pandora::CartesianVector& bestVertexU, 
+                          pandora::CartesianVector& bestVertexV, pandora::CartesianVector& bestVertexW );
+
+    void CleanUp( VertexFigureOfMeritMap& figureOfMeritMap );   
 
 
-    
-
-    
-
-    void FindPossibleConnectedVertices( const LArPointingClusterMap& inputMap, const LArPointingClusterVertexList& inputList, 
-                                        VertexFigureOfMeritMap& outputFigureOfMeritMap );
-
-  
 
    
-
     void RunFastReconstruction( const LArPointingClusterMap& inputMap,
                                 const pandora::CartesianVector& seedPosition, const pandora::CartesianVector& seedDirection, 
                                 LArPointingClusterVertexList& outputList, unsigned int& primaryClusters, float& primaryEnergy, 
@@ -221,7 +211,6 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
     
 
-
     std::string     m_vertexNameU;       ///<
     std::string     m_vertexNameV;       ///<
     std::string     m_vertexNameW;       ///<
@@ -234,7 +223,6 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
     bool            m_useTrueVertex;
     bool            m_runBeamMode;
-
 
 
 

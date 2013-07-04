@@ -40,6 +40,7 @@ StatusCode VertexFindingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_clusterListNameW, pClusterListW));
 
 
+
     // Generate list of clean pointing clusters
     LArPointingClusterMap pointingClusterMapU, pointingClusterMapV, pointingClusterMapW;
 
@@ -64,15 +65,7 @@ StatusCode VertexFindingAlgorithm::Run()
     this->GetListOfCandidateVertexPositions( pointingClusterMapW, pointingVertexListW, candidateVertexListW );
 
 
-
-   
-   
-
-
-
-
-
-    
+    // Use 3D information to form a final set of candidate vertex positions 
     CartesianPointList matchedVertexListU, matchedVertexListV,  matchedVertexListW; 
 
     this->GetListOfMatchedVertexPositions( pointingClusterMapU,  pointingClusterMapV,  pointingClusterMapW, 
@@ -82,107 +75,51 @@ StatusCode VertexFindingAlgorithm::Run()
 
 
 
-
- 
-   
-
-
-
-// 
-// 
-// =====================================================
-
-
     // Process individual views
     VertexFigureOfMeritMap theFigureOfMeritMapU;
     VertexFigureOfMeritMap theFigureOfMeritMapV;
     VertexFigureOfMeritMap theFigureOfMeritMapW;
 
-    ProcessSingleView( pointingClusterMapU, pointingVertexListU, theFigureOfMeritMapU ); 
+    /*
+    ProcessView1D( pointingClusterMapU, pointingVertexListU, theFigureOfMeritMapU ); 
+    ProcessView1D( pointingClusterMapV, pointingVertexListV, theFigureOfMeritMapV ); 
+    ProcessView1D( pointingClusterMapW, pointingVertexListW, theFigureOfMeritMapW );  
+    */
 
-    ProcessSingleView( pointingClusterMapV, pointingVertexListV, theFigureOfMeritMapV ); 
-
-    ProcessSingleView( pointingClusterMapW, pointingVertexListW, theFigureOfMeritMapW ); 
-
-
+    ProcessView1D( pointingClusterMapU, matchedVertexListU, theFigureOfMeritMapU ); 
+    ProcessView1D( pointingClusterMapV, matchedVertexListV, theFigureOfMeritMapV ); 
+    ProcessView1D( pointingClusterMapW, matchedVertexListW, theFigureOfMeritMapW ); 
 
 
-    // Process individual vertices
+
+
+    // Process vertices
     CartesianVector recoVertexU(0.f,0.f,0.f);
     CartesianVector recoVertexV(0.f,0.f,0.f);
     CartesianVector recoVertexW(0.f,0.f,0.f);
 
-    ProcessSingleVertex( pClusterListU, theFigureOfMeritMapU, recoVertexU ); 
-
-    ProcessSingleVertex( pClusterListV, theFigureOfMeritMapV, recoVertexV ); 
-
-    ProcessSingleVertex( pClusterListW, theFigureOfMeritMapW, recoVertexW ); 
+    ProcessVertex1D( theFigureOfMeritMapU, recoVertexU ); 
+    ProcessVertex1D( theFigureOfMeritMapV, recoVertexV ); 
+    ProcessVertex1D( theFigureOfMeritMapW, recoVertexW ); 
 
 
+    ProcessVertex3D( theFigureOfMeritMapU, theFigureOfMeritMapV, theFigureOfMeritMapW, 
+                     recoVertexU, recoVertexV, recoVertexW ); 
 
 
-    // Big Nested Loop 
-    CartesianVector mergedVertexU(0.f,0.f,0.f);
-    CartesianVector mergedVertexV(0.f,0.f,0.f);
-    CartesianVector mergedVertexW(0.f,0.f,0.f);
-
-    CartesianVector bestMergedVertexU(0.f,0.f,0.f);
-    CartesianVector bestMergedVertexV(0.f,0.f,0.f);
-    CartesianVector bestMergedVertexW(0.f,0.f,0.f);
-
-    float chiSquared(0.f);
-    float mergedFigureOfMerit(0.f);
-    float bestMergedFigureOfMerit(-99999.f);
-
-    float theMagicNumber(0.1);
-
-    for( VertexFigureOfMeritMap::const_iterator iterU = theFigureOfMeritMapU.begin(), iterEndU = theFigureOfMeritMapU.end(); iterU != iterEndU; ++iterU )
-    {
-        const CartesianVector vertexU = (iterU->first)->GetPosition();
-        float          figureOfMeritU = iterU->second;
-
-        for( VertexFigureOfMeritMap::const_iterator iterV = theFigureOfMeritMapV.begin(), iterEndV = theFigureOfMeritMapV.end(); iterV != iterEndV; ++iterV )
-        {
-            const CartesianVector vertexV = (iterV->first)->GetPosition();
-            float          figureOfMeritV = iterV->second;
-
-            for( VertexFigureOfMeritMap::const_iterator iterW = theFigureOfMeritMapW.begin(), iterEndW = theFigureOfMeritMapW.end(); iterW != iterEndW; ++iterW )
-            {
-                const CartesianVector vertexW = (iterW->first)->GetPosition();
-                float          figureOfMeritW = iterW->second;
-
-                LArGeometryHelper::MergeThreeViews( vertexU, vertexV, vertexW,
-                                                    mergedVertexU, mergedVertexV, mergedVertexW,
-                                                    chiSquared );
-
-                mergedFigureOfMerit = figureOfMeritU + figureOfMeritV + figureOfMeritW - theMagicNumber * chiSquared;
-
-                if( mergedFigureOfMerit>bestMergedFigureOfMerit )
-                {
-                    bestMergedVertexU = mergedVertexU;
-                    bestMergedVertexV = mergedVertexV;
-                    bestMergedVertexW = mergedVertexW;
-                    bestMergedFigureOfMerit = mergedFigureOfMerit;
-		}
-	    }
-	}
-    }
-        
 
     // Clean up
     this->CleanUp( theFigureOfMeritMapU ); 
-    
     this->CleanUp( theFigureOfMeritMapV ); 
-
     this->CleanUp( theFigureOfMeritMapW ); 
 
    
     // Set vertices
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( bestMergedVertexU, m_vertexNameU ));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertexU, m_vertexNameU ));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( bestMergedVertexV, m_vertexNameV ));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertexV, m_vertexNameV ));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( bestMergedVertexW, m_vertexNameW ));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertexW, m_vertexNameW ));
 
 
 
@@ -517,89 +454,76 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions( const LArPointingC
 {
 
     CartesianPointList cleanListU, cleanListV, cleanListW;
-    CartesianPointList matchedListU, matchedListV, matchedListW;
     CartesianPointList possibleListU, possibleListV, possibleListW;
         
     this->GetListOfCleanVertexPositions( pointingClusterMapU, inputListU, cleanListU );
     this->GetListOfCleanVertexPositions( pointingClusterMapV, inputListV, cleanListV );
     this->GetListOfCleanVertexPositions( pointingClusterMapW, inputListW, cleanListW );
 
-    this->GetListOfMatchedVertexPositions2D( VIEW_U, VIEW_V, cleanListU, cleanListV, cleanListW, matchedListW, possibleListW );
-    this->GetListOfMatchedVertexPositions2D( VIEW_V, VIEW_W, cleanListV, cleanListW, cleanListU, matchedListU, possibleListU );
-    this->GetListOfMatchedVertexPositions2D( VIEW_W, VIEW_U, cleanListW, cleanListU, cleanListV, matchedListV, possibleListV );
+    this->GetListOfMatchedVertexPositions2D( VIEW_U, VIEW_V, 
+                                             cleanListU, cleanListV, possibleListW );
+    this->GetListOfMatchedVertexPositions2D( VIEW_V, VIEW_W, 
+                                             cleanListV, cleanListW, possibleListU );
+    this->GetListOfMatchedVertexPositions2D( VIEW_W, VIEW_U, 
+                                             cleanListW, cleanListU, possibleListV );
 
-    this->GetListOfCleanVertexPositions( pointingClusterMapU, possibleListU, matchedListU );
-    this->GetListOfCleanVertexPositions( pointingClusterMapV, possibleListV, matchedListV );
-    this->GetListOfCleanVertexPositions( pointingClusterMapW, possibleListW, matchedListW );
+    this->GetListOfCleanVertexPositions( pointingClusterMapU, possibleListU, cleanListU );
+    this->GetListOfCleanVertexPositions( pointingClusterMapV, possibleListV, cleanListV );
+    this->GetListOfCleanVertexPositions( pointingClusterMapW, possibleListW, cleanListW );
 
-    this->GetListOfMatchedVertexPositions3D( matchedListU, matchedListV, matchedListW,
+    this->GetListOfMatchedVertexPositions3D( cleanListU, cleanListV, cleanListW,
                                              outputListU, outputListV, outputListW );
 
     
-/*
-
-CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f 
-CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f
-CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f, 0.f, 100.f 
 
 
-ClusterList clusterListU;
-CollectClusters( pointingClusterMapU, clusterListU );
+// CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f 
+// CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f
+// CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f, 0.f, 100.f 
 
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "CLEAN CLUSTERS (U)", GREEN);
-PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexU, "vertexU", BLUE, 1.75);
+// ClusterList clusterListU;
+// CollectClusters( pointingClusterMapU, clusterListU );
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&clusterListU, "CLEAN CLUSTERS (U)", GREEN);
+// PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexU, "vertexU", BLUE, 1.75);
+// for( CartesianPointList::const_iterator iter = outputListU.begin(), iterEnd = outputListU.end(); iter != iterEnd; ++iter ){
+//   const CartesianVector& outputVertex = *iter;
+//   PandoraMonitoringApi::AddMarkerToVisualization(&outputVertex, "vertexU", RED, 1.5);
+// }
+// PandoraMonitoringApi::ViewEvent();
 
-for( CartesianPointList::const_iterator iter = matchedListU.begin(), iterEnd = matchedListU.end(); iter != iterEnd; ++iter ){
-  const CartesianVector& outputVertex = *iter;
-  PandoraMonitoringApi::AddMarkerToVisualization(&outputVertex, "vertexU", RED, 1.5);
-}
+// ClusterList clusterListV;
+// CollectClusters( pointingClusterMapV, clusterListV );
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&clusterListV, "OUTPUT CLUSTERS (V)", GREEN);
+// PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexV, "vertexV", BLUE, 1.75);
+// for( CartesianPointList::const_iterator iter = outputListV.begin(), iterEnd = outputListV.end(); iter != iterEnd; ++iter ){
+//   const CartesianVector& outputVertex = *iter;
+//   PandoraMonitoringApi::AddMarkerToVisualization(&outputVertex, "vertexV", RED, 1.5);
+// }
+// PandoraMonitoringApi::ViewEvent();
 
-PandoraMonitoringApi::ViewEvent();
-
-
-ClusterList clusterListV;
-CollectClusters( pointingClusterMapV, clusterListV );
-
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "CLEAN CLUSTERS (V)", GREEN);
-PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexV, "vertexV", BLUE, 1.75);
-
-for( CartesianPointList::const_iterator iter = matchedListV.begin(), iterEnd = matchedListV.end(); iter != iterEnd; ++iter ){
-  const CartesianVector& outputVertex = *iter;
-  PandoraMonitoringApi::AddMarkerToVisualization(&outputVertex, "vertexV", RED, 1.5);
-}
-
-PandoraMonitoringApi::ViewEvent();
-
-
-ClusterList clusterListW;
-CollectClusters( pointingClusterMapW, clusterListW );
-
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "CLEAN CLUSTERS (W)", GREEN);
-PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexW, "vertexW", BLUE, 1.75);
-
-for( CartesianPointList::const_iterator iter = matchedListW.begin(), iterEnd = matchedListW.end(); iter != iterEnd; ++iter ){
-  const CartesianVector& outputVertex = *iter;
-  PandoraMonitoringApi::AddMarkerToVisualization(&outputVertex, "vertexW", RED, 1.5);
-}
-
-PandoraMonitoringApi::ViewEvent();
-
-*/
+// ClusterList clusterListW;
+// CollectClusters( pointingClusterMapW, clusterListW );
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&clusterListW, "OUTPUT CLUSTERS (W)", GREEN);
+// PandoraMonitoringApi::AddMarkerToVisualization(&trueVertexW, "vertexW", BLUE, 1.75);
+// for( CartesianPointList::const_iterator iter = outputListW.begin(), iterEnd = outputListW.end(); iter != iterEnd; ++iter ){
+//   const CartesianVector& outputVertex = *iter;
+//   PandoraMonitoringApi::AddMarkerToVisualization(&outputVertex, "vertexW", RED, 1.5);
+// }
+// PandoraMonitoringApi::ViewEvent();
 
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexFindingAlgorithm::GetListOfMatchedVertexPositions2D( const HitType view1, const HitType view2, const CartesianPointList& inputList1, const CartesianPointList& inputList2, const CartesianPointList& inputList3, CartesianPointList& matchedList3, CartesianPointList& projectedList3 )
+void VertexFindingAlgorithm::GetListOfMatchedVertexPositions2D( const HitType view1, const HitType view2, const CartesianPointList& inputList1, const CartesianPointList& inputList2, CartesianPointList& projectedList3 )
 {
+    // Form matches between two views
     float m_maxSeparation = 2.5;
-    float m_maxSeparationSquared = m_maxSeparation * m_maxSeparation;
-
-    CartesianVector projectedPosition(0.f,0.f,0.f);
+    
+    CartesianVector position3(0.f,0.f,0.f);
 
     float chi2(0.f);
 
@@ -613,29 +537,9 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions2D( const HitType vi
 
             if ( std::fabs(position1.GetX()-position2.GetX()) > m_maxSeparation ) continue;
  
-	    LArGeometryHelper::MergeTwoViews( view1, view2, position1, position2, projectedPosition, chi2 );
+	    LArGeometryHelper::MergeTwoViews( view1, view2, position1, position2, position3, chi2 );
             
-
-            bool foundMatch(false);
-            float minSeparationSquared(m_maxSeparationSquared);
-            CartesianVector matchedPosition(0.f,0.f,0.f);
-
-            for (CartesianPointList::const_iterator iter3 = inputList3.begin(), iterEnd3 = inputList3.end(); iter3 != iterEnd3; ++iter3 )
-	    {
-                const CartesianVector& position3 = *iter3;
-
-                float thisSeparationSquared((position3 - projectedPosition).GetMagnitudeSquared());
-
-                if (thisSeparationSquared < minSeparationSquared)
-		{
-		    minSeparationSquared = thisSeparationSquared;
-                    matchedPosition = position3;
-                    foundMatch = true;
-		}
-	    }
-
-            if ( foundMatch ) matchedList3.push_back(matchedPosition);
-            else              projectedList3.push_back(projectedPosition);
+            projectedList3.push_back(position3);
 	}
     }
 }
@@ -644,6 +548,9 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions2D( const HitType vi
 
 void VertexFindingAlgorithm::GetListOfMatchedVertexPositions3D( const CartesianPointList& inputListU, const CartesianPointList& inputListV, const CartesianPointList& inputListW, CartesianPointList& outputListU, CartesianPointList& outputListV, CartesianPointList& outputListW )
 {
+    // Form matches between three views 
+    CartesianPointList matchedListU, matchedListV, matchedListW;
+
     float m_maxSeparation = 2.5;
     float m_maxSeparationSquared = m_maxSeparation * m_maxSeparation;
 
@@ -678,23 +585,48 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions3D( const CartesianP
 		  || (positionW - projectedPositionW).GetMagnitudeSquared() > m_maxSeparationSquared )
 		    continue;
 
-                outputListU.push_back(positionU);
-                outputListV.push_back(positionV);
-                outputListW.push_back(positionW);
+                matchedListU.push_back(positionU);
+                matchedListV.push_back(positionV);
+                matchedListW.push_back(positionW);
 	    }
 	}
     }
+
+    this->GetReducedListOfVertexPositions( matchedListU, outputListU );
+    this->GetReducedListOfVertexPositions( matchedListV, outputListV );
+    this->GetReducedListOfVertexPositions( matchedListW, outputListW );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void VertexFindingAlgorithm::GetReducedListOfVertexPositions( const CartesianPointList& inputList, CartesianPointList& outputList )
+{
+    // Generate a more compact list
+    float m_minSeparation = 0.5;
+    float m_minSeparationSquared = m_minSeparation * m_minSeparation;
 
-//
-//
-// NO MAN'S LAND...
-//
-//
+    for (unsigned int i=0; i<inputList.size(); ++i )
+    {
+        const CartesianVector& positionI = inputList.at(i);
 
+        bool vetoThisEntry(false);
+
+        for (unsigned int j=i+1; j<inputList.size(); ++j )
+        {
+            const CartesianVector& positionJ = inputList.at(j);
+
+            if ( (positionI - positionJ).GetMagnitudeSquared() < m_minSeparationSquared )
+	    {
+	        vetoThisEntry = true;  break;
+	    }
+	}
+
+        if ( false == vetoThisEntry )
+	{
+	    outputList.push_back(positionI);
+	}
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -728,17 +660,6 @@ void VertexFindingAlgorithm::CollectClusters( const LArPointingClusterMap& input
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
-//
-//
-// NO MAN'S LAND...
-//
-//
-
-
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void VertexFindingAlgorithm::CleanUp( VertexFigureOfMeritMap& figureOfMeritMap )
 {
     for( VertexFigureOfMeritMap::const_iterator iter = figureOfMeritMap.begin(), iterEnd = figureOfMeritMap.end(); iter != iterEnd; ++iter ){
@@ -747,45 +668,156 @@ void VertexFindingAlgorithm::CleanUp( VertexFigureOfMeritMap& figureOfMeritMap )
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-void VertexFindingAlgorithm::ProcessSingleView( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingVertexList, VertexFigureOfMeritMap& outputFigureOfMeritMap )
+void VertexFindingAlgorithm::ProcessVertex1D( const VertexFigureOfMeritMap theFigureOfMeritMap, CartesianVector& bestVertex )
 {
-
-    // find connected vertices
-    this->FindPossibleConnectedVertices( pointingClusterMap, pointingVertexList, outputFigureOfMeritMap );
-
-
-   
-}
-
-
-
-void VertexFindingAlgorithm::ProcessSingleVertex( const ClusterList* const pClusterList, const VertexFigureOfMeritMap theFigureOfMeritMap, CartesianVector& bestVertex )
-{
-
-
-    
 
     // loop over figure of merit list
     float bestFigureOfMerit(0.f);
-   
+
+    bool foundVertex(false);
+
     for( VertexFigureOfMeritMap::const_iterator iter = theFigureOfMeritMap.begin(), iterEnd = theFigureOfMeritMap.end(); iter != iterEnd; ++iter ){
       const LArVertexCandidate* thisVertex  = iter->first;
       float              thisFigureOfMerit = iter->second;
 
       if( thisFigureOfMerit>bestFigureOfMerit ){
+        foundVertex       = true;
         bestFigureOfMerit = thisFigureOfMerit;
         bestVertex        = thisVertex->GetPosition();
       }
     }
 
+    if( false == foundVertex )
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFigureOfMeritMapU, const VertexFigureOfMeritMap theFigureOfMeritMapV, const VertexFigureOfMeritMap theFigureOfMeritMapW, CartesianVector& bestVertexU, CartesianVector& bestVertexV, CartesianVector& bestVertexW )
+{
+    // Big Nested Loop 
+    CartesianVector mergedVertexU(0.f,0.f,0.f);
+    CartesianVector mergedVertexV(0.f,0.f,0.f);
+    CartesianVector mergedVertexW(0.f,0.f,0.f);
+
+    float chiSquared(0.f);
+    float mergedFigureOfMerit(0.f);
+    float bestFigureOfMerit(-99999.f);
+
+    float theMagicNumber(0.1);
+
+    bool foundVertex(false);
+
+    for( VertexFigureOfMeritMap::const_iterator iterU = theFigureOfMeritMapU.begin(), iterEndU = theFigureOfMeritMapU.end(); iterU != iterEndU; ++iterU )
+    {
+        const CartesianVector vertexU = (iterU->first)->GetPosition();
+        float          figureOfMeritU = iterU->second;
+
+        for( VertexFigureOfMeritMap::const_iterator iterV = theFigureOfMeritMapV.begin(), iterEndV = theFigureOfMeritMapV.end(); iterV != iterEndV; ++iterV )
+        {
+            const CartesianVector vertexV = (iterV->first)->GetPosition();
+            float          figureOfMeritV = iterV->second;
+
+            for( VertexFigureOfMeritMap::const_iterator iterW = theFigureOfMeritMapW.begin(), iterEndW = theFigureOfMeritMapW.end(); iterW != iterEndW; ++iterW )
+            {
+                const CartesianVector vertexW = (iterW->first)->GetPosition();
+                float          figureOfMeritW = iterW->second;
+
+                LArGeometryHelper::MergeThreeViews( vertexU, vertexV, vertexW,
+                                                    mergedVertexU, mergedVertexV, mergedVertexW,
+                                                    chiSquared );
+
+                mergedFigureOfMerit = figureOfMeritU + figureOfMeritV + figureOfMeritW - theMagicNumber * chiSquared;
+
+                if( mergedFigureOfMerit>bestFigureOfMerit )
+                {
+		    foundVertex = true;
+                    bestVertexU = mergedVertexU;
+                    bestVertexV = mergedVertexV;
+                    bestVertexW = mergedVertexW;
+                    bestFigureOfMerit = mergedFigureOfMerit;
+		}
+	    }
+	}
+    }    
+
+    if( false == foundVertex )
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointingClusterMap, const CartesianPointList& inputVertexList, VertexFigureOfMeritMap& outputFigureOfMeritMap )
+{
+
+    float totalEnergy(0.f);
+
+    for (LArPointingClusterMap::const_iterator iter = pointingClusterMap.begin(), iterEnd = pointingClusterMap.end(); iter != iterEnd; ++iter)
+    {
+        const LArPointingCluster& cluster = iter->second;
+
+        totalEnergy += LArClusterHelper::GetEnergyFromLength( cluster.GetCluster() );
+    }
+
+
+    for (CartesianPointList::const_iterator iter = inputVertexList.begin(), iterEnd = inputVertexList.end(); iter != iterEnd; ++iter )
+    {
+        const CartesianVector& seedVertexPosition = *iter;
+
+
+	const CartesianVector seedVertexDirection(0.f,0.f,1.f); // beam direction
+
+  
+        
+	// Find associated clusters
+        float primaryEnergy(0.f);
+        float associatedEnergy(0.f);
+        float associatedMomentumModulus(0.f);
+        unsigned int primaryClusters(0);
+        CartesianVector associatedMomentum(0.f,0.f,0.f);
+
+        CartesianVector testDirection(0.f,0.f,1.f);
+
+        float energyFraction(0.f), momentumFraction(0.f);
+
+        LArPointingClusterVertexList associatedClusterVertexList;
+        RunFastReconstruction( pointingClusterMap, seedVertexPosition, seedVertexDirection,
+                               associatedClusterVertexList, primaryClusters, primaryEnergy, 
+                               associatedEnergy, associatedMomentum );
+
+        associatedMomentumModulus = associatedMomentum.GetMagnitude();
+
+        if (totalEnergy > 0.f )
+	{
+            energyFraction = associatedEnergy/totalEnergy;
+            momentumFraction = associatedMomentumModulus/totalEnergy;
+	}
+
+        // Some quality requirements on candidate vertex
+        if ( associatedClusterVertexList.empty() )
+	    continue;
+
+        if ( m_runBeamMode && this->IsConsistentWithBeamDirection(associatedMomentum) == false ) 
+            continue;
+
+
+        // Fill the output list
+        float thisFigureOfMerit(0.f);
+
+        if( totalEnergy > 0.f )
+	    thisFigureOfMerit = energyFraction * momentumFraction;
+	
+        outputFigureOfMeritMap.insert( std::pair<const LArVertexCandidate*,float>
+	    ( new LArVertexCandidate(seedVertexPosition,seedVertexDirection,energyFraction,momentumFraction),thisFigureOfMerit) );  	      
+    }
 }
 
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexFindingAlgorithm::FindPossibleConnectedVertices( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingClusterVertexCandidateList, VertexFigureOfMeritMap& outputFigureOfMeritMap )
+void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingClusterVertexCandidateList, VertexFigureOfMeritMap& outputFigureOfMeritMap )
 {
 
     // Start by calculating the total energy 
