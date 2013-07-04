@@ -35,6 +35,7 @@
 #include "TwoDPreparationAlgorithm.h"
 #include "VertexFindingAlgorithm.h"
 #include "VertexSeedFindingAlgorithm.h"
+#include "VertexSplittingAlgorithm.h"
 #include "VisualMonitoringAlgorithm.h"
 
 #include "LArClusterHelper.h"
@@ -80,6 +81,7 @@ public:
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
         d("LArVertexFinding",                       lar::VertexFindingAlgorithm::Factory)                                       \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
+	d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
