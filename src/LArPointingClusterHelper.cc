@@ -9,6 +9,7 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
+#include "LArVertexHelper.h"
 #include "LArPointingClusterHelper.h"
 
 using namespace pandora;
@@ -84,7 +85,7 @@ void LArPointingClusterHelper::GetAverageDirection( const LArPointingCluster::Ve
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, CartesianVector& intersectPosition, bool& isPhysical )
+void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement )
 { 
     const Cluster* pFirstCluster = firstVertex.GetCluster();
     const Cluster* pSecondCluster = secondVertex.GetCluster();
@@ -92,13 +93,14 @@ void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex
     if ( pFirstCluster==pSecondCluster )
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    return LArPointingClusterHelper::GetIntersection( firstVertex.GetPosition(), firstVertex.GetDirection(), 
-	secondVertex.GetPosition(), secondVertex.GetDirection(), intersectPosition, isPhysical );
+    LArPointingClusterHelper::GetIntersection( firstVertex.GetPosition(), firstVertex.GetDirection(), 
+        secondVertex.GetPosition(), secondVertex.GetDirection(), intersectPosition, 
+        firstDisplacement, secondDisplacement );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetIntersection( const CartesianVector& a1, const CartesianVector& a2, const CartesianVector& b1, const CartesianVector& b2, CartesianVector& intersectPosition, bool& isPhysical )
+void LArPointingClusterHelper::GetIntersection( const CartesianVector& a1, const CartesianVector& a2, const CartesianVector& b1, const CartesianVector& b2, CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement )
 {  
     // note: input lines are r = a1 + P * a2 and r = b1 + Q * b2
 
@@ -113,10 +115,50 @@ void LArPointingClusterHelper::GetIntersection( const CartesianVector& a1, const
     const float P = ( (a2 - b2 * cosTheta).GetDotProduct(b1-a1) ) / (1.0 - cosTheta*cosTheta);
     const float Q = ( (a2 * cosTheta - b2).GetDotProduct(b1-a1) ) / (1.0 - cosTheta*cosTheta);
 
+    // position of intersection (or point of closest approach)
     intersectPosition = ( a1 + a2 * P + b1 + b2 * Q ) * 0.5;
-    isPhysical = ( P < +1.f && Q < +1.f );
+
+    // displacements of intersection from input vertices
+    firstDisplacement = P;   secondDisplacement = Q;
 
     return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex& vertexCluster, const Cluster *const pTargetCluster, CartesianVector& intersectPosition, float& displacementL, float& displacementT )
+{       
+    displacementT = +std::numeric_limits<float>::max();
+    displacementL = -std::numeric_limits<float>::max();
+
+    float rL(0.f), rT(0.f);
+    float figureOfMerit(std::numeric_limits<float>::max());
+    float foundIntersection(false);
+
+    const OrderedCaloHitList &orderedCaloHitList(pTargetCluster->GetOrderedCaloHitList());
+
+    for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList.begin(), iterEnd1 = orderedCaloHitList.end(); iter1 != iterEnd1; ++iter1)
+    {
+        for (CaloHitList::const_iterator iter2 = iter1->second->begin(), iterEnd2 = iter1->second->end(); iter2 != iterEnd2; ++iter2)
+	{
+	    const CartesianVector& hitPosition = (*iter2)->GetPositionVector();
+
+            LArVertexHelper::GetImpactParameters( vertexCluster.GetPosition(), vertexCluster.GetDirection(), hitPosition, rL, rT );
+
+            if (rT < figureOfMerit)
+	    {
+	        figureOfMerit = rT;
+            
+                displacementL = rL;  
+                displacementT = rT;
+                intersectPosition = hitPosition; 
+                foundIntersection = true;
+	    }
+	}
+    }
+
+    if (false == foundIntersection)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
