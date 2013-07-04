@@ -118,22 +118,43 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const HitType view1, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
+void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &position3, float& chiSquared)
 {
     if( view1 == view2 )
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
  
-
-    float aveU(0.f);
-    float aveV(0.f);
-    float aveW(0.f);
-
-    float aveX = ( position1.GetX() + position2.GetX() ) / 2.0;
+    float X3 = ( position1.GetX() + position2.GetX() ) / 2.0;
 
     float Z1 = position1.GetZ();
     float Z2 = position2.GetZ();
     float Z3 = LArGeometryHelper::MergeTwoPositions(view1, view2, Z1, Z2);
 
+    position3.SetValues( X3, 0.f, Z3 );
+    
+    chiSquared = ( ( X3-position1.GetX() )*( X3-position1.GetX() )
+		 + ( X3-position2.GetX() )*( X3-position2.GetX() ) ) / ( m_sigmaUVW * m_sigmaUVW );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
+{
+    if( view1 == view2 )
+        throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+ 
+    CartesianVector position3(0.f,0.f,0.f);
+
+    LArGeometryHelper::MergeTwoViews(view1, view2, position1, position2, position3, chiSquared);
+
+    float aveU(0.f);
+    float aveV(0.f);
+    float aveW(0.f);
+
+    float Z1 = position1.GetZ();
+    float Z2 = position2.GetZ();
+    float Z3 = position3.GetZ();
+
+    float aveX = position3.GetX();
 
     if (view1 == VIEW_U && view2 == VIEW_V)
     {
@@ -168,9 +189,6 @@ void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, 
     outputU.SetValues( aveX, 0.f, aveU );
     outputV.SetValues( aveX, 0.f, aveV );
     outputW.SetValues( aveX, 0.f, aveW );
-
-    chiSquared = ( ( aveX-position1.GetX() )*( aveX-position1.GetX() )
-		 + ( aveX-position2.GetX() )*( aveX-position2.GetX() ) ) / ( m_sigmaUVW * m_sigmaUVW );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

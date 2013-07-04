@@ -68,9 +68,10 @@ public:
      *  @param  firstVertex the first vertex
      *  @param  secondVertex the second vertex
      *  @param  intersectPosition the position of the intersection
-     *  @param  isPhysical do they obey causality
+     *  @param  firstDisplacement the displacement from first vertex to intersection
+     *  @param  secondDisplacement the displacement from second vertex to intersection
      */
-    static void GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, pandora::CartesianVector& intersectPosition, bool& isPhysical );
+    static void GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, pandora::CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement );
 
     /**
      *  @brief  Get average direction of two vertices
@@ -89,11 +90,24 @@ public:
      *  @param  secondPosition the position of the second vertex
      *  @param  secondDirection the direction of the second vertex
      *  @param  intersectPosition the position of the intersection
-     *  @param  isPhysical do they obey causality
+     *  @param  firstDisplacement the displacement from first vertex to intersection
+     *  @param  secondDisplacement the displacement from second vertex to intersection
      */
-    static void GetIntersection( const pandora::CartesianVector& firstPosition, const pandora::CartesianVector& firstDirection,
+    static void GetIntersection( const pandora::CartesianVector& firstPosition, const pandora::CartesianVector &firstDirection,
         const pandora::CartesianVector& secondPosition, const pandora::CartesianVector& secondDirection,
-        pandora::CartesianVector& intersectPosition, bool& isPhysical );
+	pandora::CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement);
+
+    /**
+     *  @brief  Get intersection of vertex with target cluster
+     * 
+     *  @param  vertexCluster the vertex
+     *  @param  pTargetCluster the target cluster
+     *  @param  intersectPosition the position of the intersection
+     *  @param  displacementL the longitudinal displacement 
+     *  @param  displacementT the transverse displacement 
+     */
+    static void GetIntersection( const LArPointingCluster::Vertex& vertexCluster, const pandora::Cluster *const pTargetCluster, 
+        pandora::CartesianVector& intersectPosition, float& displacementL, float& displacementT );
 
     /**
      *  @brief  Read the vertex helper settings

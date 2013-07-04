@@ -16,7 +16,7 @@ using namespace pandora;
 namespace lar
 {
 
-float LArClusterHelper::GetLengthSquared(const pandora::Cluster* const pCluster)
+float LArClusterHelper::GetLengthSquared(const Cluster* const pCluster)
 {
     const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
     const CartesianVector outerCentroid(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
@@ -26,14 +26,23 @@ float LArClusterHelper::GetLengthSquared(const pandora::Cluster* const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetLength(const pandora::Cluster* const pCluster)
+float LArClusterHelper::GetLength(const Cluster* const pCluster)
 {
     return std::sqrt( LArClusterHelper::GetLengthSquared(pCluster) );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int LArClusterHelper::GetLayerSpan(const pandora::Cluster* const pCluster) 
+float LArClusterHelper::GetEnergyFromLength(const Cluster* const pCluster)
+{
+    static const float dEdX( 0.002 ); // approximately 2 MeV/cm
+
+    return dEdX * LArClusterHelper::GetLength( pCluster );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArClusterHelper::GetLayerSpan(const Cluster* const pCluster) 
 {
     return 1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer();
 }
@@ -53,7 +62,7 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetLayerOccupancy(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2)
+float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
     const unsigned int nOccupiedLayers(pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size());
     const unsigned int nLayers(1 + std::max(pCluster1->GetOuterPseudoLayer(), pCluster2->GetOuterPseudoLayer()) -
@@ -67,7 +76,7 @@ float LArClusterHelper::GetLayerOccupancy(const pandora::Cluster *const pCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetClosestDistance(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2)
+float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
     const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
     const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
@@ -127,7 +136,7 @@ float LArClusterHelper::GetClosestDistance(const CartesianVector &position, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetListOfCleanClusters(const ClusterQuality method, const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector)
+void LArClusterHelper::GetListOfCleanClusters(const ClusterQuality method, const ClusterList *const pClusterList, ClusterVector &clusterVector)
 {
     //
     // TODO: NEED TO RATIONALISE ALL OF THIS SOMEHOW.... HELP!
@@ -150,7 +159,7 @@ void LArClusterHelper::GetListOfCleanClusters(const ClusterQuality method, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 
 
-void LArClusterHelper::GetListOfCleanClusters_MethodA(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector)
+void LArClusterHelper::GetListOfCleanClusters_MethodA(const ClusterList *const pClusterList, ClusterVector &clusterVector)
 {
     // from ClusterAssociationAlgorithm
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
