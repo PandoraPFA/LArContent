@@ -19,6 +19,7 @@
 #include "LArClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
 #include "LArClusterSplitting/KinkSplittingAlgorithm.h"
+#include "LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
@@ -34,7 +35,6 @@
 #include "LArUtility/EventPreparationAlgorithm.h"
 #include "LArUtility/TwoDPreparationAlgorithm.h"
 #include "LArVertex/VertexFindingAlgorithm.h"
-#include "LArVertex/VertexSplittingAlgorithm.h"
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
