@@ -22,6 +22,18 @@ ifdef BUILD_32BIT_COMPATIBLE
 endif
 
 SOURCES  = $(wildcard $(PROJECT_DIR)/src/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/ClusterAssociation/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/Clustering/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/ClusterSeedAssociation/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/ClusterSplitting/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/Helpers/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/Monitoring/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/Objects/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/Reclustering/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/ThreeDSeed/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/TwoDSeed/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/Utility/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/Vertex/*.cc)
 
 OBJECTS = $(SOURCES:.cc=.o)
 DEPENDS = $(OBJECTS:.o=.d)
