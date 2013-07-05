@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h
+ *  @file   LArContent/include/LArThreeDSeed/ThreeDStraightTracksAlgorithm.h
  * 
- *  @brief  Header file for the three dimension track segments algorithm class.
+ *  @brief  Header file for the three dimension straight tracksalgorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_THREE_D_TRACK_SEGMENTS_ALGORITHM_H
-#define LAR_THREE_D_TRACK_SEGMENTS_ALGORITHM_H 1
+#ifndef LAR_THREE_D_STRAIGHT_TRACKS_ALGORITHM_H
+#define LAR_THREE_D_STRAIGHT_TRACKS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -16,9 +16,9 @@ namespace lar
 {
 
 /**
- *  @brief  ThreeDTrackSegmentsAlgorithm class
+ *  @brief  ThreeDStraightTracksAlgorithm class
  */
-class ThreeDTrackSegmentsAlgorithm : public ThreeDBaseAlgorithm
+class ThreeDStraightTracksAlgorithm : public ThreeDBaseAlgorithm
 {
 public:
     /**
@@ -54,11 +54,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ThreeDTrackSegmentsAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ThreeDStraightTracksAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ThreeDTrackSegmentsAlgorithm();
+    return new ThreeDStraightTracksAlgorithm();
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_THREE_D_TRACK_SEGMENTS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_D_STRAIGHT_TRACKS_ALGORITHM_H

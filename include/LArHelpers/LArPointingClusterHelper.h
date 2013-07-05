@@ -95,7 +95,7 @@ public:
      */
     static void GetIntersection( const pandora::CartesianVector& firstPosition, const pandora::CartesianVector &firstDirection,
         const pandora::CartesianVector& secondPosition, const pandora::CartesianVector& secondDirection,
-	pandora::CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement);
+        pandora::CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement);
 
     /**
      *  @brief  Get intersection of vertex with target cluster

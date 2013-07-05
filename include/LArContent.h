@@ -23,6 +23,7 @@
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 #include "LArReclustering/ShowerMipSeparationAlgorithm.h"
+#include "LArThreeDSeed/ThreeDStraightTracksAlgorithm.h"
 #include "LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
 #include "LArTwoDSeed/SeedConsolidationAlgorithm.h"
@@ -66,6 +67,7 @@ public:
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
         d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
+        d("LArThreeDStraightTracks",                lar::ThreeDStraightTracksAlgorithm::Factory)                                \
         d("LArThreeDTrackSegments",                 lar::ThreeDTrackSegmentsAlgorithm::Factory)                                 \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \

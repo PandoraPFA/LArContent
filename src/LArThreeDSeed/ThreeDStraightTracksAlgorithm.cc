@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDSeed/ThreeDStraightTracksAlgorithm.cc
  * 
- *  @brief  Implementation of the three dimension track segments algorithm class.
+ *  @brief  Implementation of the three dimension straight tracks algorithm class.
  * 
  *  $Log: $
  */
@@ -12,14 +12,14 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArParticleIdHelper.h"
 
-#include "LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
+#include "LArThreeDSeed/ThreeDStraightTracksAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-void ThreeDTrackSegmentsAlgorithm::SelectInputClusters()
+void ThreeDStraightTracksAlgorithm::SelectInputClusters()
 {
     for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
     {
@@ -56,21 +56,21 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackSegmentsAlgorithm::ModifyInputClusters()
+void ThreeDStraightTracksAlgorithm::ModifyInputClusters()
 {
     // TODO, see ShowerMipSeparationAlgorithm for some basic algorithm mechanics
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackSegmentsAlgorithm::InitializeTensor()
+void ThreeDStraightTracksAlgorithm::InitializeTensor()
 {
     m_overlapTensor.Clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackSegmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // U
     ClusterHelper::ClusterFitResult centroidFitResultU;
@@ -152,7 +152,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTrackSegmentsAlgorithm::ExamineTensor()
+bool ThreeDStraightTracksAlgorithm::ExamineTensor()
 {
     float bestChi2(std::numeric_limits<float>::max());
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
@@ -205,7 +205,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackSegmentsAlgorithm::UpdateTensor()
+void ThreeDStraightTracksAlgorithm::UpdateTensor()
 {
     ClusterList usedClusters;
 
@@ -226,7 +226,7 @@ void ThreeDTrackSegmentsAlgorithm::UpdateTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackSegmentsAlgorithm::TidyUp()
+void ThreeDStraightTracksAlgorithm::TidyUp()
 {
     m_overlapTensor.Clear();
     ThreeDBaseAlgorithm::TidyUp();
@@ -234,7 +234,7 @@ void ThreeDTrackSegmentsAlgorithm::TidyUp()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTrackSegmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeDStraightTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     return ThreeDBaseAlgorithm::ReadSettings(xmlHandle);
 }
