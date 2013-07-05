@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/Framework/src/Pandora/ClusterCreationAlgorithm.cc
+ *  @file   LArContent/src/Clustering/ClusterCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the cluster creation algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "ClusterCreationAlgorithm.h"
+#include "Clustering/ClusterCreationAlgorithm.h"
 
 #include <cassert>
 

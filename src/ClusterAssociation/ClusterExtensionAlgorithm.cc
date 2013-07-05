@@ -1,5 +1,5 @@
 /**
- *  @file   ClusterExtensionAlgorithm.cc
+ *  @file   LArContent/src/ClusterAssociation/ClusterExtensionAlgorithm.cc
  * 
  *  @brief  Implementation of the cluster association algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "ClusterExtensionAlgorithm.h"
+#include "ClusterAssociation/ClusterExtensionAlgorithm.h"
 
-#include "LArVertexHelper.h"
-#include "LArClusterHelper.h"
+#include "Helpers/LArVertexHelper.h"
+#include "Helpers/LArClusterHelper.h"
 
 using namespace pandora;
 

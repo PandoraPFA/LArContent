@@ -1,5 +1,5 @@
 /**
- *  @file   LArBFieldCalculator.h
+ *  @file   LArContent/include/LArBFieldCalculator.h
  * 
  *  @brief  Header file for the lar bfield calculator class.
  * 

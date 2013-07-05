@@ -1,5 +1,5 @@
 /**
- *  @file   ClusterCreationAlgorithm.h
+ *  @file   LArContent/include/Clustering/ClusterCreationAlgorithm.h
  * 
  *  @brief  Header file for the cluster creation algorithm class.
  * 

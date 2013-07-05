@@ -1,20 +1,21 @@
 /**
- *  @file   NtupleWritingAlgorithm.cc
+ *  @file   LArContent/src/Monitoring/NtupleWritingAlgorithm.cc
  * 
  *  @brief  Implementation of the ntuple writing algorithm
  * 
  *  $Log: $
  */
 
-#include "NtupleWritingAlgorithm.h"
-
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "PandoraMonitoringApi.h"
 
-#include "LArPointingCluster.h"
-#include "LArClusterHelper.h"
-#include "LArVertexHelper.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArVertexHelper.h"
+
+#include "Objects/LArPointingCluster.h"
+
+#include "Monitoring/NtupleWritingAlgorithm.h"
 
 using namespace pandora;
 

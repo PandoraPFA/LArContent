@@ -1,5 +1,5 @@
 /**
- *  @file   SeedFindingAlgorithm.cc
+ *  @file   LArContent/src/TwoDSeed/SeedFindingAlgorithm.cc
  * 
  *  @brief  Implementation of the particle seed algorithm class.
  * 
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "SeedFindingAlgorithm.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArParticleIdHelper.h"
+#include "Helpers/LArVertexHelper.h"
 
-#include "LArClusterHelper.h"
-#include "LArParticleId.h"
-#include "LArVertexHelper.h"
+#include "TwoDSeed/SeedFindingAlgorithm.h"
 
 using namespace pandora;
 
@@ -246,8 +246,8 @@ bool SeedFindingAlgorithm::AreSeedClustersAssociated(const Cluster *const pClust
     const bool consistentLongitudinalDirection = (consistentForwardDirection || consistentBackwardDirection);
 
     // Apply track-like selection criteria 
-    const bool isTrackLikeI = (LArParticleId::LArTrackWidth(pClusterI) < 0.15);
-    const bool isTrackLikeJ = (LArParticleId::LArTrackWidth(pClusterJ) < 0.15);
+    const bool isTrackLikeI = (LArParticleIdHelper::LArTrackWidth(pClusterI) < 0.15);
+    const bool isTrackLikeJ = (LArParticleIdHelper::LArTrackWidth(pClusterJ) < 0.15);
     const bool useTrackLikeCuts = (isTrackLikeI || isTrackLikeJ);
 
     // Calculate proximity variables

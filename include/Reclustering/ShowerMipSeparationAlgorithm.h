@@ -1,5 +1,5 @@
 /**
- *  @file   ShowerMipSeparationAlgorithm.h
+ *  @file   LArContent/include/Reclustering/ShowerMipSeparationAlgorithm.h
  * 
  *  @brief  Header file for the shower-mip separation algorithm class.
  * 

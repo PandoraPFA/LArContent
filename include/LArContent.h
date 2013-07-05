@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent.h
+ *  @file   LArContent/include/LArContent.h
  * 
  *  @brief  Header file detailing content for use with liquid argon time projection chambers
  * 
@@ -8,39 +8,38 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
-#include "BoundedClusterMergingAlgorithm.h"
-#include "ClusterAssociationAlgorithm.h"
-#include "ClusterCreationAlgorithm.h"
-#include "ClusterExtensionAlgorithm.h"
-#include "ClusteringParentAlgorithm.h"
-#include "ConeBasedMergingAlgorithm.h"
-#include "EventDisplayAlgorithm.h"
-#include "EventPreparationAlgorithm.h"
-#include "IsolatedHitMergingAlgorithm.h"
-#include "KinkSplittingAlgorithm.h"
-#include "NtupleWritingAlgorithm.h"
-#include "ParallelClusterMergingAlgorithm.h"
-#include "RemnantClusteringAlgorithm.h"
-#include "SeedBranchGrowingAlgorithm.h"
-#include "SeedConsolidationAlgorithm.h"
-#include "SeedFindingAlgorithm.h"
-#include "SeedLengthGrowingAlgorithm.h"
-#include "SeedRelegationAlgorithm.h"
-#include "ShowerMipSeparationAlgorithm.h"
-#include "ThreeDTrackSegmentsAlgorithm.h"
-#include "TransverseClusteringAlgorithm.h"
-#include "TwoDParticleCreationAlgorithm.h"
-#include "TwoDPreparationAlgorithm.h"
-#include "VertexFindingAlgorithm.h"
-#include "VertexSeedFindingAlgorithm.h"
-#include "VertexSplittingAlgorithm.h"
-#include "VisualMonitoringAlgorithm.h"
+#include "ClusterAssociation/ClusterAssociationAlgorithm.h"
+#include "ClusterAssociation/ClusterExtensionAlgorithm.h"
+#include "ClusterAssociation/IsolatedHitMergingAlgorithm.h"
+#include "Clustering/ClusterCreationAlgorithm.h"
+#include "Clustering/ClusteringParentAlgorithm.h"
+#include "Clustering/RemnantClusteringAlgorithm.h"
+#include "Clustering/TransverseClusteringAlgorithm.h"
+#include "ClusterSeedAssociation/BoundedClusterMergingAlgorithm.h"
+#include "ClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
+#include "ClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
+#include "ClusterSplitting/KinkSplittingAlgorithm.h"
+#include "Monitoring/EventDisplayAlgorithm.h"
+#include "Monitoring/NtupleWritingAlgorithm.h"
+#include "Monitoring/VisualMonitoringAlgorithm.h"
+#include "Reclustering/ShowerMipSeparationAlgorithm.h"
+#include "ThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
+#include "TwoDSeed/SeedBranchGrowingAlgorithm.h"
+#include "TwoDSeed/SeedConsolidationAlgorithm.h"
+#include "TwoDSeed/SeedFindingAlgorithm.h"
+#include "TwoDSeed/SeedLengthGrowingAlgorithm.h"
+#include "TwoDSeed/SeedRelegationAlgorithm.h"
+#include "TwoDSeed/VertexSeedFindingAlgorithm.h"
+#include "Utility/EventPreparationAlgorithm.h"
+#include "Utility/TwoDPreparationAlgorithm.h"
+#include "Vertex/VertexFindingAlgorithm.h"
+#include "Vertex/VertexSplittingAlgorithm.h"
 
-#include "LArClusterHelper.h"
-#include "LArGeometryHelper.h"
-#include "LArParticleId.h"
-#include "LArPointingClusterHelper.h"
-#include "LArVertexHelper.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArGeometryHelper.h"
+#include "Helpers/LArParticleIdHelper.h"
+#include "Helpers/LArPointingClusterHelper.h"
+#include "Helpers/LArVertexHelper.h"
 
 #include "LArBFieldCalculator.h"
 #include "LArPseudoLayerCalculator.h"
@@ -52,44 +51,43 @@ class LArContent
 {
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
-        d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArClusterAssociation",                  lar::ClusterAssociationAlgorithm::Factory)                                  \
-        d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
         d("LArClusterExtension",                    lar::ClusterExtensionAlgorithm::Factory)                                    \
-        d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
-        d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
-        d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
-        d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
-        d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
-        d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
-        d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
+        d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
+        d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
         d("LArRemnantClustering",                   lar::RemnantClusteringAlgorithm::Factory)                                   \
+        d("LArTransverseClustering",                lar::TransverseClusteringAlgorithm::Factory)                                \
+        d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
+        d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
+        d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
+        d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
+        d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
+        d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
+        d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
+        d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
+        d("LArThreeDTrackSegments",                 lar::ThreeDTrackSegmentsAlgorithm::Factory)                                 \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
         d("LArSeedFinding",                         lar::SeedFindingAlgorithm::Factory)                                         \
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
-        d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
-        d("LArThreeDTrackSegments",                 lar::ThreeDTrackSegmentsAlgorithm::Factory)                                 \
-        d("LArTransverseClustering",                lar::TransverseClusteringAlgorithm::Factory)                                \
-        d("LArTwoDParticleCreation",                lar::TwoDParticleCreationAlgorithm::Factory)                                \
+        d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
+        d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
         d("LArVertexFinding",                       lar::VertexFindingAlgorithm::Factory)                                       \
-        d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
-        d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
-        d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)
+        d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
-        d("LArEmShowerId",                          &lar::LArParticleId::LArEmShowerId)                                         \
-        d("LArPhotonId",                            &lar::LArParticleId::LArPhotonId)                                           \
-        d("LArElectronId",                          &lar::LArParticleId::LArElectronId)                                         \
-        d("LArMuonId",                              &lar::LArParticleId::LArMuonId)
+        d("LArEmShowerId",                          &lar::LArParticleIdHelper::LArEmShowerId)                                   \
+        d("LArPhotonId",                            &lar::LArParticleIdHelper::LArPhotonId)                                     \
+        d("LArElectronId",                          &lar::LArParticleIdHelper::LArElectronId)                                   \
+        d("LArMuonId",                              &lar::LArParticleIdHelper::LArMuonId)
 
     #define LAR_SETTINGS_LIST(d)                                                                                                \
         d("LArClusterHelper",                       &lar::LArClusterHelper::ReadSettings)                                       \
         d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
-        d("LArParticleId",                          &lar::LArParticleId::ReadSettings)                                          \
+        d("LArParticleIdHelper",                    &lar::LArParticleIdHelper::ReadSettings)                                    \
         d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)                               \
         d("LArVertexHelper",                        &lar::LArVertexHelper::ReadSettings)
 

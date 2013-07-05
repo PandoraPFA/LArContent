@@ -1,5 +1,5 @@
 /**
- *  @file   NtupleWritingAlgorithm.h
+ *  @file   LArContent/include/Monitoring/NtupleWritingAlgorithm.h
  * 
  *  @brief  Header file for the ntuple writing algorithm
  * 

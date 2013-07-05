@@ -1,5 +1,5 @@
 /**
- *  @file   ClusteringParentAlgorithm.h
+ *  @file   LArContent/include/Clustering/ClusteringParentAlgorithm.h
  * 
  *  @brief  Header file for the clustering parent algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   RemnantClusteringAlgorithm.cc
+ *  @file   LArContent/src/Clustering/RemnantClusteringAlgorithm.cc
  * 
  *  @brief  Implementation of the remnant clustering algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "RemnantClusteringAlgorithm.h"
+#include "Clustering/RemnantClusteringAlgorithm.h"
 
 using namespace pandora;
 

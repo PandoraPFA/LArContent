@@ -1,5 +1,5 @@
 /**
- *  @file   VertexSeedFindingAlgorithm.h
+ *  @file   LArContent/include/TwoDSeed/VertexSeedFindingAlgorithm.h
  * 
  *  @brief  Header file for the vertex seed finding algorithm class.
  * 

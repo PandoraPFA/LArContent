@@ -1,5 +1,5 @@
 /**
- *  @file   ParallelClusterMergingAlgorithm.cc
+ *  @file   LArContent/src/ClusterSeedAssociation/ParallelClusterMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the bounded cluster merging algorithm class.
  * 
@@ -8,9 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArParticleId.h"
-#include "ParallelClusterMergingAlgorithm.h"
-#include "LArVertexHelper.h"
+#include "ClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
+
+#include "Helpers/LArParticleIdHelper.h"
+#include "Helpers/LArVertexHelper.h"
 
 using namespace pandora;
 
@@ -321,7 +322,7 @@ inline ParallelClusterMergingAlgorithm::ClusterProperties::ClusterProperties(Clu
     m_pCluster(pCluster),
     m_isForwardInZ((LArVertexHelper::DoesCurrentVertexExist()) ? LArVertexHelper::IsForwardInZ(pCluster) : false),
     m_isBackwardInZ((LArVertexHelper::DoesCurrentVertexExist()) ? LArVertexHelper::IsBackwardInZ(pCluster) : false),
-    m_isMuon(LArParticleId::LArMuonId(pCluster))
+    m_isMuon(LArParticleIdHelper::LArMuonId(pCluster))
 {
 }
 

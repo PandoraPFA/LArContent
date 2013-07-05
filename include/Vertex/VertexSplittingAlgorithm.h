@@ -1,5 +1,5 @@
 /**
- *  @file   VertexSplittingAlgorithm.h
+ *  @file   LArContent/include/Vertex/VertexSplittingAlgorithm.h
  * 
  *  @brief  Header file for the vertex splitting algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   TranverseClusteringAlgorithm.cc
+ *  @file   LArContent/src/Clustering/TranverseClusteringAlgorithm.cc
  * 
  *  @brief  Implementation of the transverse clustering algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterHelper.h"
+#include "Clustering/TransverseClusteringAlgorithm.h"
 
-#include "TransverseClusteringAlgorithm.h"
+#include "Helpers/LArClusterHelper.h"
 
 using namespace pandora;
 

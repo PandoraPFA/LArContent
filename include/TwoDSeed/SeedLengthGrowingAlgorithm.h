@@ -1,5 +1,5 @@
 /**
- *  @file   SeedLengthGrowingAlgorithm.h
+ *  @file   LArContent/include/TwoDSeed/SeedLengthGrowingAlgorithm.h
  * 
  *  @brief  Header file for the seed length growing algorithm class.
  * 
@@ -10,8 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArPointingCluster.h"
-#include "SeedGrowingAlgorithm.h"
+#include "Objects/LArPointingCluster.h"
+
+#include "TwoDSeed/SeedGrowingAlgorithm.h"
 
 namespace lar
 {

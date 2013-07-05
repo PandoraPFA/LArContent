@@ -1,5 +1,5 @@
 /**
- *  @file   SeedBranchGrowingAlgorithm.h
+ *  @file   LArContent/include/TwoDSeed/SeedBranchGrowingAlgorithm.h
  * 
  *  @brief  Header file for the seed growing algorithm class.
  * 

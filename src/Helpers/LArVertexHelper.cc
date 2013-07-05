@@ -1,5 +1,5 @@
 /**
- *  @file   LArVertexHelper.cc
+ *  @file   LArContent/src/Helpers/LArVertexHelper.cc
  * 
  *  @brief  Implementation of the vertex helper class.
  * 
@@ -9,7 +9,7 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
-#include "LArVertexHelper.h"
+#include "Helpers/LArVertexHelper.h"
 
 using namespace pandora;
 

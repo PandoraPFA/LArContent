@@ -1,18 +1,18 @@
 /**
- *  @file   ThreeDTrackSegmentsAlgorithm.cc
+ *  @file   LArContent/src/ThreeDSeed/ThreeDTrackSegmentsAlgorithm.cc
  * 
  *  @brief  Implementation of the three dimension track segments algorithm class.
  * 
  *  $Log: $
  */
 
-#include "LArClusterHelper.h"
-#include "LArGeometryHelper.h"
-#include "LArParticleId.h"
-
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "ThreeDTrackSegmentsAlgorithm.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArGeometryHelper.h"
+#include "Helpers/LArParticleIdHelper.h"
+
+#include "ThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
 
 using namespace pandora;
 
@@ -23,19 +23,19 @@ void ThreeDTrackSegmentsAlgorithm::SelectInputClusters()
 {
     for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->IsAvailable() && (LArParticleId::LArTrackWidth(*iter) < 0.75f))
+        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
             m_clusterVectorU.push_back(*iter);
     }
 
     for (ClusterList::const_iterator iter = m_pInputClusterListV->begin(), iterEnd = m_pInputClusterListV->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->IsAvailable() && (LArParticleId::LArTrackWidth(*iter) < 0.75f))
+        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
             m_clusterVectorV.push_back(*iter);
     }
 
     for (ClusterList::const_iterator iter = m_pInputClusterListW->begin(), iterEnd = m_pInputClusterListW->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->IsAvailable() && (LArParticleId::LArTrackWidth(*iter) < 0.75f))
+        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
             m_clusterVectorW.push_back(*iter);
     }
 

@@ -1,7 +1,7 @@
 /**
- *  @file   ClusterAlgorithm.h
+ *  @file   LArContent/include/ClusterAssociation/ClusterExtensionAlgorithm.h
  * 
- *  @brief  Header file for the cluster merging algorithm class.
+ *  @brief  Header file for the cluster extension algorithm class.
  * 
  *  $Log: $
  */
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArPointingCluster.h"
+#include "Objects/LArPointingCluster.h"
 
 namespace lar
 {

@@ -1,5 +1,5 @@
 /**
- *  @file   RemnantClusteringAlgorithm.h
+ *  @file   LArContent/include/Clustering/RemnantClusteringAlgorithm.h
  * 
  *  @brief  Header file for the remnant clustering algorithm class.
  * 

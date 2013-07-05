@@ -1,5 +1,5 @@
 /**
- *  @file   KinkSplittingAlgorithm.h
+ *  @file   LArContent/include/ClusterSplitting/KinkSplittingAlgorithm.h
  * 
  *  @brief  Header file for the kink splitting algorithm class.
  * 

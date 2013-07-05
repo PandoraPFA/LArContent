@@ -1,19 +1,19 @@
 /**
- *  @file   PandoraPFANew/Framework/src/Pandora/VertexFindingAlgorithm.cc
+ *  @file   LArContent/src/Vertex/VertexFindingAlgorithm.cc
  * 
- *  @brief  Implementation of the cluster creation algorithm class.
+ *  @brief  Implementation of the vertex finding algorithm class.
  * 
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "VertexFindingAlgorithm.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArGeometryHelper.h"
+#include "Helpers/LArPointingClusterHelper.h"
+#include "Helpers/LArVertexHelper.h"
 
-#include "LArVertexHelper.h"
-#include "LArGeometryHelper.h"
-#include "LArClusterHelper.h"
-#include "LArPointingClusterHelper.h"
+#include "Vertex/VertexFindingAlgorithm.h"
 
 #include <fstream>
 #include <cmath>

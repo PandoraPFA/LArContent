@@ -1,5 +1,5 @@
 /**
- *  @file   ClusterAssociationAlgorithm.h
+ *  @file   LArContent/include/ClusterAssociation/ClusterAssociationAlgorithm.h
  * 
  *  @brief  Header file for the cluster merging algorithm class.
  * 

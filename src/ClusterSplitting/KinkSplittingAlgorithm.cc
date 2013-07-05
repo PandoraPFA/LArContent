@@ -1,5 +1,5 @@
 /**
- *  @file   KinkSplittingAlgorithm.cc
+ *  @file   LArContent/src/ClusterSplitting/KinkSplittingAlgorithm.cc
  * 
  *  @brief  Implementation of the kink splitting algorithm class.
  * 
@@ -8,8 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "KinkSplittingAlgorithm.h"
-#include "LArParticleId.h"
+#include "ClusterSplitting/KinkSplittingAlgorithm.h"
+
+#include "Helpers/LArParticleIdHelper.h"
 
 using namespace pandora;
 
@@ -30,8 +31,8 @@ StatusCode KinkSplittingAlgorithm::Run()
         if (!this->IsPossibleKink(pCluster))
             continue;
 
-        LArParticleId::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
-        LArParticleId::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+        LArParticleIdHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
+        LArParticleIdHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
 
         unsigned int splitLayer(std::numeric_limits<unsigned int>::max());
 

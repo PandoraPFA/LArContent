@@ -1,5 +1,5 @@
 /**
- *  @file   SeedConsolidationAlgorithm.cc
+ *  @file   LArContent/src/TwoDSeed/SeedConsolidationAlgorithm.cc
  * 
  *  @brief  Implementation of the seed consolidation algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "SeedConsolidationAlgorithm.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArVertexHelper.h"
 
-#include "LArClusterHelper.h"
-#include "LArVertexHelper.h"
+#include "TwoDSeed/SeedConsolidationAlgorithm.h"
 
 using namespace pandora;
 

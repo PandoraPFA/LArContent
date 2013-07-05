@@ -1,12 +1,12 @@
 /**
- *  @file   LArParticleId.h
+ *  @file   LArContent/include/Helpers/LArParticleIdHelper.h
  * 
- *  @brief  Header file for the lar particle id class.
+ *  @brief  Header file for the lar particle id helper class.
  * 
  *  $Log: $
  */
-#ifndef LAR_PARTICLE_ID_H
-#define LAR_PARTICLE_ID_H 1
+#ifndef LAR_PARTICLE_ID_HELPER_H
+#define LAR_PARTICLE_ID_HELPER_H 1
 
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/PandoraInputTypes.h"
@@ -18,9 +18,9 @@ namespace lar
 {
 
 /**
- *  @brief  LArParticleId class
+ *  @brief  LArParticleIdHelper class
  */
-class LArParticleId
+class LArParticleIdHelper
 {
 public:
     /**
@@ -198,7 +198,7 @@ public:
         LayerFitResultMap           m_layerFitResultMap;        ///< The layer fit result map
         LayerFitContributionMap     m_layerFitContributionMap;  ///< The layer fit contribution map
 
-        friend class LArParticleId;
+        friend class LArParticleIdHelper;
     };
 
     typedef TwoDSlidingXZFitResult::LayerFitResultMap LayerFitResultMap;
@@ -274,28 +274,28 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster *LArParticleId::TwoDSlidingXZFitResult::GetCluster() const
+inline const pandora::Cluster *LArParticleIdHelper::TwoDSlidingXZFitResult::GetCluster() const
 {
     return m_pCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline unsigned int LArParticleId::TwoDSlidingXZFitResult::GetLayerFitHalfWindow() const
+inline unsigned int LArParticleIdHelper::TwoDSlidingXZFitResult::GetLayerFitHalfWindow() const
 {
     return m_layerFitHalfWindow;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArParticleId::TwoDSlidingXZFitResult::LayerFitResultMap &LArParticleId::TwoDSlidingXZFitResult::GetLayerFitResultMap() const
+inline const LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResultMap &LArParticleIdHelper::TwoDSlidingXZFitResult::GetLayerFitResultMap() const
 {
     return m_layerFitResultMap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArParticleId::TwoDSlidingXZFitResult::LayerFitContributionMap &LArParticleId::TwoDSlidingXZFitResult::GetLayerFitContributionMap() const
+inline const LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContributionMap &LArParticleIdHelper::TwoDSlidingXZFitResult::GetLayerFitContributionMap() const
 {
     return m_layerFitContributionMap;
 }
@@ -303,28 +303,28 @@ inline const LArParticleId::TwoDSlidingXZFitResult::LayerFitContributionMap &LAr
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitResult::GetZ() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResult::GetZ() const
 {
     return m_z;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitResult::GetFitX() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResult::GetFitX() const
 {
     return m_fitX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitResult::GetGradient() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResult::GetGradient() const
 {
     return m_gradient;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitResult::GetRms() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResult::GetRms() const
 {
     return m_rms;
 }
@@ -332,46 +332,46 @@ inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitResult::GetRms() co
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::GetSumX() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumX() const
 {
     return m_sumX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZ() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZ() const
 {
     return m_sumZ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZX() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZX() const
 {
     return m_sumZX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZZ() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZZ() const
 {
     return m_sumZZ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::GetSumXX() const
+inline double LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumXX() const
 {
     return m_sumXX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline unsigned int LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::GetNPoints() const
+inline unsigned int LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetNPoints() const
 {
     return m_nPoints;
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_PARTICLE_ID_H
+#endif // #ifndef LAR_PARTICLE_ID_HELPER_H

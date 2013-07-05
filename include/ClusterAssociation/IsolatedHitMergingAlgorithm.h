@@ -1,5 +1,5 @@
 /**
- *  @file   IsolatedHitMergingAlgorithm.h
+ *  @file   LArContent/include/ClusterAssociation/IsolatedHitMergingAlgorithm.h
  * 
  *  @brief  Header file for the isolated hit merging algorithm class.
  * 

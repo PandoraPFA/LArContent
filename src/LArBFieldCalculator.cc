@@ -1,5 +1,5 @@
 /**
- *  @file   LArBFieldCalculator.cc
+ *  @file   LArContent/src/LArBFieldCalculator.cc
  * 
  *  @brief  Implementation of the lar bfield calculator class.
  * 

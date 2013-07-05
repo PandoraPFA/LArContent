@@ -1,5 +1,5 @@
 /**
- *  @file   LArLArPointingCluster.h
+ *  @file   LArContent/include/Objects/LArPointingCluster.h
  * 
  *  @brief  Header file for the lar pointing cluster class.
  * 

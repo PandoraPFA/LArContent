@@ -1,5 +1,5 @@
 /**
- *  @file   SeedBranchGrowingAlgorithm.cc
+ *  @file   LArContent/src/TwoDSeed/SeedBranchGrowingAlgorithm.cc
  * 
  *  @brief  Implementation of the seed growing algorithm class.
  * 
@@ -8,9 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterHelper.h"
-#include "LArVertexHelper.h"
-#include "SeedBranchGrowingAlgorithm.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArVertexHelper.h"
+
+#include "TwoDSeed/SeedBranchGrowingAlgorithm.h"
 
 using namespace pandora;
 

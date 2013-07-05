@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/Framework/include/Pandora/VertexFindingAlgorithm.h
+ *  @file   LArContent/include/Vertex/PandoraPFANew/Framework/include/Pandora/VertexFindingAlgorithm.h
  * 
  *  @brief  Header file for the cluster creation algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArPointingCluster.h"
+#include "Objects/LArPointingCluster.h"
 
 #include <vector>
 

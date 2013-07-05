@@ -1,5 +1,5 @@
 /**
- *  @file   ParallelClusterMergingAlgorithm.h
+ *  @file   LArContent/include/ClusterSeedAssociation/ParallelClusterMergingAlgorithm.h
  * 
  *  @brief  Header file for the parallel cluster merging algorithm class.
  * 

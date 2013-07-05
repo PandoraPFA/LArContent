@@ -1,5 +1,5 @@
 /**
- *  @file   LArParticleId.cc
+ *  @file   LArContent/src/Helpers/LArParticleIdHelper.cc
  * 
  *  @brief  Implementation of the lar particle id class.
  * 
@@ -10,9 +10,9 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArClusterHelper.h"
+#include "Helpers/LArClusterHelper.h"
+#include "Helpers/LArParticleIdHelper.h"
 
-#include "LArParticleId.h"
 #include "LArPseudoLayerCalculator.h"
 
 #include <algorithm>
@@ -24,33 +24,33 @@ namespace lar
 
 using namespace pandora;
 
-bool LArParticleId::LArEmShowerId(const Cluster *const pCluster)
+bool LArParticleIdHelper::LArEmShowerId(const Cluster *const pCluster)
 {
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArParticleId::LArPhotonId(const Cluster *const pCluster)
+bool LArParticleIdHelper::LArPhotonId(const Cluster *const pCluster)
 {
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArParticleId::LArElectronId(const Cluster *const pCluster)
+bool LArParticleIdHelper::LArElectronId(const Cluster *const pCluster)
 {
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArParticleId::LArMuonId(const Cluster *const pCluster)
+bool LArParticleIdHelper::LArMuonId(const Cluster *const pCluster)
 {
     if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75)
         return false;
 
-    if (LArParticleId::LArTrackWidth(pCluster) > 0.5)
+    if (LArParticleIdHelper::LArTrackWidth(pCluster) > 0.5)
         return false;
 
     return true;
@@ -58,21 +58,21 @@ bool LArParticleId::LArMuonId(const Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArParticleId::LArTrackWidth(const Cluster *const pCluster)
+float LArParticleIdHelper::LArTrackWidth(const Cluster *const pCluster)
 {
     TwoDSlidingXZFitResult twoDSlidingXZFitResult;
-    LArParticleId::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+    LArParticleIdHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
 
     return twoDSlidingXZFitResult.GetSlidingFitWidth();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArParticleId::LArTwoDSlidingXZFit(const Cluster *const pCluster, TwoDSlidingXZFitResult &twoDSlidingXZFitResult)
+void LArParticleIdHelper::LArTwoDSlidingXZFit(const Cluster *const pCluster, TwoDSlidingXZFitResult &twoDSlidingXZFitResult)
 {
     const unsigned int innerLayer(pCluster->GetInnerPseudoLayer());
     const unsigned int outerLayer(pCluster->GetOuterPseudoLayer());
-    const unsigned int layerFitHalfWindow(LArParticleId::m_layerFitHalfWindow);
+    const unsigned int layerFitHalfWindow(LArParticleIdHelper::m_layerFitHalfWindow);
 
     twoDSlidingXZFitResult.m_pCluster = pCluster;
     twoDSlidingXZFitResult.m_layerFitHalfWindow = layerFitHalfWindow;
@@ -153,11 +153,11 @@ void LArParticleId::LArTwoDSlidingXZFit(const Cluster *const pCluster, TwoDSlidi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int LArParticleId::m_layerFitHalfWindow = 20;
-float LArParticleId::m_trackFitMaxRms = 0.25; // cm
-float LArParticleId::m_minCosScatteringAngle = std::cos(M_PI * 20.f / 180.f); // radians
+unsigned int LArParticleIdHelper::m_layerFitHalfWindow = 20;
+float LArParticleIdHelper::m_trackFitMaxRms = 0.25; // cm
+float LArParticleIdHelper::m_minCosScatteringAngle = std::cos(M_PI * 20.f / 180.f); // radians
 
-StatusCode LArParticleId::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode LArParticleIdHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LayerFitHalfWindow", m_layerFitHalfWindow));    
@@ -172,7 +172,7 @@ StatusCode LArParticleId::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-  LArParticleId::TwoDSlidingXZFitResult::LayerFitResult::LayerFitResult(const double z, const double fitX, const double gradient, const double rms) :
+  LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResult::LayerFitResult(const double z, const double fitX, const double gradient, const double rms) :
     m_z(z),
     m_fitX(fitX),
     m_gradient(gradient),
@@ -183,7 +183,7 @@ StatusCode LArParticleId::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::LayerFitContribution(const CaloHitList *const pCaloHitList) :
+LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitContribution::LayerFitContribution(const CaloHitList *const pCaloHitList) :
     m_sumX(0.),
     m_sumZ(0.),
     m_sumXX(0.),
@@ -208,7 +208,7 @@ LArParticleId::TwoDSlidingXZFitResult::LayerFitContribution::LayerFitContributio
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArParticleId::TwoDSlidingXZFitResult::GetSlidingFitWidth() const
+float LArParticleIdHelper::TwoDSlidingXZFitResult::GetSlidingFitWidth() const
 {
     FloatVector residuals;
     const OrderedCaloHitList &orderedCaloHitList(m_pCluster->GetOrderedCaloHitList());
@@ -243,7 +243,7 @@ float LArParticleId::TwoDSlidingXZFitResult::GetSlidingFitWidth() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArParticleId::TwoDSlidingXZFitResult::FindLargestScatter(unsigned int &largestScatterLayer) const
+StatusCode LArParticleIdHelper::TwoDSlidingXZFitResult::FindLargestScatter(unsigned int &largestScatterLayer) const
 {
     static const float m_trackFitMaxRms(0.25); // cm
     static const float m_minCosScatteringAngle(std::cos(M_PI * 20.f / 180.f)); // radians

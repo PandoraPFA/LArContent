@@ -1,5 +1,5 @@
 /**
- *  @file   ThreeDBaseAlgorithm.cc
+ *  @file   LArContent/src/ThreeDSeed/ThreeDBaseAlgorithm.cc
  * 
  *  @brief  Implementation of the three dimension algorithm base class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "ThreeDBaseAlgorithm.h"
+#include "ThreeDSeed/ThreeDBaseAlgorithm.h"
 
 using namespace pandora;
 

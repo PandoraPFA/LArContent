@@ -1,5 +1,5 @@
 /**
- *  @file   SeedFindingAlgorithm.h
+ *  @file   LArContent/include/TwoDSeed/SeedFindingAlgorithm.h
  * 
  *  @brief  Header file for the seed finding algorithm class.
  * 

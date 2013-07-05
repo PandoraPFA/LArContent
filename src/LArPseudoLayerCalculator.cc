@@ -1,5 +1,5 @@
 /**
- *  @file   LArPseudoLayerCalculator.cxx
+ *  @file   LArContent/src/LArPseudoLayerCalculator.cxx
  * 
  *  @brief  Implementation of the lar pseudo layer calculator class.
  * 
