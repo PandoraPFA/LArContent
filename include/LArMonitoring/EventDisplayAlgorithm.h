@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/Monitoring/EventDisplayAlgorithm.h
+ *  @file   LArContent/include/LArMonitoring/EventDisplayAlgorithm.h
  * 
  *  @brief  Header file for the event display algorithm
  * 

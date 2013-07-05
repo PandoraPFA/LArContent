@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Reclustering/ShowerMipSeparationAlgorithm.cc
+ *  @file   LArContent/src/LArReclustering/ShowerMipSeparationAlgorithm.cc
  * 
  *  @brief  Implementation of the shower-mip separation algorithm class.
  * 
@@ -10,9 +10,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArClusterHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 
-#include "Reclustering/ShowerMipSeparationAlgorithm.h"
+#include "LArReclustering/ShowerMipSeparationAlgorithm.h"
 
 using namespace pandora;
 

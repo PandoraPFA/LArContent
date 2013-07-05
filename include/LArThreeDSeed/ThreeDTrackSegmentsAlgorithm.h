@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/ThreeDSeed/ThreeDTrackSegmentsAlgorithm.h
+ *  @file   LArContent/include/LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h
  * 
  *  @brief  Header file for the three dimension track segments algorithm class.
  * 

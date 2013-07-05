@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/TwoDSeed/SeedRelegationAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDSeed/SeedRelegationAlgorithm.cc
  * 
  *  @brief  Implementation of the seed relegation algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArVertexHelper.h"
-#include "Helpers/LArParticleIdHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
+#include "LArHelpers/LArParticleIdHelper.h"
 
-#include "TwoDSeed/SeedRelegationAlgorithm.h"
+#include "LArTwoDSeed/SeedRelegationAlgorithm.h"
 
 using namespace pandora;
 

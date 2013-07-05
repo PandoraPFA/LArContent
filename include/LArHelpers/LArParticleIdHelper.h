@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/Helpers/LArParticleIdHelper.h
+ *  @file   LArContent/include/LArHelpers/LArParticleIdHelper.h
  * 
  *  @brief  Header file for the lar particle id helper class.
  * 

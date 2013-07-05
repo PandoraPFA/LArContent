@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Helpers/LArGeometryHelper.cc
+ *  @file   LArContent/src/LArHelpers/LArGeometryHelper.cc
  * 
  *  @brief  Implementation of the geometry helper class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Helpers/XmlHelper.h"
 
-#include "Helpers/LArGeometryHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 using namespace pandora;
 

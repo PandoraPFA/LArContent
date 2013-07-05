@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/Helpers/LArGeometryHelper.h
+ *  @file   LArContent/include/LArHelpers/LArGeometryHelper.h
  * 
  *  @brief  Header file for the geometry helper class.
  * 

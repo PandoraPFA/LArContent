@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Helpers/LArPointingClusterHelper.cc
+ *  @file   LArContent/src/LArHelpers/LArPointingClusterHelper.cc
  * 
  *  @brief  Implementation of the pointing cluster helper class.
  * 
@@ -9,8 +9,8 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
-#include "Helpers/LArPointingClusterHelper.h"
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
 

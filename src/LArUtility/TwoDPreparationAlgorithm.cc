@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Utility/TwoDPreparationAlgorithm.cc
+ *  @file   LArContent/src/LArUtility/TwoDPreparationAlgorithm.cc
  * 
  *  @brief  Implementation of the transverse clustering algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
-#include "Utility/TwoDPreparationAlgorithm.h"
+#include "LArUtility/TwoDPreparationAlgorithm.h"
 
 using namespace pandora;
 

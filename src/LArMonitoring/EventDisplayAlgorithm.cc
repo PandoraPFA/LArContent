@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Monitoring/EventDisplayAlgorithm.cc
+ *  @file   LArContent/src/LArMonitoring/EventDisplayAlgorithm.cc
  * 
  *  @brief  Implementation of the event display algorithm
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArClusterHelper.h"
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
-#include "Monitoring/EventDisplayAlgorithm.h"
+#include "LArMonitoring/EventDisplayAlgorithm.h"
 
 using namespace pandora;
 

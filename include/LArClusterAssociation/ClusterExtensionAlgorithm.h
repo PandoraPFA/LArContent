@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/ClusterAssociation/ClusterExtensionAlgorithm.h
+ *  @file   LArContent/include/LArClusterAssociation/ClusterExtensionAlgorithm.h
  * 
  *  @brief  Header file for the cluster extension algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "Objects/LArPointingCluster.h"
+#include "LArObjects/LArPointingCluster.h"
 
 namespace lar
 {

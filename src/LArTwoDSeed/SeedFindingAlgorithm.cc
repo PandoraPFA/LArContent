@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/TwoDSeed/SeedFindingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDSeed/SeedFindingAlgorithm.cc
  * 
  *  @brief  Implementation of the particle seed algorithm class.
  * 
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArClusterHelper.h"
-#include "Helpers/LArParticleIdHelper.h"
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArParticleIdHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
-#include "TwoDSeed/SeedFindingAlgorithm.h"
+#include "LArTwoDSeed/SeedFindingAlgorithm.h"
 
 using namespace pandora;
 

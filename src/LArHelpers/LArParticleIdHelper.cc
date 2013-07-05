@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Helpers/LArParticleIdHelper.cc
+ *  @file   LArContent/src/LArHelpers/LArParticleIdHelper.cc
  * 
  *  @brief  Implementation of the lar particle id class.
  * 
@@ -10,8 +10,8 @@
 
 #include "Objects/Cluster.h"
 
-#include "Helpers/LArClusterHelper.h"
-#include "Helpers/LArParticleIdHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArParticleIdHelper.h"
 
 #include "LArPseudoLayerCalculator.h"
 

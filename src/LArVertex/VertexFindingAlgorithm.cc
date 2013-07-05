@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Vertex/VertexFindingAlgorithm.cc
+ *  @file   LArContent/src/LArVertex/VertexFindingAlgorithm.cc
  * 
  *  @brief  Implementation of the vertex finding algorithm class.
  * 
@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArClusterHelper.h"
-#include "Helpers/LArGeometryHelper.h"
-#include "Helpers/LArPointingClusterHelper.h"
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
-#include "Vertex/VertexFindingAlgorithm.h"
+#include "LArVertex/VertexFindingAlgorithm.h"
 
 #include <fstream>
 #include <cmath>

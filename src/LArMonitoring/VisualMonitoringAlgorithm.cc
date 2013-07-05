@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Monitoring/VisualMonitoringAlgorithm.cc
+ *  @file   LArContent/src/LArMonitoring/VisualMonitoringAlgorithm.cc
  * 
  *  @brief  Implementation of the visual monitoring algorithm class 
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
-#include "Monitoring/VisualMonitoringAlgorithm.h"
+#include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include <algorithm>
 #include <string>

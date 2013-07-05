@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Utility/EventPreparationAlgorithm.cc
+ *  @file   LArContent/src/LArUtility/EventPreparationAlgorithm.cc
  * 
  *  @brief  Implementation of the event preparation algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Utility/EventPreparationAlgorithm.h"
+#include "LArUtility/EventPreparationAlgorithm.h"
 
 using namespace pandora;
 

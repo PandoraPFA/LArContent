@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Objects/LArPointingCluster.cc
+ *  @file   LArContent/src/LArObjects/LArPointingCluster.cc
  * 
  *  @brief  Implementation of the lar pointing cluster class.
  * 
@@ -11,7 +11,7 @@
 #include "Objects/CartesianVector.h"
 #include "Objects/Cluster.h"
 
-#include "Objects/LArPointingCluster.h"
+#include "LArObjects/LArPointingCluster.h"
 
 using namespace pandora;
 

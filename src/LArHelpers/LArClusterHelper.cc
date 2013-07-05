@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/Helpers/LArClusterHelper.cc
+ *  @file   LArContent/src/LArHelpers/LArClusterHelper.cc
  * 
  *  @brief  Implementation of the cluster helper class.
  * 
@@ -9,7 +9,7 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
-#include "Helpers/LArClusterHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 

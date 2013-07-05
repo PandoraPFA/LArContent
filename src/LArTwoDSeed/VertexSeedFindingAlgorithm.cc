@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/TwoDSeed/VertexSeedFindingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDSeed/VertexSeedFindingAlgorithm.cc
  * 
  *  @brief  Implementation of the vertex seed finding algorithm class.
  * 
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArClusterHelper.h"
-#include "Helpers/LArPointingClusterHelper.h"
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
-#include "TwoDSeed/VertexSeedFindingAlgorithm.h"
+#include "LArTwoDSeed/VertexSeedFindingAlgorithm.h"
 
 using namespace pandora;
 

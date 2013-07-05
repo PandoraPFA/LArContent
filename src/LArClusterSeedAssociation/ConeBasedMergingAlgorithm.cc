@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/ClusterSeedAssociation/ConeBasedMergingAlgorithm.cc
+ *  @file   LArContent/src/LArClusterSeedAssociation/ConeBasedMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the cone based merging algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "ClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
+#include "LArClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
 
-#include "Helpers/LArVertexHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
 

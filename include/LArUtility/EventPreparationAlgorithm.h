@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/Utility/EventPreparationAlgorithm.h
+ *  @file   LArContent/include/LArUtility/EventPreparationAlgorithm.h
  * 
  *  @brief  Header file for the event preparation algorithm class.
  * 

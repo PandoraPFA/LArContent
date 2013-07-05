@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/TwoDSeed/SeedRelegationAlgorithm.h
+ *  @file   LArContent/include/LArTwoDSeed/SeedRelegationAlgorithm.h
  * 
  *  @brief  Header file for the seed relegation algorithm class.
  * 

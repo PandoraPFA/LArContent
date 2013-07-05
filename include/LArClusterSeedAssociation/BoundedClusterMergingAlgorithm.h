@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/ClusterSeedAssociation/BoundedClusterMergingAlgorithm.h
+ *  @file   LArContent/include/LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.h
  * 
  *  @brief  Header file for the bounded cluster merging algorithm class.
  * 

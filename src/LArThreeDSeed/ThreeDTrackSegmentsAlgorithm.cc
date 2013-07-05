@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/ThreeDSeed/ThreeDTrackSegmentsAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.cc
  * 
  *  @brief  Implementation of the three dimension track segments algorithm class.
  * 
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "Helpers/LArClusterHelper.h"
-#include "Helpers/LArGeometryHelper.h"
-#include "Helpers/LArParticleIdHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArParticleIdHelper.h"
 
-#include "ThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
+#include "LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
 
 using namespace pandora;
 

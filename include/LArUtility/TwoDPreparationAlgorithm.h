@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/Utility/TransverseClusteringAlgorithm.h
+ *  @file   LArContent/include/LArUtility/TransverseClusteringAlgorithm.h
  * 
  *  @brief  Header file for the cluster merging algorithm class.
  * 
