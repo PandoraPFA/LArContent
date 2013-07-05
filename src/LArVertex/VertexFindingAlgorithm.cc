@@ -446,6 +446,17 @@ void VertexFindingAlgorithm::GetListOfCleanVertexPositions( const LArPointingClu
             outputList.push_back(seedPosition);
 	}
     }
+
+// ClusterList clusterList;
+// CollectClusters( pointingClusterMap, clusterList );
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&clusterList, "CLEAN CLUSTERS", GREEN);
+// for( CartesianPointList::const_iterator iter = outputList.begin(), iterEnd = outputList.end(); iter != iterEnd; ++iter ){
+//   const CartesianVector& outputVertex = *iter;
+//   PandoraMonitoringApi::AddMarkerToVisualization(&outputVertex, "vertex", RED, 1.5);
+// }
+// PandoraMonitoringApi::ViewEvent();
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -475,7 +486,6 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions( const LArPointingC
                                              outputListU, outputListV, outputListW );
 
     
-
 
 // CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f 
 // CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f
@@ -548,11 +558,17 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions2D( const HitType vi
 
 void VertexFindingAlgorithm::GetListOfMatchedVertexPositions3D( const CartesianPointList& inputListU, const CartesianPointList& inputListV, const CartesianPointList& inputListW, CartesianPointList& outputListU, CartesianPointList& outputListV, CartesianPointList& outputListW )
 {
-    // Form matches between three views 
-    CartesianPointList matchedListU, matchedListV, matchedListW;
+    //
+    // TODO: Match the directions as well as positions...
+    //
 
+    // Configurable parameters
     float m_maxSeparation = 2.5;
     float m_maxSeparationSquared = m_maxSeparation * m_maxSeparation;
+
+
+    // Form matches between three views 
+    CartesianPointList matchedListU, matchedListV, matchedListW;
 
     CartesianVector projectedPositionU(0.f,0.f,0.f);
     CartesianVector projectedPositionV(0.f,0.f,0.f);
@@ -696,7 +712,11 @@ void VertexFindingAlgorithm::ProcessVertex1D( const VertexFigureOfMeritMap theFi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFigureOfMeritMapU, const VertexFigureOfMeritMap theFigureOfMeritMapV, const VertexFigureOfMeritMap theFigureOfMeritMapW, CartesianVector& bestVertexU, CartesianVector& bestVertexV, CartesianVector& bestVertexW )
-{
+{  
+    // Configurable parameters
+    float m_maxSeparation = 2.5;
+    float m_maxSeparationSquared = m_maxSeparation * m_maxSeparation;
+
     // Big Nested Loop 
     CartesianVector mergedVertexU(0.f,0.f,0.f);
     CartesianVector mergedVertexV(0.f,0.f,0.f);
@@ -725,9 +745,20 @@ void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFi
                 const CartesianVector vertexW = (iterW->first)->GetPosition();
                 float          figureOfMeritW = iterW->second;
 
+
+                if ( std::fabs(vertexU.GetX()-vertexV.GetX()) > m_maxSeparation 
+                  || std::fabs(vertexV.GetX()-vertexW.GetX()) > m_maxSeparation 
+                  || std::fabs(vertexW.GetX()-vertexU.GetX()) > m_maxSeparation ) 
+                    continue;
+
                 LArGeometryHelper::MergeThreeViews( vertexU, vertexV, vertexW,
                                                     mergedVertexU, mergedVertexV, mergedVertexW,
                                                     chiSquared );
+
+                if ( (vertexU - mergedVertexU).GetMagnitudeSquared() > m_maxSeparationSquared
+                  || (vertexV - mergedVertexV).GetMagnitudeSquared() > m_maxSeparationSquared
+		  || (vertexW - mergedVertexW).GetMagnitudeSquared() > m_maxSeparationSquared )
+		    continue;
 
                 mergedFigureOfMerit = figureOfMeritU + figureOfMeritV + figureOfMeritW - theMagicNumber * chiSquared;
 
@@ -766,6 +797,10 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
     {
         const CartesianVector& seedVertexPosition = *iter;
 
+         
+        // 
+        // TODO: Calculate a seed direction for this vertex
+        //
 
 	const CartesianVector seedVertexDirection(0.f,0.f,1.f); // beam direction
 
@@ -778,8 +813,6 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
         unsigned int primaryClusters(0);
         CartesianVector associatedMomentum(0.f,0.f,0.f);
 
-        CartesianVector testDirection(0.f,0.f,1.f);
-
         float energyFraction(0.f), momentumFraction(0.f);
 
         LArPointingClusterVertexList associatedClusterVertexList;
@@ -789,7 +822,7 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
 
         associatedMomentumModulus = associatedMomentum.GetMagnitude();
 
-        if (totalEnergy > 0.f )
+        if (totalEnergy > 0.f)
 	{
             energyFraction = associatedEnergy/totalEnergy;
             momentumFraction = associatedMomentumModulus/totalEnergy;
@@ -798,6 +831,10 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
         // Some quality requirements on candidate vertex
         if ( associatedClusterVertexList.empty() )
 	    continue;
+
+        //
+        // TODO: Move this into 'ProcessVertex' section...
+        //
 
         if ( m_runBeamMode && this->IsConsistentWithBeamDirection(associatedMomentum) == false ) 
             continue;
@@ -812,8 +849,19 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
         outputFigureOfMeritMap.insert( std::pair<const LArVertexCandidate*,float>
 	    ( new LArVertexCandidate(seedVertexPosition,seedVertexDirection,energyFraction,momentumFraction),thisFigureOfMerit) );  	      
     }
-}
 
+// ClusterList clusterList;
+// CollectClusters( pointingClusterMap, clusterList );
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&clusterList, "CLEAN CLUSTERS", GREEN); 
+// for( VertexFigureOfMeritMap::const_iterator iter = outputFigureOfMeritMap.begin(), iterEnd = outputFigureOfMeritMap.end(); iter != iterEnd; ++iter )
+// {
+//   const CartesianVector thisVertex = (iter->first)->GetPosition();
+//   PandoraMonitoringApi::AddMarkerToVisualization(&thisVertex, "vertex", RED, 1.5);
+// }
+// PandoraMonitoringApi::ViewEvent();
+
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
