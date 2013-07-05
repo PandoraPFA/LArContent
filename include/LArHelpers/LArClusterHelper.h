@@ -110,42 +110,57 @@ public:
     /** 
      * @brief Populate cluster vector with subset of cluster list, containing clusters judged to be clean
      *
+     *  @param  method the type of selection 
      *  @param  pClusterList address of the cluster list
      *  @param  clusterVector to receive the populated cluster vector
      */
     static void GetListOfCleanClusters(const ClusterQuality method, const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector);
 
     /** 
-     * @brief Populate cluster vector with clean clusters (method A)
+     *  @brief Determine if cluster is clean
      *
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
+     *  @param  method the type of selection
+     *  @param  pCluster address of the cluster
+     *
+     *  @return boolean
      */
-    static void GetListOfCleanClusters_MethodA(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector);
+    static bool IsCleanCluster(const ClusterQuality method, const pandora::Cluster *const pCluster);
 
     /** 
-     * @brief Populate cluster vector with clean clusters (method B)
+     *  @brief Determine if cluster is clean (method A)
      *
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
+     *  @param  pCluster address of the cluster
+     *
+     *  @return boolean
      */
-    static void GetListOfCleanClusters_MethodB(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector);
+    static bool IsCleanCluster_MethodA(const pandora::Cluster *const pCluster);
 
     /** 
-     * @brief Populate cluster vector with clean clusters (method C)
+     *  @brief Determine if cluster is clean (method B)
      *
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
+     *  @param  pCluster address of the cluster 
+     * 
+     *  @return boolean 
      */
-    static void GetListOfCleanClusters_MethodC(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector);
+    static bool IsCleanCluster_MethodB(const pandora::Cluster *const pCluster);
 
     /** 
-     * @brief Populate cluster vector with clean clusters (method D)
+     *  @brief Determine if cluster is clean (method C)
      *
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
+     *  @param  pCluster address of the cluster
+     *  
+     *  @return boolean
      */
-    static void GetListOfCleanClusters_MethodD(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector);
+    static bool IsCleanCluster_MethodC(const pandora::Cluster *const pCluster);
+
+    /** 
+     *  @brief Determine if cluster is clean (method D)
+     *
+     *  @param  pCluster address of the cluster 
+     *
+     *  @return boolean
+     */
+    static bool IsCleanCluster_MethodD(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Sort clusters by inner layer (then use SortByNOccupiedLayers method in event of a tie)

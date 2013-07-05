@@ -138,97 +138,93 @@ float LArClusterHelper::GetClosestDistance(const CartesianVector &position, cons
 
 void LArClusterHelper::GetListOfCleanClusters(const ClusterQuality method, const ClusterList *const pClusterList, ClusterVector &clusterVector)
 {
+    for ( ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter ) 
+    {
+        Cluster *pCluster = *iter;
+
+        if ( LArClusterHelper::IsCleanCluster(method,pCluster) ) 
+            clusterVector.push_back(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArClusterHelper::IsCleanCluster(const ClusterQuality method, const Cluster* const pCluster)
+{  
     //
     // TODO: NEED TO RATIONALISE ALL OF THIS SOMEHOW.... HELP!
     //
 
     if( method == METHOD_A ) 
-        LArClusterHelper::GetListOfCleanClusters_MethodA( pClusterList, clusterVector);
+        return LArClusterHelper::IsCleanCluster_MethodA( pCluster );
 
     else if( method == METHOD_B ) 
-        LArClusterHelper::GetListOfCleanClusters_MethodB( pClusterList, clusterVector);
+        return LArClusterHelper::IsCleanCluster_MethodB( pCluster );
     
     else if( method == METHOD_C ) 
-        LArClusterHelper::GetListOfCleanClusters_MethodC( pClusterList, clusterVector);
+        return LArClusterHelper::IsCleanCluster_MethodC( pCluster );
 
     else if( method == METHOD_D ) 
-        LArClusterHelper::GetListOfCleanClusters_MethodD( pClusterList, clusterVector);
+        return LArClusterHelper::IsCleanCluster_MethodD( pCluster );
 
     else throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 
 
-void LArClusterHelper::GetListOfCleanClusters_MethodA(const ClusterList *const pClusterList, ClusterVector &clusterVector)
+bool LArClusterHelper::IsCleanCluster_MethodA(const Cluster *const pCluster )
 {
     // from ClusterAssociationAlgorithm
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
+   
+    if( LArClusterHelper::GetLayerSpan(pCluster) < 4 )
+        return false;
 
-        if( LArClusterHelper::GetLayerSpan(pCluster) < 4 )
-	    continue;
-
-        clusterVector.push_back(pCluster);
-    }
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetListOfCleanClusters_MethodB(const ClusterList *const pClusterList, ClusterVector &clusterVector)
+bool LArClusterHelper::IsCleanCluster_MethodB(const Cluster *const pCluster)
 {
     // from ClusterExtensionAlgorithm, ClusterMergingAlgorithm, VertexFindingAlgorithm
-    for ( ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter ) 
-    {
-        Cluster *pCluster = *iter;
+   
+    if( LArClusterHelper::GetLayerSpan(pCluster) < 15 )
+        return false;
 
-        if( LArClusterHelper::GetLayerSpan(pCluster) < 15 )
-	    continue;
+    if( LArClusterHelper::GetLengthSquared(pCluster) < 25.f )
+        return false;
 
-        if( LArClusterHelper::GetLengthSquared(pCluster) < 25.f )
-	    continue;
+    if ( LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75 ) 
+        return false;
 
-        if ( LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75 ) 
-            continue;
-
-        clusterVector.push_back(pCluster);
-    }
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetListOfCleanClusters_MethodC(const ClusterList *const pClusterList, ClusterVector &clusterVector)
+bool LArClusterHelper::IsCleanCluster_MethodC(const Cluster *const pCluster)
 {
     // from VertexSeedFindingAlgorithm
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
+ 
+    if( LArClusterHelper::GetLayerSpan(pCluster) < 10 )
+        return false;
 
-        if( LArClusterHelper::GetLayerSpan(pCluster) < 10 )
-	    continue;
+    if( LArClusterHelper::GetLengthSquared(pCluster) < 1.f )
+        return false;
 
-        if( LArClusterHelper::GetLengthSquared(pCluster) < 1.f )
-	    continue;
-
-        clusterVector.push_back(pCluster);
-    }
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetListOfCleanClusters_MethodD(const ClusterList *const pClusterList, ClusterVector &clusterVector)
+bool LArClusterHelper::IsCleanCluster_MethodD(const Cluster *const pCluster)
 {
-
     // from SeedGrowingAlgorithm
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
+  
+    if (pCluster->GetNCaloHits() < 10)
+        return false;
 
-        if (pCluster->GetNCaloHits() < 10)
-            continue;
-
-        clusterVector.push_back(pCluster);
-    }
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
