@@ -8,9 +8,7 @@
 #ifndef LAR_KINK_SPLITTING_ALGORITHM_H
 #define LAR_KINK_SPLITTING_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
-
-#include <list>
+#include "LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 namespace lar
 {
@@ -18,7 +16,7 @@ namespace lar
 /**
  *  @brief  KinkSplittingAlgorithm class
  */
-class KinkSplittingAlgorithm : public pandora::Algorithm
+class KinkSplittingAlgorithm : public ClusterSplittingAlgorithm
 {
 public:
     /**
@@ -34,22 +32,25 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+ 
     /**
-     *  @brief  Whether a cluster is a kink candidate
+     *  @brief  Find layer at which cluster should be split     
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  splitLayer the layer at which to perform the split
+     */
+    pandora::StatusCode FindBestSplitLayer(const pandora::Cluster* const pCluster, unsigned int& splitLayer);
+
+   /**
+     *  @brief  Whether a cluster is a split candidate
      * 
      *  @param  pCluster address of the cluster
      * 
      *  @return boolean
      */
-    bool IsPossibleKink(const pandora::Cluster *const pCluster) const;
+    bool IsPossibleSplit(const pandora::Cluster *const pCluster) const;
 
-    /**
-     *  @brief  Split cluster into its two kink fragments
-     * 
-     *  @param  pCluster address of the cluster
-     *  @param  splitLayer the layer at which to perform the split
-     */
-    pandora::StatusCode SplitCluster(pandora::Cluster *const pCluster, const unsigned int splitLayer, std::list<pandora::Cluster*>& daughters) const;
+
 
     int         m_minClusterLayers;             ///< Min number of cluster layers for kink identification
     float       m_minScatteringRms;             ///< Min scattering rms for kink identification
