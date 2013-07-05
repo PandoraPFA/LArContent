@@ -27,8 +27,6 @@
 #include "SeedLengthGrowingAlgorithm.h"
 #include "SeedRelegationAlgorithm.h"
 #include "ShowerMipSeparationAlgorithm.h"
-#include "ThreeDParticleCreationAlgorithm.h"
-#include "ThreeDParticleMatchingAlgorithm.h"
 #include "ThreeDTrackSegmentsAlgorithm.h"
 #include "TransverseClusteringAlgorithm.h"
 #include "TwoDParticleCreationAlgorithm.h"
@@ -73,15 +71,13 @@ public:
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
         d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
-        d("LArThreeDParticleCreation",              lar::ThreeDParticleCreationAlgorithm::Factory)                              \
-        d("LArThreeDParticleMatching",              lar::ThreeDParticleMatchingAlgorithm::Factory)                              \
         d("LArThreeDTrackSegments",                 lar::ThreeDTrackSegmentsAlgorithm::Factory)                                 \
         d("LArTransverseClustering",                lar::TransverseClusteringAlgorithm::Factory)                                \
         d("LArTwoDParticleCreation",                lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
         d("LArVertexFinding",                       lar::VertexFindingAlgorithm::Factory)                                       \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
-	d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
+        d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
