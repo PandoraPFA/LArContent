@@ -29,15 +29,23 @@ bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) cons
     if ((1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) < m_minClusterLayers)
         return false;
 
-    ClusterHelper::ClusterFitResult innerLayerFit, outerLayerFit;
+    ClusterHelper::ClusterFitResult innerLayerFit, outerLayerFit, fullLayerFit;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pCluster, m_minClusterLayers, innerLayerFit));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pCluster, m_minClusterLayers, outerLayerFit));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitFullCluster(pCluster, fullLayerFit));
 
-    if (innerLayerFit.GetDirection().GetCosOpeningAngle(outerLayerFit.GetDirection()) > m_maxCosScatteringAngle)
+    if (fullLayerFit.GetRms() < m_minOverallScatteringRms)
+        return false; 
+
+    if ((innerLayerFit.GetRms() > m_minVertexScatteringRms) && (outerLayerFit.GetRms() > m_minVertexScatteringRms))
         return false;
 
-    if ((innerLayerFit.GetRms() > m_minScatteringRms) && (outerLayerFit.GetRms() > m_minScatteringRms))
-        return false;
+// Cluster* tempCluster = (Cluster*)(pCluster);
+// ClusterList tempList;
+// tempList.insert(tempCluster);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&tempList, "PossibleSplit", BLUE);
+// PandoraMonitoringApi::ViewEvent();
 
     return true;
 }
@@ -60,13 +68,19 @@ StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLayers", m_minClusterLayers));
 
-    m_minScatteringRms = 0.15;
+    m_minVertexScatteringRms = 0.25;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinScatteringRms", m_minScatteringRms));
+        "MinVertexScatteringRms", m_minVertexScatteringRms));
 
-    m_maxCosScatteringAngle = std::cos(M_PI * 15.f / 180.f);
+    m_minOverallScatteringRms = 0.75;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCosScatteringAngle", m_maxCosScatteringAngle));
+        "MinOverallScatteringRms", m_minOverallScatteringRms));
+
+    //
+    //m_maxCosScatteringAngle = std::cos(M_PI * 15.f / 180.f);
+    //PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    //    "MaxCosScatteringAngle", m_maxCosScatteringAngle));
+    //
 
     return STATUS_CODE_SUCCESS;
 }

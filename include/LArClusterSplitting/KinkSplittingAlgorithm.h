@@ -53,8 +53,12 @@ private:
 
 
     int         m_minClusterLayers;             ///< Min number of cluster layers for kink identification
-    float       m_minScatteringRms;             ///< Min scattering rms for kink identification
-    float       m_maxCosScatteringAngle;        ///< Max cosine of scattering angle for kink identification
+    float       m_minVertexScatteringRms;       ///< Min scattering rms at ends of cluster for kink identification
+    float       m_minOverallScatteringRms;      ///< Min scattering rms of full cluster for kink identification
+
+    //
+    // float       m_maxCosScatteringAngle;        ///< Max cosine of scattering angle for kink identification
+    //
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

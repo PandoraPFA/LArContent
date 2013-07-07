@@ -41,6 +41,15 @@ StatusCode ClusterSplittingAlgorithm::Run()
 	if ((splitLayer <= pCluster->GetInnerPseudoLayer()) || (splitLayer >= pCluster->GetOuterPseudoLayer()))
             continue;
 
+// const CartesianVector& bestPosition = pCluster->GetCentroid(splitLayer);
+// Cluster* tempCluster = (Cluster*)(pCluster);
+// ClusterList tempList;
+// tempList.insert(tempCluster);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&tempList, "Cluster", GREEN);
+// PandoraMonitoringApi::AddMarkerToVisualization(&bestPosition, "Split", RED, 1.75);
+// PandoraMonitoringApi::ViewEvent();
+
         std::list<Cluster*> daughters;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pCluster, splitLayer, daughters));	  
 
