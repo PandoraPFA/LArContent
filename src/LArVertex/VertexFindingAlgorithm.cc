@@ -80,12 +80,6 @@ StatusCode VertexFindingAlgorithm::Run()
     VertexFigureOfMeritMap theFigureOfMeritMapV;
     VertexFigureOfMeritMap theFigureOfMeritMapW;
 
-    /*
-    ProcessView1D( pointingClusterMapU, pointingVertexListU, theFigureOfMeritMapU ); 
-    ProcessView1D( pointingClusterMapV, pointingVertexListV, theFigureOfMeritMapV ); 
-    ProcessView1D( pointingClusterMapW, pointingVertexListW, theFigureOfMeritMapW );  
-    */
-
     ProcessView1D( pointingClusterMapU, matchedVertexListU, theFigureOfMeritMapU ); 
     ProcessView1D( pointingClusterMapV, matchedVertexListV, theFigureOfMeritMapV ); 
     ProcessView1D( pointingClusterMapW, matchedVertexListW, theFigureOfMeritMapW ); 
@@ -98,10 +92,11 @@ StatusCode VertexFindingAlgorithm::Run()
     CartesianVector recoVertexV(0.f,0.f,0.f);
     CartesianVector recoVertexW(0.f,0.f,0.f);
 
+    /*
     ProcessVertex1D( theFigureOfMeritMapU, recoVertexU ); 
     ProcessVertex1D( theFigureOfMeritMapV, recoVertexV ); 
     ProcessVertex1D( theFigureOfMeritMapW, recoVertexW ); 
-
+    */
 
     ProcessVertex3D( theFigureOfMeritMapU, theFigureOfMeritMapV, theFigureOfMeritMapW, 
                      recoVertexU, recoVertexV, recoVertexW ); 
@@ -698,6 +693,10 @@ void VertexFindingAlgorithm::ProcessVertex1D( const VertexFigureOfMeritMap theFi
       const LArVertexCandidate* thisVertex  = iter->first;
       float              thisFigureOfMerit = iter->second;
 
+      if ( m_runBeamMode 
+        && this->IsConsistentWithBeamDirectionW(thisVertex->GetDirection()) == false ) 
+          continue;
+
       if( thisFigureOfMerit>bestFigureOfMerit ){
         foundVertex       = true;
         bestFigureOfMerit = thisFigureOfMerit;
@@ -730,21 +729,38 @@ void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFi
 
     bool foundVertex(false);
 
-    for( VertexFigureOfMeritMap::const_iterator iterU = theFigureOfMeritMapU.begin(), iterEndU = theFigureOfMeritMapU.end(); iterU != iterEndU; ++iterU )
+    for( VertexFigureOfMeritMap::const_iterator iterW = theFigureOfMeritMapW.begin(), iterEndW = theFigureOfMeritMapW.end(); iterW != iterEndW; ++iterW )
     {
-        const CartesianVector vertexU = (iterU->first)->GetPosition();
-        float          figureOfMeritU = iterU->second;
+        const LArVertexCandidate* candidateW = iterW->first;
+        const CartesianVector& vertexW    = candidateW->GetPosition();
+        const CartesianVector& directionW = candidateW->GetDirection();
+        float              figureOfMeritW = iterW->second;
+
+        if ( m_runBeamMode 
+          && this->IsConsistentWithBeamDirectionW(directionW) == false ) 
+            continue;
 
         for( VertexFigureOfMeritMap::const_iterator iterV = theFigureOfMeritMapV.begin(), iterEndV = theFigureOfMeritMapV.end(); iterV != iterEndV; ++iterV )
         {
-            const CartesianVector vertexV = (iterV->first)->GetPosition();
-            float          figureOfMeritV = iterV->second;
+            const LArVertexCandidate* candidateV = iterV->first;
+            const CartesianVector& vertexV    = candidateV->GetPosition(); 
+            const CartesianVector& directionV = candidateV->GetDirection();
+            float              figureOfMeritV = iterV->second;
 
-            for( VertexFigureOfMeritMap::const_iterator iterW = theFigureOfMeritMapW.begin(), iterEndW = theFigureOfMeritMapW.end(); iterW != iterEndW; ++iterW )
+            for( VertexFigureOfMeritMap::const_iterator iterU = theFigureOfMeritMapU.begin(), iterEndU = theFigureOfMeritMapU.end(); iterU != iterEndU; ++iterU )
             {
-                const CartesianVector vertexW = (iterW->first)->GetPosition();
-                float          figureOfMeritW = iterW->second;
+                const LArVertexCandidate* candidateU = iterU->first;
+                const CartesianVector& vertexU    = candidateU->GetPosition();
+                const CartesianVector& directionU = candidateU->GetDirection();
+                float              figureOfMeritU = iterU->second;
 
+		if ( m_runBeamMode 
+		  && this->IsConsistentWithBeamDirectionUV(directionU,directionV) == false ) 
+                    continue;
+
+                //
+                // TODO: Put in a requirement of consistent U,V,W directions
+                //
 
                 if ( std::fabs(vertexU.GetX()-vertexV.GetX()) > m_maxSeparation 
                   || std::fabs(vertexV.GetX()-vertexW.GetX()) > m_maxSeparation 
@@ -759,6 +775,12 @@ void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFi
                   || (vertexV - mergedVertexV).GetMagnitudeSquared() > m_maxSeparationSquared
 		  || (vertexW - mergedVertexW).GetMagnitudeSquared() > m_maxSeparationSquared )
 		    continue;
+
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::AddMarkerToVisualization(&vertexU, "testVertexU", RED, 3.5);
+// PandoraMonitoringApi::AddMarkerToVisualization(&vertexV, "testVertexV", BLUE, 3.5);
+// PandoraMonitoringApi::AddMarkerToVisualization(&vertexW, "testVertexW", BLACK, 3.5);
+// PandoraMonitoringApi::ViewEvent();
 
                 mergedFigureOfMerit = figureOfMeritU + figureOfMeritV + figureOfMeritW - theMagicNumber * chiSquared;
 
@@ -807,18 +829,15 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
   
         
 	// Find associated clusters
-        float primaryEnergy(0.f);
         float associatedEnergy(0.f);
         float associatedMomentumModulus(0.f);
-        unsigned int primaryClusters(0);
         CartesianVector associatedMomentum(0.f,0.f,0.f);
 
         float energyFraction(0.f), momentumFraction(0.f);
 
         LArPointingClusterVertexList associatedClusterVertexList;
         RunFastReconstruction( pointingClusterMap, seedVertexPosition, seedVertexDirection,
-                               associatedClusterVertexList, primaryClusters, primaryEnergy, 
-                               associatedEnergy, associatedMomentum );
+                               associatedClusterVertexList, associatedEnergy, associatedMomentum );
 
         associatedMomentumModulus = associatedMomentum.GetMagnitude();
 
@@ -832,14 +851,6 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
         if ( associatedClusterVertexList.empty() )
 	    continue;
 
-        //
-        // TODO: Move this into 'ProcessVertex' section...
-        //
-
-        if ( m_runBeamMode && this->IsConsistentWithBeamDirection(associatedMomentum) == false ) 
-            continue;
-
-
         // Fill the output list
         float thisFigureOfMerit(0.f);
 
@@ -847,7 +858,8 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
 	    thisFigureOfMerit = energyFraction * momentumFraction;
 	
         outputFigureOfMeritMap.insert( std::pair<const LArVertexCandidate*,float>
-	    ( new LArVertexCandidate(seedVertexPosition,seedVertexDirection,energyFraction,momentumFraction),thisFigureOfMerit) );  	      
+	    ( new LArVertexCandidate(seedVertexPosition,associatedMomentum.GetUnitVector(),
+                                      energyFraction,momentumFraction),thisFigureOfMerit) );  	      
     }
 
 // ClusterList clusterList;
@@ -865,97 +877,9 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingClusterVertexCandidateList, VertexFigureOfMeritMap& outputFigureOfMeritMap )
-{
-
-    // Start by calculating the total energy 
-    float totalEnergy(0.f);
-    float totalEnergySquared(0.f); 
-    
-    for (LArPointingClusterVertexList::const_iterator iter = pointingClusterVertexCandidateList.begin(), iterEnd = pointingClusterVertexCandidateList.end(); iter != iterEnd; ++iter)
-    {
-        const LArPointingCluster::Vertex &thisCluster = *iter;
-        const Cluster* pCluster = thisCluster.GetCluster();
-        const float thisEnergy = LArClusterHelper::GetEnergyFromLength( pCluster );
-      
-        totalEnergy += 0.5 * thisEnergy;
-        totalEnergySquared += 0.5 * thisEnergy * thisEnergy;
-    }
-     
-    // Loop over clean clusters to identify possible vertex positions    
-    for (LArPointingClusterVertexList::const_iterator iter = pointingClusterVertexCandidateList.begin(), iterEnd = pointingClusterVertexCandidateList.end(); iter != iterEnd; ++iter)
-    {
-        const LArPointingCluster::Vertex &clusterVertex = *iter;
-
-        // Calculate energy of this cluster
-        const Cluster* pCluster = clusterVertex.GetCluster();
-        const float thisEnergy = LArClusterHelper::GetEnergyFromLength( pCluster );
-        const float thisEnergySquared = thisEnergy * thisEnergy;
-        
-	// Find associated clusters
-        float primaryEnergy(0.f);
-        float associatedEnergy(0.f);
-        float associatedMomentumModulus(0.f);
-        unsigned int primaryClusters(0);
-        CartesianVector associatedMomentum(0.f,0.f,0.f);
-
-        CartesianVector testDirection(0.f,0.f,1.f);
-
-        float energyFraction(0.f), momentumFraction(0.f);
-
-        LArPointingClusterVertexList associatedClusterVertexList;
-        RunFastReconstruction( pointingClusterMap, clusterVertex.GetPosition(), testDirection,//clusterVertex.GetDirection(), 
-                               associatedClusterVertexList, primaryClusters, primaryEnergy, 
-                               associatedEnergy, associatedMomentum );
-
-        associatedMomentumModulus = associatedMomentum.GetMagnitude();
-
-        if (totalEnergy > 0.f )
-	{
-            energyFraction = associatedEnergy/totalEnergy;
-            momentumFraction = associatedMomentumModulus/totalEnergy;
-	}
-
-        // Some quality requirements on candidate vertex
-        if ( associatedClusterVertexList.empty() )
-	    continue;
-
-        if ( m_runBeamMode && this->IsConsistentWithBeamDirection(associatedMomentum) == false ) 
-            continue;
-
-        if ( primaryEnergy / totalEnergy < 0.05 * ( 5.f - static_cast<float>(primaryClusters) )
-	 && thisEnergySquared / totalEnergySquared < 0.25 ) 
-            continue; 
-
-        // Fill the output list
-        float thisFigureOfMerit(0.f);
-
-        if( totalEnergy > 0.f )
-	    thisFigureOfMerit = energyFraction * momentumFraction;
-	
-        outputFigureOfMeritMap.insert( std::pair<const LArVertexCandidate*,float>
-	    ( new LArVertexCandidate(clusterVertex.GetPosition(),clusterVertex.GetDirection(),energyFraction,momentumFraction),thisFigureOfMerit) );
-       	      
-// std::cout << "  thisVertex: energyFrac=" << thisEnergy/totalEnergy << " energySquaredFrac=" << thisEnergySquared/totalEnergySquared << " numPrimaryClusters=" << primaryClusters << " primaryEnergyFrac=" << primaryEnergy/totalEnergy << " associatedEnergyFrac=" << associatedEnergy/totalEnergy << " FigureOfMerit=" << (associatedEnergy*associatedMomentumModulus)/(totalEnergy*totalEnergy) << std::endl;
-// CartesianVector thisVertex = clusterVertex.GetPosition();
-// ClusterList clusterList;
-// CollectClusters( associatedClusterVertexList, clusterList );
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&clusterList, "CLUSTERS", GREEN);
-// PandoraMonitoringApi::AddMarkerToVisualization(&thisVertex, "VERTEX", RED, 1.);
-// PandoraMonitoringApi::ViewEvent();
-
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap& inputMap, const CartesianVector& seedVertexPosition, const CartesianVector& seedVertexDirection, LArPointingClusterVertexList& outputList, unsigned int& primaryClusters, float& primaryEnergy, float& outputEnergy, CartesianVector& outputMomentum )
+void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap& inputMap, const CartesianVector& seedVertexPosition, const CartesianVector& seedVertexDirection, LArPointingClusterVertexList& outputList, float& outputEnergy, CartesianVector& outputMomentum )
 {
     outputList.clear();
-
-    primaryClusters = 0;
-    primaryEnergy = 0.f;
 
     outputEnergy = 0.f;
     outputMomentum.SetValues(0.f,0.f,0.f);
@@ -1003,7 +927,6 @@ void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap&
         if ( this->IsPrimary( clusterVertex, seedVertexPosition, seedVertexDirection ) )
 	{
 	    strongList.push_back(clusterVertex);  
-            ++primaryClusters;  primaryEnergy += thisEnergy;  
 	}
         else
 	{
@@ -1023,9 +946,17 @@ void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap&
 
            if ( this->IsWeakAssociation( strongVertex, weakVertex ) )
 	   {
-	     isAssociated = true;   break;
+	       isAssociated = true;   break;
 	   }
 	}
+
+        //
+        // TODO: Deal with split clusters! Here is a temporary fix...
+        //
+
+        if ( this->IsStrongSecondary( weakVertex, seedVertexPosition, seedVertexDirection ) )
+            isAssociated = true;
+
 
         if ( isAssociated ) outputList.push_back(weakVertex);
     }
@@ -1196,36 +1127,14 @@ bool VertexFindingAlgorithm::IsWeakSecondary( const LArPointingCluster::Vertex& 
 {
     if ( !this->IsDaughterDiverging(parentCluster,daughterCluster) ) return false;
 
-    const float cosRelativeAngle( (parentCluster.GetDirection()).GetDotProduct(daughterCluster.GetDirection()) );
-
-    if ( cosRelativeAngle < 0.866 ) return false;
-
-    float rL(0.f), rT(0.f);
-
-    LArVertexHelper::GetImpactParameters( parentCluster.GetPosition(), parentCluster.GetDirection() * -1.f, daughterCluster.GetPosition(), rL, rT );
-
-    if ( rL < 2.5 ) return false;
-
-    static const float tanTheta( std::tan( M_PI * 10.0 / 180.0 ) );
-
-    if ( rT/rL < tanTheta )  return true;  else return false;
+    return this->IsWeakSecondary( parentCluster, daughterCluster.GetPosition(), daughterCluster.GetDirection() ); 
 }
  
 //------------------------------------------------------------------------------------------------------------------------------------------
    
 bool VertexFindingAlgorithm::IsStrongSecondary( const LArPointingCluster::Vertex& parentCluster, const LArPointingCluster::Vertex& daughterCluster )
 { 
-    const float cosRelativeAngle( (parentCluster.GetDirection()).GetDotProduct(daughterCluster.GetDirection()) );
-
-    if ( cosRelativeAngle < 0.707 ) return false;
-
-    float rL(0.f), rT(0.f);
-
-    LArVertexHelper::GetImpactParameters( parentCluster.GetPosition(), parentCluster.GetDirection() * -1.f, daughterCluster.GetPosition(), rL, rT );
-
-    if ( rL < 2.5 ) return false;
-
-    return this->IsAdjacent( parentCluster, daughterCluster.GetPosition() );
+    return this->IsStrongSecondary( parentCluster, daughterCluster.GetPosition(), daughterCluster.GetDirection() );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1258,6 +1167,42 @@ bool VertexFindingAlgorithm::IsPrimary( const LArPointingCluster::Vertex& cluste
 {
   return ( this->IsNode( targetPosition, targetDirection, clusterTrajectory.GetPosition(), clusterTrajectory.GetDirection() )
 	|| this->IsEmission( targetPosition, targetDirection, clusterTrajectory.GetPosition(), clusterTrajectory.GetDirection() ) );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexFindingAlgorithm::IsStrongSecondary( const LArPointingCluster::Vertex& clusterTrajectory, const CartesianVector& targetPosition, const CartesianVector& targetDirection )
+{
+    const float cosRelativeAngle( (clusterTrajectory.GetDirection()).GetDotProduct(targetDirection) );
+
+    if ( cosRelativeAngle < 0.707 ) return false;
+
+    float rL(0.f), rT(0.f);
+
+    LArVertexHelper::GetImpactParameters( clusterTrajectory.GetPosition(), clusterTrajectory.GetDirection() * -1.f, targetPosition, rL, rT );
+
+    if ( rL < 2.5 ) return false;
+
+    return this->IsAdjacent( clusterTrajectory, targetPosition ); 
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexFindingAlgorithm::IsWeakSecondary( const LArPointingCluster::Vertex& clusterTrajectory, const CartesianVector& targetPosition, const CartesianVector& targetDirection )
+{
+    const float cosRelativeAngle( (clusterTrajectory.GetDirection()).GetDotProduct(targetDirection) );
+
+    if ( cosRelativeAngle < 0.866 ) return false;
+
+    float rL(0.f), rT(0.f);
+
+    LArVertexHelper::GetImpactParameters( clusterTrajectory.GetPosition(), clusterTrajectory.GetDirection() * -1.f, targetPosition, rL, rT );
+
+    if ( rL < 2.5 ) return false;
+
+    static const float tanTheta( std::tan( M_PI * 10.0 / 180.0 ) );
+
+    if ( rT/rL < tanTheta )  return true;  else return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1331,9 +1276,28 @@ bool VertexFindingAlgorithm::IsEmission( const CartesianVector& clusterVertex, c
  
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool VertexFindingAlgorithm::IsConsistentWithBeamDirection( const CartesianVector& thisMomentum ) const
+bool VertexFindingAlgorithm::IsConsistentWithBeamDirectionW( const CartesianVector& momentumW ) const
 {
-    if( thisMomentum.GetUnitVector().GetZ() > -0.25 ) return true;  else return false;
+    CartesianVector directionW( momentumW.GetUnitVector() );
+
+    if ( directionW.GetZ() > -0.25 ) return true;  else return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexFindingAlgorithm::IsConsistentWithBeamDirectionUV( const CartesianVector& momentumU, const CartesianVector& momentumV ) const
+{
+    CartesianVector directionU( momentumU.GetUnitVector() );
+    CartesianVector directionV( momentumV.GetUnitVector() );
+
+    if ( directionU.GetX() * directionV.GetX() < 0 )
+    {
+        directionU.SetValues( -directionU.GetX(), 0.f, directionU.GetZ() );
+    }
+
+    CartesianVector directionW( LArGeometryHelper::MergeTwoDirections(VIEW_U,VIEW_V,directionU,directionV) );
+
+    return this->IsConsistentWithBeamDirectionW( directionW );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

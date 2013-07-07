@@ -148,9 +148,6 @@ class VertexFindingAlgorithm : public pandora::Algorithm
     void ProcessView1D( const LArPointingClusterMap& pointingClusterMap, const pandora::CartesianPointList& inputVertexList,
                             VertexFigureOfMeritMap& outputFigureOfMeritMap );
 
-    void ProcessView1D( const LArPointingClusterMap& pointingClusterMap, const LArPointingClusterVertexList& pointingVertexList,
-                            VertexFigureOfMeritMap& outputFigureOfMeritMap );
-
     void ProcessVertex1D( const VertexFigureOfMeritMap figureOfMeritMap, pandora::CartesianVector& bestVertex );
 
     void ProcessVertex3D( const VertexFigureOfMeritMap figureOfMeritMapU, const VertexFigureOfMeritMap figureOfMeritMapV, 
@@ -164,8 +161,7 @@ class VertexFindingAlgorithm : public pandora::Algorithm
    
     void RunFastReconstruction( const LArPointingClusterMap& inputMap,
                                 const pandora::CartesianVector& seedPosition, const pandora::CartesianVector& seedDirection, 
-                                LArPointingClusterVertexList& outputList, unsigned int& primaryClusters, float& primaryEnergy, 
-                                float& outputEnergy, pandora::CartesianVector& outputMomentum );
+                                LArPointingClusterVertexList& outputList, float& outputEnergy, pandora::CartesianVector& outputMomentum );
 
     void GetEnergyAndMomentum( const LArPointingClusterVertexList& clusterList, const pandora::CartesianVector& thisVertex, 
                                float& outputEnergy, pandora::CartesianVector& outputMomentum );
@@ -195,6 +191,10 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
     bool IsPrimary( const LArPointingCluster::Vertex& clusterTrajectory, const pandora::CartesianVector& targetVertex, const pandora::CartesianVector& targetDirection );
 
+    bool IsStrongSecondary( const LArPointingCluster::Vertex& parentCluster, const pandora::CartesianVector& targetVertex, const pandora::CartesianVector& targetDirection );
+
+    bool IsWeakSecondary( const LArPointingCluster::Vertex& parentCluster, const pandora::CartesianVector& targetVertex, const pandora::CartesianVector& targetDirection );
+
     bool IsAdjacent( const LArPointingCluster::Vertex& clusterTrajectory, const pandora::CartesianVector& targetVertex );
 
     bool IsDownstream( const LArPointingCluster::Vertex& clusterTrajectory, const pandora::CartesianVector& targetVertex );
@@ -206,8 +206,9 @@ class VertexFindingAlgorithm : public pandora::Algorithm
     bool IsNode( const pandora::CartesianVector& clusterVertex, const pandora::CartesianVector& clusterDirection, const pandora::CartesianVector& targetVertex ) const;
     bool IsEmission( const pandora::CartesianVector& clusterVertex, const pandora::CartesianVector& clusterDirection, const pandora::CartesianVector& targetVertex ) const;
     
-    bool IsConsistentWithBeamDirection( const pandora::CartesianVector& thisMomentum ) const;
-    
+    bool IsConsistentWithBeamDirectionW( const pandora::CartesianVector& thisMomentumW ) const;
+
+    bool IsConsistentWithBeamDirectionUV( const pandora::CartesianVector& thisMomentumU, const pandora::CartesianVector& thisMomentumV ) const;
 
     
 
