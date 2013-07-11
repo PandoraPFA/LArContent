@@ -21,29 +21,15 @@ namespace lar
 
 void ThreeDStraightTracksAlgorithm::SelectInputClusters()
 {
-    for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
-            m_clusterVectorU.push_back(*iter);
-    }
-
-    for (ClusterList::const_iterator iter = m_pInputClusterListV->begin(), iterEnd = m_pInputClusterListV->end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
-            m_clusterVectorV.push_back(*iter);
-    }
-
-    for (ClusterList::const_iterator iter = m_pInputClusterListW->begin(), iterEnd = m_pInputClusterListW->end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
-            m_clusterVectorW.push_back(*iter);
-    }
+    this->SelectInputClusters(m_pInputClusterListU, m_clusterVectorU);
+    this->SelectInputClusters(m_pInputClusterListV, m_clusterVectorV);
+    this->SelectInputClusters(m_pInputClusterListW, m_clusterVectorW);
 
     std::sort(m_clusterVectorU.begin(), m_clusterVectorU.end(), LArClusterHelper::SortByNOccupiedLayers);
     std::sort(m_clusterVectorV.begin(), m_clusterVectorV.end(), LArClusterHelper::SortByNOccupiedLayers);
     std::sort(m_clusterVectorW.begin(), m_clusterVectorW.end(), LArClusterHelper::SortByNOccupiedLayers);
 
-
+std::cout << "Clusters for 2D->3D matching " << std::endl;
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 ClusterList clusterListU; clusterListU.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
 PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
@@ -52,6 +38,85 @@ PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
 ClusterList clusterListW; clusterListW.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
 PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
 PandoraMonitoringApi::ViewEvent();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
+{
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (!pCluster->IsAvailable())
+            continue;
+
+        if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75f)
+            continue;
+
+        LArParticleIdHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
+        LArParticleIdHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+
+        FloatVector residuals;
+        unsigned int nHitsOnTrack(0);
+
+        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        const LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingXZFitResult.GetLayerFitResultMap());
+
+        for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
+        {
+            const unsigned int layer(iter->first);
+            LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResultMap::const_iterator fitResultIter = layerFitResultMap.find(layer);
+
+            if (layerFitResultMap.end() == fitResultIter)
+                continue;
+
+            for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+            {
+                CaloHit *pCaloHit = *hitIter;
+                const double x(pCaloHit->GetPositionVector().GetX());
+                const double fitX(fitResultIter->second.GetFitX());
+                const double gradient(fitResultIter->second.GetGradient());
+                const double residualSquared((fitX - x) * (fitX - x) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
+                residuals.push_back(residualSquared);
+
+                if (residualSquared < 1.f) // TODO
+                    ++nHitsOnTrack;
+
+//std::cout << " x " << x << " fitX " << fitX << " gradient " << gradient << " residualSquared " << residualSquared << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList tempList; tempList.insert(pCluster);
+//const CartesianVector tempPosition(pCaloHit->GetPositionVector());
+//PandoraMonitoringApi::AddMarkerToVisualization(&tempPosition, std::string("layerMarker"), AUTO, 1);
+//PandoraMonitoringApi::VisualizeClusters(&tempList, "tempList", RED);
+//PandoraMonitoringApi::ViewEvent();
+            }
+        }
+
+        if (residuals.empty())
+           continue;
+
+        std::sort(residuals.begin(), residuals.end());
+        static const float m_trackResidualQuantile(0.8f);
+        const float theQuantile(residuals[m_trackResidualQuantile * residuals.size()]);
+        const float slidingFitWidth(std::sqrt(theQuantile));
+
+std::cout << " SELECT? slidingFitWidth " << slidingFitWidth << " hitsOnTrackFraction " << (static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits()))) << std::endl;
+PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+ClusterList tempList; tempList.insert(pCluster);
+PandoraMonitoringApi::VisualizeClusters(&tempList, "tempList", RED);
+PandoraMonitoringApi::ViewEvent();
+
+        if (slidingFitWidth > 1.5f) // TODO
+            continue;
+
+        const float hitsOnTrackFraction(static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits())));
+
+        if (hitsOnTrackFraction < 0.9f) // TODO
+            continue;
+
+        clusterVector.push_back(pCluster);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,6 +145,7 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float outerXU(pClusterU->GetCentroid(pClusterU->GetOuterPseudoLayer()).GetX());
     const float minXU(std::min(innerXU, outerXU));
     const float maxXU(std::max(innerXU, outerXU));
+    const float xSpanU(maxXU - minXU);
 
     // V
     ClusterHelper::ClusterFitResult centroidFitResultV;
@@ -89,6 +155,7 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float outerXV(pClusterV->GetCentroid(pClusterV->GetOuterPseudoLayer()).GetX());
     const float minXV(std::min(innerXV, outerXV));
     const float maxXV(std::max(innerXV, outerXV));
+    const float xSpanV(maxXV - minXV);
 
     // W
     ClusterHelper::ClusterFitResult centroidFitResultW;
@@ -98,45 +165,8 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float outerXW(pClusterW->GetCentroid(pClusterW->GetOuterPseudoLayer()).GetX());
     const float minXW(std::min(innerXW, outerXW));
     const float maxXW(std::max(innerXW, outerXW));
+    const float xSpanW(maxXW - minXW);
 
-    // Chi2 calculations
-    float chi2(std::numeric_limits<float>::max());
-
-    const float minX(std::max(minXU, std::max(minXV, minXW)));
-    const float maxX(std::min(maxXU, std::min(maxXV, maxXW)));
-
-    if (minX < maxX)
-    {
-        chi2 = 0.f;
-        static const float xPitch(0.35f);
-        unsigned int nSamplingPoints(0);
-
-        for (float x = minX; x < maxX; x += xPitch)
-        {
-            const float u((centroidFitResultU.GetIntercept() + centroidFitResultU.GetDirection() *
-                (x - centroidFitResultU.GetIntercept().GetX()) * (1.f / centroidFitResultU.GetDirection().GetX())).GetZ());
-            const float v((centroidFitResultV.GetIntercept() + centroidFitResultV.GetDirection() *
-                (x - centroidFitResultV.GetIntercept().GetX()) * (1.f / centroidFitResultV.GetDirection().GetX())).GetZ());
-            const float w((centroidFitResultW.GetIntercept() + centroidFitResultW.GetDirection() *
-                (x - centroidFitResultW.GetIntercept().GetX()) * (1.f / centroidFitResultW.GetDirection().GetX())).GetZ());
-
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
-
-            const float deltaW(uv2w - w), deltaV(uw2v - v), deltaU(vw2u - u);
-            chi2 += deltaW * deltaW;
-            ++nSamplingPoints;
-
-const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
-const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
-const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
-        }
-
-        if (nSamplingPoints == 0)
-            chi2 = std::numeric_limits<float>::max();
-
-std::cout << " xOverlap " << (maxX - minX) << ", chi2 " << chi2 << std::endl;
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 ClusterList clusterListU; clusterListU.insert(pClusterU);
 PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
@@ -144,17 +174,79 @@ ClusterList clusterListV; clusterListV.insert(pClusterV);
 PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
 ClusterList clusterListW; clusterListW.insert(pClusterW);
 PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+
+    // Assess x-overlap
+    const float minX(std::max(minXU, std::max(minXV, minXW)));
+    const float maxX(std::min(maxXU, std::min(maxXV, maxXW)));
+    const float xOverlap(maxX - minX);
+
+    if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.9f) || ((xOverlap / xSpanV) < 0.9f) || ((xOverlap / xSpanW) < 0.9f))
+{
+std::cout << " VETO: xOverlap " << xOverlap << ", xSpanUf " << (xOverlap / xSpanU) << ", xSpanVf " << (xOverlap / xSpanV) << ", xSpanWf " << (xOverlap / xSpanW) << std::endl;
 PandoraMonitoringApi::ViewEvent();
+        return;
+}
+
+    // Sampling in x
+    const float nPointsU((xOverlap / xSpanU) * pClusterU->GetNCaloHits());
+    const float nPointsV((xOverlap / xSpanV) * pClusterV->GetNCaloHits());
+    const float nPointsW((xOverlap / xSpanW) * pClusterW->GetNCaloHits());
+    const float xPitch(3.f * xOverlap / (nPointsU + nPointsV + nPointsW));
+
+    // Chi2 calculations
+    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+
+    for (float x = minX; x < maxX; x += xPitch)
+    {
+        const float u((centroidFitResultU.GetIntercept() + centroidFitResultU.GetDirection() *
+            (x - centroidFitResultU.GetIntercept().GetX()) * (1.f / centroidFitResultU.GetDirection().GetX())).GetZ());
+        const float v((centroidFitResultV.GetIntercept() + centroidFitResultV.GetDirection() *
+            (x - centroidFitResultV.GetIntercept().GetX()) * (1.f / centroidFitResultV.GetDirection().GetX())).GetZ());
+        const float w((centroidFitResultW.GetIntercept() + centroidFitResultW.GetDirection() *
+            (x - centroidFitResultW.GetIntercept().GetX()) * (1.f / centroidFitResultW.GetDirection().GetX())).GetZ());
+
+        const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
+        const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
+        const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+
+        ++nSamplingPoints;
+        const float deltaW(uv2w - w), deltaV(uw2v - v), deltaU(vw2u - u);
+        const float pseudoChi2(deltaW * deltaW + deltaV * deltaV + deltaU * deltaU);
+
+        if (pseudoChi2 < 3.f) // TODO
+            ++nMatchedSamplingPoints;
+
+std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
+const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
+const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
+const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
     }
 
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, chi2);
+    if (0 == nSamplingPoints)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
+
+    if (matchedSamplingFraction < 0.9f) // TODO
+{
+std::cout << " VETO: matchedSamplingFraction " << matchedSamplingFraction << std::endl;
+PandoraMonitoringApi::ViewEvent();
+        return;
+}
+
+std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV)
+          << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints
+          << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
+PandoraMonitoringApi::ViewEvent();
+
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, matchedSamplingFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ThreeDStraightTracksAlgorithm::ExamineTensor()
 {
-    float bestChi2(std::numeric_limits<float>::max());
+    float bestOverlapResult(std::numeric_limits<float>::max()); // TODO Min overlap result for PFO creation
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
     const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
@@ -167,11 +259,11 @@ bool ThreeDStraightTracksAlgorithm::ExamineTensor()
         {
             for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
             {
-                const float chi2(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+                const float overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
 
-                if (chi2 < bestChi2)
+                if (overlapResult < bestOverlapResult)
                 {
-                    bestChi2 = chi2;
+                    bestOverlapResult = overlapResult;
                     pBestClusterU = *iterU;
                     pBestClusterV = *iterV;
                     pBestClusterW = *iterW;
@@ -190,7 +282,7 @@ bool ThreeDStraightTracksAlgorithm::ExamineTensor()
     m_protoParticleVector.push_back(protoParticle);
 
     // DEBUG
-std::cout << " Best particle, chi2 " << bestChi2 << std::endl;
+std::cout << " Best particle, overlapResult " << bestOverlapResult << std::endl;
 ClusterList tempListU; tempListU.insert(pBestClusterU);
 ClusterList tempListV; tempListV.insert(pBestClusterV);
 ClusterList tempListW; tempListW.insert(pBestClusterW);
