@@ -10,7 +10,7 @@
 
 #include "LArClusterSplitting/KinkSplittingAlgorithm.h"
 
-#include "LArHelpers/LArParticleIdHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 
@@ -54,8 +54,8 @@ bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) cons
 
 StatusCode KinkSplittingAlgorithm::FindBestSplitLayer(const Cluster* const pCluster, unsigned int& splitLayer )
 { 
-    LArParticleIdHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
-    LArParticleIdHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+    LArClusterHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
+    LArClusterHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
 
     return twoDSlidingXZFitResult.FindLargestScatter(splitLayer);
 }

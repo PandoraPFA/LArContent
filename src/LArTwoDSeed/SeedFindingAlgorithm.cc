@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
 #include "LArTwoDSeed/SeedFindingAlgorithm.h"
@@ -246,8 +245,8 @@ bool SeedFindingAlgorithm::AreSeedClustersAssociated(const Cluster *const pClust
     const bool consistentLongitudinalDirection = (consistentForwardDirection || consistentBackwardDirection);
 
     // Apply track-like selection criteria 
-    const bool isTrackLikeI = (LArParticleIdHelper::LArTrackWidth(pClusterI) < 0.15);
-    const bool isTrackLikeJ = (LArParticleIdHelper::LArTrackWidth(pClusterJ) < 0.15);
+    const bool isTrackLikeI = (LArClusterHelper::LArTrackWidth(pClusterI) < 0.15);
+    const bool isTrackLikeJ = (LArClusterHelper::LArTrackWidth(pClusterJ) < 0.15);
     const bool useTrackLikeCuts = (isTrackLikeI || isTrackLikeJ);
 
     // Calculate proximity variables

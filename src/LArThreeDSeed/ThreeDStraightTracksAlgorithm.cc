@@ -10,7 +10,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArParticleIdHelper.h"
 
 #include "LArThreeDSeed/ThreeDStraightTracksAlgorithm.h"
 
@@ -54,19 +53,19 @@ void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const
         if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75f)
             continue;
 
-        LArParticleIdHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
-        LArParticleIdHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+        LArClusterHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
+        LArClusterHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
 
         FloatVector residuals;
         unsigned int nHitsOnTrack(0);
 
         const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        const LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingXZFitResult.GetLayerFitResultMap());
+        const LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingXZFitResult.GetLayerFitResultMap());
 
         for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
         {
             const unsigned int layer(iter->first);
-            LArParticleIdHelper::TwoDSlidingXZFitResult::LayerFitResultMap::const_iterator fitResultIter = layerFitResultMap.find(layer);
+            LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResultMap::const_iterator fitResultIter = layerFitResultMap.find(layer);
 
             if (layerFitResultMap.end() == fitResultIter)
                 continue;

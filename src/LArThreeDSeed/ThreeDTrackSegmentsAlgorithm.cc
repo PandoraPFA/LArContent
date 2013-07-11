@@ -10,7 +10,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArParticleIdHelper.h"
 
 #include "LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
 
@@ -23,19 +22,19 @@ void ThreeDTrackSegmentsAlgorithm::SelectInputClusters()
 {
     for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
+        if ((*iter)->IsAvailable() && (LArClusterHelper::LArTrackWidth(*iter) < 0.75f))
             m_clusterVectorU.push_back(*iter);
     }
 
     for (ClusterList::const_iterator iter = m_pInputClusterListV->begin(), iterEnd = m_pInputClusterListV->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
+        if ((*iter)->IsAvailable() && (LArClusterHelper::LArTrackWidth(*iter) < 0.75f))
             m_clusterVectorV.push_back(*iter);
     }
 
     for (ClusterList::const_iterator iter = m_pInputClusterListW->begin(), iterEnd = m_pInputClusterListW->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->IsAvailable() && (LArParticleIdHelper::LArTrackWidth(*iter) < 0.75f))
+        if ((*iter)->IsAvailable() && (LArClusterHelper::LArTrackWidth(*iter) < 0.75f))
             m_clusterVectorW.push_back(*iter);
     }
 
