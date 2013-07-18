@@ -12,7 +12,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 
 #include "LArPseudoLayerCalculator.h"
-
+                                            #include "PandoraMonitoringApi.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -22,36 +22,81 @@ using namespace pandora;
 namespace lar
 {
 
-void LArClusterHelper::LArTwoDSlidingXZFit(const Cluster *const pCluster, TwoDSlidingXZFitResult &twoDSlidingXZFitResult)
+void LArClusterHelper::LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
-    const unsigned int innerLayer(pCluster->GetInnerPseudoLayer());
-    const unsigned int outerLayer(pCluster->GetOuterPseudoLayer());
-    const unsigned int layerFitHalfWindow(LArClusterHelper::m_layerFitHalfWindow);
+    ClusterHelper::ClusterFitResult clusterFitResult;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitFullCluster(pCluster, clusterFitResult));
 
-    twoDSlidingXZFitResult.m_pCluster = pCluster;
-    twoDSlidingXZFitResult.m_layerFitHalfWindow = layerFitHalfWindow;
-    LayerFitResultMap &layerFitResultMap(twoDSlidingXZFitResult.m_layerFitResultMap);
-    LayerFitContributionMap &layerFitContributionMap(twoDSlidingXZFitResult.m_layerFitContributionMap);
+    const CartesianVector axisDirection(clusterFitResult.GetDirection());
+    const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
+    const CartesianVector axisIntercept(clusterFitResult.GetIntercept() + axisDirection * (axisDirection.GetDotProduct(innerCentroid - clusterFitResult.GetIntercept())));
+
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, layerFitHalfWindow, axisIntercept, axisDirection, twoDSlidingFitResult);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult)
+{
+    const CartesianVector axisIntercept(0.f, 0.f, 0.f);
+    const CartesianVector axisDirection(0.f, 0.f, 1.f);
+
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, layerFitHalfWindow, axisIntercept, axisDirection, twoDSlidingFitResult);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const CartesianVector &axisIntercept,
+    const CartesianVector &axisDirection, TwoDSlidingFitResult &twoDSlidingFitResult)
+{
+    if ((std::fabs(axisIntercept.GetY()) > std::numeric_limits<float>::epsilon()) || (std::fabs(axisDirection.GetY()) > std::numeric_limits<float>::epsilon()))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    twoDSlidingFitResult.m_pCluster = pCluster;
+    twoDSlidingFitResult.m_layerFitHalfWindow = layerFitHalfWindow;
+    twoDSlidingFitResult.m_axisIntercept = axisIntercept;
+    twoDSlidingFitResult.m_axisDirection = axisDirection;
+    TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.m_layerFitResultMap);
+    TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap(twoDSlidingFitResult.m_layerFitContributionMap);
 
     // Identify fit contributions
-    unsigned int slidingNPoints(0);
-    double slidingSumX(0.), slidingSumZ(0.), slidingSumXX(0.), slidingSumZX(0.), slidingSumZZ(0.);
+    int innerLayer(std::numeric_limits<int>::max()), outerLayer(0);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        const unsigned int iLayer(iter->first);
-        TwoDSlidingXZFitResult::LayerFitContribution layerFitContribution(iter->second);
-        (void) layerFitContributionMap.insert(LayerFitContributionMap::value_type(iLayer, layerFitContribution));
-
-        if (iLayer < innerLayer + layerFitHalfWindow)
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            slidingSumX += layerFitContribution.GetSumX();
-            slidingSumZ += layerFitContribution.GetSumZ();
-            slidingSumXX += layerFitContribution.GetSumXX();
-            slidingSumZX += layerFitContribution.GetSumZX();
-            slidingSumZZ += layerFitContribution.GetSumZZ();
-            slidingNPoints += layerFitContribution.GetNPoints();
+            float rL(0.f), rT(0.f);
+            twoDSlidingFitResult.GetLocalCoordinates((*hitIter)->GetPositionVector(), rL, rT);
+            const int layer(twoDSlidingFitResult.GetLayer(rL));
+
+            layerFitContributionMap[layer].AddPoint(rL, rT);
+
+            if (layer < innerLayer)
+                innerLayer = layer;
+
+            if (layer > outerLayer)
+                outerLayer = layer;
+        }
+    }
+
+    // Summation for first layers
+    unsigned int slidingNPoints(0);
+    double slidingSumT(0.), slidingSumL(0.), slidingSumTT(0.), slidingSumLT(0.), slidingSumLL(0.);
+
+    for (unsigned int iLayer = innerLayer; iLayer < innerLayer + layerFitHalfWindow; ++iLayer)
+    {
+        TwoDSlidingFitResult::LayerFitContributionMap::const_iterator lyrIter = layerFitContributionMap.find(iLayer);
+
+        if (layerFitContributionMap.end() != lyrIter)
+        {
+            slidingSumT += lyrIter->second.GetSumT();
+            slidingSumL += lyrIter->second.GetSumL();
+            slidingSumTT += lyrIter->second.GetSumTT();
+            slidingSumLT += lyrIter->second.GetSumLT();
+            slidingSumLL += lyrIter->second.GetSumLL();
+            slidingNPoints += lyrIter->second.GetNPoints();
         }
     }
 
@@ -59,48 +104,49 @@ void LArClusterHelper::LArTwoDSlidingXZFit(const Cluster *const pCluster, TwoDSl
     for (unsigned int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
     {
         const unsigned int fwdLayer(iLayer + layerFitHalfWindow);
-        LayerFitContributionMap::const_iterator fwdIter = layerFitContributionMap.find(fwdLayer);
+        TwoDSlidingFitResult::LayerFitContributionMap::const_iterator fwdIter = layerFitContributionMap.find(fwdLayer);
 
         if (layerFitContributionMap.end() != fwdIter)
         {
-            slidingSumX += fwdIter->second.GetSumX();
-            slidingSumZ += fwdIter->second.GetSumZ();
-            slidingSumXX += fwdIter->second.GetSumXX();
-            slidingSumZX += fwdIter->second.GetSumZX();
-            slidingSumZZ += fwdIter->second.GetSumZZ();
+            slidingSumT += fwdIter->second.GetSumT();
+            slidingSumL += fwdIter->second.GetSumL();
+            slidingSumTT += fwdIter->second.GetSumTT();
+            slidingSumLT += fwdIter->second.GetSumLT();
+            slidingSumLL += fwdIter->second.GetSumLL();
             slidingNPoints += fwdIter->second.GetNPoints();
         }
 
         const unsigned int bwdLayer(iLayer - layerFitHalfWindow - 1);
-        LayerFitContributionMap::const_iterator bwdIter = layerFitContributionMap.find(bwdLayer);
+        TwoDSlidingFitResult::LayerFitContributionMap::const_iterator bwdIter = layerFitContributionMap.find(bwdLayer);
 
         if (layerFitContributionMap.end() != bwdIter)
         {
-            slidingSumX -= bwdIter->second.GetSumX();
-            slidingSumZ -= bwdIter->second.GetSumZ();
-            slidingSumXX -= bwdIter->second.GetSumXX();
-            slidingSumZX -= bwdIter->second.GetSumZX();
-            slidingSumZZ -= bwdIter->second.GetSumZZ();
+            slidingSumT -= bwdIter->second.GetSumT();
+            slidingSumL -= bwdIter->second.GetSumL();
+            slidingSumTT -= bwdIter->second.GetSumTT();
+            slidingSumLT -= bwdIter->second.GetSumLT();
+            slidingSumLL -= bwdIter->second.GetSumLL();
             slidingNPoints -= bwdIter->second.GetNPoints();
         }
 
         if (slidingNPoints > 0)
         {
-            const double denominator(slidingSumZZ - slidingSumZ * slidingSumZ / static_cast<double>(slidingNPoints));
+            const double denominator(slidingSumLL - slidingSumL * slidingSumL / static_cast<double>(slidingNPoints));
 
             if (std::fabs(denominator) < std::numeric_limits<double>::epsilon())
                 continue;
 
-            const double gradient((slidingSumZX - slidingSumZ * slidingSumX / static_cast<double>(slidingNPoints)) / denominator);
-            const double intercept((slidingSumZZ * slidingSumX / static_cast<double>(slidingNPoints) - slidingSumZ * slidingSumZX / static_cast<double>(slidingNPoints)) / denominator);
+            const double gradient((slidingSumLT - slidingSumL * slidingSumT / static_cast<double>(slidingNPoints)) / denominator);
+            const double intercept((slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
 
-            const double z(LArPseudoLayerCalculator::GetZCoordinate(iLayer));
-            const double fitX(intercept + gradient * z);
+            const double l(LArPseudoLayerCalculator::GetZCoordinate(iLayer));
+            const double fitT(intercept + gradient * l);
 
-            const double variance((slidingSumXX - 2. * intercept * slidingSumX - 2. * gradient * slidingSumZX + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumZ + gradient * gradient * slidingSumZZ) / (1. + gradient * gradient));
+            const double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
             const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
 
-            (void) layerFitResultMap.insert(LayerFitResultMap::value_type(iLayer, TwoDSlidingXZFitResult::LayerFitResult(z, fitX, gradient, rms)));
+            const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
+            (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
         }
     }
 }
@@ -109,10 +155,10 @@ void LArClusterHelper::LArTwoDSlidingXZFit(const Cluster *const pCluster, TwoDSl
 
 float LArClusterHelper::LArTrackWidth(const Cluster *const pCluster)
 {
-    TwoDSlidingXZFitResult twoDSlidingXZFitResult;
-    LArClusterHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+    TwoDSlidingFitResult twoDSlidingFitResult;
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, m_layerFitHalfWindow, twoDSlidingFitResult);
 
-    return twoDSlidingXZFitResult.GetSlidingFitWidth();
+    return twoDSlidingFitResult.GetSlidingFitWidth();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,7 +168,7 @@ float LArClusterHelper::GetLengthSquared(const Cluster* const pCluster)
     const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
     const CartesianVector outerCentroid(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
 
-    return (outerCentroid-innerCentroid).GetMagnitudeSquared();
+    return (outerCentroid - innerCentroid).GetMagnitudeSquared();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -377,9 +423,20 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResult::LayerFitResult(const double z, const double fitX, const double gradient, const double rms) :
-    m_z(z),
-    m_fitX(fitX),
+LArClusterHelper::TwoDSlidingFitResult::TwoDSlidingFitResult() :
+    m_pCluster(NULL),
+    m_layerFitHalfWindow(0),
+    m_axisIntercept(0.f, 0.f, 0.f),
+    m_axisDirection(0.f, 0.f, 0.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArClusterHelper::TwoDSlidingFitResult::LayerFitResult::LayerFitResult(const double l, const double fitT, const double gradient, const double rms) :
+    m_l(l),
+    m_fitT(fitT),
     m_gradient(gradient),
     m_rms(rms)
 {
@@ -388,51 +445,85 @@ LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResult::LayerFitResult(const d
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContribution::LayerFitContribution(const CaloHitList *const pCaloHitList) :
-    m_sumX(0.),
-    m_sumZ(0.),
-    m_sumXX(0.),
-    m_sumZX(0.),
-    m_sumZZ(0.),
+LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::LayerFitContribution() :
+    m_sumT(0.),
+    m_sumL(0.),
+    m_sumTT(0.),
+    m_sumLT(0.),
+    m_sumLL(0.),
     m_nPoints(0)
 {
-    for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
-    {
-        const CaloHit *pCaloHit = *iter;
-        const float x(pCaloHit->GetPositionVector().GetX());
-        const float z(pCaloHit->GetPositionVector().GetZ());
-        m_sumX += x;
-        m_sumZ += z;
-        m_sumXX += x * x;
-        m_sumZX += z * x;
-        m_sumZZ += z * z;
-        ++m_nPoints;
-    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::AddPoint(const float l, const float t)
+{
+    m_sumT += t;
+    m_sumL += l;
+    m_sumTT += t * t;
+    m_sumLT += l * t;
+    m_sumLL += l * l;
+    ++m_nPoints;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::TwoDSlidingXZFitResult::GetSlidingFitWidth() const
+void LArClusterHelper::TwoDSlidingFitResult::GetLocalCoordinates(const CartesianVector &position, float &rL, float &rT) const
+{
+    const CartesianVector displacement(position - m_axisIntercept);
+    const CartesianVector crossProduct(displacement.GetCrossProduct(m_axisDirection));
+
+    rL = displacement.GetDotProduct(m_axisDirection);
+    rT = (crossProduct.GetY() < 0.f) ? (-1.f * crossProduct.GetMagnitude()) : crossProduct.GetMagnitude();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::TwoDSlidingFitResult::GetGlobalCoordinates(const float rL, const float rT, CartesianVector &position) const
+{
+    const CartesianVector positiveTDirection(m_axisDirection.GetCrossProduct(CartesianVector(0.f, 1.f, 0.f)));
+    position = m_axisIntercept + (m_axisDirection * rL) + (positiveTDirection * rT);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int LArClusterHelper::TwoDSlidingFitResult::GetLayer(const float rL) const
+{
+    return (rL / LArPseudoLayerCalculator::GetZPitch());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::TwoDSlidingFitResult::GetFitValues(const float x, float &rL, float &rT, int &layer) const
+{
+    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::TwoDSlidingFitResult::GetSlidingFitWidth() const
 {
     FloatVector residuals;
     const OrderedCaloHitList &orderedCaloHitList(m_pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
     {
-        const unsigned int layer(iter->first);
-        LayerFitResultMap::const_iterator fitResultIter = m_layerFitResultMap.find(layer);
-
-        if (m_layerFitResultMap.end() == fitResultIter)
-            continue;
-
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            CaloHit *pCaloHit = *hitIter;
-            const double x(pCaloHit->GetPositionVector().GetX());
-            const double fitX(fitResultIter->second.GetFitX());
+            float rL(0.f), rT(0.f);
+            this->GetLocalCoordinates((*hitIter)->GetPositionVector(), rL, rT);
+            const int layer(this->GetLayer(rL));
+
+            LayerFitResultMap::const_iterator fitResultIter = m_layerFitResultMap.find(layer);
+
+            if (m_layerFitResultMap.end() == fitResultIter)
+                continue;
+
+            const double fitT(fitResultIter->second.GetFitT());
             const double gradient(fitResultIter->second.GetGradient());
-            const double residualSquared((fitX - x) * (fitX - x) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
+            const double residualSquared((fitT - rT) * (fitT - rT) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
             residuals.push_back(residualSquared);
         }
     }
@@ -443,60 +534,63 @@ float LArClusterHelper::TwoDSlidingXZFitResult::GetSlidingFitWidth() const
     std::sort(residuals.begin(), residuals.end());
     static const float m_trackResidualQuantile(0.8f);
     const float theQuantile(residuals[m_trackResidualQuantile * residuals.size()]);
+
     return std::sqrt(theQuantile);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArClusterHelper::TwoDSlidingXZFitResult::FindLargestScatter(unsigned int &largestScatterLayer) const
+StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned int &largestScatterLayer) const
 {
-    static const float m_trackFitMaxRms(0.25); // cm
-    static const float m_minCosScatteringAngle(std::cos(M_PI * 20.f / 180.f)); // radians
-
     // Bail out if track is too short
-    const unsigned int minLayer(m_pCluster->GetInnerPseudoLayer());
-    const unsigned int nClusterLayers(1 + m_pCluster->GetOuterPseudoLayer() - m_pCluster->GetInnerPseudoLayer());
+    const unsigned int nFitLayers(m_layerFitResultMap.size());
 
-    if (nClusterLayers <= 2 * m_layerFitHalfWindow)
+    if ((nFitLayers <= 2) || (nFitLayers <= 2 * m_layerFitHalfWindow))
         return STATUS_CODE_NOT_FOUND;
 
+    const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
+    const int nLayersSpanned(1 + maxLayer - minLayer);
+
     // Find point of largest scatter
-    unsigned int splitLayer(0);
     double splitCosTheta(m_minCosScatteringAngle);
+    LayerFitResultMap::const_iterator splitLayerIter(m_layerFitResultMap.end());
 
-    const OrderedCaloHitList &orderedCaloHitList(m_pCluster->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
+    for (LayerFitResultMap::const_iterator iter1 = m_layerFitResultMap.begin(); iter1 != m_layerFitResultMap.end(); ++iter1)
     {
-        const unsigned int layer(iter->first);
-
-        if (layer - minLayer >= nClusterLayers - 2 * m_layerFitHalfWindow)
+        if (iter1->first - minLayer >= nLayersSpanned - 2 * m_layerFitHalfWindow)
             break;
 
-        LayerFitResultMap::const_iterator fitIter1 = m_layerFitResultMap.find(layer);
-        LayerFitResultMap::const_iterator fitIter2 = m_layerFitResultMap.find(layer + 2 * m_layerFitHalfWindow);
+        LayerFitResultMap::const_iterator iter2 = m_layerFitResultMap.find(iter1->first + 2 * m_layerFitHalfWindow);
 
-        if ((m_layerFitResultMap.end() == fitIter1) || (m_layerFitResultMap.end() == fitIter2))
+        if (m_layerFitResultMap.end() == iter2)
             continue;
 
-        const double r1(fitIter1->second.GetRms());
-        const double r2(fitIter2->second.GetRms());
-        const double m1(fitIter1->second.GetGradient());
-        const double m2(fitIter2->second.GetGradient());
+        const double r1(iter1->second.GetRms()), r2(iter2->second.GetRms());
+        const double m1(iter1->second.GetGradient()), m2(iter2->second.GetGradient());
+        const double cosTheta = (1. + m1 * m2) / (std::sqrt(1. + m1 * m1) * std::sqrt(1. + m2 * m2));
 
-        const double cosTheta = (1. + m1 * m2) / (std::sqrt(1.+ m1 * m1) * std::sqrt(1. + m2 * m2));
-
-        if ((r1< m_trackFitMaxRms) && (r2 < m_trackFitMaxRms) && (cosTheta < splitCosTheta))
+        if ((r1 < LArClusterHelper::m_trackFitMaxRms) && (r2 < LArClusterHelper::m_trackFitMaxRms) && (cosTheta < splitCosTheta))
         {
             splitCosTheta = cosTheta;
-            splitLayer = layer + m_layerFitHalfWindow;
+
+            // Find occupied layer at centre of the kink
+            for (int iLayer = iter1->first + m_layerFitHalfWindow; iLayer < maxLayer; ++iLayer)
+            {
+                splitLayerIter = m_layerFitResultMap.find(iLayer);
+
+                if (m_layerFitResultMap.end() != splitLayerIter)
+                    break;
+            }
         }
     }
 
-    if ((splitLayer <= m_pCluster->GetInnerPseudoLayer()) || (splitLayer >= m_pCluster->GetOuterPseudoLayer()))
+    if (m_layerFitResultMap.end() == splitLayerIter)
         return STATUS_CODE_NOT_FOUND;
 
-    largestScatterLayer = splitLayer;
+    CartesianVector splitPosition(0.f, 0.f, 0.f);
+    this->GetGlobalCoordinates(splitLayerIter->second.GetL(), splitLayerIter->second.GetFitT(), splitPosition);
+    largestScatterLayer = GeometryHelper::GetPseudoLayer(splitPosition);
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -510,9 +604,11 @@ float LArClusterHelper::m_minCosScatteringAngle = std::cos(M_PI * 20.f / 180.f);
 StatusCode LArClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LayerFitHalfWindow", m_layerFitHalfWindow));    
+        "LayerFitHalfWindow", m_layerFitHalfWindow));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrackFitMaxRms", m_trackFitMaxRms));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosScatteringAngle", m_minCosScatteringAngle));
 

@@ -54,16 +54,20 @@ bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) cons
 
 StatusCode KinkSplittingAlgorithm::FindBestSplitLayer(const Cluster* const pCluster, unsigned int& splitLayer )
 { 
-    LArClusterHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
-    LArClusterHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+    LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
+    LArClusterHelper::LArTwoDSlidingXZFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);
 
-    return twoDSlidingXZFitResult.FindLargestScatter(splitLayer);
+    return twoDSlidingFitResult.FindLargestScatter(splitLayer);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_slidingFitLayerHalfWindow = 20;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitLayerHalfWindow", m_slidingFitLayerHalfWindow));
+
     m_minClusterLayers = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLayers", m_minClusterLayers));
@@ -76,7 +80,6 @@ StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinOverallScatteringRms", m_minOverallScatteringRms));
 
-    //
     //m_maxCosScatteringAngle = std::cos(M_PI * 15.f / 180.f);
     //PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
     //    "MaxCosScatteringAngle", m_maxCosScatteringAngle));

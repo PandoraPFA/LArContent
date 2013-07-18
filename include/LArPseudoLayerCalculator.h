@@ -38,6 +38,20 @@ public:
      */
     static pandora::PseudoLayer GetPseudoLayer(const float zCoordinate);
 
+    /**
+     *  @brief  Get the z pitch
+     * 
+     *  @return the z pitch
+     */
+    static float GetZPitch();
+
+    /**
+     *  @brief  Get the z offset
+     * 
+     *  @return the z offset
+     */
+    static float GetZOffset();
+
 private:
     void Initialize(const pandora::GeometryHelper *const pGeometryHelper);
     pandora::PseudoLayer GetPseudoLayer(const pandora::CartesianVector &positionVector) const;
@@ -46,6 +60,20 @@ private:
     static const float  Z_PITCH;    ///< The z pitch
     static const float  Z_OFFSET;   ///< The z offset
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArPseudoLayerCalculator::GetZPitch()
+{
+    return Z_PITCH;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArPseudoLayerCalculator::GetZOffset()
+{
+    return Z_OFFSET;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

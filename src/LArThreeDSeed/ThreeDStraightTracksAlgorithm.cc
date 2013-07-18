@@ -53,30 +53,31 @@ void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const
         if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75f)
             continue;
 
-        LArClusterHelper::TwoDSlidingXZFitResult twoDSlidingXZFitResult;
-        LArClusterHelper::LArTwoDSlidingXZFit(pCluster, twoDSlidingXZFitResult);
+        LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
+        LArClusterHelper::LArTwoDSlidingFit(pCluster, 20, twoDSlidingFitResult);
 
         FloatVector residuals;
         unsigned int nHitsOnTrack(0);
 
         const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        const LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingXZFitResult.GetLayerFitResultMap());
+        const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.GetLayerFitResultMap());
 
         for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
         {
-            const unsigned int layer(iter->first);
-            LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResultMap::const_iterator fitResultIter = layerFitResultMap.find(layer);
-
-            if (layerFitResultMap.end() == fitResultIter)
-                continue;
-
             for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
             {
-                CaloHit *pCaloHit = *hitIter;
-                const double x(pCaloHit->GetPositionVector().GetX());
-                const double fitX(fitResultIter->second.GetFitX());
+                float rL(0.f), rT(0.f);
+                twoDSlidingFitResult.GetLocalCoordinates((*hitIter)->GetPositionVector(), rL, rT);
+                const int layer(twoDSlidingFitResult.GetLayer(rL));
+
+                LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator fitResultIter = layerFitResultMap.find(layer);
+
+                if (layerFitResultMap.end() == fitResultIter)
+                    continue;
+
+                const double fitT(fitResultIter->second.GetFitT());
                 const double gradient(fitResultIter->second.GetGradient());
-                const double residualSquared((fitX - x) * (fitX - x) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
+                const double residualSquared((fitT - rT) * (fitT - rT) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
                 residuals.push_back(residualSquared);
 
                 if (residualSquared < 1.f) // TODO

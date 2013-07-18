@@ -31,11 +31,16 @@ class LArClusterHelper
 {
 public:
     /**
-     *  @brief  TwoDSlidingXZFitResult class
+     *  @brief  TwoDSlidingFitResult class
      */
-    class TwoDSlidingXZFitResult
+    class TwoDSlidingFitResult
     {
     public:
+        /**
+         *  @brief  Constructor
+         */
+        TwoDSlidingFitResult();
+
         /**
          *  @brief  class LayerFitResult
          */
@@ -45,31 +50,31 @@ public:
             /**
              *  @brief  Constructor
              * 
-             *  @param  z the z coordinate
-             *  @param  fitX the fitted x coordinate
-             *  @param  gradient the fitted gradient dx/dz
+             *  @param  l the l coordinate
+             *  @param  fitT the fitted t coordinate
+             *  @param  gradient the fitted gradient dt/dl
              *  @param  rms the rms of the fit residuals
              */
-            LayerFitResult(const double z, const double fitX, const double gradient, const double rms);
+            LayerFitResult(const double l, const double fitT, const double gradient, const double rms);
 
             /**
-             *  @brief  Get the z coordinate
+             *  @brief  Get the l coordinate
              * 
-             *  @return the z coordinate
+             *  @return the l coordinate
              */
-            double GetZ() const;
+            double GetL() const;
 
             /**
-             *  @brief  Get the fitted x coordinate
+             *  @brief  Get the fitted t coordinate
              * 
-             *  @return the fitted x coordinate
+             *  @return the fitted t coordinate
              */
-            double GetFitX() const;
+            double GetFitT() const;
 
             /**
-             *  @brief  Get the fitted gradient dx/dz
+             *  @brief  Get the fitted gradient dt/dz
              * 
-             *  @return the fitted gradient dx/dz
+             *  @return the fitted gradient dt/dl
              */
             double GetGradient() const;
 
@@ -81,13 +86,13 @@ public:
             double GetRms() const;
 
             private:
-            double                  m_z;                            ///< The z coordinate
-            double                  m_fitX;                         ///< The fitted x coordinate
-            double                  m_gradient;                     ///< The fitted gradient dx/dz
+            double                  m_l;                            ///< The l coordinate
+            double                  m_fitT;                         ///< The fitted t coordinate
+            double                  m_gradient;                     ///< The fitted gradient dt/dl
             double                  m_rms;                          ///< The rms of the fit residuals
         };
 
-        typedef std::map<unsigned int, LayerFitResult> LayerFitResultMap;
+        typedef std::map<int, LayerFitResult> LayerFitResultMap;
 
         /**
          *  @brief  LayerFitContribution class
@@ -96,46 +101,52 @@ public:
         {
         public:
             /**
-             *  @brief  Constructor
-             * 
-             *  @param  pCaloHitList address of the calo hit list
+             *  @brief  Default constructor
              */
-            LayerFitContribution(const pandora::CaloHitList *const pCaloHitList);
+            LayerFitContribution();
 
             /**
-             *  @brief  Get the sum x
+             *  @brief  Add point to layer fit
              * 
-             *  @return the sum x
+             *  @param  l the longitudinal coordinate
+             *  @param  t the transverse coordinate
              */
-            double GetSumX() const;
+            void AddPoint(const float l, const float t);
 
             /**
-             *  @brief  Get the sum z
+             *  @brief  Get the sum t
              * 
-             *  @return the sum z
+             *  @return the sum t
              */
-            double GetSumZ() const;
+            double GetSumT() const;
 
             /**
-             *  @brief  Get the sum x * x
+             *  @brief  Get the sum l
              * 
-             *  @return the sum x * x
+             *  @return the sum l
              */
-            double GetSumXX() const;
+            double GetSumL() const;
 
             /**
-             *  @brief  Get the sum z * x
+             *  @brief  Get the sum t * t
              * 
-             *  @return the sum z * x
+             *  @return the sum t * t
              */
-            double GetSumZX() const;
+            double GetSumTT() const;
 
             /**
-             *  @brief  Get the sum z * z
+             *  @brief  Get the sum l * t
+             * 
+             *  @return the sum l * t
+             */
+            double GetSumLT() const;
+
+            /**
+             *  @brief  Get the sum l * l
              * 
              *  @return the sum z * z
              */
-            double GetSumZZ() const;
+            double GetSumLL() const;
 
             /**
              *  @brief  Get the number of points used
@@ -145,15 +156,15 @@ public:
             unsigned int GetNPoints() const;
 
         private:
-            double                  m_sumX;                ///< The sum x
-            double                  m_sumZ;                ///< The sum z
-            double                  m_sumXX;               ///< The sum x * x
-            double                  m_sumZX;               ///< The sum z * x
-            double                  m_sumZZ;               ///< The sum z * z
+            double                  m_sumT;                ///< The sum t
+            double                  m_sumL;                ///< The sum l
+            double                  m_sumTT;               ///< The sum t * t
+            double                  m_sumLT;               ///< The sum l * t
+            double                  m_sumLL;               ///< The sum l * l
             unsigned int            m_nPoints;             ///< The number of points used
         };
 
-        typedef std::map<unsigned int, LayerFitContribution> LayerFitContributionMap;
+        typedef std::map<int, LayerFitContribution> LayerFitContributionMap;
 
         /**
          *  @brief  Get the address of the cluster
@@ -170,13 +181,53 @@ public:
         unsigned int GetLayerFitHalfWindow() const;
 
         /**
-         *  @brief  Find the largest scatter in the cluster, if above a threshold value
+         *  @brief  Get the axis intercept position
          * 
-         *  @param  largestScatterLayer to receive the layer corresponding to the largest scatter
-         * 
-         *  @return STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND
+         *  @return the axis intercept position
          */
-        pandora::StatusCode FindLargestScatter(unsigned int &largestScatterLayer) const;
+        const pandora::CartesianVector &GetAxisIntercept() const;
+
+        /**
+         *  @brief  Get the axis direction vector
+         * 
+         *  @return the axis direction vector
+         */
+        const pandora::CartesianVector &GetAxisDirection() const;
+
+        /**
+         *  @brief  Get sliding linear fit coordinates for a given cartesian vector
+         * 
+         *  @param  position the position cartesian vector
+         *  @param  rL to receive the longitudinal coordinate
+         *  @param  rT to receive the transverse coordinate
+         */
+        void GetLocalCoordinates(const pandora::CartesianVector &position, float &rL, float &rT) const;
+
+        /**
+         *  @brief  Get global coordinates for given sliding linear fit coordinates
+         * 
+         *  @param  rL the longitudinal coordinate
+         *  @param  rT the transverse coordinate
+         *  @param  position to receive the position cartesian vector
+         */
+        void GetGlobalCoordinates(const float rL, const float rT, pandora::CartesianVector &position) const;
+
+        /**
+         *  @brief  Get layer number for given sliding linear fit longitudinal coordinate
+         * 
+         *  @param  rL the longitudinal coordinate
+         */
+        int GetLayer(const float rL) const;
+
+        /**
+         *  @brief  Get sliding linear fit values for a given x coordinate
+         * 
+         *  @param  x the x coordinate
+         *  @param  rL to receive the longitudinal coordinate
+         *  @param  rT to receive the transverse coordinate
+         *  @param  layer to receive the layer
+         */
+        void GetFitValues(const float x, float &rL, float &rT, int &layer) const;
 
         /**
          *  @brief  Get the sliding fit width
@@ -184,6 +235,15 @@ public:
          *  @return the sliding fit width
          */
         float GetSlidingFitWidth() const;
+
+        /**
+         *  @brief  Find the largest scatter in the cluster, if above a threshold value
+         * 
+         *  @param  largestScatterLayer to receive the layer corresponding to the largest scatter
+         * 
+         *  @return STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND
+         */
+        pandora::StatusCode FindLargestScatter(unsigned int &largestScatterLayer) const;
 
         /**
          *  @brief  Get the layer fit result map
@@ -202,22 +262,43 @@ public:
     private:
         const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
         unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
+        pandora::CartesianVector    m_axisIntercept;            ///< The axis intercept position
+        pandora::CartesianVector    m_axisDirection;            ///< The axis direction vector
         LayerFitResultMap           m_layerFitResultMap;        ///< The layer fit result map
         LayerFitContributionMap     m_layerFitContributionMap;  ///< The layer fit contribution map
 
         friend class LArClusterHelper;
     };
 
-    typedef TwoDSlidingXZFitResult::LayerFitResultMap LayerFitResultMap;
-    typedef TwoDSlidingXZFitResult::LayerFitContributionMap LayerFitContributionMap;
-
     /**
-     *  @brief  Perform two dimensional sliding x-z fit
+     *  @brief  Perform two dimensional sliding fit, using a three dimensional fit to the cluster to define primary axis
      * 
      *  @param  pCluster address of the cluster
-     *  @param  twoDSlidingXZFitResult to receive the fit result
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, TwoDSlidingXZFitResult &twoDSlidingXZFitResult);
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult);
+
+    /**
+     *  @brief  Perform two dimensional sliding fit, using z axis as primary axis, fitting x coordinates
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  twoDSlidingFitResult to receive the fit result
+     */
+    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult);
+
+    /**
+     *  @brief  Perform two dimensional sliding fit, using the specified primary axis
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  axisIntercept the axis intercept position
+     *  @param  axisDirection the axis direction vector
+     *  @param  twoDSlidingFitResult to receive the fit result
+     */
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
+        const pandora::CartesianVector &axisDirection, TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Measure width of cluster using multiple straight line fits
@@ -399,28 +480,42 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster *LArClusterHelper::TwoDSlidingXZFitResult::GetCluster() const
+inline const pandora::Cluster *LArClusterHelper::TwoDSlidingFitResult::GetCluster() const
 {
     return m_pCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline unsigned int LArClusterHelper::TwoDSlidingXZFitResult::GetLayerFitHalfWindow() const
+inline unsigned int LArClusterHelper::TwoDSlidingFitResult::GetLayerFitHalfWindow() const
 {
     return m_layerFitHalfWindow;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResultMap &LArClusterHelper::TwoDSlidingXZFitResult::GetLayerFitResultMap() const
+inline const pandora::CartesianVector &LArClusterHelper::TwoDSlidingFitResult::GetAxisIntercept() const
+{
+    return m_axisIntercept;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &LArClusterHelper::TwoDSlidingFitResult::GetAxisDirection() const
+{
+    return m_axisDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap &LArClusterHelper::TwoDSlidingFitResult::GetLayerFitResultMap() const
 {
     return m_layerFitResultMap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContributionMap &LArClusterHelper::TwoDSlidingXZFitResult::GetLayerFitContributionMap() const
+inline const LArClusterHelper::TwoDSlidingFitResult::LayerFitContributionMap &LArClusterHelper::TwoDSlidingFitResult::GetLayerFitContributionMap() const
 {
     return m_layerFitContributionMap;
 }
@@ -428,28 +523,28 @@ inline const LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContributionMap &
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResult::GetZ() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitResult::GetL() const
 {
-    return m_z;
+    return m_l;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResult::GetFitX() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitResult::GetFitT() const
 {
-    return m_fitX;
+    return m_fitT;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResult::GetGradient() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitResult::GetGradient() const
 {
     return m_gradient;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResult::GetRms() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitResult::GetRms() const
 {
     return m_rms;
 }
@@ -457,42 +552,42 @@ inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitResult::GetRms()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumX() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::GetSumT() const
 {
-    return m_sumX;
+    return m_sumT;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZ() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::GetSumL() const
 {
-    return m_sumZ;
+    return m_sumL;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZX() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::GetSumLT() const
 {
-    return m_sumZX;
+    return m_sumLT;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumZZ() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::GetSumLL() const
 {
-    return m_sumZZ;
+    return m_sumLL;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetSumXX() const
+inline double LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::GetSumTT() const
 {
-    return m_sumXX;
+    return m_sumTT;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline unsigned int LArClusterHelper::TwoDSlidingXZFitResult::LayerFitContribution::GetNPoints() const
+inline unsigned int LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::GetNPoints() const
 {
     return m_nPoints;
 }

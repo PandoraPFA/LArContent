@@ -50,15 +50,12 @@ private:
      */
     bool IsPossibleSplit(const pandora::Cluster *const pCluster) const;
 
+    unsigned int    m_slidingFitLayerHalfWindow;    ///< Layer half window for sliding fit
+    unsigned int    m_minClusterLayers;             ///< Min number of cluster layers for kink identification
+    float           m_minVertexScatteringRms;       ///< Min scattering rms at ends of cluster for kink identification
+    float           m_minOverallScatteringRms;      ///< Min scattering rms of full cluster for kink identification
 
-
-    int         m_minClusterLayers;             ///< Min number of cluster layers for kink identification
-    float       m_minVertexScatteringRms;       ///< Min scattering rms at ends of cluster for kink identification
-    float       m_minOverallScatteringRms;      ///< Min scattering rms of full cluster for kink identification
-
-    //
-    // float       m_maxCosScatteringAngle;        ///< Max cosine of scattering angle for kink identification
-    //
+    //float         m_maxCosScatteringAngle;        ///< Max cosine of scattering angle for kink identification
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
