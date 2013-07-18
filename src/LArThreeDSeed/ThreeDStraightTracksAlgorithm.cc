@@ -102,10 +102,10 @@ void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const
         const float slidingFitWidth(std::sqrt(theQuantile));
 
 std::cout << " SELECT? slidingFitWidth " << slidingFitWidth << " hitsOnTrackFraction " << (static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits()))) << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList tempList; tempList.insert(pCluster);
-PandoraMonitoringApi::VisualizeClusters(&tempList, "tempList", RED);
-PandoraMonitoringApi::ViewEvent();
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// ClusterList tempList; tempList.insert(pCluster);
+// PandoraMonitoringApi::VisualizeClusters(&tempList, "tempList", RED);
+// PandoraMonitoringApi::ViewEvent();
 
         if (slidingFitWidth > 1.5f) // TODO
             continue;
@@ -180,7 +180,9 @@ PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
     const float maxX(std::min(maxXU, std::min(maxXV, maxXW)));
     const float xOverlap(maxX - minX);
 
-    if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.9f) || ((xOverlap / xSpanV) < 0.9f) || ((xOverlap / xSpanW) < 0.9f))
+    
+
+    if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
 {
 std::cout << " VETO: xOverlap " << xOverlap << ", xSpanUf " << (xOverlap / xSpanU) << ", xSpanVf " << (xOverlap / xSpanV) << ", xSpanWf " << (xOverlap / xSpanW) << std::endl;
 PandoraMonitoringApi::ViewEvent();
@@ -203,6 +205,10 @@ PandoraMonitoringApi::ViewEvent();
         slidingFitResultV.GetGlobalFitCoordinates(x, fitVVector);
         slidingFitResultW.GetGlobalFitCoordinates(x, fitWVector);
 
+PANDORA_MONITORING_API(AddMarkerToVisualization(&fitUVector, "fitUVector", RED, 1.));
+PANDORA_MONITORING_API(AddMarkerToVisualization(&fitVVector, "fitVVector", GREEN, 1.));
+PANDORA_MONITORING_API(AddMarkerToVisualization(&fitWVector, "fitWVector", BLUE, 1.));
+
         const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
         const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
         const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
@@ -215,11 +221,13 @@ PandoraMonitoringApi::ViewEvent();
         if (pseudoChi2 < 3.f) // TODO
             ++nMatchedSamplingPoints;
 
-std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
-const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
-const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
-const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
+	//std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
+//const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
+//const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
+//const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
     }
+
+
 
     if (0 == nSamplingPoints)
         throw StatusCodeException(STATUS_CODE_FAILURE);

@@ -508,15 +508,17 @@ void LArClusterHelper::TwoDSlidingFitResult::GetLocalFitCoordinates(const float 
 
 void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float x, CartesianVector &position) const
 {
-    const float xToIntercept(std::fabs(x - m_axisIntercept.GetX()));
-    const float tanTheta(std::tan(m_axisDirection.GetOpeningAngle(CartesianVector(1.f, 0.f, 0.f))));
-    const float firstL((tanTheta > 0.f) ? xToIntercept / tanTheta : xToIntercept);
-    const int startLayer(this->GetLayer(firstL));
+    if (std::fabs(m_axisDirection.GetX()) < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
+    const float firstL( (x - m_axisIntercept.GetX()) / m_axisDirection.GetX() );
+    const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
+    const int startLayer(this->GetLayer(firstL));
+ 
     // First layer coordinates
     LayerFitResultMap::const_iterator firstLayerIter(m_layerFitResultMap.end());
 
-    for (int iLayer = startLayer; iLayer < m_layerFitResultMap.rbegin()->first; ++iLayer)
+    for (int iLayer = startLayer; iLayer < maxLayer; ++iLayer)
     {
         firstLayerIter = m_layerFitResultMap.find(iLayer);
 
@@ -530,12 +532,16 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
 
     CartesianVector firstLayerPosition(0.f, 0.f, 0.f);
     this->GetGlobalCoordinates(firstLayerL, firstLayerT, firstLayerPosition);
-    const float firstIsAheadInX(firstLayerPosition.GetX() > x);
+
+    // Sort out directions
+    const bool firstIsAheadInX(firstLayerPosition.GetX() > x);
+    const bool xIncreasesWithLayers(m_axisDirection.GetX() > 0.f);
+    const int increment = ((firstIsAheadInX == xIncreasesWithLayers) ? -1 : +1);
 
     // Second layer coordinates
     LayerFitResultMap::const_iterator secondLayerIter(m_layerFitResultMap.end());
 
-    for (int iLayer = startLayer - 1; iLayer > m_layerFitResultMap.begin()->first; --iLayer)
+    for (int iLayer = firstLayer + increment; (iLayer > minLayer) && (iLayer < maxLayer); iLayer += increment)
     {
         LayerFitResultMap::const_iterator tempIter = m_layerFitResultMap.find(iLayer);
 
