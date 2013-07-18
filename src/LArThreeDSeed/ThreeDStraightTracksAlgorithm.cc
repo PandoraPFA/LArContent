@@ -138,8 +138,8 @@ void ThreeDStraightTracksAlgorithm::InitializeTensor()
 void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // U
-    ClusterHelper::ClusterFitResult centroidFitResultU;
-    ClusterHelper::FitLayerCentroids(pClusterU, pClusterU->GetInnerPseudoLayer(), pClusterU->GetOuterPseudoLayer(), centroidFitResultU);
+    LArClusterHelper::TwoDSlidingFitResult slidingFitResultU;
+    LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
 
     const float innerXU(pClusterU->GetCentroid(pClusterU->GetInnerPseudoLayer()).GetX());
     const float outerXU(pClusterU->GetCentroid(pClusterU->GetOuterPseudoLayer()).GetX());
@@ -148,8 +148,8 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float xSpanU(maxXU - minXU);
 
     // V
-    ClusterHelper::ClusterFitResult centroidFitResultV;
-    ClusterHelper::FitLayerCentroids(pClusterV, pClusterV->GetInnerPseudoLayer(), pClusterV->GetOuterPseudoLayer(), centroidFitResultV);
+    LArClusterHelper::TwoDSlidingFitResult slidingFitResultV;
+    LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
 
     const float innerXV(pClusterV->GetCentroid(pClusterV->GetInnerPseudoLayer()).GetX());
     const float outerXV(pClusterV->GetCentroid(pClusterV->GetOuterPseudoLayer()).GetX());
@@ -158,8 +158,8 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float xSpanV(maxXV - minXV);
 
     // W
-    ClusterHelper::ClusterFitResult centroidFitResultW;
-    ClusterHelper::FitLayerCentroids(pClusterW, pClusterW->GetInnerPseudoLayer(), pClusterW->GetOuterPseudoLayer(), centroidFitResultW);
+    LArClusterHelper::TwoDSlidingFitResult slidingFitResultW;
+    LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
 
     const float innerXW(pClusterW->GetCentroid(pClusterW->GetInnerPseudoLayer()).GetX());
     const float outerXW(pClusterW->GetCentroid(pClusterW->GetOuterPseudoLayer()).GetX());
@@ -198,13 +198,12 @@ PandoraMonitoringApi::ViewEvent();
 
     for (float x = minX; x < maxX; x += xPitch)
     {
-        const float u((centroidFitResultU.GetIntercept() + centroidFitResultU.GetDirection() *
-            (x - centroidFitResultU.GetIntercept().GetX()) * (1.f / centroidFitResultU.GetDirection().GetX())).GetZ());
-        const float v((centroidFitResultV.GetIntercept() + centroidFitResultV.GetDirection() *
-            (x - centroidFitResultV.GetIntercept().GetX()) * (1.f / centroidFitResultV.GetDirection().GetX())).GetZ());
-        const float w((centroidFitResultW.GetIntercept() + centroidFitResultW.GetDirection() *
-            (x - centroidFitResultW.GetIntercept().GetX()) * (1.f / centroidFitResultW.GetDirection().GetX())).GetZ());
+        CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
+        slidingFitResultU.GetGlobalFitCoordinates(x, fitUVector);
+        slidingFitResultV.GetGlobalFitCoordinates(x, fitVVector);
+        slidingFitResultW.GetGlobalFitCoordinates(x, fitWVector);
 
+        const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
         const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
         const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
         const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));

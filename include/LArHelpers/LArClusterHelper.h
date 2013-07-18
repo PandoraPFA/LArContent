@@ -220,14 +220,22 @@ public:
         int GetLayer(const float rL) const;
 
         /**
-         *  @brief  Get sliding linear fit values for a given x coordinate
+         *  @brief  Get sliding linear fit coordinates for a given x coordinate
          * 
          *  @param  x the x coordinate
          *  @param  rL to receive the longitudinal coordinate
          *  @param  rT to receive the transverse coordinate
          *  @param  layer to receive the layer
          */
-        void GetFitValues(const float x, float &rL, float &rT, int &layer) const;
+        void GetLocalFitCoordinates(const float x, float &rL, float &rT, int &layer) const;
+
+        /**
+         *  @brief  Get global fit coordinates for a given x coordinate
+         * 
+         *  @param  x the x coordinate
+         *  @param  position to receive the position cartesian vector
+         */
+        void GetGlobalFitCoordinates(const float x, pandora::CartesianVector &position) const;
 
         /**
          *  @brief  Get the sliding fit width
