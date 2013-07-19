@@ -12,7 +12,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 
 #include "LArPseudoLayerCalculator.h"
-                                            #include "PandoraMonitoringApi.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -515,15 +515,12 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
     if (std::fabs(m_axisDirection.GetX()) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const float firstL( (x - m_axisIntercept.GetX()) / m_axisDirection.GetX() );
+    const float firstL((x - m_axisIntercept.GetX()) / m_axisDirection.GetX());
     const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
     const int startLayer(this->GetLayer(firstL));
 
     if ((startLayer < minLayer) || (startLayer > maxLayer))
-    {
-std::cout << " 0minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
 
     if (startLayer == minLayer)
     {
@@ -551,6 +548,7 @@ std::cout << " 0minLayer " << minLayer << " maxLayer " << maxLayer << " startLay
     if (m_layerFitResultMap.end() == firstLayerIter)
     {
 std::cout << " first not found " << std::endl;
+std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
@@ -588,11 +586,10 @@ std::cout << " first not found " << std::endl;
             break;
     }
 
-std::cout << " 1minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << std::endl;
     if (m_layerFitResultMap.end() == secondLayerIter)
     {
 std::cout << " second not found " << std::endl;
-std::cout << " ***2minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << std::endl;
+std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
