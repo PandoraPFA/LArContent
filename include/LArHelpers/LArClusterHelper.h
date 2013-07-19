@@ -238,6 +238,20 @@ public:
         void GetGlobalFitCoordinates(const float x, pandora::CartesianVector &position) const;
 
         /**
+         *  @brief  Get global position corresponding to the fit result in minimum fit layer
+         * 
+         *  @return the position
+         */
+        pandora::CartesianVector GetGlobalMinLayerPosition() const;
+
+        /**
+         *  @brief  Get global position corresponding to the fit result in maximum fit layer
+         * 
+         *  @return the position
+         */
+        pandora::CartesianVector GetGlobalMaxLayerPosition() const;
+
+        /**
          *  @brief  Get the sliding fit width
          * 
          *  @return the sliding fit width

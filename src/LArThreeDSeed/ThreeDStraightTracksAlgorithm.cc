@@ -141,8 +141,8 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultU;
     LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
 
-    const float innerXU(pClusterU->GetCentroid(pClusterU->GetInnerPseudoLayer()).GetX());
-    const float outerXU(pClusterU->GetCentroid(pClusterU->GetOuterPseudoLayer()).GetX());
+    const float innerXU(slidingFitResultU.GetGlobalMinLayerPosition().GetX());
+    const float outerXU(slidingFitResultU.GetGlobalMaxLayerPosition().GetX());
     const float minXU(std::min(innerXU, outerXU));
     const float maxXU(std::max(innerXU, outerXU));
     const float xSpanU(maxXU - minXU);
@@ -151,8 +151,8 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultV;
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
 
-    const float innerXV(pClusterV->GetCentroid(pClusterV->GetInnerPseudoLayer()).GetX());
-    const float outerXV(pClusterV->GetCentroid(pClusterV->GetOuterPseudoLayer()).GetX());
+    const float innerXV(slidingFitResultV.GetGlobalMinLayerPosition().GetX());
+    const float outerXV(slidingFitResultV.GetGlobalMaxLayerPosition().GetX());
     const float minXV(std::min(innerXV, outerXV));
     const float maxXV(std::max(innerXV, outerXV));
     const float xSpanV(maxXV - minXV);
@@ -161,8 +161,8 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultW;
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
 
-    const float innerXW(pClusterW->GetCentroid(pClusterW->GetInnerPseudoLayer()).GetX());
-    const float outerXW(pClusterW->GetCentroid(pClusterW->GetOuterPseudoLayer()).GetX());
+    const float innerXW(slidingFitResultW.GetGlobalMinLayerPosition().GetX());
+    const float outerXW(slidingFitResultW.GetGlobalMaxLayerPosition().GetX());
     const float minXW(std::min(innerXW, outerXW));
     const float maxXW(std::max(innerXW, outerXW));
     const float xSpanW(maxXW - minXW);
@@ -221,7 +221,7 @@ PANDORA_MONITORING_API(AddMarkerToVisualization(&fitWVector, "fitWVector", BLUE,
         if (pseudoChi2 < 3.f) // TODO
             ++nMatchedSamplingPoints;
 
-	//std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
+//std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
 //const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
 //const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
 //const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));

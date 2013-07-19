@@ -508,13 +508,35 @@ void LArClusterHelper::TwoDSlidingFitResult::GetLocalFitCoordinates(const float 
 
 void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float x, CartesianVector &position) const
 {
+    if (m_layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    // Find start layer - note this method does not yet work for XZ fits
     if (std::fabs(m_axisDirection.GetX()) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const float firstL( (x - m_axisIntercept.GetX()) / m_axisDirection.GetX() );
     const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
     const int startLayer(this->GetLayer(firstL));
- 
+
+    if ((startLayer < minLayer) || (startLayer > maxLayer))
+    {
+std::cout << " 0minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << std::endl;
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    if (startLayer == minLayer)
+    {
+        position = this->GetGlobalMinLayerPosition();
+        return;
+    }
+
+    if (startLayer == maxLayer)
+    {
+        position = this->GetGlobalMaxLayerPosition();
+        return;
+    }
+
     // First layer coordinates
     LayerFitResultMap::const_iterator firstLayerIter(m_layerFitResultMap.end());
 
@@ -524,6 +546,12 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
 
         if (m_layerFitResultMap.end() != firstLayerIter)
             break;
+    }
+
+    if (m_layerFitResultMap.end() == firstLayerIter)
+    {
+std::cout << " first not found " << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
     const int firstLayer(firstLayerIter->first);
@@ -560,6 +588,14 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
             break;
     }
 
+std::cout << " 1minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << std::endl;
+    if (m_layerFitResultMap.end() == secondLayerIter)
+    {
+std::cout << " second not found " << std::endl;
+std::cout << " ***2minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
+
     const int secondLayer(secondLayerIter->first);
     const float secondLayerL(secondLayerIter->second.GetL());
     const float secondLayerT(secondLayerIter->second.GetFitT());
@@ -574,6 +610,32 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     position = firstLayerPosition + (secondLayerPosition - firstLayerPosition) * (deltaX / deltaXLayers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArClusterHelper::TwoDSlidingFitResult::GetGlobalMinLayerPosition() const
+{
+    if (m_layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    LayerFitResultMap::const_iterator iter = m_layerFitResultMap.begin();
+    CartesianVector position(0.f, 0.f, 0.f);
+    this->GetGlobalCoordinates(iter->second.GetL(), iter->second.GetFitT(), position);
+    return position;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArClusterHelper::TwoDSlidingFitResult::GetGlobalMaxLayerPosition() const
+{
+    if (m_layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    LayerFitResultMap::const_reverse_iterator iter = m_layerFitResultMap.rbegin();
+    CartesianVector position(0.f, 0.f, 0.f);
+    this->GetGlobalCoordinates(iter->second.GetL(), iter->second.GetFitT(), position);
+    return position;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -604,7 +666,7 @@ float LArClusterHelper::TwoDSlidingFitResult::GetSlidingFitWidth() const
     }
 
     if (residuals.empty())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     std::sort(residuals.begin(), residuals.end());
     static const float m_trackResidualQuantile(0.8f);
