@@ -30,9 +30,9 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-private:
-    pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+protected:    
+    virtual pandora::StatusCode Run();
+    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
      *  @brief  ClusterAssociation class
@@ -60,32 +60,21 @@ private:
      *  @param  clusterVector the cluster vector
      *  @param  clusterAssociationMap to receive the populated cluster association map
      */
-    void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
+    virtual void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
-     *  @brief  Determine whether two clusters are associated
+     *  @brief  Determine which of two clusters is extremal
      * 
-     *  @param  pInnerCluster address of the inner cluster
-     *  @param  pOuterCluster address of the outer cluster
+     *  @param  isForward whether propagation direction is forward
+     *  @param  pCurrentCluster current extremal cluster
+     *  @param  pTestCluster potential extremal cluster
      * 
-     *  @return whether the clusters are associated
+     *  @return boolean
      */
-    virtual bool AreClustersAssociated(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster) const;
+    virtual bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster, const pandora::Cluster *const pTestCluster) const;
 
-    /**
-     *  @brief  Determine whether two clusters are associated
-     * 
-     *  @param  innerClusterEnd inner cluster end position
-     *  @param  outerClusterStart outer cluster start position
-     *  @param  hitSizeX hit size x
-     *  @param  hitSizeZ hit size z
-     *  @param  innerFit inner cluster fit result
-     *  @param  outerFit outer cluster fit result
-     * 
-     *  @return whether the clusters are associated
-     */
-    bool AreClustersAssociated(const pandora::CartesianVector &innerClusterEnd, const pandora::CartesianVector &outerClusterStart, const float hitSizeX,
-        const float hitSizeZ, const pandora::ClusterHelper::ClusterFitResult &innerFit, const pandora::ClusterHelper::ClusterFitResult &outerFit) const;
+
+private:
 
     /**
      *  @brief  Unambiguous propagation

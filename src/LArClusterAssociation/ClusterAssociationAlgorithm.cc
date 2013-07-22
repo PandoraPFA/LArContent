@@ -27,6 +27,7 @@ StatusCode ClusterAssociationAlgorithm::Run()
 
     while (m_mergeMade)
     {
+      
         // Unambiguous propagation
         while (m_mergeMade)
         {
@@ -34,7 +35,6 @@ StatusCode ClusterAssociationAlgorithm::Run()
 
             ClusterVector clusterVector;
             this->GetListOfCleanClusters(pClusterList, clusterVector);
-            std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByInnerLayer);
 
             clusterAssociationMap.clear();
             this->PopulateClusterAssociationMap(clusterVector, clusterAssociationMap);
@@ -44,7 +44,7 @@ StatusCode ClusterAssociationAlgorithm::Run()
                 if (pClusterList->end() == pClusterList->find(*iter))
                     continue;
 
-                this->UnambiguousPropagation(*iter, true, clusterAssociationMap);
+                this->UnambiguousPropagation(*iter, true,  clusterAssociationMap);
                 this->UnambiguousPropagation(*iter, false, clusterAssociationMap);
             }
         }
@@ -55,6 +55,7 @@ StatusCode ClusterAssociationAlgorithm::Run()
         ClusterVector clusterVector;
         this->GetListOfCleanClusters(pClusterList, clusterVector);
         std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
+
 
         // Propagation with ambiguities
         for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
@@ -80,127 +81,20 @@ StatusCode ClusterAssociationAlgorithm::Run()
 
 void ClusterAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()< 4)
-            continue;
-
-
-        clusterVector.push_back(pCluster);
-    }
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClusterAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
-    for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
-    {
-        Cluster *pInnerCluster = *iterI;
-
-        for (ClusterVector::const_iterator iterJ = iterI, iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
-        {
-            Cluster *pOuterCluster = *iterJ;
-
-            if (pInnerCluster == pOuterCluster)
-                continue;
-
-            if (!this->AreClustersAssociated(pInnerCluster, pOuterCluster))
-                continue;
-
-            clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
-            clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
-        }
-    }
-
-//    for (ClusterAssociationMap::const_iterator iter = clusterAssociationMap.begin(); iter != clusterAssociationMap.end(); ++iter)
-//    {
-//        ClusterList tempClusterList;
-//        tempClusterList.insert(iter->first);
-
-//        PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-//        PANDORA_MONITORING_API(VisualizeClusters(&tempClusterList, "MainCluster", RED));
-//        PANDORA_MONITORING_API(VisualizeClusters(&(iter->second.m_forwardAssociations), "Forward", BLUE));
-//        PANDORA_MONITORING_API(VisualizeClusters(&(iter->second.m_backwardAssociations), "Backward", GREEN));
-//        PANDORA_MONITORING_API(ViewEvent());
-//    }
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClusterAssociationAlgorithm::AreClustersAssociated(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster) const
+bool ClusterAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster, const Cluster *const pTestCluster ) const
 {
-    if (pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer())
-        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-
-    if (pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer() + 3
-      || pInnerCluster->GetOuterPseudoLayer() + 3 > pOuterCluster->GetOuterPseudoLayer())
-        return false;
-
-    if (pInnerCluster->GetOuterPseudoLayer() > pOuterCluster->GetInnerPseudoLayer() + 1
-      || pOuterCluster->GetInnerPseudoLayer() > pInnerCluster->GetOuterPseudoLayer() + 15)
-        return false;
-
-    if (2 * pInnerCluster->GetOuterPseudoLayer() < pOuterCluster->GetInnerPseudoLayer() + pInnerCluster->GetInnerPseudoLayer()
-      || pInnerCluster->GetOuterPseudoLayer() + pOuterCluster->GetOuterPseudoLayer() < 2 * pOuterCluster->GetInnerPseudoLayer())
-        return false;
-
-    const CartesianVector innerEndCentroid(pInnerCluster->GetCentroid(pInnerCluster->GetOuterPseudoLayer()));
-    const CartesianVector outerStartCentroid(pOuterCluster->GetCentroid(pOuterCluster->GetInnerPseudoLayer()));
-
-    CaloHit *pOuterLayerHit = *(pInnerCluster->GetOrderedCaloHitList().rbegin()->second->begin());
-    const float hitSizeX(pOuterLayerHit->GetCellLengthScale());
-    const float hitSizeZ(pOuterLayerHit->GetCellThickness());
-
-    ClusterHelper::ClusterFitResult innerEndFit, outerStartFit;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pInnerCluster, 30, innerEndFit));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pOuterCluster, 30, outerStartFit));
-
-    if (this->AreClustersAssociated(innerEndCentroid, outerStartCentroid, hitSizeX, hitSizeZ, innerEndFit, outerStartFit))
-        return true;
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ClusterAssociationAlgorithm::AreClustersAssociated(const CartesianVector &innerClusterEnd, const CartesianVector &outerClusterStart,
-    const float hitSizeX, const float hitSizeZ, const ClusterHelper::ClusterFitResult &innerFit, const ClusterHelper::ClusterFitResult &outerFit) const
-{
-    if (!innerFit.IsFitSuccessful() || !outerFit.IsFitSuccessful())
-        return false;
-
-    if (innerFit.GetDirection().GetCosOpeningAngle(outerFit.GetDirection()) < 0.985)
-        return false;
-
-    const CartesianVector innerEndFit1(innerFit.GetIntercept() + innerFit.GetDirection() * (innerFit.GetDirection().GetDotProduct(innerClusterEnd - innerFit.GetIntercept())));
-    const CartesianVector innerEndFit2(outerFit.GetIntercept() + outerFit.GetDirection() * (outerFit.GetDirection().GetDotProduct(innerClusterEnd - outerFit.GetIntercept())));
-
-    const CartesianVector outerStartFit1(outerFit.GetIntercept() + outerFit.GetDirection() * (outerFit.GetDirection().GetDotProduct(outerClusterStart - outerFit.GetIntercept())));
-    const CartesianVector outerStartFit2(innerFit.GetIntercept() + innerFit.GetDirection() * (innerFit.GetDirection().GetDotProduct(outerClusterStart - innerFit.GetIntercept())));
-
-    const CartesianVector clusterSeparation(outerClusterStart - innerClusterEnd);
-
-    if ((std::fabs(clusterSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(clusterSeparation.GetZ() / hitSizeZ) < 2.f))
-        return true;
-
-    const CartesianVector fittedSeparation(outerStartFit1 - innerEndFit1);
-
-    if ((std::fabs(fittedSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(fittedSeparation.GetZ() / hitSizeZ) < 2.f))
-        return true;
-
-    const CartesianVector fittedInnerSeparation(innerEndFit2 - innerEndFit1);
-
-    if ((std::fabs(fittedInnerSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(fittedInnerSeparation.GetZ() / hitSizeZ) < 2.f))
-        return true;
-
-    const CartesianVector fittedOuterSeparation(outerStartFit2 - outerStartFit1);
-
-    if ((std::fabs(fittedOuterSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(fittedOuterSeparation.GetZ() / hitSizeZ) < 2.f))
-        return true;
-
     return false;
 }
 
@@ -230,6 +124,14 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(Cluster *pCluster, cons
     if (clusterListDelete.size() != 1)
         return;
 
+
+// ClusterList tempList; tempList.insert(pClusterToDelete);
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempList, "PrimaryCluster", GREEN));
+// PANDORA_MONITORING_API(VisualizeClusters(&clusterListDelete, "Daughters", BLUE));
+// PANDORA_MONITORING_API(ViewEvent());
+
+
     this->UpdateForUnambiguousMerge(pClusterToEnlarge, pClusterToDelete, isForward, clusterAssociationMap);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pClusterToDelete));
     m_mergeMade = true;
@@ -250,29 +152,55 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
     ClusterList firstClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pCluster, isForward, pExtremalCluster, firstClusterList);
 
+
+// ClusterList tempList1; tempList1.insert(pCluster);
+// ClusterList tempList2; tempList2.insert(pExtremalCluster);
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
+// PANDORA_MONITORING_API(VisualizeClusters(&firstClusterList, "ForwardProp", GREEN));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "InitialCluster", RED));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "ExtremalCluster", BLUE));
+// PANDORA_MONITORING_API(ViewEvent());
+
+
     ClusterList secondClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pExtremalCluster, !isForward, pExtremalCluster, secondClusterList);
 
+
+// ClusterList tempList3; tempList3.insert(pExtremalCluster);
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
+// PANDORA_MONITORING_API(VisualizeClusters(&secondClusterList, "BackwardProp", GREEN));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempList3, "ExtremalCluster", BLUE));
+// PANDORA_MONITORING_API(ViewEvent());
+
+
     ClusterList daughterClusterList;
 
-    for (ClusterList::const_iterator iter = firstClusterList.begin(), iterEnd = firstClusterList.end(); iter != iterEnd; ++iter)
+    if ( pCluster==pExtremalCluster )
     {
-        if ((secondClusterList.end() != secondClusterList.find(*iter)) && (pCluster != (*iter)))
-            daughterClusterList.insert(*iter);
+        for (ClusterList::const_iterator iter = firstClusterList.begin(), iterEnd = firstClusterList.end(); iter != iterEnd; ++iter)
+        {
+            if ((secondClusterList.end() != secondClusterList.find(*iter)) && (pCluster != (*iter)))
+                daughterClusterList.insert(*iter);
+	}
     }
 
-//    PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-//    PANDORA_MONITORING_API(VisualizeClusters(&daughterClusterList, "Selected", RED));
-//    PANDORA_MONITORING_API(VisualizeClusters(&firstClusterList, "ForwardProp", BLUE));
-//    PANDORA_MONITORING_API(VisualizeClusters(&secondClusterList, "BackwardProp", GREEN));
-//    PANDORA_MONITORING_API(ViewEvent());
+
+// if ( daughterClusterList.empty() == false )
+// {
+// ClusterList tempList; tempList.insert(pCluster);
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempList, "PrimaryCluster", GREEN));
+// PANDORA_MONITORING_API(VisualizeClusters(&daughterClusterList, "Daughters", BLUE));
+// PANDORA_MONITORING_API(ViewEvent());
+// }
+
 
     for (ClusterList::const_iterator iter = daughterClusterList.begin(), iterEnd = daughterClusterList.end(); iter != iterEnd; ++iter)
     {
         this->UpdateForAmbiguousMerge(pCluster, *iter, isForward, clusterAssociationMap);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *iter));
         m_mergeMade = true;
-    }
+    } 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -390,20 +318,21 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
     if (clusterAssociationMap.end() == iterAssociation)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
+//
+// TODO: Double-check the following...
+//
+//ClusterList::iterator iterCheck1 = clusterList.find(pCluster);
+//if( iterCheck1 != clusterList.end() ){ std::cout << " Already got: " << pCluster << std::endl; }
+//ClusterList clusterList2 = iterAssociation->second.m_forwardAssociations;
+//ClusterList::iterator iterCheck2 = clusterList2.find(pCluster);
+//if( iterCheck2 != clusterList.end() ){ std::cout << " Already got: " << pCluster << " Again!!! " << std::endl; }
+// 
+
     clusterList.insert(pCluster);
 
-    const unsigned int extremalLayer(isForward ? pExtremalCluster->GetOuterPseudoLayer() : pExtremalCluster->GetInnerPseudoLayer());
-    const unsigned int thisLayer(isForward ? pCluster->GetOuterPseudoLayer() : pCluster->GetInnerPseudoLayer());
-
-    const float extremalEnergy(pExtremalCluster->GetHadronicEnergy());
-    const float thisEnergy(pCluster->GetHadronicEnergy());
-
-    if (isForward && ((thisLayer > extremalLayer) || ((thisLayer == extremalLayer) && (thisEnergy > extremalEnergy))))
-        pExtremalCluster = pCluster;
-
-    if (!isForward && ((thisLayer < extremalLayer) || ((thisLayer == extremalLayer) && (thisEnergy > extremalEnergy))))
-        pExtremalCluster = pCluster;
-
+    if ( this->IsExtremalCluster(isForward, pExtremalCluster, pCluster ) )
+          pExtremalCluster = pCluster;
+    
     const ClusterList &associatedClusterList(isForward ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
 
     for (ClusterList::const_iterator iter = associatedClusterList.begin(), iterEnd = associatedClusterList.end(); iter != iterEnd; ++iter)
