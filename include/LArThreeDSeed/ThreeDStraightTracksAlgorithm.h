@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "ThreeDBaseAlgorithm.h"
 
 namespace lar
@@ -44,6 +46,17 @@ private:
     void ModifyInputClusters();
     void InitializeTensor();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
+
+    /**
+     *  @brief  Calculate overlap result for special case with clusters at constant x
+     * 
+     *  @param  slidingFitResultU sliding fit result for u cluster
+     *  @param  slidingFitResultV sliding fit result for v cluster
+     *  @param  slidingFitResultW sliding fit result for w cluster
+     */
+    void CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
+        const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW);
+
     bool ExamineTensor();
     void UpdateTensor();
     void TidyUp();

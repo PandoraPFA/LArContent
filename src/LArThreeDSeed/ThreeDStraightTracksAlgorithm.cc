@@ -172,6 +172,9 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float maxX(std::min(maxXU, std::min(maxXV, maxXW)));
     const float xOverlap(maxX - minX);
 
+    if (std::fabs(xOverlap) < 1.f)
+        return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
+
     if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
 {
 //std::cout << " VETO: xOverlap " << xOverlap << ", xSpanUf " << (xOverlap / xSpanU) << ", xSpanVf " << (xOverlap / xSpanV) << ", xSpanWf " << (xOverlap / xSpanW) << std::endl;
@@ -321,6 +324,15 @@ PandoraMonitoringApi::VisualizeClusters(&tempListW, "ClusterListW", BLUE);
 PandoraMonitoringApi::ViewEvent();
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDStraightTracksAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
+{
+    std::cout << "TODO - ThreeDStraightTracksAlgorithm::CalculateConstantXOverlapResult " << std::endl;
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

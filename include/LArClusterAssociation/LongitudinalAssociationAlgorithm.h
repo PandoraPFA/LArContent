@@ -33,24 +33,10 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
-     * 
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
-     */
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
-
-    /**
-     *  @brief  Populate the cluster association map
-     * 
-     *  @param  clusterVector the cluster vector
-     *  @param  clusterAssociationMap to receive the populated cluster association map
-     */
     void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
+    bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster, const pandora::Cluster *const pTestCluster) const;
 
     /**
      *  @brief  Determine whether two clusters are associated
@@ -76,18 +62,6 @@ private:
      */
     bool AreClustersAssociated(const pandora::CartesianVector &innerClusterEnd, const pandora::CartesianVector &outerClusterStart, const float hitSizeX,
         const float hitSizeZ, const pandora::ClusterHelper::ClusterFitResult &innerFit, const pandora::ClusterHelper::ClusterFitResult &outerFit) const;
-
-    /**
-     *  @brief  Determine which of two clusters is extremal
-     * 
-     *  @param  isForward whether propagation direction is forward
-     *  @param  pCurrentCluster current extremal cluster
-     *  @param  pTestCluster potential extremal cluster
-     * 
-     *  @return boolean
-     */
-    bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster, const pandora::Cluster *const pTestCluster) const;
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

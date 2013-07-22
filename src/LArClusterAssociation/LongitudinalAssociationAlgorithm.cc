@@ -17,13 +17,6 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode LongitudinalAssociationAlgorithm::Run()
-{
-    return ClusterAssociationAlgorithm::Run();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -181,8 +174,6 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
 
 StatusCode LongitudinalAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-
-
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }
 

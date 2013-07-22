@@ -79,27 +79,6 @@ StatusCode ClusterAssociationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
-{
-    return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ClusterAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
-{
-    return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ClusterAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster, const Cluster *const pTestCluster ) const
-{
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ClusterAssociationAlgorithm::UnambiguousPropagation(Cluster *pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const
 {
     Cluster *pClusterToEnlarge = pCluster;
@@ -152,7 +131,6 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
     ClusterList firstClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pCluster, isForward, pExtremalCluster, firstClusterList);
 
-
 // ClusterList tempList1; tempList1.insert(pCluster);
 // ClusterList tempList2; tempList2.insert(pExtremalCluster);
 // PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
@@ -161,17 +139,14 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
 // PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "ExtremalCluster", BLUE));
 // PANDORA_MONITORING_API(ViewEvent());
 
-
     ClusterList secondClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pExtremalCluster, !isForward, pExtremalCluster, secondClusterList);
-
 
 // ClusterList tempList3; tempList3.insert(pExtremalCluster);
 // PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
 // PANDORA_MONITORING_API(VisualizeClusters(&secondClusterList, "BackwardProp", GREEN));
 // PANDORA_MONITORING_API(VisualizeClusters(&tempList3, "ExtremalCluster", BLUE));
 // PANDORA_MONITORING_API(ViewEvent());
-
 
     ClusterList daughterClusterList;
 
@@ -181,9 +156,8 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
         {
             if ((secondClusterList.end() != secondClusterList.find(*iter)) && (pCluster != (*iter)))
                 daughterClusterList.insert(*iter);
-	}
+        }
     }
-
 
 // if ( daughterClusterList.empty() == false )
 // {
@@ -193,7 +167,6 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
 // PANDORA_MONITORING_API(VisualizeClusters(&daughterClusterList, "Daughters", BLUE));
 // PANDORA_MONITORING_API(ViewEvent());
 // }
-
 
     for (ClusterList::const_iterator iter = daughterClusterList.begin(), iterEnd = daughterClusterList.end(); iter != iterEnd; ++iter)
     {
@@ -330,9 +303,9 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
 
     clusterList.insert(pCluster);
 
-    if ( this->IsExtremalCluster(isForward, pExtremalCluster, pCluster ) )
+    if (this->IsExtremalCluster(isForward, pExtremalCluster, pCluster))
           pExtremalCluster = pCluster;
-    
+
     const ClusterList &associatedClusterList(isForward ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
 
     for (ClusterList::const_iterator iter = associatedClusterList.begin(), iterEnd = associatedClusterList.end(); iter != iterEnd; ++iter)

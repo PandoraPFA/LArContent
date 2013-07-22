@@ -24,6 +24,7 @@
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 #include "LArReclustering/ShowerMipSeparationAlgorithm.h"
+#include "LArReclustering/TrackSplittingAlgorithm.h"
 #include "LArThreeDSeed/ThreeDStraightTracksAlgorithm.h"
 #include "LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
@@ -66,6 +67,7 @@ public:
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
         d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
+        d("LArTrackSplitting",                      lar::TrackSplittingAlgorithm::Factory)                                      \
         d("LArThreeDStraightTracks",                lar::ThreeDStraightTracksAlgorithm::Factory)                                \
         d("LArThreeDTrackSegments",                 lar::ThreeDTrackSegmentsAlgorithm::Factory)                                 \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
@@ -73,7 +75,7 @@ public:
         d("LArSeedFinding",                         lar::SeedFindingAlgorithm::Factory)                                         \
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
-	d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
+        d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \

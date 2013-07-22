@@ -20,17 +20,7 @@ namespace lar
  */
 class ClusterAssociationAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-protected:    
+protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -52,7 +42,7 @@ protected:
      *  @param  pClusterList address of the cluster list
      *  @param  clusterVector to receive the populated cluster vector
      */
-    virtual void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    virtual void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const = 0;
 
     /**
      *  @brief  Populate the cluster association map
@@ -60,7 +50,7 @@ protected:
      *  @param  clusterVector the cluster vector
      *  @param  clusterAssociationMap to receive the populated cluster association map
      */
-    virtual void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
+    virtual void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const = 0;
 
     /**
      *  @brief  Determine which of two clusters is extremal
@@ -71,11 +61,9 @@ protected:
      * 
      *  @return boolean
      */
-    virtual bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster, const pandora::Cluster *const pTestCluster) const;
-
+    virtual bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster, const pandora::Cluster *const pTestCluster) const = 0;
 
 private:
-
     /**
      *  @brief  Unambiguous propagation
      * 
@@ -132,13 +120,6 @@ private:
 
     bool         m_resolveAmbiguousAssociations;        ///< Whether to resolve ambiguous associations
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ClusterAssociationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ClusterAssociationAlgorithm();
-}
 
 } // namespace lar
 
