@@ -68,9 +68,9 @@ public:
      *  @param  position3 output position in the U view
      *  @param  chi-squared
      */
-    static void MergeTwoViews(const pandora::HitType view1, const pandora::HitType view2, 
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,  
-	pandora::CartesianVector &position3, float& chiSquared);
+    static void MergeTwoViews(const pandora::HitType view1, const pandora::HitType view2,
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
+        pandora::CartesianVector &position3, float& chiSquared);
 
     /**
      *  @brief  Merge two views (1,2)
@@ -85,8 +85,8 @@ public:
      *  @param  positionW output position in the W view 
      *  @param  chi-squared
      */
-    static void MergeTwoViews(const pandora::HitType view1, const pandora::HitType view2, 
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,  
+    static void MergeTwoViews(const pandora::HitType view1, const pandora::HitType view2,
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
         pandora::CartesianVector &outputU, pandora::CartesianVector &outputV, pandora::CartesianVector &outputW, 
         float& chiSquared);
 

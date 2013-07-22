@@ -252,6 +252,13 @@ public:
         pandora::CartesianVector GetGlobalMaxLayerPosition() const;
 
         /**
+         *  @brief  Whether fit results are multivalued in x
+         * 
+         *  @return boolean
+         */
+        bool IsMultivaluedInX() const;
+
+        /**
          *  @brief  Get the sliding fit width
          * 
          *  @return the sliding fit width

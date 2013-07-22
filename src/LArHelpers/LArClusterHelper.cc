@@ -637,6 +637,40 @@ CartesianVector LArClusterHelper::TwoDSlidingFitResult::GetGlobalMaxLayerPositio
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
+{
+    float previousXValue(0.f);
+    unsigned int nSteps(0), nPositiveSteps(0), nNegativeSteps(0), nUnchangedSteps(0);
+
+    for (LayerFitResultMap::const_iterator iter = m_layerFitResultMap.begin(), iterEnd = m_layerFitResultMap.end(); iter != iterEnd; ++iter)
+    {
+        CartesianVector position(0.f, 0.f, 0.f);
+        this->GetGlobalCoordinates(iter->second.GetL(), iter->second.GetFitT(), position);
+
+        const float deltaX(position.GetX() - previousXValue);
+        previousXValue = position.GetX();
+        ++nSteps;
+
+        if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
+        {
+            ++nUnchangedSteps;
+        }
+        else if (deltaX > 0.f)
+        {
+            ++nPositiveSteps;
+        }
+        else
+        {
+            ++nNegativeSteps;
+        }
+    }
+
+    std::cout << " nSteps " << nSteps << " nUnchangedSteps " << nUnchangedSteps << " nPositiveSteps " << nPositiveSteps << " nNegativeSteps " << nNegativeSteps << std::endl;
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArClusterHelper::TwoDSlidingFitResult::GetSlidingFitWidth() const
 {
     FloatVector residuals;

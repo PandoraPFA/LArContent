@@ -172,8 +172,20 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float maxX(std::min(maxXU, std::min(maxXV, maxXW)));
     const float xOverlap(maxX - minX);
 
-    if (std::fabs(xOverlap) < 1.f)
+    if (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX())
         return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
+else
+{
+std::cout << "Multivalued check " << std::endl;
+PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+ClusterList clusterListU; clusterListU.insert(pClusterU);
+PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
+ClusterList clusterListV; clusterListV.insert(pClusterV);
+PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
+ClusterList clusterListW; clusterListW.insert(pClusterW);
+PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+PandoraMonitoringApi::ViewEvent();
+}
 
     if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
 {
@@ -222,7 +234,7 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
             if (pseudoChi2 < 3.f) // TODO
                 ++nMatchedSamplingPoints;
 
-std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
+//std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
 const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
 const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
 const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
@@ -332,6 +344,16 @@ void ThreeDStraightTracksAlgorithm::CalculateConstantXOverlapResult(const LArClu
     const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
 {
     std::cout << "TODO - ThreeDStraightTracksAlgorithm::CalculateConstantXOverlapResult " << std::endl;
+
+PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+ClusterList clusterListU; clusterListU.insert(const_cast<Cluster*>(slidingFitResultU.GetCluster()));
+PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
+ClusterList clusterListV; clusterListV.insert(const_cast<Cluster*>(slidingFitResultV.GetCluster()));
+PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
+ClusterList clusterListW; clusterListW.insert(const_cast<Cluster*>(slidingFitResultW.GetCluster()));
+PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+PandoraMonitoringApi::ViewEvent();
+
     return;
 }
 
