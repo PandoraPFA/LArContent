@@ -19,13 +19,6 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode VertexSplittingAlgorithm::Run()
-{
-    return ClusterSplittingAlgorithm::Run(); 
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool VertexSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) const
 {
     if ( LArClusterHelper::GetLengthSquared(pCluster) < 4.0 * m_minSplitDisplacementSquared )
@@ -107,7 +100,7 @@ StatusCode VertexSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "MinSplitDisplacement", m_minSplitDisplacement));
     m_minSplitDisplacementSquared = m_minSplitDisplacement * m_minSplitDisplacement;
 
-    return STATUS_CODE_SUCCESS;
+    return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

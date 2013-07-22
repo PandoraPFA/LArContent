@@ -17,13 +17,6 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode KinkSplittingAlgorithm::Run()
-{
-    return ClusterSplittingAlgorithm::Run();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) const
 {
     if ((1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) < m_minClusterLayers)
@@ -85,7 +78,7 @@ StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     //    "MaxCosScatteringAngle", m_maxCosScatteringAngle));
     //
 
-    return STATUS_CODE_SUCCESS;
+    return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar
