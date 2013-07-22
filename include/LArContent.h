@@ -8,13 +8,13 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
-#include "LArClusterAssociation/ClusterAssociationAlgorithm.h"
 #include "LArClusterAssociation/ClusterExtensionAlgorithm.h"
 #include "LArClusterAssociation/IsolatedHitMergingAlgorithm.h"
+#include "LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
+#include "LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArClustering/ClusterCreationAlgorithm.h"
 #include "LArClustering/ClusteringParentAlgorithm.h"
 #include "LArClustering/RemnantClusteringAlgorithm.h"
-#include "LArClustering/TransverseClusteringAlgorithm.h"
 #include "LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
@@ -52,17 +52,16 @@ class LArContent
 {
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
-        d("LArClusterAssociation",                  lar::ClusterAssociationAlgorithm::Factory)                                  \
         d("LArClusterExtension",                    lar::ClusterExtensionAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
         d("LArRemnantClustering",                   lar::RemnantClusteringAlgorithm::Factory)                                   \
-        d("LArTransverseClustering",                lar::TransverseClusteringAlgorithm::Factory)                                \
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
+        d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
@@ -74,6 +73,7 @@ public:
         d("LArSeedFinding",                         lar::SeedFindingAlgorithm::Factory)                                         \
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
+	d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
