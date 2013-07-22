@@ -29,7 +29,6 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
  
