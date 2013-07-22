@@ -33,12 +33,12 @@ StatusCode TransverseClusteringAlgorithm::Run()
     
 
     // Separate transverse and longitudinal clusters
-    // (transverse clusters care either short or non-longitudinal)
+    // (transverse clusters are either short or not longitudinal)
     this->GetTransverseClusters( inputClusters, transverseClusters, longitudinalClusters );
 
 
     // Separate transverse clusters into seed and non-seed types
-    // (seed clusters are not associated with a longitudinal cluster)
+    // (seed clusters are not already associated with a longitudinal cluster)
     this->GetSeedClusters( transverseClusters, longitudinalClusters, seedClusters, nonSeedClusters );
 
 
@@ -434,12 +434,40 @@ bool TransverseClusteringAlgorithm::IsTransverseAssociated( const pandora::Clust
     return false;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
+bool TransverseClusteringAlgorithm::IsForwardAssociated( const LArTransverseCluster &transCluster1, const LArTransverseCluster &transCluster2 )
+{
+    // relative angle  
+    const CartesianVector& direction1(transCluster1.GetDirection());
+    const CartesianVector& direction2(transCluster2.GetDirection());
+
+    if( direction1.GetDotProduct(direction2) < m_minCosRelativeAngle )
+        return false;
+   
+    // relative position
+    // Inner transCluster1  -> Outer transCluster2
+    if ( transCluster1.GetDirection().GetDotProduct(transCluster2.GetInnerVertex()-transCluster1.GetInnerVertex()) > 0
+      && transCluster1.GetDirection().GetDotProduct(transCluster2.GetOuterVertex()-transCluster1.GetOuterVertex()) > 0
+      && transCluster2.GetDirection().GetDotProduct(transCluster1.GetInnerVertex()-transCluster2.GetInnerVertex()) < 0
+      && transCluster2.GetDirection().GetDotProduct(transCluster1.GetOuterVertex()-transCluster2.GetOuterVertex()) < 0 )
+    {
+        return ( this->IsTransverseAssociated( transCluster1, transCluster2.GetInnerVertex() )
+	      && this->IsTransverseAssociated( transCluster2, transCluster1.GetOuterVertex() ) );
+    } 
+
+    return false;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TransverseClusteringAlgorithm::IsTransverseAssociated( const LArTransverseCluster &transCluster1, const LArTransverseCluster &transCluster2 )
 {
+    return ( this->IsForwardAssociated( transCluster1, transCluster2 )
+	  || this->IsForwardAssociated( transCluster2, transCluster1 ) );
+
+
+    /*
     // relative angle  
     const CartesianVector& direction1(transCluster1.GetDirection());
     const CartesianVector& direction2(transCluster2.GetDirection());
@@ -463,14 +491,13 @@ bool TransverseClusteringAlgorithm::IsTransverseAssociated( const LArTransverseC
         return false;
 
     return true;
+    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TransverseClusteringAlgorithm::IsTransverseAssociated( const LArTransverseCluster &transCluster, const pandora::CartesianVector& testVertex )
 {
-  
-
     const CartesianVector& innerVertex = transCluster.GetInnerVertex();
     const CartesianVector& outerVertex = transCluster.GetOuterVertex();
     const CartesianVector& direction   = transCluster.GetDirection();
@@ -565,7 +592,7 @@ TransverseClusteringAlgorithm::LArTransverseCluster::LArTransverseCluster(const 
             m_innerVertex.SetValues( minX, 0.f, aveZ + m*(minX-aveX) );
             m_outerVertex.SetValues( maxX, 0.f, aveZ + m*(maxX-aveX) );
             m_direction.SetValues( px, 0.f, pz );
-
+            
             m_rms = std::sqrt( ((Swzz + m * m * Swxx + c * c * Sw) - 2.f * (m * Swzx + c * Swz - m * c * Swx)) / Sw );
 	}
         else

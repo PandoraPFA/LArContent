@@ -85,6 +85,7 @@ public:
 
         pandora::CartesianVector m_innerVertex;
         pandora::CartesianVector m_outerVertex;
+
         pandora::CartesianVector m_direction;
 
         pandora::ClusterVector   m_clusterVector;
@@ -117,6 +118,11 @@ private:
 
 
     void FillClusterMergeMap( const LArTransverseClusterMap &transverseClusterMap, LArClusterMergeMap &clusterMergeMap );
+
+
+    bool IsForwardAssociated( const LArTransverseCluster &transCluster1, const LArTransverseCluster &transCluster2 ); 
+
+
     bool IsTransverseAssociated( const LArTransverseCluster &transCluster1, const LArTransverseCluster &transCluster2 );
     bool IsTransverseAssociated( const LArTransverseCluster &theCluster, const pandora::CartesianVector& theVertex );
 
