@@ -94,12 +94,12 @@ void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const
         const float slidingFitWidth(std::sqrt(theQuantile));
 std::cout << " SELECT? slidingFitWidth " << slidingFitWidth << " hitsOnTrackFraction " << (static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits()))) << std::endl;
 
-        if (slidingFitWidth > 1.5f) // TODO
+        if (slidingFitWidth > 1.0f) // TODO: this is now equivalent to hitsOnTrackFraction cut
             continue;
 
         const float hitsOnTrackFraction(static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits())));
 
-        if (hitsOnTrackFraction < 0.9f) // TODO
+        if (hitsOnTrackFraction < 0.8f) // TODO: this is now equivalent to slidingFitWidth cut
             continue;
 
         clusterVector.push_back(pCluster);
@@ -220,7 +220,7 @@ PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
 ClusterList clusterListW; clusterListW.insert(pClusterW);
 PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
 
-    if (matchedSamplingFraction < 0.9f) // TODO
+    if (matchedSamplingFraction < 0.8f) // TODO
 {
 std::cout << " VETO: matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 PandoraMonitoringApi::ViewEvent();
