@@ -676,12 +676,11 @@ bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
     if (0 == nSteps)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    std::cout << " nSteps " << nSteps << " nUnchangedSteps " << nUnchangedSteps << " nPositiveSteps " << nPositiveSteps << " nNegativeSteps " << nNegativeSteps << std::endl;    
+    const float positiveStepFraction(static_cast<float>(nPositiveSteps) / static_cast<float>(nSteps));
+    const float negativeStepFraction(static_cast<float>(nNegativeSteps) / static_cast<float>(nSteps));
+    const float maxStepFraction(std::max(positiveStepFraction, negativeStepFraction));
 
-    if (static_cast<float>(nPositiveSteps) / static_cast<float>(nSteps) > 0.5 || static_cast<float>(nNegativeSteps) / static_cast<float>(nSteps))
-        return false;
-
-    return true;
+    return (maxStepFraction < LArClusterHelper::m_multiValuedStepFractionCut);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
