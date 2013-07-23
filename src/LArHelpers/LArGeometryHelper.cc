@@ -105,20 +105,20 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const HitType view1, const
     }
 
     if (newView == VIEW_W)
-        return CartesianVector(pX, 0.f, (pU * m_sinV + pV * m_sinU) / m_sinUplusV).GetUnitVector();
-
+        return CartesianVector(pX, 0.f, LArGeometryHelper::PUPVtoPW(pU,pV)).GetUnitVector();
+    
     if (newView == VIEW_U)
-        return CartesianVector(pX, 0.f, (pW * m_sinUplusV - pV * m_sinU) / m_sinV).GetUnitVector();
-
+        return CartesianVector(pX, 0.f, LArGeometryHelper::PWPVtoPU(pW,pV)).GetUnitVector();
+    
     if (newView == VIEW_V)
-        return CartesianVector(pX, 0.f, (pW * m_sinUplusV - pU * m_sinV) / m_sinU).GetUnitVector();
+        return CartesianVector(pX, 0.f, LArGeometryHelper::PWPUtoPV(pW,pU)).GetUnitVector();
 
     throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &position3, float& chiSquared)
+void LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &position3, float& chiSquared)
 {
     if( view1 == view2 )
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -137,14 +137,14 @@ void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
+void LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
 {
     if( view1 == view2 )
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
  
     CartesianVector position3(0.f,0.f,0.f);
 
-    LArGeometryHelper::MergeTwoViews(view1, view2, position1, position2, position3, chiSquared);
+    LArGeometryHelper::MergeTwoPositions(view1, view2, position1, position2, position3, chiSquared);
 
     float aveU(0.f);
     float aveV(0.f);
@@ -193,45 +193,45 @@ void LArGeometryHelper::MergeTwoViews(const HitType view1, const HitType view2, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGeometryHelper::MergeThreeViews(const HitType view1, const HitType view2, const HitType view3, const CartesianVector &position1, const CartesianVector &position2, const CartesianVector &position3, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
+void LArGeometryHelper::MergeThreePositions(const HitType view1, const HitType view2, const HitType view3, const CartesianVector &position1, const CartesianVector &position2, const CartesianVector &position3, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
 {
     if (view1 == view2 || view2==view3 || view3==view1)
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     if (view1 == VIEW_U && view2 == VIEW_V)
     {
-        return LArGeometryHelper::MergeThreeViews( position1, position2, position3,
-                                                   outputU, outputV, outputW, chiSquared ); 
+        return LArGeometryHelper::MergeThreePositions( position1, position2, position3,
+                                                       outputU, outputV, outputW, chiSquared ); 
     }
 
     if (view1 == VIEW_V && view2 == VIEW_W)
     {
-        return LArGeometryHelper::MergeThreeViews( position3, position1, position2,
-                                                   outputU, outputV, outputW, chiSquared );   
+        return LArGeometryHelper::MergeThreePositions( position3, position1, position2,
+                                                       outputU, outputV, outputW, chiSquared );   
     }
 
     if (view1 == VIEW_W && view2 == VIEW_U)
     {
-        return LArGeometryHelper::MergeThreeViews( position2, position3, position1,
-                                                   outputU, outputV, outputW, chiSquared );       
+        return LArGeometryHelper::MergeThreePositions( position2, position3, position1,
+                                                       outputU, outputV, outputW, chiSquared );       
     }
 
     if (view1 == VIEW_V && view2 == VIEW_U) 
     {
-        return LArGeometryHelper::MergeThreeViews( position2, position1, position3,
-                                                   outputU, outputV, outputW, chiSquared );    
+        return LArGeometryHelper::MergeThreePositions( position2, position1, position3,
+                                                       outputU, outputV, outputW, chiSquared );    
     }
 
     if (view1 == VIEW_W && view2 == VIEW_V) 
     {
-        return LArGeometryHelper::MergeThreeViews( position3, position2, position1,
-                                                   outputU, outputV, outputW, chiSquared );   
+        return LArGeometryHelper::MergeThreePositions( position3, position2, position1,
+                                                       outputU, outputV, outputW, chiSquared );   
     }
 
     if (view1 == VIEW_U && view2 == VIEW_W) 
     {
-        return LArGeometryHelper::MergeThreeViews( position1, position3, position2,
-                                                   outputU, outputV, outputW, chiSquared );   
+        return LArGeometryHelper::MergeThreePositions( position1, position3, position2,
+                                                       outputU, outputV, outputW, chiSquared );   
     }
 
     throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -239,7 +239,7 @@ void LArGeometryHelper::MergeThreeViews(const HitType view1, const HitType view2
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGeometryHelper::MergeThreeViews(const CartesianVector &positionU, const CartesianVector &positionV, const CartesianVector &positionW, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
+void LArGeometryHelper::MergeThreePositions(const CartesianVector &positionU, const CartesianVector &positionV, const CartesianVector &positionW, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
 {
     
     float YfromUV = LArGeometryHelper::UVtoY( positionU.GetZ(), positionV.GetZ() );
@@ -262,6 +262,86 @@ void LArGeometryHelper::MergeThreeViews(const CartesianVector &positionU, const 
                  + ( outputU.GetZ()-positionU.GetZ() )*( outputU.GetZ()-positionU.GetZ() )
                  + ( outputV.GetZ()-positionV.GetZ() )*( outputV.GetZ()-positionV.GetZ() )
 	         + ( outputW.GetZ()-positionW.GetZ() )*( outputW.GetZ()-positionW.GetZ() ) ) / ( m_sigmaUVW * m_sigmaUVW );
+}
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGeometryHelper::MergeTwoPositions3D(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &position3D)
+{
+    float chiSquared(0.f);
+
+    CartesianVector positionU(0.f,0.f,0.f);
+    CartesianVector positionV(0.f,0.f,0.f);
+    CartesianVector positionW(0.f,0.f,0.f);
+
+    LArGeometryHelper::MergeTwoPositions(view1, view2, position1, position2, 
+                                         positionU, positionV, positionW, chiSquared);
+
+    position3D.SetValues( positionW.GetX(), 
+                          LArGeometryHelper::UVtoY(positionU.GetZ(),positionV.GetZ()),
+                          LArGeometryHelper::UVtoZ(positionU.GetZ(),positionV.GetZ()) );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+void LArGeometryHelper::MergeThreePositions3D(const HitType view1, const HitType view2, const HitType view3, const CartesianVector &position1, const CartesianVector &position2, const CartesianVector &position3, CartesianVector &position3D)
+{
+    float chiSquared(0.f);
+
+    CartesianVector positionU(0.f,0.f,0.f);
+    CartesianVector positionV(0.f,0.f,0.f);
+    CartesianVector positionW(0.f,0.f,0.f);
+
+    LArGeometryHelper::MergeThreePositions(view1, view2, view3, position1, position2, position3,
+                                           positionU, positionV, positionW, chiSquared);
+
+    position3D.SetValues( positionW.GetX(), 
+                          LArGeometryHelper::UVtoY(positionU.GetZ(),positionV.GetZ()),
+                          LArGeometryHelper::UVtoZ(positionU.GetZ(),positionV.GetZ()) );
+}
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArGeometryHelper::ProjectPosition(const CartesianVector &position3D, const HitType view)
+{
+    if (view == VIEW_U)
+    {
+        return CartesianVector( position3D.GetX(), 0.0, LArGeometryHelper::YZtoU(position3D.GetY(),position3D.GetZ()) );
+    }
+
+    else if (view == VIEW_V)
+    {
+        return CartesianVector( position3D.GetX(), 0.0, LArGeometryHelper::YZtoV(position3D.GetY(),position3D.GetZ()) );
+    }
+
+    else if (view == VIEW_W)
+    {
+        return CartesianVector( position3D.GetX(), 0.0, position3D.GetZ() );
+    }
+
+    throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+CartesianVector LArGeometryHelper::ProjectDirection(const CartesianVector &direction3D, const HitType view)
+{
+    if (view == VIEW_U)
+    {
+        return CartesianVector( direction3D.GetX(), 0.0, LArGeometryHelper::PYPZtoPU(direction3D.GetY(),direction3D.GetZ()) ).GetUnitVector();
+    }
+
+    else if (view == VIEW_V)
+    {
+        return CartesianVector( direction3D.GetX(), 0.0, LArGeometryHelper::PYPZtoPV(direction3D.GetY(),direction3D.GetZ()) ).GetUnitVector();
+    }
+
+    else if (view == VIEW_W)
+    {
+        return CartesianVector( direction3D.GetX(), 0.0, direction3D.GetZ() ).GetUnitVector();
+    }
+
+    throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -332,6 +412,62 @@ float LArGeometryHelper::YZtoU(const float& Y, const float& Z)
 float LArGeometryHelper::YZtoV(const float& Y, const float& Z)
 {
     return Z * m_cosV - ( Y - 0.5 * m_H ) * m_sinV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+   
+float LArGeometryHelper::PVPUtoPW(const float& pV, const float& pU)
+{
+    return LArGeometryHelper::PUPVtoPW(pU,pV);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+  
+float LArGeometryHelper::PWPVtoPU(const float& pW, const float& pV)
+{
+    return LArGeometryHelper::PVPWtoPU(pV,pW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+  
+float LArGeometryHelper::PUPWtoPV(const float& pU, const float& pW)
+{
+    return LArGeometryHelper::PWPUtoPV(pW,pU);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::PUPVtoPW(const float& pU, const float& pV)
+{
+    return (pU * m_sinV + pV * m_sinU) / m_sinUplusV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+   
+float LArGeometryHelper::PVPWtoPU(const float& pV, const float& pW)
+{
+    return (pW * m_sinUplusV - pV * m_sinU) / m_sinV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+  
+float LArGeometryHelper::PWPUtoPV(const float& pW, const float& pU)
+{
+    return (pW * m_sinUplusV - pU * m_sinV) / m_sinU;  
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::PYPZtoPU(const float& pY, const float& pZ)
+{
+    return pZ * m_cosU + pY * m_sinU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::PYPZtoPV(const float& pY, const float& pZ)
+{
+    return pZ * m_cosV - pY * m_sinV;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

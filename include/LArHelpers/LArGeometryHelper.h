@@ -57,8 +57,9 @@ public:
     static pandora::CartesianVector MergeTwoDirections(const pandora::HitType view1, const pandora::HitType view2,
         const pandora::CartesianVector &direction1, const pandora::CartesianVector &direction2);
 
+
     /**
-     *  @brief  Merge two views (1,2)
+     *  @brief  Merge 2D positions from two views to give 2D position in third view
      *
      *  @param  view1 the first view
      *  @param  view2 the second view
@@ -68,12 +69,12 @@ public:
      *  @param  position3 output position in the U view
      *  @param  chi-squared
      */
-    static void MergeTwoViews(const pandora::HitType view1, const pandora::HitType view2,
+    static void MergeTwoPositions(const pandora::HitType view1, const pandora::HitType view2,
         const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
         pandora::CartesianVector &position3, float& chiSquared);
 
     /**
-     *  @brief  Merge two views (1,2)
+     *  @brief  Merge 2D positions from two views to give 2D position in third view
      *
      *  @param  view1 the first view
      *  @param  view2 the second view
@@ -85,13 +86,13 @@ public:
      *  @param  positionW output position in the W view 
      *  @param  chi-squared
      */
-    static void MergeTwoViews(const pandora::HitType view1, const pandora::HitType view2,
+    static void MergeTwoPositions(const pandora::HitType view1, const pandora::HitType view2,
         const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
         pandora::CartesianVector &outputU, pandora::CartesianVector &outputV, pandora::CartesianVector &outputW, 
         float& chiSquared);
 
     /**
-     *  @brief  Merge three views (1,2,3)
+     *  @brief  Merge 2D positions from three views to give unified 2D positions for each view
      *
      *  @param  view1 the first view
      *  @param  view2 the second view
@@ -105,13 +106,13 @@ public:
      *  @param  positionW output position in the W view 
      *  @param  chi-squared
      */
-    static void MergeThreeViews(const pandora::HitType view1, const pandora::HitType view2, const pandora::HitType view3, 
+    static void MergeThreePositions(const pandora::HitType view1, const pandora::HitType view2, const pandora::HitType view3, 
         const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, const pandora::CartesianVector &position3,  
         pandora::CartesianVector &outputU, pandora::CartesianVector &outputV, pandora::CartesianVector &outputW, 
         float& chiSquared);
 
     /**
-     *  @brief  Merge three views (U,V,W). 
+     *  @brief  Merge 2D positions from three views to give unified 2D positions for each view
      *
      *  @param  positionU input position in the U view
      *  @param  positionV input position in the V view
@@ -121,115 +122,221 @@ public:
      *  @param  positionW output position in the W view
      *  @param  chi-squared
      */
-    static void MergeThreeViews(const pandora::CartesianVector &positionU, const pandora::CartesianVector &positionV, 
+    static void MergeThreePositions(const pandora::CartesianVector &positionU, const pandora::CartesianVector &positionV, 
         const pandora::CartesianVector &positionW, pandora::CartesianVector &outputU, pandora::CartesianVector &outputV, 
         pandora::CartesianVector &outputW, float& chiSquared);
 
-    /** 
-     *  @brief  Transform from (U,V) to W coordinate 
-     *
-     *  @param U the U coordinate
-     *  @param V the V coordinate  
-     */
 
+    /**
+     *  @brief  Merge 2D positions from two views to give unified 3D position
+     *
+     *  @param  view1 the first view
+     *  @param  view2 the second view
+     *  @param  position1 the position in the first view
+     *  @param  position2 the position in the second view
+     *
+     *  @param  position3D output position in 3D
+     */
+    static void MergeTwoPositions3D(const pandora::HitType view1, const pandora::HitType view2,
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D);
+
+    /**
+     *  @brief  Merge 2D positions from three views to give unified 3D position
+     *
+     *  @param  view1 the first view
+     *  @param  view2 the second view
+     *  @param  view3 the third view
+     *  @param  position1 the position in the first view
+     *  @param  position2 the position in the second view
+     *  @param  position3 the position in the third view
+     *
+     *  @param  position3D output position in 3D
+     */
+    static void MergeThreePositions3D(const pandora::HitType view1, const pandora::HitType view2, const pandora::HitType view3,
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, const pandora::CartesianVector &position3, 
+        pandora::CartesianVector &position3D);
+
+
+    /**
+     *  @brief  Project 3D position into a given 2D view
+     *
+     *  @param  position3D the position in 3D
+     *  @param  view the 2D projection
+     */
+    static pandora::CartesianVector ProjectPosition(const pandora::CartesianVector &position3D, const pandora::HitType view);
+
+    /**
+     *  @brief  Project 3D direction into a given 2D view
+     *
+     *  @param  direction3D the direction in 3D
+     *  @param  view the 2D projection
+     */
+    static pandora::CartesianVector ProjectDirection(const pandora::CartesianVector &direction3D, const pandora::HitType view);
+
+
+    /** 
+     *  @brief  Transform from (U,V) to W position 
+     *
+     *  @param U the U position
+     *  @param V the V position  
+     */
      static float UVtoW(const float& U, const float& V);
 
     /** 
-     *  @brief  Transform from (V,W) to U coordinate 
+     *  @brief  Transform from (V,W) to U position 
      *
-     *  @param V the V coordinate
-     *  @param W the W coordinate  
+     *  @param V the V position
+     *  @param W the W position  
      */
-
      static float VWtoU(const float& V, const float& W);
 
     /** 
-     *  @brief  Transform from (W,U) to V coordinate 
+     *  @brief  Transform from (W,U) to V position 
      *
-     *  @param W the W coordinate
-     *  @param U the U coordinate  
+     *  @param W the W position
+     *  @param U the U position  
      */
-
      static float WUtoV(const float& W, const float& U); 
 
     /** 
-     *  @brief  Transform from (V,U) to W coordinate 
+     *  @brief  Transform from (V,U) to W position 
      * 
-     *  @param V the V coordinate  
-     *  @param U the U coordinate
+     *  @param V the V position  
+     *  @param U the U position
      */
-
      static float VUtoW(const float& V, const float& U);
 
     /** 
-     *  @brief  Transform from (W,V) to U coordinate 
+     *  @brief  Transform from (W,V) to U position 
      *
-     *  @param W the W coordinate  
-     *  @param V the V coordinate
+     *  @param W the W position  
+     *  @param V the V position
      */
-
      static float WVtoU(const float& W, const float& V);
 
     /** 
-     *  @brief  Transform from (U,W) to V coordinate 
+     *  @brief  Transform from (U,W) to V position 
      *
-     *  @param U the U coordinate  
-     *  @param W the W coordinate
+     *  @param U the U position  
+     *  @param W the W position
      */
-
      static float UWtoV(const float& U, const float& W); 
 
 
     /** 
-     *  @brief  Transform from (U,V) to Y coordinate 
+     *  @brief  Transform from (U,V) to Y position 
      * 
      *              Y * sin(thetaU+thetaV) = U * cos(thetaV) + V * cos(thetaU) - H/2 * sin(thetaU-thetaV)
      *
-     *  @param U the U coordinate
-     *  @param V the V coordinate  
+     *  @param U the U position
+     *  @param V the V position  
      */
-
     static float UVtoY(const float& U, const float& V);
 
     /** 
-     *  @brief  Transform from (U,V) to Z coordinate 
+     *  @brief  Transform from (U,V) to Z position 
      * 
      *              Z * sin(thetaU+thetaV) = U * sin(thetaV) + V * sin(thetaU) - H * sin(thetaU) * sin(thetaV)
      *
-     *  @param U the U coordinate
-     *  @param V the V coordinate  
+     *  @param U the U position
+     *  @param V the V position  
      */
-
      static float UVtoZ(const float& U, const float& V);  
 
     /** 
-     *  @brief  Transform from (Y,Z) to U coordinate
+     *  @brief  Transform from (Y,Z) to U position
      *
      *              U = Z * cos(thetaU) + ( Y + H/2 ) * sin(thetaU)
      *   
-     *  @param Y the Y coordinate   
-     *  @param Z the Z coordinate   
+     *  @param Y the Y position   
+     *  @param Z the Z position   
      */
-
      static float YZtoU(const float& Y, const float& Z);
 
     /** 
-     *  @brief  Transform from (Y,Z) to V coordinate
+     *  @brief  Transform from (Y,Z) to V position
      *
      *              V = Z * cos(thetaV) - ( Y - H/2 ) * sin(thetaV)
      *   
-     *  @param Y the Y coordinate   
-     *  @param Z the Z coordinate   
+     *  @param Y the Y position   
+     *  @param Z the Z position   
      */
+     static float YZtoV(const float& Y, const float& Z);
 
-    static float YZtoV(const float& Y, const float& Z);
+    /** 
+     *  @brief  Transform from (pU,pV) to pW direction 
+     *
+     *  @param pU the pU direction
+     *  @param pV the pV direction  
+     */
+     static float PUPVtoPW(const float& pU, const float& pV);
+
+    /** 
+     *  @brief  Transform from (pV,pW) to pU direction 
+     *
+     *  @param pV the pV direction
+     *  @param pW the pW direction  
+     */
+     static float PVPWtoPU(const float& pV, const float& pW);
+
+    /** 
+     *  @brief  Transform from (pW,pU) to pV direction 
+     *
+     *  @param pW the pW direction
+     *  @param pU the pU direction  
+     */
+     static float PWPUtoPV(const float& pW, const float& pU); 
+
+    /** 
+     *  @brief  Transform from (pV,pU) to pW direction 
+     * 
+     *  @param pV the pV direction  
+     *  @param pU the pU direction
+     */
+     static float PVPUtoPW(const float& pV, const float& pU);
+
+    /** 
+     *  @brief  Transform from (pW,pV) to pU direction 
+     *
+     *  @param pW the pW direction  
+     *  @param pV the pV direction
+     */
+     static float PWPVtoPU(const float& pW, const float& pV);
+
+    /** 
+     *  @brief  Transform from (pU,pW) to pV direction 
+     *
+     *  @param pU the pU direction  
+     *  @param pW the pW direction
+     */
+     static float PUPWtoPV(const float& pU, const float& pW); 
+
+    /** 
+     *  @brief  Transform from (pY,pZ) to pU direction
+     *
+     *              pU = pZ * cos(thetaU) + pY * sin(thetaU)  
+     *   
+     *  @param pU the U component   
+     *  @param pV the V component   
+     */
+    static float PYPZtoPU(const float& pY, const float& pZ); 
+
+    /** 
+     *  @brief  Transform from (pY,pZ) to pV direction
+     *
+     *              pV = pZ * cos(thetaV) - pY * sin(thetaV)
+     *   
+     *  @param pU the U component   
+     *  @param pV the V component   
+     */
+    static float PYPZtoPV(const float& pY, const float& pZ);
+
 
     /**
      *  @brief  Read the vertex helper settings
      * 
      *  @param  xmlHandle the relevant xml handle
      */
-
     static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:

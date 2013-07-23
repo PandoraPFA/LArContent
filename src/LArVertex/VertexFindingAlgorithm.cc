@@ -542,7 +542,7 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions2D( const HitType vi
 
             if ( std::fabs(position1.GetX()-position2.GetX()) > m_maxSeparation ) continue;
  
-	    LArGeometryHelper::MergeTwoViews( view1, view2, position1, position2, position3, chi2 );
+	    LArGeometryHelper::MergeTwoPositions( view1, view2, position1, position2, position3, chi2 );
             
             projectedList3.push_back(position3);
 	}
@@ -588,8 +588,8 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions3D( const CartesianP
                   || std::fabs(positionW.GetX()-positionU.GetX()) > m_maxSeparation ) 
                     continue;
 
-		LArGeometryHelper::MergeThreeViews( positionU, positionV, positionW,
-                                                    projectedPositionU, projectedPositionV, projectedPositionW, chi2 );
+		LArGeometryHelper::MergeThreePositions( positionU, positionV, positionW,
+                                                        projectedPositionU, projectedPositionV, projectedPositionW, chi2 );
 
                 if ( (positionU - projectedPositionU).GetMagnitudeSquared() > m_maxSeparationSquared
                   || (positionV - projectedPositionV).GetMagnitudeSquared() > m_maxSeparationSquared
@@ -767,9 +767,9 @@ void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFi
                   || std::fabs(vertexW.GetX()-vertexU.GetX()) > m_maxSeparation ) 
                     continue;
 
-                LArGeometryHelper::MergeThreeViews( vertexU, vertexV, vertexW,
-                                                    mergedVertexU, mergedVertexV, mergedVertexW,
-                                                    chiSquared );
+                LArGeometryHelper::MergeThreePositions( vertexU, vertexV, vertexW,
+                                                        mergedVertexU, mergedVertexV, mergedVertexW,
+                                                        chiSquared );
 
                 if ( (vertexU - mergedVertexU).GetMagnitudeSquared() > m_maxSeparationSquared
                   || (vertexV - mergedVertexV).GetMagnitudeSquared() > m_maxSeparationSquared
