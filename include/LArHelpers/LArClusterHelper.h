@@ -220,6 +220,13 @@ public:
         int GetLayer(const float rL) const;
 
         /**
+         *  @brief  Get longitudinal coordinate for a given sliding linear fit layer number
+         * 
+         *  @param  layer the layer number
+         */
+        float GetL(const int layer) const;
+
+        /**
          *  @brief  Get sliding linear fit coordinates for a given x coordinate
          * 
          *  @param  x the x coordinate

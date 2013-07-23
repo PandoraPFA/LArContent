@@ -85,7 +85,7 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
     unsigned int slidingNPoints(0);
     double slidingSumT(0.), slidingSumL(0.), slidingSumTT(0.), slidingSumLT(0.), slidingSumLL(0.);
 
-    for (int iLayer = innerLayer; iLayer < innerLayer + layerFitHalfWindow; ++iLayer)
+    for (int iLayer = innerLayer; iLayer < static_cast<int>(innerLayer + layerFitHalfWindow); ++iLayer)
     {
         TwoDSlidingFitResult::LayerFitContributionMap::const_iterator lyrIter = layerFitContributionMap.find(iLayer);
 
@@ -103,6 +103,7 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
     // Sliding fit
     for (int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
     {
+
         const int fwdLayer(iLayer + layerFitHalfWindow);
         TwoDSlidingFitResult::LayerFitContributionMap::const_iterator fwdIter = layerFitContributionMap.find(fwdLayer);
 
@@ -139,7 +140,7 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
             const double gradient((slidingSumLT - slidingSumL * slidingSumT / static_cast<double>(slidingNPoints)) / denominator);
             const double intercept((slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
 
-            const double l(LArPseudoLayerCalculator::GetZCoordinate(iLayer));
+            const double l(twoDSlidingFitResult.GetL(iLayer));
             const double fitT(intercept + gradient * l);
 
             const double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
@@ -491,7 +492,14 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalCoordinates(const float rL
 
 int LArClusterHelper::TwoDSlidingFitResult::GetLayer(const float rL) const
 {
-    return (rL / LArPseudoLayerCalculator::GetZPitch());
+    return std::floor(rL / LArPseudoLayerCalculator::GetZPitch());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::TwoDSlidingFitResult::GetL(const int layer) const
+{
+    return static_cast<float>(layer) *  LArPseudoLayerCalculator::GetZPitch();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -718,6 +726,7 @@ StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned i
 
     const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
     const int nLayersSpanned(1 + maxLayer - minLayer);
+    const int layerFitHalfWindow(m_layerFitHalfWindow);
 
     // Find point of largest scatter
     double splitCosTheta(m_minCosScatteringAngle);
@@ -725,10 +734,10 @@ StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned i
 
     for (LayerFitResultMap::const_iterator iter1 = m_layerFitResultMap.begin(); iter1 != m_layerFitResultMap.end(); ++iter1)
     {
-        if (iter1->first - minLayer >= nLayersSpanned - 2 * m_layerFitHalfWindow)
+        if (iter1->first - minLayer >= nLayersSpanned - 2 * layerFitHalfWindow)
             break;
 
-        LayerFitResultMap::const_iterator iter2 = m_layerFitResultMap.find(iter1->first + 2 * m_layerFitHalfWindow);
+        LayerFitResultMap::const_iterator iter2 = m_layerFitResultMap.find(iter1->first + 2 * layerFitHalfWindow);
 
         if (m_layerFitResultMap.end() == iter2)
             continue;
@@ -742,7 +751,7 @@ StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned i
             splitCosTheta = cosTheta;
 
             // Find occupied layer at centre of the kink
-            for (int iLayer = iter1->first + m_layerFitHalfWindow; iLayer < maxLayer; ++iLayer)
+            for (int iLayer = iter1->first + layerFitHalfWindow; iLayer < maxLayer; ++iLayer)
             {
                 splitLayerIter = m_layerFitResultMap.find(iLayer);
 
