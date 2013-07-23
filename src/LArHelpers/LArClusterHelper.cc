@@ -573,11 +573,10 @@ std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLa
     const int increment = ((firstIsAheadInX == xIncreasesWithLayers) ? -1 : +1);
 
 
-
     // Second layer coordinates
     LayerFitResultMap::const_iterator secondLayerIter(m_layerFitResultMap.end());
 
-    for (int iLayer = firstLayer + increment; (iLayer > minLayer) && (iLayer < maxLayer); iLayer += increment)
+    for (int iLayer = firstLayer + increment; (iLayer >= minLayer) && (iLayer <= maxLayer); iLayer += increment)
     {
         LayerFitResultMap::const_iterator tempIter = m_layerFitResultMap.find(iLayer);
 
@@ -680,8 +679,7 @@ bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
     if (0 == nSteps)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-
-    std::cout << " nSteps " << nSteps << " nUnchangedSteps " << nUnchangedSteps << " nPositiveSteps " << nPositiveSteps << " nNegativeSteps " << nNegativeSteps << std::endl;
+    std::cout << " nSteps " << nSteps << " nUnchangedSteps " << nUnchangedSteps << " nPositiveSteps " << nPositiveSteps << " nNegativeSteps " << nNegativeSteps << std::endl;    
 
     if (static_cast<float>(nPositiveSteps) / static_cast<float>(nSteps) > 0.5 || static_cast<float>(nNegativeSteps) / static_cast<float>(nSteps))
         return false;
