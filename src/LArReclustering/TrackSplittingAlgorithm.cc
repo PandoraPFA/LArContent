@@ -66,6 +66,7 @@ PandoraMonitoringApi::ViewEvent();
 
         if (nProtoClusters > 1)
         {
+	    // Move small sub-clusters into relegated list
             ClusterVector subClusterVector;
             ClusterList relegations;
 
@@ -82,53 +83,107 @@ PandoraMonitoringApi::ViewEvent();
             }
 
             std::sort(subClusterVector.begin(), subClusterVector.end(), LArClusterHelper::SortByNHits);
-            ClusterList parents, branches, prongs;
+
+            // Identify clusters which are branches or prongs
+            ClusterList branches, prongs, parents, daughters;  // TODO: Which of these lists is superfluous ?
 
             for (ClusterVector::iterator subIter = subClusterVector.begin(), subIterEnd = subClusterVector.end(); subIter != subIterEnd; ++subIter)
             {
                 Cluster *pParent = *subIter;
 
-                if (NULL == pParent)
-                    continue;
-
                 for (ClusterVector::iterator subIter2 = subIter; subIter2 != subIterEnd; ++subIter2)
                 {
                     Cluster *pDaughter = *subIter2;
 
-                    if (NULL == pDaughter)
-                        continue;
+                    if (pDaughter == pParent)
+		        continue;
 
-                    const float pOuter(LArClusterHelper::GetClosestDistance(pParent->GetCentroid(pParent->GetOuterPseudoLayer()), pDaughter));
-                    const float dOuter(LArClusterHelper::GetClosestDistance(pDaughter->GetCentroid(pDaughter->GetOuterPseudoLayer()), pParent));
-                    const float pInner(LArClusterHelper::GetClosestDistance(pParent->GetCentroid(pParent->GetInnerPseudoLayer()), pDaughter));
-                    const float dInner(LArClusterHelper::GetClosestDistance(pDaughter->GetCentroid(pDaughter->GetInnerPseudoLayer()), pParent));
+                    const CartesianVector pInnerCentroid(pParent->GetCentroid(pParent->GetInnerPseudoLayer()));
+                    const CartesianVector pOuterCentroid(pParent->GetCentroid(pParent->GetOuterPseudoLayer()));
+                    const CartesianVector dInnerCentroid(pDaughter->GetCentroid(pDaughter->GetInnerPseudoLayer()));
+                    const CartesianVector dOuterCentroid(pDaughter->GetCentroid(pDaughter->GetOuterPseudoLayer()));
 
-                    // Branches
-                    if ((pInner > 10.) && (pOuter > 10.) && ((dInner < 2.5) || (dOuter < 2.5)))
+                    // prongs
+                    const float rsqInnerInner((pInnerCentroid - dInnerCentroid).GetMagnitudeSquared());
+                    const float rsqInnerOuter((pInnerCentroid - dOuterCentroid).GetMagnitudeSquared());
+                    const float rsqOuterInner((pOuterCentroid - dInnerCentroid).GetMagnitudeSquared());
+                    const float rsqOuterOuter((pOuterCentroid - dOuterCentroid).GetMagnitudeSquared()); 
+
+                    if (rsqInnerInner < 2.5 * 2.5 || rsqInnerOuter < 2.5 * 2.5 ||
+                        rsqOuterInner < 2.5 * 2.5 || rsqOuterOuter < 2.5 * 2.5) 
                     {
-                        parents.insert(pParent);
-                        branches.insert(pDaughter);
-                        *subIter2 = NULL;
+		        parents.insert(pParent);
+                        daughters.insert(pDaughter);
+                        prongs.insert(pDaughter);
+			continue;
                     }
 
-                    // Prongs
-                    if ((pInner > 10.) && (dOuter > 10.) && (pOuter < 2.5) && (dInner < 2.5))
+                    // branches
+                    const float pOuter(LArClusterHelper::GetClosestDistance(pOuterCentroid, pDaughter));
+                    const float pInner(LArClusterHelper::GetClosestDistance(pInnerCentroid, pDaughter));
+                    const float dOuter(LArClusterHelper::GetClosestDistance(dOuterCentroid, pParent));
+                    const float dInner(LArClusterHelper::GetClosestDistance(dInnerCentroid, pParent));
+
+                    if ((pInner > 2.5) && (pOuter > 2.5) && ((dInner < 2.5) || (dOuter < 2.5)))
                     {
                         parents.insert(pParent);
-                        prongs.insert(pDaughter);
-                        *subIter2 = NULL;
+                        daughters.insert(pDaughter);
+                        branches.insert(pDaughter);
+			continue;
                     }
                 }
             }
 
+            // Select clean clusters
+            ClusterList theSeedClusters, theNonSeedClusters;
+
+            unsigned int nParents(0), nProngs(0), nBranches(0), nIsolated(0);
+
+            for (ClusterVector::iterator subIter = subClusterVector.begin(), subIterEnd = subClusterVector.end(); subIter != subIterEnd; ++subIter)
+            {
+                Cluster* pCluster = *subIter;
+
+                bool isParent(false), isDaughter(false), isBranch(false), isProng(false);
+
+                ClusterList::const_iterator parentIter = parents.find(pCluster);
+                if (parentIter != parents.end()) isParent = true;
+
+                ClusterList::const_iterator daughterIter = daughters.find(pCluster);
+                if (daughterIter != daughters.end()) isDaughter = true;
+
+                ClusterList::const_iterator branchIter = branches.find(pCluster);
+                if (branchIter != branches.end()) isBranch = true;
+
+                ClusterList::const_iterator prongIter = prongs.find(pCluster);
+                if (prongIter != prongs.end()) isProng = true;
+		
+                if (true == isBranch) ++nBranches;
+                else if (true == isProng) ++nProngs;
+                else if (false == isParent) ++nIsolated;
+                else ++nParents;
+
+		const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
+
+		if ( lengthSquared > 200.f || (false == isBranch && lengthSquared > 100.f) )
+		{
+		    theSeedClusters.insert(pCluster);
+		}
+                else 
+                {
+                    theNonSeedClusters.insert(pCluster);
+		}
+	    }
+
 std::cout << " nProtoClusters " << nProtoClusters << ", nProtoClusters10 " << subClusterVector.size() << std::endl;
-std::cout << " nParents " << parents.size() << " nBranches " << branches.size() << " nProngs " << prongs.size() << std::endl;
+std::cout << " nParents " << nParents << " nBranches " << nBranches << " nProngs " << nProngs << " nIsolated " << nIsolated << std::endl;
+std::cout << " seedClusters " << theSeedClusters.size() << " nonSeedClusters " << theNonSeedClusters.size() << std::endl;
 PandoraMonitoringApi::VisualizeClusters(&inputClusterList, "InputClusterList", BLUE);
-PandoraMonitoringApi::VisualizeClusters(&parents, "parents", GREEN);
+PandoraMonitoringApi::VisualizeClusters(&theSeedClusters, "Seeds", RED);
+PandoraMonitoringApi::VisualizeClusters(&theNonSeedClusters, "NonSeeds", GREEN);
 PandoraMonitoringApi::VisualizeClusters(&branches, "branches", ORANGE);
 PandoraMonitoringApi::VisualizeClusters(&prongs, "prongs", MAGENTA);
 PandoraMonitoringApi::VisualizeClusters(&relegations, "junk", YELLOW);
-PandoraMonitoringApi::VisualizeClusters(pReclusterList, "ReclusterList", RED);
+PandoraMonitoringApi::VisualizeClusters(pReclusterList, "ReclusterList", GRAY);
 PandoraMonitoringApi::ViewEvent();
 
             if (false)
