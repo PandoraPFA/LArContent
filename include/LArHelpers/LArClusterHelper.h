@@ -508,9 +508,11 @@ public:
     static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
-    static unsigned int             m_layerFitHalfWindow;       ///< The layer fit half window for sliding 2d x-z fits
-    static float                    m_trackFitMaxRms;           ///< Max RMS of track segment to be considered for kink splitting
-    static float                    m_minCosScatteringAngle;    ///< Min kink angle at which to enable kink splitting
+    static unsigned int             m_layerFitHalfWindow;           ///< The layer fit half window for sliding 2d x-z fits
+    static float                    m_trackFitMaxRms;               ///< Max RMS of track segment to be considered for kink splitting
+    static float                    m_minCosScatteringAngle;        ///< Min kink angle at which to enable kink splitting
+    static float                    m_multiValuedTanThetaCut;       ///< Tan theta cut for finding sliding fits multivalued in x
+    static float                    m_multiValuedStepFractionCut;   ///< Step fraction cut for finding sliding fits multivalued in x
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

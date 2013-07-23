@@ -572,7 +572,6 @@ std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLa
     const bool xIncreasesWithLayers(m_axisDirection.GetX() > 0.f);
     const int increment = ((firstIsAheadInX == xIncreasesWithLayers) ? -1 : +1);
 
-
     // Second layer coordinates
     LayerFitResultMap::const_iterator secondLayerIter(m_layerFitResultMap.end());
 
@@ -660,9 +659,7 @@ bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
         previousPosition = position;
         ++nSteps;
 
-        float m_tanTheta(0.1);
-
-        if (std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * m_tanTheta)
+        if (std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * LArClusterHelper::m_multiValuedTanThetaCut)
         {
             ++nUnchangedSteps;
         }
@@ -787,6 +784,8 @@ StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned i
 unsigned int LArClusterHelper::m_layerFitHalfWindow = 20;
 float LArClusterHelper::m_trackFitMaxRms = 0.25f; // cm
 float LArClusterHelper::m_minCosScatteringAngle = std::cos(M_PI * 20.f / 180.f); // radians
+float LArClusterHelper::m_multiValuedTanThetaCut = 0.1f;
+float LArClusterHelper::m_multiValuedStepFractionCut = 0.5f;
 
 StatusCode LArClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -798,6 +797,12 @@ StatusCode LArClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosScatteringAngle", m_minCosScatteringAngle));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MultiValuedTanThetaCut", m_multiValuedTanThetaCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MultiValuedStepFractionCut", m_multiValuedStepFractionCut));
 
     return STATUS_CODE_SUCCESS;
 }

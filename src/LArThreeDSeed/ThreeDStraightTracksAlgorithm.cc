@@ -80,16 +80,8 @@ void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const
                 const double residualSquared((fitT - rT) * (fitT - rT) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
                 residuals.push_back(residualSquared);
 
-                if (residualSquared < 1.f) // TODO
+                if (residualSquared < 1.f)
                     ++nHitsOnTrack;
-
-//std::cout << " x " << x << " fitX " << fitX << " gradient " << gradient << " residualSquared " << residualSquared << std::endl;
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//ClusterList tempList; tempList.insert(pCluster);
-//const CartesianVector tempPosition(pCaloHit->GetPositionVector());
-//PandoraMonitoringApi::AddMarkerToVisualization(&tempPosition, std::string("layerMarker"), AUTO, 1);
-//PandoraMonitoringApi::VisualizeClusters(&tempList, "tempList", RED);
-//PandoraMonitoringApi::ViewEvent();
             }
         }
 
@@ -100,12 +92,7 @@ void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const
         static const float m_trackResidualQuantile(0.8f);
         const float theQuantile(residuals[m_trackResidualQuantile * residuals.size()]);
         const float slidingFitWidth(std::sqrt(theQuantile));
-
 std::cout << " SELECT? slidingFitWidth " << slidingFitWidth << " hitsOnTrackFraction " << (static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits()))) << std::endl;
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// ClusterList tempList; tempList.insert(pCluster);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "tempList", RED);
-// PandoraMonitoringApi::ViewEvent();
 
         if (slidingFitWidth > 1.5f) // TODO
             continue;
@@ -172,34 +159,11 @@ void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const float maxX(std::min(maxXU, std::min(maxXV, maxXW)));
     const float xOverlap(maxX - minX);
 
+    if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
+        return;
+
     if (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX())
         return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
-else
-{
-std::cout << "Multivalued check " << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(pClusterU);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(pClusterV);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(pClusterW);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
-}
-
-    if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
-{
-//std::cout << " VETO: xOverlap " << xOverlap << ", xSpanUf " << (xOverlap / xSpanU) << ", xSpanVf " << (xOverlap / xSpanV) << ", xSpanWf " << (xOverlap / xSpanW) << std::endl;
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//ClusterList clusterListU; clusterListU.insert(pClusterU);
-//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-//ClusterList clusterListV; clusterListV.insert(pClusterV);
-//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-//ClusterList clusterListW; clusterListW.insert(pClusterW);
-//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-//PandoraMonitoringApi::ViewEvent();
-        return;
-}
 
     // Sampling in x
     const float nPointsU((xOverlap / xSpanU) * pClusterU->GetNCaloHits());
@@ -218,9 +182,6 @@ PandoraMonitoringApi::ViewEvent();
             slidingFitResultU.GetGlobalFitCoordinates(x, fitUVector);
             slidingFitResultV.GetGlobalFitCoordinates(x, fitVVector);
             slidingFitResultW.GetGlobalFitCoordinates(x, fitWVector);
-//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitUVector, "fitUVector", RED, 1.));
-//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitVVector, "fitVVector", GREEN, 1.));
-//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitWVector, "fitWVector", BLUE, 1.));
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
@@ -234,7 +195,9 @@ PandoraMonitoringApi::ViewEvent();
             if (pseudoChi2 < 3.f) // TODO
                 ++nMatchedSamplingPoints;
 
-//std::cout << " pseudoChi2 " << pseudoChi2 << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
+//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitUVector, "fitUVector", RED, 1.));
+//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitVVector, "fitVVector", GREEN, 1.));
+//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitWVector, "fitWVector", BLUE, 1.));
 const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
 const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
 const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
@@ -249,9 +212,6 @@ const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisua
 
     const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
 
-    if (matchedSamplingFraction < 0.9f) // TODO
-{
-std::cout << " VETO: matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 ClusterList clusterListU; clusterListU.insert(pClusterU);
 PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
@@ -259,24 +219,17 @@ ClusterList clusterListV; clusterListV.insert(pClusterV);
 PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
 ClusterList clusterListW; clusterListW.insert(pClusterW);
 PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+
+    if (matchedSamplingFraction < 0.9f) // TODO
+{
+std::cout << " VETO: matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 PandoraMonitoringApi::ViewEvent();
         return;
 }
 
-std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV)
-          << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints
-          << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(pClusterU);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(pClusterV);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(pClusterW);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 PandoraMonitoringApi::ViewEvent();
-std::cout << "Set overlap result, pClusterU " << pClusterU << ", pClusterU " <<  pClusterV << ", pClusterW " << pClusterW << std::endl;
     m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, matchedSamplingFraction);
-std::cout << "Done set overlap result " << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
