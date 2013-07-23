@@ -27,16 +27,24 @@ StatusCode TrackSplittingAlgorithm::Run()
 
     ClusterVector clusterVector(pClusterList->begin(), pClusterList->end());
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
-
-    ClusterList clusterRelegations;
+    ClusterList allClusterRelegations;
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
 
-        // Selection here
-        //if (true)
-        //    continue;
+std::cout << " Select cluster for reclustering? " << std::endl;
+const unsigned int nHits(pCluster->GetNCaloHits());
+const unsigned int nLayers(pCluster->GetOrderedCaloHitList().size());
+const float length((pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()) - pCluster->GetCentroid(pCluster->GetInnerPseudoLayer())).GetMagnitude());
+const float slidingFitWidth(LArClusterHelper::LArTrackWidth(pCluster));
+std::cout << " nHits " << nHits << " nLayers " << nLayers << " length " << length << std::endl;
+std::cout << " nHits/Layer " << static_cast<float>(nHits)/static_cast<float>(nLayers) << " nHits/Length " << static_cast<float>(nHits)/length << std::endl;
+std::cout << " slidingFitWidth " << slidingFitWidth << std::endl;
+ClusterList tempList; tempList.insert(pCluster);
+PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+PandoraMonitoringApi::VisualizeClusters(&tempList, "ClusterListU", BLUE);
+PandoraMonitoringApi::ViewEvent();
 
         // Perform the reclustering
         ClusterList inputClusterList;
@@ -58,42 +66,86 @@ StatusCode TrackSplittingAlgorithm::Run()
 
         if (nProtoClusters > 1)
         {
-            ClusterVector subClusterVector(pReclusterList->begin(), pReclusterList->end());
-            std::sort(subClusterVector.begin(), subClusterVector.end(), LArClusterHelper::SortByNHits);
+            ClusterVector subClusterVector;
+            ClusterList relegations;
 
-            for (ClusterVector::const_iterator subIter = subClusterVector.begin(), subIterEnd = subClusterVector.end(); subIter != subIterEnd; ++subIter)
+            for (ClusterList::const_iterator subIter = pReclusterList->begin(), subIterEnd = pReclusterList->end(); subIter != subIterEnd; ++subIter)
             {
-                Cluster *pSubCluster = *subIter;
-
-                if (pSubCluster->GetNCaloHits() < 10)
+                if ((*subIter)->GetNCaloHits() > 9)
                 {
-                    clusterRelegations.insert(pSubCluster);
-                    continue;
+                    subClusterVector.push_back(*subIter);
                 }
-
-                if (LArClusterHelper::LArTrackWidth(pSubCluster) < 1.5f)
+                else
                 {
-                    chosenListName = reclusterListName;
-                    ClusterList subClusterList;
-                    subClusterList.insert(pSubCluster);
-                    PandoraMonitoringApi::VisualizeClusters(&subClusterList, "SubCluster", BLUE);
-                    PandoraMonitoringApi::ViewEvent();
+                    relegations.insert(*subIter);
                 }
             }
 
-            PandoraMonitoringApi::VisualizeClusters(&inputClusterList, "InputClusterList", BLUE);
-            PandoraMonitoringApi::VisualizeClusters(pReclusterList, "ReclusterList", RED);
-            PandoraMonitoringApi::ViewEvent();
+            std::sort(subClusterVector.begin(), subClusterVector.end(), LArClusterHelper::SortByNHits);
+            ClusterList parents, branches, prongs;
+
+            for (ClusterVector::iterator subIter = subClusterVector.begin(), subIterEnd = subClusterVector.end(); subIter != subIterEnd; ++subIter)
+            {
+                Cluster *pParent = *subIter;
+
+                if (NULL == pParent)
+                    continue;
+
+                for (ClusterVector::iterator subIter2 = subIter; subIter2 != subIterEnd; ++subIter2)
+                {
+                    Cluster *pDaughter = *subIter2;
+
+                    if (NULL == pDaughter)
+                        continue;
+
+                    const float pOuter(LArClusterHelper::GetClosestDistance(pParent->GetCentroid(pParent->GetOuterPseudoLayer()), pDaughter));
+                    const float dOuter(LArClusterHelper::GetClosestDistance(pDaughter->GetCentroid(pDaughter->GetOuterPseudoLayer()), pParent));
+                    const float pInner(LArClusterHelper::GetClosestDistance(pParent->GetCentroid(pParent->GetInnerPseudoLayer()), pDaughter));
+                    const float dInner(LArClusterHelper::GetClosestDistance(pDaughter->GetCentroid(pDaughter->GetInnerPseudoLayer()), pParent));
+
+                    // Branches
+                    if ((pInner > 10.) && (pOuter > 10.) && ((dInner < 2.5) || (dOuter < 2.5)))
+                    {
+                        parents.insert(pParent);
+                        branches.insert(pDaughter);
+                        *subIter2 = NULL;
+                    }
+
+                    // Prongs
+                    if ((pInner > 10.) && (dOuter > 10.) && (pOuter < 2.5) && (dInner < 2.5))
+                    {
+                        parents.insert(pParent);
+                        prongs.insert(pDaughter);
+                        *subIter2 = NULL;
+                    }
+                }
+            }
+
+std::cout << " nProtoClusters " << nProtoClusters << ", nProtoClusters10 " << subClusterVector.size() << std::endl;
+std::cout << " nParents " << parents.size() << " nBranches " << branches.size() << " nProngs " << prongs.size() << std::endl;
+PandoraMonitoringApi::VisualizeClusters(&inputClusterList, "InputClusterList", BLUE);
+PandoraMonitoringApi::VisualizeClusters(&parents, "parents", GREEN);
+PandoraMonitoringApi::VisualizeClusters(&branches, "branches", ORANGE);
+PandoraMonitoringApi::VisualizeClusters(&prongs, "prongs", MAGENTA);
+PandoraMonitoringApi::VisualizeClusters(&relegations, "junk", YELLOW);
+PandoraMonitoringApi::VisualizeClusters(pReclusterList, "ReclusterList", RED);
+PandoraMonitoringApi::ViewEvent();
+
+            if (false)
+            {
+                chosenListName = reclusterListName;
+                //allClusterRelegations.insert();
+            }
         }
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, chosenListName));
     }
 
     // Relegate fragments to non-seed list
-    if (!clusterRelegations.empty())
+    if (!allClusterRelegations.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_seedClusterListName,
-            m_nonSeedClusterListName, clusterRelegations));
+            m_nonSeedClusterListName, allClusterRelegations));
     }
 
     return STATUS_CODE_SUCCESS;
