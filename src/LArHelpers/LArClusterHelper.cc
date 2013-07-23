@@ -572,6 +572,8 @@ std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLa
     const bool xIncreasesWithLayers(m_axisDirection.GetX() > 0.f);
     const int increment = ((firstIsAheadInX == xIncreasesWithLayers) ? -1 : +1);
 
+
+
     // Second layer coordinates
     LayerFitResultMap::const_iterator secondLayerIter(m_layerFitResultMap.end());
 
@@ -597,7 +599,7 @@ std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLa
     if (m_layerFitResultMap.end() == secondLayerIter)
     {
 std::cout << " second not found " << std::endl;
-std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << std::endl;
+std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << " increment=" << increment << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
@@ -647,7 +649,7 @@ CartesianVector LArClusterHelper::TwoDSlidingFitResult::GetGlobalMaxLayerPositio
 
 bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
 {
-    float previousXValue(0.f);
+  CartesianVector previousPosition(0.f, 0.f, 0.f);
     unsigned int nSteps(0), nPositiveSteps(0), nNegativeSteps(0), nUnchangedSteps(0);
 
     for (LayerFitResultMap::const_iterator iter = m_layerFitResultMap.begin(), iterEnd = m_layerFitResultMap.end(); iter != iterEnd; ++iter)
@@ -655,15 +657,17 @@ bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
         CartesianVector position(0.f, 0.f, 0.f);
         this->GetGlobalCoordinates(iter->second.GetL(), iter->second.GetFitT(), position);
 
-        const float deltaX(position.GetX() - previousXValue);
-        previousXValue = position.GetX();
+        const CartesianVector delta(position - previousPosition);
+        previousPosition = position;
         ++nSteps;
 
-        if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
+        float m_tanTheta(0.1);
+
+        if (std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * m_tanTheta)
         {
             ++nUnchangedSteps;
         }
-        else if (deltaX > 0.f)
+        else if (delta.GetX() > 0.f)
         {
             ++nPositiveSteps;
         }
@@ -673,8 +677,16 @@ bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
         }
     }
 
+    if (0 == nSteps)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+
     std::cout << " nSteps " << nSteps << " nUnchangedSteps " << nUnchangedSteps << " nPositiveSteps " << nPositiveSteps << " nNegativeSteps " << nNegativeSteps << std::endl;
-    return false;
+
+    if (static_cast<float>(nPositiveSteps) / static_cast<float>(nSteps) > 0.5 || static_cast<float>(nNegativeSteps) / static_cast<float>(nSteps))
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
