@@ -85,7 +85,7 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
     unsigned int slidingNPoints(0);
     double slidingSumT(0.), slidingSumL(0.), slidingSumTT(0.), slidingSumLT(0.), slidingSumLL(0.);
 
-    for (unsigned int iLayer = innerLayer; iLayer < innerLayer + layerFitHalfWindow; ++iLayer)
+    for (int iLayer = innerLayer; iLayer < innerLayer + layerFitHalfWindow; ++iLayer)
     {
         TwoDSlidingFitResult::LayerFitContributionMap::const_iterator lyrIter = layerFitContributionMap.find(iLayer);
 
@@ -101,9 +101,9 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
     }
 
     // Sliding fit
-    for (unsigned int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
+    for (int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
     {
-        const unsigned int fwdLayer(iLayer + layerFitHalfWindow);
+        const int fwdLayer(iLayer + layerFitHalfWindow);
         TwoDSlidingFitResult::LayerFitContributionMap::const_iterator fwdIter = layerFitContributionMap.find(fwdLayer);
 
         if (layerFitContributionMap.end() != fwdIter)
@@ -116,7 +116,7 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
             slidingNPoints += fwdIter->second.GetNPoints();
         }
 
-        const unsigned int bwdLayer(iLayer - layerFitHalfWindow - 1);
+        const int bwdLayer(iLayer - layerFitHalfWindow - 1);
         TwoDSlidingFitResult::LayerFitContributionMap::const_iterator bwdIter = layerFitContributionMap.find(bwdLayer);
 
         if (layerFitContributionMap.end() != bwdIter)
