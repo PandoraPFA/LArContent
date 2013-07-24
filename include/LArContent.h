@@ -25,8 +25,8 @@
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 #include "LArReclustering/ShowerMipSeparationAlgorithm.h"
 #include "LArReclustering/TrackSplittingAlgorithm.h"
-#include "LArThreeDSeed/ThreeDStraightTracksAlgorithm.h"
-#include "LArThreeDSeed/ThreeDTrackSegmentsAlgorithm.h"
+#include "LArThreeDSeed/ThreeDShowersAlgorithm.h"
+#include "LArThreeDSeed/ThreeDTracksAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
 #include "LArTwoDSeed/SeedConsolidationAlgorithm.h"
 #include "LArTwoDSeed/SeedFindingAlgorithm.h"
@@ -68,8 +68,8 @@ public:
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
         d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
         d("LArTrackSplitting",                      lar::TrackSplittingAlgorithm::Factory)                                      \
-        d("LArThreeDStraightTracks",                lar::ThreeDStraightTracksAlgorithm::Factory)                                \
-        d("LArThreeDTrackSegments",                 lar::ThreeDTrackSegmentsAlgorithm::Factory)                                 \
+        d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
+        d("LArThreeDTracks",                        lar::ThreeDTracksAlgorithm::Factory)                                        \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
         d("LArSeedFinding",                         lar::SeedFindingAlgorithm::Factory)                                         \

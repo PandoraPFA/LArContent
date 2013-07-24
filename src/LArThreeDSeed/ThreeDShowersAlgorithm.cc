@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDStraightTracksAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDSeed/ThreeDShowersAlgorithm.cc
  * 
- *  @brief  Implementation of the three dimension straight tracks algorithm class.
+ *  @brief  Implementation of the three dimensional showers algorithm class.
  * 
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDSeed/ThreeDStraightTracksAlgorithm.h"
+#include "LArThreeDSeed/ThreeDShowersAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-void ThreeDStraightTracksAlgorithm::SelectInputClusters()
+void ThreeDShowersAlgorithm::SelectInputClusters()
 {
     this->SelectInputClusters(m_pInputClusterListU, m_clusterVectorU);
     this->SelectInputClusters(m_pInputClusterListV, m_clusterVectorV);
@@ -41,7 +41,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
+void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -50,79 +50,27 @@ void ThreeDStraightTracksAlgorithm::SelectInputClusters(const ClusterList *const
         if (!pCluster->IsAvailable())
             continue;
 
-        if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75f)
-            continue;
-
-        LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(pCluster, 20, twoDSlidingFitResult);
-
-        FloatVector residuals;
-        unsigned int nHitsOnTrack(0);
-
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.GetLayerFitResultMap());
-
-        for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
-        {
-            for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-            {
-                float rL(0.f), rT(0.f);
-                twoDSlidingFitResult.GetLocalCoordinates((*hitIter)->GetPositionVector(), rL, rT);
-                const int layer(twoDSlidingFitResult.GetLayer(rL));
-
-                LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator fitResultIter = layerFitResultMap.find(layer);
-
-                if (layerFitResultMap.end() == fitResultIter)
-                    continue;
-
-                const double fitT(fitResultIter->second.GetFitT());
-                const double gradient(fitResultIter->second.GetGradient());
-                const double residualSquared((fitT - rT) * (fitT - rT) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
-                residuals.push_back(residualSquared);
-
-                if (residualSquared < 1.f)
-                    ++nHitsOnTrack;
-            }
-        }
-
-        if (residuals.empty())
-           continue;
-
-        std::sort(residuals.begin(), residuals.end());
-        static const float m_trackResidualQuantile(0.8f);
-        const float theQuantile(residuals[m_trackResidualQuantile * residuals.size()]);
-        const float slidingFitWidth(std::sqrt(theQuantile));
-std::cout << " SELECT? slidingFitWidth " << slidingFitWidth << " hitsOnTrackFraction " << (static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits()))) << std::endl;
-
-        if (slidingFitWidth > 1.0f) // TODO: this is now equivalent to hitsOnTrackFraction cut
-            continue;
-
-        const float hitsOnTrackFraction(static_cast<float>(nHitsOnTrack) / (static_cast<float>(pCluster->GetNCaloHits())));
-
-        if (hitsOnTrackFraction < 0.8f) // TODO: this is now equivalent to slidingFitWidth cut
-            continue;
-
         clusterVector.push_back(pCluster);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDStraightTracksAlgorithm::ModifyInputClusters()
+void ThreeDShowersAlgorithm::ModifyInputClusters()
 {
     // TODO, see ShowerMipSeparationAlgorithm for some basic algorithm mechanics
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDStraightTracksAlgorithm::InitializeTensor()
+void ThreeDShowersAlgorithm::InitializeTensor()
 {
     m_overlapTensor.Clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDStraightTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // U
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultU;
@@ -234,7 +182,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDStraightTracksAlgorithm::ExamineTensor()
+bool ThreeDShowersAlgorithm::ExamineTensor()
 {
     float bestOverlapResult(std::numeric_limits<float>::max()); // TODO Min overlap result for PFO creation
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
@@ -293,10 +241,10 @@ std::cout << " Best particle, overlapResult " << bestOverlapResult << std::endl;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDStraightTracksAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
+void ThreeDShowersAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
     const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
 {
-    std::cout << "TODO - ThreeDStraightTracksAlgorithm::CalculateConstantXOverlapResult " << std::endl;
+    std::cout << "TODO - ThreeDShowersAlgorithm::CalculateConstantXOverlapResult " << std::endl;
 
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 ClusterList clusterListU; clusterListU.insert(const_cast<Cluster*>(slidingFitResultU.GetCluster()));
@@ -312,7 +260,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDStraightTracksAlgorithm::UpdateTensor()
+void ThreeDShowersAlgorithm::UpdateTensor()
 {
     ClusterList usedClusters;
 
@@ -333,7 +281,7 @@ void ThreeDStraightTracksAlgorithm::UpdateTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDStraightTracksAlgorithm::TidyUp()
+void ThreeDShowersAlgorithm::TidyUp()
 {
     m_overlapTensor.Clear();
     ThreeDBaseAlgorithm::TidyUp();
@@ -341,7 +289,7 @@ void ThreeDStraightTracksAlgorithm::TidyUp()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDStraightTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     return ThreeDBaseAlgorithm::ReadSettings(xmlHandle);
 }

@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDSeed/ThreeDStraightTracksAlgorithm.h
+ *  @file   LArContent/include/LArThreeDSeed/ThreeDShowersAlgorithm.h
  * 
- *  @brief  Header file for the three dimension straight tracksalgorithm class.
+ *  @brief  Header file for the three dimensional showers algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_THREE_D_STRAIGHT_TRACKS_ALGORITHM_H
-#define LAR_THREE_D_STRAIGHT_TRACKS_ALGORITHM_H 1
+#ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H
+#define LAR_THREE_D_SHOWERS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -18,9 +18,9 @@ namespace lar
 {
 
 /**
- *  @brief  ThreeDStraightTracksAlgorithm class
+ *  @brief  ThreeDShowersAlgorithm class
  */
-class ThreeDStraightTracksAlgorithm : public ThreeDBaseAlgorithm
+class ThreeDShowersAlgorithm : public ThreeDBaseAlgorithm
 {
 public:
     /**
@@ -67,11 +67,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ThreeDStraightTracksAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ThreeDShowersAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ThreeDStraightTracksAlgorithm();
+    return new ThreeDShowersAlgorithm();
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_THREE_D_STRAIGHT_TRACKS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H
