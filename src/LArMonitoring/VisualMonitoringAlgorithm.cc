@@ -213,7 +213,22 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeClusters(pClusterList, listName.empty() ? "currentClusters" : listName.c_str(),
+    ClusterList clusterList(*pClusterList);
+
+    // Filter cluster list
+    for (ClusterList::const_iterator clsIter = clusterList.begin(), clsIterEnd = clusterList.end(); clsIter != clsIterEnd; )
+    {
+        if (m_showOnlyAvailable && !(*clsIter)->IsAvailable())
+        {
+            clusterList.erase(clsIter++);
+        }
+        else
+        {
+            clsIter++;
+        }
+    }
+
+    PANDORA_MONITORING_API(VisualizeClusters(&clusterList, listName.empty() ? "currentClusters" : listName.c_str(),
         (m_hitColors.find("particleid") != std::string::npos) ? AUTOID :
         (m_hitColors.find("particletype") != std::string::npos) ? AUTOTYPE :
         (m_hitColors.find("iterate") != std::string::npos ? AUTOITER :

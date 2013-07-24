@@ -46,14 +46,10 @@ PandoraMonitoringApi::ViewEvent();
         const float length((pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()) - pCluster->GetCentroid(pCluster->GetInnerPseudoLayer())).GetMagnitude());
         const float hitsPerUnitLength((length > 0.f) ? static_cast<float>(nHits) / length : std::numeric_limits<float>::max());
 
-        if (hitsPerUnitLength > 10.f) // TODO
+        if (hitsPerUnitLength > 10.f)
         {
+std::cout << "OBVIOUS SHOWER, hitsPerUnitLength " << hitsPerUnitLength << std::endl;
             allShowerSeedClusters.insert(pCluster);
-std::cout << " hitsPerUnitLength " << hitsPerUnitLength << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList tempList; tempList.insert(pCluster);
-PandoraMonitoringApi::VisualizeClusters(&tempList, "ObviousShower", BLUE);
-PandoraMonitoringApi::ViewEvent();
             continue;
         }
 
@@ -179,18 +175,20 @@ PandoraMonitoringApi::ViewEvent();
             }
         }
 
-std::cout << " nProtoClusters " << pReclusterList->size() << ", nProtoClusters10 " << subClusterVector.size() << std::endl;
-std::cout << " nParents " << nParents << " nBranches " << nBranches << " nProngs " << nProngs << " nIsolated " << nIsolated << std::endl;
-std::cout << " seedClusters " << trackSeedClusters.size() << " nonSeedClusters " << nonSeedClusters.size() << std::endl;
+        // Decision making
+        unsigned int nSelectedHits(0);
+        for (ClusterList::const_iterator tIter = trackSeedClusters.begin(), tIterEnd = trackSeedClusters.end(); tIter != tIterEnd; ++tIter)
+            nSelectedHits += (*tIter)->GetNCaloHits();
 
-const unsigned int nProtoClusters10(subClusterVector.size());
-const float clustersPerUnitLength(static_cast<float>(subClusterVector.size()) / length);
-const float branchesPerUnitLength(static_cast<float>(nBranches) / length);
-unsigned int nSelectedHits(0);
-for (ClusterList::const_iterator tIter = trackSeedClusters.begin(), tIterEnd = trackSeedClusters.end(); tIter != tIterEnd; ++tIter)
-    nSelectedHits += (*tIter)->GetNCaloHits();
-const float selectedHitFraction(static_cast<float>(nSelectedHits) / static_cast<float>(nHits));
-std::cout << " clustersPerUnitLength " << clustersPerUnitLength << " branchesPerUnitLength " << branchesPerUnitLength << " selectedHitFraction " << selectedHitFraction << std::endl;
+        const float selectedHitFraction(static_cast<float>(nSelectedHits) / static_cast<float>(nHits));
+        const float clustersPerUnitLength(static_cast<float>(subClusterVector.size()) / length);
+        const unsigned int nProtoClusters10(subClusterVector.size());
+
+//const float branchesPerUnitLength(static_cast<float>(nBranches) / length);
+//std::cout << " nProtoClusters " << pReclusterList->size() << ", nProtoClusters10 " << subClusterVector.size() << std::endl;
+//std::cout << " nParents " << nParents << " nBranches " << nBranches << " nProngs " << nProngs << " nIsolated " << nIsolated << std::endl;
+//std::cout << " seedClusters " << trackSeedClusters.size() << " nonSeedClusters " << nonSeedClusters.size() << std::endl;
+//std::cout << " clustersPerUnitLength " << clustersPerUnitLength << " branchesPerUnitLength " << branchesPerUnitLength << " selectedHitFraction " << selectedHitFraction << std::endl;
 
         std::string chosenListName;
 

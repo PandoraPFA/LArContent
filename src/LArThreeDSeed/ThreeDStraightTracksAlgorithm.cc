@@ -279,14 +279,14 @@ bool ThreeDStraightTracksAlgorithm::ExamineTensor()
 
     // DEBUG
 std::cout << " Best particle, overlapResult " << bestOverlapResult << std::endl;
-ClusterList tempListU; tempListU.insert(pBestClusterU);
-ClusterList tempListV; tempListV.insert(pBestClusterV);
-ClusterList tempListW; tempListW.insert(pBestClusterW);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&tempListU, "ClusterListU", RED);
-PandoraMonitoringApi::VisualizeClusters(&tempListV, "ClusterListV", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&tempListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
+//ClusterList tempListU; tempListU.insert(pBestClusterU);
+//ClusterList tempListV; tempListV.insert(pBestClusterV);
+//ClusterList tempListW; tempListW.insert(pBestClusterW);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//PandoraMonitoringApi::VisualizeClusters(&tempListU, "ClusterListU", RED);
+//PandoraMonitoringApi::VisualizeClusters(&tempListV, "ClusterListV", GREEN);
+//PandoraMonitoringApi::VisualizeClusters(&tempListW, "ClusterListW", BLUE);
+//PandoraMonitoringApi::ViewEvent();
 
     return true;
 }
