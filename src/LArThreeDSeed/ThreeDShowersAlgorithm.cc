@@ -58,7 +58,6 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pClust
 
 void ThreeDShowersAlgorithm::ModifyInputClusters()
 {
-    // TODO, see ShowerMipSeparationAlgorithm for some basic algorithm mechanics
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,12 +142,10 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
             if (pseudoChi2 < 3.f) // TODO
                 ++nMatchedSamplingPoints;
 
-//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitUVector, "fitUVector", RED, 1.));
-//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitVVector, "fitVVector", GREEN, 1.));
-//PANDORA_MONITORING_API(AddMarkerToVisualization(&fitWVector, "fitWVector", BLUE, 1.));
 const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
 const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
 const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
+std::cout << " SHW pseudoChi2 " << pseudoChi2 << " deltaW " << deltaW << " deltaV " << deltaV << " deltaU " << deltaU << std::endl;
         }
         catch (StatusCodeException &)
         {

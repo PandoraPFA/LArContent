@@ -103,7 +103,6 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
     // Sliding fit
     for (int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
     {
-
         const int fwdLayer(iLayer + layerFitHalfWindow);
         TwoDSlidingFitResult::LayerFitContributionMap::const_iterator fwdIter = layerFitContributionMap.find(fwdLayer);
 
@@ -554,11 +553,7 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
     }
 
     if (m_layerFitResultMap.end() == firstLayerIter)
-    {
-std::cout << " first not found " << std::endl;
-std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    }
 
     const int firstLayer(firstLayerIter->first);
     const float firstLayerL(firstLayerIter->second.GetL());
@@ -595,11 +590,7 @@ std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLa
     }
 
     if (m_layerFitResultMap.end() == secondLayerIter)
-    {
-std::cout << " second not found " << std::endl;
-std::cout << " ->minLayer " << minLayer << " maxLayer " << maxLayer << " startLayer " << startLayer << " firstLayer " << firstLayer << " increment=" << increment << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    }
 
     const int secondLayer(secondLayerIter->first);
     const float secondLayerL(secondLayerIter->second.GetL());
