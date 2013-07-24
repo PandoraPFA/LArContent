@@ -32,7 +32,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_seedClusterListName;              ///< The seed cluster list name
+    std::string             m_inputSeedClusterListName;         ///< The seed cluster list name
+    std::string             m_showerSeedClusterListName;        ///< The shower seed cluster list name
+    std::string             m_trackSeedClusterListName;         ///< The track seed cluster list name
     std::string             m_nonSeedClusterListName;           ///< The non seed cluster list name
 
     std::string             m_clusteringAlgorithmName;          ///< The name of the clustering algorithm to run
