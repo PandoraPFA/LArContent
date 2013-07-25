@@ -18,11 +18,24 @@ namespace lar
  */
 enum ClusterQuality
 {
-    METHOD_A = 0,  // NEED NAME
-    METHOD_B,      // NEED NAME
-    METHOD_C,      // NEED NAME
-    METHOD_D       // NEED NAME
+    METHOD_A = 0,
+    METHOD_B,
+    METHOD_C,
+    METHOD_D
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  ShowerEdge enum
+ */
+enum ShowerEdge
+{
+    POSITIVE_SHOWER_EDGE,
+    NEGATIVE_SHOWER_EDGE
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  LArClusterHelper class
@@ -337,6 +350,19 @@ public:
         const pandora::CartesianVector &axisDirection, TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
+     *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  axisIntercept the axis intercept position
+     *  @param  axisDirection the axis direction vector
+     *  @param  showerEdge the shower edge
+     *  @param  twoDSlidingFitResult to receive the fit result
+     */
+    static void LArTwoDShowerEdgeFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
+        const pandora::CartesianVector &axisDirection, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult);
+
+    /**
      *  @brief  Measure width of cluster using multiple straight line fits
      * 
      *  @param  pCluster address of the cluster
@@ -508,6 +534,13 @@ public:
     static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
+    /**
+     *  @brief  Perform two dimensional sliding fit, using the information stored in the sliding fit result object
+     * 
+     *  @param  twoDSlidingFitResult to receive the fit result
+     */
+    static void StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingFitResult);
+
     static unsigned int             m_layerFitHalfWindow;           ///< The layer fit half window for sliding 2d x-z fits
     static float                    m_trackFitMaxRms;               ///< Max RMS of track segment to be considered for kink splitting
     static float                    m_minCosScatteringAngle;        ///< Min kink angle at which to enable kink splitting

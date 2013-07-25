@@ -34,9 +34,15 @@ StatusCode ThreeDBaseAlgorithm::Run()
 {
     try
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameU, m_pInputClusterListU));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameV, m_pInputClusterListV));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameW, m_pInputClusterListW));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameU, m_pInputClusterListU));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameV, m_pInputClusterListV));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameW, m_pInputClusterListW));
+
+        if ((NULL == m_pInputClusterListU) || (NULL == m_pInputClusterListV) || (NULL == m_pInputClusterListW))
+        {
+            std::cout << "ThreeDBaseAlgorithm: input cluster list missing in one or more views " << std::endl;
+            return STATUS_CODE_SUCCESS;
+        }
 
         this->SelectInputClusters();
         this->ModifyInputClusters();
