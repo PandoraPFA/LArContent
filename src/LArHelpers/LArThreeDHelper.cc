@@ -1,0 +1,111 @@
+/**
+ *  @file   LArContent/src/LArHelpers/LArThreeDHelper.cc
+ * 
+ *  @brief  Implementation of the lar three dimensional reconstruction helper class.
+ * 
+ *  $Log: $
+ */
+
+#include "Helpers/XmlHelper.h"
+
+#include "Objects/Cluster.h"
+
+#include "LArHelpers/LArThreeDHelper.h"
+
+namespace lar
+{
+
+using namespace pandora;
+
+LArThreeDHelper::ClusterToIdMap LArThreeDHelper::m_seedClusterToIdMap;
+LArThreeDHelper::IdToClusterListMap LArThreeDHelper::m_idToSeedClusterListMap;
+LArThreeDHelper::IdToClusterListMap LArThreeDHelper::m_idToNonSeedClusterListMap;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArThreeDHelper::StoreClusterComponents(const ClusterList &seedComponents, const ClusterList &nonSeedComponents)
+{
+    const unsigned int clusterId(LArThreeDHelper::GetNStoredClusters());
+
+    m_idToSeedClusterListMap[clusterId] = seedComponents;
+    m_idToNonSeedClusterListMap[clusterId] = nonSeedComponents;
+
+    for (ClusterList::const_iterator iter = seedComponents.begin(), iterEnd = seedComponents.end(); iter != iterEnd; ++iter)
+        m_seedClusterToIdMap[*iter] = clusterId;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArThreeDHelper::RemoveAllStoredClusters()
+{
+    m_seedClusterToIdMap.clear();
+    m_idToSeedClusterListMap.clear();
+    m_idToNonSeedClusterListMap.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArThreeDHelper::GetNStoredClusters()
+{
+    const unsigned int nStoredClusters(m_idToSeedClusterListMap.size());
+
+    if (m_idToNonSeedClusterListMap.size() != nStoredClusters)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    return nStoredClusters;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArThreeDHelper::GetClusterIdFromSeed(const Cluster *const pSeedCluster)
+{
+    ClusterToIdMap::const_iterator iter = m_seedClusterToIdMap.find(pSeedCluster);
+
+    if (m_seedClusterToIdMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArThreeDHelper::GetAllClusterComponents(const Cluster *const pSeedCluster, ClusterList &clusterList)
+{
+    LArThreeDHelper::GetAllSeedComponents(pSeedCluster, clusterList);
+    LArThreeDHelper::GetAllNonSeedComponents(pSeedCluster, clusterList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArThreeDHelper::GetAllSeedComponents(const Cluster *const pSeedCluster, ClusterList &clusterList)
+{
+    const unsigned int clusterId(LArThreeDHelper::GetClusterIdFromSeed(pSeedCluster));
+    IdToClusterListMap::const_iterator iter = m_idToSeedClusterListMap.find(clusterId);
+
+    if (m_idToSeedClusterListMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    clusterList.insert(iter->second.begin(), iter->second.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArThreeDHelper::GetAllNonSeedComponents(const Cluster *const pSeedCluster, ClusterList &clusterList)
+{
+    const unsigned int clusterId(LArThreeDHelper::GetClusterIdFromSeed(pSeedCluster));
+    IdToClusterListMap::const_iterator iter = m_idToNonSeedClusterListMap.find(clusterId);
+
+    if (m_idToNonSeedClusterListMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    clusterList.insert(iter->second.begin(), iter->second.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode LArThreeDHelper::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+{
+    return STATUS_CODE_SUCCESS;
+}
+
+} // namespace lar

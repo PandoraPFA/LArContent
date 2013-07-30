@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArReclustering/TrackSplittingAlgorithm.h"
 
@@ -25,9 +26,6 @@ StatusCode TrackSplittingAlgorithm::Run()
 
     ClusterVector clusterVector(pInputClusterList->begin(), pInputClusterList->end());
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(pInputClusterList, "inputClusterList", BLUE);
-PandoraMonitoringApi::ViewEvent();
 
     // The target lists
     ClusterList allShowerSeedClusters, allTrackSeedClusters, allNonSeedClusters;
@@ -37,21 +35,13 @@ PandoraMonitoringApi::ViewEvent();
         Cluster *pCluster = *iter;
         ClusterList trackSeedClusters, nonSeedClusters;
 
-        // Obvious showers
+        // Input cluster properties
         const unsigned int nHits(pCluster->GetNCaloHits());
 
         if (0 == nHits)
             return STATUS_CODE_FAILURE;
 
         const float length((pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()) - pCluster->GetCentroid(pCluster->GetInnerPseudoLayer())).GetMagnitude());
-        const float hitsPerUnitLength((length > 0.f) ? static_cast<float>(nHits) / length : std::numeric_limits<float>::max());
-
-        if (hitsPerUnitLength > 10.f)
-        {
-std::cout << "OBVIOUS SHOWER, hitsPerUnitLength " << hitsPerUnitLength << std::endl;
-            allShowerSeedClusters.insert(pCluster);
-            continue;
-        }
 
         // Reduce to subclusters
         ClusterList inputClusterList; inputClusterList.insert(pCluster); std::string inputClusterListName;
@@ -184,35 +174,26 @@ std::cout << "OBVIOUS SHOWER, hitsPerUnitLength " << hitsPerUnitLength << std::e
         const float clustersPerUnitLength(static_cast<float>(subClusterVector.size()) / length);
         const unsigned int nProtoClusters10(subClusterVector.size());
 
-//const float branchesPerUnitLength(static_cast<float>(nBranches) / length);
-//std::cout << " nProtoClusters " << pReclusterList->size() << ", nProtoClusters10 " << subClusterVector.size() << std::endl;
-//std::cout << " nParents " << nParents << " nBranches " << nBranches << " nProngs " << nProngs << " nIsolated " << nIsolated << std::endl;
-//std::cout << " seedClusters " << trackSeedClusters.size() << " nonSeedClusters " << nonSeedClusters.size() << std::endl;
-//std::cout << " clustersPerUnitLength " << clustersPerUnitLength << " branchesPerUnitLength " << branchesPerUnitLength << " selectedHitFraction " << selectedHitFraction << std::endl;
-
         std::string chosenListName;
 
         if ((selectedHitFraction > 0.8f) && ((nProtoClusters10 == 1) || (clustersPerUnitLength < 0.1f)))
         {
-std::cout << "TRACK-LIKE - Use new fragments " << std::endl;
             chosenListName = reclusterListName;
             allTrackSeedClusters.insert(trackSeedClusters.begin(), trackSeedClusters.end());
             allNonSeedClusters.insert(nonSeedClusters.begin(), nonSeedClusters.end());
         }
+        else if (!trackSeedClusters.empty())
+        {
+            chosenListName = reclusterListName;
+            allShowerSeedClusters.insert(trackSeedClusters.begin(), trackSeedClusters.end());
+            allNonSeedClusters.insert(nonSeedClusters.begin(), nonSeedClusters.end());
+            LArThreeDHelper::StoreClusterComponents(trackSeedClusters, nonSeedClusters);
+        }
         else
         {
-std::cout << "SHOWER - Revert to input cluster " << std::endl;
             chosenListName = inputClusterListName;
             allShowerSeedClusters.insert(pCluster);
         }
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(&inputClusterList, "inputClusterList", BLUE);
-//PandoraMonitoringApi::VisualizeClusters(&trackSeedClusters, "trackSeedClusters", RED);
-//PandoraMonitoringApi::VisualizeClusters(&nonSeedClusters, "nonSeedClusters", GREEN);
-//PandoraMonitoringApi::VisualizeClusters(&branches, "branches", ORANGE);
-//PandoraMonitoringApi::VisualizeClusters(&prongs, "prongs", MAGENTA);
-//PandoraMonitoringApi::VisualizeClusters(pReclusterList, "reclusterList", GRAY);
-//PandoraMonitoringApi::ViewEvent();
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, chosenListName));
     }
@@ -238,12 +219,6 @@ std::cout << "SHOWER - Revert to input cluster " << std::endl;
 
     if (!pInputClusterList->empty())
         return STATUS_CODE_FAILURE;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(pInputClusterList, "InputClusterList", BLUE);
-PandoraMonitoringApi::VisualizeClusters(&allShowerSeedClusters, "allShowerSeedClusters", RED);
-PandoraMonitoringApi::VisualizeClusters(&allTrackSeedClusters, "allTrackSeedClusters", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&allNonSeedClusters, "allNonSeedClusters", ORANGE);
-PandoraMonitoringApi::ViewEvent();
 
     return STATUS_CODE_SUCCESS;
 }

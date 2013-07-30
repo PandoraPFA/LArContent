@@ -374,39 +374,39 @@ public:
     /**
      *  @brief  Get length squared of cluster
      * 
-     *  @param  pCluster address of the first cluster
+     *  @param  pCluster address of the cluster
      * 
      *  @return the length squared
      */
-    static float GetLengthSquared( const pandora::Cluster* const pCluster );
+    static float GetLengthSquared(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Get length of cluster
      * 
-     *  @param  pCluster address of the first cluster
+     *  @param  pCluster address of the cluster
      * 
      *  @return the length
      */
-    static float GetLength( const pandora::Cluster* const pCluster ); 
+    static float GetLength(const pandora::Cluster* const pCluster);
 
     /**
      *  @brief  Get energy of cluster, based on length
      * 
-     *  @param  pCluster address of the first cluster
+     *  @param  pCluster address of the cluster
      * 
      *  @return the energy
      */
-    static float GetEnergyFromLength( const pandora::Cluster* const pCluster );
+    static float GetEnergyFromLength(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Get number of layers spanned by cluster (1+Last-First)
      * 
-     *  @param  pCluster address of the first cluster
+     *  @param  pCluster address of the cluster
      * 
      *  @return the layer span
      */
 
-    static unsigned int GetLayerSpan( const pandora::Cluster* const pCluster );
+    static unsigned int GetLayerSpan(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Fraction of occupied layers in cluster

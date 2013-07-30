@@ -109,8 +109,8 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
     if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
         return;
 
-    if (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX())
-        return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
+    //if (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX())
+    //    return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
 
     // Sampling in x
     const float nPointsU((xOverlap / xSpanU) * pClusterU->GetNCaloHits());
@@ -142,10 +142,10 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
             if (pseudoChi2 < 3.f) // TODO
                 ++nMatchedSamplingPoints;
 
-const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
-const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
-const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
-std::cout << " TRK pseudoChi2 " << pseudoChi2 << " deltaW " << deltaW << " deltaV " << deltaV << " deltaU " << deltaU << std::endl;
+//const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
+//const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
+//const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
+//std::cout << " TRK pseudoChi2 " << pseudoChi2 << " deltaW " << deltaW << " deltaV " << deltaV << " deltaU " << deltaU << std::endl;
         }
         catch (StatusCodeException &)
         {
@@ -157,23 +157,23 @@ std::cout << " TRK pseudoChi2 " << pseudoChi2 << " deltaW " << deltaW << " delta
 
     const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
 
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(pClusterU);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(pClusterV);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(pClusterW);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU; clusterListU.insert(pClusterU);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
+//ClusterList clusterListV; clusterListV.insert(pClusterV);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
+//ClusterList clusterListW; clusterListW.insert(pClusterW);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
 
     if (matchedSamplingFraction < 0.8f) // TODO
 {
-std::cout << " VETO: matchedSamplingFraction " << matchedSamplingFraction << std::endl;
-PandoraMonitoringApi::ViewEvent();
+//std::cout << " VETO: matchedSamplingFraction " << matchedSamplingFraction << std::endl;
+//PandoraMonitoringApi::ViewEvent();
         return;
 }
 
-std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
-PandoraMonitoringApi::ViewEvent();
+//std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
+//PandoraMonitoringApi::ViewEvent();
     m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, matchedSamplingFraction);
 }
 
@@ -231,7 +231,6 @@ void ThreeDTracksAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelp
     const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
 {
     std::cout << "TODO - ThreeDTracksAlgorithm::CalculateConstantXOverlapResult " << std::endl;
-
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 ClusterList clusterListU; clusterListU.insert(const_cast<Cluster*>(slidingFitResultU.GetCluster()));
 PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);

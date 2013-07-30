@@ -71,7 +71,7 @@ void ThreeDShowersAlgorithm::InitializeTensor()
 
 void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    static const unsigned int m_layerFitHalfWindow = 100;
+    static const unsigned int m_layerFitHalfWindow = 40;
 
     // U
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultU;

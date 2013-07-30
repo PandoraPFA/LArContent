@@ -23,7 +23,7 @@
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
-#include "LArReclustering/ShowerMipSeparationAlgorithm.h"
+#include "LArReclustering/ShowerRebuildingAlgorithm.h"
 #include "LArReclustering/TrackSplittingAlgorithm.h"
 #include "LArThreeDSeed/ThreeDShowersAlgorithm.h"
 #include "LArThreeDSeed/ThreeDTracksAlgorithm.h"
@@ -41,6 +41,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
 #include "LArBFieldCalculator.h"
@@ -66,7 +67,7 @@ public:
         d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
-        d("LArShowerMipSeparation",                 lar::ShowerMipSeparationAlgorithm::Factory)                                 \
+        d("LArShowerRebuilding",                    lar::ShowerRebuildingAlgorithm::Factory)                                    \
         d("LArTrackSplitting",                      lar::TrackSplittingAlgorithm::Factory)                                      \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDTracks",                        lar::ThreeDTracksAlgorithm::Factory)                                        \
@@ -93,6 +94,7 @@ public:
         d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
         d("LArParticleIdHelper",                    &lar::LArParticleIdHelper::ReadSettings)                                    \
         d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)                               \
+        d("LArThreeDHelper",                        &lar::LArThreeDHelper::ReadSettings)                                        \
         d("LArVertexHelper",                        &lar::LArVertexHelper::ReadSettings)
 
     /**

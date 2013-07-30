@@ -41,7 +41,7 @@ StatusCode ThreeDBaseAlgorithm::Run()
         if ((NULL == m_pInputClusterListU) || (NULL == m_pInputClusterListV) || (NULL == m_pInputClusterListW))
         {
             std::cout << "ThreeDBaseAlgorithm: input cluster list missing in one or more views " << std::endl;
-            return STATUS_CODE_SUCCESS;
+            throw StatusCodeException(STATUS_CODE_SUCCESS);
         }
 
         this->SelectInputClusters();
@@ -72,7 +72,9 @@ StatusCode ThreeDBaseAlgorithm::Run()
     catch (StatusCodeException &statusCodeException)
     {
         this->TidyUp();
-        throw statusCodeException;
+
+        if (STATUS_CODE_SUCCESS != statusCodeException.GetStatusCode())
+            throw statusCodeException;
     }
 
     return STATUS_CODE_SUCCESS;
