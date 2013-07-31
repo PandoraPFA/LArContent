@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "LArThreeDSeed/ThreeDBaseAlgorithm.h"
 
 using namespace pandora;
@@ -45,7 +47,6 @@ StatusCode ThreeDBaseAlgorithm::Run()
         }
 
         this->SelectInputClusters();
-        this->ModifyInputClusters();
 
         // Derived algorithm creates the tensor instance (necessary if different algorithms store different objects in tensor)
         this->InitializeTensor();
@@ -78,6 +79,43 @@ StatusCode ThreeDBaseAlgorithm::Run()
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDBaseAlgorithm::SelectInputClusters()
+{
+    for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
+    {
+        if ((*iter)->IsAvailable())
+            m_clusterVectorU.push_back(*iter);
+    }
+
+    for (ClusterList::const_iterator iter = m_pInputClusterListV->begin(), iterEnd = m_pInputClusterListV->end(); iter != iterEnd; ++iter)
+    {
+        if ((*iter)->IsAvailable())
+            m_clusterVectorV.push_back(*iter);
+    }
+
+    for (ClusterList::const_iterator iter = m_pInputClusterListW->begin(), iterEnd = m_pInputClusterListW->end(); iter != iterEnd; ++iter)
+    {
+        if ((*iter)->IsAvailable())
+            m_clusterVectorW.push_back(*iter);
+    }
+
+    std::sort(m_clusterVectorU.begin(), m_clusterVectorU.end(), LArClusterHelper::SortByNOccupiedLayers);
+    std::sort(m_clusterVectorV.begin(), m_clusterVectorV.end(), LArClusterHelper::SortByNOccupiedLayers);
+    std::sort(m_clusterVectorW.begin(), m_clusterVectorW.end(), LArClusterHelper::SortByNOccupiedLayers);
+
+//std::cout << "Clusters for 2D->3D matching " << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU; clusterListU.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
+//ClusterList clusterListV; clusterListV.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
+//ClusterList clusterListW; clusterListW.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+//PandoraMonitoringApi::ViewEvent();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

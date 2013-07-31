@@ -18,50 +18,6 @@ using namespace pandora;
 namespace lar
 {
 
-void ThreeDShowersAlgorithm::SelectInputClusters()
-{
-    this->SelectInputClusters(m_pInputClusterListU, m_clusterVectorU);
-    this->SelectInputClusters(m_pInputClusterListV, m_clusterVectorV);
-    this->SelectInputClusters(m_pInputClusterListW, m_clusterVectorW);
-
-    std::sort(m_clusterVectorU.begin(), m_clusterVectorU.end(), LArClusterHelper::SortByNOccupiedLayers);
-    std::sort(m_clusterVectorV.begin(), m_clusterVectorV.end(), LArClusterHelper::SortByNOccupiedLayers);
-    std::sort(m_clusterVectorW.begin(), m_clusterVectorW.end(), LArClusterHelper::SortByNOccupiedLayers);
-
-std::cout << "Clusters for 2D->3D matching " << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
-{
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (!pCluster->IsAvailable())
-            continue;
-
-        clusterVector.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDShowersAlgorithm::ModifyInputClusters()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDShowersAlgorithm::InitializeTensor()
 {
     m_overlapTensor.Clear();
@@ -359,7 +315,7 @@ PandoraMonitoringApi::ViewEvent();
 
 bool ThreeDShowersAlgorithm::ExamineTensor()
 {
-    float bestOverlapResult(std::numeric_limits<float>::max()); // TODO Min overlap result for PFO creation
+    float bestOverlapResult(0.8f); // TODO Min overlap result for PFO creation
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
     const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
@@ -376,7 +332,7 @@ bool ThreeDShowersAlgorithm::ExamineTensor()
                 {
                     const float overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
 
-                    if (overlapResult < bestOverlapResult)
+                    if (overlapResult > bestOverlapResult)
                     {
                         bestOverlapResult = overlapResult;
                         pBestClusterU = *iterU;

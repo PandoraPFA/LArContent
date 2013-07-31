@@ -35,12 +35,7 @@ protected:
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
      */
-    virtual void SelectInputClusters() = 0;
-
-    /**
-     *  @brief  Modify selected input clusters as desired, maybe breaking up track-like sections
-     */
-    virtual void ModifyInputClusters() = 0;
+    virtual void SelectInputClusters();
 
     /**
      *  @brief  Initialize cluster overlap tensor in derived algorithm

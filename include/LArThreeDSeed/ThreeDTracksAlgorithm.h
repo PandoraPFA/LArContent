@@ -33,17 +33,47 @@ public:
     };
 
 private:
-    void SelectInputClusters();
-
     /**
-     *  @brief  Select input clusters for 2D->3D operations
-     * 
-     *  @param  pClusterList address of the input cluster list
-     *  @param  clusterVector to receive clusters to be used in 2D->3D operations
+     *  @brief  
      */
-    void SelectInputClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    class OverlapResult
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  nMatchedSamplingPoints
+         *  @param  nSamplingPoints
+         */
+        OverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints);
 
-    void ModifyInputClusters();
+        /**
+         *  @brief  Get the number of matched sampling points
+         *
+         *  @return the number of matched sampling points
+         */
+        unsigned int GetNMatchedSamplingPoints() const;
+
+        /**
+         *  @brief  Get the number of sampling points
+         *
+         *  @return the number of sampling points
+         */
+        unsigned int GetNSamplingPoints() const;
+
+        /**
+         *  @brief  Get the fraction of sampling points resulting in a match
+         *
+         *  @return the fraction of sampling points resulting in a match
+         */
+        float GetMatchedFraction() const;
+
+    private:
+        unsigned int    m_nMatchedSamplingPoints;       ///< The number of matched sampling points
+        unsigned int    m_nSamplingPoints;              ///< The number of sampling points
+        float           m_matchedFraction;              ///< The fraction of sampling points resulting in a match
+    };
+
     void InitializeTensor();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
@@ -62,7 +92,7 @@ private:
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    OverlapTensor<float>    m_overlapTensor;        ///< The overlap tensor
+    OverlapTensor<OverlapResult>    m_overlapTensor;    ///< The overlap tensor
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -70,6 +100,41 @@ private:
 inline pandora::Algorithm *ThreeDTracksAlgorithm::Factory::CreateAlgorithm() const
 {
     return new ThreeDTracksAlgorithm();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ThreeDTracksAlgorithm::OverlapResult::OverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints) :
+    m_nMatchedSamplingPoints(nMatchedSamplingPoints),
+    m_nSamplingPoints(nSamplingPoints),
+    m_matchedFraction(0.f)
+{
+    if ((0 == m_nSamplingPoints) || (m_nMatchedSamplingPoints > m_nSamplingPoints))
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    m_matchedFraction = static_cast<float>(m_nMatchedSamplingPoints) / static_cast<float>(m_nSamplingPoints);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int ThreeDTracksAlgorithm::OverlapResult::GetNMatchedSamplingPoints() const
+{
+    return m_nMatchedSamplingPoints;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int ThreeDTracksAlgorithm::OverlapResult::GetNSamplingPoints() const
+{
+    return m_nSamplingPoints;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float ThreeDTracksAlgorithm::OverlapResult::GetMatchedFraction() const
+{
+    return m_matchedFraction;
 }
 
 } // namespace lar

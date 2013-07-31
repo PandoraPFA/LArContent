@@ -33,17 +33,6 @@ public:
     };
 
 private:
-    void SelectInputClusters();
-
-    /**
-     *  @brief  Select input clusters for 2D->3D operations
-     * 
-     *  @param  pClusterList address of the input cluster list
-     *  @param  clusterVector to receive clusters to be used in 2D->3D operations
-     */
-    void SelectInputClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
-
-    void ModifyInputClusters();
     void InitializeTensor();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
