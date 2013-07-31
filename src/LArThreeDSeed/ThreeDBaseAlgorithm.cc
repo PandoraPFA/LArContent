@@ -40,7 +40,7 @@ StatusCode ThreeDBaseAlgorithm::Run()
 
         if ((NULL == m_pInputClusterListU) || (NULL == m_pInputClusterListV) || (NULL == m_pInputClusterListW))
         {
-            std::cout << "ThreeDBaseAlgorithm: input cluster list missing in one or more views " << std::endl;
+            std::cout << "ThreeDBaseAlgorithm: one or more input cluster lists unavailable." << std::endl;
             throw StatusCodeException(STATUS_CODE_SUCCESS);
         }
 

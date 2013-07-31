@@ -19,11 +19,33 @@ namespace lar
 
 StatusCode ShowerRebuildingAlgorithm::Run()
 {
+    // Rebuild 2d showers relating to seed that have been added to 3d particles
+    this->RebuildThreeDShowers();
+
+    // Rebuild any 2d showers for which 2d->3d matching was not possible
+    this->RebuildTwoDShowers(m_seedClusterListNameU, m_nonSeedClusterListNameU);
+    this->RebuildTwoDShowers(m_seedClusterListNameV, m_nonSeedClusterListNameV);
+    this->RebuildTwoDShowers(m_seedClusterListNameW, m_nonSeedClusterListNameW);
+
+    LArThreeDHelper::RemoveAllStoredClusters();
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerRebuildingAlgorithm::RebuildThreeDShowers() const
+{
     try
     {
-        // Rebuild 2d showers relating to seed that have been added to 3d particles
         const PfoList *pPfoList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_particleListName, pPfoList));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetPfoList(*this, m_particleListName, pPfoList));
+
+        if (NULL == pPfoList)
+        {
+            std::cout << "ShowerRebuildingAlgorithm: pfo list " << m_particleListName << " unavailable." << std::endl;
+            throw StatusCodeException(STATUS_CODE_SUCCESS);
+        }
 
         PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
         std::sort(pfoVector.begin(), pfoVector.end(), ShowerRebuildingAlgorithm::SortByNHits);
@@ -47,54 +69,9 @@ StatusCode ShowerRebuildingAlgorithm::Run()
     }
     catch (StatusCodeException &statusCodeException)
     {
-        std::cout << "ThreeDShowerRebuilding failure " << statusCodeException.ToString() << std::endl;
+        if (STATUS_CODE_SUCCESS != statusCodeException.GetStatusCode())
+            std::cout << "ShowerRebuildingAlgorithm::RebuildThreeDShowers, " << statusCodeException.ToString() << std::endl;
     }
-
-    try
-    {
-        // Rebuild any 2d showers for which 2d->3d matching was not possible
-        this->RebuildTwoDShowers(m_seedClusterListNameU, m_nonSeedClusterListNameU);
-        this->RebuildTwoDShowers(m_seedClusterListNameV, m_nonSeedClusterListNameV);
-        this->RebuildTwoDShowers(m_seedClusterListNameW, m_nonSeedClusterListNameW);
-    }
-    catch (StatusCodeException &statusCodeException)
-    {
-        std::cout << "TwoDShowerRebuilding failure " << statusCodeException.ToString() << std::endl;
-    }
-
-    LArThreeDHelper::RemoveAllStoredClusters();
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const pPfo, Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW) const
-{
-    if (3 != pPfo->GetClusterList().size())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    pClusterU = NULL; pClusterV = NULL; pClusterW = NULL;
-
-    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
-    {
-        Cluster *pCluster = *cIter;
-        const bool containsU(pCluster->ContainsHitType(VIEW_U));
-        const bool containsV(pCluster->ContainsHitType(VIEW_V));
-        const bool containsW(pCluster->ContainsHitType(VIEW_W));
-
-        if (containsU && !containsV && !containsW)
-            pClusterU = pCluster;
-
-        if (!containsU && containsV && !containsW)
-            pClusterV = pCluster;
-
-        if (!containsU && !containsV && containsW)
-            pClusterW = pCluster;
-    }
-
-    if ((NULL == pClusterU) || (NULL == pClusterV) || (NULL == pClusterW))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -165,12 +142,48 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(PfoVector &pfoVector, Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const pPfo, Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW) const
+{
+    if (3 != pPfo->GetClusterList().size())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    pClusterU = NULL; pClusterV = NULL; pClusterW = NULL;
+
+    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
+    {
+        Cluster *pCluster = *cIter;
+        const bool containsU(pCluster->ContainsHitType(VIEW_U));
+        const bool containsV(pCluster->ContainsHitType(VIEW_V));
+        const bool containsW(pCluster->ContainsHitType(VIEW_W));
+
+        if (containsU && !containsV && !containsW)
+            pClusterU = pCluster;
+
+        if (!containsU && containsV && !containsW)
+            pClusterV = pCluster;
+
+        if (!containsU && !containsV && containsW)
+            pClusterW = pCluster;
+    }
+
+    if ((NULL == pClusterU) || (NULL == pClusterV) || (NULL == pClusterW))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedClusterListName, const std::string &nonSeedClusterListName) const
 {
     try
     {
         const ClusterList *pClusterList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, seedClusterListName, pClusterList));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, seedClusterListName, pClusterList));
+
+        if (NULL == pClusterList)
+        {
+            std::cout << "ShowerRebuildingAlgorithm: cluster list " << seedClusterListName << " unavailable." << std::endl;
+            throw StatusCodeException(STATUS_CODE_SUCCESS);
+        }
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
@@ -209,7 +222,8 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
     }
     catch (StatusCodeException &statusCodeException)
     {
-        std::cout << "RebuildTwoDShowers failure " << statusCodeException.ToString() << std::endl;
+        if (STATUS_CODE_SUCCESS != statusCodeException.GetStatusCode())
+            std::cout << "ShowerRebuildingAlgorithm::RebuildTwoDShowers, " << statusCodeException.ToString() << std::endl;
     }
 }
 

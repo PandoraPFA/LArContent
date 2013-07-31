@@ -33,14 +33,9 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /*
-     *  @brief  GetSeedClusters
-     * 
-     *  @param  pPfo
-     *  @param  pClusterU
-     *  @param  pClusterV
-     *  @param  pClusterW
+     *  @brief  RebuildThreeDShowers
      */
-    void GetSeedClusters(const pandora::ParticleFlowObject *const pPfo, pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW) const;
+    void RebuildThreeDShowers() const;
 
     /*
      *  @brief  RebuildThreeDShower
@@ -54,6 +49,16 @@ private:
      */
     void RebuildThreeDShower(pandora::PfoVector &pfoVector, pandora::Cluster *pSeedCluster, pandora::Cluster *pSeedCluster2, pandora::Cluster *pSeedCluster3,
         const std::string &seedClusterListName, const std::string &nonSeedClusterListName) const;
+
+    /*
+     *  @brief  GetSeedClusters
+     * 
+     *  @param  pPfo
+     *  @param  pClusterU
+     *  @param  pClusterV
+     *  @param  pClusterW
+     */
+    void GetSeedClusters(const pandora::ParticleFlowObject *const pPfo, pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW) const;
 
     /*
      *  @brief  RebuildTwoDShowers

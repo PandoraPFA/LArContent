@@ -28,15 +28,15 @@ void ThreeDTracksAlgorithm::SelectInputClusters()
     std::sort(m_clusterVectorV.begin(), m_clusterVectorV.end(), LArClusterHelper::SortByNOccupiedLayers);
     std::sort(m_clusterVectorW.begin(), m_clusterVectorW.end(), LArClusterHelper::SortByNOccupiedLayers);
 
-std::cout << "Clusters for 2D->3D matching " << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
+//std::cout << "Clusters for 2D->3D matching " << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU; clusterListU.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
+//ClusterList clusterListV; clusterListV.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
+//ClusterList clusterListW; clusterListW.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+//PandoraMonitoringApi::ViewEvent();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,7 +153,10 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
     }
 
     if (0 == nSamplingPoints)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    {
+        std::cout << "ThreeDTracksAlgorithm: Cannot calculate overlap result, nSamplingPoints " << nSamplingPoints << std::endl;
+        return;
+    }
 
     const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
 
@@ -231,15 +234,6 @@ void ThreeDTracksAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelp
     const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
 {
     std::cout << "TODO - ThreeDTracksAlgorithm::CalculateConstantXOverlapResult " << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(const_cast<Cluster*>(slidingFitResultU.GetCluster()));
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(const_cast<Cluster*>(slidingFitResultV.GetCluster()));
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(const_cast<Cluster*>(slidingFitResultW.GetCluster()));
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
-
     return;
 }
 
