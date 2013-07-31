@@ -18,13 +18,6 @@ using namespace pandora;
 namespace lar
 {
 
-void ThreeDShowersAlgorithm::InitializeTensor()
-{
-    m_overlapTensor.Clear();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     static const unsigned int m_layerFitHalfWindow = 40;
@@ -167,10 +160,6 @@ CartesianVectorList uList, uPosList, uNegList;
 CartesianVectorList vList, vPosList, vNegList;
 CartesianVectorList wList, wPosList, wNegList;
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-    // TODO
-    // if (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX())
-    //     return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
 
     // Sampling in x
     const float nPointsU((xOverlap / xSpanU) * pClusterU->GetNCaloHits());
@@ -356,73 +345,14 @@ bool ThreeDShowersAlgorithm::ExamineTensor()
     protoParticle.m_clusterVectorW.push_back(pBestClusterW);
     m_protoParticleVector.push_back(protoParticle);
 
-    // DEBUG
-std::cout << " Best particle, overlapResult " << bestOverlapResult << std::endl;
-//ClusterList tempListU; tempListU.insert(pBestClusterU);
-//ClusterList tempListV; tempListV.insert(pBestClusterV);
-//ClusterList tempListW; tempListW.insert(pBestClusterW);
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(&tempListU, "ClusterListU", RED);
-//PandoraMonitoringApi::VisualizeClusters(&tempListV, "ClusterListV", GREEN);
-//PandoraMonitoringApi::VisualizeClusters(&tempListW, "ClusterListW", BLUE);
-//PandoraMonitoringApi::ViewEvent();
-
     return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDShowersAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
-{
-    std::cout << "TODO - ThreeDShowersAlgorithm::CalculateConstantXOverlapResult " << std::endl;
-
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(const_cast<Cluster*>(slidingFitResultU.GetCluster()));
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(const_cast<Cluster*>(slidingFitResultV.GetCluster()));
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(const_cast<Cluster*>(slidingFitResultW.GetCluster()));
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
-
-    return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDShowersAlgorithm::UpdateTensor()
-{
-    ClusterList usedClusters;
-
-    for (ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
-    {
-        usedClusters.insert(iter->m_clusterVectorU.begin(), iter->m_clusterVectorU.end());
-        usedClusters.insert(iter->m_clusterVectorV.begin(), iter->m_clusterVectorV.end());
-        usedClusters.insert(iter->m_clusterVectorW.begin(), iter->m_clusterVectorW.end());
-    }
-
-    for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
-    {
-        m_overlapTensor.RemoveCluster(*iter);
-    }
-
-    ThreeDBaseAlgorithm::UpdateTensor();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDShowersAlgorithm::TidyUp()
-{
-    m_overlapTensor.Clear();
-    ThreeDBaseAlgorithm::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    return ThreeDBaseAlgorithm::ReadSettings(xmlHandle);
+    return ThreeDBaseAlgorithm<float>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

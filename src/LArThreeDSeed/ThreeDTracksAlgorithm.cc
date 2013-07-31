@@ -18,13 +18,6 @@ using namespace pandora;
 namespace lar
 {
 
-void ThreeDTracksAlgorithm::InitializeTensor()
-{
-    m_overlapTensor.Clear();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // U
@@ -65,8 +58,8 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
     if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
         return;
 
-    //if (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX())
-    //    return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
+    if (m_constantXTreatment && (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX()))
+        return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
 
     // Sampling in x
     const float nPointsU((xOverlap / xSpanU) * pClusterU->GetNCaloHits());
@@ -95,9 +88,8 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
             const float deltaW(uv2w - w), deltaV(uw2v - v), deltaU(vw2u - u);
             const float pseudoChi2(deltaW * deltaW + deltaV * deltaV + deltaU * deltaU);
 
-            if (pseudoChi2 < 3.f) // TODO
+            if (pseudoChi2 < m_pseudoChi2Cut)
                 ++nMatchedSamplingPoints;
-
 //const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 1.));
 //const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 1.));
 //const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 1.));
@@ -115,7 +107,7 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
     }
 
     const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
-
+//std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 //PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 //ClusterList clusterListU; clusterListU.insert(pClusterU);
 //PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
@@ -123,24 +115,15 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
 //PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
 //ClusterList clusterListW; clusterListW.insert(pClusterW);
 //PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-
-//    if (matchedSamplingFraction < 0.8f) // TODO, move this cut
-//{
-//std::cout << " VETO: matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 //PandoraMonitoringApi::ViewEvent();
-//        return;
-//}
-
-//std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
-//PandoraMonitoringApi::ViewEvent();
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, OverlapResult(nMatchedSamplingPoints, nSamplingPoints));
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ThreeDTracksAlgorithm::ExamineTensor()
 {
-    float bestOverlapResult(0.8f);
+    float bestOverlapResult(m_minMatchedFraction);
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
     const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
@@ -155,7 +138,10 @@ bool ThreeDTracksAlgorithm::ExamineTensor()
             {
                 try
                 {
-                    const OverlapResult &overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+                    const TrackOverlapResult &overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+
+                    if (overlapResult.GetNMatchedSamplingPoints() < m_minMatchedPoints)
+                        continue;
 
                     if (overlapResult.GetMatchedFraction() > bestOverlapResult)
                     {
@@ -195,38 +181,25 @@ void ThreeDTracksAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTracksAlgorithm::UpdateTensor()
-{
-    ClusterList usedClusters;
-
-    for (ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
-    {
-        usedClusters.insert(iter->m_clusterVectorU.begin(), iter->m_clusterVectorU.end());
-        usedClusters.insert(iter->m_clusterVectorV.begin(), iter->m_clusterVectorV.end());
-        usedClusters.insert(iter->m_clusterVectorW.begin(), iter->m_clusterVectorW.end());
-    }
-
-    for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
-    {
-        m_overlapTensor.RemoveCluster(*iter);
-    }
-
-    ThreeDBaseAlgorithm::UpdateTensor();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDTracksAlgorithm::TidyUp()
-{
-    m_overlapTensor.Clear();
-    ThreeDBaseAlgorithm::TidyUp();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ThreeDTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    return ThreeDBaseAlgorithm::ReadSettings(xmlHandle);
+    m_constantXTreatment = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ConstantXTreatment", m_constantXTreatment));
+
+    m_pseudoChi2Cut = 3.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PseudoChi2Cut", m_pseudoChi2Cut));
+
+    m_minMatchedFraction = 0.8f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedFraction", m_minMatchedFraction));
+
+    m_minMatchedPoints = 0;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedPoints", m_minMatchedPoints));
+
+    return ThreeDBaseAlgorithm<TrackOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

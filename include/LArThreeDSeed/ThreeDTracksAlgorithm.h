@@ -12,6 +12,8 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
+#include "LArObjects/LArOverlapTensor.h"
+
 #include "ThreeDBaseAlgorithm.h"
 
 namespace lar
@@ -20,7 +22,7 @@ namespace lar
 /**
  *  @brief  ThreeDTracksAlgorithm class
  */
-class ThreeDTracksAlgorithm : public ThreeDBaseAlgorithm
+class ThreeDTracksAlgorithm : public ThreeDBaseAlgorithm<TrackOverlapResult>
 {
 public:
     /**
@@ -33,49 +35,8 @@ public:
     };
 
 private:
-    /**
-     *  @brief  
-     */
-    class OverlapResult
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         * 
-         *  @param  nMatchedSamplingPoints
-         *  @param  nSamplingPoints
-         */
-        OverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints);
-
-        /**
-         *  @brief  Get the number of matched sampling points
-         *
-         *  @return the number of matched sampling points
-         */
-        unsigned int GetNMatchedSamplingPoints() const;
-
-        /**
-         *  @brief  Get the number of sampling points
-         *
-         *  @return the number of sampling points
-         */
-        unsigned int GetNSamplingPoints() const;
-
-        /**
-         *  @brief  Get the fraction of sampling points resulting in a match
-         *
-         *  @return the fraction of sampling points resulting in a match
-         */
-        float GetMatchedFraction() const;
-
-    private:
-        unsigned int    m_nMatchedSamplingPoints;       ///< The number of matched sampling points
-        unsigned int    m_nSamplingPoints;              ///< The number of sampling points
-        float           m_matchedFraction;              ///< The fraction of sampling points resulting in a match
-    };
-
-    void InitializeTensor();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
+    bool ExamineTensor();
 
     /**
      *  @brief  Calculate overlap result for special case with clusters at constant x
@@ -87,12 +48,12 @@ private:
     void CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
         const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW);
 
-    bool ExamineTensor();
-    void UpdateTensor();
-    void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    OverlapTensor<OverlapResult>    m_overlapTensor;    ///< The overlap tensor
+    bool            m_constantXTreatment;       ///< Whether to use alternative OverlapResult calculation for constant x clusters
+    float           m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
+    float           m_minMatchedFraction;       ///< The minimum matched sampling fraction to allow particle creation
+    unsigned int    m_minMatchedPoints;         ///< The minimum number of matched sampling points to allow particle creation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,41 +61,6 @@ private:
 inline pandora::Algorithm *ThreeDTracksAlgorithm::Factory::CreateAlgorithm() const
 {
     return new ThreeDTracksAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline ThreeDTracksAlgorithm::OverlapResult::OverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints) :
-    m_nMatchedSamplingPoints(nMatchedSamplingPoints),
-    m_nSamplingPoints(nSamplingPoints),
-    m_matchedFraction(0.f)
-{
-    if ((0 == m_nSamplingPoints) || (m_nMatchedSamplingPoints > m_nSamplingPoints))
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-    m_matchedFraction = static_cast<float>(m_nMatchedSamplingPoints) / static_cast<float>(m_nSamplingPoints);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline unsigned int ThreeDTracksAlgorithm::OverlapResult::GetNMatchedSamplingPoints() const
-{
-    return m_nMatchedSamplingPoints;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline unsigned int ThreeDTracksAlgorithm::OverlapResult::GetNSamplingPoints() const
-{
-    return m_nSamplingPoints;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ThreeDTracksAlgorithm::OverlapResult::GetMatchedFraction() const
-{
-    return m_matchedFraction;
 }
 
 } // namespace lar

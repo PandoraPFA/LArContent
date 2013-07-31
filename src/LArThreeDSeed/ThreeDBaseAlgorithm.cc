@@ -10,6 +10,8 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
+#include "LArObjects/LArOverlapTensor.h"
+
 #include "LArThreeDSeed/ThreeDBaseAlgorithm.h"
 
 using namespace pandora;
@@ -17,7 +19,8 @@ using namespace pandora;
 namespace lar
 {
 
-ThreeDBaseAlgorithm::ThreeDBaseAlgorithm() :
+template <typename T>
+ThreeDBaseAlgorithm<T>::ThreeDBaseAlgorithm() :
     m_pInputClusterListU(NULL),
     m_pInputClusterListV(NULL),
     m_pInputClusterListW(NULL)
@@ -26,64 +29,15 @@ ThreeDBaseAlgorithm::ThreeDBaseAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDBaseAlgorithm::~ThreeDBaseAlgorithm()
+template <typename T>
+ThreeDBaseAlgorithm<T>::~ThreeDBaseAlgorithm()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDBaseAlgorithm::Run()
-{
-    try
-    {
-        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameU, m_pInputClusterListU));
-        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameV, m_pInputClusterListV));
-        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameW, m_pInputClusterListW));
-
-        if ((NULL == m_pInputClusterListU) || (NULL == m_pInputClusterListV) || (NULL == m_pInputClusterListW))
-        {
-            std::cout << "ThreeDBaseAlgorithm: one or more input cluster lists unavailable." << std::endl;
-            throw StatusCodeException(STATUS_CODE_SUCCESS);
-        }
-
-        this->SelectInputClusters();
-
-        // Derived algorithm creates the tensor instance (necessary if different algorithms store different objects in tensor)
-        this->InitializeTensor();
-
-        // Loop over selected modified input clusters and allow derived algorithm to populate tensor
-        for (ClusterVector::const_iterator iterU = m_clusterVectorU.begin(), iterUEnd = m_clusterVectorU.end(); iterU != iterUEnd; ++iterU)
-        {
-            for (ClusterVector::const_iterator iterV = m_clusterVectorV.begin(), iterVEnd = m_clusterVectorV.end(); iterV != iterVEnd; ++iterV)
-            {
-                for (ClusterVector::const_iterator iterW = m_clusterVectorW.begin(), iterWEnd = m_clusterVectorW.end(); iterW != iterWEnd; ++iterW)
-                    this->CalculateOverlapResult(*iterU, *iterV, *iterW);
-            }
-        }
-
-        // Process results encoded in tensor
-        while (this->ExamineTensor())
-        {
-            this->CreateThreeDParticles();
-            this->UpdateTensor();
-        }
-
-        this->TidyUp();
-    }
-    catch (StatusCodeException &statusCodeException)
-    {
-        this->TidyUp();
-
-        if (STATUS_CODE_SUCCESS != statusCodeException.GetStatusCode())
-            throw statusCodeException;
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDBaseAlgorithm::SelectInputClusters()
+template <typename T>
+void ThreeDBaseAlgorithm<T>::SelectInputClusters()
 {
     for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
     {
@@ -120,12 +74,13 @@ void ThreeDBaseAlgorithm::SelectInputClusters()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDBaseAlgorithm::CreateThreeDParticles()
+template <typename T>
+void ThreeDBaseAlgorithm<T>::CreateThreeDParticles()
 {
     const PfoList *pPfoList = NULL; std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryPfoListAndSetCurrent(*this, pPfoList, pfoListName));
 
-    for (ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
+    for (typename ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
     {
         // TODO - correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
@@ -149,15 +104,32 @@ void ThreeDBaseAlgorithm::CreateThreeDParticles()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDBaseAlgorithm::UpdateTensor()
+template <typename T>
+void ThreeDBaseAlgorithm<T>::UpdateTensor()
 {
+    ClusterList usedClusters;
+
+    for (typename ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
+    {
+        usedClusters.insert(iter->m_clusterVectorU.begin(), iter->m_clusterVectorU.end());
+        usedClusters.insert(iter->m_clusterVectorV.begin(), iter->m_clusterVectorV.end());
+        usedClusters.insert(iter->m_clusterVectorW.begin(), iter->m_clusterVectorW.end());
+    }
+
+    for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
+    {
+        m_overlapTensor.RemoveCluster(*iter);
+    }
+
     m_protoParticleVector.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDBaseAlgorithm::TidyUp()
+template <typename T>
+void ThreeDBaseAlgorithm<T>::TidyUp()
 {
+    m_overlapTensor.Clear();
     m_protoParticleVector.clear();
 
     m_pInputClusterListU = NULL;
@@ -171,7 +143,60 @@ void ThreeDBaseAlgorithm::TidyUp()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+template <typename T>
+StatusCode ThreeDBaseAlgorithm<T>::Run()
+{
+    try
+    {
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this,
+            m_inputClusterListNameU, m_pInputClusterListU));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this,
+            m_inputClusterListNameV, m_pInputClusterListV));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this,
+            m_inputClusterListNameW, m_pInputClusterListW));
+
+        if ((NULL == m_pInputClusterListU) || (NULL == m_pInputClusterListV) || (NULL == m_pInputClusterListW))
+        {
+            std::cout << "ThreeDBaseAlgorithm: one or more input cluster lists unavailable." << std::endl;
+            throw StatusCodeException(STATUS_CODE_SUCCESS);
+        }
+
+        this->SelectInputClusters();
+
+        // Loop over selected modified input clusters and allow derived algorithm to populate tensor
+        for (ClusterVector::const_iterator iterU = m_clusterVectorU.begin(), iterUEnd = m_clusterVectorU.end(); iterU != iterUEnd; ++iterU)
+        {
+            for (ClusterVector::const_iterator iterV = m_clusterVectorV.begin(), iterVEnd = m_clusterVectorV.end(); iterV != iterVEnd; ++iterV)
+            {
+                for (ClusterVector::const_iterator iterW = m_clusterVectorW.begin(), iterWEnd = m_clusterVectorW.end(); iterW != iterWEnd; ++iterW)
+                    this->CalculateOverlapResult(*iterU, *iterV, *iterW);
+            }
+        }
+
+        // Process results encoded in tensor
+        while (this->ExamineTensor())
+        {
+            this->CreateThreeDParticles();
+            this->UpdateTensor();
+        }
+
+        this->TidyUp();
+    }
+    catch (StatusCodeException &statusCodeException)
+    {
+        this->TidyUp();
+
+        if (STATUS_CODE_SUCCESS != statusCodeException.GetStatusCode())
+            throw statusCodeException;
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+StatusCode ThreeDBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
@@ -180,5 +205,8 @@ StatusCode ThreeDBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     return STATUS_CODE_SUCCESS;
 }
+
+template class ThreeDBaseAlgorithm<float>;
+template class ThreeDBaseAlgorithm<TrackOverlapResult>;
 
 } // namespace lar
