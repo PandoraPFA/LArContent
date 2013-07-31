@@ -109,12 +109,6 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(PfoVector &pfoVector, Cluste
     const unsigned int seedId2(LArThreeDHelper::GetClusterIdFromSeed(pSeedCluster2));
     const unsigned int seedId3(LArThreeDHelper::GetClusterIdFromSeed(pSeedCluster3));
 
-    // Merge-in the associated non-seeds
-    for (ClusterList::const_iterator iter = nonSeeds.begin(), iterEnd = nonSeeds.end(); iter != iterEnd; ++iter)
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *iter, seedClusterListName, nonSeedClusterListName));
-    }
-
     // Merge-in the associated seeds
     for (ClusterList::const_iterator iter = seeds.begin(), iterEnd = seeds.end(); iter != iterEnd; ++iter)
     {
@@ -161,6 +155,12 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(PfoVector &pfoVector, Cluste
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *iter, seedClusterListName, seedClusterListName));
     }
+
+    // Merge-in the associated non-seeds
+    for (ClusterList::const_iterator iter = nonSeeds.begin(), iterEnd = nonSeeds.end(); iter != iterEnd; ++iter)
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *iter, seedClusterListName, nonSeedClusterListName));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -185,12 +185,6 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
                 LArThreeDHelper::GetAllSeedComponents(pSeedCluster, seeds);
                 LArThreeDHelper::GetAllNonSeedComponents(pSeedCluster, nonSeeds);
 
-                // Merge-in the associated non-seeds
-                for (ClusterList::const_iterator cIter = nonSeeds.begin(), cIterEnd = nonSeeds.end(); cIter != cIterEnd; ++cIter)
-                {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *cIter, seedClusterListName, nonSeedClusterListName));
-                }
-
                 // Merge-in the associated seeds
                 for (ClusterList::const_iterator cIter = seeds.begin(), cIterEnd = seeds.end(); cIter != cIterEnd; ++cIter)
                 {
@@ -198,6 +192,12 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
                         continue;
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *cIter, seedClusterListName, seedClusterListName));
+                }
+
+                // Merge-in the associated non-seeds
+                for (ClusterList::const_iterator cIter = nonSeeds.begin(), cIterEnd = nonSeeds.end(); cIter != cIterEnd; ++cIter)
+                {
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *cIter, seedClusterListName, nonSeedClusterListName));
                 }
             }
             catch (StatusCodeException &statusCodeException)
