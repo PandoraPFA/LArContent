@@ -106,9 +106,9 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(PfoVector &pfoVector, Cluste
                 Cluster *pSeedClusterU(NULL), *pSeedClusterV(NULL), *pSeedClusterW(NULL);
                 this->GetSeedClusters(pPfo, pSeedClusterU, pSeedClusterV, pSeedClusterW);
 
-                const bool isMatchU(pSeedCluster == pSeedClusterU);
-                const bool isMatchV(pSeedCluster == pSeedClusterV);
-                const bool isMatchW(pSeedCluster == pSeedClusterW);
+                const bool isMatchU(pSiblingSeed == pSeedClusterU);
+                const bool isMatchV(pSiblingSeed == pSeedClusterV);
+                const bool isMatchW(pSiblingSeed == pSeedClusterW);
 
                 if (!isMatchU && !isMatchV && !isMatchW)
                     continue;
