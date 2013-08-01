@@ -69,6 +69,11 @@ private:
     void RebuildTwoDShowers(const std::string &seedClusterListName, const std::string &nonSeedClusterListName) const;
 
     /*
+     *  @brief  RestoreLoneShowers
+     */
+    void RestoreLoneShowers() const;
+
+    /*
      *  @brief  Sort pfos by descending energy 
      * 
      *  @param  pLhs address of first pfo

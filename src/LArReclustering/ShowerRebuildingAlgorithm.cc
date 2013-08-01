@@ -27,6 +27,9 @@ StatusCode ShowerRebuildingAlgorithm::Run()
     this->RebuildTwoDShowers(m_seedClusterListNameV, m_nonSeedClusterListNameV);
     this->RebuildTwoDShowers(m_seedClusterListNameW, m_nonSeedClusterListNameW);
 
+    // Move any seed showers that did not have promising spines back into the shower seed list
+    this->RestoreLoneShowers();
+
     LArThreeDHelper::RemoveAllStoredClusters();
 
     return STATUS_CODE_SUCCESS;
@@ -157,13 +160,21 @@ void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const 
         const bool containsW(pCluster->ContainsHitType(VIEW_W));
 
         if (containsU && !containsV && !containsW)
+        {
             pClusterU = pCluster;
-
-        if (!containsU && containsV && !containsW)
+        }
+        else if (!containsU && containsV && !containsW)
+        {
             pClusterV = pCluster;
-
-        if (!containsU && !containsV && containsW)
+        }
+        else if (!containsU && !containsV && containsW)
+        {
             pClusterW = pCluster;
+        }
+        else
+        {
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
     }
 
     if ((NULL == pClusterU) || (NULL == pClusterV) || (NULL == pClusterW))
@@ -224,6 +235,60 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
     {
         if (STATUS_CODE_SUCCESS != statusCodeException.GetStatusCode())
             std::cout << "ShowerRebuildingAlgorithm::RebuildTwoDShowers, " << statusCodeException.ToString() << std::endl;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerRebuildingAlgorithm::RestoreLoneShowers() const
+{
+    try
+    {
+        const ClusterList &loneClusters(LArThreeDHelper::GetLoneClusterList());
+
+        if (loneClusters.empty())
+            return;
+
+        ClusterList loneClustersU, loneClustersV, loneClustersW;
+
+        for (ClusterList::const_iterator iter = loneClusters.begin(), iterEnd = loneClusters.end(); iter != iterEnd; ++iter)
+        {
+            Cluster *pCluster = *iter;
+            const bool containsU(pCluster->ContainsHitType(VIEW_U));
+            const bool containsV(pCluster->ContainsHitType(VIEW_V));
+            const bool containsW(pCluster->ContainsHitType(VIEW_W));
+
+            if (containsU && !containsV && !containsW)
+            {
+                loneClustersU.insert(pCluster);
+            }
+            else if (!containsU && containsV && !containsW)
+            {
+                loneClustersV.insert(pCluster);
+            }
+            else if (!containsU && !containsV && containsW)
+            {
+                loneClustersW.insert(pCluster);
+            }
+            else
+            {
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+            }
+        }
+
+        if (!loneClustersU.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_nonSeedClusterListNameU, m_seedClusterListNameU, loneClustersU));
+
+        if (!loneClustersV.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_nonSeedClusterListNameV, m_seedClusterListNameV, loneClustersV));
+
+        if (!loneClustersW.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_nonSeedClusterListNameW, m_seedClusterListNameW, loneClustersW));
+    }
+    catch (StatusCodeException &statusCodeException)
+    {
+        if (STATUS_CODE_SUCCESS != statusCodeException.GetStatusCode())
+            std::cout << "ShowerRebuildingAlgorithm::RestoreLoneShowers, " << statusCodeException.ToString() << std::endl;
     }
 }
 

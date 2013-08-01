@@ -32,18 +32,6 @@ public:
     static void StoreClusterComponents(const pandora::ClusterList &seedComponents, const pandora::ClusterList &nonSeedComponents);
 
     /**
-     *  @brief  Remove all stored clusters from the helper class
-     */
-    static void RemoveAllStoredClusters();
-
-    /**
-     *  @brief  Get the number of stored clusters
-     * 
-     *  @return the number of stored clusters
-     */
-    static unsigned int GetNStoredClusters();
-
-    /**
      *  @brief  Get the cluster id corresponding to a cluster originally containing a specified seed
      * 
      *  @param  pSeedCluster address of a seed component cluster
@@ -77,6 +65,25 @@ public:
     static void GetAllNonSeedComponents(const pandora::Cluster *const pSeedCluster, pandora::ClusterList &clusterList);
 
     /**
+     *  @brief  Store a lone cluster
+     * 
+     *  @param  pCluster address of the lone cluster
+     */
+    static void StoreLoneCluster(pandora::Cluster *pCluster);
+
+    /**
+     *  @brief  Get the list of lone clusters stored in the three d helper
+     * 
+     *  @return the list of lone clusters
+     */
+    static const pandora::ClusterList &GetLoneClusterList();
+
+    /**
+     *  @brief  Remove all stored clusters from the helper class
+     */
+    static void RemoveAllStoredClusters();
+
+    /**
      *  @brief  Read the lar particle id settings
      * 
      *  @param  xmlHandle the relevant xml handle
@@ -90,7 +97,22 @@ private:
     static ClusterToIdMap       m_seedClusterToIdMap;               ///< The seed cluster to id map
     static IdToClusterListMap   m_idToSeedClusterListMap;           ///< The id to seed cluster list map
     static IdToClusterListMap   m_idToNonSeedClusterListMap;        ///< The id to non seed cluster list map
+    static pandora::ClusterList m_loneClusterList;                  ///< The lone cluster list
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArThreeDHelper::StoreLoneCluster(pandora::Cluster *pCluster)
+{
+    (void) m_loneClusterList.insert(pCluster);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ClusterList &LArThreeDHelper::GetLoneClusterList()
+{
+    return m_loneClusterList;
+}
 
 } // namespace lar
 

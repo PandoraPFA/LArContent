@@ -20,39 +20,22 @@ using namespace pandora;
 LArThreeDHelper::ClusterToIdMap LArThreeDHelper::m_seedClusterToIdMap;
 LArThreeDHelper::IdToClusterListMap LArThreeDHelper::m_idToSeedClusterListMap;
 LArThreeDHelper::IdToClusterListMap LArThreeDHelper::m_idToNonSeedClusterListMap;
+ClusterList LArThreeDHelper::m_loneClusterList;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArThreeDHelper::StoreClusterComponents(const ClusterList &seedComponents, const ClusterList &nonSeedComponents)
 {
-    const unsigned int clusterId(LArThreeDHelper::GetNStoredClusters());
+    const unsigned int clusterId(m_idToSeedClusterListMap.size());
+
+    if (m_idToNonSeedClusterListMap.size() != clusterId)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
 
     m_idToSeedClusterListMap[clusterId] = seedComponents;
     m_idToNonSeedClusterListMap[clusterId] = nonSeedComponents;
 
     for (ClusterList::const_iterator iter = seedComponents.begin(), iterEnd = seedComponents.end(); iter != iterEnd; ++iter)
         m_seedClusterToIdMap[*iter] = clusterId;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArThreeDHelper::RemoveAllStoredClusters()
-{
-    m_seedClusterToIdMap.clear();
-    m_idToSeedClusterListMap.clear();
-    m_idToNonSeedClusterListMap.clear();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-unsigned int LArThreeDHelper::GetNStoredClusters()
-{
-    const unsigned int nStoredClusters(m_idToSeedClusterListMap.size());
-
-    if (m_idToNonSeedClusterListMap.size() != nStoredClusters)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    return nStoredClusters;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -99,6 +82,16 @@ void LArThreeDHelper::GetAllNonSeedComponents(const Cluster *const pSeedCluster,
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     clusterList.insert(iter->second.begin(), iter->second.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArThreeDHelper::RemoveAllStoredClusters()
+{
+    m_seedClusterToIdMap.clear();
+    m_idToSeedClusterListMap.clear();
+    m_idToNonSeedClusterListMap.clear();
+    m_loneClusterList.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

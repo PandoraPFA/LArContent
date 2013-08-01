@@ -192,7 +192,8 @@ StatusCode TrackSplittingAlgorithm::Run()
         else
         {
             chosenListName = inputClusterListName;
-            allShowerSeedClusters.insert(pCluster);
+            allNonSeedClusters.insert(pCluster);
+            LArThreeDHelper::StoreLoneCluster(pCluster);
         }
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, chosenListName));
