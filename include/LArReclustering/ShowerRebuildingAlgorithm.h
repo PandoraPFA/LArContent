@@ -44,11 +44,11 @@ private:
      *  @param  pSeedCluster
      *  @param  pSeedCluster2
      *  @param  pSeedCluster3
-     *  @param  seedClusterListName
-     *  @param  nonSeedClusterListName
+     *  @param  seedMerges
+     *  @param  nonSeedMerges
      */
     void RebuildThreeDShower(pandora::PfoVector &pfoVector, pandora::Cluster *pSeedCluster, pandora::Cluster *pSeedCluster2, pandora::Cluster *pSeedCluster3,
-        const std::string &seedClusterListName, const std::string &nonSeedClusterListName) const;
+        pandora::ClusterList &seedMerges, pandora::ClusterList &nonSeedMerges) const;
 
     /*
      *  @brief  GetSeedClusters
@@ -59,6 +59,16 @@ private:
      *  @param  pClusterW
      */
     void GetSeedClusters(const pandora::ParticleFlowObject *const pPfo, pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW) const;
+
+    /*
+     *  @brief  PerformClusterMerges
+     * 
+     *  @param  pCluster
+     *  @param  clusterList
+     *  @param  clusterListName1
+     *  @param  clusterListName2
+     */
+    void PerformClusterMerges(pandora::Cluster *pCluster, const pandora::ClusterList &clusterList, const std::string &clusterListName1, const std::string &clusterListName2) const;
 
     /*
      *  @brief  RebuildTwoDShowers
