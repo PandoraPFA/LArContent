@@ -19,7 +19,7 @@ namespace lar
 
 StatusCode ShowerRebuildingAlgorithm::Run()
 {
-    // Rebuild 2d showers relating to seed that have been added to 3d particles
+    // Rebuild 2d showers relating to seeds that have been added to 3d particles
     this->RebuildThreeDShowers();
 
     // Rebuild any 2d showers for which 2d->3d matching was not possible
@@ -227,7 +227,7 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
             catch (StatusCodeException &statusCodeException)
             {
                 if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
-                    throw statusCodeException.GetStatusCode();
+                    throw statusCodeException;
             }
         }
     }
