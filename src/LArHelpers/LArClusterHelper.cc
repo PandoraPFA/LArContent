@@ -589,6 +589,139 @@ void LArClusterHelper::TwoDSlidingFitResult::GetLocalFitCoordinates(const float 
 
 void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float x, CartesianVector &position) const
 {
+    return this->GetGlobalFitPosition(x,position);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitPosition(const float x, CartesianVector &position) const
+{
+    // Get surrounding layers
+    int firstLayer(0), secondLayer(0);
+
+    this->GetSurroundingLayers( x, firstLayer, secondLayer );
+
+
+    // Look up first layer 
+    LayerFitResultMap::const_iterator firstLayerIter = m_layerFitResultMap.find(firstLayer);
+
+    if (m_layerFitResultMap.end() == firstLayerIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float firstLayerL(firstLayerIter->second.GetL());
+    const float firstLayerT(firstLayerIter->second.GetFitT());
+
+    CartesianVector firstLayerPosition(0.f, 0.f, 0.f);
+    this->GetGlobalCoordinates(firstLayerL, firstLayerT, firstLayerPosition);
+
+
+    if( firstLayer == secondLayer )
+    {
+        position = firstLayerPosition;
+        return;
+    }
+
+
+    // Look up second layer 
+    LayerFitResultMap::const_iterator secondLayerIter = m_layerFitResultMap.find(secondLayer);
+
+    if (m_layerFitResultMap.end() == secondLayerIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float secondLayerL(secondLayerIter->second.GetL());
+    const float secondLayerT(secondLayerIter->second.GetFitT());
+
+    CartesianVector secondLayerPosition(0.f, 0.f, 0.f);
+    this->GetGlobalCoordinates(secondLayerL, secondLayerT, secondLayerPosition);
+   
+
+    // Linear interpolation
+    const float deltaX(x - firstLayerPosition.GetX());
+    const float deltaXLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
+
+    if (std::fabs(deltaXLayers) < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    position = firstLayerPosition + (secondLayerPosition - firstLayerPosition) * (deltaX / deltaXLayers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitDirection(const float x, CartesianVector &direction) const
+{
+    // Get surrounding layers
+    int firstLayer(0), secondLayer(0);
+
+    this->GetSurroundingLayers( x, firstLayer, secondLayer );
+
+
+    // Look up first layer
+    LayerFitResultMap::const_iterator firstLayerIter = m_layerFitResultMap.find(firstLayer);
+
+    if (m_layerFitResultMap.end() == firstLayerIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float firstLayerGrad(firstLayerIter->second.GetGradient());
+    const float firstLayerPL(            1.0 / std::sqrt( 1.0 + firstLayerGrad * firstLayerGrad ) );
+    const float firstLayerPT( firstLayerGrad / std::sqrt( 1.0 + firstLayerGrad * firstLayerGrad ) );
+
+    CartesianVector firstLayerDirectionVector(0.f, 0.f, 0.f);
+
+    this->GetGlobalCoordinates(firstLayerPL, firstLayerPT, firstLayerDirectionVector);
+
+    CartesianVector firstLayerDirection = (firstLayerDirectionVector-m_axisIntercept).GetUnitVector();
+
+
+    if( firstLayer == secondLayer )
+    {
+        direction = firstLayerDirection;
+        return;
+    }
+
+
+    // Look up second layer
+    LayerFitResultMap::const_iterator secondLayerIter = m_layerFitResultMap.find(secondLayer);
+
+    if (m_layerFitResultMap.end() == secondLayerIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float secondLayerGrad(secondLayerIter->second.GetGradient());
+    const float secondLayerPL(             1.0 / std::sqrt( 1.0 + secondLayerGrad * secondLayerGrad ) );
+    const float secondLayerPT( secondLayerGrad / std::sqrt( 1.0 + secondLayerGrad * secondLayerGrad ) );
+
+    CartesianVector secondLayerDirectionVector(0.f, 0.f, 0.f);
+        
+    this->GetGlobalCoordinates(secondLayerPL, secondLayerPT, secondLayerDirectionVector);
+   
+    CartesianVector secondLayerDirection = (secondLayerDirectionVector-m_axisIntercept).GetUnitVector();
+
+
+    // Linear interpolation
+    const float firstLayerL(firstLayerIter->second.GetL());
+    const float firstLayerT(firstLayerIter->second.GetFitT());
+
+    const float secondLayerL(secondLayerIter->second.GetL());
+    const float secondLayerT(secondLayerIter->second.GetFitT());
+
+    CartesianVector firstLayerPosition(0.f, 0.f, 0.f);
+    CartesianVector secondLayerPosition(0.f, 0.f, 0.f);
+
+    this->GetGlobalCoordinates(firstLayerL,  firstLayerT,  firstLayerPosition);
+    this->GetGlobalCoordinates(secondLayerL, secondLayerT, secondLayerPosition);
+
+    const float deltaX(x - firstLayerPosition.GetX());
+    const float deltaXLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
+
+    if (std::fabs(deltaXLayers) < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    direction = (firstLayerDirection + (secondLayerDirection - firstLayerDirection) * (deltaX / deltaXLayers)).GetUnitVector();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayers(const float x, int &firstLayer, int &secondLayer) const
+{
     if (m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
@@ -605,15 +738,16 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
 
     if (startLayer == minLayer)
     {
-        position = this->GetGlobalMinLayerPosition();
+        firstLayer = minLayer;  secondLayer = minLayer;
         return;
     }
 
     if (startLayer == maxLayer)
     {
-        position = this->GetGlobalMaxLayerPosition();
+        firstLayer = maxLayer;  secondLayer = maxLayer;
         return;
     }
+
 
     // First layer coordinates
     LayerFitResultMap::const_iterator firstLayerIter(m_layerFitResultMap.end());
@@ -629,17 +763,20 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
     if (m_layerFitResultMap.end() == firstLayerIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const int firstLayer(firstLayerIter->first);
+
+    // Have found the first layer, now sort out the direction
+    firstLayer = firstLayerIter->first;
+
     const float firstLayerL(firstLayerIter->second.GetL());
     const float firstLayerT(firstLayerIter->second.GetFitT());
-
     CartesianVector firstLayerPosition(0.f, 0.f, 0.f);
+
     this->GetGlobalCoordinates(firstLayerL, firstLayerT, firstLayerPosition);
 
-    // Sort out directions
     const bool firstIsAheadInX(firstLayerPosition.GetX() > x);
     const bool xIncreasesWithLayers(m_axisDirection.GetX() > 0.f);
     const int increment = ((firstIsAheadInX == xIncreasesWithLayers) ? -1 : +1);
+
 
     // Second layer coordinates
     LayerFitResultMap::const_iterator secondLayerIter(m_layerFitResultMap.end());
@@ -652,11 +789,11 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
             continue;
 
         secondLayerIter = tempIter;
-        const int secondLayer(secondLayerIter->first);
+        
         const float secondLayerL(secondLayerIter->second.GetL());
         const float secondLayerT(secondLayerIter->second.GetFitT());
-
         CartesianVector secondLayerPosition(0.f, 0.f, 0.f);
+
         this->GetGlobalCoordinates(secondLayerL, secondLayerT, secondLayerPosition);
 
         if ((firstIsAheadInX && (secondLayerPosition.GetX() < x)) || (!firstIsAheadInX && (secondLayerPosition.GetX() > x)))
@@ -666,20 +803,9 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float
     if (m_layerFitResultMap.end() == secondLayerIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const int secondLayer(secondLayerIter->first);
-    const float secondLayerL(secondLayerIter->second.GetL());
-    const float secondLayerT(secondLayerIter->second.GetFitT());
 
-    CartesianVector secondLayerPosition(0.f, 0.f, 0.f);
-    this->GetGlobalCoordinates(secondLayerL, secondLayerT, secondLayerPosition);
-
-    // Linear interpolation
-    const float deltaX(x - firstLayerPosition.GetX()), deltaXLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
-
-    if (std::fabs(deltaXLayers) < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    position = firstLayerPosition + (secondLayerPosition - firstLayerPosition) * (deltaX / deltaXLayers);
+    // Have found the second layer
+    secondLayer = secondLayerIter->first;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

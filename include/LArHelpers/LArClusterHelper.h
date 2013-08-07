@@ -258,6 +258,31 @@ public:
         void GetGlobalFitCoordinates(const float x, pandora::CartesianVector &position) const;
 
         /**
+         *  @brief  Get global fit position for a given x coordinate
+         * 
+         *  @param  x the x coordinate
+         *  @param  position the fitted position at these coordinates
+         */
+        void GetGlobalFitPosition(const float x, pandora::CartesianVector &position) const;
+
+        /**
+         *  @brief  Get global fit direction for a given x coordinate
+         * 
+         *  @param  x the x coordinate
+         *  @param  direction the fitted direction at these coordinates
+         */
+        void GetGlobalFitDirection(const float x, pandora::CartesianVector &direction) const;
+
+        /**
+         *  @brief  Get global fit coordinates for a given x coordinate
+         * 
+         *  @param  x the x coordinate
+         *  @param  firstLayer the layer number just below x
+         *  @param  secondLayer the layer number just above x
+         */
+        void GetSurroundingLayers(const float x, int &firstLayer, int &secondLayer) const;
+
+        /**
          *  @brief  Get global position corresponding to the fit result in minimum fit layer
          * 
          *  @return the position
