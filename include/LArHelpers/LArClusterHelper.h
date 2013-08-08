@@ -258,29 +258,32 @@ public:
         void GetGlobalFitCoordinates(const float x, pandora::CartesianVector &position) const;
 
         /**
-         *  @brief  Get global fit position for a given x coordinate
+         *  @brief  Get global fit position for a given x or z coordinate
          * 
-         *  @param  x the x coordinate
+         *  @param  useX whether input coordinate is x or z
+         *  @param  p the input coordinate
          *  @param  position the fitted position at these coordinates
          */
-        void GetGlobalFitPosition(const float x, pandora::CartesianVector &position) const;
+        void GetGlobalFitPosition(const bool useX, const float p, pandora::CartesianVector &position) const;
 
         /**
-         *  @brief  Get global fit direction for a given x coordinate
-         * 
-         *  @param  x the x coordinate
+         *  @brief  Get global fit direction for a given x or z coordinate
+         *
+         *  @param  useX whether input coordinate is x or z
+         *  @param  p the input coordinate
          *  @param  direction the fitted direction at these coordinates
          */
-        void GetGlobalFitDirection(const float x, pandora::CartesianVector &direction) const;
+        void GetGlobalFitDirection(const bool useX, const float p, pandora::CartesianVector &direction) const;
 
         /**
-         *  @brief  Get global fit coordinates for a given x coordinate
+         *  @brief  Get global fit coordinates for a given x or z coordinate
          * 
-         *  @param  x the x coordinate
-         *  @param  firstLayer the layer number just below x
-         *  @param  secondLayer the layer number just above x
+         *  @param  useX whether input coordinate is x or z
+         *  @param  p the input coordinate
+         *  @param  firstLayer the layer number just below the input coordinate
+         *  @param  secondLayer the layer number just above the input coordinate
          */
-        void GetSurroundingLayers(const float x, int &firstLayer, int &secondLayer) const;
+        void GetSurroundingLayers(const bool useX, const float p, int &firstLayer, int &secondLayer) const;
 
         /**
          *  @brief  Get global position corresponding to the fit result in minimum fit layer

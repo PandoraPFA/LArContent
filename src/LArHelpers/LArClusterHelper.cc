@@ -589,17 +589,17 @@ void LArClusterHelper::TwoDSlidingFitResult::GetLocalFitCoordinates(const float 
 
 void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitCoordinates(const float x, CartesianVector &position) const
 {
-    return this->GetGlobalFitPosition(x,position);
+    return this->GetGlobalFitPosition(true,x,position);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitPosition(const float x, CartesianVector &position) const
+void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitPosition(const bool useX, const float p, pandora::CartesianVector &position) const
 {
-    // Get surrounding layers
+   // Get surrounding layers
     int firstLayer(0), secondLayer(0);
 
-    this->GetSurroundingLayers( x, firstLayer, secondLayer );
+    this->GetSurroundingLayers( useX, p, firstLayer, secondLayer );
 
 
     // Look up first layer 
@@ -636,23 +636,23 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitPosition(const float x,
    
 
     // Linear interpolation
-    const float deltaX(x - firstLayerPosition.GetX());
-    const float deltaXLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
+    const float deltaP = useX ? (p - firstLayerPosition.GetX()) : (p - firstLayerPosition.GetZ());
+    const float deltaPLayers = useX ? (secondLayerPosition.GetX() - firstLayerPosition.GetX()) : (secondLayerPosition.GetZ() - firstLayerPosition.GetZ());
 
-    if (std::fabs(deltaXLayers) < std::numeric_limits<float>::epsilon())
+    if (std::fabs(deltaPLayers) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    position = firstLayerPosition + (secondLayerPosition - firstLayerPosition) * (deltaX / deltaXLayers);
+    position = firstLayerPosition + (secondLayerPosition - firstLayerPosition) * (deltaP / deltaPLayers);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitDirection(const float x, CartesianVector &direction) const
+void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitDirection(const bool useX, const float p, pandora::CartesianVector &direction) const
 {
     // Get surrounding layers
     int firstLayer(0), secondLayer(0);
 
-    this->GetSurroundingLayers( x, firstLayer, secondLayer );
+    this->GetSurroundingLayers( useX, p, firstLayer, secondLayer );
 
 
     // Look up first layer
@@ -708,28 +708,30 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitDirection(const float x
 
     this->GetGlobalCoordinates(firstLayerL,  firstLayerT,  firstLayerPosition);
     this->GetGlobalCoordinates(secondLayerL, secondLayerT, secondLayerPosition);
+  
+    const float deltaP = useX ? (p - firstLayerPosition.GetX()) : (p - firstLayerPosition.GetZ());
+    const float deltaPLayers = useX ? (secondLayerPosition.GetX() - firstLayerPosition.GetX()) : (secondLayerPosition.GetZ() - firstLayerPosition.GetZ());
 
-    const float deltaX(x - firstLayerPosition.GetX());
-    const float deltaXLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
-
-    if (std::fabs(deltaXLayers) < std::numeric_limits<float>::epsilon())
+    if (std::fabs(deltaPLayers) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    direction = (firstLayerDirection + (secondLayerDirection - firstLayerDirection) * (deltaX / deltaXLayers)).GetUnitVector();
+    direction = (firstLayerDirection + (secondLayerDirection - firstLayerDirection) * (deltaP / deltaPLayers)).GetUnitVector();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayers(const float x, int &firstLayer, int &secondLayer) const
+void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayers(const bool useX, const float p, int &firstLayer, int &secondLayer) const
 {
     if (m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    // Find start layer - note this method does not yet work for XZ fits
-    if (std::fabs(m_axisDirection.GetX()) < std::numeric_limits<float>::epsilon())
+    // Find start layer
+    if (false == useX && std::fabs(m_axisDirection.GetZ()) < std::numeric_limits<float>::epsilon() ||
+        true  == useX && std::fabs(m_axisDirection.GetX()) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const float firstL((x - m_axisIntercept.GetX()) / m_axisDirection.GetX());
+    const float firstL = ((true == useX) ? (p - m_axisIntercept.GetX()) / m_axisDirection.GetX() : (p - m_axisIntercept.GetZ()) / m_axisDirection.GetZ());
+
     const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
     const int startLayer(this->GetLayer(firstL));
 
@@ -748,7 +750,6 @@ void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayers(const float x,
         return;
     }
 
-
     // First layer coordinates
     LayerFitResultMap::const_iterator firstLayerIter(m_layerFitResultMap.end());
 
@@ -763,7 +764,6 @@ void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayers(const float x,
     if (m_layerFitResultMap.end() == firstLayerIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-
     // Have found the first layer, now sort out the direction
     firstLayer = firstLayerIter->first;
 
@@ -773,9 +773,9 @@ void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayers(const float x,
 
     this->GetGlobalCoordinates(firstLayerL, firstLayerT, firstLayerPosition);
 
-    const bool firstIsAheadInX(firstLayerPosition.GetX() > x);
-    const bool xIncreasesWithLayers(m_axisDirection.GetX() > 0.f);
-    const int increment = ((firstIsAheadInX == xIncreasesWithLayers) ? -1 : +1);
+    const bool firstIsAheadInP = ((true == useX) ? (firstLayerPosition.GetX() > p) : (firstLayerPosition.GetZ() > p));
+    const bool pIncreasesWithLayers = ((true == useX) ? (m_axisDirection.GetX() > 0.f) : (m_axisDirection.GetZ() > 0.f));
+    const int  increment = ((firstIsAheadInP == pIncreasesWithLayers) ? -1 : +1);
 
 
     // Second layer coordinates
@@ -796,8 +796,10 @@ void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayers(const float x,
 
         this->GetGlobalCoordinates(secondLayerL, secondLayerT, secondLayerPosition);
 
-        if ((firstIsAheadInX && (secondLayerPosition.GetX() < x)) || (!firstIsAheadInX && (secondLayerPosition.GetX() > x)))
-            break;
+        if( true == ( useX ? 
+            ((firstIsAheadInP && (secondLayerPosition.GetX() < p)) || (!firstIsAheadInP && (secondLayerPosition.GetX() > p))) :
+	    ((firstIsAheadInP && (secondLayerPosition.GetZ() < p)) || (!firstIsAheadInP && (secondLayerPosition.GetZ() > p))))) 
+                break;
     }
 
     if (m_layerFitResultMap.end() == secondLayerIter)
