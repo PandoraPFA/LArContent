@@ -70,8 +70,19 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
     const float xOverlap(maxX - minX);
 
     if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
+    {
+std::cout << "Fail overlap criteria, xOverlap " << xOverlap << " xSpanU " << (xOverlap / xSpanU) << " xSpanV " << (xOverlap / xSpanV) << " xSpanW " << (xOverlap / xSpanW) << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU; clusterListU.insert(pClusterU);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "pClusterU", RED);
+//ClusterList clusterListV; clusterListV.insert(pClusterV);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "pClusterV", GREEN);
+//ClusterList clusterListW; clusterListW.insert(pClusterW);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "pClusterW", BLUE);
+//PandoraMonitoringApi::ViewEvent();
         return;
-
+    }
+/*
 // DEBUG
 //------------------------------------------------------------------------------------------------------------------------------------------
 std::cout << " ClusterU and sliding shower fits " << std::endl;
@@ -155,7 +166,7 @@ ClusterList clusterListW1; clusterListW1.insert(pClusterW);
 PandoraMonitoringApi::VisualizeClusters(&clusterListW1, "ClusterListW", RED);
 PandoraMonitoringApi::ViewEvent();
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+*/
     ShowerEdgeMap uMap, uPosMap, uNegMap;
     ShowerEdgeMap vMap, vPosMap, vNegMap;
     ShowerEdgeMap wMap, wPosMap, wNegMap;
@@ -237,34 +248,34 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     const float includedFractionU(this->GetIncludedHitFraction(pClusterU, minX, maxX, xPitch, uPosMap, uNegMap));
-    std::cout << "ClusterU: predicted shower shape, includedFractionU " << includedFractionU << std::endl;
-for (ShowerEdgeMap::const_iterator iter = uMap.begin(); iter != uMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrU", CYAN, 1.);
-for (ShowerEdgeMap::const_iterator iter = uPosMap.begin(); iter != uPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posU", GRAY, 1.);
-for (ShowerEdgeMap::const_iterator iter = uNegMap.begin(); iter != uNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negU", GRAY, 1.);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU2; clusterListU2.insert(pClusterU);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU2, "ClusterListU", RED);
-PandoraMonitoringApi::ViewEvent();
+//    std::cout << "ClusterU: predicted shower shape, includedFractionU " << includedFractionU << std::endl;
+//for (ShowerEdgeMap::const_iterator iter = uMap.begin(); iter != uMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrU", CYAN, 1.);
+//for (ShowerEdgeMap::const_iterator iter = uPosMap.begin(); iter != uPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posU", GRAY, 1.);
+//for (ShowerEdgeMap::const_iterator iter = uNegMap.begin(); iter != uNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negU", GRAY, 1.);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU2; clusterListU2.insert(pClusterU);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU2, "ClusterListU", RED);
+//PandoraMonitoringApi::ViewEvent();
 
     const float includedFractionV(this->GetIncludedHitFraction(pClusterV, minX, maxX, xPitch, vPosMap, vNegMap));
-    std::cout << "ClusterV: predicted shower shape, includedFractionV " << includedFractionV << std::endl;
-for (ShowerEdgeMap::const_iterator iter = vMap.begin(); iter != vMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrV", CYAN, 1.);
-for (ShowerEdgeMap::const_iterator iter = vPosMap.begin(); iter != vPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posV", GRAY, 1.);
-for (ShowerEdgeMap::const_iterator iter = vNegMap.begin(); iter != vNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negV", GRAY, 1.);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListV2; clusterListV2.insert(pClusterV);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV2, "ClusterListV", RED);
-PandoraMonitoringApi::ViewEvent();
+//    std::cout << "ClusterV: predicted shower shape, includedFractionV " << includedFractionV << std::endl;
+//for (ShowerEdgeMap::const_iterator iter = vMap.begin(); iter != vMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrV", CYAN, 1.);
+//for (ShowerEdgeMap::const_iterator iter = vPosMap.begin(); iter != vPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posV", GRAY, 1.);
+//for (ShowerEdgeMap::const_iterator iter = vNegMap.begin(); iter != vNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negV", GRAY, 1.);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListV2; clusterListV2.insert(pClusterV);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV2, "ClusterListV", RED);
+//PandoraMonitoringApi::ViewEvent();
 
     const float includedFractionW(this->GetIncludedHitFraction(pClusterW, minX, maxX, xPitch, wPosMap, wNegMap));
-    std::cout << "ClusterW: predicted shower shape, includedFractionW " << includedFractionW << std::endl;
-for (ShowerEdgeMap::const_iterator iter = wMap.begin(); iter != wMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrW", CYAN, 1.);
-for (ShowerEdgeMap::const_iterator iter = wPosMap.begin(); iter != wPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posW", GRAY, 1.);
-for (ShowerEdgeMap::const_iterator iter = wNegMap.begin(); iter != wNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negW", GRAY, 1.);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListW2; clusterListW2.insert(pClusterW);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW2, "ClusterListW", RED);
-PandoraMonitoringApi::ViewEvent();
+//    std::cout << "ClusterW: predicted shower shape, includedFractionW " << includedFractionW << std::endl;
+//for (ShowerEdgeMap::const_iterator iter = wMap.begin(); iter != wMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrW", CYAN, 1.);
+//for (ShowerEdgeMap::const_iterator iter = wPosMap.begin(); iter != wPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posW", GRAY, 1.);
+//for (ShowerEdgeMap::const_iterator iter = wNegMap.begin(); iter != wNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negW", GRAY, 1.);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListW2; clusterListW2.insert(pClusterW);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW2, "ClusterListW", RED);
+//PandoraMonitoringApi::ViewEvent();
 //------------------------------------------------------------------------------------------------------------------------------------------
 
     if ((includedFractionU < 0.5f) || (includedFractionV < 0.5f) || (includedFractionW < 0.5f))
@@ -331,7 +342,7 @@ float ThreeDShowersAlgorithm::GetIncludedHitFraction(const Cluster *const pClust
 
     unsigned int nHitsInRange(0), nIncludedHits(0);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-CaloHitList included;
+//CaloHitList included;
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         for (CaloHitList::const_iterator hIter = iter->second->begin(), hIterEnd = iter->second->end(); hIter != hIterEnd; ++hIter)
@@ -356,11 +367,11 @@ CaloHitList included;
             const float minZ(std::min(edgeIter1->second.GetZ(), edgeIter2->second.GetZ()));
 
             if ((z > minZ) && (z < maxZ))
-                {included.insert(pCaloHit); ++nIncludedHits;}
+                {/*included.insert(pCaloHit);*/ ++nIncludedHits;}
         }
     }
 
-PandoraMonitoringApi::VisualizeCaloHits(&included, "included", BLUE);
+//PandoraMonitoringApi::VisualizeCaloHits(&included, "included", BLUE);
 
     if (0 == nHitsInRange)
         return 0.f;

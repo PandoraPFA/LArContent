@@ -106,7 +106,7 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
         return;
     }
 
-    const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
+//const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
 //std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 //PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 //ClusterList clusterListU; clusterListU.insert(pClusterU);
