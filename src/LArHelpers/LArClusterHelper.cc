@@ -661,6 +661,39 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitDirection(const float p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArClusterHelper::TwoDSlidingFitResult::GetGlobalFitProjection(const CartesianVector &inputPosition, CartesianVector &projectedPosition) const
+{
+    // Get surrounding layer iterators
+    LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
+    this->GetSurroundingLayerIterators(inputPosition, firstLayerIter, secondLayerIter);  
+
+    CartesianVector firstLayerPosition(0.f, 0.f, 0.f);
+    this->GetGlobalPosition(firstLayerIter->second.GetL(), firstLayerIter->second.GetFitT(), firstLayerPosition);
+
+    if (firstLayerIter == secondLayerIter)
+    {
+        projectedPosition = firstLayerPosition;
+        return;
+    }
+
+    CartesianVector secondLayerPosition(0.f, 0.f, 0.f);
+    this->GetGlobalPosition(secondLayerIter->second.GetL(), secondLayerIter->second.GetFitT(), secondLayerPosition); 
+
+    // Linear interpolation
+    float rL(0.f), rT(0.f);
+    this->GetLocalPosition(inputPosition, rL, rT); 
+
+    const float deltaL(rL - firstLayerIter->second.GetL());
+    const float deltaLLayers(secondLayerIter->second.GetL() - firstLayerIter->second.GetL());
+
+    if (std::fabs(deltaLLayers) < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    projectedPosition = firstLayerPosition + (secondLayerPosition - firstLayerPosition) * (deltaL / deltaLLayers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 CartesianVector LArClusterHelper::TwoDSlidingFitResult::GetGlobalMinLayerPosition() const
 {
     if (m_layerFitResultMap.empty())
@@ -894,6 +927,72 @@ void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayerIterators(const 
 
         if (firstIsAhead != secondIsAhead)
             break;
+    }
+
+    if (m_layerFitResultMap.end() == secondLayerIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayerIterators(const CartesianVector &position, LayerFitResultMap::const_iterator &firstLayerIter,
+            LayerFitResultMap::const_iterator &secondLayerIter) const
+{
+    if (m_layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    float rL(0.f), rT(0.f);
+    this->GetLocalPosition(position, rL, rT);
+
+    const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
+    const int startLayer(this->GetLayer(rL));
+
+    if ((startLayer < minLayer) || (startLayer > maxLayer))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    if (startLayer == minLayer)
+    {
+        firstLayerIter = m_layerFitResultMap.begin();
+        secondLayerIter = m_layerFitResultMap.begin();
+        return;
+    }
+
+    if (startLayer == maxLayer)
+    {
+        firstLayerIter = --(m_layerFitResultMap.end());
+        secondLayerIter = --(m_layerFitResultMap.end());
+        return;
+    }
+
+    // First layer iterator
+    firstLayerIter = m_layerFitResultMap.end();
+
+    for (int iLayer = startLayer; iLayer >= minLayer; --iLayer)
+    {
+        firstLayerIter = m_layerFitResultMap.find(iLayer);
+
+        if (m_layerFitResultMap.end() == firstLayerIter)
+            continue;
+
+        if (firstLayerIter->second.GetL() < rL)
+	    break;
+    }
+
+    if (m_layerFitResultMap.end() == firstLayerIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // Second layer iterator
+    secondLayerIter = m_layerFitResultMap.end();
+
+    for (int iLayer = startLayer; iLayer <= maxLayer; ++iLayer)
+    {
+        secondLayerIter = m_layerFitResultMap.find(iLayer);
+
+        if (m_layerFitResultMap.end() == secondLayerIter)
+	    continue;
+
+        if (secondLayerIter->second.GetL() > rL)
+	    break;
     }
 
     if (m_layerFitResultMap.end() == secondLayerIter)

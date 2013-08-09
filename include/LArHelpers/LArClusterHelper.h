@@ -268,6 +268,14 @@ public:
         void GetGlobalFitDirection(const float p, const bool useX, pandora::CartesianVector &direction) const;
 
         /**
+         *  @brief  Get projected position on global fit for a given position vector
+         * 
+         *  @param  inputPosition the input coordinate
+         *  @param  projectedPosition the projected position on the global fit for these coordinates
+         */
+        void GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
+
+        /**
          *  @brief  Get global position corresponding to the fit result in minimum fit layer
          * 
          *  @return the position
@@ -329,6 +337,17 @@ public:
          */
         void GetSurroundingLayerIterators(const float p, const bool useX, LayerFitResultMap::const_iterator &firstLayerIter,
             LayerFitResultMap::const_iterator &secondLayerIter) const;
+
+        /**
+         *  @brief  Get iterators for layers surrounding the projection of a given position
+         * 
+         *  @param  position the input position vector
+         *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
+         *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         */
+        void GetSurroundingLayerIterators(const pandora::CartesianVector &position, LayerFitResultMap::const_iterator &firstLayerIter,
+            LayerFitResultMap::const_iterator &secondLayerIter) const;
+
 
         const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
         unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
