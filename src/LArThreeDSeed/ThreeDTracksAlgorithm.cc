@@ -55,6 +55,7 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
         return;
     }
 
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints));
 //const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
 //std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
 //PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
@@ -65,20 +66,97 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
 //ClusterList clusterListW; clusterListW.insert(pClusterW);
 //PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
 //PandoraMonitoringApi::ViewEvent();
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
 {
-    // TODO - proper logic needed here
+    unsigned int nSustainedSteps(0);
+    CartesianVector previousPosition(0.f, 0.f, 0.f);
+    SlidingFitDirection previousDirection(UNKNOWN), sustainedDirection(UNKNOWN);
+    LayerFitResultMap::const_iterator sustainedDirectionStartIter, sustainedDirectionEndIter;
+
     const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
 
-    if (layerFitResultMap.size() < 2)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+    {
+        CartesianVector position(0.f, 0.f, 0.f);
+        slidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
 
-    fitSegmentList.push_back(FitSegment(slidingFitResult, layerFitResultMap.begin(), --(layerFitResultMap.end())));
+        const CartesianVector delta(position - previousPosition);
+        const SlidingFitDirection currentDirection((std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * -1.f) ?
+            UNCHANGED_IN_X : (delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
+
+        if (previousDirection == currentDirection)
+        {
+            if (++nSustainedSteps > 10)
+            {
+                sustainedDirection = currentDirection;
+                sustainedDirectionEndIter = iter;
+            }
+        }
+        else
+        {
+            if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
+                fitSegmentList.push_back(FitSegment(slidingFitResult, sustainedDirectionStartIter, sustainedDirectionEndIter));
+
+            nSustainedSteps = 0;
+            sustainedDirection = UNKNOWN;
+            sustainedDirectionStartIter = iter;
+        }
+
+        previousPosition = position;
+        previousDirection = currentDirection;
+    }
+
+    if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
+/*{*/   fitSegmentList.push_back(FitSegment(slidingFitResult, sustainedDirectionStartIter, sustainedDirectionEndIter));
+//DEBUG display
+//sustainedDirectionEndIter = --(layerFitResultMap.end());
+//    }
+//
+//std::cout << " GetFitSegmentList, fitSegmentList.size() " << fitSegmentList.size() << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//int counter(0);
+//
+//for (FitSegmentList::const_iterator iter = fitSegmentList.begin(), iterEnd = fitSegmentList.end(); iter != iterEnd; ++iter)
+//{
+//    const int startLayer(iter->GetStartLayer());
+//    const int endLayer(iter->GetEndLayer());
+//
+//    LayerFitResultMap::const_iterator startIter = layerFitResultMap.find(startLayer);
+//    LayerFitResultMap::const_iterator endIter = layerFitResultMap.find(endLayer);
+//
+//    if ((layerFitResultMap.end() == startIter) || (layerFitResultMap.end() == endIter))
+//        continue;
+//
+//    ++counter;
+//
+//    for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
+//    {
+//        CartesianVector position(0.f, 0.f, 0.f);
+//        slidingFitResult.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
+//        
+//        if (counter % 2 == 0)
+//        {
+//            PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "position", RED, 2));
+//        }
+//        else
+//        {
+//            PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "position", BLUE, 2));
+//        }
+//    }
+//}
+//
+//for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+//{
+//    CartesianVector position(0.f, 0.f, 0.f);
+//    slidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
+//    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "cluster", GREEN, 1));
+//}
+//
+//PandoraMonitoringApi::ViewEvent();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -87,10 +165,49 @@ void ThreeDTracksAlgorithm::GetSegmentComparisonList(const FitSegmentList &fitSe
     const FitSegmentList &fitSegmentListW, SegmentComparisonList &segmentComparisonList) const
 {
     // TODO - proper logic needed here
-    if ((1 != fitSegmentListU.size()) || (1 != fitSegmentListV.size()) || (1 != fitSegmentListW.size()))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    const FitSegment *pBestFitSegmentU(NULL), *pBestFitSegmentV(NULL), *pBestFitSegmentW(NULL);
+    int bestLayerSpanU(0), bestLayerSpanV(0), bestLayerSpanW(0);
 
-    segmentComparisonList.push_back(SegmentComparison(*(fitSegmentListU.begin()), *(fitSegmentListV.begin()), *(fitSegmentListW.begin())));
+    for (FitSegmentList::const_iterator iter = fitSegmentListU.begin(), iterEnd = fitSegmentListU.end(); iter != iterEnd; ++iter)
+    {
+        const int layerSpan(iter->GetEndLayer() - iter->GetStartLayer());
+
+        if (layerSpan > bestLayerSpanU)
+        {
+            bestLayerSpanU = layerSpan;
+            pBestFitSegmentU = &(*iter);
+        }
+    }
+
+    for (FitSegmentList::const_iterator iter = fitSegmentListV.begin(), iterEnd = fitSegmentListV.end(); iter != iterEnd; ++iter)
+    {
+        const int layerSpan(iter->GetEndLayer() - iter->GetStartLayer());
+
+        if (layerSpan > bestLayerSpanV)
+        {
+            bestLayerSpanV = layerSpan;
+            pBestFitSegmentV = &(*iter);
+        }
+    }
+
+    for (FitSegmentList::const_iterator iter = fitSegmentListW.begin(), iterEnd = fitSegmentListW.end(); iter != iterEnd; ++iter)
+    {
+        const int layerSpan(iter->GetEndLayer() - iter->GetStartLayer());
+
+        if (layerSpan > bestLayerSpanW)
+        {
+            bestLayerSpanW = layerSpan;
+            pBestFitSegmentW = &(*iter);
+        }
+    }
+
+    if ((NULL == pBestFitSegmentU) || (NULL == pBestFitSegmentV) || (NULL == pBestFitSegmentW))
+    {
+        std::cout << "No segment comparison object formed " << std::endl;
+        return;
+    }
+
+    segmentComparisonList.push_back(SegmentComparison(*pBestFitSegmentU, *pBestFitSegmentV, *pBestFitSegmentW));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

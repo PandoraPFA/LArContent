@@ -689,7 +689,7 @@ CartesianVector LArClusterHelper::TwoDSlidingFitResult::GetGlobalMaxLayerPositio
 
 bool LArClusterHelper::TwoDSlidingFitResult::IsMultivaluedInX() const
 {
-  CartesianVector previousPosition(0.f, 0.f, 0.f);
+    CartesianVector previousPosition(0.f, 0.f, 0.f);
     unsigned int nSteps(0), nPositiveSteps(0), nNegativeSteps(0), nUnchangedSteps(0);
 
     for (LayerFitResultMap::const_iterator iter = m_layerFitResultMap.begin(), iterEnd = m_layerFitResultMap.end(); iter != iterEnd; ++iter)

@@ -35,10 +35,21 @@ public:
     };
 
 private:
+    /**
+     *  @brief  SlidingFitDirection enum
+     */
+    enum SlidingFitDirection
+    {
+        POSITIVE_IN_X,
+        NEGATIVE_IN_X,
+        UNCHANGED_IN_X,
+        UNKNOWN
+    };
+
     typedef LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
 
     /**
-     *  @brief  
+     *  @brief  FitSegment class
      */
     class FitSegment
     {
@@ -115,7 +126,7 @@ private:
     typedef std::vector<FitSegment> FitSegmentList;
 
     /**
-     *  @brief  
+     *  @brief  SegmentComparison class
      */
     class SegmentComparison
     {
