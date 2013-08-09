@@ -20,34 +20,96 @@ namespace lar
 
 void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    // U
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultU;
+    LArClusterHelper::TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
     LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
-
-    const float innerXU(slidingFitResultU.GetGlobalMinLayerPosition().GetX());
-    const float outerXU(slidingFitResultU.GetGlobalMaxLayerPosition().GetX());
-    const float minXU(std::min(innerXU, outerXU));
-    const float maxXU(std::max(innerXU, outerXU));
-    const float xSpanU(maxXU - minXU);
-
-    // V
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultV;
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
-
-    const float innerXV(slidingFitResultV.GetGlobalMinLayerPosition().GetX());
-    const float outerXV(slidingFitResultV.GetGlobalMaxLayerPosition().GetX());
-    const float minXV(std::min(innerXV, outerXV));
-    const float maxXV(std::max(innerXV, outerXV));
-    const float xSpanV(maxXV - minXV);
-
-    // W
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultW;
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
 
-    const float innerXW(slidingFitResultW.GetGlobalMinLayerPosition().GetX());
-    const float outerXW(slidingFitResultW.GetGlobalMaxLayerPosition().GetX());
-    const float minXW(std::min(innerXW, outerXW));
-    const float maxXW(std::max(innerXW, outerXW));
+    FitSegmentList fitSegmentListU, fitSegmentListV, fitSegmentListW;
+    this->GetFitSegmentList(slidingFitResultU, fitSegmentListU);
+    this->GetFitSegmentList(slidingFitResultV, fitSegmentListV);
+    this->GetFitSegmentList(slidingFitResultW, fitSegmentListW);
+
+    SegmentComparisonList segmentComparisonList;
+    this->GetSegmentComparisonList(fitSegmentListU, fitSegmentListV, fitSegmentListW, segmentComparisonList);
+
+    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+
+    for (SegmentComparisonList::const_iterator iter = segmentComparisonList.begin(), iterEnd = segmentComparisonList.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const TrackOverlapResult trackOverlapResult(this->CalculateOverlapResult(*iter, slidingFitResultU, slidingFitResultV, slidingFitResultW));
+            nSamplingPoints += trackOverlapResult.GetNSamplingPoints();
+            nMatchedSamplingPoints += trackOverlapResult.GetNMatchedSamplingPoints();
+        }
+        catch (StatusCodeException &)
+        {
+            std::cout << "Failed to calculate track overlap result for a list of segments " << std::endl;
+        }
+    }
+
+    if (0 == nSamplingPoints)
+    {
+        std::cout << "ThreeDTracksAlgorithm: Cannot calculate overlap result, nSamplingPoints " << nSamplingPoints << std::endl;
+        return;
+    }
+
+//const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
+//std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU; clusterListU.insert(pClusterU);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
+//ClusterList clusterListV; clusterListV.insert(pClusterV);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
+//ClusterList clusterListW; clusterListW.insert(pClusterW);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
+//PandoraMonitoringApi::ViewEvent();
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
+{
+    // TODO - proper logic needed here
+    const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
+
+    if (layerFitResultMap.size() < 2)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    fitSegmentList.push_back(FitSegment(slidingFitResult, layerFitResultMap.begin(), --(layerFitResultMap.end())));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTracksAlgorithm::GetSegmentComparisonList(const FitSegmentList &fitSegmentListU, const FitSegmentList &fitSegmentListV,
+    const FitSegmentList &fitSegmentListW, SegmentComparisonList &segmentComparisonList) const
+{
+    // TODO - proper logic needed here
+    if ((1 != fitSegmentListU.size()) || (1 != fitSegmentListV.size()) || (1 != fitSegmentListW.size()))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    segmentComparisonList.push_back(SegmentComparison(*(fitSegmentListU.begin()), *(fitSegmentListV.begin()), *(fitSegmentListW.begin())));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackOverlapResult ThreeDTracksAlgorithm::CalculateOverlapResult(const SegmentComparison &segmentComparison,
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV,
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW) const
+{
+    const float minXU(segmentComparison.GetFitSegmentU().GetMinX());
+    const float maxXU(segmentComparison.GetFitSegmentU().GetMaxX());
+
+    const float minXV(segmentComparison.GetFitSegmentV().GetMinX());
+    const float maxXV(segmentComparison.GetFitSegmentV().GetMaxX());
+
+    const float minXW(segmentComparison.GetFitSegmentW().GetMinX());
+    const float maxXW(segmentComparison.GetFitSegmentW().GetMaxX());
+
+    const float xSpanU(maxXU - minXU);
+    const float xSpanV(maxXV - minXV);
     const float xSpanW(maxXW - minXW);
 
     // Assess x-overlap
@@ -56,15 +118,13 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
     const float xOverlap(maxX - minX);
 
     if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
-        return;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    if (m_constantXTreatment && (slidingFitResultU.IsMultivaluedInX() || slidingFitResultV.IsMultivaluedInX() || slidingFitResultW.IsMultivaluedInX()))
-        return this->CalculateConstantXOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW);
+    // Sampling in x, TODO, work out x pitch for segment comparison
+    const float nPointsU((xOverlap / xSpanU) * slidingFitResultU.GetCluster()->GetNCaloHits());
+    const float nPointsV((xOverlap / xSpanV) * slidingFitResultV.GetCluster()->GetNCaloHits());
+    const float nPointsW((xOverlap / xSpanW) * slidingFitResultW.GetCluster()->GetNCaloHits());
 
-    // Sampling in x
-    const float nPointsU((xOverlap / xSpanU) * pClusterU->GetNCaloHits());
-    const float nPointsV((xOverlap / xSpanV) * pClusterV->GetNCaloHits());
-    const float nPointsW((xOverlap / xSpanW) * pClusterW->GetNCaloHits());
     const float xPitch(3.f * xOverlap / (nPointsU + nPointsV + nPointsW));
 
     // Chi2 calculations
@@ -101,22 +161,17 @@ void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *
     }
 
     if (0 == nSamplingPoints)
-    {
-        std::cout << "ThreeDTracksAlgorithm: Cannot calculate overlap result, nSamplingPoints " << nSamplingPoints << std::endl;
-        return;
-    }
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-//const float matchedSamplingFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
-//std::cout << " POPULATE TENSOR: xOverlap " << xOverlap << ", xOverlapU " << (xOverlap / xSpanU) << ", xOverlapV " << (xOverlap / xSpanV) << ", xOverlapW " << (xOverlap / xSpanW) << ", nMatchedSamplingPoints " << nMatchedSamplingPoints << ", nSamplingPoints " << nSamplingPoints << ", matchedSamplingFraction " << matchedSamplingFraction << std::endl;
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//ClusterList clusterListU; clusterListU.insert(pClusterU);
-//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-//ClusterList clusterListV; clusterListV.insert(pClusterV);
-//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-//ClusterList clusterListW; clusterListW.insert(pClusterW);
-//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-//PandoraMonitoringApi::ViewEvent();
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints));
+    return TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTracksAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
+{
+    // TODO - Blake code to go here... fasten your seatbelt!!!
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -171,22 +226,31 @@ bool ThreeDTracksAlgorithm::ExamineTensor()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTracksAlgorithm::CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW)
+ThreeDTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::TwoDSlidingFitResult &twoDSlidingFitResult,
+        LayerFitResultMap::const_iterator startLayerIter, LayerFitResultMap::const_iterator endLayerIter) :
+    m_startLayer(startLayerIter->first),
+    m_endLayer(endLayerIter->first)
 {
-    std::cout << "TODO - ThreeDTracksAlgorithm::CalculateConstantXOverlapResult " << std::endl;
-    return;
+    CartesianVector startLayerPosition(0.f, 0.f, 0.f);
+    twoDSlidingFitResult.GetGlobalPosition(startLayerIter->second.GetL(), startLayerIter->second.GetFitT(), startLayerPosition);
+
+    CartesianVector endLayerPosition(0.f, 0.f, 0.f);
+    twoDSlidingFitResult.GetGlobalPosition(endLayerIter->second.GetL(), endLayerIter->second.GetFitT(), endLayerPosition);
+
+    m_minX = std::min(startLayerPosition.GetX(), endLayerPosition.GetX());
+    m_maxX = std::max(startLayerPosition.GetX(), endLayerPosition.GetX());
+    m_startValue = startLayerPosition.GetZ();
+    m_endValue = endLayerPosition.GetZ();
+    m_isIncreasingX = (endLayerPosition.GetX() > startLayerPosition.GetX());
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_constantXTreatment = false;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ConstantXTreatment", m_constantXTreatment));
-
     m_pseudoChi2Cut = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
