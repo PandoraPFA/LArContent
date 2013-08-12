@@ -348,7 +348,6 @@ public:
         void GetSurroundingLayerIterators(const pandora::CartesianVector &position, LayerFitResultMap::const_iterator &firstLayerIter,
             LayerFitResultMap::const_iterator &secondLayerIter) const;
 
-
         const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
         unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
         pandora::CartesianVector    m_axisIntercept;            ///< The axis intercept position

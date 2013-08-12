@@ -975,7 +975,7 @@ void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayerIterators(const 
             continue;
 
         if (firstLayerIter->second.GetL() < rL)
-	    break;
+            break;
     }
 
     if (m_layerFitResultMap.end() == firstLayerIter)
@@ -989,10 +989,10 @@ void LArClusterHelper::TwoDSlidingFitResult::GetSurroundingLayerIterators(const 
         secondLayerIter = m_layerFitResultMap.find(iLayer);
 
         if (m_layerFitResultMap.end() == secondLayerIter)
-	    continue;
+            continue;
 
         if (secondLayerIter->second.GetL() > rL)
-	    break;
+            break;
     }
 
     if (m_layerFitResultMap.end() == secondLayerIter)
