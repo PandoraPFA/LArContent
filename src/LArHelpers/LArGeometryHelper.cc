@@ -266,10 +266,8 @@ void LArGeometryHelper::MergeThreePositions(const CartesianVector &positionU, co
  
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGeometryHelper::MergeTwoPositions3D(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &position3D)
+void LArGeometryHelper::MergeTwoPositions3D(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &position3D, float &chiSquared)
 {
-    float chiSquared(0.f);
-
     CartesianVector positionU(0.f,0.f,0.f);
     CartesianVector positionV(0.f,0.f,0.f);
     CartesianVector positionW(0.f,0.f,0.f);
@@ -284,10 +282,8 @@ void LArGeometryHelper::MergeTwoPositions3D(const HitType view1, const HitType v
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-void LArGeometryHelper::MergeThreePositions3D(const HitType view1, const HitType view2, const HitType view3, const CartesianVector &position1, const CartesianVector &position2, const CartesianVector &position3, CartesianVector &position3D)
+void LArGeometryHelper::MergeThreePositions3D(const HitType view1, const HitType view2, const HitType view3, const CartesianVector &position1, const CartesianVector &position2, const CartesianVector &position3, CartesianVector &position3D, float &chiSquared)
 {
-    float chiSquared(0.f);
-
     CartesianVector positionU(0.f,0.f,0.f);
     CartesianVector positionV(0.f,0.f,0.f);
     CartesianVector positionW(0.f,0.f,0.f);
