@@ -27,7 +27,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
 
-
+    /*
     unsigned int nMultiValuedInX(0);
 
     if ( slidingFitResultU.IsMultivaluedInX() ) ++nMultiValuedInX;
@@ -36,8 +36,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 
     if ( nMultiValuedInX < 2 )
         return;
-
-   
+    */
 
    
     
