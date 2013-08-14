@@ -147,8 +147,11 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(PfoVector &pfoVector, Cluste
                 *pIter = NULL;
 
                 if (!isSameShower)
-                    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-             }
+                {
+                    std::cout << "Shower spines matched between multiple clusters - delete PFO with fewest hits " << std::endl;
+                    // throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+                }
+            }
         }
 
         seedMerges.insert(pSiblingSeed);
