@@ -46,7 +46,8 @@ private:
         UNKNOWN
     };
 
-    typedef LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
+    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
+    typedef TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
 
     /**
      *  @brief  FitSegment class
@@ -61,7 +62,7 @@ private:
          *  @param  startLayerIter the layer fit result map iterator for the start layer
          *  @param  secondLayerIter the layer fit result map iterator for the end layer
          */
-        FitSegment(const LArClusterHelper::TwoDSlidingFitResult &twoDSlidingFitResult, LayerFitResultMap::const_iterator startLayerIter,
+        FitSegment(const TwoDSlidingFitResult &twoDSlidingFitResult, LayerFitResultMap::const_iterator startLayerIter,
             LayerFitResultMap::const_iterator endLayerIter);
 
         /**
@@ -125,49 +126,11 @@ private:
 
     typedef std::vector<FitSegment> FitSegmentList;
 
-    /**
-     *  @brief  SegmentComparison class
-     */
-    class SegmentComparison
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         * 
-         *  @param  fitSegmentU fit segment u
-         *  @param  fitSegmentV fit segment v
-         *  @param  fitSegmentW fit segment w
-         */
-        SegmentComparison(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW);
+    typedef std::map<unsigned int, TrackOverlapResult> FitSegmentToOverlapResultMap;
+    typedef std::map<unsigned int, FitSegmentToOverlapResultMap> FitSegmentMatrix;
+    typedef std::map<unsigned int, FitSegmentMatrix> FitSegmentTensor;
 
-        /**
-         *  @brief  Get fit segment u
-         *
-         *  @return the address of fit segment u
-         */
-        const FitSegment &GetFitSegmentU() const;
-
-        /**
-         *  @brief  Get fit segment v
-         *
-         *  @return the address of fit segment v
-         */
-        const FitSegment &GetFitSegmentV() const;
-
-        /**
-         *  @brief  Get fit segment w
-         *
-         *  @return the address of fit segment w
-         */
-        const FitSegment &GetFitSegmentW() const;
-
-    private:
-        FitSegment  m_fitSegmentU;              ///< Fit segment u
-        FitSegment  m_fitSegmentV;              ///< Fit segment v
-        FitSegment  m_fitSegmentW;              ///< Fit segment w
-    };
-
-    typedef std::vector<SegmentComparison> SegmentComparisonList;
+    typedef std::vector<unsigned int> UIntVector;
 
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
@@ -177,41 +140,88 @@ private:
      *  @param  slidingFitResult the sliding fit result
      *  @param  fitSegmentList to receive the fit segment list
      */
-    void GetFitSegmentList(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const;
+    void GetFitSegmentList(const TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const;
 
     /**
-     *  @brief  Get the segment comparison list for a give set of fit segment lists
+     *  @brief  Get the number of matched points for three fit segments and accompanying sliding fit results
      * 
-     *  @param  fitSegmentListU the fit segment list u
-     *  @param  fitSegmentListV the fit segment list v
-     *  @param  fitSegmentListW the fit segment list w
-     *  @param  segmentComparisonList to receive the segment comparison list
+     *  @param  slidingFitResultU sliding fit result for u cluster
+     *  @param  slidingFitResultV sliding fit result for v cluster
+     *  @param  slidingFitResultW sliding fit result for w cluster
+     *  @param  fitSegmentTensor the fit segment tensor
      */
-    void GetSegmentComparisonList(const FitSegmentList &fitSegmentListU, const FitSegmentList &fitSegmentListV, const FitSegmentList &fitSegmentListW,
-       SegmentComparisonList &segmentComparisonList) const;
+    void GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
+        const TwoDSlidingFitResult &slidingFitResultW, FitSegmentTensor &fitSegmentTensor) const;
 
     /**
-     *  @brief  Get the overlap result for a given segment comparison objects and the accompanying sliding fit results
+     *  @brief  Get the overlap result for three fit segments and the accompanying sliding fit results
      * 
-     *  @param  segmentComparison the segment comparison details
+     *  @param  fitSegmentU the fit segment u
+     *  @param  fitSegmentV the fit segment v
+     *  @param  fitSegmentW the fit segment w
      *  @param  slidingFitResultU sliding fit result for u cluster
      *  @param  slidingFitResultV sliding fit result for v cluster
      *  @param  slidingFitResultW sliding fit result for w cluster
      * 
      *  @return the overlap result
      */
-    TrackOverlapResult CalculateOverlapResult(const SegmentComparison &segmentComparison, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
-        const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW) const;
+    TrackOverlapResult GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
+        const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW) const;
 
     /**
-     *  @brief  Calculate overlap result for special case with clusters at constant x
+     *  @brief  Get the number of matched sampling points, by examining the fit segment tensor
      * 
-     *  @param  slidingFitResultU sliding fit result for u cluster
-     *  @param  slidingFitResultV sliding fit result for v cluster
-     *  @param  slidingFitResultW sliding fit result for w cluster
+     *  @param  fitSegmentTensor the fit segment tensor
+     * 
+     *  @return the number of matched sampling points
      */
-    void CalculateConstantXOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
-        const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW);
+    unsigned int GetNMatchedSamplingPoints(const FitSegmentTensor &fitSegmentTensor) const;
+
+    /**
+     *  @brief  Get the first segment match, and associated properties, from the fit segment tensor
+     * 
+     *  @param  fitSegmentTensor the fit segment tensor
+     *  @param  indexU to receive the u index
+     *  @param  indexV to receive the v index
+     *  @param  indexW to receive the w index
+     *  @param  nMatchedPoints to receive the number of matched points
+     */
+    void GetFirstMatch(const FitSegmentTensor &fitSegmentTensor, unsigned int &indexU, unsigned int &indexV, unsigned int &indexW,
+        unsigned int &nMatchedPoints) const;
+
+    /**
+     *  @brief  Get segment matches neighbouring that with specified indices; if no neighbours found, store matched points value in vector
+     * 
+     *  @param  fitSegmentTensor the fit segment tensor
+     *  @param  indexU the u index
+     *  @param  indexV the v index
+     *  @param  indexW the w index
+     *  @param  nMatchedPoints the number of matched points so far
+     *  @param  nMatchedHitValues to receive the matched hit values for each path
+     */
+    void GetNeighbours(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
+        const unsigned int nMatchedPoints, UIntVector &nMatchedHitValues) const;
+
+    /**
+     *  @brief  Whether a requested (adjacent) element of the fit segment tensor exists
+     * 
+     *  @param  fitSegmentTensor the fit segment tensor
+     *  @param  indexU the u index
+     *  @param  indexV the v index
+     *  @param  indexW the w index
+     *  @param  incrementU whether to increment the u index
+     *  @param  incrementV whether to increment the v index
+     *  @param  incrementW whether to increment the w index
+     *  @param  newIndexU to receive the new u index
+     *  @param  newIndexV to receive the new v index
+     *  @param  newIndexW to receive the new w index
+     *  @param  nMatchedPoints to receive the number of matched points
+     * 
+     *  @return boolean
+     */
+    bool IsPresent(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
+        const bool incrementU, const bool incrementV, const bool incrementW, unsigned int &newIndexU, unsigned int &newIndexV,
+        unsigned int &newIndexW, unsigned int &nMatchedPoints) const;
 
     bool ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -276,37 +286,6 @@ inline float ThreeDTracksAlgorithm::FitSegment::GetEndValue() const
 inline bool ThreeDTracksAlgorithm::FitSegment::IsIncreasingX() const
 {
     return m_isIncreasingX;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline ThreeDTracksAlgorithm::SegmentComparison::SegmentComparison(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW) :
-    m_fitSegmentU(fitSegmentU),
-    m_fitSegmentV(fitSegmentV),
-    m_fitSegmentW(fitSegmentW)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const ThreeDTracksAlgorithm::FitSegment &ThreeDTracksAlgorithm::SegmentComparison::GetFitSegmentU() const
-{
-    return m_fitSegmentU;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const ThreeDTracksAlgorithm::FitSegment &ThreeDTracksAlgorithm::SegmentComparison::GetFitSegmentV() const
-{
-    return m_fitSegmentV;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const ThreeDTracksAlgorithm::FitSegment &ThreeDTracksAlgorithm::SegmentComparison::GetFitSegmentW() const
-{
-    return m_fitSegmentW;
 }
 
 } // namespace lar
