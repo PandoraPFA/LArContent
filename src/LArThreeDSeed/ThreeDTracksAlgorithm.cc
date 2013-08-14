@@ -111,7 +111,7 @@ if ((slidingFitResultV.GetLayerFitResultMap().end() == startIter) || (slidingFit
 for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
 {
     CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultU.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
+    slidingFitResultV.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
     PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionV", GREEN, 1));
 }
 startIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetStartLayer());
@@ -147,7 +147,7 @@ if ((slidingFitResultV.GetLayerFitResultMap().end() == startIter) || (slidingFit
 for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
 {
     CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultU.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
+    slidingFitResultV.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
     PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionV", GREEN, 1));
 }
 startIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetStartLayer());
