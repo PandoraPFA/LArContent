@@ -64,28 +64,21 @@ void ThreeDTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slid
     for (unsigned int indexU = 0, indexUEnd = fitSegmentListU.size(); indexU < indexUEnd; ++indexU)
     {
         const FitSegment &fitSegmentU(fitSegmentListU.at(indexU));
-//        const bool isUIncreasingWithX(fitSegmentU.IsIncreasingX());
 
         for (unsigned int indexV = 0, indexVEnd = fitSegmentListV.size(); indexV < indexVEnd; ++indexV)
         {
             const FitSegment &fitSegmentV(fitSegmentListV.at(indexV));
 
-//            if (isUIncreasingWithX != fitSegmentV.IsIncreasingX())
-//                continue;
-
             for (unsigned int indexW = 0, indexWEnd = fitSegmentListW.size(); indexW < indexWEnd; ++indexW)
             {
                 const FitSegment &fitSegmentW(fitSegmentListW.at(indexW));
-
-//                if (isUIncreasingWithX != fitSegmentW.IsIncreasingX())
-//                    continue;
 
                 try
                 {
                     const TrackOverlapResult segmentOverlap(this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW,
                         slidingFitResultU, slidingFitResultV, slidingFitResultW));
 std::cout << " Segment overlap " << segmentOverlap.GetMatchedFraction() << ", indices, indexU " << indexU << " indexV " << indexV << " indexW " << indexW << std::endl;
-                    if (segmentOverlap.GetMatchedFraction() < 0.1f) // TODO
+                    if ((segmentOverlap.GetMatchedFraction() < 0.1f) || (segmentOverlap.GetNMatchedSamplingPoints() < 5)) // TODO
                         continue;
 
                     if (!fitSegmentTensor[indexU][indexV].insert(FitSegmentToOverlapResultMap::value_type(indexW, segmentOverlap)).second)
@@ -128,7 +121,7 @@ PandoraMonitoringApi::ViewEvent();
                 }
                 catch (StatusCodeException &statusCodeException)
                 {
-std::cout << " Segment overlap, exception " << statusCodeException.ToString() << ", indices, indexU " << indexU << " indexV " << indexV << " indexW " << indexW << std::endl;
+std::cout << " Segment overlap, exception " << statusCodeException.ToString() << ", indices: indexU " << indexU << " indexV " << indexV << " indexW " << indexW << std::endl;
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 LayerFitResultMap::const_iterator startIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetStartLayer());
 LayerFitResultMap::const_iterator endIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetEndLayer());
