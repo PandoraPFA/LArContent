@@ -20,15 +20,6 @@ namespace lar
 
 void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-std::cout << " CALCULATE OVERLAP RESULT " << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(pClusterU);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(pClusterV);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(pClusterW);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
     LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
@@ -36,24 +27,20 @@ PandoraMonitoringApi::ViewEvent();
 
     FitSegmentTensor fitSegmentTensor;
     this->GetFitSegmentTensor(slidingFitResultU, slidingFitResultV, slidingFitResultW, fitSegmentTensor);
-std::cout << " fitSegmentTensor.size() " << fitSegmentTensor.size() << std::endl;
     const TrackOverlapResult trackOverlapResult(this->GetBestOverlapResult(fitSegmentTensor));
 
-    // const int nLayersSpannedU(slidingFitResultU.GetMaxLayer() - slidingFitResultU.GetMinLayer());
-    // const int nLayersSpannedV(slidingFitResultV.GetMaxLayer() - slidingFitResultV.GetMinLayer());
-    // const int nLayersSpannedW(slidingFitResultW.GetMaxLayer() - slidingFitResultW.GetMinLayer());
-    // const unsigned int nSamplingPoints(static_cast<unsigned int>((1.f / 3.f) * static_cast<float>(nLayersSpannedU + nLayersSpannedV + nLayersSpannedW)));
+    const int nLayersSpannedU(slidingFitResultU.GetMaxLayer() - slidingFitResultU.GetMinLayer());
+    const int nLayersSpannedV(slidingFitResultV.GetMaxLayer() - slidingFitResultV.GetMinLayer());
+    const int nLayersSpannedW(slidingFitResultW.GetMaxLayer() - slidingFitResultW.GetMinLayer());
+    const unsigned int meanLayersSpanned(static_cast<unsigned int>((1.f / 3.f) * static_cast<float>(nLayersSpannedU + nLayersSpannedV + nLayersSpannedW)));
 
-    // This is the overlap result that actually goes into the final tensor
-    if (trackOverlapResult.GetNMatchedSamplingPoints() > 0)
+    if (0 == meanLayersSpanned)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const float nSamplingPointsPerLayer(static_cast<float>(trackOverlapResult.GetNSamplingPoints()) / static_cast<float>(meanLayersSpanned));
+
+    if (nSamplingPointsPerLayer > m_minOverallMatchedFraction)
          m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, trackOverlapResult);
-
-std::cout << " FINISHED CLUSTER COMBINATION SetOverlapResult, nMatcheds " << trackOverlapResult.GetNMatchedSamplingPoints() << " nSamples " << trackOverlapResult.GetNSamplingPoints() << " fraction " << trackOverlapResult.GetMatchedFraction() << " chi2 " << trackOverlapResult.GetChi2() << " reducedchi2 " << trackOverlapResult.GetReducedChi2() << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,119 +69,15 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitRe
                 {
                     const TrackOverlapResult segmentOverlap(this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW,
                         slidingFitResultU, slidingFitResultV, slidingFitResultW));
-std::cout << " Segment overlap " << segmentOverlap.GetMatchedFraction() << ", indices, indexU " << indexU << " indexV " << indexV << " indexW " << indexW << std::endl;
-                    if ((segmentOverlap.GetMatchedFraction() < 0.1f) || (segmentOverlap.GetNMatchedSamplingPoints() < 5)) // TODO
-{std::cout << " segmentOverlap discarded matchedFraction " << segmentOverlap.GetMatchedFraction() << " matchedPoints " << segmentOverlap.GetNMatchedSamplingPoints() << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-LayerFitResultMap::const_iterator startIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetStartLayer());
-LayerFitResultMap::const_iterator endIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetEndLayer());
-if ((slidingFitResultU.GetLayerFitResultMap().end() == startIter) || (slidingFitResultU.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultU.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionU", RED, 1));
-}
-startIter = slidingFitResultV.GetLayerFitResultMap().find(fitSegmentV.GetStartLayer());
-endIter = slidingFitResultV.GetLayerFitResultMap().find(fitSegmentV.GetEndLayer());
-if ((slidingFitResultV.GetLayerFitResultMap().end() == startIter) || (slidingFitResultV.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultV.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionV", GREEN, 1));
-}
-startIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetStartLayer());
-endIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetEndLayer());
-if ((slidingFitResultW.GetLayerFitResultMap().end() == startIter) || (slidingFitResultW.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultW.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionW", BLUE, 1));
-}
-PandoraMonitoringApi::ViewEvent();
 
-continue;
-}
+                    if ((segmentOverlap.GetMatchedFraction() < m_minSegmentMatchedFraction) || (segmentOverlap.GetNMatchedSamplingPoints() < m_minSegmentMatchedPoints)) // TODO
+                        continue;
 
                     if (!fitSegmentTensor[indexU][indexV].insert(FitSegmentToOverlapResultMap::value_type(indexW, segmentOverlap)).second)
                         throw StatusCodeException(STATUS_CODE_FAILURE);
-// DEBUG
-std::cout << " PUT IN FIT SEGMENT TENSOR indexU " << indexU << " indexV " << indexV << " indexW " << indexW << std::endl;
-std::cout << " nMatchedSamplingPoints " << segmentOverlap.GetNMatchedSamplingPoints() << " nSamplingPoints " << segmentOverlap.GetNSamplingPoints() << " fraction " << segmentOverlap.GetMatchedFraction() << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-LayerFitResultMap::const_iterator startIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetStartLayer());
-LayerFitResultMap::const_iterator endIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetEndLayer());
-if ((slidingFitResultU.GetLayerFitResultMap().end() == startIter) || (slidingFitResultU.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultU.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionU", RED, 1));
-}
-startIter = slidingFitResultV.GetLayerFitResultMap().find(fitSegmentV.GetStartLayer());
-endIter = slidingFitResultV.GetLayerFitResultMap().find(fitSegmentV.GetEndLayer());
-if ((slidingFitResultV.GetLayerFitResultMap().end() == startIter) || (slidingFitResultV.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultV.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionV", GREEN, 1));
-}
-startIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetStartLayer());
-endIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetEndLayer());
-if ((slidingFitResultW.GetLayerFitResultMap().end() == startIter) || (slidingFitResultW.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultW.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionW", BLUE, 1));
-}
-PandoraMonitoringApi::ViewEvent();
                 }
                 catch (StatusCodeException &statusCodeException)
                 {
-std::cout << " Segment overlap, exception " << statusCodeException.ToString() << ", indices: indexU " << indexU << " indexV " << indexV << " indexW " << indexW << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-LayerFitResultMap::const_iterator startIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetStartLayer());
-LayerFitResultMap::const_iterator endIter = slidingFitResultU.GetLayerFitResultMap().find(fitSegmentU.GetEndLayer());
-if ((slidingFitResultU.GetLayerFitResultMap().end() == startIter) || (slidingFitResultU.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultU.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionU", RED, 1));
-}
-startIter = slidingFitResultV.GetLayerFitResultMap().find(fitSegmentV.GetStartLayer());
-endIter = slidingFitResultV.GetLayerFitResultMap().find(fitSegmentV.GetEndLayer());
-if ((slidingFitResultV.GetLayerFitResultMap().end() == startIter) || (slidingFitResultV.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultV.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionV", GREEN, 1));
-}
-startIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetStartLayer());
-endIter = slidingFitResultW.GetLayerFitResultMap().find(fitSegmentW.GetEndLayer());
-if ((slidingFitResultW.GetLayerFitResultMap().end() == startIter) || (slidingFitResultW.GetLayerFitResultMap().end() == endIter))
-    throw;
-for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResultW.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "positionW", BLUE, 1));
-}
-PandoraMonitoringApi::ViewEvent();
-
                     if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                         throw statusCodeException;
                 }
@@ -246,52 +129,7 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::
     }
 
     if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
-{   fitSegmentList.push_back(FitSegment(slidingFitResult, sustainedDirectionStartIter, sustainedDirectionEndIter));
-//DEBUG display
-sustainedDirectionEndIter = --(layerFitResultMap.end());
-    }
-
-std::cout << " GetFitSegmentList, fitSegmentList.size() " << fitSegmentList.size() << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-int counter(0);
-
-for (FitSegmentList::const_iterator iter = fitSegmentList.begin(), iterEnd = fitSegmentList.end(); iter != iterEnd; ++iter)
-{
-    const int startLayer(iter->GetStartLayer());
-    const int endLayer(iter->GetEndLayer());
-
-    LayerFitResultMap::const_iterator startIter = layerFitResultMap.find(startLayer);
-    LayerFitResultMap::const_iterator endIter = layerFitResultMap.find(endLayer);
-
-    if ((layerFitResultMap.end() == startIter) || (layerFitResultMap.end() == endIter))
-        continue;
-
-    ++counter;
-
-    for (LayerFitResultMap::const_iterator mIter = startIter; !(mIter == endIter); ++mIter)
-    {
-        CartesianVector position(0.f, 0.f, 0.f);
-        slidingFitResult.GetGlobalPosition(mIter->second.GetL(), mIter->second.GetFitT(), position);
-        
-        if (counter % 2 == 0)
-        {
-            PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "position", RED, 2));
-        }
-        else
-        {
-            PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "position", BLUE, 2));
-        }
-    }
-}
-
-for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
-{
-    CartesianVector position(0.f, 0.f, 0.f);
-    slidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
-    PANDORA_MONITORING_API(AddMarkerToVisualization(&position, "cluster", GREEN, 1));
-}
-
-PandoraMonitoringApi::ViewEvent();
+        fitSegmentList.push_back(FitSegment(slidingFitResult, sustainedDirectionStartIter, sustainedDirectionEndIter));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -303,15 +141,13 @@ TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitS
     const float xSpanU(fitSegmentU.GetMaxX() - fitSegmentU.GetMinX());
     const float xSpanV(fitSegmentV.GetMaxX() - fitSegmentV.GetMinX());
     const float xSpanW(fitSegmentW.GetMaxX() - fitSegmentW.GetMinX());
-std::cout << " minXU " << fitSegmentU.GetMinX() << " maxXU " << fitSegmentU.GetMaxX() << std::endl;
-std::cout << " minXV " << fitSegmentV.GetMinX() << " maxXV " << fitSegmentV.GetMaxX() << std::endl;
-std::cout << " minXW " << fitSegmentW.GetMinX() << " maxXW " << fitSegmentW.GetMaxX() << std::endl;
+
     const float minX(std::max(fitSegmentU.GetMinX(), std::max(fitSegmentV.GetMinX(), fitSegmentW.GetMinX())));
     const float maxX(std::min(fitSegmentU.GetMaxX(), std::min(fitSegmentV.GetMaxX(), fitSegmentW.GetMaxX())));
     const float xOverlap(maxX - minX);
-std::cout << " minX " << minX << " maxX " << maxX << " xOverlap " << xOverlap << std::endl;
-    if ((xOverlap < 0.f))// TODO! || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
-        {std::cout << "GetSegmentOverlap:: xOverlap " << xOverlap << std::endl; throw StatusCodeException(STATUS_CODE_NOT_FOUND);}
+
+    if (xOverlap < 0.f)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     // Sampling in x
     const float nPointsU(std::fabs((xOverlap / xSpanU) * static_cast<float>(fitSegmentU.GetEndLayer() - fitSegmentU.GetStartLayer())));
@@ -352,10 +188,6 @@ std::cout << " minX " << minX << " maxX " << maxX << " xOverlap " << xOverlap <<
 
             if (pseudoChi2 < m_pseudoChi2Cut)
                 ++nMatchedSamplingPoints;
-std::cout << " pseudoChi2 " << pseudoChi2 << " m_pseudoChi2Cut " << m_pseudoChi2Cut << " pseudoChi2Sum " << pseudoChi2Sum << std::endl;
-const CartesianVector expU(x, 0., vw2u); PANDORA_MONITORING_API(AddMarkerToVisualization(&expU, "expU", RED, 2));
-const CartesianVector expV(x, 0., uw2v); PANDORA_MONITORING_API(AddMarkerToVisualization(&expV, "expV", GREEN, 2));
-const CartesianVector expW(x, 0., uv2w); PANDORA_MONITORING_API(AddMarkerToVisualization(&expW, "expW", BLUE, 2));
         }
         catch (StatusCodeException &)
         {
@@ -382,7 +214,6 @@ TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(const F
     TrackOverlapResult trackOverlapResult(0, 1, 0.f);
 
     this->GetFirstMatch(fitSegmentTensor, indexU, indexV, indexW, trackOverlapResult);
-std::cout << " First match " << indexU << ", " << indexV << ", " << indexW << ", nMatchedPoints " << trackOverlapResult.GetNMatchedSamplingPoints() << std::endl;
     this->GetNeighbours(fitSegmentTensor, indexU, indexV, indexW, trackOverlapResult, trackOverlapResultVector);
 
     TrackOverlapResultVector::const_iterator maxElement = std::max_element(trackOverlapResultVector.begin(), trackOverlapResultVector.end());
@@ -427,14 +258,12 @@ void ThreeDTransverseTracksAlgorithm::GetNeighbours(const FitSegmentTensor &fitS
 {
     if (fitSegmentTensor.empty())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-static unsigned int instanceCounter(0);
-std::cout << " GetNeighbours instance " << ++instanceCounter << " indices: " << indexU << ", " << indexV << ", " << indexW << std::endl;
+
     bool neighbourFound(false);
 
     // Care with permutations, not interested in case where index is unchanged
     for (unsigned int iPermutation = 1; iPermutation < 8; ++iPermutation)
     {
-        std::cout << " iPermutation " << iPermutation << std::endl;
         const bool incrementU((iPermutation >> 0) & 0x1);
         const bool incrementV((iPermutation >> 1) & 0x1);
         const bool incrementW((iPermutation >> 2) & 0x1);
@@ -448,7 +277,7 @@ std::cout << " GetNeighbours instance " << ++instanceCounter << " indices: " << 
         if (additionalOverlapResult.GetNMatchedSamplingPoints() > 0)
             neighbourFound = true;
     }
---instanceCounter;
+
     if (!neighbourFound)
         trackOverlapResultVector.push_back(trackOverlapResult);
 }
@@ -480,8 +309,6 @@ bool ThreeDTransverseTracksAlgorithm::IsPresent(const FitSegmentTensor &fitSegme
     newIndexV = iterV->first;
     newIndexW = iterW->first;
     trackOverlapResult = iterW->second;
-std::cout << " IsPresent iU " << indexU << " iV " << indexV << " iW " << indexW << " inc " << incrementU << ", " << incrementV << ", " << incrementW
-<< " nIU " << newIndexU << " nIV " << newIndexV << " nIW " << newIndexW << " nMatch " << iterW->second.GetNMatchedSamplingPoints() << " nSample " << iterW->second.GetNSamplingPoints() << " frac " << iterW->second.GetMatchedFraction() << std::endl;
     return true;
 }
 
@@ -489,8 +316,8 @@ std::cout << " IsPresent iU " << indexU << " iV " << indexV << " iW " << indexW 
 
 bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
-    float bestOverlapResult(m_minMatchedFraction);
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
+    TrackOverlapResult bestTrackOverlapResult(0, 1, 0.f);
 
     const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
     const ClusterList &clusterListV(m_overlapTensor.GetClusterListV());
@@ -504,21 +331,19 @@ bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
             {
                 try
                 {
-                    const TrackOverlapResult &overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+                    const TrackOverlapResult &trackOverlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
 
-                    if (overlapResult.GetNMatchedSamplingPoints() < m_minMatchedPoints)
+                    if (trackOverlapResult < bestTrackOverlapResult)
                         continue;
 
-                    if (overlapResult.GetMatchedFraction() > bestOverlapResult)
-                    {
-                        bestOverlapResult = overlapResult.GetMatchedFraction();
-                        pBestClusterU = *iterU;
-                        pBestClusterV = *iterV;
-                        pBestClusterW = *iterW;
-                    }
+                    bestTrackOverlapResult = trackOverlapResult;
+                    pBestClusterU = *iterU;
+                    pBestClusterV = *iterV;
+                    pBestClusterW = *iterW;
                 }
                 catch (StatusCodeException &)
                 {
+                    std::cout << " ExamineTensor: CATCH " << std::endl;
                 }
             }
         }
@@ -566,13 +391,17 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    m_minMatchedFraction = 0.5f;
+    m_minOverallMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+        "MinOverallMatchedFraction", m_minOverallMatchedFraction));
 
-    m_minMatchedPoints = 0;
+    m_minSegmentMatchedFraction = 0.1f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedPoints", m_minMatchedPoints));
+        "MinSegmentMatchedFraction", m_minSegmentMatchedFraction));
+
+    m_minSegmentMatchedPoints = 3;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinSegmentMatchedPoints", m_minSegmentMatchedPoints));
 
     return ThreeDBaseAlgorithm<TrackOverlapResult>::ReadSettings(xmlHandle);
 }

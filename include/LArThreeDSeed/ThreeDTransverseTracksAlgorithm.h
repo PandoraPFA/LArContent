@@ -130,7 +130,7 @@ private:
     typedef std::map<unsigned int, FitSegmentToOverlapResultMap> FitSegmentMatrix;
     typedef std::map<unsigned int, FitSegmentMatrix> FitSegmentTensor;
 
-    typedef std::vector<unsigned int> UIntVector;
+    typedef std::vector<TrackOverlapResult> TrackOverlapResultVector;
 
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
@@ -169,13 +169,13 @@ private:
         const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW) const;
 
     /**
-     *  @brief  Get the number of matched sampling points, by examining the fit segment tensor
+     *  @brief  Get the best overlap result, by examining the fit segment tensor
      * 
      *  @param  fitSegmentTensor the fit segment tensor
      * 
-     *  @return the number of matched sampling points
+     *  @return the best overlap result
      */
-    unsigned int GetNMatchedSamplingPoints(const FitSegmentTensor &fitSegmentTensor) const;
+    TrackOverlapResult GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor) const;
 
     /**
      *  @brief  Get the first segment match, and associated properties, from the fit segment tensor
@@ -184,10 +184,10 @@ private:
      *  @param  indexU to receive the u index
      *  @param  indexV to receive the v index
      *  @param  indexW to receive the w index
-     *  @param  nMatchedPoints to receive the number of matched points
+     *  @param  trackOverlapResult to receive the first track overlap result
      */
     void GetFirstMatch(const FitSegmentTensor &fitSegmentTensor, unsigned int &indexU, unsigned int &indexV, unsigned int &indexW,
-        unsigned int &nMatchedPoints) const;
+        TrackOverlapResult &trackOverlapResult) const;
 
     /**
      *  @brief  Get segment matches neighbouring that with specified indices; if no neighbours found, store matched points value in vector
@@ -196,11 +196,11 @@ private:
      *  @param  indexU the u index
      *  @param  indexV the v index
      *  @param  indexW the w index
-     *  @param  nMatchedPoints the number of matched points so far
-     *  @param  nMatchedHitValues to receive the matched hit values for each path
+     *  @param  trackOverlapResult the track overlap result so far
+     *  @param  nMatchedHitValues to receive the track overlap result values for each path
      */
     void GetNeighbours(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
-        const unsigned int nMatchedPoints, UIntVector &nMatchedHitValues) const;
+        const TrackOverlapResult &trackOverlapResult, TrackOverlapResultVector &trackOverlapResultVector) const;
 
     /**
      *  @brief  Whether a requested (adjacent) element of the fit segment tensor exists
@@ -215,20 +215,21 @@ private:
      *  @param  newIndexU to receive the new u index
      *  @param  newIndexV to receive the new v index
      *  @param  newIndexW to receive the new w index
-     *  @param  nMatchedPoints to receive the number of matched points
+     *  @param  trackOverlapResult to receive the track overlap result
      * 
      *  @return boolean
      */
     bool IsPresent(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
         const bool incrementU, const bool incrementV, const bool incrementW, unsigned int &newIndexU, unsigned int &newIndexV,
-        unsigned int &newIndexW, unsigned int &nMatchedPoints) const;
+        unsigned int &newIndexW, TrackOverlapResult &trackOverlapResult) const;
 
     bool ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float           m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
-    float           m_minMatchedFraction;       ///< The minimum matched sampling fraction to allow particle creation
-    unsigned int    m_minMatchedPoints;         ///< The minimum number of matched sampling points to allow particle creation
+    float           m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
+    float           m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
+    unsigned int    m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

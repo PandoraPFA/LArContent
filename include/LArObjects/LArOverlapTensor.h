@@ -119,8 +119,16 @@ public:
      * 
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
+     *  @param  chi2
      */
-    TrackOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints);
+    TrackOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2);
+
+    /**
+     *  @brief  Copy constructor
+     * 
+     *  @param  rhs
+     */
+    TrackOverlapResult(const TrackOverlapResult &rhs);
 
     /**
      *  @brief  Get the number of matched sampling points
@@ -143,11 +151,49 @@ public:
      */
     float GetMatchedFraction() const;
 
+    /**
+     *  @brief  Get the absolute chi2 value
+     *
+     *  @return the absolute chi2 value
+     */
+    float GetChi2() const;
+
+    /**
+     *  @brief  Get the chi2 per samping point value
+     *
+     *  @return the chi2 per samping point value
+     */
+    float GetReducedChi2() const;
+
+    /**
+     *  @brief  Track overlap result less than operator
+     * 
+     *  @param  rhs the track overlap result for comparison
+     */
+    bool operator<(const TrackOverlapResult &rhs) const;
+
+    /**
+     *  @brief  Track overlap result assigment operator
+     * 
+     *  @param  rhs the track overlap result to assign
+     */
+    TrackOverlapResult &operator=(const TrackOverlapResult &rhs);
+
 private:
     unsigned int    m_nMatchedSamplingPoints;       ///< The number of matched sampling points
     unsigned int    m_nSamplingPoints;              ///< The number of sampling points
     float           m_matchedFraction;              ///< The fraction of sampling points resulting in a match
+    float           m_chi2;                         ///< The absolute chi2 value
+    float           m_reducedChi2;                  ///< The chi2 per samping point value
 };
+
+/**
+ *  @brief  Track overlap result + operator
+ * 
+ *  @param  lhs the first track overlap result to add
+ *  @param  rhs the second track overlap result to add
+ */
+TrackOverlapResult operator+(const TrackOverlapResult &lhs, const TrackOverlapResult &rhs);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -291,15 +337,29 @@ inline void OverlapTensor<T>::Clear()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TrackOverlapResult::TrackOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints) :
+inline TrackOverlapResult::TrackOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2) :
     m_nMatchedSamplingPoints(nMatchedSamplingPoints),
     m_nSamplingPoints(nSamplingPoints),
-    m_matchedFraction(0.f)
+    m_matchedFraction(0.f),
+    m_chi2(chi2),
+    m_reducedChi2(0.f)
 {
     if ((0 == m_nSamplingPoints) || (m_nMatchedSamplingPoints > m_nSamplingPoints))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     m_matchedFraction = static_cast<float>(m_nMatchedSamplingPoints) / static_cast<float>(m_nSamplingPoints);
+    m_reducedChi2 = m_chi2 / static_cast<float>(m_nSamplingPoints);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline TrackOverlapResult::TrackOverlapResult(const TrackOverlapResult &rhs) :
+    m_nMatchedSamplingPoints(rhs.m_nMatchedSamplingPoints),
+    m_nSamplingPoints(rhs.m_nSamplingPoints),
+    m_matchedFraction(rhs.m_matchedFraction),
+    m_chi2(rhs.m_chi2),
+    m_reducedChi2(rhs.m_reducedChi2)
+{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -321,6 +381,55 @@ inline unsigned int TrackOverlapResult::GetNSamplingPoints() const
 inline float TrackOverlapResult::GetMatchedFraction() const
 {
     return m_matchedFraction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TrackOverlapResult::GetChi2() const
+{
+    return m_chi2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TrackOverlapResult::GetReducedChi2() const
+{
+    return m_reducedChi2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool TrackOverlapResult::operator<(const TrackOverlapResult &rhs) const
+{
+    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
+        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+
+    return (m_reducedChi2 > rhs.m_reducedChi2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResult &rhs)
+{
+    if (this == &rhs)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    m_nMatchedSamplingPoints = rhs.m_nMatchedSamplingPoints;
+    m_nSamplingPoints = rhs.m_nSamplingPoints;
+    m_matchedFraction = rhs.m_matchedFraction;
+    m_chi2 = rhs.m_chi2;
+    m_reducedChi2 = rhs.m_reducedChi2;
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline TrackOverlapResult operator+(const TrackOverlapResult &lhs, const TrackOverlapResult &rhs)
+{
+    return TrackOverlapResult(lhs.GetNMatchedSamplingPoints() + rhs.GetNMatchedSamplingPoints(), lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(),
+        lhs.GetChi2() + rhs.GetChi2());
 }
 
 } // namespace lar
