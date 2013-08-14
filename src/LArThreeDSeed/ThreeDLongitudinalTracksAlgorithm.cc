@@ -39,8 +39,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 
     const float m_maxChi2 = 5.f;
     const float m_minCosOpeningAngle = 0.5;
-
-    TrackOverlapResult bestOverlapResult(0, 1);
+    TrackOverlapResult bestOverlapResult(0, 1, 0.f);
 
     for (unsigned int nU = 0; nU <= 1; ++nU)
     {
@@ -148,7 +147,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
                             continue;
                         }
 
-                        TrackOverlapResult thisOverlapResult(0, 1);
+                        TrackOverlapResult thisOverlapResult(0, 1, 0.f);
                         this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, thisOverlapResult);
 
                         if (thisOverlapResult.GetNMatchedSamplingPoints() > bestOverlapResult.GetNMatchedSamplingPoints())
@@ -215,10 +214,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     }
 
     if (nSamplingPoints > 0)
-    {
-        reducedChi2 = totalChi2 / static_cast<float>(nSamplingPoints);
-        overlapResult = TrackOverlapResult(nMatchedSamplingPoints,nSamplingPoints);
-    }
+        overlapResult = TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2);
 
 Cluster *pClusterU = (Cluster*)(slidingFitResultU.GetCluster());
 Cluster *pClusterV = (Cluster*)(slidingFitResultV.GetCluster());

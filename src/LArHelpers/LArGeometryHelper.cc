@@ -120,26 +120,23 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const HitType view1, const
 
 void LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &position3, float& chiSquared)
 {
-    if( view1 == view2 )
+    if (view1 == view2)
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
- 
-    float X3 = ( position1.GetX() + position2.GetX() ) / 2.0;
 
-    float Z1 = position1.GetZ();
-    float Z2 = position2.GetZ();
-    float Z3 = LArGeometryHelper::MergeTwoPositions(view1, view2, Z1, Z2);
+    const float X3((position1.GetX() + position2.GetX() ) / 2.f);
+    const float Z1(position1.GetZ());
+    const float Z2(position2.GetZ());
+    const float Z3(LArGeometryHelper::MergeTwoPositions(view1, view2, Z1, Z2));
 
-    position3.SetValues( X3, 0.f, Z3 );
-    
-    chiSquared = ( ( X3-position1.GetX() )*( X3-position1.GetX() )
-		 + ( X3-position2.GetX() )*( X3-position2.GetX() ) ) / ( m_sigmaUVW * m_sigmaUVW );
+    position3.SetValues(X3, 0.f, Z3);
+    chiSquared = ((X3 - position1.GetX()) * (X3 - position1.GetX()) + (X3 - position2.GetX()) * (X3 - position2.GetX())) / (m_sigmaUVW * m_sigmaUVW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType view2, const CartesianVector &position1, const CartesianVector &position2, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
 {
-    if( view1 == view2 )
+    if (view1 == view2)
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
  
     CartesianVector position3(0.f,0.f,0.f);
@@ -185,7 +182,7 @@ void LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType vie
     {
         aveU = Z1;  aveW = Z2;  aveV = Z3;
     }
-    
+
     outputU.SetValues( aveX, 0.f, aveU );
     outputV.SetValues( aveX, 0.f, aveV );
     outputW.SetValues( aveX, 0.f, aveW );
@@ -241,27 +238,26 @@ void LArGeometryHelper::MergeThreePositions(const HitType view1, const HitType v
 
 void LArGeometryHelper::MergeThreePositions(const CartesianVector &positionU, const CartesianVector &positionV, const CartesianVector &positionW, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float& chiSquared)
 {
-    
-    float YfromUV = LArGeometryHelper::UVtoY( positionU.GetZ(), positionV.GetZ() );
-    float ZfromUV = LArGeometryHelper::UVtoZ( positionU.GetZ(), positionV.GetZ() );
+    const float YfromUV(LArGeometryHelper::UVtoY(positionU.GetZ(), positionV.GetZ()));
+    const float ZfromUV(LArGeometryHelper::UVtoZ(positionU.GetZ(), positionV.GetZ()));
 
-    float aveX = ( positionU.GetX() + positionV.GetX() + positionW.GetX() ) / 3.0;
-    float aveY = YfromUV;
-    float aveW = ( positionW.GetZ() + 2.0 * ZfromUV ) / 3.0;
+    const float aveX((positionU.GetX() + positionV.GetX() + positionW.GetX()) / 3.f);
+    const float aveY(YfromUV);
+    const float aveW((positionW.GetZ() + 2.f * ZfromUV ) / 3.f);
 
-    float aveU = LArGeometryHelper::YZtoU( aveY, aveW );
-    float aveV = LArGeometryHelper::YZtoV( aveY, aveW );
+    const float aveU(LArGeometryHelper::YZtoU(aveY, aveW));
+    const float aveV(LArGeometryHelper::YZtoV(aveY, aveW));
 
-    outputU.SetValues( aveX, 0.f, aveU );
-    outputV.SetValues( aveX, 0.f, aveV );
-    outputW.SetValues( aveX, 0.f, aveW );
+    outputU.SetValues(aveX, 0.f, aveU);
+    outputV.SetValues(aveX, 0.f, aveV);
+    outputW.SetValues(aveX, 0.f, aveW);
 
-    chiSquared = ( ( outputU.GetX()-positionU.GetX() )*( outputU.GetX()-positionU.GetX() )
-                 + ( outputV.GetX()-positionV.GetX() )*( outputV.GetX()-positionV.GetX() )
-                 + ( outputW.GetX()-positionW.GetX() )*( outputW.GetX()-positionW.GetX() )
-                 + ( outputU.GetZ()-positionU.GetZ() )*( outputU.GetZ()-positionU.GetZ() )
-                 + ( outputV.GetZ()-positionV.GetZ() )*( outputV.GetZ()-positionV.GetZ() )
-	         + ( outputW.GetZ()-positionW.GetZ() )*( outputW.GetZ()-positionW.GetZ() ) ) / ( m_sigmaUVW * m_sigmaUVW );
+    chiSquared = ((outputU.GetX() - positionU.GetX()) * (outputU.GetX() - positionU.GetX()) +
+                  (outputV.GetX() - positionV.GetX()) * (outputV.GetX() - positionV.GetX()) +
+                  (outputW.GetX() - positionW.GetX()) * (outputW.GetX() - positionW.GetX()) +
+                  (outputU.GetZ() - positionU.GetZ()) * (outputU.GetZ() - positionU.GetZ()) +
+                  (outputV.GetZ() - positionV.GetZ()) * (outputV.GetZ() - positionV.GetZ()) +
+                  (outputW.GetZ() - positionW.GetZ()) * (outputW.GetZ() - positionW.GetZ())) / (m_sigmaUVW * m_sigmaUVW);
 }
  
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -509,6 +505,9 @@ StatusCode LArGeometryHelper::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Resolution", m_sigmaUVW));
+
+    if (std::fabs(m_sigmaUVW) < std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_INVALID_PARAMETER;
 
     return STATUS_CODE_SUCCESS;
 }
