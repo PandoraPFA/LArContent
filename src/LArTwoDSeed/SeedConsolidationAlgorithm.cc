@@ -475,9 +475,13 @@ void SeedConsolidationAlgorithm::OverlapAssociation::CalculateProperties(const C
     m_nNonVtxContactGroups = ((m_nNonVtxContactGroups > 0) && (std::min(m_innerOverlapDistance, m_outerOverlapDistance) < 5.f)) ?
         m_nContactGroups - 1 : m_nContactGroups;
 
-    std::sort(layerDistances.begin(), layerDistances.end());
-    m_layerDistance50 = layerDistances[static_cast<unsigned int>(0.5 * layerDistances.size())];
-
+    if(layerDistances.size()>0){
+      std::sort(layerDistances.begin(), layerDistances.end());
+      m_layerDistance50 = layerDistances[static_cast<unsigned int>(0.5 * layerDistances.size())];
+    }
+    else{
+      m_layerDistance50 = 0.;     //Will fail anyway as there are no contact layers
+    }
 
 // ClusterList tempList1, tempList2;
 // Cluster* tempC1 = (Cluster*)pParentCluster;
