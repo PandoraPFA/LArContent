@@ -240,6 +240,20 @@ public:
         float GetL(const int layer) const;
 
         /**
+         *  @brief  Get the maximum occupied layer in the sliding fit
+         * 
+         *  @param  the maximum occupied layer in the sliding fit
+         */
+        int GetMaxLayer() const;
+
+        /**
+         *  @brief  Get the minimum occupied layer in the sliding fit
+         * 
+         *  @param  the minimum occupied layer in the sliding fit
+         */
+        int GetMinLayer() const;
+
+        /**
          *  @brief  Get sliding linear fit coordinates for a given x coordinate
          * 
          *  @param  x the x coordinate
@@ -614,6 +628,26 @@ inline const pandora::CartesianVector &LArClusterHelper::TwoDSlidingFitResult::G
 inline const pandora::CartesianVector &LArClusterHelper::TwoDSlidingFitResult::GetAxisDirection() const
 {
     return m_axisDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArClusterHelper::TwoDSlidingFitResult::GetMaxLayer() const
+{
+    if (m_layerFitResultMap.empty())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_layerFitResultMap.rbegin()->first;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArClusterHelper::TwoDSlidingFitResult::GetMinLayer() const
+{
+    if (m_layerFitResultMap.empty())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_layerFitResultMap.begin()->first;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
