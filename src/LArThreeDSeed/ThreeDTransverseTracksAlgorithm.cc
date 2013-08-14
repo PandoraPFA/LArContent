@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDTracksAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDSeed/ThreeDTransverseTracksAlgorithm.cc
  * 
- *  @brief  Implementation of the three dimensional tracks algorithm class.
+ *  @brief  Implementation of the three dimensional transverse tracks algorithm class.
  * 
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDSeed/ThreeDTracksAlgorithm.h"
+#include "LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-void ThreeDTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
 std::cout << " CALCULATE OVERLAP RESULT " << std::endl;
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
@@ -53,7 +53,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
+void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
     const TwoDSlidingFitResult &slidingFitResultW, FitSegmentTensor &fitSegmentTensor) const
 {
     FitSegmentList fitSegmentListU, fitSegmentListV, fitSegmentListW;
@@ -165,7 +165,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
+void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
 {
     unsigned int nSustainedSteps(0);
     CartesianVector previousPosition(0.f, 0.f, 0.f);
@@ -256,7 +256,7 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackOverlapResult ThreeDTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
+TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
     const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW) const
 {
     // Assess x-overlap
@@ -320,7 +320,7 @@ std::cout << " minX " << minX << " maxX " << maxX << " xOverlap " << xOverlap <<
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int ThreeDTracksAlgorithm::GetNMatchedSamplingPoints(const FitSegmentTensor &fitSegmentTensor) const
+unsigned int ThreeDTransverseTracksAlgorithm::GetNMatchedSamplingPoints(const FitSegmentTensor &fitSegmentTensor) const
 {
     if (fitSegmentTensor.empty())
         return 0;
@@ -341,7 +341,7 @@ std::cout << " First match " << indexU << ", " << indexV << ", " << indexW << ",
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTracksAlgorithm::GetFirstMatch(const FitSegmentTensor &fitSegmentTensor, unsigned int &indexU, unsigned int &indexV,
+void ThreeDTransverseTracksAlgorithm::GetFirstMatch(const FitSegmentTensor &fitSegmentTensor, unsigned int &indexU, unsigned int &indexV,
     unsigned int &indexW, unsigned int &nMatchedPoints) const
 {
     if (fitSegmentTensor.empty())
@@ -368,7 +368,7 @@ void ThreeDTracksAlgorithm::GetFirstMatch(const FitSegmentTensor &fitSegmentTens
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTracksAlgorithm::GetNeighbours(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV,
+void ThreeDTransverseTracksAlgorithm::GetNeighbours(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV,
     const unsigned int indexW, const unsigned int nMatchedPoints, UIntVector &nMatchedHitValues) const
 {
     if (fitSegmentTensor.empty())
@@ -401,7 +401,7 @@ std::cout << " iPermutation " << iPermutation << std::endl;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTracksAlgorithm::IsPresent(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV,
+bool ThreeDTransverseTracksAlgorithm::IsPresent(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV,
     const unsigned int indexW, const bool incrementU, const bool incrementV, const bool incrementW, unsigned int &newIndexU,
     unsigned int &newIndexV, unsigned int &newIndexW, unsigned int &nMatchedPoints) const
 {
@@ -434,7 +434,7 @@ std::cout << " IsPresent iU " << indexU << " iV " << indexV << " iW " << indexW 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTracksAlgorithm::ExamineTensor()
+bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
     float bestOverlapResult(m_minMatchedFraction);
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
@@ -486,7 +486,7 @@ bool ThreeDTracksAlgorithm::ExamineTensor()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::TwoDSlidingFitResult &twoDSlidingFitResult,
+ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::TwoDSlidingFitResult &twoDSlidingFitResult,
         LayerFitResultMap::const_iterator startLayerIter, LayerFitResultMap::const_iterator endLayerIter) :
     m_startLayer(startLayerIter->first),
     m_endLayer(endLayerIter->first)
@@ -507,7 +507,7 @@ ThreeDTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::TwoDSlidin
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_pseudoChi2Cut = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDSeed/ThreeDTracksAlgorithm.h
+ *  @file   LArContent/include/LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h
  * 
- *  @brief  Header file for the three dimensional tracksalgorithm class.
+ *  @brief  Header file for the three dimensional transverse tracks algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_THREE_D_TRACKS_ALGORITHM_H
-#define LAR_THREE_D_TRACKS_ALGORITHM_H 1
+#ifndef LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H
+#define LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -20,9 +20,9 @@ namespace lar
 {
 
 /**
- *  @brief  ThreeDTracksAlgorithm class
+ *  @brief  ThreeDTransverseTracksAlgorithm class
  */
-class ThreeDTracksAlgorithm : public ThreeDBaseAlgorithm<TrackOverlapResult>
+class ThreeDTransverseTracksAlgorithm : public ThreeDBaseAlgorithm<TrackOverlapResult>
 {
 public:
     /**
@@ -233,61 +233,61 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ThreeDTracksAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ThreeDTracksAlgorithm();
+    return new ThreeDTransverseTracksAlgorithm();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int ThreeDTracksAlgorithm::FitSegment::GetStartLayer() const
+inline int ThreeDTransverseTracksAlgorithm::FitSegment::GetStartLayer() const
 {
     return m_startLayer;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int ThreeDTracksAlgorithm::FitSegment::GetEndLayer() const
+inline int ThreeDTransverseTracksAlgorithm::FitSegment::GetEndLayer() const
 {
     return m_endLayer;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ThreeDTracksAlgorithm::FitSegment::GetMinX() const
+inline float ThreeDTransverseTracksAlgorithm::FitSegment::GetMinX() const
 {
     return m_minX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ThreeDTracksAlgorithm::FitSegment::GetMaxX() const
+inline float ThreeDTransverseTracksAlgorithm::FitSegment::GetMaxX() const
 {
     return m_maxX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ThreeDTracksAlgorithm::FitSegment::GetStartValue() const
+inline float ThreeDTransverseTracksAlgorithm::FitSegment::GetStartValue() const
 {
     return m_startValue;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ThreeDTracksAlgorithm::FitSegment::GetEndValue() const
+inline float ThreeDTransverseTracksAlgorithm::FitSegment::GetEndValue() const
 {
     return m_endValue;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool ThreeDTracksAlgorithm::FitSegment::IsIncreasingX() const
+inline bool ThreeDTransverseTracksAlgorithm::FitSegment::IsIncreasingX() const
 {
     return m_isIncreasingX;
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_THREE_D_TRACKS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H

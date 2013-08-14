@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.h
  * 
- *  @brief  Header file for the three dimensional tracks algorithm class.
+ *  @brief  Header file for the three dimensional longitudinal tracks algorithm class.
  * 
  *  $Log: $
  */
@@ -35,31 +35,27 @@ public:
     };
 
 private:
-   
-
-    typedef LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
-
-   
-
-   
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
-   
+    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
+    typedef TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
 
-  
-    void CalculateOverlapResult(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU,
-        const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV, const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW,
-	const pandora::CartesianVector vtxMerged3D, const pandora::CartesianVector endMerged3D, TrackOverlapResult& overlapResult);
-
-
+    /**
+     *  @brief  Calculate the overlap result for given 3D vertex and end positions
+     * 
+     *  @param  slidingFitResultU the sliding fit result u
+     *  @param  slidingFitResultV the sliding fit result v
+     *  @param  slidingFitResultW the sliding fit result w
+     *  @param  vtxMerged3D the 3D vertex position
+     *  @param  endMerged3D the 3D end position
+     *  @param  overlapResult to receive the overlap result
+     */
+    void CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
+        const TwoDSlidingFitResult &slidingFitResultW, const pandora::CartesianVector &vtxMerged3D, const pandora::CartesianVector &endMerged3D,
+        TrackOverlapResult &overlapResult) const;
 
     bool ExamineTensor();
-
-
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,4 +67,4 @@ inline pandora::Algorithm *ThreeDLongitudinalTracksAlgorithm::Factory::CreateAlg
 
 } // namespace lar
 
-#endif // #ifndef LAR_THREE_D_TRACKS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_D_LONGITUDINAL_TRACKS_ALGORITHM_H
