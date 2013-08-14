@@ -195,7 +195,7 @@ TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitS
     }
 
     if (0 == nSamplingPoints)
-        {std::cout << "GetSegmentOverlap:: nSamplingPoints == 0 " << std::endl; throw StatusCodeException(STATUS_CODE_NOT_FOUND);}
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum);
 }
@@ -343,7 +343,6 @@ bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
                 }
                 catch (StatusCodeException &)
                 {
-                    std::cout << " ExamineTensor: CATCH " << std::endl;
                 }
             }
         }
