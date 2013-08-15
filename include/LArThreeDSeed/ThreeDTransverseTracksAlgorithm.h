@@ -125,14 +125,62 @@ private:
     };
 
     typedef std::vector<FitSegment> FitSegmentList;
-
     typedef std::map<unsigned int, TrackOverlapResult> FitSegmentToOverlapResultMap;
     typedef std::map<unsigned int, FitSegmentToOverlapResultMap> FitSegmentMatrix;
     typedef std::map<unsigned int, FitSegmentMatrix> FitSegmentTensor;
 
-    typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
+    /**
+     *  @brief  ParticleComponent class
+     */
+    class ParticleComponent
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  pClusterU the u cluster
+         *  @param  pClusterV the v cluster
+         *  @param  pClusterW the w cluster
+         *  @param  trackOverlapResult the track overlap result
+         */
+        ParticleComponent(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW, const TrackOverlapResult &trackOverlapResult);
 
-    typedef std::vector<TrackOverlapResult> TrackOverlapResultVector;
+        /**
+         *  @brief  Get the u cluster
+         * 
+         *  @return the u cluster
+         */
+        pandora::Cluster *GetClusterU() const;
+
+        /**
+         *  @brief  Get the v cluster
+         * 
+         *  @return the v cluster
+         */
+        pandora::Cluster *GetClusterV() const;
+
+        /**
+         *  @brief  Get the w cluster
+         * 
+         *  @return the w cluster
+         */
+        pandora::Cluster *GetClusterW() const;
+
+        /**
+         *  @brief  Get the track overlap result
+         * 
+         *  @return the track overlap result
+         */
+        const TrackOverlapResult &GetTrackOverlapResult() const;
+
+    private:
+        pandora::Cluster   *m_pClusterU;            ///< 
+        pandora::Cluster   *m_pClusterV;            ///< 
+        pandora::Cluster   *m_pClusterW;            ///< 
+        TrackOverlapResult  m_trackOverlapResult;   ///< 
+    };
+
+    typedef std::vector<ParticleComponent> ParticleComponentList;
 
     void PreparationStep();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
@@ -192,6 +240,8 @@ private:
     void GetFirstMatch(const FitSegmentTensor &fitSegmentTensor, unsigned int &indexU, unsigned int &indexV, unsigned int &indexW,
         TrackOverlapResult &trackOverlapResult) const;
 
+    typedef std::vector<TrackOverlapResult> TrackOverlapResultVector;
+
     /**
      *  @brief  Get segment matches neighbouring that with specified indices; if no neighbours found, store matched points value in vector
      * 
@@ -229,14 +279,27 @@ private:
     bool ExamineTensor();
 
     /**
-     *  @brief  Build proto particle, starting with the three best clusters extracted from the tensor
+     *  @brief  Build proto particle, starting with provided component and picking up any matched components in the overlap tensor
      * 
-     *  @param  protoParticle the proto particle
+     *  @param  particleComponent the particle component
+     *  @param  protoParticle to receive the populated proto particle
      */
-    void BuildProtoParticle(ProtoParticle &protoParticle) const;
+    void BuildProtoParticle(const ParticleComponent &firstComponent, ProtoParticle &protoParticle) const;
+
+    /**
+     *  @brief  Whether to include a specified particle component in a proto particle
+     * 
+     *  @param  particleComponent the first particle component
+     *  @param  protoParticle the proto particle
+     * 
+     *  @return boolean
+     */
+    bool IsParticleMatch(const ParticleComponent &particleComponent, const ProtoParticle &protoParticle) const;
 
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
 
     float               m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float               m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
@@ -300,6 +363,46 @@ inline float ThreeDTransverseTracksAlgorithm::FitSegment::GetEndValue() const
 inline bool ThreeDTransverseTracksAlgorithm::FitSegment::IsIncreasingX() const
 {
     return m_isIncreasingX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ThreeDTransverseTracksAlgorithm::ParticleComponent::ParticleComponent(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV,
+        pandora::Cluster *pClusterW, const TrackOverlapResult &trackOverlapResult) :
+    m_pClusterU(pClusterU),
+    m_pClusterV(pClusterV),
+    m_pClusterW(pClusterW),
+    m_trackOverlapResult(trackOverlapResult)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Cluster *ThreeDTransverseTracksAlgorithm::ParticleComponent::GetClusterU() const
+{
+    return m_pClusterU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Cluster *ThreeDTransverseTracksAlgorithm::ParticleComponent::GetClusterV() const
+{
+    return m_pClusterV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Cluster *ThreeDTransverseTracksAlgorithm::ParticleComponent::GetClusterW() const
+{
+    return m_pClusterW;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const TrackOverlapResult &ThreeDTransverseTracksAlgorithm::ParticleComponent::GetTrackOverlapResult() const
+{
+    return m_trackOverlapResult;
 }
 
 } // namespace lar

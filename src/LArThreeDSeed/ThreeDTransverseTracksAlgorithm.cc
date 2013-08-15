@@ -229,6 +229,7 @@ TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitS
 
 TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor) const
 {
+    // TODO, will need to navigate across fit segment tensor in multiple different directions
     const TrackOverlapResult noMatchResult(0, 1, 0.f);
 
     if (fitSegmentTensor.empty())
@@ -377,11 +378,7 @@ bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
         return false;
 
     ProtoParticle protoParticle;
-    protoParticle.m_clusterListU.insert(pBestClusterU);
-    protoParticle.m_clusterListV.insert(pBestClusterV);
-    protoParticle.m_clusterListW.insert(pBestClusterW);
-
-    this->BuildProtoParticle(protoParticle);
+    this->BuildProtoParticle(ParticleComponent(pBestClusterU, pBestClusterV, pBestClusterW, bestTrackOverlapResult), protoParticle);
     m_protoParticleVector.push_back(protoParticle);
 
     return true;
@@ -389,16 +386,53 @@ bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(ProtoParticle &protoParticle) const
+void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(const ParticleComponent &particleComponent, ProtoParticle &protoParticle) const
 {
-    if (protoParticle.m_clusterListU.empty() || protoParticle.m_clusterListV.empty() || protoParticle.m_clusterListW.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    Cluster *pClusterU(particleComponent.GetClusterU()), *pClusterV(particleComponent.GetClusterV()), *pClusterW(particleComponent.GetClusterW());
+    protoParticle.m_clusterListU.insert(pClusterU);
+    protoParticle.m_clusterListV.insert(pClusterV);
+    protoParticle.m_clusterListW.insert(pClusterW);
 
-    Cluster *pClusterU(*protoParticle.m_clusterListU.begin());
-    Cluster *pClusterV(*protoParticle.m_clusterListV.begin());
-    Cluster *pClusterW(*protoParticle.m_clusterListW.begin());
+    ParticleComponentList particleComponentList;
+    const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
+    const ClusterList &clusterListV(m_overlapTensor.GetClusterListV());
+    const ClusterList &clusterListW(m_overlapTensor.GetClusterListW());
 
-    
+    for (ClusterList::const_iterator iterU = clusterListU.begin(), iterUEnd = clusterListU.end(); iterU != iterUEnd; ++iterU)
+    {
+        for (ClusterList::const_iterator iterV = clusterListV.begin(), iterVEnd = clusterListV.end(); iterV != iterVEnd; ++iterV)
+        {
+            for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
+            {
+                try
+                {
+                    if ((pClusterU != *iterU) && (pClusterV != *iterV) && (pClusterW != *iterW))
+                        continue;
+
+                    const TrackOverlapResult &trackOverlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+                    particleComponentList.push_back(ParticleComponent(*iterU, *iterV, *iterW, trackOverlapResult));
+                }
+                catch (StatusCodeException &)
+                {
+                }
+            }
+        }
+    }
+
+    for (ParticleComponentList::const_iterator iter = particleComponentList.begin(), iterEnd = particleComponentList.end(); iter != iterEnd; ++iter)
+    {
+        if (this->IsParticleMatch(*iter, protoParticle))
+            this->BuildProtoParticle(*iter, protoParticle);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(const ParticleComponent &particleComponent, const ProtoParticle &protoParticle) const
+{
+    // TODO, return true in case where we have a particle match
+    std::cout << "CHECK IS PARTICLE MATCH " << std::endl;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
