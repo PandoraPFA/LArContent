@@ -86,7 +86,7 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, cons
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
             CaloHit *pCaloHit = *hitIter;
-            Cluster *pClusterToModify((thisLayer < splitLayer) ? pCluster1 : pCluster2);
+            Cluster *&pClusterToModify((thisLayer < splitLayer) ? pCluster1 : pCluster2);
 
             if (NULL == pClusterToModify)
             {
