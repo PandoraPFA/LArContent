@@ -39,14 +39,13 @@ bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) cons
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::VisualizeClusters(&tempList, "PossibleSplit", BLUE);
 // PandoraMonitoringApi::ViewEvent();
-
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode KinkSplittingAlgorithm::FindBestSplitLayer(const Cluster* const pCluster, unsigned int& splitLayer )
-{ 
+StatusCode KinkSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCluster, unsigned int &splitLayer) const
+{
     LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
     LArClusterHelper::LArTwoDSlidingXZFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);
 
@@ -72,11 +71,6 @@ StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_minOverallScatteringRms = 0.75;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinOverallScatteringRms", m_minOverallScatteringRms));
-
-    //m_maxCosScatteringAngle = std::cos(M_PI * 15.f / 180.f);
-    //PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-    //    "MaxCosScatteringAngle", m_maxCosScatteringAngle));
-    //
 
     return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }

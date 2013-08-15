@@ -20,37 +20,28 @@ namespace lar
  */
 class ClusterSplittingAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-
 protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
- 
+
+    typedef std::list<pandora::Cluster*> ClusterSplittingList;
+
     /**
      *  @brief  Split cluster into its two fragments
      * 
      *  @param  pCluster address of the cluster
      *  @param  splitLayer the layer at which to perform the split
-     *  @param  daughters the two cluster fragments
+     *  @param  clusterSplittingList to receive the two cluster fragments
      */
-    virtual pandora::StatusCode SplitCluster(pandora::Cluster *const pCluster, const unsigned int splitLayer, std::list<pandora::Cluster*>& daughters);
+    virtual pandora::StatusCode SplitCluster(pandora::Cluster *const pCluster, const unsigned int splitLayer, ClusterSplittingList &clusterSplittingList) const;
 
     /**
-     *  @brief  Find layer at which cluster should be split     
+     *  @brief  Find layer at which cluster should be split
      * 
      *  @param  pCluster address of the cluster
      *  @param  splitLayer the layer at which to perform the split
      */
-    virtual pandora::StatusCode FindBestSplitLayer(const pandora::Cluster* const pCluster, unsigned int& splitLayer);
+    virtual pandora::StatusCode FindBestSplitLayer(const pandora::Cluster *const pCluster, unsigned int &splitLayer) const = 0;
 
    /**
      *  @brief  Whether a cluster is a split candidate
@@ -59,22 +50,8 @@ protected:
      * 
      *  @return boolean
      */
-    virtual bool IsPossibleSplit(const pandora::Cluster *const pCluster) const;
-
-
-private:
-
-    
+    virtual bool IsPossibleSplit(const pandora::Cluster *const pCluster) const = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ClusterSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ClusterSplittingAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 } // namespace lar
 

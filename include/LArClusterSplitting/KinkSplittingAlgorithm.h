@@ -30,23 +30,7 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
- 
-    /**
-     *  @brief  Find layer at which cluster should be split     
-     * 
-     *  @param  pCluster address of the cluster
-     *  @param  splitLayer the layer at which to perform the split
-     */
-    pandora::StatusCode FindBestSplitLayer(const pandora::Cluster* const pCluster, unsigned int& splitLayer);
-
-   /**
-     *  @brief  Whether a cluster is a split candidate
-     * 
-     *  @param  pCluster address of the cluster
-     * 
-     *  @return boolean
-     */
+    pandora::StatusCode FindBestSplitLayer(const pandora::Cluster *const pCluster, unsigned int &splitLayer) const;
     bool IsPossibleSplit(const pandora::Cluster *const pCluster) const;
 
     unsigned int    m_slidingFitLayerHalfWindow;    ///< Layer half window for sliding fit
