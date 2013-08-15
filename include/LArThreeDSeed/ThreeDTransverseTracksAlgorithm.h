@@ -130,8 +130,11 @@ private:
     typedef std::map<unsigned int, FitSegmentToOverlapResultMap> FitSegmentMatrix;
     typedef std::map<unsigned int, FitSegmentMatrix> FitSegmentTensor;
 
+    typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
+
     typedef std::vector<TrackOverlapResult> TrackOverlapResultVector;
 
+    void PreparationStep();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
     /**
@@ -224,12 +227,22 @@ private:
         unsigned int &newIndexW, TrackOverlapResult &trackOverlapResult) const;
 
     bool ExamineTensor();
+
+    /**
+     *  @brief  Build proto particle, starting with the three best clusters extracted from the tensor
+     * 
+     *  @param  protoParticle the proto particle
+     */
+    void BuildProtoParticle(ProtoParticle &protoParticle) const;
+
+    void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float           m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
-    float           m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
-    float           m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
-    unsigned int    m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
+    float               m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
+    float               m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
+    float               m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
+    unsigned int        m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
+    SlidingFitResultMap m_slidingFitResultMap;      ///< The sliding fit result map
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

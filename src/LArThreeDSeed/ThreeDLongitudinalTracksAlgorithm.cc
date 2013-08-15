@@ -276,9 +276,9 @@ bool ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
         return false;
 
     ProtoParticle protoParticle;
-    protoParticle.m_clusterVectorU.push_back(pBestClusterU);
-    protoParticle.m_clusterVectorV.push_back(pBestClusterV);
-    protoParticle.m_clusterVectorW.push_back(pBestClusterW);
+    protoParticle.m_clusterListU.insert(pBestClusterU);
+    protoParticle.m_clusterListV.insert(pBestClusterV);
+    protoParticle.m_clusterListW.insert(pBestClusterW);
     m_protoParticleVector.push_back(protoParticle);
 
     return true;

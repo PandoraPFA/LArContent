@@ -18,12 +18,37 @@ using namespace pandora;
 namespace lar
 {
 
+void ThreeDTransverseTracksAlgorithm::PreparationStep()
+{
+    ClusterList allClustersList;
+    allClustersList.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
+    allClustersList.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
+    allClustersList.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
+
+    for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
+    {
+        LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+        LArClusterHelper::LArTwoDSlidingFit(*iter, 20, slidingFitResult);
+
+        if (!m_slidingFitResultMap.insert(SlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
-    LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
-    LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
-    LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
+    SlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
+    SlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
+    SlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
+
+    if ((m_slidingFitResultMap.end() == iterU) || (m_slidingFitResultMap.end() == iterV) || (m_slidingFitResultMap.end() == iterW))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU(iterU->second);
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV(iterV->second);
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW(iterW->second);
 
     FitSegmentTensor fitSegmentTensor;
     this->GetFitSegmentTensor(slidingFitResultU, slidingFitResultV, slidingFitResultW, fitSegmentTensor);
@@ -352,12 +377,36 @@ bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
         return false;
 
     ProtoParticle protoParticle;
-    protoParticle.m_clusterVectorU.push_back(pBestClusterU);
-    protoParticle.m_clusterVectorV.push_back(pBestClusterV);
-    protoParticle.m_clusterVectorW.push_back(pBestClusterW);
+    protoParticle.m_clusterListU.insert(pBestClusterU);
+    protoParticle.m_clusterListV.insert(pBestClusterV);
+    protoParticle.m_clusterListW.insert(pBestClusterW);
+
+    this->BuildProtoParticle(protoParticle);
     m_protoParticleVector.push_back(protoParticle);
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(ProtoParticle &protoParticle) const
+{
+    if (protoParticle.m_clusterListU.empty() || protoParticle.m_clusterListV.empty() || protoParticle.m_clusterListW.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    Cluster *pClusterU(*protoParticle.m_clusterListU.begin());
+    Cluster *pClusterV(*protoParticle.m_clusterListV.begin());
+    Cluster *pClusterW(*protoParticle.m_clusterListW.begin());
+
+    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTransverseTracksAlgorithm::TidyUp()
+{
+    m_slidingFitResultMap.clear();
+    return ThreeDBaseAlgorithm<TrackOverlapResult>::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
