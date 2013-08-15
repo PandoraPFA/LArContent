@@ -37,9 +37,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         return;
     */
 
-    const float m_maxChi2 = 5.f;
-    const float m_minCosOpeningAngle = 0.5;
-    TrackOverlapResult bestOverlapResult(0, 1, 0.f);
+    TrackOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut);
 
     for (unsigned int nU = 0; nU <= 1; ++nU)
     {
@@ -83,28 +81,28 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 
                 // Calculate possible 3D start positions
                 LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, vtxU, vtxV, position3D, chi2);
-                if (chi2 < m_maxChi2)
+                if (chi2 < m_vertexChi2Cut)
                     vtxList3D.push_back(position3D);
 
                 LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, vtxV, vtxW, position3D, chi2);
-                if (chi2 < m_maxChi2)
+                if (chi2 < m_vertexChi2Cut)
                     vtxList3D.push_back(position3D);
 
                 LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, vtxW, vtxU, position3D, chi2);
-                if (chi2 < m_maxChi2)
+                if (chi2 < m_vertexChi2Cut)
                     vtxList3D.push_back(position3D);
 
                 // Calculate possible 3D end positions
                 LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, endU, endV, position3D, chi2);
-                if (chi2 < m_maxChi2)
+                if (chi2 < m_vertexChi2Cut)
                     endList3D.push_back(position3D);
 
                 LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, endV, endW, position3D, chi2);
-                if (chi2 < m_maxChi2)
+                if (chi2 < m_vertexChi2Cut)
                     endList3D.push_back(position3D);
 
                 LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, endW, endU, position3D, chi2);
-                if (chi2 < m_maxChi2)
+                if (chi2 < m_vertexChi2Cut)
                     endList3D.push_back(position3D);
 
                 // Find best matched 3D trajactory
@@ -124,9 +122,9 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
                         const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_V));
                         const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_W));
 
-                        if ( ((endMergedU - vtxMergedU).GetCosOpeningAngle(endU - vtxU) < m_minCosOpeningAngle) ||
-                             ((endMergedV - vtxMergedV).GetCosOpeningAngle(endV - vtxV) < m_minCosOpeningAngle) ||
-                             ((endMergedW - vtxMergedW).GetCosOpeningAngle(endW - vtxW) < m_minCosOpeningAngle) )
+                        if ( ((endMergedU - vtxMergedU).GetCosOpeningAngle(endU - vtxU) < m_cosOpeningAngleCut) ||
+                             ((endMergedV - vtxMergedV).GetCosOpeningAngle(endV - vtxV) < m_cosOpeningAngleCut) ||
+                             ((endMergedW - vtxMergedW).GetCosOpeningAngle(endW - vtxW) < m_cosOpeningAngleCut) )
                         {
                             continue;
                         }
@@ -147,10 +145,10 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
                             continue;
                         }
 
-                        TrackOverlapResult thisOverlapResult(0, 1, 0.f);
+                        TrackOverlapResult thisOverlapResult(0, 1, m_reducedChi2Cut);
                         this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, thisOverlapResult);
 
-                        if (thisOverlapResult.GetNMatchedSamplingPoints() > bestOverlapResult.GetNMatchedSamplingPoints())
+                        if (thisOverlapResult.GetNMatchedSamplingPoints() > 0 && thisOverlapResult.GetReducedChi2() < bestOverlapResult.GetReducedChi2())
                             bestOverlapResult = thisOverlapResult;
                     }
                 }
@@ -176,7 +174,6 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D,VIEW_V)); 
     const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D,VIEW_W));
 
-    const float m_maxChi2(5.f), m_samplingPitch(1.f);
     const unsigned int nTotalSamplingPoints = static_cast<unsigned int>((endMerged3D - vtxMerged3D).GetMagnitude()/ m_samplingPitch);
 
     if (0 == nTotalSamplingPoints)
@@ -202,7 +199,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
             CartesianVector mergedU(0.f,0.f,0.f), mergedV(0.f,0.f,0.f), mergedW(0.f,0.f,0.f);
             LArGeometryHelper::MergeThreePositions(posU, posV, posW, mergedU, mergedV, mergedW, deltaChi2);
 
-            if (deltaChi2 < m_maxChi2)
+            if (deltaChi2 < m_reducedChi2Cut)
                 ++nMatchedSamplingPoints;
 
             ++nSamplingPoints;
@@ -214,8 +211,10 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     }
 
     if (nSamplingPoints > 0)
+    {    
         overlapResult = TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2);
 
+std::cout << " nMatchedSamplingPoints=" << nMatchedSamplingPoints << " nSamplingPoints=" << nSamplingPoints << " totalChi2=" << totalChi2 << std::endl;
 Cluster *pClusterU = (Cluster*)(slidingFitResultU.GetCluster());
 Cluster *pClusterV = (Cluster*)(slidingFitResultV.GetCluster());
 Cluster *pClusterW = (Cluster*)(slidingFitResultW.GetCluster());  
@@ -233,13 +232,15 @@ PandoraMonitoringApi::AddMarkerToVisualization(&endMergedU, "endMergedU", RED,  
 PandoraMonitoringApi::AddMarkerToVisualization(&endMergedV, "endMergedV", GREEN, 3.0);
 PandoraMonitoringApi::AddMarkerToVisualization(&endMergedW, "endMergedW", BLUE,  3.0);
 PandoraMonitoringApi::ViewEvent();
+    }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 {
-    float bestOverlapResult(0.f);
+    float bestReducedChi2(m_reducedChi2Cut);
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
     const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
@@ -256,9 +257,9 @@ bool ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
                 {
                     const TrackOverlapResult &overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
 
-                    if (overlapResult.GetNMatchedSamplingPoints() > bestOverlapResult)
+                    if (overlapResult.GetReducedChi2() < bestReducedChi2)
                     {
-                        bestOverlapResult = overlapResult.GetNMatchedSamplingPoints();
+		        bestReducedChi2 = overlapResult.GetReducedChi2();
                         pBestClusterU = *iterU;
                         pBestClusterV = *iterV;
                         pBestClusterW = *iterW;
@@ -287,7 +288,26 @@ bool ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
+{ 
+    m_vertexChi2Cut = 5.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexChi2Cut", m_vertexChi2Cut));
+
+    m_reducedChi2Cut = 5.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ReducedChi2Cut", m_reducedChi2Cut));
+
+    m_cosOpeningAngleCut = 0.5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CosOpeningAngleCut", m_cosOpeningAngleCut));
+
+    m_samplingPitch = 1.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SamplingPitch", m_samplingPitch));
+
+    if(m_samplingPitch < std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_INVALID_PARAMETER;
+
     return ThreeDBaseAlgorithm<TrackOverlapResult>::ReadSettings(xmlHandle);
 }
 

@@ -56,6 +56,11 @@ private:
 
     bool ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float           m_vertexChi2Cut;
+    float           m_reducedChi2Cut;
+    float           m_cosOpeningAngleCut;
+    float           m_samplingPitch;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
