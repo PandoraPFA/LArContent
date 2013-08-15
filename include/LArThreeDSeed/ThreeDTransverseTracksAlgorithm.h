@@ -281,20 +281,30 @@ private:
     /**
      *  @brief  Build proto particle, starting with provided component and picking up any matched components in the overlap tensor
      * 
-     *  @param  particleComponent the particle component
+     *  @param  firstComponent the first particle component
      *  @param  protoParticle to receive the populated proto particle
      */
     void BuildProtoParticle(const ParticleComponent &firstComponent, ProtoParticle &protoParticle) const;
 
     /**
-     *  @brief  Whether to include a specified particle component in a proto particle
+     *  @brief  Whether two particle components match, representing the same particle
      * 
-     *  @param  particleComponent the first particle component
-     *  @param  protoParticle the proto particle
+     *  @param  firstComponent the first particle component
+     *  @param  secondComponent the second particle component
      * 
      *  @return boolean
      */
-    bool IsParticleMatch(const ParticleComponent &particleComponent, const ProtoParticle &protoParticle) const;
+    bool IsParticleMatch(const ParticleComponent &firstComponent, const ParticleComponent &secondComponent) const;
+
+    /**
+     *  @brief  Whether two clusters match, representing the same particle
+     * 
+     *  @param  pFirstCluster the address of the first cluster
+     *  @param  pSecondCluster the address of the second cluster
+     * 
+     *  @return boolean
+     */
+    bool IsParticleMatch(pandora::Cluster *const pFirstCluster, pandora::Cluster *const pSecondCluster) const;
 
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

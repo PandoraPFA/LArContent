@@ -386,9 +386,9 @@ bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(const ParticleComponent &particleComponent, ProtoParticle &protoParticle) const
+void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(const ParticleComponent &firstComponent, ProtoParticle &protoParticle) const
 {
-    Cluster *pClusterU(particleComponent.GetClusterU()), *pClusterV(particleComponent.GetClusterV()), *pClusterW(particleComponent.GetClusterW());
+    Cluster *pClusterU(firstComponent.GetClusterU()), *pClusterV(firstComponent.GetClusterV()), *pClusterW(firstComponent.GetClusterW());
     protoParticle.m_clusterListU.insert(pClusterU);
     protoParticle.m_clusterListV.insert(pClusterV);
     protoParticle.m_clusterListW.insert(pClusterW);
@@ -421,18 +421,53 @@ void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(const ParticleComponent
 
     for (ParticleComponentList::const_iterator iter = particleComponentList.begin(), iterEnd = particleComponentList.end(); iter != iterEnd; ++iter)
     {
-        if (this->IsParticleMatch(*iter, protoParticle))
+        if (protoParticle.m_clusterListU.count(iter->GetClusterU()) && protoParticle.m_clusterListV.count(iter->GetClusterV()) &&
+            protoParticle.m_clusterListW.count(iter->GetClusterW()))
+        {
+            continue;
+        }
+
+        if (this->IsParticleMatch(firstComponent, *iter))
+        {
             this->BuildProtoParticle(*iter, protoParticle);
+        }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(const ParticleComponent &particleComponent, const ProtoParticle &protoParticle) const
+bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(const ParticleComponent &firstComponent, const ParticleComponent &secondComponent) const
 {
-    // TODO, return true in case where we have a particle match
-    std::cout << "CHECK IS PARTICLE MATCH " << std::endl;
-    return false;
+    return (this->IsParticleMatch(firstComponent.GetClusterU(), secondComponent.GetClusterU()) ||
+            this->IsParticleMatch(firstComponent.GetClusterV(), secondComponent.GetClusterV()) ||
+            this->IsParticleMatch(firstComponent.GetClusterW(), secondComponent.GetClusterW()) );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(Cluster *const pFirstCluster, Cluster *const pSecondCluster) const
+{
+    if (pFirstCluster == pSecondCluster)
+        return false;
+
+    SlidingFitResultMap::const_iterator iter1 = m_slidingFitResultMap.find(pFirstCluster);
+    SlidingFitResultMap::const_iterator iter2 = m_slidingFitResultMap.find(pSecondCluster);
+
+    if ((m_slidingFitResultMap.end() == iter1) || (m_slidingFitResultMap.end() == iter2))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult1(iter1->second);
+    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult2(iter2->second);
+
+    const CartesianVector minLayerPosition1(slidingFitResult1.GetGlobalMinLayerPosition());
+    const CartesianVector maxLayerPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
+    const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
+    const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
+
+    return (((minLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 1.f) ||
+            ((maxLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 1.f) ||
+            ((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 1.f) ||
+            ((maxLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 1.f) );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
