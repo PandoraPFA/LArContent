@@ -464,9 +464,7 @@ bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(Cluster *const pFirstClust
     const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
 
-    return (((minLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 1.f) ||
-            ((maxLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 1.f) ||
-            ((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 1.f) ||
+    return (((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 1.f) ||
             ((maxLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 1.f) );
 }
 
