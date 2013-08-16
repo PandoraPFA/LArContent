@@ -211,29 +211,27 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     }
 
     if (nSamplingPoints > 0)
-    {    
+    {
         overlapResult = TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2);
-
-std::cout << " nMatchedSamplingPoints=" << nMatchedSamplingPoints << " nSamplingPoints=" << nSamplingPoints << " totalChi2=" << totalChi2 << std::endl;
-Cluster *pClusterU = (Cluster*)(slidingFitResultU.GetCluster());
-Cluster *pClusterV = (Cluster*)(slidingFitResultV.GetCluster());
-Cluster *pClusterW = (Cluster*)(slidingFitResultW.GetCluster());  
-ClusterList tempListU; tempListU.insert(pClusterU);
-ClusterList tempListV; tempListV.insert(pClusterV);
-ClusterList tempListW; tempListW.insert(pClusterW);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&tempListU, "BestClusterU", RED);
-PandoraMonitoringApi::VisualizeClusters(&tempListV, "BestClusterV", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&tempListW, "BestClusterW", BLUE);
-PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedU, "vtxMergedU", RED,   3.0);
-PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedV, "vtxMergedV", GREEN, 3.0);
-PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedW, "vtxMergedW", BLUE,  3.0);
-PandoraMonitoringApi::AddMarkerToVisualization(&endMergedU, "endMergedU", RED,   3.0);
-PandoraMonitoringApi::AddMarkerToVisualization(&endMergedV, "endMergedV", GREEN, 3.0);
-PandoraMonitoringApi::AddMarkerToVisualization(&endMergedW, "endMergedW", BLUE,  3.0);
-PandoraMonitoringApi::ViewEvent();
+//std::cout << " nMatchedSamplingPoints=" << nMatchedSamplingPoints << " nSamplingPoints=" << nSamplingPoints << " totalChi2=" << totalChi2 << std::endl;
+//Cluster *pClusterU = (Cluster*)(slidingFitResultU.GetCluster());
+//Cluster *pClusterV = (Cluster*)(slidingFitResultV.GetCluster());
+//Cluster *pClusterW = (Cluster*)(slidingFitResultW.GetCluster());  
+//ClusterList tempListU; tempListU.insert(pClusterU);
+//ClusterList tempListV; tempListV.insert(pClusterV);
+//ClusterList tempListW; tempListW.insert(pClusterW);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//PandoraMonitoringApi::VisualizeClusters(&tempListU, "BestClusterU", RED);
+//PandoraMonitoringApi::VisualizeClusters(&tempListV, "BestClusterV", GREEN);
+//PandoraMonitoringApi::VisualizeClusters(&tempListW, "BestClusterW", BLUE);
+//PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedU, "vtxMergedU", RED,   3.0);
+//PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedV, "vtxMergedV", GREEN, 3.0);
+//PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedW, "vtxMergedW", BLUE,  3.0);
+//PandoraMonitoringApi::AddMarkerToVisualization(&endMergedU, "endMergedU", RED,   3.0);
+//PandoraMonitoringApi::AddMarkerToVisualization(&endMergedV, "endMergedV", GREEN, 3.0);
+//PandoraMonitoringApi::AddMarkerToVisualization(&endMergedW, "endMergedW", BLUE,  3.0);
+//PandoraMonitoringApi::ViewEvent();
     }
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -259,7 +257,7 @@ bool ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 
                     if (overlapResult.GetReducedChi2() < bestReducedChi2)
                     {
-		        bestReducedChi2 = overlapResult.GetReducedChi2();
+                        bestReducedChi2 = overlapResult.GetReducedChi2();
                         pBestClusterU = *iterU;
                         pBestClusterV = *iterV;
                         pBestClusterW = *iterW;
