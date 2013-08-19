@@ -24,10 +24,10 @@ StatusCode ClusterSplittingAlgorithm::Run()
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
 
-    std::list<Cluster*> internalClusterList(pClusterList->begin(), pClusterList->end());
+    ClusterSplittingList internalClusterList(pClusterList->begin(), pClusterList->end());
 
-    for (std::list<Cluster*>::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
-    {  
+    for (ClusterSplittingList::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
+    {
         Cluster* pCluster = *iter;
 
         if (!this->IsPossibleSplit(pCluster))
@@ -38,7 +38,7 @@ StatusCode ClusterSplittingAlgorithm::Run()
         if (STATUS_CODE_SUCCESS != this->FindBestSplitLayer(pCluster,splitLayer))
             continue;
 
-	if ((splitLayer <= pCluster->GetInnerPseudoLayer()) || (splitLayer >= pCluster->GetOuterPseudoLayer()))
+        if ((splitLayer <= pCluster->GetInnerPseudoLayer()) || (splitLayer >= pCluster->GetOuterPseudoLayer()))
             continue;
 
 // const CartesianVector& bestPosition = pCluster->GetCentroid(splitLayer);
@@ -49,17 +49,15 @@ StatusCode ClusterSplittingAlgorithm::Run()
 // PandoraMonitoringApi::VisualizeClusters(&tempList, "Cluster", GREEN);
 // PandoraMonitoringApi::AddMarkerToVisualization(&bestPosition, "Split", RED, 1.75);
 // PandoraMonitoringApi::ViewEvent();
+        ClusterSplittingList clusterSplittingList;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pCluster, splitLayer, clusterSplittingList));
 
-        std::list<Cluster*> daughters;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pCluster, splitLayer, daughters));	  
-
-// ClusterList tempList(daughters.begin(),daughters.end());
+// ClusterList tempList(clusterSplittingList.begin(),clusterSplittingList.end());
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::VisualizeClusters(&tempList, "SplitCluster", AUTOITER);
 // PandoraMonitoringApi::ViewEvent();
-
-        internalClusterList.splice(internalClusterList.end(),daughters);
-	*iter = NULL;
+        internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
+        *iter = NULL;
     }
 
     return STATUS_CODE_SUCCESS;
@@ -67,7 +65,7 @@ StatusCode ClusterSplittingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, const unsigned int splitLayer, std::list<Cluster*>& daughters)
+StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, const unsigned int splitLayer, ClusterSplittingList &clusterSplittingList) const
 {
     // Begin cluster fragmentation operations
     ClusterList clusterList;
@@ -78,9 +76,7 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, cons
         clusterListToSaveName));
 
     // Create new clusters
-    Cluster *pCluster1(NULL);
-    Cluster *pCluster2(NULL);
-
+    Cluster *pCluster1(NULL), *pCluster2(NULL);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
@@ -95,7 +91,7 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, cons
             if (NULL == pClusterToModify)
             {
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pCaloHit, pClusterToModify));
-		daughters.push_back(pClusterToModify);
+                clusterSplittingList.push_back(pClusterToModify);
             }
             else
             {
@@ -112,21 +108,7 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClusterSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) const
-{
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode ClusterSplittingAlgorithm::FindBestSplitLayer(const Cluster* const pCluster, unsigned int& splitLayer )
-{
-    return STATUS_CODE_NOT_FOUND;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode ClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }

@@ -19,7 +19,7 @@ namespace lar
 
 StatusCode ShowerRebuildingAlgorithm::Run()
 {
-    // Rebuild 2d showers relating to seed that have been added to 3d particles
+    // Rebuild 2d showers relating to seeds that have been added to 3d particles
     this->RebuildThreeDShowers();
 
     // Rebuild any 2d showers for which 2d->3d matching was not possible
@@ -51,7 +51,7 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShowers() const
         }
 
         PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
-        std::sort(pfoVector.begin(), pfoVector.end(), ShowerRebuildingAlgorithm::SortByNHits);
+        std::sort(pfoVector.begin(), pfoVector.end(), ShowerRebuildingAlgorithm::SortPfosByNHits);
 
         for (PfoVector::iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
         {
@@ -60,14 +60,30 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShowers() const
             if (NULL == pPfo)
                 continue;
 
+            try
+            {
+                Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
+                this->GetSeedClusters(pPfo, pClusterU, pClusterV, pClusterW);
+
+                ClusterList seedMergesU, seedMergesV, seedMergesW, nonSeedMergesU, nonSeedMergesV, nonSeedMergesW;
+                this->RebuildThreeDShower(pPfo, pClusterU, pfoVector, seedMergesU, nonSeedMergesU);
+                this->RebuildThreeDShower(pPfo, pClusterV, pfoVector, seedMergesV, nonSeedMergesV);
+                this->RebuildThreeDShower(pPfo, pClusterW, pfoVector, seedMergesW, nonSeedMergesW);
+
+                this->PerformClusterMerges(pClusterU, seedMergesU, m_seedClusterListNameU, m_seedClusterListNameU);
+                this->PerformClusterMerges(pClusterV, seedMergesV, m_seedClusterListNameV, m_seedClusterListNameV);
+                this->PerformClusterMerges(pClusterW, seedMergesW, m_seedClusterListNameW, m_seedClusterListNameW);
+
+                this->PerformClusterMerges(pClusterU, nonSeedMergesU, m_seedClusterListNameU, m_nonSeedClusterListNameU);
+                this->PerformClusterMerges(pClusterV, nonSeedMergesV, m_seedClusterListNameV, m_nonSeedClusterListNameV);
+                this->PerformClusterMerges(pClusterW, nonSeedMergesW, m_seedClusterListNameW, m_nonSeedClusterListNameW);
+            }
+            catch (StatusCodeException &statusCodeException)
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeletePfo(*this, pPfo));
+            }
+
             *iter = NULL;
-
-            Cluster *pSeedClusterU(NULL), *pSeedClusterV(NULL), *pSeedClusterW(NULL);
-            this->GetSeedClusters(pPfo, pSeedClusterU, pSeedClusterV, pSeedClusterW);
-
-            this->RebuildThreeDShower(pfoVector, pSeedClusterU, pSeedClusterV, pSeedClusterW, m_seedClusterListNameU, m_nonSeedClusterListNameU);
-            this->RebuildThreeDShower(pfoVector, pSeedClusterV, pSeedClusterW, pSeedClusterU, m_seedClusterListNameV, m_nonSeedClusterListNameV);
-            this->RebuildThreeDShower(pfoVector, pSeedClusterW, pSeedClusterU, pSeedClusterV, m_seedClusterListNameW, m_nonSeedClusterListNameW);
         }
     }
     catch (StatusCodeException &statusCodeException)
@@ -79,78 +95,10 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShowers() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerRebuildingAlgorithm::RebuildThreeDShower(PfoVector &pfoVector, Cluster *pSeedCluster, Cluster *pSeedCluster2, Cluster *pSeedCluster3,
-    const std::string &seedClusterListName, const std::string &nonSeedClusterListName) const
+void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const pPfo, Cluster *&pSeedClusterU, Cluster *&pSeedClusterV,
+    Cluster *&pSeedClusterW) const
 {
-    ClusterList seeds, nonSeeds;
-    LArThreeDHelper::GetAllSeedComponents(pSeedCluster, seeds);
-    LArThreeDHelper::GetAllNonSeedComponents(pSeedCluster, nonSeeds);
-
-    const unsigned int seedId2(LArThreeDHelper::GetClusterIdFromSeed(pSeedCluster2));
-    const unsigned int seedId3(LArThreeDHelper::GetClusterIdFromSeed(pSeedCluster3));
-
-    // Merge-in the associated seeds
-    for (ClusterList::const_iterator iter = seeds.begin(), iterEnd = seeds.end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pSiblingSeed = *iter;
-
-        if (pSeedCluster == pSiblingSeed)
-            continue;
-
-        if (!pSiblingSeed->IsAvailable())
-        {
-            for (PfoVector::iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
-            {
-                ParticleFlowObject *pPfo = *pIter;
-
-                if (NULL == pPfo)
-                    continue;
-
-                Cluster *pSeedClusterU(NULL), *pSeedClusterV(NULL), *pSeedClusterW(NULL);
-                this->GetSeedClusters(pPfo, pSeedClusterU, pSeedClusterV, pSeedClusterW);
-
-                const bool isMatchU(pSiblingSeed == pSeedClusterU);
-                const bool isMatchV(pSiblingSeed == pSeedClusterV);
-                const bool isMatchW(pSiblingSeed == pSeedClusterW);
-
-                if (!isMatchU && !isMatchV && !isMatchW)
-                    continue;
-
-                const unsigned int clusterIdU(LArThreeDHelper::GetClusterIdFromSeed(pSeedClusterU));
-                const unsigned int clusterIdV(LArThreeDHelper::GetClusterIdFromSeed(pSeedClusterV));
-                const unsigned int clusterIdW(LArThreeDHelper::GetClusterIdFromSeed(pSeedClusterW));
-
-                const bool isSameShower(
-                    (isMatchU && ((seedId2 == clusterIdV && seedId3 == clusterIdW) || (seedId2 == clusterIdW && seedId3 == clusterIdV))) ||
-                    (isMatchV && ((seedId2 == clusterIdU && seedId3 == clusterIdW) || (seedId2 == clusterIdW && seedId3 == clusterIdU))) ||
-                    (isMatchW && ((seedId2 == clusterIdU && seedId3 == clusterIdV) || (seedId2 == clusterIdV && seedId3 == clusterIdU))) );
-
-                if (!isSameShower)
-                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT); // TODO, resolve this failure mechanism
-
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeletePfo(*this, pPfo));
-                *pIter = NULL;
-             }
-        }
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *iter, seedClusterListName, seedClusterListName));
-    }
-
-    // Merge-in the associated non-seeds
-    for (ClusterList::const_iterator iter = nonSeeds.begin(), iterEnd = nonSeeds.end(); iter != iterEnd; ++iter)
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *iter, seedClusterListName, nonSeedClusterListName));
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const pPfo, Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW) const
-{
-    if (3 != pPfo->GetClusterList().size())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    pClusterU = NULL; pClusterV = NULL; pClusterW = NULL;
+    ClusterVector seedClustersU, seedClustersV, seedClustersW;
 
     for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
     {
@@ -161,15 +109,15 @@ void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const 
 
         if (containsU && !containsV && !containsW)
         {
-            pClusterU = pCluster;
+            seedClustersU.push_back(pCluster);
         }
         else if (!containsU && containsV && !containsW)
         {
-            pClusterV = pCluster;
+            seedClustersV.push_back(pCluster);
         }
         else if (!containsU && !containsV && containsW)
         {
-            pClusterW = pCluster;
+            seedClustersW.push_back(pCluster);
         }
         else
         {
@@ -177,8 +125,93 @@ void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const 
         }
     }
 
-    if ((NULL == pClusterU) || (NULL == pClusterV) || (NULL == pClusterW))
+    if (seedClustersU.empty() || seedClustersV.empty() || seedClustersW.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    std::sort(seedClustersU.begin(), seedClustersU.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+    std::sort(seedClustersV.begin(), seedClustersV.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+    std::sort(seedClustersW.begin(), seedClustersW.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+
+    pSeedClusterU = seedClustersU.at(0);
+    pSeedClusterV = seedClustersV.at(0);
+    pSeedClusterW = seedClustersW.at(0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerRebuildingAlgorithm::RebuildThreeDShower(const ParticleFlowObject *const pPfo, Cluster *pSeedCluster, PfoVector &pfoVector,
+    ClusterList &seedMerges, ClusterList &nonSeedMerges) const
+{
+    this->GetAssociatedClusters(pSeedCluster, seedMerges, nonSeedMerges);
+
+    for (ClusterList::const_iterator iter = seedMerges.begin(), iterEnd = seedMerges.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pSiblingSeed = *iter;
+
+        if (pSeedCluster == pSiblingSeed)
+            continue;
+
+        if (pSiblingSeed->IsAvailable())
+            continue;
+
+        // First pfo in sorted container wins in the event of any mismatches with initial 2D reconstruction
+        for (PfoVector::iterator pfoIter = pfoVector.begin(), pfoIterEnd = pfoVector.end(); pfoIter != pfoIterEnd; ++pfoIter)
+        {
+            ParticleFlowObject *pAlternativePfo = *pfoIter;
+
+            if (NULL == pAlternativePfo)
+                continue;
+
+            if (pAlternativePfo->GetClusterList().count(pSiblingSeed) == 0)
+                continue;
+
+            if (pPfo == pAlternativePfo)
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveClusterFromPfo(*this, pAlternativePfo, pSiblingSeed));
+            }
+            else
+            {
+                std::cout << "Shower spines matched between multiple clusters - delete PFO with fewest hits " << std::endl;
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeletePfo(*this, pAlternativePfo));
+                *pfoIter = NULL;
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerRebuildingAlgorithm::GetAssociatedClusters(const Cluster *const pCluster, ClusterList &seedMerges, ClusterList &nonSeedMerges) const
+{
+    ClusterList siblingSeeds, nonSeeds;
+    LArThreeDHelper::GetAllSeedComponents(pCluster, siblingSeeds);
+    LArThreeDHelper::GetAllNonSeedComponents(pCluster, nonSeeds);
+
+    for (ClusterList::const_iterator iter = siblingSeeds.begin(), iterEnd = siblingSeeds.end(); iter != iterEnd; ++iter)
+    {
+        if ((pCluster != *iter) && (seedMerges.end() == seedMerges.find(*iter)))
+        {
+            seedMerges.insert(*iter);
+            this->GetAssociatedClusters(*iter, seedMerges, nonSeedMerges);
+        }
+    }
+
+    for (ClusterList::const_iterator iter = nonSeeds.begin(), iterEnd = nonSeeds.end(); iter != iterEnd; ++iter)
+    {
+        nonSeedMerges.insert(*iter);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerRebuildingAlgorithm::PerformClusterMerges(Cluster *pCluster, const ClusterList &clusterList, const std::string &clusterListName1,
+    const std::string &clusterListName2) const
+{
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        if ((*iter) != pCluster)
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *iter, clusterListName1, clusterListName2));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,7 +260,7 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
             catch (StatusCodeException &statusCodeException)
             {
                 if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
-                    throw statusCodeException.GetStatusCode();
+                    throw statusCodeException;
             }
         }
     }
@@ -294,7 +327,7 @@ void ShowerRebuildingAlgorithm::RestoreLoneShowers() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerRebuildingAlgorithm::SortByNHits(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
+bool ShowerRebuildingAlgorithm::SortPfosByNHits(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
 {
     unsigned int nHitsLhs(0);
     const ClusterList &clusterListLhs(pLhs->GetClusterList());
@@ -309,6 +342,13 @@ bool ShowerRebuildingAlgorithm::SortByNHits(const ParticleFlowObject *const pLhs
         nHitsRhs += (*iter)->GetNCaloHits();
 
     return (nHitsLhs > nHitsRhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ShowerRebuildingAlgorithm::SortClustersByNHits(const Cluster *const pLhs, const Cluster *const pRhs)
+{
+    return (pLhs->GetNCaloHits() > pRhs->GetNCaloHits());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

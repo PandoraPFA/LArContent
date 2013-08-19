@@ -214,7 +214,7 @@ public:
          *  @param  rL to receive the longitudinal coordinate
          *  @param  rT to receive the transverse coordinate
          */
-        void GetLocalCoordinates(const pandora::CartesianVector &position, float &rL, float &rT) const;
+        void GetLocalPosition(const pandora::CartesianVector &position, float &rL, float &rT) const;
 
         /**
          *  @brief  Get global coordinates for given sliding linear fit coordinates
@@ -223,7 +223,7 @@ public:
          *  @param  rT the transverse coordinate
          *  @param  position to receive the position cartesian vector
          */
-        void GetGlobalCoordinates(const float rL, const float rT, pandora::CartesianVector &position) const;
+        void GetGlobalPosition(const float rL, const float rT, pandora::CartesianVector &position) const;
 
         /**
          *  @brief  Get layer number for given sliding linear fit longitudinal coordinate
@@ -240,6 +240,20 @@ public:
         float GetL(const int layer) const;
 
         /**
+         *  @brief  Get the maximum occupied layer in the sliding fit
+         * 
+         *  @param  the maximum occupied layer in the sliding fit
+         */
+        int GetMaxLayer() const;
+
+        /**
+         *  @brief  Get the minimum occupied layer in the sliding fit
+         * 
+         *  @param  the minimum occupied layer in the sliding fit
+         */
+        int GetMinLayer() const;
+
+        /**
          *  @brief  Get sliding linear fit coordinates for a given x coordinate
          * 
          *  @param  x the x coordinate
@@ -247,15 +261,33 @@ public:
          *  @param  rT to receive the transverse coordinate
          *  @param  layer to receive the layer
          */
-        void GetLocalFitCoordinates(const float x, float &rL, float &rT, int &layer) const;
+        void GetLocalFitPosition(const float x, float &rL, float &rT, int &layer) const;
 
         /**
-         *  @brief  Get global fit coordinates for a given x coordinate
+         *  @brief  Get global fit position for a given x or z coordinate
          * 
-         *  @param  x the x coordinate
-         *  @param  position to receive the position cartesian vector
+         *  @param  p the input coordinate
+         *  @param  useX whether input coordinate is x or z
+         *  @param  position the fitted position at these coordinates
          */
-        void GetGlobalFitCoordinates(const float x, pandora::CartesianVector &position) const;
+        void GetGlobalFitPosition(const float p, const bool useX, pandora::CartesianVector &position) const;
+
+        /**
+         *  @brief  Get global fit direction for a given x or z coordinate
+         *
+         *  @param  p the input coordinate
+         *  @param  useX whether input coordinate is x or z
+         *  @param  direction the fitted direction at these coordinates
+         */
+        void GetGlobalFitDirection(const float p, const bool useX, pandora::CartesianVector &direction) const;
+
+        /**
+         *  @brief  Get projected position on global fit for a given position vector
+         * 
+         *  @param  inputPosition the input coordinate
+         *  @param  projectedPosition the projected position on the global fit for these coordinates
+         */
+        void GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
 
         /**
          *  @brief  Get global position corresponding to the fit result in minimum fit layer
@@ -309,6 +341,27 @@ public:
         const LayerFitContributionMap &GetLayerFitContributionMap() const;
 
     private:
+        /**
+         *  @brief  Get iterators for layers surrounding the specified x or z position
+         * 
+         *  @param  p the input coordinate
+         *  @param  useX whether input coordinate is x or z
+         *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
+         *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         */
+        void GetSurroundingLayerIterators(const float p, const bool useX, LayerFitResultMap::const_iterator &firstLayerIter,
+            LayerFitResultMap::const_iterator &secondLayerIter) const;
+
+        /**
+         *  @brief  Get iterators for layers surrounding the projection of a given position
+         * 
+         *  @param  position the input position vector
+         *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
+         *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         */
+        void GetSurroundingLayerIterators(const pandora::CartesianVector &position, LayerFitResultMap::const_iterator &firstLayerIter,
+            LayerFitResultMap::const_iterator &secondLayerIter) const;
+
         const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
         unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
         pandora::CartesianVector    m_axisIntercept;            ///< The axis intercept position
@@ -575,6 +628,26 @@ inline const pandora::CartesianVector &LArClusterHelper::TwoDSlidingFitResult::G
 inline const pandora::CartesianVector &LArClusterHelper::TwoDSlidingFitResult::GetAxisDirection() const
 {
     return m_axisDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArClusterHelper::TwoDSlidingFitResult::GetMaxLayer() const
+{
+    if (m_layerFitResultMap.empty())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_layerFitResultMap.rbegin()->first;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArClusterHelper::TwoDSlidingFitResult::GetMinLayer() const
+{
+    if (m_layerFitResultMap.empty())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_layerFitResultMap.begin()->first;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

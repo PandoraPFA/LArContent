@@ -21,7 +21,7 @@ namespace lar
 
 bool VertexSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) const
 {
-    if ( LArClusterHelper::GetLengthSquared(pCluster) < 4.0 * m_minSplitDisplacementSquared )
+    if (LArClusterHelper::GetLengthSquared(pCluster) < 4.f * m_minSplitDisplacementSquared)
         return false;
 
     return true;
@@ -29,10 +29,9 @@ bool VertexSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster* const pCluster, unsigned int& splitLayer )
-{    
-    // Nothing to do
-    if ( LArVertexHelper::DoesCurrentVertexExist() == false )
+StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCluster, unsigned int &splitLayer) const
+{
+    if (!LArVertexHelper::DoesCurrentVertexExist())
         return STATUS_CODE_NOT_FOUND;
 
     // Find nearest hit to vertex
@@ -40,42 +39,41 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster* const pCl
     const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
     const CartesianVector outerCentroid(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
 
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
     bool foundSplit(false);
-    CartesianVector splitPosition(0.f,0.f,0.f);
     float minDisplacementSquared(m_minSplitDisplacementSquared);
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+// CartesianVector splitPosition(0.f, 0.f, 0.f);
 
     for (OrderedCaloHitList::const_iterator iterI = orderedCaloHitList.begin(), iterEndI = orderedCaloHitList.end(); iterI != iterEndI; ++iterI)
     {
-        const unsigned int thisLayer    = iterI->first;
-        const CaloHitList *pCaloHitList = iterI->second;
+        const unsigned int thisLayer(iterI->first);
+        const CaloHitList *pCaloHitList(iterI->second);
 
         for (CaloHitList::const_iterator iterJ = pCaloHitList->begin(), iterEndJ = pCaloHitList->end(); iterJ != iterEndJ; ++iterJ)
         {
-            const CaloHit* pCaloHit = *iterJ;
+            const CaloHit *pCaloHit = *iterJ;
+            const float thisDisplacementSquared((pCaloHit->GetPositionVector() - theVertex).GetMagnitudeSquared());
 
-            float thisDisplacementSquared((pCaloHit->GetPositionVector() - theVertex).GetMagnitudeSquared());
+            if (thisDisplacementSquared > minDisplacementSquared)
+                continue;
 
-            if( thisDisplacementSquared > minDisplacementSquared )
-	        continue;
-	    
             foundSplit = false;
             minDisplacementSquared = thisDisplacementSquared;
 
-            if( (pCaloHit->GetPositionVector()-innerCentroid).GetMagnitudeSquared() < m_minSplitDisplacementSquared
-             || (pCaloHit->GetPositionVector()-outerCentroid).GetMagnitudeSquared() < m_minSplitDisplacementSquared )
-	        continue;
+            if (((pCaloHit->GetPositionVector() - innerCentroid).GetMagnitudeSquared() < m_minSplitDisplacementSquared) ||
+                ((pCaloHit->GetPositionVector() - outerCentroid).GetMagnitudeSquared() < m_minSplitDisplacementSquared) )
+            {
+                continue;
+            }
 
-            splitPosition = pCaloHit->GetPositionVector();
+            foundSplit = true;
             splitLayer = thisLayer;
-            foundSplit = true;	    
-	}
+// splitPosition = pCaloHit->GetPositionVector();
+        }
     }
 
-    if ( false == foundSplit ) 
+    if (!foundSplit)
         return STATUS_CODE_NOT_FOUND;
-
 
 // ClusterList tempList;
 // Cluster* tempCluster = (Cluster*)pCluster;
@@ -85,7 +83,6 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster* const pCl
 // PandoraMonitoringApi::AddMarkerToVisualization(&theVertex, "Vertex", RED, 1.75); 
 // PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition, "Split", BLUE, 1.75);
 // PandoraMonitoringApi::ViewEvent();
-
 
     return STATUS_CODE_SUCCESS;
 }

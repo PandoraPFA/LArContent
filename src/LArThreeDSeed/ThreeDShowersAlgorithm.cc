@@ -20,7 +20,7 @@ namespace lar
 
 void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    static const unsigned int m_layerFitHalfWindow = 40;
+    static const unsigned int m_layerFitHalfWindow = 100;
 
     // U
     LArClusterHelper::TwoDSlidingFitResult slidingFitResultU;
@@ -70,8 +70,19 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
     const float xOverlap(maxX - minX);
 
     if ((xOverlap < 0.f) || ((xOverlap / xSpanU) < 0.3f) || ((xOverlap / xSpanV) < 0.3f) || ((xOverlap / xSpanW) < 0.3f))
+    {
+std::cout << "Fail overlap criteria, xOverlap " << xOverlap << " xSpanU " << (xOverlap / xSpanU) << " xSpanV " << (xOverlap / xSpanV) << " xSpanW " << (xOverlap / xSpanW) << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU; clusterListU.insert(pClusterU);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "pClusterU", RED);
+//ClusterList clusterListV; clusterListV.insert(pClusterV);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "pClusterV", GREEN);
+//ClusterList clusterListW; clusterListW.insert(pClusterW);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "pClusterW", BLUE);
+//PandoraMonitoringApi::ViewEvent();
         return;
-
+    }
+/*
 // DEBUG
 //------------------------------------------------------------------------------------------------------------------------------------------
 std::cout << " ClusterU and sliding shower fits " << std::endl;
@@ -154,12 +165,11 @@ PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 ClusterList clusterListW1; clusterListW1.insert(pClusterW);
 PandoraMonitoringApi::VisualizeClusters(&clusterListW1, "ClusterListW", RED);
 PandoraMonitoringApi::ViewEvent();
-
-typedef std::vector<CartesianVector> CartesianVectorList;
-CartesianVectorList uList, uPosList, uNegList;
-CartesianVectorList vList, vPosList, vNegList;
-CartesianVectorList wList, wPosList, wNegList;
 //------------------------------------------------------------------------------------------------------------------------------------------
+*/
+    ShowerEdgeMap uMap, uPosMap, uNegMap;
+    ShowerEdgeMap vMap, vPosMap, vNegMap;
+    ShowerEdgeMap wMap, wPosMap, wNegMap;
 
     // Sampling in x
     const float nPointsU((xOverlap / xSpanU) * pClusterU->GetNCaloHits());
@@ -167,35 +177,25 @@ CartesianVectorList wList, wPosList, wNegList;
     const float nPointsW((xOverlap / xSpanW) * pClusterW->GetNCaloHits());
     const float xPitch(3.f * xOverlap / (nPointsU + nPointsV + nPointsW));
 
-    // Chi2 calculations
-    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
-    unsigned int nPosSamplingPoints(0), nPosMatchedSamplingPoints(0);
-    unsigned int nNegSamplingPoints(0), nNegMatchedSamplingPoints(0);
-
     for (float x = minX; x < maxX; x += xPitch)
     {
         // Fit to all hits in shower
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            slidingFitResultU.GetGlobalFitCoordinates(x, fitUVector);
-            slidingFitResultV.GetGlobalFitCoordinates(x, fitVVector);
-            slidingFitResultW.GetGlobalFitCoordinates(x, fitWVector);
+            slidingFitResultU.GetGlobalFitPosition(x, true, fitUVector);
+            slidingFitResultV.GetGlobalFitPosition(x, true, fitVVector);
+            slidingFitResultW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
             const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
             const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
 
-            ++nSamplingPoints;
-            const float deltaW(uv2w - w), deltaV(uw2v - v), deltaU(vw2u - u);
-            const float pseudoChi2(deltaW * deltaW + deltaV * deltaV + deltaU * deltaU);
-
-            if (pseudoChi2 < 6.f)
-                ++nMatchedSamplingPoints;
-uList.push_back(CartesianVector(x, 0., vw2u));
-vList.push_back(CartesianVector(x, 0., uw2v));
-wList.push_back(CartesianVector(x, 0., uv2w));
+            const unsigned int xBin((x - minX) / xPitch);
+            uMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
+            vMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., uw2v)));
+            wMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., uv2w)));
         }
         catch (StatusCodeException &)
         {
@@ -205,24 +205,19 @@ wList.push_back(CartesianVector(x, 0., uv2w));
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            positiveShowerEdgeFitU.GetGlobalFitCoordinates(x, fitUVector);
-            positiveShowerEdgeFitV.GetGlobalFitCoordinates(x, fitVVector);
-            positiveShowerEdgeFitW.GetGlobalFitCoordinates(x, fitWVector);
+            positiveShowerEdgeFitU.GetGlobalFitPosition(x, true, fitUVector);
+            positiveShowerEdgeFitV.GetGlobalFitPosition(x, true, fitVVector);
+            positiveShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
             const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
             const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
 
-            ++nPosSamplingPoints;
-            const float deltaW(uv2w - w), deltaV(uw2v - v), deltaU(vw2u - u);
-            const float pseudoChi2(deltaW * deltaW + deltaV * deltaV + deltaU * deltaU);
-
-            if (pseudoChi2 < 6.f)
-                ++nPosMatchedSamplingPoints;
-uPosList.push_back(CartesianVector(x, 0., vw2u));
-vPosList.push_back(CartesianVector(x, 0., uw2v));
-wPosList.push_back(CartesianVector(x, 0., uv2w));
+            const unsigned int xBin((x - minX) / xPitch);
+            uPosMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
+            vPosMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., uw2v)));
+            wPosMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., uv2w)));
         }
         catch (StatusCodeException &)
         {
@@ -232,24 +227,19 @@ wPosList.push_back(CartesianVector(x, 0., uv2w));
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            negativeShowerEdgeFitU.GetGlobalFitCoordinates(x, fitUVector);
-            negativeShowerEdgeFitV.GetGlobalFitCoordinates(x, fitVVector);
-            negativeShowerEdgeFitW.GetGlobalFitCoordinates(x, fitWVector);
+            negativeShowerEdgeFitU.GetGlobalFitPosition(x, true, fitUVector);
+            negativeShowerEdgeFitV.GetGlobalFitPosition(x, true, fitVVector);
+            negativeShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
             const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
             const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
 
-            ++nNegSamplingPoints;
-            const float deltaW(uv2w - w), deltaV(uw2v - v), deltaU(vw2u - u);
-            const float pseudoChi2(deltaW * deltaW + deltaV * deltaV + deltaU * deltaU);
-
-            if (pseudoChi2 < 6.f)
-                ++nNegMatchedSamplingPoints;
-uNegList.push_back(CartesianVector(x, 0., vw2u));
-vNegList.push_back(CartesianVector(x, 0., uw2v));
-wNegList.push_back(CartesianVector(x, 0., uv2w));
+            const unsigned int xBin((x - minX) / xPitch);
+            uNegMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
+            vNegMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., uw2v)));
+            wNegMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., uv2w)));
         }
         catch (StatusCodeException &)
         {
@@ -257,54 +247,48 @@ wNegList.push_back(CartesianVector(x, 0., uv2w));
     }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-std::cout << " ClusterU: predicted shower shape"  << std::endl;
-for (CartesianVectorList::const_iterator iter = uList.begin(); iter != uList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "ctrU", CYAN, 1.);
-for (CartesianVectorList::const_iterator iter = uPosList.begin(); iter != uPosList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "posU", GRAY, 1.);
-for (CartesianVectorList::const_iterator iter = uNegList.begin(); iter != uNegList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "negU", GRAY, 1.);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU2; clusterListU2.insert(pClusterU);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU2, "ClusterListU", RED);
-PandoraMonitoringApi::ViewEvent();
-std::cout << " ClusterV: predicted shower shape"  << std::endl;
-for (CartesianVectorList::const_iterator iter = vList.begin(); iter != vList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "ctrV", CYAN, 1.);
-for (CartesianVectorList::const_iterator iter = vPosList.begin(); iter != vPosList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "posV", GRAY, 1.);
-for (CartesianVectorList::const_iterator iter = vNegList.begin(); iter != vNegList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "negV", GRAY, 1.);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListV2; clusterListV2.insert(pClusterV);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV2, "ClusterListV", RED);
-PandoraMonitoringApi::ViewEvent();
-std::cout << " ClusterW: predicted shower shape"  << std::endl;
-for (CartesianVectorList::const_iterator iter = wList.begin(); iter != wList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "ctrW", CYAN, 1.);
-for (CartesianVectorList::const_iterator iter = wPosList.begin(); iter != wPosList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "posW", GRAY, 1.);
-for (CartesianVectorList::const_iterator iter = wNegList.begin(); iter != wNegList.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(*iter), "negW", GRAY, 1.);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListW2; clusterListW2.insert(pClusterW);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW2, "ClusterListW", RED);
-PandoraMonitoringApi::ViewEvent();
+    const float includedFractionU(this->GetIncludedHitFraction(pClusterU, minX, maxX, xPitch, uPosMap, uNegMap));
+//    std::cout << "ClusterU: predicted shower shape, includedFractionU " << includedFractionU << std::endl;
+//for (ShowerEdgeMap::const_iterator iter = uMap.begin(); iter != uMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrU", CYAN, 1.);
+//for (ShowerEdgeMap::const_iterator iter = uPosMap.begin(); iter != uPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posU", GRAY, 1.);
+//for (ShowerEdgeMap::const_iterator iter = uNegMap.begin(); iter != uNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negU", GRAY, 1.);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListU2; clusterListU2.insert(pClusterU);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListU2, "ClusterListU", RED);
+//PandoraMonitoringApi::ViewEvent();
+
+    const float includedFractionV(this->GetIncludedHitFraction(pClusterV, minX, maxX, xPitch, vPosMap, vNegMap));
+//    std::cout << "ClusterV: predicted shower shape, includedFractionV " << includedFractionV << std::endl;
+//for (ShowerEdgeMap::const_iterator iter = vMap.begin(); iter != vMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrV", CYAN, 1.);
+//for (ShowerEdgeMap::const_iterator iter = vPosMap.begin(); iter != vPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posV", GRAY, 1.);
+//for (ShowerEdgeMap::const_iterator iter = vNegMap.begin(); iter != vNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negV", GRAY, 1.);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListV2; clusterListV2.insert(pClusterV);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListV2, "ClusterListV", RED);
+//PandoraMonitoringApi::ViewEvent();
+
+    const float includedFractionW(this->GetIncludedHitFraction(pClusterW, minX, maxX, xPitch, wPosMap, wNegMap));
+//    std::cout << "ClusterW: predicted shower shape, includedFractionW " << includedFractionW << std::endl;
+//for (ShowerEdgeMap::const_iterator iter = wMap.begin(); iter != wMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "ctrW", CYAN, 1.);
+//for (ShowerEdgeMap::const_iterator iter = wPosMap.begin(); iter != wPosMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "posW", GRAY, 1.);
+//for (ShowerEdgeMap::const_iterator iter = wNegMap.begin(); iter != wNegMap.end(); ++iter) PandoraMonitoringApi::AddMarkerToVisualization(&(iter->second), "negW", GRAY, 1.);
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList clusterListW2; clusterListW2.insert(pClusterW);
+//PandoraMonitoringApi::VisualizeClusters(&clusterListW2, "ClusterListW", RED);
+//PandoraMonitoringApi::ViewEvent();
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-    const float matchedFraction((nSamplingPoints > 0) ? static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints) : 0.f);
-    const float posMatchedFraction((nPosSamplingPoints > 0) ? static_cast<float>(nPosMatchedSamplingPoints) / static_cast<float>(nPosSamplingPoints) : 0.f);
-    const float negMatchedFraction((nNegSamplingPoints > 0) ? static_cast<float>(nNegMatchedSamplingPoints) / static_cast<float>(nNegSamplingPoints) : 0.f);
+    if ((includedFractionU < 0.5f) || (includedFractionV < 0.5f) || (includedFractionW < 0.5f))
+        return;
 
-std::cout << " All clusters: matchedFraction " << matchedFraction << " posMatchedFraction " << posMatchedFraction << " negMatchedFraction " << negMatchedFraction << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList clusterListU; clusterListU.insert(pClusterU);
-PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-ClusterList clusterListV; clusterListV.insert(pClusterV);
-PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-ClusterList clusterListW; clusterListW.insert(pClusterW);
-PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-PandoraMonitoringApi::ViewEvent();
-
-    // m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, matchedFraction);
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, (includedFractionU + includedFractionV + includedFractionW) / 3.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ThreeDShowersAlgorithm::ExamineTensor()
 {
-    float bestOverlapResult(0.8f); // TODO Min overlap result for PFO creation
+    float bestOverlapResult(0.5f); // TODO Min overlap result for PFO creation
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
     const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
@@ -340,12 +324,59 @@ bool ThreeDShowersAlgorithm::ExamineTensor()
         return false;
 
     ProtoParticle protoParticle;
-    protoParticle.m_clusterVectorU.push_back(pBestClusterU);
-    protoParticle.m_clusterVectorV.push_back(pBestClusterV);
-    protoParticle.m_clusterVectorW.push_back(pBestClusterW);
+    protoParticle.m_clusterListU.insert(pBestClusterU);
+    protoParticle.m_clusterListV.insert(pBestClusterV);
+    protoParticle.m_clusterListW.insert(pBestClusterW);
     m_protoParticleVector.push_back(protoParticle);
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ThreeDShowersAlgorithm::GetIncludedHitFraction(const Cluster *const pCluster, const float minX, const float maxX, const float xPitch,
+    const ShowerEdgeMap &edgeMap1, const ShowerEdgeMap &edgeMap2) const
+{
+    if (((maxX - minX) < std::numeric_limits<float>::epsilon()) || (xPitch < std::numeric_limits<float>::epsilon()))
+        {std::cout << "maxX " << maxX << " minX " << minX << " xPitch " << xPitch << std::endl; throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);}
+
+    unsigned int nHitsInRange(0), nIncludedHits(0);
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+//CaloHitList included;
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hIter = iter->second->begin(), hIterEnd = iter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            CaloHit *pCaloHit = *hIter;
+            const float x(pCaloHit->GetPositionVector().GetX());
+            const float z(pCaloHit->GetPositionVector().GetZ());
+
+            if ((x < minX) || (x > maxX))
+                continue;
+
+            ++nHitsInRange;
+            const unsigned int xBin((x - minX) / xPitch);
+
+            ShowerEdgeMap::const_iterator edgeIter1 = edgeMap1.find(xBin);
+            ShowerEdgeMap::const_iterator edgeIter2 = edgeMap2.find(xBin);
+
+            if ((edgeMap1.end() == edgeIter1) || (edgeMap2.end() == edgeIter2))
+                continue;
+
+            const float maxZ(std::max(edgeIter1->second.GetZ(), edgeIter2->second.GetZ()));
+            const float minZ(std::min(edgeIter1->second.GetZ(), edgeIter2->second.GetZ()));
+
+            if ((z > minZ) && (z < maxZ))
+                {/*included.insert(pCaloHit);*/ ++nIncludedHits;}
+        }
+    }
+
+//PandoraMonitoringApi::VisualizeCaloHits(&included, "included", BLUE);
+
+    if (0 == nHitsInRange)
+        return 0.f;
+
+    return (static_cast<float>(nIncludedHits) / static_cast<float>(nHitsInRange));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

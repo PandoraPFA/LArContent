@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/include/LArUtility/TransverseClusteringAlgorithm.h
+ *  @file   LArContent/include/LArUtility/TwoDPreparationAlgorithm.h
  * 
- *  @brief  Header file for the cluster merging algorithm class.
+ *  @brief  Header file for the two dimensional preparation algorithm class.
  * 
  *  $Log: $
  */
@@ -32,10 +32,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_clusterListName;  ///< 
-    std::string     m_caloHitListName;  ///< 
-    std::string     m_vertexName;       ///<
-
+    std::string     m_clusterListName;  ///< The cluster list name to set as the current cluster list
+    std::string     m_caloHitListName;  ///< The calo hit list name to set as the current calo hit list
+    std::string     m_vertexName;       ///< The vertex name to set as the current vertex
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

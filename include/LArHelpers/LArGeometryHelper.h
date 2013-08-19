@@ -117,6 +117,7 @@ public:
      *  @param  positionU input position in the U view
      *  @param  positionV input position in the V view
      *  @param  positionW input position in the W view 
+     *
      *  @param  positionU output position in the U view
      *  @param  positionV output position in the V view
      *  @param  positionW output position in the W view
@@ -136,9 +137,11 @@ public:
      *  @param  position2 the position in the second view
      *
      *  @param  position3D output position in 3D
+     *  @param  chi-squared
      */
     static void MergeTwoPositions3D(const pandora::HitType view1, const pandora::HitType view2,
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D);
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, 
+        pandora::CartesianVector &position3D, float &chiSquared);
 
     /**
      *  @brief  Merge 2D positions from three views to give unified 3D position
@@ -151,10 +154,11 @@ public:
      *  @param  position3 the position in the third view
      *
      *  @param  position3D output position in 3D
+     *  @param  chi-squared
      */
     static void MergeThreePositions3D(const pandora::HitType view1, const pandora::HitType view2, const pandora::HitType view3,
         const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, const pandora::CartesianVector &position3, 
-        pandora::CartesianVector &position3D);
+        pandora::CartesianVector &position3D, float &chiSquared);
 
 
     /**

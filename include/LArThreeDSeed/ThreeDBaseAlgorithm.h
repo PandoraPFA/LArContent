@@ -41,6 +41,11 @@ protected:
     virtual void SelectInputClusters();
 
     /**
+     *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters
+     */
+    virtual void PreparationStep();
+
+    /**
      *  @brief  Calculate cluster overlap result and store in tensor
      * 
      *  @param  pClusterU address of U view cluster
@@ -77,9 +82,9 @@ protected:
     class ProtoParticle
     {
     public:
-        pandora::ClusterVector  m_clusterVectorU;               ///< List of 2D U clusters in a 3D proto particle
-        pandora::ClusterVector  m_clusterVectorV;               ///< List of 2D V clusters in a 3D proto particle
-        pandora::ClusterVector  m_clusterVectorW;               ///< List of 2D W clusters in a 3D proto particle
+        pandora::ClusterList    m_clusterListU;                 ///< List of 2D U clusters in a 3D proto particle
+        pandora::ClusterList    m_clusterListV;                 ///< List of 2D V clusters in a 3D proto particle
+        pandora::ClusterList    m_clusterListW;                 ///< List of 2D W clusters in a 3D proto particle
     };
 
     typedef std::vector<ProtoParticle> ProtoParticleVector;

@@ -75,6 +75,13 @@ void ThreeDBaseAlgorithm<T>::SelectInputClusters()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
+void ThreeDBaseAlgorithm<T>::PreparationStep()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
 void ThreeDBaseAlgorithm<T>::CreateThreeDParticles()
 {
     const PfoList *pPfoList = NULL; std::string pfoListName;
@@ -89,9 +96,9 @@ void ThreeDBaseAlgorithm<T>::CreateThreeDParticles()
         pfoParameters.m_mass = 0.f;
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = CartesianVector(0., 0., 0.);
-        pfoParameters.m_clusterList.insert(iter->m_clusterVectorU.begin(), iter->m_clusterVectorU.end());
-        pfoParameters.m_clusterList.insert(iter->m_clusterVectorV.begin(), iter->m_clusterVectorV.end());
-        pfoParameters.m_clusterList.insert(iter->m_clusterVectorW.begin(), iter->m_clusterVectorW.end());
+        pfoParameters.m_clusterList.insert(iter->m_clusterListU.begin(), iter->m_clusterListU.end());
+        pfoParameters.m_clusterList.insert(iter->m_clusterListV.begin(), iter->m_clusterListV.end());
+        pfoParameters.m_clusterList.insert(iter->m_clusterListW.begin(), iter->m_clusterListW.end());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters));
     }
 
@@ -111,9 +118,9 @@ void ThreeDBaseAlgorithm<T>::UpdateTensor()
 
     for (typename ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
     {
-        usedClusters.insert(iter->m_clusterVectorU.begin(), iter->m_clusterVectorU.end());
-        usedClusters.insert(iter->m_clusterVectorV.begin(), iter->m_clusterVectorV.end());
-        usedClusters.insert(iter->m_clusterVectorW.begin(), iter->m_clusterVectorW.end());
+        usedClusters.insert(iter->m_clusterListU.begin(), iter->m_clusterListU.end());
+        usedClusters.insert(iter->m_clusterListV.begin(), iter->m_clusterListV.end());
+        usedClusters.insert(iter->m_clusterListW.begin(), iter->m_clusterListW.end());
     }
 
     for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
@@ -162,6 +169,7 @@ StatusCode ThreeDBaseAlgorithm<T>::Run()
         }
 
         this->SelectInputClusters();
+        this->PreparationStep();
 
         // Loop over selected modified input clusters and allow derived algorithm to populate tensor
         for (ClusterVector::const_iterator iterU = m_clusterVectorU.begin(), iterUEnd = m_clusterVectorU.end(); iterU != iterUEnd; ++iterU)

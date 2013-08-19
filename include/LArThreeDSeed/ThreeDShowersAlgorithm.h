@@ -35,6 +35,22 @@ public:
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
     bool ExamineTensor();
+
+    typedef std::map<unsigned int, pandora::CartesianVector> ShowerEdgeMap;
+
+    /**
+     *  @brief  GetIncludedHitFraction
+     * 
+     *  @param  pCluster
+     *  @param  minX
+     *  @param  maxX
+     *  @param  xPitch
+     *  @param  edgeMap1
+     *  @param  edgeMap2
+     */
+    float GetIncludedHitFraction(const pandora::Cluster *const pCluster, const float minX, const float maxX, const float xPitch,
+        const ShowerEdgeMap &edgeMap1, const ShowerEdgeMap &edgeMap2) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 

@@ -8,9 +8,9 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
-#include "LArClusterAssociation/ClusterExtensionAlgorithm.h"
 #include "LArClusterAssociation/IsolatedHitMergingAlgorithm.h"
 #include "LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
+#include "LArClusterAssociation/TrackExtensionAlgorithm.h"
 #include "LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArClustering/ClusterCreationAlgorithm.h"
 #include "LArClustering/ClusteringParentAlgorithm.h"
@@ -26,7 +26,8 @@
 #include "LArReclustering/ShowerRebuildingAlgorithm.h"
 #include "LArReclustering/TrackSplittingAlgorithm.h"
 #include "LArThreeDSeed/ThreeDShowersAlgorithm.h"
-#include "LArThreeDSeed/ThreeDTracksAlgorithm.h"
+#include "LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.h"
+#include "LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
 #include "LArTwoDSeed/SeedConsolidationAlgorithm.h"
 #include "LArTwoDSeed/SeedFindingAlgorithm.h"
@@ -54,7 +55,6 @@ class LArContent
 {
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
-        d("LArClusterExtension",                    lar::ClusterExtensionAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
@@ -70,12 +70,14 @@ public:
         d("LArShowerRebuilding",                    lar::ShowerRebuildingAlgorithm::Factory)                                    \
         d("LArTrackSplitting",                      lar::TrackSplittingAlgorithm::Factory)                                      \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
-        d("LArThreeDTracks",                        lar::ThreeDTracksAlgorithm::Factory)                                        \
+        d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
+        d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
         d("LArSeedFinding",                         lar::SeedFindingAlgorithm::Factory)                                         \
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
+        d("LArTrackExtension",                      lar::TrackExtensionAlgorithm::Factory)                                      \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
