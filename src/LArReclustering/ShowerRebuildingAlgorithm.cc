@@ -30,7 +30,7 @@ StatusCode ShowerRebuildingAlgorithm::Run()
     // Move any seed showers that did not have promising spines back into the shower seed list
     this->RestoreLoneShowers();
 
-    LArThreeDHelper::RemoveAllStoredClusters();
+    LArThreeDHelper::Reset();
 
     return STATUS_CODE_SUCCESS;
 }

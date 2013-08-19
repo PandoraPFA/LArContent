@@ -81,7 +81,7 @@ public:
     /**
      *  @brief  Remove all stored clusters from the helper class
      */
-    static void RemoveAllStoredClusters();
+    static void Reset();
 
     /**
      *  @brief  Read the lar particle id settings

@@ -86,7 +86,7 @@ void LArThreeDHelper::GetAllNonSeedComponents(const Cluster *const pSeedCluster,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArThreeDHelper::RemoveAllStoredClusters()
+void LArThreeDHelper::Reset()
 {
     m_seedClusterToIdMap.clear();
     m_idToSeedClusterListMap.clear();
