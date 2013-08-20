@@ -35,8 +35,11 @@ private:
     pandora::StatusCode FindBestSplitLayer(const pandora::Cluster *const pCluster, unsigned int &splitLayer) const;
     bool IsPossibleSplit(const pandora::Cluster *const pCluster) const;
 
-    float   m_minSplitDisplacement;
-    float   m_minSplitDisplacementSquared;  
+    float   m_splitDisplacement;
+    float   m_splitDisplacementSquared;  
+
+    float   m_vertexDisplacement;
+    float   m_vertexDisplacementSquared;  
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
