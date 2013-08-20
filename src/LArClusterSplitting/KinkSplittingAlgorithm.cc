@@ -44,19 +44,19 @@ bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode KinkSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCluster, unsigned int &splitLayer) const
+StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
 {
     LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
-    LArClusterHelper::LArTwoDSlidingXZFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);
 
-    return twoDSlidingFitResult.FindLargestScatter(splitLayer);
+    return twoDSlidingFitResult.FindLargestScatter(splitPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_slidingFitLayerHalfWindow = 20;
+    m_slidingFitLayerHalfWindow = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitLayerHalfWindow", m_slidingFitLayerHalfWindow));
 

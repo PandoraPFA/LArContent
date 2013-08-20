@@ -33,28 +33,30 @@ StatusCode ClusterSplittingAlgorithm::Run()
         if (!this->IsPossibleSplit(pCluster))
             continue;
 
-        unsigned int splitLayer(std::numeric_limits<unsigned int>::max());
+        CartesianVector splitPosition(0.f, 0.f, 0.f);
 
-        if (STATUS_CODE_SUCCESS != this->FindBestSplitLayer(pCluster,splitLayer))
+        if (STATUS_CODE_SUCCESS != this->FindBestSplitPosition(pCluster,splitPosition))
             continue;
+
+        const unsigned int splitLayer(GeometryHelper::GetPseudoLayer(splitPosition));
 
         if ((splitLayer <= pCluster->GetInnerPseudoLayer()) || (splitLayer >= pCluster->GetOuterPseudoLayer()))
             continue;
 
-// const CartesianVector& bestPosition = pCluster->GetCentroid(splitLayer);
 // Cluster* tempCluster = (Cluster*)(pCluster);
 // ClusterList tempList;
 // tempList.insert(tempCluster);
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::VisualizeClusters(&tempList, "Cluster", GREEN);
-// PandoraMonitoringApi::AddMarkerToVisualization(&bestPosition, "Split", RED, 1.75);
+// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition, "Split", RED, 1.75);
 // PandoraMonitoringApi::ViewEvent();
         ClusterSplittingList clusterSplittingList;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pCluster, splitLayer, clusterSplittingList));
 
-// ClusterList tempList(clusterSplittingList.begin(),clusterSplittingList.end());
+// ClusterList tempSplitList(clusterSplittingList.begin(),clusterSplittingList.end());
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "SplitCluster", AUTOITER);
+// PandoraMonitoringApi::VisualizeClusters(&tempSplitList, "SplitCluster", AUTOITER);
+// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition, "SplitPosition", BLACK, 1.75);
 // PandoraMonitoringApi::ViewEvent();
         internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
         *iter = NULL;
@@ -67,6 +69,8 @@ StatusCode ClusterSplittingAlgorithm::Run()
 
 StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, const unsigned int splitLayer, ClusterSplittingList &clusterSplittingList) const
 {
+    // TODO: Use projection of split position on cluster trajectory rather than layer number (i.e. use rL, not Z).
+
     // Begin cluster fragmentation operations
     ClusterList clusterList;
     clusterList.insert(pCluster);

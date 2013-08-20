@@ -797,7 +797,7 @@ float LArClusterHelper::TwoDSlidingFitResult::GetSlidingFitWidth() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned int &largestScatterLayer) const
+StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(CartesianVector &largestScatterPosition) const
 {
     // Bail out if track is too short
     const unsigned int nFitLayers(m_layerFitResultMap.size());
@@ -845,10 +845,8 @@ StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned i
     if (m_layerFitResultMap.end() == splitLayerIter)
         return STATUS_CODE_NOT_FOUND;
 
-    CartesianVector splitPosition(0.f, 0.f, 0.f);
-    this->GetGlobalPosition(splitLayerIter->second.GetL(), splitLayerIter->second.GetFitT(), splitPosition);
-    largestScatterLayer = GeometryHelper::GetPseudoLayer(splitPosition);
-
+    this->GetGlobalPosition(splitLayerIter->second.GetL(), splitLayerIter->second.GetFitT(), largestScatterPosition);
+    
     return STATUS_CODE_SUCCESS;
 }
 

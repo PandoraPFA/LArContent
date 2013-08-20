@@ -36,12 +36,12 @@ protected:
     virtual pandora::StatusCode SplitCluster(pandora::Cluster *const pCluster, const unsigned int splitLayer, ClusterSplittingList &clusterSplittingList) const;
 
     /**
-     *  @brief  Find layer at which cluster should be split
+     *  @brief  Find position at which cluster should be split
      * 
      *  @param  pCluster address of the cluster
-     *  @param  splitLayer the layer at which to perform the split
+     *  @param  splitPosition the layer at which to perform the split
      */
-    virtual pandora::StatusCode FindBestSplitLayer(const pandora::Cluster *const pCluster, unsigned int &splitLayer) const = 0;
+    virtual pandora::StatusCode FindBestSplitPosition(const pandora::Cluster *const pCluster, pandora::CartesianVector &splitPosition) const = 0; 
 
    /**
      *  @brief  Whether a cluster is a split candidate

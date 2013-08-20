@@ -30,9 +30,10 @@ bool VertexSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) co
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 /*
 // KEEP OLD METHOD FOR NOW
-StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCluster, unsigned int &splitLayer) const
+StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
 {
 
     if (!LArVertexHelper::DoesCurrentVertexExist())
@@ -49,7 +50,6 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCl
 
     for (OrderedCaloHitList::const_iterator iterI = orderedCaloHitList.begin(), iterEndI = orderedCaloHitList.end(); iterI != iterEndI; ++iterI)
     {
-        const unsigned int thisLayer(iterI->first);
         const CaloHitList *pCaloHitList(iterI->second);
 
         for (CaloHitList::const_iterator iterJ = pCaloHitList->begin(), iterEndJ = pCaloHitList->end(); iterJ != iterEndJ; ++iterJ)
@@ -70,7 +70,7 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCl
             }
 
             foundSplit = true;
-            splitLayer = thisLayer;
+            splitPosition = pCaloHit->GetPositionVector();
         }
     }
 
@@ -83,21 +83,18 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCluster, unsigned int &splitLayer) const
+StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
 {
-    if (!LArVertexHelper::DoesCurrentVertexExist())
-        return STATUS_CODE_NOT_FOUND;
-
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
-
-    // Project vertex onto sliding window fit
-    LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, 10, twoDSlidingFitResult);  
-
     bool foundSplit(false);
-    CartesianVector splitPosition(0.f,0.f,0.f);
 
-    try{        
+    try{
+        // Get current vertex 
+        const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
+
+        // Project vertex onto sliding window fit
+        LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
+        LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);  
+
         const CartesianVector innerVertex(twoDSlidingFitResult.GetGlobalMinLayerPosition());
         const CartesianVector outerVertex(twoDSlidingFitResult.GetGlobalMaxLayerPosition());
 
@@ -111,34 +108,37 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCl
              vertexDisplacementSquared > m_vertexDisplacementSquared &&
              splitDisplacementSquared < vertexDisplacementSquared )
 	{
-	    splitLayer = GeometryHelper::GetPseudoLayer(splitPosition);
 	    foundSplit = true;
 	}
     }
     catch (StatusCodeException &)
     {
+        
     }
 
     if (!foundSplit)
         return STATUS_CODE_NOT_FOUND;
 
-ClusterList tempList;
-Cluster* tempCluster = (Cluster*)pCluster;
-tempList.insert(tempCluster);
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&tempList, "Cluster", GREEN);
-PandoraMonitoringApi::AddMarkerToVisualization(&theVertex, "Vertex", RED, 1.75); 
-PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition, "Split", BLUE, 1.75);
-PandoraMonitoringApi::ViewEvent();
+// ClusterList tempList;
+// Cluster* tempCluster = (Cluster*)pCluster;
+// tempList.insert(tempCluster);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&tempList, "Cluster", GREEN);
+// PandoraMonitoringApi::AddMarkerToVisualization(&theVertex, "Vertex", RED, 1.75); 
+// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition, "Split", BLUE, 1.75);
+// PandoraMonitoringApi::ViewEvent();
 
     return STATUS_CODE_SUCCESS;
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode VertexSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_slidingFitLayerHalfWindow = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitLayerHalfWindow", m_slidingFitLayerHalfWindow));
+
     m_splitDisplacement = 4.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SplitDisplacement", m_splitDisplacement));
