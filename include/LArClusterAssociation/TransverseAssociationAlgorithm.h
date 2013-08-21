@@ -47,23 +47,24 @@ private:
         /**
          *  @brief  Constructor
          * 
-         *  @param  
+         *  @param  pSeedCluster
+         *  @param  associatedClusters
          */
-        LArTransverseCluster(const pandora::Cluster *pSeedCluster, const pandora::ClusterVector &associatedClusters);
+        LArTransverseCluster(pandora::Cluster *pSeedCluster, const pandora::ClusterVector &associatedClusters);
 
         /**
-         *  @brief  Get the number of clusters
+         *  @brief  Constructor
          * 
-         *  @return the number of clusters
+         *  @return the address of the seed cluster
          */
-        const unsigned int GetNumClusters() const;
+        pandora::Cluster *GetSeedCluster() const;
 
         /**
-         *  @brief  Get the address of the central cluster
+         *  @brief  Get the associated cluster vector
          * 
-         *  @return the address of the central cluster
+         *  @return the associated cluster vector
          */
-        const pandora::Cluster *GetCluster(unsigned int icluster = 0) const;
+        const pandora::ClusterVector &GetAssociatedClusters() const;
 
         /**
          *  @brief  Get the inner vertex position
@@ -84,110 +85,121 @@ private:
          * 
          *  @return the direction
          */
-        const pandora::CartesianVector &GetDirection() const;    
-
-        /**
-         *  @brief  Get the RMS
-         * 
-         *  @return the RMS
-         */
-        const float GetRms() const;
+        const pandora::CartesianVector &GetDirection() const;
 
     private:
+        pandora::Cluster           *m_pSeedCluster;
+        pandora::ClusterVector      m_associatedClusters;
         pandora::CartesianVector    m_innerVertex;
         pandora::CartesianVector    m_outerVertex;
         pandora::CartesianVector    m_direction;
-        pandora::ClusterVector      m_clusterVector;
-        float                       m_rms;
     };
 
-    typedef std::vector<LArTransverseCluster> LArTransverseClusterList;
-    typedef std::map<const pandora::Cluster*, LArTransverseCluster> LArTransverseClusterMap;
-    typedef std::map<pandora::Cluster*, pandora::ClusterList> LArClusterMergeMap; // TODO: Put this somewhere more central...
+    typedef std::vector<LArTransverseCluster*> TransverseClusterList;
+    typedef std::map<pandora::Cluster*, pandora::ClusterList> LArClusterMergeMap;
 
     /**
-     *  @brief Separate clusters into transverse and longitudinal categories
+     *  @brief  Separate transverse and longitudinal clusters, transverse clusters are either short or not longitudinal
      * 
-     *  @param inputClusters input vector of clusters
-     *  @param transverseClusters output vector of transverse or small clusters (small clusters are used to build new transverse clusters)
-     *  @param longitudinalClusters output vector of longitudinal and large clusters
+     *  @param  inputClusters input vector of clusters
+     *  @param  transverseClusters output vector of transverse or small clusters (small clusters are used to build new transverse clusters)
+     *  @param  longitudinalClusters output vector of longitudinal and large clusters
      */
     void GetTransverseClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &transverseClusters, pandora::ClusterVector &longitudinalClusters) const;
 
     /**
-     *  @brief Select clean set of transverse clusters
+     *  @brief  Separate transverse clusters into seed and non-seed types, seed clusters are not already associated with a longitudinal cluster
      * 
-     *  @param transverseClusters input vector of selected transverse clusters
-     *  @param longitudinalClusters input vector of selected longitudinal clusters
-     *  @param seedClusters output vector of transverse clusters selected as clean clusters
-     *  @param nonSeedClusters output vector of transverse clusters not selected as clean clusters
+     *  @param  transverseClusters input vector of selected transverse clusters
+     *  @param  longitudinalClusters input vector of selected longitudinal clusters
+     *  @param  seedClusters output vector of transverse clusters selected as clean clusters
+     *  @param  nonSeedClusters output vector of transverse clusters not selected as clean clusters
      */
     void GetSeedClusters(const pandora::ClusterVector &transverseClusters, const pandora::ClusterVector &longitudinalClusters, pandora::ClusterVector &seedClusters, pandora::ClusterVector &nonSeedClusters) const;
 
     /**
-     *  @brief Find the clusters that are transversely associated with a target cluster
+     *  @brief  Use seed clusters to create transverse cluster objects, these are protoclusters with a direction and inner/outer vertices
+     *
+     *  @param  seedClusters input vector of clean transverse clusters
+     *  @param  transverseClusters input vector of all transverse clusters
+     *  @param  transverseClusterVector the output vector of transverse cluster objects
+     */
+    void FillTransverseClusterList(const pandora::ClusterVector &seedClusters, const pandora::ClusterVector &transverseClusters, TransverseClusterList &transverseClusterList) const;
+
+    /**
+     *  @brief  Find the clusters that are transversely associated with a target cluster
      * 
-     *  @param pCluster the target cluster
-     *  @param inputClusters input vector of clean clusters for this event
-     *  @param outputClusters output vector of clusters transversely associated with target cluster
+     *  @param  pCluster the target cluster
+     *  @param  inputClusters input vector of clean clusters for this event
+     *  @param  outputClusters output vector of clusters transversely associated with target cluster
      */
-    void GetTransverseAssociatedClusters(const pandora::Cluster *const pCluster, const pandora::ClusterVector &inputClusters, pandora::ClusterVector &outputClusters) const;
+    void GetTransverseAssociatedClusters(pandora::Cluster *const pCluster, const pandora::ClusterVector &inputClusters, pandora::ClusterVector &outputClusters) const;
 
     /**
-     *  @brief Build a map of transverse cluster objects
+     *  @brief  Define whether clusters are transversely associated
      *
-     *  @param seedClusters input vector of clean transverse clusters
-     *  @param transverseClusters input vector of all transverse clusters
-     *  @param transverseClusterMap output map of transverse cluster objects 
-     */
-    void FillTransverseClusterMap(const pandora::ClusterVector &seedClusters, const pandora::ClusterVector &transverseClusters, LArTransverseClusterMap &transverseClusterMap) const;
-
-    /**
-     *  @brief Build the map of forward/backward associations between clusters
-     *
-     *  @param transverseClusterMap input map of transverse cluster objects 
-     *  @param clusterAssociationMap output map of forward/backward associations
-     */
-    void FillClusterAssociationMap(const LArTransverseClusterMap &transverseClusterMap, ClusterAssociationMap &clusterAssociationMap) const;
-
-    /**
-     *  @brief Define whether two transverse cluster objects are associated
-     *
-     *  @param transCluster1 the inner cluster
-     *  @param transCluster2 the outer cluster
-     *
-     *  @return boolean
-     */
-    bool IsTransverseAssociated(const LArTransverseCluster &transCluster1, const LArTransverseCluster &transCluster2) const;
-
-    /**
-     *  @brief Define whether a transverse cluster object is associated with the vertex position of a second transverse cluster object
-     *
-     *  @param theCluster the target cluster
-     *  @param theVertex the vertex position
-     *
-     *  @return boolean
-     */
-    bool IsTransverseAssociated(const LArTransverseCluster &theCluster, const pandora::CartesianVector& theVertex) const;
-
-    /**
-     *  @brief Define whether clusters are transversely associated
-     *
-     *  @param pCluster1 the first cluster
-     *  @param pCluster2 the second cluster
+     *  @param  pCluster1 the first cluster
+     *  @param  pCluster2 the second cluster
      *
      *  @return boolean
      */
     bool IsTransverseAssociated(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     /**
-     *  @brief Get minimum and maximum X coordinates for a given cluster
+     *  @brief  Use transverse cluster objects to define forward/backward associations
      *
-     *  @param pCluster the input cluster
-     *  @param minX the minimum X position
-     *  @param maxX the maximum X position
+     *  @param  transverseClusterList input list of transverse cluster objects 
+     *  @param  forwardMergeMap
+     *  @param  backwardMergeMap
      */
-    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, float& minX, float& maxX) const;
+    void FillClusterMergeMaps(const TransverseClusterList &transverseClusterList, LArClusterMergeMap &forwardMergeMap,
+        LArClusterMergeMap &backwardMergeMap) const;
+
+    /**
+     *  @brief  Use cluster merge maps to fill the final cluster association map
+     *
+     *  @param  forwardMergeMap
+     *  @param  backwardMergeMap
+     *  @param  clusterAssociationMap output map of forward/backward associations
+     */
+    void FillClusterAssociationMap(LArClusterMergeMap &forwardMergeMap, LArClusterMergeMap &backwardMergeMap,
+        ClusterAssociationMap &clusterAssociationMap) const;
+
+    /**
+     *  @brief  Prune associations from the cluster association map
+     * 
+     *  @param  clusterAssociationMap the cluster association map
+     */
+    void PruneAssociations(ClusterAssociationMap &clusterAssociationMap) const;
+
+    /**
+     *  @brief  Define whether two transverse cluster objects are associated
+     *
+     *  @param  pTransverseCluster1 the inner cluster
+     *  @param  pTransverseCluster2 the outer cluster
+     *
+     *  @return boolean
+     */
+    bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster1, const LArTransverseCluster *const pTransverseCluster2) const;
+
+    /**
+     *  @brief  Define whether a transverse cluster object is associated with the vertex position of a second transverse cluster object
+     *
+     *  @param  theCluster the target cluster
+     *  @param  theVertex the vertex position
+     *
+     *  @return boolean
+     */
+    bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const pandora::CartesianVector &theVertex) const;
+
+    /**
+     *  @brief  Get minimum and maximum X coordinates for a given cluster
+     *
+     *  @param  pCluster the input cluster
+     *  @param  minX the minimum X position
+     *  @param  maxX the maximum X position
+     */
+    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, float &minX, float &maxX) const;
 
     unsigned int   m_clusterCaloHits;               ///< 
 
@@ -207,16 +219,16 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const unsigned int TransverseAssociationAlgorithm::LArTransverseCluster::GetNumClusters() const
+inline pandora::Cluster *TransverseAssociationAlgorithm::LArTransverseCluster::GetSeedCluster() const
 {
-    return m_clusterVector.size();
+    return m_pSeedCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster *TransverseAssociationAlgorithm::LArTransverseCluster::GetCluster(unsigned int icluster) const
+inline const pandora::ClusterVector &TransverseAssociationAlgorithm::LArTransverseCluster::GetAssociatedClusters() const
 {
-    return m_clusterVector.at(icluster);
+    return m_associatedClusters;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,13 +250,6 @@ inline const pandora::CartesianVector &TransverseAssociationAlgorithm::LArTransv
 inline const pandora::CartesianVector &TransverseAssociationAlgorithm::LArTransverseCluster::GetDirection() const
 {
     return m_direction;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const float TransverseAssociationAlgorithm::LArTransverseCluster::GetRms() const
-{
-    return m_rms;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
