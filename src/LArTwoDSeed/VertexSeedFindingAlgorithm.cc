@@ -21,33 +21,21 @@ namespace lar
 
 StatusCode VertexSeedFindingAlgorithm::Run()
 {
-    // Store details of cluster inner and outer vertices
+    // Get current cluster list
     const ClusterList *pInputClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pInputClusterList));
 
+
+    // Get list of clean clusters
     ClusterVector clusterVector;
     this->GetListOfCleanClusters(pInputClusterList, clusterVector);
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
 
-    // Create list of clusters associated with the vertex
+
+    // Identify clusters associated with vertex 
     ClusterList vertexSeedClusterList;
-
-    const CartesianVector eventVertex(LArVertexHelper::GetCurrentVertex());
-
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
-    {
-        LArPointingCluster pointingCluster(*iter);
-
-        if (LArPointingClusterHelper::IsNode(eventVertex, pointingCluster.GetInnerVertex().GetPosition()) ||
-            LArPointingClusterHelper::IsNode(eventVertex, pointingCluster.GetOuterVertex().GetPosition()) ||
-            LArPointingClusterHelper::IsEmitted(eventVertex, pointingCluster.GetInnerVertex()) ||
-            LArPointingClusterHelper::IsEmitted(eventVertex, pointingCluster.GetOuterVertex()))
-        {
-            vertexSeedClusterList.insert(*iter);
-        }
-    }
-
-    this->MakeVertexSeedMerges(eventVertex, vertexSeedClusterList);
+    this->GetListOfVertexClusters(clusterVector,vertexSeedClusterList);
+    
 
     // Cluster list management
     ClusterList nonSeedClusterList(*pInputClusterList);
@@ -79,17 +67,11 @@ void VertexSeedFindingAlgorithm::GetListOfCleanClusters(const ClusterList *const
     {
         Cluster *pCluster = *iter;
 
-        const unsigned int innerPseudoLayer(pCluster->GetInnerPseudoLayer());
-        const unsigned int outerPseudoLayer(pCluster->GetOuterPseudoLayer());
+        if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
+	    continue;
 
-        if (outerPseudoLayer - innerPseudoLayer < m_minClusterLayers)
-            continue;
-
-        const CartesianVector innerCentroid(pCluster->GetCentroid(innerPseudoLayer));
-        const CartesianVector outerCentroid(pCluster->GetCentroid(outerPseudoLayer));
-
-        if ((outerCentroid - innerCentroid).GetMagnitudeSquared() < m_minClusterLengthSquared)
-            continue;
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+	    continue;
 
         clusterVector.push_back(pCluster);
     }
@@ -97,8 +79,146 @@ void VertexSeedFindingAlgorithm::GetListOfCleanClusters(const ClusterList *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSeedFindingAlgorithm::MakeVertexSeedMerges(const CartesianVector &eventVertex, ClusterList &vertexSeedClusterList) const
+void VertexSeedFindingAlgorithm::GetListOfVertexClusters(const ClusterVector &clusterVector, ClusterList& seedClusterList) const
 {
+    // Get the current vertex
+    const CartesianVector eventVertex(LArVertexHelper::GetCurrentVertex());
+
+
+    // Generate a map of pointing clusters 
+    LArPointingClusterMap pointingClusterMap;
+
+    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+        pointingClusterMap.insert( std::pair<Cluster*,LArPointingCluster>(*iter,LArPointingCluster(*iter)) );
+
+
+    // Identify nodes and emissions
+    LArPointingClusterVertexList emissions, associations, seeds;
+
+    for (LArPointingClusterMap::const_iterator iter = pointingClusterMap.begin(), iterEnd = pointingClusterMap.end(); iter != iterEnd; ++iter)
+    {
+        const LArPointingCluster& pointingCluster = iter->second;
+        const LArPointingCluster::Vertex& innerVertex = pointingCluster.GetInnerVertex();
+        const LArPointingCluster::Vertex& outerVertex = pointingCluster.GetOuterVertex();
+
+        const bool possibleNode( pointingCluster.GetCluster()->GetNCaloHits() >= m_minClusterHitsNode );
+        const bool possibleEmission( pointingCluster.GetCluster()->GetNCaloHits() >= m_minClusterHitsEmission );
+
+        const float innerDisplacementSquared( (eventVertex - innerVertex.GetPosition()).GetMagnitudeSquared() );
+        const float outerDisplacementSquared( (eventVertex - outerVertex.GetPosition()).GetMagnitudeSquared() );
+
+        if (innerDisplacementSquared < outerDisplacementSquared)
+	{
+	    if (LArPointingClusterHelper::IsNode(eventVertex,innerVertex))
+	    {
+	        if (possibleNode) seeds.push_back(innerVertex);
+	    }
+            else if(LArPointingClusterHelper::IsEmission(eventVertex,innerVertex))
+	    {
+	        if (possibleEmission) emissions.push_back(innerVertex);
+	    }
+	}
+        else
+	{
+            if (LArPointingClusterHelper::IsNode(eventVertex,outerVertex))
+	    {
+	        if (possibleNode) seeds.push_back(outerVertex);
+	    }
+            else if(LArPointingClusterHelper::IsEmission(eventVertex,outerVertex))
+	    {
+	        if (possibleEmission) emissions.push_back(outerVertex);
+	    }
+	} 
+    }
+
+    associations.insert(associations.end(), seeds.begin(), seeds.end());
+    associations.insert(associations.end(), emissions.begin(), emissions.end());
+
+    // Sort through the list of emissions
+    for (LArPointingClusterVertexList::const_iterator iterI = emissions.begin(), iterEndI = emissions.end(); iterI != iterEndI; ++iterI)
+    {
+        const LArPointingCluster::Vertex& vertexI = *iterI;
+
+        bool isSeed(true);
+
+        for (LArPointingClusterVertexList::const_iterator iterJ = associations.begin(), iterEndJ = associations.end(); iterJ != iterEndJ; ++iterJ)
+        {
+            const LArPointingCluster::Vertex& vertexJ = *iterJ;
+
+            if (vertexI.GetCluster() == vertexJ.GetCluster())
+	        continue;
+
+            // Check proximity between vertexI and vertexJ
+            if (2 * vertexI.GetCluster()->GetOrderedCaloHitList().size() < vertexJ.GetCluster()->GetOrderedCaloHitList().size() &&
+                (vertexI.GetPosition() - vertexJ.GetPosition()).GetMagnitudeSquared() > 5.f * 5.f &&
+                LArClusterHelper::GetClosestDistance(vertexI.GetPosition(),vertexJ.GetCluster()) < 2.5 )
+	    {
+                isSeed = false;
+                break;
+	    }
+
+            // Check proximity between vertexI and endJ
+            LArPointingClusterMap::const_iterator lookupJ = pointingClusterMap.find(vertexJ.GetCluster());
+
+            if ( lookupJ == pointingClusterMap.end() ) 
+                throw pandora::StatusCodeException(STATUS_CODE_FAILURE);
+
+            const LArPointingCluster& clusterJ = lookupJ->second;
+            const LArPointingCluster::Vertex& endJ = vertexJ.IsInner() ? clusterJ.GetOuterVertex() : clusterJ.GetInnerVertex();
+        
+            if ( LArPointingClusterHelper::IsNode(endJ.GetPosition(),vertexI) ||
+                (LArPointingClusterHelper::IsEmission(endJ.GetPosition(),vertexI) &&
+                 endJ.GetDirection().GetDotProduct(vertexI.GetDirection()) < -0.707 ) )
+	    {
+	        isSeed = false;
+                break;
+	    }
+	}
+
+        if (isSeed) 
+            seeds.push_back(vertexI);
+    }
+
+    // Populate list of vertex clusters
+    for (LArPointingClusterVertexList::const_iterator iter = seeds.begin(), iterEnd = seeds.end(); iter != iterEnd; ++iter)
+    {
+        const LArPointingCluster::Vertex& vertexCluster = *iter;
+        seedClusterList.insert(vertexCluster.GetCluster());
+    }
+
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&seedClusterList, "SeedClusters", AUTOITER);
+// PandoraMonitoringApi::AddMarkerToVisualization(&eventVertex, "Vertex", BLACK, 2.5);
+// PandoraMonitoringApi::ViewEvent();
+
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+// KEEP OLD METHOD FOR NOW
+void VertexSeedFindingAlgorithm::GetListOfVertexClusters(const ClusterVector &clusterVector, ClusterList &vertexSeedClusterList) const
+{ 
+    // Get the current vertex
+    const CartesianVector eventVertex(LArVertexHelper::GetCurrentVertex());
+
+
+    // Create list of clusters associated with the vertex
+    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    {
+        LArPointingCluster pointingCluster(*iter);
+
+        if (LArPointingClusterHelper::IsNode(eventVertex, pointingCluster.GetInnerVertex().GetPosition()) ||
+            LArPointingClusterHelper::IsNode(eventVertex, pointingCluster.GetOuterVertex().GetPosition()) ||
+            LArPointingClusterHelper::IsEmitted(eventVertex, pointingCluster.GetInnerVertex()) ||
+            LArPointingClusterHelper::IsEmitted(eventVertex, pointingCluster.GetOuterVertex()))
+        {
+            vertexSeedClusterList.insert(*iter);
+        }
+    }
+
+
+    // Merge or delete clusters
     for (ClusterList::iterator iterI = vertexSeedClusterList.begin(); iterI != vertexSeedClusterList.end(); ++iterI)
     {
         Cluster *pClusterI = *iterI;
@@ -156,8 +276,8 @@ void VertexSeedFindingAlgorithm::MakeVertexSeedMerges(const CartesianVector &eve
                 mergeDaughter = true;
             }
 
-//if (removeDaughter || mergeDaughter)
-//{
+// if (removeDaughter || mergeDaughter)
+// {
 //    if (removeDaughter) std::cout << "Remove daughter " << std::endl;
 //    if (mergeDaughter) std::cout << "Merge daughter " << std::endl;
 //    if (removeDaughter && mergeDaughter) std::cout << "Both merge and remove daughter - PROBLEM! " << std::endl;
@@ -167,7 +287,7 @@ void VertexSeedFindingAlgorithm::MakeVertexSeedMerges(const CartesianVector &eve
 //    PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
 //    PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", GREEN);
 //    PandoraMonitoringApi::ViewEvent();
-//}
+// }
             if (removeDaughter)
             {
                 vertexSeedClusterList.erase(iterJ);
@@ -186,6 +306,7 @@ void VertexSeedFindingAlgorithm::MakeVertexSeedMerges(const CartesianVector &eve
         }
     }
 }
+*/
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -194,14 +315,22 @@ StatusCode VertexSeedFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
 
-    float minClusterLength = 1.f;
+    float minClusterLength = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
-    m_minClusterLayers = 10;
+    m_minClusterLayers = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinClusterLayers", m_minClusterLayers));
+
+    m_minClusterHitsNode = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MinClusterHitsNode", m_minClusterHitsNode));
+
+    m_minClusterHitsEmission = 15;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MinClusterHitsEmission", m_minClusterHitsEmission));
 
     return STATUS_CODE_SUCCESS;
 }

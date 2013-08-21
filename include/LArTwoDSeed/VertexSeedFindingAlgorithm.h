@@ -41,18 +41,21 @@ private:
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
     /**
-     *  @brief  Merge any vertex seed candidates that are unambiguously associated
+     *  @brief  Identify clusters that are connected to the vertex
      * 
-     *  @param  eventVertex the event vertex position vector
-     *  @param  vertexSeedClusterList the list of vertex seed candidates
+     *  @param  pClusterList address of the cluster list
+     *  @param  outputList the list of vertex clusters
      */
-    void MakeVertexSeedMerges(const pandora::CartesianVector &eventVertex, pandora::ClusterList &vertexSeedClusterList) const;
+    void GetListOfVertexClusters(const pandora::ClusterVector &clusterVector, pandora::ClusterList& outputList) const;
 
     std::string         m_seedClusterListName;          ///< The seed cluster list name
     std::string         m_nonSeedClusterListName;       ///< The non seed cluster list name
 
     unsigned int        m_minClusterLayers;             ///< The min number of layers for a clean cluster
     float               m_minClusterLengthSquared;      ///< The min length (squared) for a clean cluster
+
+    unsigned int        m_minClusterHitsNode;           ///< The min number of cluster hits for a node 
+    unsigned int        m_minClusterHitsEmission;       ///< The min number of cluster hits for an emission
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

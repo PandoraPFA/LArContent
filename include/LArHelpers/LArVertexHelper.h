@@ -124,7 +124,7 @@ public:
     static bool IsBackwardInZ(const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Does this cluster point back to the vertex
+     *  @brief  Ask if one end of cluster is adjacent to the vertex
      * 
      *  @param  pCluster address of the cluster
      *
@@ -133,22 +133,22 @@ public:
     static bool IsConnectedToCurrentVertex(const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Calculate distance from cluster to vertex using inner/outer centroids
+     *  @brief  Ask if one end of cluster is pointing back to the vertex
+     * 
+     *  @param  pCluster address of the cluster
+     *
+     *  @return boolean
+     */
+    static bool IsPointingToCurrentVertex(const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Calculate distance from cluster to vertex fitted inner/outer centroids
      * 
      *  @param  pCluster address of the cluster
      *
      *  @return boolean
      */
     static float GetDistanceSquaredToCurrentVertex(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Calculate distance from cluster to vertex using fitted inner/outer positions
-     * 
-     *  @param  pCluster address of the cluster
-     *
-     *  @return boolean
-     */
-    static float GetPreciseDistanceSquaredToCurrentVertex(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Calculate transverse impact parameter of a cluster

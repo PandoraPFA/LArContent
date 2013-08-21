@@ -163,19 +163,27 @@ ClusterDirection LArVertexHelper::GetDirectionInZ(const Cluster *const pCluster)
 
 bool LArVertexHelper::IsConnectedToCurrentVertex(const Cluster *const pCluster)
 {
-    // Calculate distance to vertex
-    if ( LArVertexHelper::GetDistanceSquaredToCurrentVertex(pCluster) < 2.5*2.5
-      || LArVertexHelper::GetPreciseDistanceSquaredToCurrentVertex(pCluster) < 2.5*2.5 )
-        return true;
-
-    // Calculate impact parameters to vertex
     float rL(0.f), rT(0.f);
 
-    static const float tanSqTheta( pow( tan( M_PI * 2.0 / 180.0 ), 2.0 ) );
+    LArVertexHelper::GetImpactParametersToCurrentVertex( pCluster, rL, rT );
 
-    LArVertexHelper::GetImpactParametersToCurrentVertex(pCluster, rL, rT);
+    if ( rL > -2.5 && rL < 2.5 && rT < 2.5 ) 
+        return true;
 
-    if ( rL > -2.5 && rL < 125.f && rT*rT < 2.5*2.5 + rL*rL*tanSqTheta ) 
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArVertexHelper::IsPointingToCurrentVertex(const Cluster *const pCluster)
+{
+    float rL(0.f), rT(0.f);
+
+    static const float tanSqTheta( std::pow( std::tan( M_PI * 2.0 / 180.0 ), 2.0 ) );
+
+    LArVertexHelper::GetImpactParametersToCurrentVertex( pCluster, rL, rT );
+
+    if ( rL > -2.5 && rL < 25.f && rT*rT < 2.5*2.5 + rL*rL*tanSqTheta ) 
         return true;  
 
     return false;
@@ -184,18 +192,6 @@ bool LArVertexHelper::IsConnectedToCurrentVertex(const Cluster *const pCluster)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArVertexHelper::GetDistanceSquaredToCurrentVertex(const Cluster *const pCluster)
-{
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
-
-    const float innerDistanceSquared((pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()) - theVertex).GetMagnitudeSquared());
-    const float outerDistanceSquared((pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()) - theVertex).GetMagnitudeSquared());
-
-    return std::min(innerDistanceSquared, outerDistanceSquared);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArVertexHelper::GetPreciseDistanceSquaredToCurrentVertex(const Cluster *const pCluster)
 {
     const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
 

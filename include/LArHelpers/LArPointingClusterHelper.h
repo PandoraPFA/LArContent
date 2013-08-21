@@ -33,34 +33,24 @@ public:
     static bool IsNode(const pandora::CartesianVector &parentVertex, const pandora::CartesianVector &daughterVertex);
 
     /**
-     *  @brief  Whether parent and daughter vertices represent an emission from the parent
+     *  @brief  Whether pointing vertex is adjacent to a given position
      * 
-     *  @param  parentPointingVertex the parent pointing vertex
-     *  @param  daughterVertex the position of the daughter vertex
+     *  @param  parentVertex the parent vertex position
+     *  @param  daughtervertex the daughter pointing vertex
      * 
      *  @return boolean
      */
-    static bool IsEmission(const LArPointingCluster::Vertex &parentPointingVertex, const pandora::CartesianVector &daughterVertex);
+    static bool IsNode(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex); 
 
     /**
-     *  @brief  Whether parent and daughter vertices represent an emission from the parent
+     *  @brief  Whether pointing vertex is emitted from a given position
      * 
-     *  @param  parentVertex the position of the parent vertex
-     *  @param  daughterPointingVertex the daughter pointing vertex
-     * 
-     *  @return boolean
-     */
-    static bool IsEmitted(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterPointingVertex);
-
-    /**
-     *  @brief  Whether vertex and pointing vertex are compatible with an emission
-     * 
-     *  @param  vertex the position of the vertex
-     *  @param  pointingVertex the pointing vertex
+     *  @param  parentVertex the parent vertex position
+     *  @param  daughtervertex the daughter pointing vertex
      * 
      *  @return boolean
      */
-    static bool IsPointing(const pandora::CartesianVector &vertex, const LArPointingCluster::Vertex &pointingVertex);
+    static bool IsEmission(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex);
 
     /**
      *  @brief  Get intersection of two vertices

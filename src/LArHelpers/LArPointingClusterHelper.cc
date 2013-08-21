@@ -29,36 +29,33 @@ bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArPointingClusterHelper::IsEmission(const LArPointingCluster::Vertex &parentPointingVertex, const pandora::CartesianVector &daughterVertex)
+bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
-    return LArPointingClusterHelper::IsPointing(daughterVertex, parentPointingVertex);
+    float rL(0.f), rT(0.f);
+
+    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
+
+    if ( std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) || rT > m_maxPointingTransverseDistance ) 
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArPointingClusterHelper::IsEmitted(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterPointingVertex)
+bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
-    return LArPointingClusterHelper::IsPointing(parentVertex, daughterPointingVertex);
-}
+    float rL(0.f), rT(0.f);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    static const float tanSqTheta( std::pow( std::tan( M_PI * m_pointingAngularAllowance / 180.0 ), 2.0 ) );
 
-bool LArPointingClusterHelper::IsPointing(const pandora::CartesianVector &vertex, const LArPointingCluster::Vertex &pointingVertex)
-{
-    const CartesianVector displacement(pointingVertex.GetPosition() - vertex);
+    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
-    const float longitudinalDistance(pointingVertex.GetDirection().GetDotProduct(displacement));
-
-    if ((longitudinalDistance < m_minPointingLongitudinalDistance) || (longitudinalDistance > m_maxPointingLongitudinalDistance))
+    if ( std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) && (rL < 0 || rL > m_maxPointingLongitudinalDistance) )
         return false;
 
-    const float maxTransverseDistanceSquared((m_maxPointingTransverseDistance * m_maxPointingTransverseDistance) + 
-        (m_pointingAngularAllowance * m_pointingAngularAllowance * longitudinalDistance * longitudinalDistance));
-
-    const float transverseDistanceSquared(pointingVertex.GetDirection().GetCrossProduct(displacement).GetMagnitudeSquared());
-
-    if (transverseDistanceSquared > maxTransverseDistanceSquared)
-        return false;
+    if ( rT * rT > m_maxPointingTransverseDistance * m_maxPointingTransverseDistance + rL * rL * tanSqTheta ) 
+        return false;  
 
     return true;
 }
@@ -164,10 +161,10 @@ void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArPointingClusterHelper::m_maxNodeRadiusSquared = 2.5f * 2.5f;
-float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 20.f;
+float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 25.f;
 float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.5f;
 float LArPointingClusterHelper::m_maxPointingTransverseDistance = 2.5f;
-float LArPointingClusterHelper::m_pointingAngularAllowance = 0.0175f; // tan (1 degree)
+float LArPointingClusterHelper::m_pointingAngularAllowance = 2.f; // degrees
 
 StatusCode LArPointingClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {

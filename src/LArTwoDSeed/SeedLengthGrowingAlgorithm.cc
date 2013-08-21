@@ -21,11 +21,11 @@ namespace lar
 StatusCode SeedLengthGrowingAlgorithm::Run()
 {
     m_pointingClusterMap.clear();
-    ClusterVector candidateClusters;
-
+    
     const ClusterList *pSeedClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
-    this->GetCandidateClusters(pSeedClusterList, candidateClusters);
+
+    ClusterVector candidateClusters(pSeedClusterList->begin(),pSeedClusterList->end());
 
     const ClusterList *pNonSeedClusterList = NULL;
     const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
@@ -49,6 +49,8 @@ StatusCode SeedLengthGrowingAlgorithm::Run()
 
 SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
+
+
     // Parent and daughter directions
     const ClusterDirection seedDirection(LArVertexHelper::GetDirectionInZ(pClusterSeed));
     const ClusterDirection clusterDirection(LArVertexHelper::GetDirectionInZ(pCluster));
@@ -67,15 +69,15 @@ SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClust
     const LArPointingCluster *const pPointingCluster(&(iterCluster->second));
 
     // Investigate associations by considering pairs of vertices, note forbidden associations
-    const bool isNodeII((BACKWARD != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetInnerVertex().GetPosition()));
-    const bool isNodeIO((FORWARD  != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetOuterVertex().GetPosition()));
-    const bool isNodeOI((BACKWARD != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetInnerVertex().GetPosition()));
-    const bool isNodeOO((FORWARD  != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetOuterVertex().GetPosition()));
+    const bool isNodeII((BACKWARD != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
+    const bool isNodeIO((FORWARD  != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
+    const bool isNodeOI((BACKWARD != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
+    const bool isNodeOO((FORWARD  != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
 
-    const bool isEmissionII((BACKWARD == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex(), pPointingCluster->GetInnerVertex().GetPosition()));
-    const bool isEmissionIO((BACKWARD == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex(), pPointingCluster->GetOuterVertex().GetPosition()));
-    const bool isEmissionOI((FORWARD  == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex(), pPointingCluster->GetInnerVertex().GetPosition()));
-    const bool isEmissionOO((FORWARD  == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex(), pPointingCluster->GetOuterVertex().GetPosition()));
+    const bool isEmissionII((BACKWARD == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
+    const bool isEmissionIO((BACKWARD == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
+    const bool isEmissionOI((FORWARD  == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
+    const bool isEmissionOO((FORWARD  == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
 
     if (!isNodeII && !isNodeIO && !isNodeOI && !isNodeOO && !isEmissionII && !isEmissionIO && !isEmissionOI && !isEmissionOO)
         return NONE;
@@ -114,16 +116,16 @@ SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClust
     const float bestEmissionTheta(std::min(emissionThetaII, std::min(emissionThetaIO, std::min(emissionThetaOI, emissionThetaOO))));
     const AssociationType emissionAssociationType((bestEmissionTheta < 0.174f) ? STANDARD : NONE);
 
-//if (std::max(nodeAssociationType, emissionAssociationType) > NONE)
-//{
-//std::cout << " nodeAssociationType " << nodeAssociationType << " bestNodeTheta " << bestNodeTheta << " nodeThetaII " << nodeThetaII << " nodeThetaIO " << nodeThetaIO << " nodeThetaOI " << nodeThetaOI << " nodeThetaOO " << nodeThetaOO << std::endl;
-//std::cout << " emissionAssociationType " << emissionAssociationType << " bestEmissionTheta " << bestEmissionTheta << " emissionThetaII " << nodeThetaII << " emissionThetaIO " << emissionThetaIO << " emissionThetaOI " << emissionThetaOI << " emissionThetaOO " << emissionThetaOO << std::endl;
-//ClusterList parent, daughter; parent.insert(const_cast<Cluster*>(pClusterSeed)); daughter.insert(const_cast<Cluster*>(pCluster));
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
-//PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", GREEN);
-//PandoraMonitoringApi::ViewEvent();
-//}
+// if (std::max(nodeAssociationType, emissionAssociationType) > NONE)
+// {
+// std::cout << " nodeAssociationType " << nodeAssociationType << " bestNodeTheta " << bestNodeTheta << " nodeThetaII " << nodeThetaII << " nodeThetaIO " << nodeThetaIO << " nodeThetaOI " << nodeThetaOI << " nodeThetaOO " << nodeThetaOO << std::endl;
+// std::cout << " emissionAssociationType " << emissionAssociationType << " bestEmissionTheta " << bestEmissionTheta << " emissionThetaII " << nodeThetaII << " emissionThetaIO " << emissionThetaIO << " emissionThetaOI " << emissionThetaOI << " emissionThetaOO " << emissionThetaOO << std::endl;
+// ClusterList parent, daughter; parent.insert(const_cast<Cluster*>(pClusterSeed)); daughter.insert(const_cast<Cluster*>(pCluster));
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
+// PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", GREEN);
+// PandoraMonitoringApi::ViewEvent();
+// }
 
     return std::max(nodeAssociationType, emissionAssociationType);
 }
