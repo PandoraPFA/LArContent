@@ -187,6 +187,12 @@ void VertexSeedFindingAlgorithm::GetListOfVertexClusters(const ClusterVector &cl
     }
 
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// ClusterList inputClusterList(clusterVector.begin(),clusterVector.end());
+// PandoraMonitoringApi::VisualizeClusters(&inputClusterList, "InputClusters", GREEN);
+// PandoraMonitoringApi::AddMarkerToVisualization(&eventVertex, "Vertex", BLACK, 2.5);
+// PandoraMonitoringApi::ViewEvent();
+
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::VisualizeClusters(&seedClusterList, "SeedClusters", AUTOITER);
 // PandoraMonitoringApi::AddMarkerToVisualization(&eventVertex, "Vertex", BLACK, 2.5);
 // PandoraMonitoringApi::ViewEvent();

@@ -160,15 +160,15 @@ void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArPointingClusterHelper::m_maxNodeRadiusSquared = 2.5f * 2.5f;
+float LArPointingClusterHelper::m_maxNodeRadiusSquared = 4.f;
 float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 25.f;
-float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.5f;
-float LArPointingClusterHelper::m_maxPointingTransverseDistance = 2.5f;
+float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.f;
+float LArPointingClusterHelper::m_maxPointingTransverseDistance = 2.f;
 float LArPointingClusterHelper::m_pointingAngularAllowance = 2.f; // degrees
 
 StatusCode LArPointingClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    float maxNodeRadius = 2.5f;
+    float maxNodeRadius = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxNodeRadius", maxNodeRadius));
     m_maxNodeRadiusSquared = maxNodeRadius * maxNodeRadius;

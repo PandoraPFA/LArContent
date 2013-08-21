@@ -94,7 +94,7 @@ protected:
      *  @param  pClusterList address of the cluster list
      *  @param  clusterVector to receive the populated cluster vector
      */
-    virtual void GetCandidateClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    virtual void GetCandidateClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const = 0;
 
     /**
      *  @brief  Determine whether two clusters are associated

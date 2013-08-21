@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
 #include "LArTwoDSeed/SeedLengthGrowingAlgorithm.h"
@@ -47,6 +48,24 @@ StatusCode SeedLengthGrowingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void SeedLengthGrowingAlgorithm::GetCandidateClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
+{
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (LArClusterHelper::GetLengthSquared(pCluster) < 25.f)
+	    continue;
+
+        if (pCluster->GetNCaloHits() < 25)
+            continue;
+
+        clusterVector.push_back(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
 
@@ -74,10 +93,15 @@ SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClust
     const bool isNodeOI((BACKWARD != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
     const bool isNodeOO((FORWARD  != clusterDirection) && LArPointingClusterHelper::IsNode(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
 
-    const bool isEmissionII((BACKWARD == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
-    const bool isEmissionIO((BACKWARD == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
-    const bool isEmissionOI((FORWARD  == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
-    const bool isEmissionOO((FORWARD  == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
+    const bool checkEmissionII((pPointingSeed->GetInnerVertex().GetPosition() - pPointingCluster->GetInnerVertex().GetPosition()).GetMagnitudeSquared() < 25.f);
+    const bool checkEmissionIO((pPointingSeed->GetInnerVertex().GetPosition() - pPointingCluster->GetOuterVertex().GetPosition()).GetMagnitudeSquared() < 25.f);
+    const bool checkEmissionOI((pPointingSeed->GetOuterVertex().GetPosition() - pPointingCluster->GetInnerVertex().GetPosition()).GetMagnitudeSquared() < 25.f);
+    const bool checkEmissionOO((pPointingSeed->GetOuterVertex().GetPosition() - pPointingCluster->GetOuterVertex().GetPosition()).GetMagnitudeSquared() < 25.f);
+
+    const bool isEmissionII(checkEmissionII && (BACKWARD == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
+    const bool isEmissionIO(checkEmissionIO && (BACKWARD == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetInnerVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
+    const bool isEmissionOI(checkEmissionOI && (FORWARD  == seedDirection) && (FORWARD  == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetInnerVertex()));
+    const bool isEmissionOO(checkEmissionOO && (FORWARD  == seedDirection) && (BACKWARD == clusterDirection) && LArPointingClusterHelper::IsEmission(pPointingSeed->GetOuterVertex().GetPosition(), pPointingCluster->GetOuterVertex()));
 
     if (!isNodeII && !isNodeIO && !isNodeOI && !isNodeOO && !isEmissionII && !isEmissionIO && !isEmissionOI && !isEmissionOO)
         return NONE;
@@ -123,7 +147,7 @@ SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClust
 // ClusterList parent, daughter; parent.insert(const_cast<Cluster*>(pClusterSeed)); daughter.insert(const_cast<Cluster*>(pCluster));
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
-// PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", GREEN);
+// PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", BLUE);
 // PandoraMonitoringApi::ViewEvent();
 // }
 
