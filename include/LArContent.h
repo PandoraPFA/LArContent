@@ -28,6 +28,7 @@
 #include "LArThreeDSeed/ThreeDShowersAlgorithm.h"
 #include "LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h"
+#include "LArThreeDSeed/ThreeDPairedTracksAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
 #include "LArTwoDSeed/SeedConsolidationAlgorithm.h"
 #include "LArTwoDSeed/SeedFindingAlgorithm.h"
@@ -73,6 +74,7 @@ public:
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
+        d("LArThreeDPairedTracks",                  lar::ThreeDPairedTracksAlgorithm::Factory)                                  \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
         d("LArSeedFinding",                         lar::SeedFindingAlgorithm::Factory)                                         \
