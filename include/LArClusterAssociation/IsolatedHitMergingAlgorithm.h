@@ -50,6 +50,7 @@ private:
      */
     static bool SortByLayer(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
 
+    std::string    m_seedClusterListName;       ///< The seed cluster list name
     std::string    m_nonSeedClusterListName;    ///< The non seed cluster list name
 };
 

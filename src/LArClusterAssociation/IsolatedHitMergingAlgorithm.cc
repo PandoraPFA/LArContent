@@ -10,6 +10,8 @@
 
 #include "LArClusterAssociation/IsolatedHitMergingAlgorithm.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 using namespace pandora;
 
 namespace lar
@@ -17,39 +19,43 @@ namespace lar
 
 StatusCode IsolatedHitMergingAlgorithm::Run()
 {
-    // TODO - remove this test code. Later maybe remove all non-seed clusters, having promoted important remnants
     const ClusterList *pNonSeedClusterList = NULL;
     const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
-
-    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
-        return statusCode;
 
     if (STATUS_CODE_NOT_INITIALIZED == statusCode)
         return STATUS_CODE_SUCCESS;
 
+    if (STATUS_CODE_SUCCESS != statusCode)
+        return statusCode;
+
+    const ClusterList *pSeedClusterList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
+
+    // Delete small clusters from the current list of non-seeds to free the underlying hits
     ClusterList clustersToDelete;
+    CaloHitList caloHitList;
+
     for (ClusterList::const_iterator iter = pNonSeedClusterList->begin(), iterEnd = pNonSeedClusterList->end(); iter != iterEnd; ++iter)    
     {
-         if ((*iter)->GetNCaloHits() < 10)
-            clustersToDelete.insert(*iter);
+        Cluster *pCluster = *iter;
+
+        if (pCluster->GetNCaloHits() < 10)
+        {
+            clustersToDelete.insert(pCluster);
+            pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        }
     }
 
-    // Delete the current list of non-seed clusters to free the underlying hits
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeleteClusters(*this, clustersToDelete, m_nonSeedClusterListName));
 
-    const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
+    // Reassign available hits to be most appropriate seed clusters
+    ClusterVector clusterVector(pSeedClusterList->begin(), pSeedClusterList->end());
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
-    ClusterVector clusterVector(pClusterList->begin(), pClusterList->end());
-    std::sort(clusterVector.begin(), clusterVector.end(), Cluster::SortByInnerLayer);
-
-    const CaloHitList *pCaloHitList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList));
-
-    CaloHitVector caloHitVector(pCaloHitList->begin(), pCaloHitList->end());
+    CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
     std::sort(caloHitVector.begin(), caloHitVector.end(), IsolatedHitMergingAlgorithm::SortByLayer);
 
-    for (CaloHitList::const_iterator iterI = pCaloHitList->begin(), iterIEnd = pCaloHitList->end(); iterI != iterIEnd; ++iterI)
+    for (CaloHitVector::const_iterator iterI = caloHitVector.begin(), iterIEnd = caloHitVector.end(); iterI != iterIEnd; ++iterI)
     {
         CaloHit *pCaloHit = *iterI;
 
@@ -57,10 +63,8 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
             continue;
 
         Cluster *pBestHostCluster(NULL);
-        float bestHostClusterEnergy(0.);
-        float minDistance(10.f);
+        float bestHostClusterEnergy(0.), minDistance(10.f);
 
-        // Find most appropriate cluster for this isolated hit
         for (ClusterVector::const_iterator iterJ = clusterVector.begin(), iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
         {
             Cluster *pCluster = *iterJ;
@@ -81,14 +85,6 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
 
         if (NULL != pBestHostCluster)
         {
-// ClusterList pTempList;
-// CaloHitList dTempList;
-// pTempList.insert(pBestHostCluster);
-// dTempList.insert(pCaloHit);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&pTempList, "ISOParent", RED);
-// PandoraMonitoringApi::VisualizeCaloHits(&dTempList, "ISODaughter", BLUE);
-// PandoraMonitoringApi::ViewEvent();
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedCaloHitToCluster(*this, pBestHostCluster, pCaloHit));
         }
     }
@@ -139,6 +135,7 @@ bool IsolatedHitMergingAlgorithm::SortByLayer(const CaloHit *const pLhs, const C
 
 StatusCode IsolatedHitMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
 
     return STATUS_CODE_SUCCESS;
