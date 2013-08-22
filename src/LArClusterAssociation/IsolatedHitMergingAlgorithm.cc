@@ -63,7 +63,7 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
             continue;
 
         Cluster *pBestHostCluster(NULL);
-        float bestHostClusterEnergy(0.), minDistance(10.f);
+        float bestHostClusterEnergy(0.), minDistance(m_maxHitClusterDistance);
 
         for (ClusterVector::const_iterator iterJ = clusterVector.begin(), iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
         {
@@ -137,6 +137,10 @@ StatusCode IsolatedHitMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
+
+    m_maxHitClusterDistance = 10.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MaxHitClusterDistance", m_maxHitClusterDistance));
 
     return STATUS_CODE_SUCCESS;
 }
