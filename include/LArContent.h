@@ -29,10 +29,11 @@
 #include "LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDSeed/ThreeDPairedTracksAlgorithm.h"
+#include "LArTwoDSeed/LengthSeedFindingAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
 #include "LArTwoDSeed/SeedConsolidationAlgorithm.h"
-#include "LArTwoDSeed/SeedFindingAlgorithm.h"
 #include "LArTwoDSeed/SeedLengthGrowingAlgorithm.h"
+#include "LArTwoDSeed/SeedMergingAlgorithm.h"
 #include "LArTwoDSeed/SeedRelegationAlgorithm.h"
 #include "LArTwoDSeed/VertexSeedFindingAlgorithm.h"
 #include "LArUtility/EventPreparationAlgorithm.h"
@@ -75,14 +76,15 @@ public:
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArThreeDPairedTracks",                  lar::ThreeDPairedTracksAlgorithm::Factory)                                  \
+        d("LArLengthSeedFinding",                   lar::LengthSeedFindingAlgorithm::Factory)                                   \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
-        d("LArSeedFinding",                         lar::SeedFindingAlgorithm::Factory)                                         \
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
+        d("LArSeedMerging",                         lar::SeedMergingAlgorithm::Factory)                                         \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
+        d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArTrackExtension",                      lar::TrackExtensionAlgorithm::Factory)                                      \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
-        d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \

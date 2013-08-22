@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDSeed/SeedFindingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDSeed/SeedMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the particle seed algorithm class.
  * 
@@ -11,133 +11,56 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
-#include "LArTwoDSeed/SeedFindingAlgorithm.h"
+#include "LArTwoDSeed/SeedMergingAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode SeedFindingAlgorithm::Run()
+StatusCode SeedMergingAlgorithm::Run()
 {
-    // Input lists
-    const ClusterList *pVertexSeedClusterList = NULL;
-    const ClusterList *pNonSeedClusterList = NULL;
-
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pVertexSeedClusterList))
-    {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this,
-            m_nonSeedClusterListName, pNonSeedClusterList));
-    }
-    else
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pNonSeedClusterList));
-    }
-
-    // Particle seed formation
-    ClusterList vertexSeedClusters((NULL != pVertexSeedClusterList) ? ClusterList(*pVertexSeedClusterList) : ClusterList());
-    ClusterList nonSeedClusters((NULL != pNonSeedClusterList) ? ClusterList(*pNonSeedClusterList) : ClusterList());
-
     ParticleSeedVector particleSeedVector;
-    this->GetParticleSeeds(vertexSeedClusters, nonSeedClusters, particleSeedVector);
 
-    if (particleSeedVector.empty())
-        return STATUS_CODE_SUCCESS;
-
-    // List manipulation - ensure same behaviour if there are or are not separate vertex clusters
-    if (NULL != pVertexSeedClusterList)
+    try
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_nonSeedClusterListName, vertexSeedClusters));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentClusterList(*this, m_nonSeedClusterListName));
+        const ClusterList *pClusterList = NULL;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
+
+        this->GetParticleSeeds(pClusterList, particleSeedVector);
+        this->MakeClusterMerges(particleSeedVector);
     }
-
-    // Make cluster merges and write out final lists
-    ClusterList finalSeedClusters;
-    this->MakeClusterMerges(particleSeedVector, finalSeedClusters);
-
-    if ((NULL == pVertexSeedClusterList) && (NULL != pNonSeedClusterList))
+    catch (StatusCodeException &statusCodeException)
     {
-        ClusterList finalNonSeedClusters(*pNonSeedClusterList);
-
-        for (ClusterList::const_iterator iter = finalSeedClusters.begin(), iterEnd = finalSeedClusters.end(); iter != iterEnd; ++iter)
-            finalNonSeedClusters.erase(*iter);
-
-        if (!finalNonSeedClusters.empty())
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_nonSeedClusterListName, finalNonSeedClusters));
-    }
-
-    if (!finalSeedClusters.empty())
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_seedClusterListName, finalSeedClusters));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentClusterList(*this, m_seedClusterListName));
+        std::cout << "SeedMergingAlgorithm: exception " << statusCodeException.ToString() << std::endl;
     }
 
     for (ParticleSeedVector::const_iterator iter = particleSeedVector.begin(), iterEnd = particleSeedVector.end(); iter != iterEnd; ++iter)
+    {
         delete *iter;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedFindingAlgorithm::GetParticleSeeds(const ClusterList &vertexSeedClusters, const ClusterList &nonSeedClusters, ParticleSeedVector &particleSeedVector) const
+void SeedMergingAlgorithm::GetParticleSeeds(const ClusterList *const pClusterList, ParticleSeedVector &particleSeedVector) const
 {
-    // Create vertex-based particle seeds, using clusters from earlier algorithm
-    ParticleSeedVector vertexSeedVector;
+    ParticleSeedVector localSeedVector;
 
-    for (ClusterList::const_iterator iter = vertexSeedClusters.begin(), iterEnd = vertexSeedClusters.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        vertexSeedVector.push_back(new ParticleSeed(*iter));
+        localSeedVector.push_back(new ParticleSeed(*iter));
     }
 
-    // Create length-based particle seeds, using sliding window length cut
-    ParticleSeedVector lengthSeedVector;
-    int nIter(vertexSeedClusters.size());
+    std::sort(localSeedVector.begin(), localSeedVector.end(), SeedMergingAlgorithm::SortByLayerSpan);
 
-    ClusterVector clusterVector(nonSeedClusters.begin(), nonSeedClusters.end());
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
-
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
-    {
-        int lengthCut((nIter < m_finalChangeIter) ? m_initialLengthCut : m_finalLengthCut);
-
-        if ((nIter > m_initialChangeIter) && (nIter < m_finalChangeIter))
-            lengthCut = m_initialLengthCut + (nIter - m_initialChangeIter) * (m_finalLengthCut - m_initialLengthCut) / (m_finalChangeIter - m_initialChangeIter);
-
-        if ((*iter)->GetOrderedCaloHitList().size() >= lengthCut)
-            lengthSeedVector.push_back(new ParticleSeed(*iter));
-
-        ++nIter;
-    }
-
-    // Associate vertex and length-based seeds
-    std::sort(vertexSeedVector.begin(), vertexSeedVector.end(), SeedFindingAlgorithm::SortByLayerSpan);
-    std::sort(lengthSeedVector.begin(), lengthSeedVector.end(), SeedFindingAlgorithm::SortByLayerSpan);
-
-    for (ParticleSeedVector::const_iterator iterP = vertexSeedVector.begin(), iterPEnd = vertexSeedVector.end(); iterP != iterPEnd; ++iterP)
-    {
-        ParticleSeed *pPrimarySeed = *iterP;
-        particleSeedVector.push_back(pPrimarySeed);
-
-        ParticleSeedVector associatedSeeds;
-        this->FindAssociatedSeeds(pPrimarySeed, lengthSeedVector, associatedSeeds);
-
-        for (ParticleSeedVector::iterator iterA = associatedSeeds.begin(), iterAEnd = associatedSeeds.end(); iterA != iterAEnd; ++iterA)
-        {
-            if ((*iterA) != pPrimarySeed)
-            {
-                pPrimarySeed->AddClusterList((*iterA)->GetClusterList());
-                delete *iterA;
-            }
-        }
-    }
-
-    // Associations between remaining length-based seeds
     while (true)
     {
-        ParticleSeedVector::iterator primarySeedIter = lengthSeedVector.end();
+        ParticleSeedVector::iterator primarySeedIter = localSeedVector.end();
 
-        for (ParticleSeedVector::iterator iterP = lengthSeedVector.begin(), iterPEnd = lengthSeedVector.end(); iterP != iterPEnd; ++iterP)
+        for (ParticleSeedVector::iterator iterP = localSeedVector.begin(), iterPEnd = localSeedVector.end(); iterP != iterPEnd; ++iterP)
         {
             if ((*iterP) != NULL)
             {
@@ -146,7 +69,7 @@ void SeedFindingAlgorithm::GetParticleSeeds(const ClusterList &vertexSeedCluster
             }
         }
 
-        if (lengthSeedVector.end() == primarySeedIter)
+        if (localSeedVector.end() == primarySeedIter)
             break;
 
         ParticleSeed *pPrimarySeed = *primarySeedIter;
@@ -154,7 +77,7 @@ void SeedFindingAlgorithm::GetParticleSeeds(const ClusterList &vertexSeedCluster
         *primarySeedIter = NULL;
 
         ParticleSeedVector associatedSeeds;
-        this->FindAssociatedSeeds(pPrimarySeed, lengthSeedVector, associatedSeeds);
+        this->FindAssociatedSeeds(pPrimarySeed, localSeedVector, associatedSeeds);
 
         for (ParticleSeedVector::iterator iterA = associatedSeeds.begin(), iterAEnd = associatedSeeds.end(); iterA != iterAEnd; ++iterA)
         {
@@ -169,7 +92,7 @@ void SeedFindingAlgorithm::GetParticleSeeds(const ClusterList &vertexSeedCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedFindingAlgorithm::FindAssociatedSeeds(ParticleSeed *const pParticleSeed, ParticleSeedVector &candidateSeeds,
+void SeedMergingAlgorithm::FindAssociatedSeeds(ParticleSeed *const pParticleSeed, ParticleSeedVector &candidateSeeds,
     ParticleSeedVector &associatedSeeds) const
 {
     ParticleSeedVector currentSeedAssociations, newSeedAssociations;
@@ -205,7 +128,7 @@ void SeedFindingAlgorithm::FindAssociatedSeeds(ParticleSeed *const pParticleSeed
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SeedFindingAlgorithm::AreParticleSeedsAssociated(const ParticleSeed *const pAssociatedSeed, const ParticleSeed *const pCandidateSeed) const
+bool SeedMergingAlgorithm::AreParticleSeedsAssociated(const ParticleSeed *const pAssociatedSeed, const ParticleSeed *const pCandidateSeed) const
 {
     const ClusterList &associatedClusterList(pAssociatedSeed->GetClusterList());
     const ClusterList &candidateClusterList(pCandidateSeed->GetClusterList());
@@ -224,7 +147,7 @@ bool SeedFindingAlgorithm::AreParticleSeedsAssociated(const ParticleSeed *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SeedFindingAlgorithm::AreSeedClustersAssociated(const Cluster *const pClusterI, const Cluster *const pClusterJ) const
+bool SeedMergingAlgorithm::AreSeedClustersAssociated(const Cluster *const pClusterI, const Cluster *const pClusterJ) const
 {
     // Direction measurements
     const bool currentVertexExists(LArVertexHelper::DoesCurrentVertexExist());
@@ -416,7 +339,7 @@ bool SeedFindingAlgorithm::AreSeedClustersAssociated(const Cluster *const pClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedFindingAlgorithm::MakeClusterMerges(const ParticleSeedVector &particleSeedVector, pandora::ClusterList &finalClusterList) const
+void SeedMergingAlgorithm::MakeClusterMerges(const ParticleSeedVector &particleSeedVector) const
 {
     for (ParticleSeedVector::const_iterator iter = particleSeedVector.begin(), iterEnd = particleSeedVector.end(); iter != iterEnd; ++iter)
     {
@@ -427,7 +350,6 @@ void SeedFindingAlgorithm::MakeClusterMerges(const ParticleSeedVector &particleS
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         Cluster *pParentCluster = *(particleSeedClusterList.begin());
-        finalClusterList.insert(pParentCluster);
 
         for (ClusterList::const_iterator iterM = particleSeedClusterList.begin(), iterMEnd = particleSeedClusterList.end(); iterM != iterMEnd; ++iterM)
         {
@@ -443,7 +365,7 @@ void SeedFindingAlgorithm::MakeClusterMerges(const ParticleSeedVector &particleS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SeedFindingAlgorithm::SortByLayerSpan(const ParticleSeed *const pLhs, const ParticleSeed *const pRhs)
+bool SeedMergingAlgorithm::SortByLayerSpan(const ParticleSeed *const pLhs, const ParticleSeed *const pRhs)
 {
     int minLayerLhs(std::numeric_limits<int>::max()), minLayerRhs(std::numeric_limits<int>::max()), maxLayerLhs(0), maxLayerRhs(0);
     float energyLhs(0.f), energyRhs(0.f);
@@ -470,27 +392,8 @@ bool SeedFindingAlgorithm::SortByLayerSpan(const ParticleSeed *const pLhs, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode SeedFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode SeedMergingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
-
-    m_initialLengthCut = 10;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "InitialLengthCut", m_initialLengthCut));
-
-    m_finalLengthCut = 50;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "FinalLengthCut", m_finalLengthCut));
-
-    m_initialChangeIter = 2;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "InitialChangeIter", m_initialChangeIter));
-
-    m_finalChangeIter = 6;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "FinalChangeIter", m_finalChangeIter));
-
     return STATUS_CODE_SUCCESS;
 }
 

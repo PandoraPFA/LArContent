@@ -19,65 +19,11 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode VertexSeedFindingAlgorithm::Run()
-{
-    const ClusterList *pInputClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pInputClusterList));
-
-    ClusterVector clusterVector;
-    this->GetListOfCleanClusters(pInputClusterList, clusterVector);
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
-
-    ClusterList vertexSeedClusterList;
-    this->GetListOfVertexClusters(clusterVector, vertexSeedClusterList);
-
-    // Cluster list management
-    ClusterList nonSeedClusterList(*pInputClusterList);
-
-    for (ClusterList::const_iterator iter = vertexSeedClusterList.begin(), iterEnd = vertexSeedClusterList.end(); iter != iterEnd; ++iter)
-    {
-        nonSeedClusterList.erase(*iter);
-    }
-
-    if (!vertexSeedClusterList.empty())
-    {
-        if (!nonSeedClusterList.empty())
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_nonSeedClusterListName, nonSeedClusterList));
-        }
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, m_seedClusterListName, vertexSeedClusterList));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentClusterList(*this, m_seedClusterListName));
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void VertexSeedFindingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
-{
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
-            continue;
-
-        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
-            continue;
-
-        clusterVector.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void VertexSeedFindingAlgorithm::GetListOfVertexClusters(const ClusterVector &clusterVector, ClusterList& seedClusterList) const
+void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &candidateClusters, ClusterList &seedClusterList) const
 {
     LArPointingClusterMap pointingClusterMap;
 
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    for (ClusterVector::const_iterator iter = candidateClusters.begin(), iterEnd = candidateClusters.end(); iter != iterEnd; ++iter)
     {
         pointingClusterMap.insert(LArPointingClusterMap::value_type(*iter, LArPointingCluster(*iter)));
     }
@@ -184,18 +130,6 @@ void VertexSeedFindingAlgorithm::GetListOfVertexClusters(const ClusterVector &cl
 
 StatusCode VertexSeedFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
-
-    float minClusterLength = 3.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "MinClusterLength", minClusterLength));
-    m_minClusterLengthSquared = minClusterLength * minClusterLength;
-
-    m_minClusterLayers = 5;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "MinClusterLayers", m_minClusterLayers));
-
     m_minClusterHitsNode = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinClusterHitsNode", m_minClusterHitsNode));
@@ -204,7 +138,7 @@ StatusCode VertexSeedFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinClusterHitsEmission", m_minClusterHitsEmission));
 
-    return STATUS_CODE_SUCCESS;
+    return SeedFindingBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

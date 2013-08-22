@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArTwoDSeed/SeedFindingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDSeed/SeedMergingAlgorithm.h
  * 
- *  @brief  Header file for the seed finding algorithm class.
+ *  @brief  Header file for the seed merging algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_SEED_FINDING_ALGORITHM_H
-#define LAR_SEED_FINDING_ALGORITHM_H 1
+#ifndef LAR_SEED_MERGING_ALGORITHM_H
+#define LAR_SEED_MERGING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  SeedFindingAlgorithm class
+ *  @brief  SeedMergingAlgorithm class
  */
-class SeedFindingAlgorithm : public pandora::Algorithm
+class SeedMergingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -68,12 +68,10 @@ private:
     /**
      *  @brief  Populate particle seed vector with candidate particle seeds
      * 
-     *  @param  vertexSeedClusters the vertex seed cluster list
-     *  @param  nonSeedClusters the non seed cluster list
+     *  @param  pClusterList the address of the candidate cluster list
      *  @param  particleSeedVector to receive the populated particle seed vector
      */
-    void GetParticleSeeds(const pandora::ClusterList &vertexSeedClusters, const pandora::ClusterList &nonSeedClusters,
-        ParticleSeedVector &particleSeedVector) const;
+    void GetParticleSeeds(const pandora::ClusterList *const pClusterList, ParticleSeedVector &particleSeedVector) const;
 
     /**
      *  @brief  Find associated particle seeds
@@ -108,9 +106,8 @@ private:
      *  @brief  Make cluster merges
      * 
      *  @param  particleSeedVector the particle seed list
-     *  @param  finalClusterList to receive the final cluster list
      */
-    void MakeClusterMerges(const ParticleSeedVector &particleSeedVector, pandora::ClusterList &finalClusterList) const;
+    void MakeClusterMerges(const ParticleSeedVector &particleSeedVector) const;
 
     /**
      *  @brief  Sort particle seed by layer span of constituent clusters
@@ -119,27 +116,19 @@ private:
      *  @param  pRhs address of second particle seed
      */
     static bool SortByLayerSpan(const ParticleSeed *const pLhs, const ParticleSeed *const pRhs);
-
-    std::string         m_seedClusterListName;      ///< The seed cluster list name
-    std::string         m_nonSeedClusterListName;   ///< The non seed cluster list name
-
-    int                 m_initialLengthCut;         ///< 
-    int                 m_finalLengthCut;           ///< 
-    int                 m_initialChangeIter;        ///< 
-    int                 m_finalChangeIter;          ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *SeedFindingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *SeedMergingAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new SeedFindingAlgorithm();
+    return new SeedMergingAlgorithm();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SeedFindingAlgorithm::ParticleSeed::ParticleSeed(pandora::Cluster *pCluster)
+inline SeedMergingAlgorithm::ParticleSeed::ParticleSeed(pandora::Cluster *pCluster)
 {
     if (!m_clusterList.insert(pCluster).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_ALREADY_PRESENT);
@@ -147,7 +136,7 @@ inline SeedFindingAlgorithm::ParticleSeed::ParticleSeed(pandora::Cluster *pClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedFindingAlgorithm::ParticleSeed::AddClusterList(const pandora::ClusterList &clusterList)
+void SeedMergingAlgorithm::ParticleSeed::AddClusterList(const pandora::ClusterList &clusterList)
 {
     for (pandora::ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
@@ -158,11 +147,11 @@ void SeedFindingAlgorithm::ParticleSeed::AddClusterList(const pandora::ClusterLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::ClusterList &SeedFindingAlgorithm::ParticleSeed::GetClusterList() const
+inline const pandora::ClusterList &SeedMergingAlgorithm::ParticleSeed::GetClusterList() const
 {
     return m_clusterList;
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_SEED_FINDING_ALGORITHM_H
+#endif // #ifndef LAR_SEED_MERGING_ALGORITHM_H
