@@ -97,12 +97,10 @@ bool LArVertexHelper::IsForwardInZ(const Cluster *const pCluster)
     if (!LArVertexHelper::DoesCurrentVertexExist())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    const CartesianVector endPosition(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
-    CartesianVector startPosition(0.f, 0.f, 0.f);
-    CartesianVector startDirection(0.f, 0.f, 0.f);
-
+    CartesianVector startPosition(0.f, 0.f, 0.f), startDirection(0.f, 0.f, 0.f);
     LArVertexHelper::GetInnerVertexAndDirection(pCluster, startPosition, startDirection); 
 
+    const CartesianVector endPosition(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
     return LArVertexHelper::IsDirectionCorrect(startPosition, endPosition, startDirection);    
 }
 
@@ -113,12 +111,10 @@ bool LArVertexHelper::IsBackwardInZ(const Cluster *const pCluster)
     if (!LArVertexHelper::DoesCurrentVertexExist())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    const CartesianVector endPosition(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
-    CartesianVector startPosition(0.f, 0.f, 0.f);
-    CartesianVector startDirection(0.f, 0.f, 0.f);
-
+    CartesianVector startPosition(0.f, 0.f, 0.f), startDirection(0.f, 0.f, 0.f);
     LArVertexHelper::GetOuterVertexAndDirection(pCluster, startPosition, startDirection);
 
+    const CartesianVector endPosition(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
     return LArVertexHelper::IsDirectionCorrect(startPosition, endPosition, startDirection);
 }
 
@@ -129,25 +125,25 @@ ClusterDirection LArVertexHelper::GetDirectionInZ(const Cluster *const pCluster)
     if (!LArVertexHelper::DoesCurrentVertexExist())
         return DIRECTION_UNKNOWN;
 
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex()); 
-
     // calculate inner and outer position and direction
-    CartesianVector innerPosition(0.f, 0.f, 0.f);
-    CartesianVector innerDirection(0.f, 0.f, 0.f);
-    CartesianVector outerPosition(0.f, 0.f, 0.f);
-    CartesianVector outerDirection(0.f, 0.f, 0.f);
+    CartesianVector innerPosition(0.f, 0.f, 0.f), innerDirection(0.f, 0.f, 0.f);
+    LArVertexHelper::GetInnerVertexAndDirection(pCluster, innerPosition, innerDirection);
 
-    LArVertexHelper::GetInnerVertexAndDirection(pCluster, innerPosition, innerDirection); 
-    LArVertexHelper::GetOuterVertexAndDirection(pCluster, outerPosition, outerDirection); 
+    CartesianVector outerPosition(0.f, 0.f, 0.f), outerDirection(0.f, 0.f, 0.f);
+    LArVertexHelper::GetOuterVertexAndDirection(pCluster, outerPosition, outerDirection);
 
     // calculate direction using closest end to vertex
-    bool isForwardInZ(false);
-    bool isBackwardInZ(false);
+    bool isForwardInZ(false), isBackwardInZ(false);
+    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex()); 
 
-    if ( (innerPosition-theVertex).GetMagnitudeSquared() < (outerPosition-theVertex).GetMagnitudeSquared() )   
+    if ((innerPosition - theVertex).GetMagnitudeSquared() < (outerPosition - theVertex).GetMagnitudeSquared())
+    {
         isForwardInZ = LArVertexHelper::IsDirectionCorrect(innerPosition, outerPosition, innerDirection);
+    }
     else
+    {
         isBackwardInZ = LArVertexHelper::IsDirectionCorrect(outerPosition, innerPosition, outerDirection);
+    }
 
     // analyse the results
     if (isForwardInZ && !isBackwardInZ)
@@ -164,10 +160,9 @@ ClusterDirection LArVertexHelper::GetDirectionInZ(const Cluster *const pCluster)
 bool LArVertexHelper::IsConnectedToCurrentVertex(const Cluster *const pCluster)
 {
     float rL(0.f), rT(0.f);
+    LArVertexHelper::GetImpactParametersToCurrentVertex(pCluster, rL, rT);
 
-    LArVertexHelper::GetImpactParametersToCurrentVertex( pCluster, rL, rT );
-
-    if ( rL > -2.5 && rL < 2.5 && rT < 2.5 ) 
+    if ((rL > -2.5f) && (rL < 2.5f) && (rT < 2.5f))
         return true;
 
     return false;
@@ -178,13 +173,12 @@ bool LArVertexHelper::IsConnectedToCurrentVertex(const Cluster *const pCluster)
 bool LArVertexHelper::IsPointingToCurrentVertex(const Cluster *const pCluster)
 {
     float rL(0.f), rT(0.f);
-
-    static const float tanSqTheta( std::pow( std::tan( M_PI * 2.0 / 180.0 ), 2.0 ) );
-
     LArVertexHelper::GetImpactParametersToCurrentVertex( pCluster, rL, rT );
 
-    if ( rL > -2.5 && rL < 25.f && rT*rT < 2.5*2.5 + rL*rL*tanSqTheta ) 
-        return true;  
+    static const float tanSqTheta(std::pow(std::tan(M_PI * 2.f / 180.f), 2.f));
+
+    if ((rL > -2.5f) && (rL < 25.f) && (rT * rT < 2.5f * 2.5f + rL * rL * tanSqTheta))
+        return true;
 
     return false;
 }
@@ -229,8 +223,6 @@ float LArVertexHelper::GetImpactParameterToCurrentVertex(const Cluster *const pC
 
 void LArVertexHelper::GetImpactParametersToCurrentVertex(const Cluster *const pCluster, float &longitudinal, float &transverse)
 {
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex()); 
-
     // Calculate inner and outer vertex and direction
     CartesianVector innerPosition(0.f, 0.f, 0.f), innerDirection(0.f, 0.f, 0.f);
     CartesianVector outerPosition(0.f, 0.f, 0.f), outerDirection(0.f, 0.f, 0.f);
@@ -239,10 +231,16 @@ void LArVertexHelper::GetImpactParametersToCurrentVertex(const Cluster *const pC
     LArVertexHelper::GetOuterVertexAndDirection(pCluster, outerPosition, outerDirection); 
 
     // Calculate impact parameters using closest end to vertex
-    if ( (innerPosition-theVertex).GetMagnitudeSquared() < (outerPosition-theVertex).GetMagnitudeSquared() )   
+    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex()); 
+
+    if ((innerPosition - theVertex).GetMagnitudeSquared() < (outerPosition - theVertex).GetMagnitudeSquared())
+    {
         return LArVertexHelper::GetImpactParameters(innerPosition, innerDirection, theVertex, longitudinal, transverse);
+    }
     else
+    {
         return LArVertexHelper::GetImpactParameters(outerPosition, outerDirection, theVertex, longitudinal, transverse);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -264,11 +262,11 @@ bool LArVertexHelper::IsDirectionCorrect(const CartesianVector &startPosition, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArVertexHelper::GetInnerVertexAndDirection(const Cluster *const pCluster, CartesianVector& innerPosition, CartesianVector& innerDirection)
+void LArVertexHelper::GetInnerVertexAndDirection(const Cluster *const pCluster, CartesianVector &innerPosition, CartesianVector &innerDirection)
 {
     ClusterHelper::ClusterFitResult innerLayerFit;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pCluster, m_numberOfLayersToFit, innerLayerFit));
-    
+
     const CartesianVector &innerIntercept(innerLayerFit.GetIntercept());
     const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
 
@@ -278,7 +276,7 @@ void LArVertexHelper::GetInnerVertexAndDirection(const Cluster *const pCluster, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArVertexHelper::GetOuterVertexAndDirection(const Cluster *const pCluster, CartesianVector& outerPosition, CartesianVector& outerDirection)
+void LArVertexHelper::GetOuterVertexAndDirection(const Cluster *const pCluster, CartesianVector &outerPosition, CartesianVector &outerDirection)
 {
     ClusterHelper::ClusterFitResult outerLayerFit;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pCluster, m_numberOfLayersToFit, outerLayerFit));
@@ -286,7 +284,7 @@ void LArVertexHelper::GetOuterVertexAndDirection(const Cluster *const pCluster, 
     const CartesianVector &outerIntercept(outerLayerFit.GetIntercept());
     const CartesianVector outerCentroid(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
 
-    outerDirection = outerLayerFit.GetDirection() * -1.0; // Note: minus sign!
+    outerDirection = outerLayerFit.GetDirection() * -1.f; // Note: minus sign!
     outerPosition  = outerIntercept + outerDirection * (outerDirection.GetDotProduct(outerCentroid-outerIntercept));
 }
 

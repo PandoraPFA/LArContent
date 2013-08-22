@@ -59,14 +59,14 @@ public:
          * 
          *  @return the rms
          */
-        const float GetRms() const;   
+        const float GetRms() const;
 
         /**
          *  @brief  Is this the inner vertex
          * 
          *  @return boolean
          */
-        const bool IsInner() const;  
+        const bool IsInner() const;
 
         /**
          *  @brief  Get vertex position and direction
@@ -78,7 +78,7 @@ public:
         void GetVertex( const unsigned int nLayersToSkip, pandora::CartesianVector& position, pandora::CartesianVector& direction, float& rms ) const;
 
     private:
-        pandora::Cluster*           m_pCluster;             ///< The address of the cluster
+        pandora::Cluster           *m_pCluster;             ///< The address of the cluster
         pandora::CartesianVector    m_position;             ///< The vertex position
         pandora::CartesianVector    m_direction;            ///< The vertex direction
         float                       m_rms;                  ///< rms from vertex fit

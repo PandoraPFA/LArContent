@@ -22,7 +22,7 @@ namespace lar
 StatusCode SeedLengthGrowingAlgorithm::Run()
 {
     m_pointingClusterMap.clear();
-    
+
     const ClusterList *pSeedClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
 
@@ -55,7 +55,7 @@ void SeedLengthGrowingAlgorithm::GetCandidateClusters(const ClusterList *const p
         Cluster *pCluster = *iter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < 25.f)
-	    continue;
+            continue;
 
         if (pCluster->GetNCaloHits() < 25)
             continue;
@@ -68,8 +68,6 @@ void SeedLengthGrowingAlgorithm::GetCandidateClusters(const ClusterList *const p
 
 SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
-
-
     // Parent and daughter directions
     const ClusterDirection seedDirection(LArVertexHelper::GetDirectionInZ(pClusterSeed));
     const ClusterDirection clusterDirection(LArVertexHelper::GetDirectionInZ(pCluster));
