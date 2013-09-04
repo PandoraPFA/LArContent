@@ -10,7 +10,7 @@
 
 #include "LArClusterAssociation/IsolatedHitMergingAlgorithm.h"
 #include "LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
-#include "LArClusterAssociation/TrackExtensionAlgorithm.h"
+#include "LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 #include "LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArClustering/ClusterCreationAlgorithm.h"
 #include "LArClustering/ClusteringParentAlgorithm.h"
@@ -67,6 +67,7 @@ public:
         d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
+        d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
         d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
@@ -83,7 +84,6 @@ public:
         d("LArSeedMerging",                         lar::SeedMergingAlgorithm::Factory)                                         \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
-        d("LArTrackExtension",                      lar::TrackExtensionAlgorithm::Factory)                                      \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
