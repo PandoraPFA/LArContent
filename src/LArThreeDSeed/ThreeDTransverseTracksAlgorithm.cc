@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h"
 
@@ -464,8 +465,15 @@ bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(Cluster *const pFirstClust
     const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
 
-    return (((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 1.f) ||
-            ((maxLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 1.f) );
+    // TODO: Think harder about this...!
+
+    const ClusterDirection direction1(LArVertexHelper::GetDirectionInZ(pFirstCluster));
+    const ClusterDirection direction2(LArVertexHelper::GetDirectionInZ(pSecondCluster));
+
+    return ( (((minLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && (direction1 != direction2))
+	  || (((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && (direction1 == direction2))
+          || (((maxLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && (direction1 == direction2))
+          || (((maxLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && (direction1 != direction2)) );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
