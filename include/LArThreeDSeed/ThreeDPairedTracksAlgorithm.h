@@ -10,6 +10,10 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArObjects/LArOverlapTensor.h"
+
+#include "PandoraMonitoringApi.h"
+
 namespace lar
 {
 
@@ -29,15 +33,20 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
+    pandora::StatusCode Run();    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    void CalculateOverlapResult(const pandora::ClusterVector& clusterVectorU, const pandora::ClusterVector& clusterVectorV, const pandora::ClusterVector& clusterVectorW);
+    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
+    bool BuildNextParticle();
 
-  
-    std::string             m_inputClusterListNameU;           ///< Input cluster list name for U view
-    std::string             m_inputClusterListNameV;           ///< Input cluster list name for V view
-    std::string             m_inputClusterListNameW;           ///< Input cluster list name for W view
+    OverlapTensor<TrackOverlapResult> m_overlapTensor;                ///< The overlap tensor
+
+    std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
+    std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
+    std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
+    std::string                 m_outputPfoListName;            ///< The output pfo list name
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
