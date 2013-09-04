@@ -125,8 +125,10 @@ void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const 
         }
     }
 
-    if (seedClustersU.empty() && seedClustersV.empty() && seedClustersW.empty())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    if ( (seedClustersU.empty() && seedClustersV.empty()) ||
+         (seedClustersV.empty() && seedClustersW.empty()) ||
+         (seedClustersW.empty() && seedClustersU.empty()) )  
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
     pSeedClusterU = NULL;
     pSeedClusterV = NULL;
@@ -179,6 +181,17 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(const ParticleFlowObject *co
             if (pAlternativePfo->GetClusterList().count(pSiblingSeed) == 0)
                 continue;
 
+            if( pAlternativePfo->GetNClusters() > 1 )
+	    {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveClusterFromPfo(*this, pAlternativePfo, pSiblingSeed));
+	    }
+            else
+	    {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeletePfo(*this, pAlternativePfo));
+                *pfoIter = NULL;
+	    }
+
+	    /*
             if (pPfo == pAlternativePfo)
             {
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveClusterFromPfo(*this, pAlternativePfo, pSiblingSeed));
@@ -189,6 +202,7 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(const ParticleFlowObject *co
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeletePfo(*this, pAlternativePfo));
                 *pfoIter = NULL;
             }
+	    */
         }
     }
 }
