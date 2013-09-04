@@ -66,17 +66,17 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShowers() const
                 this->GetSeedClusters(pPfo, pClusterU, pClusterV, pClusterW);
 
                 ClusterList seedMergesU, seedMergesV, seedMergesW, nonSeedMergesU, nonSeedMergesV, nonSeedMergesW;
-                this->RebuildThreeDShower(pPfo, pClusterU, pfoVector, seedMergesU, nonSeedMergesU);
-                this->RebuildThreeDShower(pPfo, pClusterV, pfoVector, seedMergesV, nonSeedMergesV);
-                this->RebuildThreeDShower(pPfo, pClusterW, pfoVector, seedMergesW, nonSeedMergesW);
+                if(pClusterU) this->RebuildThreeDShower(pPfo, pClusterU, pfoVector, seedMergesU, nonSeedMergesU);
+                if(pClusterV) this->RebuildThreeDShower(pPfo, pClusterV, pfoVector, seedMergesV, nonSeedMergesV);
+                if(pClusterW) this->RebuildThreeDShower(pPfo, pClusterW, pfoVector, seedMergesW, nonSeedMergesW);
 
-                this->PerformClusterMerges(pClusterU, seedMergesU, m_seedClusterListNameU, m_seedClusterListNameU);
-                this->PerformClusterMerges(pClusterV, seedMergesV, m_seedClusterListNameV, m_seedClusterListNameV);
-                this->PerformClusterMerges(pClusterW, seedMergesW, m_seedClusterListNameW, m_seedClusterListNameW);
+                if(pClusterU) this->PerformClusterMerges(pClusterU, seedMergesU, m_seedClusterListNameU, m_seedClusterListNameU);
+                if(pClusterV) this->PerformClusterMerges(pClusterV, seedMergesV, m_seedClusterListNameV, m_seedClusterListNameV);
+                if(pClusterW) this->PerformClusterMerges(pClusterW, seedMergesW, m_seedClusterListNameW, m_seedClusterListNameW);
 
-                this->PerformClusterMerges(pClusterU, nonSeedMergesU, m_seedClusterListNameU, m_nonSeedClusterListNameU);
-                this->PerformClusterMerges(pClusterV, nonSeedMergesV, m_seedClusterListNameV, m_nonSeedClusterListNameV);
-                this->PerformClusterMerges(pClusterW, nonSeedMergesW, m_seedClusterListNameW, m_nonSeedClusterListNameW);
+                if(pClusterU) this->PerformClusterMerges(pClusterU, nonSeedMergesU, m_seedClusterListNameU, m_nonSeedClusterListNameU);
+                if(pClusterV) this->PerformClusterMerges(pClusterV, nonSeedMergesV, m_seedClusterListNameV, m_nonSeedClusterListNameV);
+                if(pClusterW) this->PerformClusterMerges(pClusterW, nonSeedMergesW, m_seedClusterListNameW, m_nonSeedClusterListNameW);
             }
             catch (StatusCodeException &statusCodeException)
             {
@@ -125,16 +125,30 @@ void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const 
         }
     }
 
-    if (seedClustersU.empty() || seedClustersV.empty() || seedClustersW.empty())
+    if (seedClustersU.empty() && seedClustersV.empty() && seedClustersW.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    std::sort(seedClustersU.begin(), seedClustersU.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
-    std::sort(seedClustersV.begin(), seedClustersV.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
-    std::sort(seedClustersW.begin(), seedClustersW.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+    pSeedClusterU = NULL;
+    pSeedClusterV = NULL;
+    pSeedClusterW = NULL;
 
-    pSeedClusterU = seedClustersU.at(0);
-    pSeedClusterV = seedClustersV.at(0);
-    pSeedClusterW = seedClustersW.at(0);
+    if (!seedClustersU.empty())
+    {
+        std::sort(seedClustersU.begin(), seedClustersU.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+        pSeedClusterU = seedClustersU.at(0);
+    }
+
+    if (!seedClustersV.empty())
+    {
+        std::sort(seedClustersV.begin(), seedClustersV.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+        pSeedClusterV = seedClustersV.at(0);
+    }
+
+    if (!seedClustersW.empty())
+    {
+        std::sort(seedClustersW.begin(), seedClustersW.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+        pSeedClusterW = seedClustersW.at(0);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
