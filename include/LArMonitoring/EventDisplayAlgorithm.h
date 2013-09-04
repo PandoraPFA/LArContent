@@ -41,6 +41,7 @@ private:
     std::string        m_seedClusterListName;
     std::string        m_nonSeedClusterListName;
     std::string        m_vertexName;
+    std::string        m_particleListName;
 
 };
 

@@ -22,59 +22,138 @@ StatusCode EventDisplayAlgorithm::Run()
 { 
     const ClusterList *pSeedClusterList = NULL;
     const ClusterList *pNonSeedClusterList = NULL;
+    const PfoList     *pPfoList = NULL;
 
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList))
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
+
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetPfoList(*this, m_particleListName, pPfoList));
+
+    if (NULL == pSeedClusterList && NULL == pNonSeedClusterList)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pNonSeedClusterList));  
+	std::cout << " --- Loading Current Cluster List --- " << std::endl;
     }
 
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList))
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
-    }
-    else
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pNonSeedClusterList));
-    }
 
-    ClusterVector seedClusterVector, nonSeedClusterVector;
+    // Hit type
+    HitType hitType(CUSTOM); 
+
 
     // Add the seed clusters
+    ClusterList seedClusterList;
+
     if( NULL != pSeedClusterList )
     {
         for ( ClusterList::const_iterator iter = pSeedClusterList->begin(), iterEnd = pSeedClusterList->end(); iter != iterEnd; ++iter ) 
-            seedClusterVector.push_back(*iter);
-        std::sort(seedClusterVector.begin(), seedClusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
+	{
+            Cluster *pCluster = *iter;
+
+	    if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
+                hitType = VIEW_U;
+                
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
+                hitType = VIEW_V;
+                
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
+                hitType = VIEW_W;
+	    
+            if (pCluster->ContainsHitType(hitType) == false)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            if (pCluster->IsAvailable())
+                seedClusterList.insert(pCluster);
+	}
     }
 
+  
     // Add the non-seed clusters
+    ClusterList nonSeedClusterList; 
+
     if( NULL != pNonSeedClusterList )
     {
         for ( ClusterList::const_iterator iter = pNonSeedClusterList->begin(), iterEnd = pNonSeedClusterList->end(); iter != iterEnd; ++iter ) 
-            nonSeedClusterVector.push_back(*iter);
-        std::sort(nonSeedClusterVector.begin(), nonSeedClusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
+	{
+            Cluster *pCluster = *iter;
+
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
+                hitType = VIEW_U;
+                
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
+                hitType = VIEW_V;
+                
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
+                hitType = VIEW_W;
+	    
+            if (pCluster->ContainsHitType(hitType) == false)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+	    if (pCluster->IsAvailable())
+                nonSeedClusterList.insert(pCluster);
+	}
     }
 
-    
-    CartesianVector theVertex = LArVertexHelper::GetVertex(m_vertexName);
+   
+    // Start Drawing Stuff
+    unsigned int n(0);
 
     PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 
-    for( unsigned int n=0; n<seedClusterVector.size(); ++n ){
-      Cluster* pCluster = seedClusterVector.at(n);
-      ClusterList clusterList;
-      clusterList.insert(pCluster);
-      PandoraMonitoringApi::VisualizeClusters(&clusterList, "Cluster", GetColor(n) );
-    } 
+    if ( NULL != pPfoList )
+    {
+        PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
 
-    for( unsigned int n=0; n<nonSeedClusterVector.size(); ++n ){
-      Cluster* pCluster = nonSeedClusterVector.at(n);
-      ClusterList clusterList;
-      clusterList.insert(pCluster);
-      PandoraMonitoringApi::VisualizeClusters(&clusterList, "Cluster", GRAY );
-    } 
+        for (PfoVector::iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
+        {
+            ParticleFlowObject *pPfo = *pIter;
 
-    PandoraMonitoringApi::AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0);
+            ClusterList clusterList;
+
+            for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
+            {
+                Cluster *pCluster = *cIter;
+
+                if ( pCluster->ContainsHitType(hitType) )
+		    clusterList.insert(pCluster);
+	    }
+
+            PandoraMonitoringApi::VisualizeClusters(&clusterList, "Particles", GetColor(n++) );
+	}
+    
+        PandoraMonitoringApi::VisualizeClusters(&seedClusterList, "Seeds", GRAY );
+        PandoraMonitoringApi::VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY );
+    }
+
+    else if( NULL != pSeedClusterList )
+    {
+        for( ClusterList::const_iterator iter = seedClusterList.begin(), iterEnd = seedClusterList.end(); iter != iterEnd; ++iter )
+	{
+	    Cluster* pCluster = *iter; 
+            ClusterList tempList;
+            tempList.insert(pCluster);
+            PandoraMonitoringApi::VisualizeClusters(&tempList, "Seed", GetColor(n++) );
+	}
+
+        PandoraMonitoringApi::VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY );
+    }
+
+    else
+    {
+        for( ClusterList::const_iterator iter = nonSeedClusterList.begin(), iterEnd = nonSeedClusterList.end(); iter != iterEnd; ++iter )
+	{
+	    Cluster* pCluster = *iter; 
+            ClusterList tempList;
+            tempList.insert(pCluster);
+            PandoraMonitoringApi::VisualizeClusters(&tempList, "NonSeed", GetColor(n++) );
+	}
+
+    }
+
+    if( LArVertexHelper::DoesVertexExist(m_vertexName) ){
+      CartesianVector theVertex = LArVertexHelper::GetVertex(m_vertexName);
+      PandoraMonitoringApi::AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0);
+    }
 
     PandoraMonitoringApi::ViewEvent();
 
@@ -110,9 +189,21 @@ Color EventDisplayAlgorithm::GetColor( unsigned int icolor )
 
 StatusCode EventDisplayAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexName", m_vertexName));
+    m_seedClusterListName = "SeedClusterListName";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "SeedClusterListName", m_seedClusterListName));
+
+    m_nonSeedClusterListName = "NonSeedClusterListName";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "NonSeedClusterListName", m_nonSeedClusterListName));
+
+    m_vertexName = "VertexName";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "VertexName", m_vertexName));
+
+    m_particleListName = "ParticleListName";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ParticleListName", m_particleListName));
 
     return STATUS_CODE_SUCCESS;
 }
