@@ -24,9 +24,28 @@ namespace lar
 {
 
 StatusCode VertexFindingAlgorithm::Run()
-{
+{ 
+    // Build true vertex (TO: Replace these hard-coded numbers!)
+    CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f 
+    CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f
+    CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f, 0.f, 100.f 
+
+    LArVertexHelper::AddVertex("TrueVertexU", trueVertexU);
+    LArVertexHelper::AddVertex("TrueVertexV", trueVertexV);
+    LArVertexHelper::AddVertex("TrueVertexW", trueVertexW);
+
+
     // Cheat the vertex
-    if ( m_useTrueVertex ) return SetTrueVertex();
+    if ( m_useTrueVertex )
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexU, m_vertexNameU ));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexV, m_vertexNameV ));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexW, m_vertexNameW ));
+
+        return STATUS_CODE_SUCCESS;
+    }
 
 
     // Get the cluster lists for each view
@@ -1298,23 +1317,6 @@ bool VertexFindingAlgorithm::IsConsistentWithBeamDirectionUV( const CartesianVec
     CartesianVector directionW( LArGeometryHelper::MergeTwoDirections(VIEW_U,VIEW_V,directionU,directionV) );
 
     return this->IsConsistentWithBeamDirectionW( directionW );
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode VertexFindingAlgorithm::SetTrueVertex()
-{
-    CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f,0.f,151.f 
-    CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f,0.f,151.f
-    CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f,0.f,100.f 
-
-    LArVertexHelper::AddVertex(m_vertexNameU, trueVertexU);
-    LArVertexHelper::AddVertex(m_vertexNameV, trueVertexV);
-    LArVertexHelper::AddVertex(m_vertexNameW, trueVertexW);
-    
-    LArVertexHelper::SetCurrentVertex(m_vertexNameW);
-
-    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

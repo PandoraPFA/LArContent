@@ -97,7 +97,6 @@ class VertexFindingAlgorithm : public pandora::Algorithm
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StatusCode SetTrueVertex();
     pandora::StatusCode SetVertex(const pandora::CartesianVector& eventVertex, std::string vertexName);
     
     
