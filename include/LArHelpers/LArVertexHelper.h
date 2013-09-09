@@ -80,7 +80,14 @@ public:
      * 
      *  @return the current vertex
      */
-    static const pandora::CartesianVector &GetCurrentVertex();
+    static const pandora::CartesianVector &GetCurrentVertex(); 
+
+    /**
+     *  @brief  Get the current vertex name, if set
+     * 
+     *  @return the current vertex name
+     */
+    static const std::string GetCurrentVertexName();
 
     /**
      *  @brief  Ask if the current vertex exists
@@ -122,6 +129,24 @@ public:
      *  @return boolean
      */
     static bool IsBackwardInZ(const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Ask if cluster is propagation forwards in Z
+     * 
+     *  @param  pCluster address of the cluster
+     *
+     *  @return boolean
+     */
+    static bool IsForwardInZ_WorkIn3D(const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Ask if cluster is propagation backward in Z
+     * 
+     *  @param  pCluster address of the cluster
+     *
+     *  @return boolean
+     */
+    static bool IsBackwardInZ_WorkIn3D(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Ask if one end of cluster is adjacent to the vertex
