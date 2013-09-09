@@ -255,14 +255,14 @@ bool ThreeDPairedTracksAlgorithm::BuildNextParticle()
 
     if ( pBestClusterU && pBestClusterV && pBestClusterW )
     {
-ClusterList tempListU; tempListU.insert(pBestClusterU);
-ClusterList tempListV; tempListV.insert(pBestClusterV);
-ClusterList tempListW; tempListW.insert(pBestClusterW); 
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(&tempListU, "ClusterU", RED);
-PandoraMonitoringApi::VisualizeClusters(&tempListV, "ClusterV", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&tempListW, "ClusterW", BLUE);
-PandoraMonitoringApi::ViewEvent();
+// ClusterList tempListU; tempListU.insert(pBestClusterU);
+// ClusterList tempListV; tempListV.insert(pBestClusterV);
+// ClusterList tempListW; tempListW.insert(pBestClusterW); 
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&tempListU, "ClusterU", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempListV, "ClusterV", GREEN);
+// PandoraMonitoringApi::VisualizeClusters(&tempListW, "ClusterW", BLUE);
+// PandoraMonitoringApi::ViewEvent();
 
         const PfoList *pPfoList = NULL; std::string pfoListName;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryPfoListAndSetCurrent(*this, pPfoList, pfoListName));
