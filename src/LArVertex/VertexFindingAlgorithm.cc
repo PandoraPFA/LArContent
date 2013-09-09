@@ -29,11 +29,12 @@ StatusCode VertexFindingAlgorithm::Run()
     CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f 
     CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f
     CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f, 0.f, 100.f 
+    CartesianVector trueVertex3D(130.5f, 0.f, 100.f); // 128.2f, 0.f, 100.f 
 
     LArVertexHelper::AddVertex("TrueVertexU", trueVertexU);
     LArVertexHelper::AddVertex("TrueVertexV", trueVertexV);
     LArVertexHelper::AddVertex("TrueVertexW", trueVertexW);
-
+    LArVertexHelper::AddVertex("TrueVertex3D", trueVertex3D);
 
     // Cheat the vertex
     if ( m_useTrueVertex )
@@ -43,6 +44,8 @@ StatusCode VertexFindingAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexV, m_vertexNameV ));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexW, m_vertexNameW ));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertex3D, m_vertexName3D ));
 
         return STATUS_CODE_SUCCESS;
     }
@@ -122,6 +125,16 @@ StatusCode VertexFindingAlgorithm::Run()
 
 
 
+    // Calculate 3D Vertex
+    float chiSquared(0.f);
+    CartesianVector recoVertex3D(0.f,0.f,0.f);
+    
+    LArGeometryHelper::MergeThreePositions3D(VIEW_U, VIEW_V, VIEW_W,
+                                             recoVertexU, recoVertexV, recoVertexW,
+                                             recoVertex3D, chiSquared);
+                          
+
+
     // Clean up
     this->CleanUp( theFigureOfMeritMapU ); 
     this->CleanUp( theFigureOfMeritMapV ); 
@@ -134,6 +147,8 @@ StatusCode VertexFindingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertexV, m_vertexNameV ));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertexW, m_vertexNameW ));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertex3D, m_vertexName3D ));
 
 
 
@@ -1344,6 +1359,10 @@ StatusCode VertexFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_vertexNameW = "";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "VertexNameW", m_vertexNameW));
+
+    m_vertexName3D = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+	 "VertexName3D", m_vertexName3D));
 
     m_clusterListNameU = "";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 

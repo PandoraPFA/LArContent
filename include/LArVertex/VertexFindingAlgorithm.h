@@ -214,6 +214,7 @@ class VertexFindingAlgorithm : public pandora::Algorithm
     std::string     m_vertexNameU;       ///<
     std::string     m_vertexNameV;       ///<
     std::string     m_vertexNameW;       ///<
+    std::string     m_vertexName3D;      ///<
 
 
     std::string     m_clusterListNameU;  ///< 
