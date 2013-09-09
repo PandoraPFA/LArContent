@@ -306,6 +306,17 @@ private:
      */
     bool IsParticleMatch(pandora::Cluster *const pFirstCluster, pandora::Cluster *const pSecondCluster) const;
 
+    /**
+     *  @brief  Whether two clusters might match and represent the same particle
+     * 
+     *  @param  pFirstCluster the address of the first cluster
+     *  @param  pSecondCluster the address of the second cluster
+     * 
+     *  @return boolean
+     */
+    bool IsPossibleMatch(pandora::Cluster *const pFirstCluster, pandora::Cluster *const pSecondCluster) const;
+
+
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
