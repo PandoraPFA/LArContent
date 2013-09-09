@@ -39,6 +39,7 @@
 #include "LArUtility/EventPreparationAlgorithm.h"
 #include "LArUtility/ListMergingAlgorithm.h"
 #include "LArUtility/TwoDPreparationAlgorithm.h"
+#include "LArUtility/ThreeDPreparationAlgorithm.h"
 #include "LArVertex/VertexFindingAlgorithm.h"
 
 #include "LArHelpers/LArClusterHelper.h"
@@ -88,6 +89,7 @@ public:
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
+        d("LArThreeDPreparation",                   lar::ThreeDPreparationAlgorithm::Factory)                                   \
         d("LArVertexFinding",                       lar::VertexFindingAlgorithm::Factory)                                       \
         d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)
 
