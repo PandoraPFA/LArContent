@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/LArUtility/ThreeDPreparationAlgorithm.cc
  * 
- *  @brief  Implementation of the two dimensional preparation algorithm class.
+ *  @brief  Implementation of the three dimensional preparation algorithm class.
  * 
  *  $Log: $
  */

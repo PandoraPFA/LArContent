@@ -31,11 +31,9 @@ public:
     };
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    void GetListOfCleanClusters( const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector ) const;
-    void FillAssociationMatrix( const pandora::ClusterVector& clusterVector, ClusterAssociationMatrix& clusterAssociationMatrix) const;
-    bool AreClustersAssociated( pandora::Cluster* pCluster1, pandora::Cluster* pCluster2, ClusterAssociationMatrix& clusterAssociationMatrix ) const;
-
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    void FillAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+    bool AreClustersAssociated(pandora::Cluster *pCluster1, pandora::Cluster *pCluster2, const ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     /**
      *  @brief  Form associations between pointing clusters
@@ -44,7 +42,7 @@ private:
      *  @param  clusterJ the second pointing cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
-    void FillAssociationMatrix( const LArPointingCluster& clusterI, const LArPointingCluster& clusterJ, ClusterAssociationMatrix& clusterAssociationMatrix) const;
+    void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     /**
      *  @brief  Form associations between pointing cluster vertices
@@ -53,9 +51,11 @@ private:
      *  @param  clusterVertexJ the second pointing cluster vertex
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
-    void FillAssociationMatrix( const LArPointingCluster::Vertex& clusterVertexI, const LArPointingCluster::Vertex& clusterVertexJ, ClusterAssociationMatrix& clusterAssociationMatrix ) const;
+    void FillAssociationMatrix(const LArPointingCluster::Vertex &clusterVertexI, const LArPointingCluster::Vertex &clusterVertexJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
-  
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float   m_spatialResolution;    ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

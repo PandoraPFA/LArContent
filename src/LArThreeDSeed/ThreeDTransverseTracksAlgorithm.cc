@@ -67,7 +67,6 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
 
     if (nSamplingPointsPerLayer > m_minOverallMatchedFraction)
          m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, trackOverlapResult);
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -440,28 +439,12 @@ void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(const ParticleComponent
 
 bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(const ParticleComponent &firstComponent, const ParticleComponent &secondComponent) const
 {
-
-// ClusterList firstListU; firstListU.insert(firstComponent.GetClusterU());
-// ClusterList firstListV; firstListV.insert(firstComponent.GetClusterV());
-// ClusterList firstListW; firstListW.insert(firstComponent.GetClusterW()); 
-// ClusterList secondListU; secondListU.insert(secondComponent.GetClusterU());
-// ClusterList secondListV; secondListV.insert(secondComponent.GetClusterV());
-// ClusterList secondListW; secondListW.insert(secondComponent.GetClusterW()); 
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&firstListU, "FirstClusterU", RED);
-// PandoraMonitoringApi::VisualizeClusters(&firstListV, "FirstClusterV", RED);
-// PandoraMonitoringApi::VisualizeClusters(&firstListW, "FirstClusterW", RED);
-// PandoraMonitoringApi::VisualizeClusters(&secondListU, "SecondClusterU", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&secondListV, "SecondClusterV", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&secondListW, "SecondClusterW", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-
-    return ( ( this->IsPossibleMatch(firstComponent.GetClusterU(), secondComponent.GetClusterU()) &&
-               this->IsPossibleMatch(firstComponent.GetClusterV(), secondComponent.GetClusterV()) &&
-               this->IsPossibleMatch(firstComponent.GetClusterW(), secondComponent.GetClusterW()) )
-          && ( this->IsParticleMatch(firstComponent.GetClusterU(), secondComponent.GetClusterU()) ||
-               this->IsParticleMatch(firstComponent.GetClusterV(), secondComponent.GetClusterV()) ||
-               this->IsParticleMatch(firstComponent.GetClusterW(), secondComponent.GetClusterW()) ) );
+    return ((this->IsPossibleMatch(firstComponent.GetClusterU(), secondComponent.GetClusterU()) &&
+             this->IsPossibleMatch(firstComponent.GetClusterV(), secondComponent.GetClusterV()) &&
+             this->IsPossibleMatch(firstComponent.GetClusterW(), secondComponent.GetClusterW())) &&
+            (this->IsParticleMatch(firstComponent.GetClusterU(), secondComponent.GetClusterU()) ||
+             this->IsParticleMatch(firstComponent.GetClusterV(), secondComponent.GetClusterV()) ||
+             this->IsParticleMatch(firstComponent.GetClusterW(), secondComponent.GetClusterW())));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -485,7 +468,7 @@ bool ThreeDTransverseTracksAlgorithm::IsPossibleMatch(Cluster *const pFirstClust
     const CartesianVector maxLayerPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
     const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
-  
+
     const CartesianVector linearDirection1((maxLayerPosition1 - minLayerPosition1).GetUnitVector());
     const CartesianVector linearDirection2((maxLayerPosition2 - minLayerPosition2).GetUnitVector());
 
@@ -497,10 +480,10 @@ bool ThreeDTransverseTracksAlgorithm::IsPossibleMatch(Cluster *const pFirstClust
     const float clusterOverlap2_Pos1(linearDirection2.GetDotProduct(minLayerPosition1 - minLayerPosition2));
     const float clusterOverlap2_Pos2(linearDirection2.GetDotProduct(maxLayerPosition1 - minLayerPosition2));
 
-    return( (std::min(clusterOverlap1_Pos1,clusterOverlap1_Pos2) > clusterOverlap1_Pos0 - 2.f) ||
-	    (std::min(clusterOverlap2_Pos1,clusterOverlap2_Pos2) > clusterOverlap2_Pos0 - 2.f) ||
-            (std::max(clusterOverlap1_Pos1,clusterOverlap1_Pos2) < 2.f) ||
-	    (std::max(clusterOverlap2_Pos1,clusterOverlap2_Pos2) < 2.f) );
+    return ((std::min(clusterOverlap1_Pos1, clusterOverlap1_Pos2) > clusterOverlap1_Pos0 - 2.f) ||
+            (std::min(clusterOverlap2_Pos1, clusterOverlap2_Pos2) > clusterOverlap2_Pos0 - 2.f) ||
+            (std::max(clusterOverlap1_Pos1, clusterOverlap1_Pos2) < 2.f) ||
+            (std::max(clusterOverlap2_Pos1, clusterOverlap2_Pos2) < 2.f));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -508,6 +491,9 @@ bool ThreeDTransverseTracksAlgorithm::IsPossibleMatch(Cluster *const pFirstClust
 bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(Cluster *const pFirstCluster, Cluster *const pSecondCluster) const
 {
     if (pFirstCluster == pSecondCluster)
+        return false;
+
+    if (!LArVertexHelper::DoesCurrentVertexExist())
         return false;
 
     SlidingFitResultMap::const_iterator iter1 = m_slidingFitResultMap.find(pFirstCluster);
@@ -524,28 +510,15 @@ bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(Cluster *const pFirstClust
     const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
 
-    // TODO: Think harder about this... 
-    if (LArVertexHelper::DoesCurrentVertexExist() )
-    {
-        const bool isForward1(LArVertexHelper::IsForwardInZ_WorkIn3D(pFirstCluster));
-        const bool isForward2(LArVertexHelper::IsForwardInZ_WorkIn3D(pSecondCluster));
+    const bool isForward1(LArVertexHelper::IsForwardInZ_WorkIn3D(pFirstCluster));
+    const bool isForward2(LArVertexHelper::IsForwardInZ_WorkIn3D(pSecondCluster));
+    const bool isBackward1(LArVertexHelper::IsBackwardInZ_WorkIn3D(pFirstCluster));
+    const bool isBackward2(LArVertexHelper::IsBackwardInZ_WorkIn3D(pSecondCluster));
 
-        const bool isBackward1(LArVertexHelper::IsBackwardInZ_WorkIn3D(pFirstCluster));    
-        const bool isBackward2(LArVertexHelper::IsBackwardInZ_WorkIn3D(pSecondCluster));
-  
-        return ( (((minLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||
-                 (((maxLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||
-                 (((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isBackward2) && !(isBackward1 && isForward2)) ||
-                 (((maxLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isBackward2) && !(isBackward1 && isForward2)) );
-    }
-
-    // TODO: ...especially if there is no vertex at all
-    else
-    {
-        return false; // BAIL OUT...
-    }
-
-    return false;
+    return ((((minLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||
+            (((maxLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||
+            (((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isBackward2) && !(isBackward1 && isForward2)) ||
+            (((maxLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isBackward2) && !(isBackward1 && isForward2)) );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

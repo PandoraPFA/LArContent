@@ -177,12 +177,6 @@ void SeedGrowingAlgorithm::MakeClusterMerges(const SeedAssociationList &seedAsso
             if (pDaughterCluster == pParticleSeed)
                 continue;
 
-// ClusterList parent, daughter; parent.insert(const_cast<Cluster*>(pParticleSeed)); daughter.insert(const_cast<Cluster*>(pDaughterCluster));
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
-// PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParticleSeed, pDaughterCluster,
                 m_seedClusterListName, m_nonSeedClusterListName));
         }
