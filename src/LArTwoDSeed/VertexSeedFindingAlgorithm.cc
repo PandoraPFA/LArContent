@@ -46,12 +46,12 @@ void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &candida
 
         if (innerDisplacementSquared < outerDisplacementSquared)
         {
-            if (LArPointingClusterHelper::IsNode(eventVertex,innerVertex))
+            if (LArPointingClusterHelper::IsNode(eventVertex, innerVertex))
             {
                 if (possibleNode)
                     seeds.push_back(innerVertex);
             }
-            else if(LArPointingClusterHelper::IsEmission(eventVertex,innerVertex))
+            else if(LArPointingClusterHelper::IsEmission(eventVertex, innerVertex))
             {
                 if (possibleEmission)
                     emissions.push_back(innerVertex);
@@ -59,12 +59,12 @@ void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &candida
         }
         else
         {
-            if (LArPointingClusterHelper::IsNode(eventVertex,outerVertex))
+            if (LArPointingClusterHelper::IsNode(eventVertex, outerVertex))
             {
                 if (possibleNode)
                     seeds.push_back(outerVertex);
             }
-            else if(LArPointingClusterHelper::IsEmission(eventVertex,outerVertex))
+            else if(LArPointingClusterHelper::IsEmission(eventVertex, outerVertex))
             {
                 if (possibleEmission)
                     emissions.push_back(outerVertex);
