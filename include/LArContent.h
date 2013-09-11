@@ -14,7 +14,6 @@
 #include "LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArClustering/ClusterCreationAlgorithm.h"
 #include "LArClustering/ClusteringParentAlgorithm.h"
-#include "LArClustering/RemnantClusteringAlgorithm.h"
 #include "LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
@@ -62,7 +61,6 @@ public:
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
-        d("LArRemnantClustering",                   lar::RemnantClusteringAlgorithm::Factory)                                   \
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \

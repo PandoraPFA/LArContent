@@ -9,7 +9,10 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
+
+#include "LArObjects/LArPointingCluster.h"
 
 #include "LArTwoDSeed/SeedMergingAlgorithm.h"
 
@@ -147,192 +150,70 @@ bool SeedMergingAlgorithm::AreParticleSeedsAssociated(const ParticleSeed *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SeedMergingAlgorithm::AreSeedClustersAssociated(const Cluster *const pClusterI, const Cluster *const pClusterJ) const
+bool SeedMergingAlgorithm::AreSeedClustersAssociated(Cluster *const pClusterI, Cluster *const pClusterJ) const
 {
+    if (!LArVertexHelper::DoesCurrentVertexExist())
+        return false;
+
+    const CartesianVector &eventVertex(LArVertexHelper::GetCurrentVertex());
+    const LArPointingCluster pointingClusterI(pClusterI);
+    const LArPointingCluster pointingClusterJ(pClusterJ);
+
+    const bool isVertexAssociatedI(LArPointingClusterHelper::IsNode(eventVertex, pointingClusterI.GetInnerVertex()) ||
+        LArPointingClusterHelper::IsNode(eventVertex, pointingClusterI.GetOuterVertex()) ||
+        LArPointingClusterHelper::IsEmission(eventVertex, pointingClusterI.GetInnerVertex()) ||
+        LArPointingClusterHelper::IsEmission(eventVertex, pointingClusterI.GetOuterVertex()) );
+
+    const bool isVertexAssociatedJ(LArPointingClusterHelper::IsNode(eventVertex, pointingClusterJ.GetInnerVertex()) ||
+        LArPointingClusterHelper::IsNode(eventVertex, pointingClusterJ.GetOuterVertex()) ||
+        LArPointingClusterHelper::IsEmission(eventVertex, pointingClusterJ.GetInnerVertex()) ||
+        LArPointingClusterHelper::IsEmission(eventVertex, pointingClusterJ.GetOuterVertex()) );
+
+    if (isVertexAssociatedI && isVertexAssociatedJ)
+        return false;
+
+    // Apply track-like selection criteria 
+    const bool isTrackLikeI = (LArClusterHelper::LArTrackWidth(pClusterI) < 0.15f);
+    const bool isTrackLikeJ = (LArClusterHelper::LArTrackWidth(pClusterJ) < 0.15f);
+
+    if (isTrackLikeI || isTrackLikeJ)
+        return false;
+
     // Direction measurements
     const bool currentVertexExists(LArVertexHelper::DoesCurrentVertexExist());
 
-    const bool isForwardI = (currentVertexExists) ? LArVertexHelper::IsForwardInZ(pClusterI) : false;
-    const bool isBackwardI = (currentVertexExists) ? LArVertexHelper::IsBackwardInZ(pClusterI) : false;
-    const bool checkForwardI = (isForwardI || !isBackwardI);
-    const bool checkBackwardI = (isBackwardI || !isForwardI);
+    const bool isForwardI(currentVertexExists ? LArVertexHelper::IsForwardInZ(pClusterI) : false);
+    const bool isBackwardI(currentVertexExists ? LArVertexHelper::IsBackwardInZ(pClusterI) : false);
+    const bool checkForwardI(isForwardI || !isBackwardI);
+    const bool checkBackwardI(isBackwardI || !isForwardI);
 
-    const bool isForwardJ = (currentVertexExists) ? LArVertexHelper::IsForwardInZ(pClusterJ) : false;
-    const bool isBackwardJ = (currentVertexExists) ? LArVertexHelper::IsBackwardInZ(pClusterJ) : false;
-    const bool checkForwardJ = (isForwardJ || !isBackwardJ);
-    const bool checkBackwardJ = (isBackwardJ || !isForwardJ);
+    const bool isForwardJ(currentVertexExists ? LArVertexHelper::IsForwardInZ(pClusterJ) : false);
+    const bool isBackwardJ(currentVertexExists ? LArVertexHelper::IsBackwardInZ(pClusterJ) : false);
+    const bool checkForwardJ(isForwardJ || !isBackwardJ);
+    const bool checkBackwardJ(isBackwardJ || !isForwardJ);
 
-    // Consistent Longitudinal Directions
-    const bool consistentForwardDirection = (checkForwardI && checkForwardJ);
-    const bool consistentBackwardDirection = (checkBackwardI && checkBackwardJ);
-    const bool consistentLongitudinalDirection = (consistentForwardDirection || consistentBackwardDirection);
+    const bool consistentLongitudinalDirection = ((checkForwardI && checkForwardJ) || (checkBackwardI && checkBackwardJ));
 
-    // Apply track-like selection criteria 
-    const bool isTrackLikeI = (LArClusterHelper::LArTrackWidth(pClusterI) < 0.15);
-    const bool isTrackLikeJ = (LArClusterHelper::LArTrackWidth(pClusterJ) < 0.15);
-    const bool useTrackLikeCuts = (isTrackLikeI || isTrackLikeJ);
+    if (!consistentLongitudinalDirection)
+        return false;
 
-    // Calculate proximity variables
+    // Calculate proximity variables and look for overlapping showers
     const float rOuterI(LArClusterHelper::GetClosestDistance(pClusterI->GetCentroid(pClusterI->GetOuterPseudoLayer()), pClusterJ));
     const float rOuterJ(LArClusterHelper::GetClosestDistance(pClusterJ->GetCentroid(pClusterJ->GetOuterPseudoLayer()), pClusterI));
     const float rInnerI(LArClusterHelper::GetClosestDistance(pClusterI->GetCentroid(pClusterI->GetInnerPseudoLayer()), pClusterJ));
     const float rInnerJ(LArClusterHelper::GetClosestDistance(pClusterJ->GetCentroid(pClusterJ->GetInnerPseudoLayer()), pClusterI));
 
-    // Association check 1, look for overlapping clusters
-    if (consistentLongitudinalDirection)
-    {
-        if (useTrackLikeCuts)
-        {
-            // look for overlapping tracks
-            if ((rInnerJ < 2.5 && rOuterJ < 2.5) && (!checkForwardI || rInnerI > 10.) && (!checkBackwardI || rOuterI > 10.))
-                return true;
-
-            if ((rInnerI < 2.5 && rOuterI < 2.5) && (!checkForwardJ || rInnerJ > 10.) && (!checkBackwardJ || rOuterJ > 10.))
-                return true;
-
-            if ((rInnerI < 2.5 && rOuterJ < 2.5) && (!checkForwardJ || rInnerJ > 10.) && (!checkBackwardI || rOuterI > 10.))
-                return true;
-
-            if ((rInnerJ < 2.5 && rOuterI < 2.5) && (!checkForwardI || rInnerI > 10.) && (!checkBackwardJ || rOuterJ > 10.))
-                return true;
-        }
-        else
-        {
-            // look for overlapping showers
-            if ((rInnerJ < 5. && rOuterJ < 5.) && (!checkForwardI || rInnerI > 5.) && (!checkBackwardI || rOuterI > 5.))
-                return true;
-
-            if ((rInnerI < 5. && rOuterI < 5.) && (!checkForwardJ || rInnerJ > 5.) && (!checkBackwardJ || rOuterJ > 5.))
-                return true;
-
-            if ((rInnerI < 5. && rOuterJ < 5.) && (!checkForwardJ || rInnerJ > 5.) && (!checkBackwardI || rOuterI > 5.))
-                return true;
-
-            if ((rInnerJ < 5. && rOuterI < 5.) && (!checkForwardI || rInnerI > 5.) && (!checkBackwardJ || rOuterJ > 5.))
-                return true;
-        }
-    }
-
-    // Association check 2, look for branching clusters (where J is a branch of I)
-    if ((!checkForwardI || rInnerI > 20.) && (!checkBackwardI || rOuterI > 20.) && ((checkForwardJ && rInnerJ < 2.5) || (checkBackwardJ && rOuterJ < 2.5)))
+    if ((rInnerJ < 5. && rOuterJ < 5.) && (!checkForwardI || rInnerI > 5.) && (!checkBackwardI || rOuterI > 5.))
         return true;
 
-    // Association check 2, look for branching clusters (where I is a branch of J)
-    if ((!checkForwardJ || rInnerJ > 20.) && (!checkBackwardJ || rOuterJ > 20.) && ((checkForwardI && rInnerI < 2.5) || (checkBackwardI && rOuterI < 2.5)))
+    if ((rInnerI < 5. && rOuterI < 5.) && (!checkForwardJ || rInnerJ > 5.) && (!checkBackwardJ || rOuterJ > 5.))
         return true;
 
-    // Association check 3, association through pointing
+    if ((rInnerI < 5. && rOuterJ < 5.) && (!checkForwardJ || rInnerJ > 5.) && (!checkBackwardI || rOuterI > 5.))
+        return true;
 
-    // Bail out if clusters are well separated
-    if (std::min(std::min(rInnerJ, rOuterJ), std::min(rInnerI, rOuterI) ) > 50.)
-        return false;
-
-    // Remove overlaps before checking pointing information
-    if ((pClusterJ->GetOuterPseudoLayer() > pClusterI->GetInnerPseudoLayer()) && (pClusterI->GetOuterPseudoLayer() > pClusterJ->GetInnerPseudoLayer()))
-        return false;
-
-    // Calculate distances and angles
-    static const unsigned int m_seedFitLayerWindow(30);
-
-    ClusterHelper::ClusterFitResult innerFitI, innerFitJ, outerFitI, outerFitJ;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pClusterI, m_seedFitLayerWindow, innerFitI));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pClusterJ, m_seedFitLayerWindow, innerFitJ));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pClusterI, m_seedFitLayerWindow, outerFitI));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pClusterJ, m_seedFitLayerWindow, outerFitJ));
-
-    const CartesianVector innerDirectionI(innerFitI.GetDirection());
-    const CartesianVector outerDirectionI(outerFitI.GetDirection());
-    const CartesianVector innerDirectionJ(innerFitJ.GetDirection());
-    const CartesianVector outerDirectionJ(outerFitJ.GetDirection());
-
-    const CartesianVector innerCentroidI(pClusterI->GetCentroid(pClusterI->GetInnerPseudoLayer()));
-    const CartesianVector outerCentroidI(pClusterI->GetCentroid(pClusterI->GetOuterPseudoLayer()));
-    const CartesianVector innerCentroidJ(pClusterJ->GetCentroid(pClusterJ->GetInnerPseudoLayer()));
-    const CartesianVector outerCentroidJ(pClusterJ->GetCentroid(pClusterJ->GetOuterPseudoLayer()));
-
-    // Pointing check 1, longitudinal distances
-    if (pClusterI->GetInnerPseudoLayer() > pClusterJ->GetOuterPseudoLayer())
-    {
-        if (pClusterI->GetInnerPseudoLayer() - pClusterJ->GetOuterPseudoLayer() > 100)
-            return false;
-
-        if (std::max(outerDirectionI.GetDotProduct(innerCentroidI - outerCentroidJ), innerFitJ.GetDirection().GetDotProduct(innerCentroidI - outerCentroidJ)) > 30.)
-            return false;
-    }
-
-    if (pClusterJ->GetInnerPseudoLayer() > pClusterI->GetOuterPseudoLayer())
-    {
-        if (pClusterJ->GetInnerPseudoLayer() - pClusterI->GetOuterPseudoLayer() > 100)
-            return false;
-
-        if (std::max(outerDirectionJ.GetDotProduct(innerCentroidJ - outerCentroidI), innerFitI.GetDirection().GetDotProduct(innerCentroidJ - outerCentroidI)) > 30.)
-            return false;
-    }
-
-    // Pointing check 2, pointing angle and transverse distances
-    // check 2(a): innerI->innerJ
-    if (consistentForwardDirection)
-    {
-        if (innerDirectionI.GetCosOpeningAngle(innerDirectionJ) > 0.985)
-        {
-            if ((pClusterI->GetInnerPseudoLayer() < pClusterJ->GetInnerPseudoLayer()) && (innerDirectionI.GetDotProduct(innerCentroidJ - innerCentroidI) < 50.) && 
-                ((innerDirectionI.GetCrossProduct(innerCentroidJ - innerCentroidI)).GetMagnitudeSquared() < 2.5 * 2.5))
-            {
-                return true;
-            }
-
-            if ((pClusterJ->GetInnerPseudoLayer() < pClusterI->GetInnerPseudoLayer()) && (innerDirectionJ.GetDotProduct(innerCentroidI - innerCentroidJ) < 50.) &&
-                ((innerDirectionJ.GetCrossProduct(innerCentroidI - innerCentroidJ)).GetMagnitudeSquared() < 2.5 * 2.5))
-            {
-                return true;
-            }
-        }
-    }
-
-    // check 2(b): outerI->outerJ
-    if (consistentBackwardDirection)
-    {
-        if (outerDirectionI.GetCosOpeningAngle(outerDirectionJ) > 0.985)
-        {
-            if ((pClusterI->GetOuterPseudoLayer() > pClusterJ->GetOuterPseudoLayer()) && (outerDirectionI.GetDotProduct(outerCentroidI - outerCentroidJ) < 50.) &&
-                ((outerDirectionI.GetCrossProduct(outerCentroidI - outerCentroidJ)).GetMagnitudeSquared() < 2.5 * 2.5))
-            {
-                return true;
-            }
-
-            if ((pClusterJ->GetOuterPseudoLayer() > pClusterI->GetOuterPseudoLayer()) && (outerDirectionJ.GetDotProduct(outerCentroidJ - outerCentroidI) < 50.) &&
-                ((outerDirectionJ.GetCrossProduct(outerCentroidJ - outerCentroidI)).GetMagnitudeSquared() < 2.5 * 2.5))
-            {
-                return true;
-            }
-        }
-    }
-
-    // check 2(c): outerJ->innerI
-    if (consistentLongitudinalDirection)
-    {
-        if ((pClusterJ->GetOuterPseudoLayer() < pClusterI->GetInnerPseudoLayer()) && (innerDirectionI.GetCosOpeningAngle(outerDirectionJ) > 0.985))
-        {
-            if (((innerDirectionI.GetCrossProduct(innerCentroidI - outerCentroidJ)).GetMagnitudeSquared() < 2.5 * 2.5) ||
-                ((outerDirectionJ.GetCrossProduct(innerCentroidI - outerCentroidJ)).GetMagnitudeSquared() < 2.5 * 2.5))
-            {
-                return true;
-            }
-        }
-    }
-
-    // check 2(d): outerI->innerJ
-    if (consistentLongitudinalDirection)
-    {
-        if ((pClusterI->GetOuterPseudoLayer() < pClusterJ->GetInnerPseudoLayer()) && (outerDirectionI.GetCosOpeningAngle(innerDirectionJ) > 0.985))
-        {
-            if (((outerDirectionI.GetCrossProduct(innerCentroidJ - outerCentroidI)).GetMagnitudeSquared() < 2.5 * 2.5) ||
-                ((innerDirectionJ.GetCrossProduct(innerCentroidJ - outerCentroidI)).GetMagnitudeSquared() < 2.5 * 2.5))
-            {
-                return true;
-            }
-        }
-    }
+    if ((rInnerJ < 5. && rOuterI < 5.) && (!checkForwardI || rInnerI > 5.) && (!checkBackwardJ || rOuterJ > 5.))
+        return true;
 
     return false;
 }
