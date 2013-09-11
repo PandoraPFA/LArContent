@@ -100,7 +100,7 @@ private:
      * 
      *  @return boolean
      */
-    bool AreSeedClustersAssociated(const pandora::Cluster *const pClusterI, const pandora::Cluster *const pClusterJ) const;
+    bool AreSeedClustersAssociated(pandora::Cluster *const pClusterI, pandora::Cluster *const pClusterJ) const;
 
     /**
      *  @brief  Make cluster merges
