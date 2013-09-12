@@ -122,6 +122,16 @@ public:
     static bool IsForwardInZ(const pandora::Cluster *const pCluster);
 
     /**
+     *  @brief  Ask if cluster is propagation forwards in Z, wrt a specified vertex
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  specifiedVertex the specified vertex
+     *
+     *  @return boolean
+     */
+    static bool IsForwardInZ(const pandora::Cluster *const pCluster, const pandora::CartesianVector &specifiedVertex);
+
+    /**
      *  @brief  Ask if cluster is propagation backward in Z
      * 
      *  @param  pCluster address of the cluster
@@ -131,13 +141,23 @@ public:
     static bool IsBackwardInZ(const pandora::Cluster *const pCluster);
 
     /**
+     *  @brief  Ask if cluster is propagation backward in Z, wrt a specified vertex
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  specifiedVertex the specified vertex
+     *
+     *  @return boolean
+     */
+    static bool IsBackwardInZ(const pandora::Cluster *const pCluster, const pandora::CartesianVector &specifiedVertex);
+
+    /**
      *  @brief  Ask if cluster is propagation forwards in Z
      * 
      *  @param  pCluster address of the cluster
      *
      *  @return boolean
      */
-    static bool IsForwardInZ_WorkIn3D(const pandora::Cluster *const pCluster);
+    static bool IsForwardInZ3D(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Ask if cluster is propagation backward in Z
@@ -146,25 +166,7 @@ public:
      *
      *  @return boolean
      */
-    static bool IsBackwardInZ_WorkIn3D(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Ask if one end of cluster is adjacent to the vertex
-     * 
-     *  @param  pCluster address of the cluster
-     *
-     *  @return boolean
-     */
-    static bool IsConnectedToCurrentVertex(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Ask if one end of cluster is pointing back to the vertex
-     * 
-     *  @param  pCluster address of the cluster
-     *
-     *  @return boolean
-     */
-    static bool IsPointingToCurrentVertex(const pandora::Cluster *const pCluster);
+    static bool IsBackwardInZ3D(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Calculate distance from cluster to vertex fitted inner/outer centroids
@@ -214,16 +216,17 @@ public:
         pandora::CartesianVector &outerDirection);
   
     /**
-     *  @brief  Ask if cluster direction measure is correct
+     *  @brief  Ask if cluster direction measure is correct, wrt a specified vertex
      *
+     *  @param  specifiedVertex the specified vertex
      *  @param  startPosition the cluster start position
      *  @param  endPosition the cluster end position
      *  @param  direction the cluster direction measure position
      * 
      *  @return boolean
      */
-    static bool IsDirectionCorrect(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &endPosition, 
-        const pandora::CartesianVector &direction);
+    static bool IsDirectionCorrect(const pandora::CartesianVector &specifiedVertex, const pandora::CartesianVector &startPosition,
+        const pandora::CartesianVector &endPosition, const pandora::CartesianVector &direction);
 
     /**
      *  @brief  Impact parameters
@@ -278,6 +281,20 @@ inline bool LArVertexHelper::DoesVertexExist(const std::string &vertexName)
 inline bool LArVertexHelper::DoesCurrentVertexExist()
 {
     return DoesVertexExist(m_currentVertexName);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArVertexHelper::IsForwardInZ(const pandora::Cluster *const pCluster)
+{
+    return LArVertexHelper::IsForwardInZ(pCluster, LArVertexHelper::GetCurrentVertex());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArVertexHelper::IsBackwardInZ(const pandora::Cluster *const pCluster)
+{
+    return LArVertexHelper::IsBackwardInZ(pCluster, LArVertexHelper::GetCurrentVertex());
 }
 
 } // namespace lar

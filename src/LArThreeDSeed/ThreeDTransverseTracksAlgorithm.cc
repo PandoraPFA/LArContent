@@ -510,10 +510,10 @@ bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(Cluster *const pFirstClust
     const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
 
-    const bool isForward1(LArVertexHelper::IsForwardInZ_WorkIn3D(pFirstCluster));
-    const bool isForward2(LArVertexHelper::IsForwardInZ_WorkIn3D(pSecondCluster));
-    const bool isBackward1(LArVertexHelper::IsBackwardInZ_WorkIn3D(pFirstCluster));
-    const bool isBackward2(LArVertexHelper::IsBackwardInZ_WorkIn3D(pSecondCluster));
+    const bool isForward1(LArVertexHelper::IsForwardInZ3D(pFirstCluster));
+    const bool isForward2(LArVertexHelper::IsForwardInZ3D(pSecondCluster));
+    const bool isBackward1(LArVertexHelper::IsBackwardInZ3D(pFirstCluster));
+    const bool isBackward2(LArVertexHelper::IsBackwardInZ3D(pSecondCluster));
 
     return ((((minLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||
             (((maxLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||

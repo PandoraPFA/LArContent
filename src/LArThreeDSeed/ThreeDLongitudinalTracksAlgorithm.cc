@@ -43,12 +43,12 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
                 // Check consistency of directions with reconstructed vertex 
                 if (LArVertexHelper::DoesCurrentVertexExist())
                 {
-                    if ( (isForwardU && LArVertexHelper::IsBackwardInZ_WorkIn3D(slidingFitResultU.GetCluster())) ||
-                         (!isForwardU && LArVertexHelper::IsForwardInZ_WorkIn3D(slidingFitResultU.GetCluster())) ||
-                         (isForwardV && LArVertexHelper::IsBackwardInZ_WorkIn3D(slidingFitResultV.GetCluster())) ||
-                         (!isForwardV && LArVertexHelper::IsForwardInZ_WorkIn3D(slidingFitResultV.GetCluster())) ||
-                         (isForwardW && LArVertexHelper::IsBackwardInZ_WorkIn3D(slidingFitResultW.GetCluster())) ||
-                         (!isForwardW && LArVertexHelper::IsForwardInZ_WorkIn3D(slidingFitResultW.GetCluster())) )
+                    if ( (isForwardU && LArVertexHelper::IsBackwardInZ3D(slidingFitResultU.GetCluster())) ||
+                         (!isForwardU && LArVertexHelper::IsForwardInZ3D(slidingFitResultU.GetCluster())) ||
+                         (isForwardV && LArVertexHelper::IsBackwardInZ3D(slidingFitResultV.GetCluster())) ||
+                         (!isForwardV && LArVertexHelper::IsForwardInZ3D(slidingFitResultV.GetCluster())) ||
+                         (isForwardW && LArVertexHelper::IsBackwardInZ3D(slidingFitResultW.GetCluster())) ||
+                         (!isForwardW && LArVertexHelper::IsForwardInZ3D(slidingFitResultW.GetCluster())) )
                     {
                         continue;
                     }

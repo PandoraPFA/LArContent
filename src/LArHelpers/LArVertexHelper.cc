@@ -10,6 +10,7 @@
 #include "Helpers/XmlHelper.h"
 
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
@@ -86,7 +87,7 @@ const std::string LArVertexHelper::GetCurrentVertexName()
     NameToVertexMap::const_iterator iter = m_nameToVertexMap.find(m_currentVertexName);
 
     if (m_nameToVertexMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     return m_currentVertexName;
 }
@@ -98,127 +99,47 @@ const CartesianVector &LArVertexHelper::GetCurrentVertex()
     NameToVertexMap::const_iterator iter = m_nameToVertexMap.find(m_currentVertexName);
 
     if (m_nameToVertexMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     return iter->second;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArVertexHelper::IsForwardInZ(const Cluster *const pCluster)
+bool LArVertexHelper::IsForwardInZ(const Cluster *const pCluster, const CartesianVector &specifiedVertex)
 {
-    if (!LArVertexHelper::DoesCurrentVertexExist())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
     CartesianVector startPosition(0.f, 0.f, 0.f), startDirection(0.f, 0.f, 0.f);
     LArVertexHelper::GetInnerVertexAndDirection(pCluster, startPosition, startDirection); 
 
     const CartesianVector endPosition(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
-    return LArVertexHelper::IsDirectionCorrect(startPosition, endPosition, startDirection);    
+    return LArVertexHelper::IsDirectionCorrect(specifiedVertex, startPosition, endPosition, startDirection);    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArVertexHelper::IsBackwardInZ(const Cluster *const pCluster)
+bool LArVertexHelper::IsBackwardInZ(const Cluster *const pCluster, const CartesianVector &specifiedVertex)
 {
-    if (!LArVertexHelper::DoesCurrentVertexExist())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
     CartesianVector startPosition(0.f, 0.f, 0.f), startDirection(0.f, 0.f, 0.f);
     LArVertexHelper::GetOuterVertexAndDirection(pCluster, startPosition, startDirection);
 
     const CartesianVector endPosition(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
-    return LArVertexHelper::IsDirectionCorrect(startPosition, endPosition, startDirection);
+    return LArVertexHelper::IsDirectionCorrect(specifiedVertex, startPosition, endPosition, startDirection);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArVertexHelper::IsBackwardInZ_WorkIn3D(const Cluster *const pCluster)
+bool LArVertexHelper::IsBackwardInZ3D(const Cluster *const pCluster)
 {
-    if (!LArVertexHelper::DoesCurrentVertexExist())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex()); 
-    const std::string theVertexName(LArVertexHelper::GetCurrentVertexName()); 
-
-    HitType hitType(CUSTOM); 
-
-    if (pCluster->ContainsHitType(VIEW_U))
-    {
-        if (CUSTOM == hitType) hitType = VIEW_U;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (pCluster->ContainsHitType(VIEW_V))
-    {
-        if (CUSTOM == hitType) hitType = VIEW_V;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (pCluster->ContainsHitType(VIEW_W))
-    {
-        if (CUSTOM == hitType) hitType = VIEW_W;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (CUSTOM == hitType)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-  
-    const CartesianVector theVertex2D = LArGeometryHelper::ProjectPosition(theVertex, hitType);     
-
-    LArVertexHelper::AddVertex("ThisIsNasty",theVertex2D);
-    LArVertexHelper::SetCurrentVertex("ThisIsNasty");
-    const bool isBackwardInZ(LArVertexHelper::IsBackwardInZ(pCluster));
-    LArVertexHelper::RemoveVertex("ThisIsNasty");
-
-    LArVertexHelper::SetCurrentVertex(theVertexName);
-
-    return isBackwardInZ;
+    const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(LArVertexHelper::GetCurrentVertex(), LArThreeDHelper::GetClusterHitType(pCluster)));
+    return LArVertexHelper::IsBackwardInZ(pCluster, theVertex2D);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArVertexHelper::IsForwardInZ_WorkIn3D(const Cluster *const pCluster)
+bool LArVertexHelper::IsForwardInZ3D(const Cluster *const pCluster)
 {
-    if (!LArVertexHelper::DoesCurrentVertexExist())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex()); 
-    const std::string theVertexName(LArVertexHelper::GetCurrentVertexName()); 
-
-    HitType hitType(CUSTOM); 
-
-    if (pCluster->ContainsHitType(VIEW_U))
-    {
-        if (CUSTOM == hitType) hitType = VIEW_U;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (pCluster->ContainsHitType(VIEW_V))
-    {
-        if (CUSTOM == hitType) hitType = VIEW_V;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (pCluster->ContainsHitType(VIEW_W))
-    {
-        if (CUSTOM == hitType) hitType = VIEW_W;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (CUSTOM == hitType)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    const CartesianVector theVertex2D = LArGeometryHelper::ProjectPosition(theVertex, hitType);     
-
-    LArVertexHelper::AddVertex("ThisIsNasty",theVertex2D);
-    LArVertexHelper::SetCurrentVertex("ThisIsNasty"); 
-    const bool isForwardInZ(LArVertexHelper::IsForwardInZ(pCluster));
-    LArVertexHelper::RemoveVertex("ThisIsNasty");
-
-    LArVertexHelper::SetCurrentVertex(theVertexName);
-    
-    return isForwardInZ;
+    const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(LArVertexHelper::GetCurrentVertex(), LArThreeDHelper::GetClusterHitType(pCluster)));
+    return LArVertexHelper::IsForwardInZ(pCluster, theVertex2D);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -241,11 +162,11 @@ ClusterDirection LArVertexHelper::GetDirectionInZ(const Cluster *const pCluster)
 
     if ((innerPosition - theVertex).GetMagnitudeSquared() < (outerPosition - theVertex).GetMagnitudeSquared())
     {
-        isForwardInZ = LArVertexHelper::IsDirectionCorrect(innerPosition, outerPosition, innerDirection);
+        isForwardInZ = LArVertexHelper::IsDirectionCorrect(LArVertexHelper::GetCurrentVertex(), innerPosition, outerPosition, innerDirection);
     }
     else
     {
-        isBackwardInZ = LArVertexHelper::IsDirectionCorrect(outerPosition, innerPosition, outerDirection);
+        isBackwardInZ = LArVertexHelper::IsDirectionCorrect(LArVertexHelper::GetCurrentVertex(), outerPosition, innerPosition, outerDirection);
     }
 
     // analyse the results
@@ -256,34 +177,6 @@ ClusterDirection LArVertexHelper::GetDirectionInZ(const Cluster *const pCluster)
         return BACKWARD;
 
     return DIRECTION_AMBIGUOUS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArVertexHelper::IsConnectedToCurrentVertex(const Cluster *const pCluster)
-{
-    float rL(0.f), rT(0.f);
-    LArVertexHelper::GetImpactParametersToCurrentVertex(pCluster, rL, rT);
-
-    if ((rL > -2.5f) && (rL < 2.5f) && (rT < 2.5f))
-        return true;
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArVertexHelper::IsPointingToCurrentVertex(const Cluster *const pCluster)
-{
-    float rL(0.f), rT(0.f);
-    LArVertexHelper::GetImpactParametersToCurrentVertex( pCluster, rL, rT );
-
-    static const float tanSqTheta(std::pow(std::tan(M_PI * 2.f / 180.f), 2.f));
-
-    if ((rL > -2.5f) && (rL < 25.f) && (rT * rT < 2.5f * 2.5f + rL * rL * tanSqTheta))
-        return true;
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -348,12 +241,11 @@ void LArVertexHelper::GetImpactParametersToCurrentVertex(const Cluster *const pC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArVertexHelper::IsDirectionCorrect(const CartesianVector &startPosition, const CartesianVector &endPosition, const CartesianVector &direction)
+bool LArVertexHelper::IsDirectionCorrect(const CartesianVector &specifiedVertex, const CartesianVector &startPosition, const CartesianVector &endPosition,
+    const CartesianVector &direction)
 {
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
-
     float rL(0.f), rT(0.f);
-    LArVertexHelper::GetImpactParameters(startPosition, direction, theVertex, rL, rT);
+    LArVertexHelper::GetImpactParameters(startPosition, direction, specifiedVertex, rL, rT);
     const float r((startPosition - endPosition).GetMagnitude());
 
     // Vertex must be inside a 60 degree triangle with apex placed one third of the way along the cluster (i.e. rL > +rT / tan(60) - r / 3.)

@@ -127,7 +127,6 @@ public:
         const pandora::CartesianVector &positionW, pandora::CartesianVector &outputU, pandora::CartesianVector &outputV, 
         pandora::CartesianVector &outputW, float& chiSquared);
 
-
     /**
      *  @brief  Merge 2D positions from two views to give unified 3D position
      *
@@ -160,7 +159,6 @@ public:
         const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, const pandora::CartesianVector &position3, 
         pandora::CartesianVector &position3D, float &chiSquared);
 
-
     /**
      *  @brief  Project 3D position into a given 2D view
      *
@@ -177,164 +175,155 @@ public:
      */
     static pandora::CartesianVector ProjectDirection(const pandora::CartesianVector &direction3D, const pandora::HitType view);
 
-
     /** 
      *  @brief  Transform from (U,V) to W position 
      *
-     *  @param U the U position
-     *  @param V the V position  
+     *  @param  U the U position
+     *  @param  V the V position
      */
-     static float UVtoW(const float& U, const float& V);
+     static float UVtoW(const float u, const float v);
 
     /** 
      *  @brief  Transform from (V,W) to U position 
      *
-     *  @param V the V position
-     *  @param W the W position  
+     *  @param  V the V position
+     *  @param  W the W position
      */
-     static float VWtoU(const float& V, const float& W);
+     static float VWtoU(const float v, const float w);
 
     /** 
      *  @brief  Transform from (W,U) to V position 
      *
-     *  @param W the W position
-     *  @param U the U position  
+     *  @param  W the W position
+     *  @param  U the U position
      */
-     static float WUtoV(const float& W, const float& U); 
+     static float WUtoV(const float w, const float u);
 
     /** 
      *  @brief  Transform from (V,U) to W position 
      * 
-     *  @param V the V position  
-     *  @param U the U position
+     *  @param  V the V position
+     *  @param  U the U position
      */
-     static float VUtoW(const float& V, const float& U);
+     static float VUtoW(const float v, const float u);
 
     /** 
      *  @brief  Transform from (W,V) to U position 
      *
-     *  @param W the W position  
-     *  @param V the V position
+     *  @param  W the W position
+     *  @param  V the V position
      */
-     static float WVtoU(const float& W, const float& V);
+     static float WVtoU(const float w, const float v);
 
     /** 
      *  @brief  Transform from (U,W) to V position 
      *
-     *  @param U the U position  
-     *  @param W the W position
+     *  @param  U the U position
+     *  @param  W the W position
      */
-     static float UWtoV(const float& U, const float& W); 
-
+     static float UWtoV(const float u, const float w);
 
     /** 
-     *  @brief  Transform from (U,V) to Y position 
-     * 
-     *              Y * sin(thetaU+thetaV) = U * cos(thetaV) + V * cos(thetaU) - H/2 * sin(thetaU-thetaV)
+     *  @brief  Transform from (U,V) to Y position
+     *          Y * sin(thetaU+thetaV) = U * cos(thetaV) + V * cos(thetaU) - H/2 * sin(thetaU-thetaV)
      *
-     *  @param U the U position
-     *  @param V the V position  
+     *  @param  U the U position
+     *  @param  V the V position
      */
-    static float UVtoY(const float& U, const float& V);
+    static float UVtoY(const float u, const float v);
 
     /** 
      *  @brief  Transform from (U,V) to Z position 
-     * 
-     *              Z * sin(thetaU+thetaV) = U * sin(thetaV) + V * sin(thetaU) - H * sin(thetaU) * sin(thetaV)
+     *          Z * sin(thetaU+thetaV) = U * sin(thetaV) + V * sin(thetaU) - H * sin(thetaU) * sin(thetaV)
      *
-     *  @param U the U position
-     *  @param V the V position  
+     *  @param  U the U position
+     *  @param  V the V position
      */
-     static float UVtoZ(const float& U, const float& V);  
+     static float UVtoZ(const float u, const float v);
 
     /** 
      *  @brief  Transform from (Y,Z) to U position
-     *
-     *              U = Z * cos(thetaU) + ( Y + H/2 ) * sin(thetaU)
-     *   
-     *  @param Y the Y position   
-     *  @param Z the Z position   
+     *          U = Z * cos(thetaU) + ( Y + H/2 ) * sin(thetaU)
+     * 
+     *  @param  Y the Y position
+     *  @param  Z the Z position
      */
-     static float YZtoU(const float& Y, const float& Z);
+     static float YZtoU(const float y, const float z);
 
     /** 
      *  @brief  Transform from (Y,Z) to V position
-     *
-     *              V = Z * cos(thetaV) - ( Y - H/2 ) * sin(thetaV)
-     *   
-     *  @param Y the Y position   
-     *  @param Z the Z position   
+     *          V = Z * cos(thetaV) - ( Y - H/2 ) * sin(thetaV)
+     * 
+     *  @param  Y the Y position
+     *  @param  Z the Z position
      */
-     static float YZtoV(const float& Y, const float& Z);
+     static float YZtoV(const float y, const float z);
 
     /** 
-     *  @brief  Transform from (pU,pV) to pW direction 
+     *  @brief  Transform from (pU,pV) to pW direction
      *
-     *  @param pU the pU direction
-     *  @param pV the pV direction  
+     *  @param  pU the pU direction
+     *  @param  pV the pV direction
      */
-     static float PUPVtoPW(const float& pU, const float& pV);
+     static float PUPVtoPW(const float pu, const float pv);
 
     /** 
      *  @brief  Transform from (pV,pW) to pU direction 
      *
-     *  @param pV the pV direction
-     *  @param pW the pW direction  
+     *  @param  pV the pV direction
+     *  @param  pW the pW direction
      */
-     static float PVPWtoPU(const float& pV, const float& pW);
+     static float PVPWtoPU(const float pv, const float pw);
 
     /** 
      *  @brief  Transform from (pW,pU) to pV direction 
      *
-     *  @param pW the pW direction
-     *  @param pU the pU direction  
+     *  @param  pW the pW direction
+     *  @param  pU the pU direction
      */
-     static float PWPUtoPV(const float& pW, const float& pU); 
+     static float PWPUtoPV(const float pw, const float pu);
 
     /** 
-     *  @brief  Transform from (pV,pU) to pW direction 
+     *  @brief  Transform from (pV,pU) to pW direction
      * 
-     *  @param pV the pV direction  
-     *  @param pU the pU direction
+     *  @param  pV the pV direction  
+     *  @param  pU the pU direction
      */
-     static float PVPUtoPW(const float& pV, const float& pU);
+     static float PVPUtoPW(const float pv, const float pu);
 
     /** 
-     *  @brief  Transform from (pW,pV) to pU direction 
+     *  @brief  Transform from (pW,pV) to pU direction
      *
-     *  @param pW the pW direction  
-     *  @param pV the pV direction
+     *  @param  pW the pW direction
+     *  @param  pV the pV direction
      */
-     static float PWPVtoPU(const float& pW, const float& pV);
+     static float PWPVtoPU(const float pw, const float pv);
 
     /** 
      *  @brief  Transform from (pU,pW) to pV direction 
      *
-     *  @param pU the pU direction  
-     *  @param pW the pW direction
+     *  @param  pU the pU direction
+     *  @param  pW the pW direction
      */
-     static float PUPWtoPV(const float& pU, const float& pW); 
+     static float PUPWtoPV(const float pu, const float pw);
 
     /** 
      *  @brief  Transform from (pY,pZ) to pU direction
-     *
-     *              pU = pZ * cos(thetaU) + pY * sin(thetaU)  
-     *   
-     *  @param pU the U component   
-     *  @param pV the V component   
+     *          pU = pZ * cos(thetaU) + pY * sin(thetaU)  
+     * 
+     *  @param  pU the U component
+     *  @param  pV the V component
      */
-    static float PYPZtoPU(const float& pY, const float& pZ); 
+    static float PYPZtoPU(const float py, const float pz);
 
     /** 
      *  @brief  Transform from (pY,pZ) to pV direction
-     *
-     *              pV = pZ * cos(thetaV) - pY * sin(thetaV)
-     *   
-     *  @param pU the U component   
-     *  @param pV the V component   
+     *          pV = pZ * cos(thetaV) - pY * sin(thetaV)
+     * 
+     *  @param  pU the U component
+     *  @param  pV the V component
      */
-    static float PYPZtoPV(const float& pY, const float& pZ);
-
+    static float PYPZtoPV(const float py, const float pz);
 
     /**
      *  @brief  Read the vertex helper settings
