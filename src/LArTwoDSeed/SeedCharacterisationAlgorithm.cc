@@ -34,31 +34,89 @@ StatusCode SeedCharacterisationAlgorithm::Run()
 
     for (SeedAssociationList::const_iterator iter1 = seedAssociationList.begin(), iter1End = seedAssociationList.end(); iter1 != iter1End; ++iter1)
     {
-        Cluster *pParticleSeed(iter1->first);
+        Cluster *pParent(iter1->first);
+
+        if (relegatedSeeds.count(pParent))
+            continue;
+
         const ClusterVector &associatedClusters(iter1->second);
         ClusterList associatedSeeds, associatedNonSeeds;
+        ClusterList seedProngs, seedBranches, nonSeedProngs, nonSeedBranches;
 
         for (ClusterVector::const_iterator iter2 = associatedClusters.begin(), iter2End = associatedClusters.end(); iter2 != iter2End; ++iter2)
         {
-            Cluster *pAssociatedCluster(*iter2);
+            Cluster *pDaughter(*iter2);
 
-            if (pSeedClusterList->count(pAssociatedCluster))
+            bool isProng(false), isBranch(false);
+            const CartesianVector pInnerCentroid(pParent->GetCentroid(pParent->GetInnerPseudoLayer()));
+            const CartesianVector pOuterCentroid(pParent->GetCentroid(pParent->GetOuterPseudoLayer()));
+            const CartesianVector dInnerCentroid(pDaughter->GetCentroid(pDaughter->GetInnerPseudoLayer()));
+            const CartesianVector dOuterCentroid(pDaughter->GetCentroid(pDaughter->GetOuterPseudoLayer()));
+
+            // Prongs
+            const float rsqInnerInner((pInnerCentroid - dInnerCentroid).GetMagnitudeSquared());
+            const float rsqInnerOuter((pInnerCentroid - dOuterCentroid).GetMagnitudeSquared());
+            const float rsqOuterInner((pOuterCentroid - dInnerCentroid).GetMagnitudeSquared());
+            const float rsqOuterOuter((pOuterCentroid - dOuterCentroid).GetMagnitudeSquared()); 
+
+            if (rsqInnerInner < 2.5 * 2.5 || rsqInnerOuter < 2.5 * 2.5 ||
+                rsqOuterInner < 2.5 * 2.5 || rsqOuterOuter < 2.5 * 2.5) 
             {
-                associatedSeeds.insert(pAssociatedCluster);
+                isProng = true;
+            }
+
+            // Branches
+            const float pOuter(LArClusterHelper::GetClosestDistance(pOuterCentroid, pDaughter));
+            const float pInner(LArClusterHelper::GetClosestDistance(pInnerCentroid, pDaughter));
+            const float dOuter(LArClusterHelper::GetClosestDistance(dOuterCentroid, pParent));
+            const float dInner(LArClusterHelper::GetClosestDistance(dInnerCentroid, pParent));
+
+            if ((pInner > 2.5) && (pOuter > 2.5) && ((dInner < 2.5) || (dOuter < 2.5)))
+            {
+                isBranch = true;
+            }
+
+            // Fill containers
+            if (pSeedClusterList->count(pDaughter))
+            {
+                associatedSeeds.insert(pDaughter);
+                if (isProng) seedProngs.insert(pDaughter);
+                if (isBranch) seedBranches.insert(pDaughter);
             }
             else
             {
-                associatedNonSeeds.insert(pAssociatedCluster);
+                associatedNonSeeds.insert(pDaughter);
+                if (isProng) nonSeedProngs.insert(pDaughter);
+                if (isBranch) nonSeedBranches.insert(pDaughter);
             }
         }
-std::cout << "SeedCharacterisation: NAssociatedSeeds " << associatedSeeds.size() << ", NAssociatedNonSeeds " << associatedNonSeeds.size() << std::endl;
+
+        // Classify the particle seed
+std::cout << "SeedCharacterisation: NAssociatedSeeds " << associatedSeeds.size() << " (br: " << seedBranches.size() << ", pr: " << seedProngs.size()
+          << "), NAssociatedNonSeeds " << associatedNonSeeds.size() << " (br: " << nonSeedBranches.size() << ", pr: " << nonSeedProngs.size() << ")" << std::endl;
 PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList tempList; tempList.insert(pParticleSeed);
+ClusterList tempList; tempList.insert(pParent);
 PandoraMonitoringApi::VisualizeClusters(&tempList, "ParticleSeed", RED);
 PandoraMonitoringApi::VisualizeClusters(&associatedSeeds, "AssociatedSeedClusters", GREEN);
 PandoraMonitoringApi::VisualizeClusters(&associatedNonSeeds, "AssociatedNonSeedClusters", BLUE);
+PandoraMonitoringApi::VisualizeClusters(&seedProngs, "seedProngs", CYAN);
+PandoraMonitoringApi::VisualizeClusters(&seedBranches, "seedBranches", MAGENTA);
+PandoraMonitoringApi::VisualizeClusters(&nonSeedProngs, "nonSeedProngs", CYAN);
+PandoraMonitoringApi::VisualizeClusters(&nonSeedBranches, "nonSeedBranches", MAGENTA);
 PandoraMonitoringApi::ViewEvent();
     }
+
+//std::cout << "SeedCharacterisation: results " << std::endl;
+//std::cout << " p.size() " << particleSeedVector.size() << " (t.size() + s.size() + r.size()) " << (trackSeeds.size() + showerSeeds.size() + relegatedSeeds.size()) << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//PandoraMonitoringApi::VisualizeClusters(&trackSeeds, "trackSeeds", RED);
+//PandoraMonitoringApi::VisualizeClusters(&showerSeeds, "showerSeeds", BLUE);
+//PandoraMonitoringApi::VisualizeClusters(&relegatedSeeds, "relegatedSeeds", GREEN);
+//PandoraMonitoringApi::ViewEvent();
+
+//    // Sanity check
+//    if (particleSeedVector.size() != (trackSeeds.size() + showerSeeds.size() + relegatedSeeds.size()))
+//        return STATUS_CODE_FAILURE;
 
     // Cluster list output
     if (!trackSeeds.empty())
