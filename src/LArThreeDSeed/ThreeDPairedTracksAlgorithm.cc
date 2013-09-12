@@ -219,7 +219,6 @@ bool ThreeDPairedTracksAlgorithm::BuildNextParticle() const
 
     if (pBestClusterU && pBestClusterV && pBestClusterW)
     {
-        // TODO should we make a new particle here, or add the track pair to the existing particle?
         const PfoList *pPfoList = NULL; std::string pfoListName;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryPfoListAndSetCurrent(*this, pPfoList, pfoListName));
 

@@ -30,6 +30,7 @@
 #include "LArThreeDSeed/ThreeDPairedTracksAlgorithm.h"
 #include "LArTwoDSeed/LengthSeedFindingAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
+#include "LArTwoDSeed/SeedCharacterisationAlgorithm.h"
 #include "LArTwoDSeed/SeedConsolidationAlgorithm.h"
 #include "LArTwoDSeed/SeedLengthGrowingAlgorithm.h"
 #include "LArTwoDSeed/SeedMergingAlgorithm.h"
@@ -78,6 +79,7 @@ public:
         d("LArThreeDPairedTracks",                  lar::ThreeDPairedTracksAlgorithm::Factory)                                  \
         d("LArLengthSeedFinding",                   lar::LengthSeedFindingAlgorithm::Factory)                                   \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
+        d("LArSeedCharacterisation",                lar::SeedCharacterisationAlgorithm::Factory)                                \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArSeedMerging",                         lar::SeedMergingAlgorithm::Factory)                                         \
