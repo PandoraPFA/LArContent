@@ -366,8 +366,8 @@ void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointin
             const float innerDistanceSquared = (innerJ.GetPosition() - vertexI.GetPosition()).GetMagnitudeSquared();
             const float outerDistanceSquared = (outerJ.GetPosition() - vertexI.GetPosition()).GetMagnitudeSquared();
 
-            if ( ( vertexJ.IsInner() == true  && innerDistanceSquared > outerDistanceSquared ) 
-	      || ( vertexJ.IsInner() == false && innerDistanceSquared < outerDistanceSquared ) ) 
+            if ( ( vertexJ.IsInnerVertex() == true  && innerDistanceSquared > outerDistanceSquared ) 
+	      || ( vertexJ.IsInnerVertex() == false && innerDistanceSquared < outerDistanceSquared ) ) 
                 continue;
 
 
@@ -947,8 +947,8 @@ void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap&
         const float innerDistanceSquared = (innerVertex.GetPosition() - seedVertexPosition ).GetMagnitudeSquared();
         const float outerDistanceSquared = (outerVertex.GetPosition() - seedVertexPosition ).GetMagnitudeSquared();
 
-        if ( ( clusterVertex.IsInner()==true  && innerDistanceSquared < outerDistanceSquared ) 
-	  || ( clusterVertex.IsInner()==false && innerDistanceSquared > outerDistanceSquared ) )
+        if ( ( clusterVertex.IsInnerVertex()==true  && innerDistanceSquared < outerDistanceSquared ) 
+	  || ( clusterVertex.IsInnerVertex()==false && innerDistanceSquared > outerDistanceSquared ) )
 	    associatedList.push_back(clusterVertex);
     }
 

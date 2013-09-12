@@ -199,17 +199,14 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
         // Remove 10 layers and re-calculate impact parameters
         if (strengthType < ClusterAssociation::STRONG)
         {
-            float truncatedRmsI(0.f);
-            CartesianVector truncatedPositionI(0.f, 0.f, 0.f), truncatedDirectionI(0.f, 0.f, 0.f);
-
-            clusterVertexI.GetVertex(10, truncatedPositionI, truncatedDirectionI, truncatedRmsI);
-            const float cosTheta(-truncatedDirectionI.GetDotProduct(vertexDirectionJ));
+            const LArPointingCluster::Vertex truncatedVertexI(clusterVertexI.GetCluster(), clusterVertexI.IsInnerVertex(), 10);
+            const float cosTheta(-truncatedVertexI.GetDirection().GetDotProduct(vertexDirectionJ));
 
             float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-            LArVertexHelper::GetImpactParameters(truncatedPositionI, truncatedDirectionI, vertexPositionJ, rL1, rT1);
-            LArVertexHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, truncatedPositionI, rL2, rT2);
+            LArVertexHelper::GetImpactParameters(truncatedVertexI.GetPosition(), truncatedVertexI.GetDirection(), vertexPositionJ, rL1, rT1);
+            LArVertexHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, truncatedVertexI.GetPosition(), rL2, rT2);
 
-            if ((cosTheta > 0.985f) && (truncatedRmsI < 0.5f) && (std::fabs(rL1) < 10.f) && (std::fabs(rL2) < 10.f) &&
+            if ((cosTheta > 0.985f) && (truncatedVertexI.GetRms() < 0.5f) && (std::fabs(rL1) < 10.f) && (std::fabs(rL2) < 10.f) &&
                 (rT1 < m_spatialResolution) && (rT2 < m_spatialResolution))
             {
                 associationType = ClusterAssociation::EMISSION;
@@ -219,17 +216,14 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 
         if (strengthType < ClusterAssociation::STRONG)
         {
-            float truncatedRmsJ(0.f);
-            CartesianVector truncatedPositionJ(0.f, 0.f, 0.f), truncatedDirectionJ(0.f, 0.f, 0.f);
-
-            clusterVertexJ.GetVertex(10, truncatedPositionJ, truncatedDirectionJ, truncatedRmsJ);
-            const float cosTheta(-truncatedDirectionJ.GetDotProduct(vertexDirectionI));
+            const LArPointingCluster::Vertex truncatedVertexJ(clusterVertexJ.GetCluster(), clusterVertexJ.IsInnerVertex(), 10);
+            const float cosTheta(-truncatedVertexJ.GetDirection().GetDotProduct(vertexDirectionI));
 
             float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-            LArVertexHelper::GetImpactParameters(truncatedPositionJ, truncatedDirectionJ, vertexPositionI, rL1, rT1);
-            LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, truncatedPositionJ, rL2, rT2);
+            LArVertexHelper::GetImpactParameters(truncatedVertexJ.GetPosition(), truncatedVertexJ.GetDirection(), vertexPositionI, rL1, rT1);
+            LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, truncatedVertexJ.GetPosition(), rL2, rT2);
 
-            if ((cosTheta > 0.985f) && (truncatedRmsJ < 0.5f) && (std::fabs(rL1) < 10.f) && (std::fabs(rL2) < 10.f) &&
+            if ((cosTheta > 0.985f) && (truncatedVertexJ.GetRms() < 0.5f) && (std::fabs(rL1) < 10.f) && (std::fabs(rL2) < 10.f) &&
                 (rT1 < m_spatialResolution) && (rT2 < m_spatialResolution))
             {
                 associationType = ClusterAssociation::EMISSION;
@@ -240,8 +234,8 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 
     if (strengthType > ClusterAssociation::UNASSOCIATED)
     {
-        const ClusterAssociation::VertexType vertexTypeI(clusterVertexI.IsInner() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-        const ClusterAssociation::VertexType vertexTypeJ(clusterVertexJ.IsInner() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+        const ClusterAssociation::VertexType vertexTypeI(clusterVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+        const ClusterAssociation::VertexType vertexTypeJ(clusterVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
         (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, strengthType, clusterLengthJ)));
         (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, strengthType, clusterLengthI)));
     }

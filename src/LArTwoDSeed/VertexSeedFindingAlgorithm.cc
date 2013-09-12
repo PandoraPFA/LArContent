@@ -104,7 +104,7 @@ void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &candida
                 throw pandora::StatusCodeException(STATUS_CODE_FAILURE);
 
             const LArPointingCluster &clusterJ(lookupJ->second);
-            const LArPointingCluster::Vertex &endJ(vertexJ.IsInner() ? clusterJ.GetOuterVertex() : clusterJ.GetInnerVertex());
+            const LArPointingCluster::Vertex &endJ(vertexJ.IsInnerVertex() ? clusterJ.GetOuterVertex() : clusterJ.GetInnerVertex());
 
             if (LArPointingClusterHelper::IsNode(endJ.GetPosition(), vertexI) ||
                 (LArPointingClusterHelper::IsEmission(endJ.GetPosition(), vertexI) &&
