@@ -51,8 +51,8 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
     }
     else
     {
-        const unsigned int innerFitLayer(std::max(static_cast<int>(outerLayer) - static_cast<int>(nLayersToSkip) - static_cast<int>(m_numberOfLayersToFit), static_cast<int>(innerLayer)));
-        const unsigned int outerFitLayer(std::max(static_cast<int>(outerLayer) - static_cast<int>(nLayersToSkip), static_cast<int>(innerLayer)));
+        const int innerFitLayer(std::max(static_cast<int>(outerLayer) - static_cast<int>(nLayersToSkip) - static_cast<int>(m_numberOfLayersToFit), static_cast<int>(innerLayer)));
+        const int outerFitLayer(std::max(static_cast<int>(outerLayer) - static_cast<int>(nLayersToSkip), static_cast<int>(innerLayer)));
 
         if (outerFitLayer <= innerFitLayer)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
