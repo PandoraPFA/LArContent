@@ -226,34 +226,23 @@ private:
      * 
      *  @return the best overlap result
      */
-    TrackOverlapResult GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor) const;
-
-    /**
-     *  @brief  Get the first segment match, and associated properties, from the fit segment tensor
-     * 
-     *  @param  fitSegmentTensor the fit segment tensor
-     *  @param  indexU to receive the u index
-     *  @param  indexV to receive the v index
-     *  @param  indexW to receive the w index
-     *  @param  trackOverlapResult to receive the first track overlap result
-     */
-    void GetFirstMatch(const FitSegmentTensor &fitSegmentTensor, unsigned int &indexU, unsigned int &indexV, unsigned int &indexW,
-        TrackOverlapResult &trackOverlapResult) const;
+    TrackOverlapResult GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const;
 
     typedef std::vector<TrackOverlapResult> TrackOverlapResultVector;
 
     /**
-     *  @brief  Get segment matches neighbouring that with specified indices; if no neighbours found, store matched points value in vector
+     *  @brief  Get track overlap results for possible connected segments
      * 
-     *  @param  fitSegmentTensor the fit segment tensor
-     *  @param  indexU the u index
-     *  @param  indexV the v index
-     *  @param  indexW the w index
-     *  @param  trackOverlapResult the track overlap result so far
-     *  @param  nMatchedHitValues to receive the track overlap result values for each path
+     *  @param  indexU the index u
+     *  @param  indexV the index v
+     *  @param  indexW the index w
+     *  @param  maxIndexU the max index u
+     *  @param  maxIndexV the max index v
+     *  @param  maxIndexW the max index w
+     *  @param  trackOverlapResultVector the track overlap result vector
      */
-    void GetNeighbours(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
-        const TrackOverlapResult &trackOverlapResult, TrackOverlapResultVector &trackOverlapResultVector) const;
+    void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW, const unsigned int maxIndexU,
+        const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor, TrackOverlapResultVector &trackOverlapResultVector) const;
 
     /**
      *  @brief  Whether a requested (adjacent) element of the fit segment tensor exists
