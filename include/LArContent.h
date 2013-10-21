@@ -36,6 +36,7 @@
 #include "LArTwoDSeed/SeedMergingAlgorithm.h"
 #include "LArTwoDSeed/SeedRelegationAlgorithm.h"
 #include "LArTwoDSeed/VertexSeedFindingAlgorithm.h"
+#include "LArTwoDSeed/TwoDParticleCreationAlgorithm.h"
 #include "LArUtility/EventPreparationAlgorithm.h"
 #include "LArUtility/ListMergingAlgorithm.h"
 #include "LArUtility/TwoDPreparationAlgorithm.h"
@@ -85,6 +86,7 @@ public:
         d("LArSeedMerging",                         lar::SeedMergingAlgorithm::Factory)                                         \
         d("LArSeedRelegation",                      lar::SeedRelegationAlgorithm::Factory)                                      \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
+	d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
