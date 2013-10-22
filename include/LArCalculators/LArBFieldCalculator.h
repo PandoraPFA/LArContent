@@ -24,6 +24,19 @@ private:
     float GetBField(const pandora::CartesianVector &positionVector) const;
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArBFieldCalculator::Initialize(const pandora::GeometryHelper *const pGeometryHelper)
+{
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArBFieldCalculator::GetBField(const pandora::CartesianVector &/*positionVector*/) const
+{
+    return 0.f;
+};
+
 } // namespace lar
 
 #endif // #ifndef LAR_BFIELD_CALCULATOR_H

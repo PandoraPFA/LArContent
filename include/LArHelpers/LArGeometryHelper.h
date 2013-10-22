@@ -10,8 +10,15 @@
 
 #include "Objects/CartesianVector.h"
 
+#include "Pandora/StatusCodes.h"
+
 namespace lar
 {
+
+class LArPseudoLayerCalculator;
+class LArTransformationCalculator;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  LArGeometryHelper class
@@ -21,16 +28,7 @@ class LArGeometryHelper
 public:
     /**
      *  @brief  Merge two views (U,V) to give a third view (Z). 
-     *          U and V views are inclined at angles thetaU and thetaV (both positive)
-     *          and H is the height of the detector
      * 
-     *          Transformation from (Y,Z) to (U,V) coordinates:
-     *            U = Z * cos(thetaU) + ( Y + H/2 ) * sin(thetaU)
-     *            V = Z * cos(thetaV) - ( Y - H/2 ) * sin(thetaV)
-     *
-     *          (Eliminating Y...)
-     *         => Z * sin(thetaU+thetaV) = U * sin(thetaV) + V * sin(thetaU) - H * sin(thetaU) * sin(thetaV)
-     *                                                       
      *  @param  view1 the first view
      *  @param  view2 the second view
      *  @param  position1 the position in the first view
@@ -39,15 +37,7 @@ public:
     static float MergeTwoPositions(const pandora::HitType view1, const pandora::HitType view2, const float position1, const float position2);
 
     /**
-     *  @brief  Merge two views (U,V) to give a third view (Z).  
-     *          U and V views are inclined at angles thetaU and thetaV (both positive)
-     * 
-     *          Transformation from (pY,pZ) to (pU,pV) coordinates:
-     *            pU = pZ * cos(thetaU) + pY * sin(thetaU)
-     *            pV = pZ * cos(thetaV) - pY * sin(thetaV)
-     *
-     *          (Eliminating pY...)
-     *         => pZ * sin(thetaU+thetaV) = pU * sin(thetaV) + pV * sin(thetaU)            
+     *  @brief  Merge two views (U,V) to give a third view (Z).
      * 
      *  @param  view1 the first view
      *  @param  view2 the second view
@@ -175,155 +165,33 @@ public:
      */
     static pandora::CartesianVector ProjectDirection(const pandora::CartesianVector &direction3D, const pandora::HitType view);
 
-    /** 
-     *  @brief  Transform from (U,V) to W position 
+    /**
+     *  @brief  Set the registered LArPseudoLayerCalculator (derived version of registered geometry helper PseudoLayerCalculator)
      *
-     *  @param  U the U position
-     *  @param  V the V position
+     *  @param  pLArPseudoLayerCalculator the address of the LArPseudoLayerCalculator
      */
-     static float UVtoW(const float u, const float v);
+    static pandora::StatusCode SetLArPseudoLayerCalculator(const LArPseudoLayerCalculator *pLArPseudoLayerCalculator);
 
-    /** 
-     *  @brief  Transform from (V,W) to U position 
+    /**
+     *  @brief  Get the registered LArPseudoLayerCalculator (derived version of registered geometry helper PseudoLayerCalculator)
      *
-     *  @param  V the V position
-     *  @param  W the W position
+     *  @return the address of the LArPseudoLayerCalculator
      */
-     static float VWtoU(const float v, const float w);
+    static const LArPseudoLayerCalculator *GetLArPseudoLayerCalculator();
 
-    /** 
-     *  @brief  Transform from (W,U) to V position 
+    /**
+     *  @brief  Set the registered LArTransformationCalculator
      *
-     *  @param  W the W position
-     *  @param  U the U position
+     *  @param  pLArTransformationCalculator the address of the LArTransformationCalculator
      */
-     static float WUtoV(const float w, const float u);
+    static pandora::StatusCode SetLArTransformationCalculator(const LArTransformationCalculator *pLArTransformationCalculator);
 
-    /** 
-     *  @brief  Transform from (V,U) to W position 
-     * 
-     *  @param  V the V position
-     *  @param  U the U position
-     */
-     static float VUtoW(const float v, const float u);
-
-    /** 
-     *  @brief  Transform from (W,V) to U position 
+    /**
+     *  @brief  Get the registered LArTransformationCalculator
      *
-     *  @param  W the W position
-     *  @param  V the V position
+     *  @return the address of the LArTransformationCalculator
      */
-     static float WVtoU(const float w, const float v);
-
-    /** 
-     *  @brief  Transform from (U,W) to V position 
-     *
-     *  @param  U the U position
-     *  @param  W the W position
-     */
-     static float UWtoV(const float u, const float w);
-
-    /** 
-     *  @brief  Transform from (U,V) to Y position
-     *          Y * sin(thetaU+thetaV) = U * cos(thetaV) + V * cos(thetaU) - H/2 * sin(thetaU-thetaV)
-     *
-     *  @param  U the U position
-     *  @param  V the V position
-     */
-    static float UVtoY(const float u, const float v);
-
-    /** 
-     *  @brief  Transform from (U,V) to Z position 
-     *          Z * sin(thetaU+thetaV) = U * sin(thetaV) + V * sin(thetaU) - H * sin(thetaU) * sin(thetaV)
-     *
-     *  @param  U the U position
-     *  @param  V the V position
-     */
-     static float UVtoZ(const float u, const float v);
-
-    /** 
-     *  @brief  Transform from (Y,Z) to U position
-     *          U = Z * cos(thetaU) + ( Y + H/2 ) * sin(thetaU)
-     * 
-     *  @param  Y the Y position
-     *  @param  Z the Z position
-     */
-     static float YZtoU(const float y, const float z);
-
-    /** 
-     *  @brief  Transform from (Y,Z) to V position
-     *          V = Z * cos(thetaV) - ( Y - H/2 ) * sin(thetaV)
-     * 
-     *  @param  Y the Y position
-     *  @param  Z the Z position
-     */
-     static float YZtoV(const float y, const float z);
-
-    /** 
-     *  @brief  Transform from (pU,pV) to pW direction
-     *
-     *  @param  pU the pU direction
-     *  @param  pV the pV direction
-     */
-     static float PUPVtoPW(const float pu, const float pv);
-
-    /** 
-     *  @brief  Transform from (pV,pW) to pU direction 
-     *
-     *  @param  pV the pV direction
-     *  @param  pW the pW direction
-     */
-     static float PVPWtoPU(const float pv, const float pw);
-
-    /** 
-     *  @brief  Transform from (pW,pU) to pV direction 
-     *
-     *  @param  pW the pW direction
-     *  @param  pU the pU direction
-     */
-     static float PWPUtoPV(const float pw, const float pu);
-
-    /** 
-     *  @brief  Transform from (pV,pU) to pW direction
-     * 
-     *  @param  pV the pV direction  
-     *  @param  pU the pU direction
-     */
-     static float PVPUtoPW(const float pv, const float pu);
-
-    /** 
-     *  @brief  Transform from (pW,pV) to pU direction
-     *
-     *  @param  pW the pW direction
-     *  @param  pV the pV direction
-     */
-     static float PWPVtoPU(const float pw, const float pv);
-
-    /** 
-     *  @brief  Transform from (pU,pW) to pV direction 
-     *
-     *  @param  pU the pU direction
-     *  @param  pW the pW direction
-     */
-     static float PUPWtoPV(const float pu, const float pw);
-
-    /** 
-     *  @brief  Transform from (pY,pZ) to pU direction
-     *          pU = pZ * cos(thetaU) + pY * sin(thetaU)  
-     * 
-     *  @param  pU the U component
-     *  @param  pV the V component
-     */
-    static float PYPZtoPU(const float py, const float pz);
-
-    /** 
-     *  @brief  Transform from (pY,pZ) to pV direction
-     *          pV = pZ * cos(thetaV) - pY * sin(thetaV)
-     * 
-     *  @param  pU the U component
-     *  @param  pV the V component
-     */
-    static float PYPZtoPV(const float py, const float pz);
+    static const LArTransformationCalculator *GetLArTransformationCalculator();
 
     /**
      *  @brief  Read the vertex helper settings
@@ -333,19 +201,51 @@ public:
     static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
-    static float    m_thetaU;            // inclination of U wires (radians)
-    static float    m_thetaV;            // inclination of V wires (radians)
-
-    static float    m_sinUminusV;        // sin(thetaU-thetaV)
-    static float    m_sinUplusV;         // sin(thetaU+thetaV)
-    static float    m_sinU;              // sin(thetaU)
-    static float    m_sinV;              // sin(thetaV)
-    static float    m_cosU;              // cos(thetaU)
-    static float    m_cosV;              // cos(thetaV)
-    static float    m_H;                 // height (cm)
-
-    static float    m_sigmaUVW;          // resolution (cm), for calculation of chi2
+    static const LArPseudoLayerCalculator     *m_pLArPseudoLayerCalculator;       ///< Address of the lar pseudolayer calculator
+    static const LArTransformationCalculator  *m_pLArTransformationCalculator;    ///< Address of the lar transformation calculator
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArGeometryHelper::SetLArPseudoLayerCalculator(const LArPseudoLayerCalculator *pLArPseudoLayerCalculator)
+{
+    if (NULL != m_pLArPseudoLayerCalculator)
+        return pandora::STATUS_CODE_ALREADY_INITIALIZED;
+
+    m_pLArPseudoLayerCalculator = pLArPseudoLayerCalculator;
+    return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArPseudoLayerCalculator *LArGeometryHelper::GetLArPseudoLayerCalculator()
+{
+    if (NULL == m_pLArPseudoLayerCalculator)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_pLArPseudoLayerCalculator;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArGeometryHelper::SetLArTransformationCalculator(const LArTransformationCalculator *pLArTransformationCalculator)
+{
+    if (NULL != m_pLArTransformationCalculator)
+        return pandora::STATUS_CODE_ALREADY_INITIALIZED;
+
+    m_pLArTransformationCalculator = pLArTransformationCalculator;
+    return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArTransformationCalculator *LArGeometryHelper::GetLArTransformationCalculator()
+{
+    if (NULL == m_pLArTransformationCalculator)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_pLArTransformationCalculator;
+}
 
 } // namespace lar
 

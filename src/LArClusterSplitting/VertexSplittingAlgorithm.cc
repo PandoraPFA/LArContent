@@ -12,8 +12,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
-#include "LArPseudoLayerCalculator.h"
-
 #include "LArClusterSplitting/VertexSplittingAlgorithm.h"
 
 using namespace pandora;
@@ -87,7 +85,8 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const 
 {
     bool foundSplit(false);
 
-    try{
+    try
+    {
         // Get current vertex 
         const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
 
@@ -101,19 +100,17 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const 
         twoDSlidingFitResult.GetGlobalFitProjection(theVertex, splitPosition); 
 
         const float splitDisplacementSquared((splitPosition - theVertex).GetMagnitudeSquared());
-        const float vertexDisplacementSquared(std::min((splitPosition - innerVertex).GetMagnitudeSquared(),
-                                                       (splitPosition - outerVertex).GetMagnitudeSquared()));
+        const float vertexDisplacementSquared(std::min((splitPosition - innerVertex).GetMagnitudeSquared(), (splitPosition - outerVertex).GetMagnitudeSquared()));
 
-        if ( splitDisplacementSquared < m_splitDisplacementSquared &&
-             vertexDisplacementSquared > m_vertexDisplacementSquared &&
-             splitDisplacementSquared < vertexDisplacementSquared )
-	{
-	    foundSplit = true;
-	}
+        if (splitDisplacementSquared < m_splitDisplacementSquared &&
+            vertexDisplacementSquared > m_vertexDisplacementSquared &&
+            splitDisplacementSquared < vertexDisplacementSquared )
+        {
+            foundSplit = true;
+        }
     }
     catch (StatusCodeException &)
     {
-        
     }
 
     if (!foundSplit)

@@ -50,8 +50,9 @@
 #include "LArHelpers/LArThreeDHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
-#include "LArBFieldCalculator.h"
-#include "LArPseudoLayerCalculator.h"
+#include "LArCalculators/LArBFieldCalculator.h"
+#include "LArCalculators/LArTransformationCalculator.h"
+#include "LArCalculators/LArPseudoLayerCalculator.h"
 
 /**
  *  @brief  LArContent class
@@ -110,18 +111,49 @@ public:
         d("LArVertexHelper",                        &lar::LArVertexHelper::ReadSettings)
 
     /**
-     *  @brief  Register all the fine granularity algorithms with pandora
+     *  @brief  Register all the lar content algorithms with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
      */
     static pandora::StatusCode RegisterAlgorithms(pandora::Pandora &pandora);
 
     /**
-     *  @brief  Register all the fine granularity helper functions with pandora
+     *  @brief  Register all the lar content helper functions with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
      */
     static pandora::StatusCode RegisterHelperFunctions(pandora::Pandora &pandora);
+
+    /**
+     *  @brief  Register all the lar content functions with pandora
+     * 
+     *  @param  pandora the pandora instance with which to register content
+     */
+    static pandora::StatusCode RegisterResetFunctions(pandora::Pandora &pandora);
+
+    /**
+     *  @brief  Register all the lar content functions with pandora
+     * 
+     *  @param  pandora the pandora instance with which to register content
+     *  @param  pLArBFieldCalculator the address of the lar b field calculator
+     */
+    static pandora::StatusCode SetLArBFieldCalculator(pandora::Pandora &pandora, lar::LArBFieldCalculator *pLArBFieldCalculator);
+
+    /**
+     *  @brief  Register all the lar content functions with pandora
+     * 
+     *  @param  pandora the pandora instance with which to register content
+     *  @param  pLArPseudoLayerCalculator the address of the lar pseudo layer calculator
+     */
+    static pandora::StatusCode SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator);
+
+    /**
+     *  @brief  Register all the lar content functions with pandora
+     * 
+     *  @param  pandora the pandora instance with which to register content
+     *  @param  pLArTransformationCalculator the address of the lar transformation calculator
+     */
+    static pandora::StatusCode SetLArTransformationCalculator(pandora::Pandora &pandora, lar::LArTransformationCalculator *pLArTransformationCalculator);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,6 +173,40 @@ inline pandora::StatusCode LArContent::RegisterHelperFunctions(pandora::Pandora 
     LAR_SETTINGS_LIST(PANDORA_REGISTER_SETTINGS);
 
     return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &pandora)
+{
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterResetFunction(pandora, &lar::LArVertexHelper::Reset));
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterResetFunction(pandora, &lar::LArThreeDHelper::Reset));
+
+    return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArContent::SetLArBFieldCalculator(pandora::Pandora &pandora, lar::LArBFieldCalculator *pLArBFieldCalculator)
+{
+    return PandoraApi::SetBFieldCalculator(pandora, pLArBFieldCalculator);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArContent::SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator)
+{
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(pandora, pLArPseudoLayerCalculator));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, lar::LArGeometryHelper::SetLArPseudoLayerCalculator(pLArPseudoLayerCalculator));
+
+    return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArContent::SetLArTransformationCalculator(pandora::Pandora &/*pandora*/, lar::LArTransformationCalculator *pLArTransformationCalculator)
+{
+    return lar::LArGeometryHelper::SetLArTransformationCalculator(pLArTransformationCalculator);
 }
 
 #endif // #ifndef LAR_CONTENT_H
