@@ -34,7 +34,7 @@ StatusCode EventPreparationAlgorithm::ProcessMCParticles()
     if (pMCParticleList->empty())
         return STATUS_CODE_NOT_INITIALIZED;
 
-    MCParticleList mcParticleListU, mcParticleListV, mcParticleListW;
+    MCParticleList mcParticleListU, mcParticleListV, mcParticleListW, mcParticleList3D;
 
     for (MCParticleList::const_iterator mcIter = pMCParticleList->begin(), mcIterEnd = pMCParticleList->end(); mcIter != mcIterEnd; ++mcIter)
     {
@@ -55,6 +55,11 @@ StatusCode EventPreparationAlgorithm::ProcessMCParticles()
             if (!mcParticleListW.insert(*mcIter).second)
                 return STATUS_CODE_ALREADY_PRESENT;
         }
+        else if (MC_STANDARD == (*mcIter)->GetMCParticleType())
+        {
+            if (!mcParticleList3D.insert(*mcIter).second)
+                return STATUS_CODE_ALREADY_PRESENT;
+        }
     }
 
     // Save the lists
@@ -66,6 +71,9 @@ StatusCode EventPreparationAlgorithm::ProcessMCParticles()
 
     if (!mcParticleListW.empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveMCParticleList(*this, mcParticleListW, m_outputMCParticleListNameW));
+
+    if (!mcParticleList3D.empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveMCParticleList(*this, mcParticleList3D, m_outputMCParticleListName3D));
 
     if (!m_currentMCParticleListReplacement.empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentMCParticleList(*this, m_currentMCParticleListReplacement));
@@ -116,7 +124,15 @@ StatusCode EventPreparationAlgorithm::ProcessCaloHits()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FinalizeHitList(caloHitListV, finalCaloHitListV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FinalizeHitList(caloHitListW, finalCaloHitListW));
 
+    CaloHitList filteredInputList;
+    filteredInputList.insert(finalCaloHitListU.begin(), finalCaloHitListU.end());
+    filteredInputList.insert(finalCaloHitListV.begin(), finalCaloHitListV.end());
+    filteredInputList.insert(finalCaloHitListW.begin(), finalCaloHitListW.end());
+
     // Save the lists
+    if (!filteredInputList.empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveCaloHitList(*this, filteredInputList, m_filteredCaloHitListName));
+
     if (!finalCaloHitListU.empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveCaloHitList(*this, finalCaloHitListU, m_outputCaloHitListNameU));
 
@@ -196,6 +212,10 @@ StatusCode EventPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputCaloHitListNameW", m_outputCaloHitListNameW));
 
+    m_filteredCaloHitListName = "caloHitListFiltered";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FilteredCaloHitListName", m_filteredCaloHitListName));
+
     m_currentCaloHitListReplacement = "caloHitListW";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CurrentCaloHitListReplacement", m_currentCaloHitListReplacement));
@@ -212,7 +232,11 @@ StatusCode EventPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputMCParticleListNameW", m_outputMCParticleListNameW));
 
-    m_currentMCParticleListReplacement = "MCParticleListW";
+    m_outputMCParticleListName3D = "MCParticleList3D";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputMCParticleListName3D", m_outputMCParticleListName3D));
+
+    m_currentMCParticleListReplacement = "MCParticleList3D";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CurrentMCParticleListReplacement", m_currentMCParticleListReplacement));
 

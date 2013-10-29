@@ -21,6 +21,7 @@
 #include "LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
+#include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 #include "LArReclustering/ShowerRebuildingAlgorithm.h"
 #include "LArReclustering/TrackSplittingAlgorithm.h"
@@ -72,6 +73,7 @@ public:
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
         d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
+        d("LArParticleMonitoring",                  lar::ParticleMonitoringAlgorithm::Factory)                                  \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
         d("LArShowerRebuilding",                    lar::ShowerRebuildingAlgorithm::Factory)                                    \
         d("LArTrackSplitting",                      lar::TrackSplittingAlgorithm::Factory)                                      \
