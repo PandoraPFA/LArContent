@@ -25,13 +25,6 @@ public:
      *  @return the z pitch
      */
     virtual float GetZPitch() const = 0;
-
-    /**
-     *  @brief  Get the z offset
-     * 
-     *  @return the z offset
-     */
-    virtual float GetZOffset() const = 0;
 };
 
 } // namespace lar
