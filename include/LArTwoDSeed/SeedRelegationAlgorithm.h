@@ -90,9 +90,6 @@ inline pandora::Algorithm *SeedRelegationAlgorithm::Factory::CreateAlgorithm() c
     return new SeedRelegationAlgorithm();
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-
 } // namespace lar
 
 #endif // #ifndef LAR_SEED_RELEGATION_ALGORITHM_H

@@ -136,7 +136,7 @@ inline SeedMergingAlgorithm::ParticleSeed::ParticleSeed(pandora::Cluster *pClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedMergingAlgorithm::ParticleSeed::AddClusterList(const pandora::ClusterList &clusterList)
+inline void SeedMergingAlgorithm::ParticleSeed::AddClusterList(const pandora::ClusterList &clusterList)
 {
     for (pandora::ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {

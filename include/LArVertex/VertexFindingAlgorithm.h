@@ -241,36 +241,39 @@ class VertexFindingAlgorithm : public pandora::Algorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexFindingAlgorithm::LArVertexCandidate::LArVertexCandidate(const pandora::CartesianVector position, const pandora::CartesianVector direction,
-    const float energy, const float momentum) : m_position(position), m_direction(direction), m_energy(energy), m_momentum(momentum)
+inline VertexFindingAlgorithm::LArVertexCandidate::LArVertexCandidate(const pandora::CartesianVector position, const pandora::CartesianVector direction,
+        const float energy, const float momentum) :
+    m_position(position),
+    m_direction(direction),
+    m_energy(energy),
+    m_momentum(momentum)
 {
-  
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::CartesianVector &VertexFindingAlgorithm::LArVertexCandidate::GetPosition() const
+inline const pandora::CartesianVector &VertexFindingAlgorithm::LArVertexCandidate::GetPosition() const
 {
     return m_position;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::CartesianVector &VertexFindingAlgorithm::LArVertexCandidate::GetDirection() const
+inline const pandora::CartesianVector &VertexFindingAlgorithm::LArVertexCandidate::GetDirection() const
 {
     return m_direction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const float &VertexFindingAlgorithm::LArVertexCandidate::GetEnergy() const
+inline const float &VertexFindingAlgorithm::LArVertexCandidate::GetEnergy() const
 {
   return m_energy;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const float &VertexFindingAlgorithm::LArVertexCandidate::GetMomentum() const
+inline const float &VertexFindingAlgorithm::LArVertexCandidate::GetMomentum() const
 {
   return m_momentum;
 }

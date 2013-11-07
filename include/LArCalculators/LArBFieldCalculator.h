@@ -26,13 +26,13 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArBFieldCalculator::Initialize(const pandora::GeometryHelper *const pGeometryHelper)
+inline void LArBFieldCalculator::Initialize(const pandora::GeometryHelper *const pGeometryHelper)
 {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArBFieldCalculator::GetBField(const pandora::CartesianVector &/*positionVector*/) const
+inline float LArBFieldCalculator::GetBField(const pandora::CartesianVector &/*positionVector*/) const
 {
     return 0.f;
 };
