@@ -8,8 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "PandoraMonitoringApi.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
@@ -36,7 +34,8 @@ StatusCode NtupleWritingAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pNonSeedClusterList));
     }
     else{
-      // would be bad to reach here...
+        std::cout << " Cannot find an input cluster list " << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
     }
 
     // Get view
@@ -261,7 +260,7 @@ NtupleWritingAlgorithm::NtupleWriter::NtupleWriter() :
     m_treeNameV = treeName;  m_treeNameV.append("V");
     m_treeNameW = treeName;  m_treeNameW.append("W");
 
-    PandoraMonitoringApi::Create();
+    PANDORA_MONITORING_API(Create());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -275,7 +274,7 @@ NtupleWritingAlgorithm::NtupleWriter::NtupleWriter( std::string fileName, std::s
     m_treeNameV = treeName;  m_treeNameV.append("V");
     m_treeNameW = treeName;  m_treeNameW.append("W");
 
-    PandoraMonitoringApi::Create();
+    PANDORA_MONITORING_API(Create());
 }
 
 
@@ -289,27 +288,27 @@ NtupleWritingAlgorithm::NtupleWriter::~NtupleWriter()
     {
         if ( false==fileExists )
 	{
-            PandoraMonitoringApi::SaveTree(m_treeNameU.c_str(), m_fileName.c_str(), "RECREATE"); fileExists = true;          
+	    PANDORA_MONITORING_API(SaveTree(m_treeNameU.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;          
 	}
-        else PandoraMonitoringApi::SaveTree(m_treeNameU.c_str(), m_fileName.c_str(), "UPDATE");
+        else PANDORA_MONITORING_API(SaveTree(m_treeNameU.c_str(), m_fileName.c_str(), "UPDATE"));
     }
 
     if ( m_treeExistsV )
     {
         if ( false==fileExists )
 	{
-            PandoraMonitoringApi::SaveTree(m_treeNameV.c_str(), m_fileName.c_str(), "RECREATE"); fileExists = true;
+	    PANDORA_MONITORING_API(SaveTree(m_treeNameV.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;
 	}
-        else PandoraMonitoringApi::SaveTree(m_treeNameV.c_str(), m_fileName.c_str(), "UPDATE");
+        else PANDORA_MONITORING_API(SaveTree(m_treeNameV.c_str(), m_fileName.c_str(), "UPDATE"));
     }
 
     if ( m_treeExistsW )
     {
         if ( false==fileExists )
 	{
-            PandoraMonitoringApi::SaveTree(m_treeNameW.c_str(), m_fileName.c_str(), "RECREATE"); fileExists = true;
+	    PANDORA_MONITORING_API(SaveTree(m_treeNameW.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;
 	}
-        else PandoraMonitoringApi::SaveTree(m_treeNameW.c_str(), m_fileName.c_str(), "UPDATE");
+        else PANDORA_MONITORING_API(SaveTree(m_treeNameW.c_str(), m_fileName.c_str(), "UPDATE"));
     }
 }
   
@@ -367,44 +366,44 @@ void NtupleWritingAlgorithm::NtupleWriter::WriteEntry()
     else if ( m_view == VIEW_W ) { treeName = m_treeNameW; m_treeExistsW = true; }
     else return;
 
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "event", m_event);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "view", m_view);
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "event", m_event));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "view", m_view));
 
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "foundVertex", m_foundVertex);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "vertexPosX", m_vertexPosX);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "vertexPosY", m_vertexPosY);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "vertexPosZ", m_vertexPosZ);
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "foundVertex", m_foundVertex));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "vertexPosX", m_vertexPosX));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "vertexPosY", m_vertexPosY));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "vertexPosZ", m_vertexPosZ));
 
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "nHits", m_nHits); 
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "hitID", &m_hitID); 
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "hitClusterID", &m_hitClusterID); 
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "hitPosX", &m_hitPosX);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "hitPosY", &m_hitPosY);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "hitPosZ", &m_hitPosZ);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "hitEnergy", &m_hitEnergy);
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "nHits", m_nHits)); 
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitID", &m_hitID)); 
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitClusterID", &m_hitClusterID)); 
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitPosX", &m_hitPosX));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitPosY", &m_hitPosY));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitPosZ", &m_hitPosZ));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitEnergy", &m_hitEnergy));
 
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "nClusters", m_nClusters);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "nSeedClusters", m_nSeedClusters);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterID", &m_clusterID);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterIsSeed", &m_clusterIsSeed);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterDirectionInZ", &m_clusterDirectionInZ);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterLayers", &m_clusterLayers);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterLength", &m_clusterLength);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterEnergy", &m_clusterEnergy);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterStartPosX", &m_clusterStartPosX);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterStartPosY", &m_clusterStartPosY);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterStartPosZ", &m_clusterStartPosZ);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterStartDirX", &m_clusterStartDirX);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterStartDirY", &m_clusterStartDirY);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterStartDirZ", &m_clusterStartDirZ);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterEndPosX", &m_clusterEndPosX);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterEndPosY", &m_clusterEndPosY);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterEndPosZ", &m_clusterEndPosZ);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterEndDirX", &m_clusterEndDirX);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterEndDirY", &m_clusterEndDirY);
-    PandoraMonitoringApi::SetTreeVariable(treeName.c_str(), "clusterEndDirZ", &m_clusterEndDirZ);
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "nClusters", m_nClusters));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "nSeedClusters", m_nSeedClusters));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterID", &m_clusterID));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterIsSeed", &m_clusterIsSeed));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterDirectionInZ", &m_clusterDirectionInZ));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterLayers", &m_clusterLayers));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterLength", &m_clusterLength));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterEnergy", &m_clusterEnergy));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterStartPosX", &m_clusterStartPosX));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterStartPosY", &m_clusterStartPosY));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterStartPosZ", &m_clusterStartPosZ));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterStartDirX", &m_clusterStartDirX));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterStartDirY", &m_clusterStartDirY));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterStartDirZ", &m_clusterStartDirZ));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterEndPosX", &m_clusterEndPosX));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterEndPosY", &m_clusterEndPosY));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterEndPosZ", &m_clusterEndPosZ));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterEndDirX", &m_clusterEndDirX));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterEndDirY", &m_clusterEndDirY));
+    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "clusterEndDirZ", &m_clusterEndDirZ));
 
-    PandoraMonitoringApi::FillTree(treeName.c_str());
+    PANDORA_MONITORING_API(FillTree(treeName.c_str()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

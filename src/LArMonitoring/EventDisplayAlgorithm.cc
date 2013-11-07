@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#ifdef MONITORING
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
@@ -98,7 +100,7 @@ StatusCode EventDisplayAlgorithm::Run()
     // Start Drawing Stuff
     unsigned int n(0);
 
-    PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+    PANDORA_MONITORING_API(SetEveDisplayParameters(0, 0, -1.f, 1.f));
 
     if ( NULL != pPfoList )
     {
@@ -118,11 +120,11 @@ StatusCode EventDisplayAlgorithm::Run()
 		    clusterList.insert(pCluster);
 	    }
 
-            PandoraMonitoringApi::VisualizeClusters(&clusterList, "Particles", GetColor(n++) );
+            PANDORA_MONITORING_API(VisualizeClusters(&clusterList, "Particles", GetColor(n++) ));
 	}
     
-        PandoraMonitoringApi::VisualizeClusters(&seedClusterList, "Seeds", GRAY );
-        PandoraMonitoringApi::VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY );
+        PANDORA_MONITORING_API(VisualizeClusters(&seedClusterList, "Seeds", GRAY ));
+        PANDORA_MONITORING_API(VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY ));
     }
 
     else if( NULL != pSeedClusterList )
@@ -132,10 +134,10 @@ StatusCode EventDisplayAlgorithm::Run()
 	    Cluster* pCluster = *iter; 
             ClusterList tempList;
             tempList.insert(pCluster);
-            PandoraMonitoringApi::VisualizeClusters(&tempList, "Seed", GetColor(n++) );
+            PANDORA_MONITORING_API(VisualizeClusters(&tempList, "Seed", GetColor(n++) ));
 	}
 
-        PandoraMonitoringApi::VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY );
+        PANDORA_MONITORING_API(VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY ));
     }
 
     else
@@ -145,17 +147,17 @@ StatusCode EventDisplayAlgorithm::Run()
 	    Cluster* pCluster = *iter; 
             ClusterList tempList;
             tempList.insert(pCluster);
-            PandoraMonitoringApi::VisualizeClusters(&tempList, "NonSeed", GetColor(n++) );
+            PANDORA_MONITORING_API(VisualizeClusters(&tempList, "NonSeed", GetColor(n++) ));
 	}
 
     }
 
     if( LArVertexHelper::DoesVertexExist(m_vertexName) ){
       CartesianVector theVertex = LArVertexHelper::GetVertex(m_vertexName);
-      PandoraMonitoringApi::AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0);
+      PANDORA_MONITORING_API(AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0));
     }
 
-    PandoraMonitoringApi::ViewEvent();
+    PANDORA_MONITORING_API(ViewEvent());
 
 
     return STATUS_CODE_SUCCESS;
@@ -163,6 +165,7 @@ StatusCode EventDisplayAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+#ifdef MONITORING
 Color EventDisplayAlgorithm::GetColor( unsigned int icolor )
 {
     unsigned thisColor = icolor%10;
@@ -184,6 +187,7 @@ Color EventDisplayAlgorithm::GetColor( unsigned int icolor )
 
     return YELLOW;
 }
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -209,3 +213,5 @@ StatusCode EventDisplayAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 }
 
 } // namespace lar
+
+#endif // #ifdef MONITORING

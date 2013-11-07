@@ -5,6 +5,7 @@
  * 
  *  $Log: $
  */
+
 #ifndef LAR_EVENT_DISPLAY_ALGORITHM_H
 #define LAR_EVENT_DISPLAY_ALGORITHM_H 1
 
@@ -34,9 +35,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-
+#ifdef MONITORING
     Color GetColor( unsigned int icolor );
-
+#endif
 
     std::string        m_seedClusterListName;
     std::string        m_nonSeedClusterListName;
