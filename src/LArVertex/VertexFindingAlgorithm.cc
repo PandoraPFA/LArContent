@@ -25,7 +25,7 @@ namespace lar
 
 StatusCode VertexFindingAlgorithm::Run()
 { 
-    // Build true vertex (TO: Replace these hard-coded numbers!)
+    // Build true vertex (TODO: Replace these hard-coded numbers!)
     CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f 
     CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f
     CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f, 0.f, 100.f 
@@ -345,7 +345,7 @@ void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointin
         bool foundIntersect(false);
         float closestDisplacement(10.f);
         CartesianVector closestPosition(0.f,0.f,0.f);
-        Cluster* closestCluster(NULL);
+// Cluster* closestCluster(NULL); // (For event display below)
 
         for (LArPointingClusterVertexList::const_iterator iterJ = cleanClusterList.begin(), iterEndJ = cleanClusterList.end(); iterJ != iterEndJ; ++iterJ)
         {
@@ -411,7 +411,7 @@ void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointin
              && this->IsNode( vertexI.GetPosition(), vertexI.GetDirection(), intersectPosition ) == false )
 	    {
 	        closestPosition = intersectPosition;  
-                closestCluster = vertexJ.GetCluster();
+// closestCluster = vertexJ.GetCluster(); // (For event display below)
                 foundIntersect = true;
 	    }
 	}
@@ -956,8 +956,6 @@ void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap&
     {
         const LArPointingCluster::Vertex &clusterVertex = *iter0;
 
-        const float thisEnergy( LArClusterHelper::GetEnergyFromLength( clusterVertex.GetCluster() ) );
-
         if ( this->IsPrimary( clusterVertex, seedVertexPosition, seedVertexDirection ) )
 	{
 	    strongList.push_back(clusterVertex);  
@@ -1030,8 +1028,6 @@ void VertexFindingAlgorithm::GetEnergyAndMomentum( const LArPointingCluster::Ver
     outputEnergy = 0.f;
     outputMomentum.SetValues(0.f,0.f,0.f);
 
-    const Cluster* pCluster = thisCluster.GetCluster();
-    
     const float clusterEnergy = LArClusterHelper::GetEnergyFromLength( thisCluster.GetCluster() );
     const float clusterLength = LArClusterHelper::GetLength( thisCluster.GetCluster() );
 
