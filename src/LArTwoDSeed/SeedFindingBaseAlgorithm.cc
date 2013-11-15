@@ -22,10 +22,10 @@ StatusCode SeedFindingBaseAlgorithm::Run()
     // Organize input lists
     const ClusterList *pSeedClusterList = NULL;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
-    const bool seedListExists(NULL != pSeedClusterList);
 
     const ClusterList *pNonSeedClusterList = NULL;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+
     const bool nonSeedListExists(NULL != pNonSeedClusterList);
 
     if (!nonSeedListExists)
