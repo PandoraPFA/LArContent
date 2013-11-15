@@ -537,8 +537,6 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(Clust
         if (Sw * Swxx - Swx * Swx > 0.f)
         {
             float m((Sw * Swzx - Swx * Swz) / (Sw * Swxx - Swx * Swx));
-            float c((Swz - m * Swx) / Sw);
-
             float px(1.f / std::sqrt(1.f + m * m));
             float pz(m / std::sqrt(1.f + m * m));
 
