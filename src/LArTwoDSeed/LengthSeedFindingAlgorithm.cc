@@ -20,12 +20,12 @@ void LengthSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &candida
     const ClusterList *pSeedClusterList = NULL;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
 
-    int nIter((NULL != pSeedClusterList) ? pSeedClusterList->size() : 0);
+    unsigned int nIter((NULL != pSeedClusterList) ? pSeedClusterList->size() : 0);
 
     for (ClusterVector::const_iterator iter = candidateClusters.begin(), iterEnd = candidateClusters.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
-        int lengthCut((nIter < m_finalChangeIter) ? m_initialLengthCut : m_finalLengthCut);
+        unsigned int lengthCut((nIter < m_finalChangeIter) ? m_initialLengthCut : m_finalLengthCut);
 
         if ((nIter > m_initialChangeIter) && (nIter < m_finalChangeIter))
         {
