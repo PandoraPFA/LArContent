@@ -248,7 +248,7 @@ void SeedMergingAlgorithm::MakeClusterMerges(const ParticleSeedVector &particleS
 
 bool SeedMergingAlgorithm::SortByLayerSpan(const ParticleSeed *const pLhs, const ParticleSeed *const pRhs)
 {
-    int minLayerLhs(std::numeric_limits<int>::max()), minLayerRhs(std::numeric_limits<int>::max()), maxLayerLhs(0), maxLayerRhs(0);
+    unsigned int minLayerLhs(std::numeric_limits<unsigned int>::max()), minLayerRhs(std::numeric_limits<unsigned int>::max()), maxLayerLhs(0), maxLayerRhs(0);
     float energyLhs(0.f), energyRhs(0.f);
 
     for (ClusterList::const_iterator iter = pLhs->GetClusterList().begin(), iterEnd = pLhs->GetClusterList().end(); iter != iterEnd; ++iter)
@@ -265,8 +265,11 @@ bool SeedMergingAlgorithm::SortByLayerSpan(const ParticleSeed *const pLhs, const
         energyRhs += (*iter)->GetHadronicEnergy();
     }
 
-    if ((maxLayerLhs - minLayerLhs) != (maxLayerRhs - minLayerRhs))
-        return ((maxLayerLhs - minLayerLhs) > (maxLayerRhs - minLayerRhs));
+    unsigned int layerSpanLhs((maxLayerLhs>minLayerLhs) ? maxLayerLhs - minLayerLhs : 0);
+    unsigned int layerSpanRhs((maxLayerRhs>minLayerRhs) ? maxLayerRhs - minLayerRhs : 0);
+
+    if (layerSpanLhs != layerSpanRhs)
+        return (layerSpanLhs > layerSpanRhs);
 
     return (energyLhs > energyRhs);
 }
