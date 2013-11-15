@@ -122,7 +122,6 @@ bool SeedRelegationAlgorithm::IsSeedClusterConnectedToLargerCluster(const Cluste
     const CartesianVector innerCentroidJ = pClusterJ->GetCentroid(innerLayerJ);
     const CartesianVector outerCentroidJ = pClusterJ->GetCentroid(outerLayerJ);
 
-    const float clusterLengthSquaredI = (outerCentroidI-innerCentroidI).GetMagnitudeSquared();
     const float clusterLengthSquaredJ = (outerCentroidJ-innerCentroidJ).GetMagnitudeSquared();
     const float clusterHalfLengthSquaredJ = 0.25f * clusterLengthSquaredJ;
 
