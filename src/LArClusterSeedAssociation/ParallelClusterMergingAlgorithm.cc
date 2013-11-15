@@ -156,7 +156,7 @@ bool ParallelClusterMergingAlgorithm::IsCleanCluster(const Cluster* pCluster) co
 
 bool ParallelClusterMergingAlgorithm::IsParallel(const Cluster *const pSeedCluster, const Cluster *const pTargetCluster) const
 {
-    // Require an overlap between the seed and target cluster.
+    // Require an overlap between the seed and target cluster
     if ((pTargetCluster->GetOuterPseudoLayer() < pSeedCluster->GetInnerPseudoLayer()) ||
         (pSeedCluster->GetOuterPseudoLayer() < pTargetCluster->GetInnerPseudoLayer()))
     {
