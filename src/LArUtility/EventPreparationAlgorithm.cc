@@ -38,7 +38,6 @@ StatusCode EventPreparationAlgorithm::ProcessMCParticles()
 
     for (MCParticleList::const_iterator mcIter = pMCParticleList->begin(), mcIterEnd = pMCParticleList->end(); mcIter != mcIterEnd; ++mcIter)
     {
-        MCParticle *pMCParticle = *mcIter;
 
         if (MC_VIEW_U == (*mcIter)->GetMCParticleType())
         {
