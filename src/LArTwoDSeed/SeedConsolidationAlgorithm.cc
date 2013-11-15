@@ -266,8 +266,8 @@ SeedConsolidationAlgorithm::ConeAssociation::ConeAssociation(const Cluster *cons
     m_coneLength(0.f),
     m_isForwardsInZ(true),
     m_coneCosHalfAngleParent(1.f),
-    m_enclosedParentHitFraction(0.f),
     m_coneCosHalfAngleDaughter(1.f),
+    m_enclosedParentHitFraction(0.f),
     m_enclosedDaughterHitFraction(0.f)
 {
     this->CalculateProperties(pParentCluster, pDaughterCluster);
