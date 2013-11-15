@@ -168,10 +168,10 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     if (0 == nTotalSamplingPoints)
         return;
 
-    float deltaChi2(0.f), totalChi2(0.f), reducedChi2(0.f);
+    float deltaChi2(0.f), totalChi2(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
 
-    for (int n = 0; n < nTotalSamplingPoints; ++n)
+    for (unsigned int n = 0; n < nTotalSamplingPoints; ++n)
     {
         const float alpha((0.5f + static_cast<float>(n)) / static_cast<float>(nTotalSamplingPoints));
         const CartesianVector linearU(vtxMergedU + (endMergedU - vtxMergedU) * alpha);
