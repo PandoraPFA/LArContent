@@ -37,7 +37,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 {
     // Tree elements
     int nMCParticles(0), nPfos(0);
-    IntVector pidVector, nMCHitsVector, nPfoHitsVector, nMatchedHitsVector;
+    IntVector pidVector, neutrinoVector, nMCHitsVector, nPfoHitsVector, nMatchedHitsVector;
     FloatVector completenessVector, purityVector, pxVector, pyVector, pzVector, thetaVector, energyVector, pVector;
     FloatVector vtxXPosVector, vtxYPosVector, vtxZPosVector, endXPosVector, endYPosVector, endZPosVector, mcVtxXPosVector, mcVtxYPosVector, mcVtxZPosVector, mcEndXPosVector, mcEndYPosVector, mcEndZPosVector;
 
@@ -80,6 +80,8 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
             const MCParticle *pMCParticle3D(mcIter->second);
             ++nMCParticles;
+
+            neutrinoVector.push_back(this->GetPrimaryNeutrino(pMCParticle3D));
 
             pidVector.push_back(pMCParticle3D->GetParticleId());
             pxVector.push_back(pMCParticle3D->GetMomentum().GetX());
@@ -147,6 +149,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMCParticles", nMCParticles));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nPfos", nPfos));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "pdg", &pidVector));
+    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nupdg", &neutrinoVector));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "px", &pxVector));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "py", &pyVector));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "pz", &pzVector));
@@ -189,17 +192,12 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
         const MCParticle *pMCParticle = *iter;
         uidToMCParticleMap[pMCParticle->GetUid()] = pMCParticle;
 
-        if (pMCParticle->GetParentList().empty())
+        if (pMCParticle->GetParentList().empty() || this->IsNeutrinoInduced(pMCParticle))
         {
-            if (!this->IsNeutrino(pMCParticle))
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+	    if (!this->IsNeutrino(pMCParticle))
+                uidToPrimaryMap[pMCParticle->GetUid()] = pMCParticle->GetUid();
+        }
 
-            continue;
-        }
-        else if ((pMCParticle->GetParentList().size() == 1) && (this->IsNeutrino(*(pMCParticle->GetParentList().begin()))))
-        {
-            uidToPrimaryMap[pMCParticle->GetUid()] = pMCParticle->GetUid();
-        }
         else
         {
             const MCParticle *pParentMCParticle = pMCParticle;
@@ -213,7 +211,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
                     uidToPrimaryMap[pMCParticle->GetUid()] = uidToPrimaryMap[pParentMCParticle->GetUid()];
                     break;
                 }
-                else if ((pParentMCParticle->GetParentList().size() == 1) && (this->IsNeutrino(*(pParentMCParticle->GetParentList().begin()))))
+                else if (pParentMCParticle->GetParentList().empty() || this->IsNeutrinoInduced(pParentMCParticle))
                 {
                     uidToPrimaryMap[pMCParticle->GetUid()] = pParentMCParticle->GetUid();
                     break;
@@ -323,6 +321,13 @@ CartesianVector ParticleMonitoringAlgorithm::GetSpacePoint(const ClusterList &cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool ParticleMonitoringAlgorithm::IsNeutrinoInduced(const MCParticle *const pMCParticle) const
+{
+    return ((pMCParticle->GetParentList().size() == 1) && (this->IsNeutrino(*(pMCParticle->GetParentList().begin()))));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ParticleMonitoringAlgorithm::IsNeutrino(const MCParticle *const pMCParticle) const
 {
     const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
@@ -331,6 +336,23 @@ bool ParticleMonitoringAlgorithm::IsNeutrino(const MCParticle *const pMCParticle
         return true;
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int ParticleMonitoringAlgorithm::GetPrimaryNeutrino(const pandora::MCParticle *const pMCParticle) const
+{
+    const MCParticle *pParentMCParticle = pMCParticle;
+
+    while (pParentMCParticle->GetParentList().empty()==false)
+    {
+        pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
+    }
+     
+    if( this->IsNeutrino(pParentMCParticle) )
+        return pParentMCParticle->GetParticleId();
+
+    return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -89,13 +89,32 @@ private:
         const bool useInnerLayer) const;
 
     /**
-     *  @brief  Whether a mc particle is a neutrino or (anti neutrino)
+     *  @brief  Whether a mc particle is a final-state particle from a neutrino (or antineutrino) interaction
+     * 
+     *  @param  pMCParticle
+     * 
+     *  @return boolean
+     */
+    bool IsNeutrinoInduced(const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Whether a mc particle is a neutrino or (antineutrino)
      * 
      *  @param  pMCParticle
      * 
      *  @return boolean
      */
     bool IsNeutrino(const pandora::MCParticle *const pMCParticle) const;
+
+    /**
+     *  @brief  Get primary neutrino or antineutrino
+     * 
+     *  @param  pMCParticle
+     * 
+     *  @return pdg code of neutrino (or zero, otherwise)
+     */
+    int GetPrimaryNeutrino(const pandora::MCParticle *const pMCParticle) const;
+
 
     std::string     m_caloHitListName;                  ///< 
     std::string     m_mcParticleListName;               ///< 
