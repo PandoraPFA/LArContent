@@ -62,7 +62,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
         UidToPfoMap uidToPfoMap;
         ContributionMap mcPfoContributionMap;
-        this->GetMCParticleToPfoMatches(pfoList, uidToPrimaryMap, uidToPfoMap, mcPfoContributionMap);
+        this->GetMCParticleToPfoMatches(pCaloHitList, pfoList, uidToPrimaryMap, uidToPfoMap, mcPfoContributionMap);
 
         ContributionMap mcHitContributionMap;
         this->GetMCParticleToCaloHitMatches(pCaloHitList, uidToPrimaryMap, mcHitContributionMap);
@@ -223,8 +223,8 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const PfoList &pfoList, const UidRelationMap &uidToPrimaryMap,
-    UidToPfoMap &uidToPfoMap, ContributionMap &contributionMap) const
+void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList, 
+    const UidRelationMap &uidToPrimaryMap, UidToPfoMap &uidToPfoMap, ContributionMap &contributionMap) const
 {
     for (PfoList::const_iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; ++iter)
     {
@@ -244,7 +244,11 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const PfoList &pfoLi
             {
                 try
                 {
-                    const CaloHit *pCaloHit = *hIter;
+                    CaloHit *pCaloHit = *hIter;
+
+		    if (pCaloHitList->count(pCaloHit) == 0)
+		        continue;
+
                     const MCParticle *pHitMCParticle(pCaloHit->GetMainMCParticle());
                     UidRelationMap::const_iterator rIter = uidToPrimaryMap.find(pHitMCParticle->GetUid());
 

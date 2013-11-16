@@ -60,13 +60,14 @@ private:
     /**
      *  @brief  Find pfo containing most hits from each primary MC particle, and store properties in a map indexed by particle Uid
      * 
+     *  @param  pCaloHitList
      *  @param  pfoList
      *  @param  uidToPrimaryMap
      *  @param  uidToPfoMap
      *  @param  contributionMap
      */
-    void GetMCParticleToPfoMatches(const pandora::PfoList &pfoList, const UidRelationMap &uidToPrimaryMap, UidToPfoMap &uidToPfoMap,
-        ContributionMap &contributionMap) const;
+    void GetMCParticleToPfoMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &pfoList, 
+        const UidRelationMap &uidToPrimaryMap, UidToPfoMap &uidToPfoMap, ContributionMap &contributionMap) const;
 
     /**
      *  @brief  Work out the total number of hits associated with each primary MC particle
