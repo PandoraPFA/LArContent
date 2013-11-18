@@ -39,6 +39,7 @@
 #include "LArTwoDSeed/VertexSeedFindingAlgorithm.h"
 #include "LArTwoDSeed/TwoDParticleCreationAlgorithm.h"
 #include "LArUtility/EventPreparationAlgorithm.h"
+#include "LArUtility/HelloWorldAlgorithm.h"
 #include "LArUtility/ListMergingAlgorithm.h"
 #include "LArUtility/TwoDPreparationAlgorithm.h"
 #include "LArUtility/ThreeDPreparationAlgorithm.h"
@@ -92,6 +93,7 @@ public:
         d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
+	d("LArHelloWorld",                          lar::HelloWorldAlgorithm::Factory)                                          \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
         d("LArThreeDPreparation",                   lar::ThreeDPreparationAlgorithm::Factory)                                   \
