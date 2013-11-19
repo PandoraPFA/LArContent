@@ -35,7 +35,7 @@ StatusCode EventDisplayAlgorithm::Run()
     if (NULL == pSeedClusterList && NULL == pNonSeedClusterList)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pNonSeedClusterList));  
-	std::cout << " --- Loading Current Cluster List --- " << std::endl;
+        std::cout << " --- Loading Current Cluster List --- " << std::endl;
     }
 
 
@@ -49,34 +49,7 @@ StatusCode EventDisplayAlgorithm::Run()
     if( NULL != pSeedClusterList )
     {
         for ( ClusterList::const_iterator iter = pSeedClusterList->begin(), iterEnd = pSeedClusterList->end(); iter != iterEnd; ++iter ) 
-	{
-            Cluster *pCluster = *iter;
-
-	    if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
-                hitType = VIEW_U;
-                
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
-                hitType = VIEW_V;
-                
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
-                hitType = VIEW_W;
-	    
-            if (pCluster->ContainsHitType(hitType) == false)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            if (pCluster->IsAvailable())
-                seedClusterList.insert(pCluster);
-	}
-    }
-
-  
-    // Add the non-seed clusters
-    ClusterList nonSeedClusterList; 
-
-    if( NULL != pNonSeedClusterList )
-    {
-        for ( ClusterList::const_iterator iter = pNonSeedClusterList->begin(), iterEnd = pNonSeedClusterList->end(); iter != iterEnd; ++iter ) 
-	{
+        {
             Cluster *pCluster = *iter;
 
             if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
@@ -87,13 +60,40 @@ StatusCode EventDisplayAlgorithm::Run()
                 
             if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
                 hitType = VIEW_W;
-	    
+
             if (pCluster->ContainsHitType(hitType) == false)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-	    if (pCluster->IsAvailable())
+            if (pCluster->IsAvailable())
+                seedClusterList.insert(pCluster);
+        }
+    }
+
+  
+    // Add the non-seed clusters
+    ClusterList nonSeedClusterList; 
+
+    if( NULL != pNonSeedClusterList )
+    {
+        for ( ClusterList::const_iterator iter = pNonSeedClusterList->begin(), iterEnd = pNonSeedClusterList->end(); iter != iterEnd; ++iter ) 
+        {
+            Cluster *pCluster = *iter;
+
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
+                hitType = VIEW_U;
+                
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
+                hitType = VIEW_V;
+                
+            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
+                hitType = VIEW_W;
+
+            if (pCluster->ContainsHitType(hitType) == false)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            if (pCluster->IsAvailable())
                 nonSeedClusterList.insert(pCluster);
-	}
+        }
     }
 
    
@@ -117,12 +117,12 @@ StatusCode EventDisplayAlgorithm::Run()
                 Cluster *pCluster = *cIter;
 
                 if ( pCluster->ContainsHitType(hitType) )
-		    clusterList.insert(pCluster);
-	    }
+                    clusterList.insert(pCluster);
+            }
 
             PANDORA_MONITORING_API(VisualizeClusters(&clusterList, "Particles", GetColor(n++) ));
-	}
-    
+        }
+
         PANDORA_MONITORING_API(VisualizeClusters(&seedClusterList, "Seeds", GRAY ));
         PANDORA_MONITORING_API(VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY ));
     }
@@ -130,12 +130,12 @@ StatusCode EventDisplayAlgorithm::Run()
     else if( NULL != pSeedClusterList )
     {
         for( ClusterList::const_iterator iter = seedClusterList.begin(), iterEnd = seedClusterList.end(); iter != iterEnd; ++iter )
-	{
-	    Cluster* pCluster = *iter; 
+        {
+            Cluster* pCluster = *iter; 
             ClusterList tempList;
             tempList.insert(pCluster);
             PANDORA_MONITORING_API(VisualizeClusters(&tempList, "Seed", GetColor(n++) ));
-	}
+        }
 
         PANDORA_MONITORING_API(VisualizeClusters(&nonSeedClusterList, "NonSeeds", GRAY ));
     }
@@ -143,13 +143,12 @@ StatusCode EventDisplayAlgorithm::Run()
     else
     {
         for( ClusterList::const_iterator iter = nonSeedClusterList.begin(), iterEnd = nonSeedClusterList.end(); iter != iterEnd; ++iter )
-	{
-	    Cluster* pCluster = *iter; 
+        {
+            Cluster* pCluster = *iter; 
             ClusterList tempList;
             tempList.insert(pCluster);
             PANDORA_MONITORING_API(VisualizeClusters(&tempList, "NonSeed", GetColor(n++) ));
-	}
-
+        }
     }
 
     if( LArVertexHelper::DoesVertexExist(m_vertexName) ){

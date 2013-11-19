@@ -172,7 +172,7 @@ void NtupleWritingAlgorithm::NtupleWriter::AddCluster( Cluster* pCluster, bool i
             m_hitPosY.push_back( pCaloHit->GetPositionVector().GetY() );
             m_hitPosZ.push_back( pCaloHit->GetPositionVector().GetZ() );
             m_hitEnergy.push_back( pCaloHit->GetHadronicEnergy() );
-	}
+        }
     }
 
     // Write out cluster info
@@ -207,7 +207,7 @@ void NtupleWritingAlgorithm::NtupleWriter::AddCluster( Cluster* pCluster, bool i
             m_clusterEndDirX.push_back( pointingCluster.GetOuterVertex().GetDirection().GetX() );
             m_clusterEndDirY.push_back( pointingCluster.GetOuterVertex().GetDirection().GetY() );
             m_clusterEndDirZ.push_back( pointingCluster.GetOuterVertex().GetDirection().GetZ() );
-	}
+        }
         else
         {
             m_clusterStartPosX.push_back( pointingCluster.GetOuterVertex().GetPosition().GetX() );
@@ -222,7 +222,7 @@ void NtupleWritingAlgorithm::NtupleWriter::AddCluster( Cluster* pCluster, bool i
             m_clusterEndDirX.push_back( pointingCluster.GetInnerVertex().GetDirection().GetX() );
             m_clusterEndDirY.push_back( pointingCluster.GetInnerVertex().GetDirection().GetY() );
             m_clusterEndDirZ.push_back( pointingCluster.GetInnerVertex().GetDirection().GetZ() );
-	}
+        }
     }
 
     else{
@@ -287,27 +287,27 @@ NtupleWritingAlgorithm::NtupleWriter::~NtupleWriter()
     if ( m_treeExistsU )
     {
         if ( false==fileExists )
-	{
-	    PANDORA_MONITORING_API(SaveTree(m_treeNameU.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;          
-	}
+        {
+            PANDORA_MONITORING_API(SaveTree(m_treeNameU.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;          
+        }
         else PANDORA_MONITORING_API(SaveTree(m_treeNameU.c_str(), m_fileName.c_str(), "UPDATE"));
     }
 
     if ( m_treeExistsV )
     {
         if ( false==fileExists )
-	{
-	    PANDORA_MONITORING_API(SaveTree(m_treeNameV.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;
-	}
+        {
+            PANDORA_MONITORING_API(SaveTree(m_treeNameV.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;
+        }
         else PANDORA_MONITORING_API(SaveTree(m_treeNameV.c_str(), m_fileName.c_str(), "UPDATE"));
     }
 
     if ( m_treeExistsW )
     {
         if ( false==fileExists )
-	{
-	    PANDORA_MONITORING_API(SaveTree(m_treeNameW.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;
-	}
+        {
+            PANDORA_MONITORING_API(SaveTree(m_treeNameW.c_str(), m_fileName.c_str(), "RECREATE")); fileExists = true;
+        }
         else PANDORA_MONITORING_API(SaveTree(m_treeNameW.c_str(), m_fileName.c_str(), "UPDATE"));
     }
 }

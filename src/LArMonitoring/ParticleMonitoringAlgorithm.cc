@@ -194,7 +194,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
 
         if (pMCParticle->GetParentList().empty() || this->IsNeutrinoInduced(pMCParticle))
         {
-	    if (!this->IsNeutrino(pMCParticle))
+            if (!this->IsNeutrino(pMCParticle))
                 uidToPrimaryMap[pMCParticle->GetUid()] = pMCParticle->GetUid();
         }
 
@@ -246,8 +246,8 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *c
                 {
                     CaloHit *pCaloHit = *hIter;
 
-		    if (pCaloHitList->count(pCaloHit) == 0)
-		        continue;
+                    if (pCaloHitList->count(pCaloHit) == 0)
+                        continue;
 
                     const MCParticle *pHitMCParticle(pCaloHit->GetMainMCParticle());
                     UidRelationMap::const_iterator rIter = uidToPrimaryMap.find(pHitMCParticle->GetUid());
@@ -348,12 +348,12 @@ int ParticleMonitoringAlgorithm::GetPrimaryNeutrino(const pandora::MCParticle *c
 {
     const MCParticle *pParentMCParticle = pMCParticle;
 
-    while (pParentMCParticle->GetParentList().empty()==false)
+    while (pParentMCParticle->GetParentList().empty() == false)
     {
         pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
     }
-     
-    if( this->IsNeutrino(pParentMCParticle) )
+
+    if (this->IsNeutrino(pParentMCParticle))
         return pParentMCParticle->GetParticleId();
 
     return 0;

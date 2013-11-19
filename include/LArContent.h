@@ -93,7 +93,7 @@ public:
         d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
-	d("LArHelloWorld",                          lar::HelloWorldAlgorithm::Factory)                                          \
+        d("LArHelloWorld",                          lar::HelloWorldAlgorithm::Factory)                                          \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
         d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
         d("LArThreeDPreparation",                   lar::ThreeDPreparationAlgorithm::Factory)                                   \

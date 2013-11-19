@@ -416,14 +416,14 @@ void BoundedCluster::BuildBoundingBox(const Cluster *pCluster)
             fBoxMinY[ilayer] = hitY;
             fBoxMinY[ilayer] = hitY;
             fBoxFlag[ilayer] = true;
-	  }
+        }
           else{
                  if( hitX<fBoxMinX[ilayer] ) fBoxMinX[ilayer] = hitX;
             else if( hitX>fBoxMaxX[ilayer] ) fBoxMaxX[ilayer] = hitX;
                  if( hitY<fBoxMinY[ilayer] ) fBoxMinY[ilayer] = hitY;
             else if( hitY>fBoxMaxY[ilayer] ) fBoxMaxY[ilayer] = hitY;
-	  }
-	}
+            }
+        }
       }
     }
   }
