@@ -215,7 +215,7 @@ StatusCode EventPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilteredCaloHitListName", m_filteredCaloHitListName));
 
-    m_currentCaloHitListReplacement = "caloHitListW";
+    m_currentCaloHitListReplacement = "";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CurrentCaloHitListReplacement", m_currentCaloHitListReplacement));
 
@@ -235,7 +235,7 @@ StatusCode EventPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputMCParticleListName3D", m_outputMCParticleListName3D));
 
-    m_currentMCParticleListReplacement = "MCParticleList3D";
+    m_currentMCParticleListReplacement = "";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CurrentMCParticleListReplacement", m_currentMCParticleListReplacement));
 
