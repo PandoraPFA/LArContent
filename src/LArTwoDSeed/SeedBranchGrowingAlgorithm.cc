@@ -18,6 +18,21 @@ using namespace pandora;
 namespace lar
 {
 
+void SeedBranchGrowingAlgorithm::GetCandidateClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
+{
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (pCluster->GetNCaloHits() < 10)
+            continue;
+
+        clusterVector.push_back(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 SeedBranchGrowingAlgorithm::AssociationType SeedBranchGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
     const bool currentVertexExists(LArVertexHelper::DoesCurrentVertexExist());

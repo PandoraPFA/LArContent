@@ -9,9 +9,10 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "LArCalculators/LArPseudoLayerCalculator.h"
 
-#include "LArPseudoLayerCalculator.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 #include <algorithm>
 #include <cmath>
@@ -565,14 +566,14 @@ void LArClusterHelper::TwoDSlidingFitResult::GetGlobalPosition(const float rL, c
 
 int LArClusterHelper::TwoDSlidingFitResult::GetLayer(const float rL) const
 {
-    return std::floor(rL / LArPseudoLayerCalculator::GetZPitch());
+    return std::floor(rL / LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArClusterHelper::TwoDSlidingFitResult::GetL(const int layer) const
 {
-    return static_cast<float>(layer) *  LArPseudoLayerCalculator::GetZPitch();
+    return static_cast<float>(layer) * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -797,7 +798,7 @@ float LArClusterHelper::TwoDSlidingFitResult::GetSlidingFitWidth() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned int &largestScatterLayer) const
+StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(CartesianVector &largestScatterPosition) const
 {
     // Bail out if track is too short
     const unsigned int nFitLayers(m_layerFitResultMap.size());
@@ -845,10 +846,8 @@ StatusCode LArClusterHelper::TwoDSlidingFitResult::FindLargestScatter(unsigned i
     if (m_layerFitResultMap.end() == splitLayerIter)
         return STATUS_CODE_NOT_FOUND;
 
-    CartesianVector splitPosition(0.f, 0.f, 0.f);
-    this->GetGlobalPosition(splitLayerIter->second.GetL(), splitLayerIter->second.GetFitT(), splitPosition);
-    largestScatterLayer = GeometryHelper::GetPseudoLayer(splitPosition);
-
+    this->GetGlobalPosition(splitLayerIter->second.GetL(), splitLayerIter->second.GetFitT(), largestScatterPosition);
+    
     return STATUS_CODE_SUCCESS;
 }
 

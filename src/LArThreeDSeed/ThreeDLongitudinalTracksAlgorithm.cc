@@ -26,17 +26,6 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
 
-    /*
-    unsigned int nMultiValuedInX(0);
-
-    if ( slidingFitResultU.IsMultivaluedInX() ) ++nMultiValuedInX;
-    if ( slidingFitResultV.IsMultivaluedInX() ) ++nMultiValuedInX;
-    if ( slidingFitResultW.IsMultivaluedInX() ) ++nMultiValuedInX;
-
-    if ( nMultiValuedInX < 2 )
-        return;
-    */
-
     TrackOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut);
 
     for (unsigned int nU = 0; nU <= 1; ++nU)
@@ -54,12 +43,12 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
                 // Check consistency of directions with reconstructed vertex 
                 if (LArVertexHelper::DoesCurrentVertexExist())
                 {
-                    if ( (isForwardU && LArVertexHelper::IsBackwardInZ(slidingFitResultU.GetCluster())) ||
-                         (!isForwardU && LArVertexHelper::IsForwardInZ(slidingFitResultU.GetCluster())) ||
-                         (isForwardV && LArVertexHelper::IsBackwardInZ(slidingFitResultV.GetCluster())) ||
-                         (!isForwardV && LArVertexHelper::IsForwardInZ(slidingFitResultV.GetCluster())) ||
-                         (isForwardW && LArVertexHelper::IsBackwardInZ(slidingFitResultW.GetCluster())) ||
-                         (!isForwardW && LArVertexHelper::IsForwardInZ(slidingFitResultW.GetCluster())) )
+                    if ( (isForwardU && LArVertexHelper::IsBackwardInZ3D(slidingFitResultU.GetCluster())) ||
+                         (!isForwardU && LArVertexHelper::IsForwardInZ3D(slidingFitResultU.GetCluster())) ||
+                         (isForwardV && LArVertexHelper::IsBackwardInZ3D(slidingFitResultV.GetCluster())) ||
+                         (!isForwardV && LArVertexHelper::IsForwardInZ3D(slidingFitResultV.GetCluster())) ||
+                         (isForwardW && LArVertexHelper::IsBackwardInZ3D(slidingFitResultW.GetCluster())) ||
+                         (!isForwardW && LArVertexHelper::IsForwardInZ3D(slidingFitResultW.GetCluster())) )
                     {
                         continue;
                     }
@@ -179,10 +168,10 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     if (0 == nTotalSamplingPoints)
         return;
 
-    float deltaChi2(0.f), totalChi2(0.f), reducedChi2(0.f);
+    float deltaChi2(0.f), totalChi2(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
 
-    for (int n = 0; n < nTotalSamplingPoints; ++n)
+    for (unsigned int n = 0; n < nTotalSamplingPoints; ++n)
     {
         const float alpha((0.5f + static_cast<float>(n)) / static_cast<float>(nTotalSamplingPoints));
         const CartesianVector linearU(vtxMergedU + (endMergedU - vtxMergedU) * alpha);
@@ -213,24 +202,6 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     if (nSamplingPoints > 0)
     {
         overlapResult = TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2);
-//std::cout << " nMatchedSamplingPoints=" << nMatchedSamplingPoints << " nSamplingPoints=" << nSamplingPoints << " totalChi2=" << totalChi2 << std::endl;
-//Cluster *pClusterU = (Cluster*)(slidingFitResultU.GetCluster());
-//Cluster *pClusterV = (Cluster*)(slidingFitResultV.GetCluster());
-//Cluster *pClusterW = (Cluster*)(slidingFitResultW.GetCluster());  
-//ClusterList tempListU; tempListU.insert(pClusterU);
-//ClusterList tempListV; tempListV.insert(pClusterV);
-//ClusterList tempListW; tempListW.insert(pClusterW);
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(&tempListU, "BestClusterU", RED);
-//PandoraMonitoringApi::VisualizeClusters(&tempListV, "BestClusterV", GREEN);
-//PandoraMonitoringApi::VisualizeClusters(&tempListW, "BestClusterW", BLUE);
-//PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedU, "vtxMergedU", RED,   3.0);
-//PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedV, "vtxMergedV", GREEN, 3.0);
-//PandoraMonitoringApi::AddMarkerToVisualization(&vtxMergedW, "vtxMergedW", BLUE,  3.0);
-//PandoraMonitoringApi::AddMarkerToVisualization(&endMergedU, "endMergedU", RED,   3.0);
-//PandoraMonitoringApi::AddMarkerToVisualization(&endMergedV, "endMergedV", GREEN, 3.0);
-//PandoraMonitoringApi::AddMarkerToVisualization(&endMergedW, "endMergedW", BLUE,  3.0);
-//PandoraMonitoringApi::ViewEvent();
     }
 }
 

@@ -94,7 +94,7 @@ protected:
      *  @param  pClusterList address of the cluster list
      *  @param  clusterVector to receive the populated cluster vector
      */
-    virtual void GetCandidateClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    virtual void GetCandidateClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const = 0;
 
     /**
      *  @brief  Determine whether two clusters are associated
@@ -109,7 +109,6 @@ protected:
     std::string         m_seedClusterListName;      ///< The seed cluster list name
     std::string         m_nonSeedClusterListName;   ///< The non seed cluster list name
 
-private:
     /**
      *  @brief  Find clusters associated with a particle seed
      * 
@@ -133,6 +132,7 @@ private:
     void IdentifyClusterMerges(const pandora::ClusterVector &particleSeedVector, const ClusterUsageMap &backwardUsageMap,
         SeedAssociationList &seedAssociationList) const;
 
+private:
     /**
      *  @brief  Make cluster merges
      * 

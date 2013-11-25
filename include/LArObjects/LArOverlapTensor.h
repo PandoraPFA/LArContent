@@ -115,6 +115,11 @@ class TrackOverlapResult
 {
 public:
     /**
+     *  @brief  Default constructor
+     */
+    TrackOverlapResult();
+
+    /**
      *  @brief  Constructor
      * 
      *  @param  nMatchedSamplingPoints
@@ -129,6 +134,13 @@ public:
      *  @param  rhs
      */
     TrackOverlapResult(const TrackOverlapResult &rhs);
+
+    /**
+     *  @brief  Whether the track overlap result has been initialized
+     *
+     *  @return boolean
+     */
+    bool IsInitialized() const;
 
     /**
      *  @brief  Get the number of matched sampling points
@@ -173,6 +185,13 @@ public:
     bool operator<(const TrackOverlapResult &rhs) const;
 
     /**
+     *  @brief  Track overlap result greater than operator
+     * 
+     *  @param  rhs the track overlap result for comparison
+     */
+    bool operator>(const TrackOverlapResult &rhs) const;
+
+    /**
      *  @brief  Track overlap result assigment operator
      * 
      *  @param  rhs the track overlap result to assign
@@ -180,6 +199,7 @@ public:
     TrackOverlapResult &operator=(const TrackOverlapResult &rhs);
 
 private:
+    bool            m_isInitialized;                ///< Whether the track overlap result has been initialized
     unsigned int    m_nMatchedSamplingPoints;       ///< The number of matched sampling points
     unsigned int    m_nSamplingPoints;              ///< The number of sampling points
     float           m_matchedFraction;              ///< The fraction of sampling points resulting in a match
@@ -337,7 +357,20 @@ inline void OverlapTensor<T>::Clear()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline TrackOverlapResult::TrackOverlapResult() :
+    m_isInitialized(false),
+    m_nMatchedSamplingPoints(0),
+    m_nSamplingPoints(0),
+    m_matchedFraction(0.f),
+    m_chi2(0.f),
+    m_reducedChi2(0.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline TrackOverlapResult::TrackOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2) :
+    m_isInitialized(true),
     m_nMatchedSamplingPoints(nMatchedSamplingPoints),
     m_nSamplingPoints(nSamplingPoints),
     m_matchedFraction(0.f),
@@ -354,12 +387,20 @@ inline TrackOverlapResult::TrackOverlapResult(const unsigned int nMatchedSamplin
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrackOverlapResult::TrackOverlapResult(const TrackOverlapResult &rhs) :
+    m_isInitialized(rhs.m_isInitialized),
     m_nMatchedSamplingPoints(rhs.m_nMatchedSamplingPoints),
     m_nSamplingPoints(rhs.m_nSamplingPoints),
     m_matchedFraction(rhs.m_matchedFraction),
     m_chi2(rhs.m_chi2),
     m_reducedChi2(rhs.m_reducedChi2)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool TrackOverlapResult::IsInitialized() const
+{
+    return m_isInitialized;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -409,11 +450,22 @@ inline bool TrackOverlapResult::operator<(const TrackOverlapResult &rhs) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline bool TrackOverlapResult::operator>(const TrackOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    return !(*this < rhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResult &rhs)
 {
     if (this == &rhs)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
+    m_isInitialized = rhs.m_isInitialized;
     m_nMatchedSamplingPoints = rhs.m_nMatchedSamplingPoints;
     m_nSamplingPoints = rhs.m_nSamplingPoints;
     m_matchedFraction = rhs.m_matchedFraction;
@@ -428,8 +480,11 @@ inline TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResul
 
 inline TrackOverlapResult operator+(const TrackOverlapResult &lhs, const TrackOverlapResult &rhs)
 {
-    return TrackOverlapResult(lhs.GetNMatchedSamplingPoints() + rhs.GetNMatchedSamplingPoints(), lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(),
-        lhs.GetChi2() + rhs.GetChi2());
+    if (!lhs.IsInitialized() && !rhs.IsInitialized())
+        return TrackOverlapResult();
+
+    return TrackOverlapResult(lhs.GetNMatchedSamplingPoints() + rhs.GetNMatchedSamplingPoints(),
+        lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(), lhs.GetChi2() + rhs.GetChi2());
 }
 
 } // namespace lar

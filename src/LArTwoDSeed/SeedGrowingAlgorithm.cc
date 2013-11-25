@@ -55,21 +55,6 @@ StatusCode SeedGrowingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedGrowingAlgorithm::GetCandidateClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
-{
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (pCluster->GetNCaloHits() < 10)
-            continue;
-
-        clusterVector.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void SeedGrowingAlgorithm::FindAssociatedClusters(Cluster *const pParticleSeed, ClusterVector &candidateClusters,
     ClusterUsageMap &forwardUsageMap, ClusterUsageMap &backwardUsageMap) const
 {

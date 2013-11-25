@@ -10,13 +10,15 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "SeedFindingBaseAlgorithm.h"
+
 namespace lar
 {
 
 /**
  *  @brief  VertexSeedFindingAlgorithm class
  */
-class VertexSeedFindingAlgorithm : public pandora::Algorithm
+class VertexSeedFindingAlgorithm : public SeedFindingBaseAlgorithm
 {
 public:
     /**
@@ -29,30 +31,11 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    void GetSeedClusterList(const pandora::ClusterVector &candidateClusters, pandora::ClusterList &seedClusterList) const;
 
-    /**
-     *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
-     * 
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
-     */
-    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
-
-    /**
-     *  @brief  Merge any vertex seed candidates that are unambiguously associated
-     * 
-     *  @param  eventVertex the event vertex position vector
-     *  @param  vertexSeedClusterList the list of vertex seed candidates
-     */
-    void MakeVertexSeedMerges(const pandora::CartesianVector &eventVertex, pandora::ClusterList &vertexSeedClusterList) const;
-
-    std::string         m_seedClusterListName;          ///< The seed cluster list name
-    std::string         m_nonSeedClusterListName;       ///< The non seed cluster list name
-
-    unsigned int        m_minClusterLayers;             ///< The min number of layers for a clean cluster
-    float               m_minClusterLengthSquared;      ///< The min length (squared) for a clean cluster
+    unsigned int        m_minClusterHitsNode;           ///< The min number of cluster hits for a node 
+    unsigned int        m_minClusterHitsEmission;       ///< The min number of cluster hits for an emission
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

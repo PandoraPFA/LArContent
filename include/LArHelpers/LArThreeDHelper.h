@@ -24,6 +24,15 @@ class LArThreeDHelper
 {
 public:
     /**
+     *  @brief  Get the hit type associated with a two dimensional cluster
+     * 
+     *  @param  pCluster the address of the cluster
+     * 
+     *  @return the cluster hit type
+     */
+    static pandora::HitType GetClusterHitType(const pandora::Cluster *const pCluster);
+
+    /**
      *  @brief  Store components of a cluster that has undergone reclustering/fragmentation
      * 
      *  @param  seedComponents the list of seed component clusters
@@ -81,7 +90,7 @@ public:
     /**
      *  @brief  Remove all stored clusters from the helper class
      */
-    static void RemoveAllStoredClusters();
+    static void Reset();
 
     /**
      *  @brief  Read the lar particle id settings

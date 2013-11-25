@@ -21,7 +21,6 @@ namespace lar
 class LArPointingClusterHelper
 {
 public:
-
     /**
      *  @brief  Whether specified parent and daughter vertices form a node
      * 
@@ -33,34 +32,24 @@ public:
     static bool IsNode(const pandora::CartesianVector &parentVertex, const pandora::CartesianVector &daughterVertex);
 
     /**
-     *  @brief  Whether parent and daughter vertices represent an emission from the parent
+     *  @brief  Whether pointing vertex is adjacent to a given position
      * 
-     *  @param  parentPointingVertex the parent pointing vertex
-     *  @param  daughterVertex the position of the daughter vertex
+     *  @param  parentVertex the parent vertex position
+     *  @param  daughtervertex the daughter pointing vertex
      * 
      *  @return boolean
      */
-    static bool IsEmission(const LArPointingCluster::Vertex &parentPointingVertex, const pandora::CartesianVector &daughterVertex);
+    static bool IsNode(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex); 
 
     /**
-     *  @brief  Whether parent and daughter vertices represent an emission from the parent
+     *  @brief  Whether pointing vertex is emitted from a given position
      * 
-     *  @param  parentVertex the position of the parent vertex
-     *  @param  daughterPointingVertex the daughter pointing vertex
-     * 
-     *  @return boolean
-     */
-    static bool IsEmitted(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterPointingVertex);
-
-    /**
-     *  @brief  Whether vertex and pointing vertex are compatible with an emission
-     * 
-     *  @param  vertex the position of the vertex
-     *  @param  pointingVertex the pointing vertex
+     *  @param  parentVertex the parent vertex position
+     *  @param  daughtervertex the daughter pointing vertex
      * 
      *  @return boolean
      */
-    static bool IsPointing(const pandora::CartesianVector &vertex, const LArPointingCluster::Vertex &pointingVertex);
+    static bool IsEmission(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex);
 
     /**
      *  @brief  Get intersection of two vertices
@@ -71,7 +60,8 @@ public:
      *  @param  firstDisplacement the displacement from first vertex to intersection
      *  @param  secondDisplacement the displacement from second vertex to intersection
      */
-    static void GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, pandora::CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement );
+    static void GetIntersection(const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
+        pandora::CartesianVector &intersectPosition, float &firstDisplacement, float &secondDisplacement);
 
     /**
      *  @brief  Get average direction of two vertices
@@ -80,7 +70,8 @@ public:
      *  @param  secondVertex the second vertex
      *  @param  averageDirection the average direction
      */
-    static void GetAverageDirection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, pandora::CartesianVector& averageDirection );
+    static void GetAverageDirection(const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
+        pandora::CartesianVector &averageDirection);
 
     /**
      *  @brief  Get intersection of two vertices
@@ -93,9 +84,9 @@ public:
      *  @param  firstDisplacement the displacement from first vertex to intersection
      *  @param  secondDisplacement the displacement from second vertex to intersection
      */
-    static void GetIntersection( const pandora::CartesianVector& firstPosition, const pandora::CartesianVector &firstDirection,
-        const pandora::CartesianVector& secondPosition, const pandora::CartesianVector& secondDirection,
-        pandora::CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement);
+    static void GetIntersection(const pandora::CartesianVector &firstPosition, const pandora::CartesianVector &firstDirection,
+        const pandora::CartesianVector &secondPosition, const pandora::CartesianVector &secondDirection,
+        pandora::CartesianVector &intersectPosition, float &firstDisplacement, float &secondDisplacement);
 
     /**
      *  @brief  Get intersection of vertex with target cluster
@@ -106,8 +97,8 @@ public:
      *  @param  displacementL the longitudinal displacement 
      *  @param  displacementT the transverse displacement 
      */
-    static void GetIntersection( const LArPointingCluster::Vertex& vertexCluster, const pandora::Cluster *const pTargetCluster, 
-        pandora::CartesianVector& intersectPosition, float& displacementL, float& displacementT );
+    static void GetIntersection(const LArPointingCluster::Vertex &vertexCluster, const pandora::Cluster *const pTargetCluster,
+        pandora::CartesianVector &intersectPosition, float &displacementL, float &displacementT);
 
     /**
      *  @brief  Read the vertex helper settings

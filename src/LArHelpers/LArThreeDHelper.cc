@@ -24,6 +24,36 @@ ClusterList LArThreeDHelper::m_loneClusterList;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+HitType LArThreeDHelper::GetClusterHitType(const Cluster *const pCluster)
+{
+    HitType hitType(CUSTOM);
+
+    if (pCluster->ContainsHitType(VIEW_U))
+    {
+        if (CUSTOM == hitType) hitType = VIEW_U;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (pCluster->ContainsHitType(VIEW_V))
+    {
+        if (CUSTOM == hitType) hitType = VIEW_V;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (pCluster->ContainsHitType(VIEW_W))
+    {
+        if (CUSTOM == hitType) hitType = VIEW_W;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (CUSTOM == hitType)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    return hitType;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArThreeDHelper::StoreClusterComponents(const ClusterList &seedComponents, const ClusterList &nonSeedComponents)
 {
     const unsigned int clusterId(m_idToSeedClusterListMap.size());
@@ -86,7 +116,7 @@ void LArThreeDHelper::GetAllNonSeedComponents(const Cluster *const pSeedCluster,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArThreeDHelper::RemoveAllStoredClusters()
+void LArThreeDHelper::Reset()
 {
     m_seedClusterToIdMap.clear();
     m_idToSeedClusterListMap.clear();

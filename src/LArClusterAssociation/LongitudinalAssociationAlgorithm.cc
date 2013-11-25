@@ -36,11 +36,7 @@ void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList 
 
 void LongitudinalAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
-    
-    //
-    // This method assumes that clusters have been sorted by layer
-    //
-
+    // ATTN: This method assumes that clusters have been sorted by layer
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
     {
         Cluster *pInnerCluster = *iterI;
@@ -59,22 +55,11 @@ void LongitudinalAssociationAlgorithm::PopulateClusterAssociationMap(const Clust
             clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
         }
     }
-
-//   for (ClusterAssociationMap::const_iterator iter = clusterAssociationMap.begin(); iter != clusterAssociationMap.end(); ++iter)
-//    {
-//        ClusterList tempClusterList;
-//        tempClusterList.insert(iter->first);
-//        PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-//        PANDORA_MONITORING_API(VisualizeClusters(&tempClusterList, "MainCluster", RED));
-//        PANDORA_MONITORING_API(VisualizeClusters(&(iter->second.m_forwardAssociations), "Forward", BLUE));
-//        PANDORA_MONITORING_API(VisualizeClusters(&(iter->second.m_backwardAssociations), "Backward", GREEN));
-//        PANDORA_MONITORING_API(ViewEvent());
-//    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LongitudinalAssociationAlgorithm::IsExtremalCluster( const bool isForward, const Cluster *const pCurrentCluster,  const Cluster *const pTestCluster ) const
+bool LongitudinalAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster,  const Cluster *const pTestCluster) const
 {
     const unsigned int currentLayer(isForward ? pCurrentCluster->GetOuterPseudoLayer() : pCurrentCluster->GetInnerPseudoLayer());
     const unsigned int testLayer(isForward ? pTestCluster->GetOuterPseudoLayer() : pTestCluster->GetInnerPseudoLayer());
@@ -98,22 +83,28 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     if (pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer())
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    if (pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer() + 3
-      || pInnerCluster->GetOuterPseudoLayer() + 3 > pOuterCluster->GetOuterPseudoLayer())
+    if ((pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer() + 3) ||
+        (pInnerCluster->GetOuterPseudoLayer() + 3 > pOuterCluster->GetOuterPseudoLayer()))
+    {
         return false;
+    }
 
-    if (pInnerCluster->GetOuterPseudoLayer() > pOuterCluster->GetInnerPseudoLayer() + 1
-      || pOuterCluster->GetInnerPseudoLayer() > pInnerCluster->GetOuterPseudoLayer() + 15)
+    if ((pInnerCluster->GetOuterPseudoLayer() > pOuterCluster->GetInnerPseudoLayer() + 1) ||
+        (pOuterCluster->GetInnerPseudoLayer() > pInnerCluster->GetOuterPseudoLayer() + 15))
+    {
         return false;
+    }
 
-    if (2 * pInnerCluster->GetOuterPseudoLayer() < pOuterCluster->GetInnerPseudoLayer() + pInnerCluster->GetInnerPseudoLayer()
-      || pInnerCluster->GetOuterPseudoLayer() + pOuterCluster->GetOuterPseudoLayer() < 2 * pOuterCluster->GetInnerPseudoLayer())
+    if ((2 * pInnerCluster->GetOuterPseudoLayer() < pOuterCluster->GetInnerPseudoLayer() + pInnerCluster->GetInnerPseudoLayer()) ||
+        (pInnerCluster->GetOuterPseudoLayer() + pOuterCluster->GetOuterPseudoLayer() < 2 * pOuterCluster->GetInnerPseudoLayer()))
+    {
         return false;
+    }
 
     const CartesianVector innerEndCentroid(pInnerCluster->GetCentroid(pInnerCluster->GetOuterPseudoLayer()));
     const CartesianVector outerStartCentroid(pOuterCluster->GetCentroid(pOuterCluster->GetInnerPseudoLayer()));
 
-    if ( (innerEndCentroid-outerStartCentroid).GetMagnitudeSquared() > 25.f )
+    if ((innerEndCentroid-outerStartCentroid).GetMagnitudeSquared() > 25.f)
         return false;
 
     CaloHit *pOuterLayerHit = *(pInnerCluster->GetOrderedCaloHitList().rbegin()->second->begin());
@@ -138,7 +129,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
     if (!innerFit.IsFitSuccessful() || !outerFit.IsFitSuccessful())
         return false;
 
-    if (innerFit.GetDirection().GetCosOpeningAngle(outerFit.GetDirection()) < 0.985)
+    if (innerFit.GetDirection().GetCosOpeningAngle(outerFit.GetDirection()) < 0.985f)
         return false;
 
     const CartesianVector innerEndFit1(innerFit.GetIntercept() + innerFit.GetDirection() * (innerFit.GetDirection().GetDotProduct(innerClusterEnd - innerFit.GetIntercept())));

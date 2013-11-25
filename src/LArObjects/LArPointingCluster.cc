@@ -18,23 +18,28 @@ using namespace pandora;
 namespace lar
 {
 
-LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, const bool useInnerVertex) :
+LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, const bool useInnerVertex, const unsigned int nLayersToSkip) :
     m_pCluster(pCluster),
     m_position(0.f, 0.f, 0.f),
     m_direction(0.f, 0.f, 0.f),
     m_rms(std::numeric_limits<float>::max()),
-    m_isInner(useInnerVertex)
+    m_isInner(useInnerVertex),
+    m_nSkippedLayers(nLayersToSkip)
 {
-    this->GetVertex( 0, m_position, m_direction, m_rms );
+    static const unsigned int m_numberOfLayersToFit = 30; // TODO, read from settings, probably via LArClusterHelper
+    const unsigned int innerLayer(pCluster->GetInnerPseudoLayer());
+    const unsigned int outerLayer(pCluster->GetOuterPseudoLayer());
 
-  /*
-    // KEEP OLD IMPLEMENTATION FOR NOW
-    const unsigned int m_numberOfLayersToFit = 30; // TODO, read from settings, probably via LArClusterHelper
-
-    if (m_isInner)
+    if (useInnerVertex)
     {
+        const unsigned int innerFitLayer(std::min(innerLayer + nLayersToSkip, outerLayer));
+        const unsigned int outerFitLayer(std::min(innerLayer + nLayersToSkip + m_numberOfLayersToFit, outerLayer));
+
+        if (outerFitLayer <= innerFitLayer)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
         ClusterHelper::ClusterFitResult clusterFitResult;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pCluster, m_numberOfLayersToFit, clusterFitResult)); 
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitLayers(pCluster, innerFitLayer, outerFitLayer, clusterFitResult)); 
 
         const CartesianVector &fitIntercept(clusterFitResult.GetIntercept());
         const CartesianVector fitDirection(clusterFitResult.GetDirection());
@@ -46,8 +51,14 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
     }
     else
     {
+        const int innerFitLayer(std::max(static_cast<int>(outerLayer) - static_cast<int>(nLayersToSkip) - static_cast<int>(m_numberOfLayersToFit), static_cast<int>(innerLayer)));
+        const int outerFitLayer(std::max(static_cast<int>(outerLayer) - static_cast<int>(nLayersToSkip), static_cast<int>(innerLayer)));
+
+        if (outerFitLayer <= innerFitLayer)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
         ClusterHelper::ClusterFitResult clusterFitResult;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pCluster, m_numberOfLayersToFit, clusterFitResult)); 
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitLayers(pCluster, innerFitLayer, outerFitLayer, clusterFitResult)); 
 
         const CartesianVector &fitIntercept(clusterFitResult.GetIntercept());
         const CartesianVector fitDirection(clusterFitResult.GetDirection() * -1.f);
@@ -57,142 +68,6 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
         m_position = fitIntercept + fitDirection * (fitDirection.GetDotProduct(outerCentroid - fitIntercept));
         m_direction = fitDirection;
     }
-  */
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArPointingCluster::Vertex::GetVertex( const unsigned int nLayersToSkip, pandora::CartesianVector& position, pandora::CartesianVector& direction, float& rms ) const
-{
-    const unsigned int m_numberOfLayersToFit = 30;    // TODO, read from settings, probably via LArClusterHelper
-    const unsigned int m_minNumberOfLayersToFit = 20; // TODO, read from settings, probably via LArClusterHelper
-
-    const unsigned int innerLayer = m_pCluster->GetInnerPseudoLayer();
-    const unsigned int outerLayer = m_pCluster->GetOuterPseudoLayer();
-
-    if ( m_isInner )
-    {
-        // Calculate inner and outer layers 
-        unsigned int innerFitLayer = innerLayer;
-        unsigned int outerFitLayer = outerLayer;
-
-        if ( innerLayer + nLayersToSkip < outerLayer )
-	    innerFitLayer = innerLayer + nLayersToSkip;
-        else innerFitLayer = outerLayer;
-
-        if ( innerFitLayer + (m_numberOfLayersToFit-1) < outerLayer )
-	    outerFitLayer = innerFitLayer + (m_numberOfLayersToFit-1);
-        else outerFitLayer = outerLayer;
-
-        if ( innerFitLayer + (m_minNumberOfLayersToFit-1) > outerFitLayer )
-	{
-	    if ( innerLayer + (m_minNumberOfLayersToFit-1) < outerFitLayer )
-	        innerFitLayer = outerFitLayer - (m_minNumberOfLayersToFit-1);
-            else innerFitLayer = innerLayer;
-	}
-
-        // Apply a linear fit to these layers
-        ClusterHelper::ClusterFitResult clusterFitResult;
-
-        if ( STATUS_CODE_SUCCESS == ClusterHelper::FitLayers(m_pCluster, innerFitLayer, outerFitLayer, clusterFitResult) )
-	{
-            const CartesianVector &fitIntercept(clusterFitResult.GetIntercept());
-            const CartesianVector fitDirection(clusterFitResult.GetDirection());
-            const CartesianVector innerCentroid(m_pCluster->GetCentroid(innerLayer));
-
-            rms = clusterFitResult.GetRms();
-            position = fitIntercept + fitDirection * (fitDirection.GetDotProduct(innerCentroid - fitIntercept));
-            direction = fitDirection;
-	}
-        else
-	{
-	    // Try to use the inner and outer centroids
-	    rms = std::numeric_limits<float>::max();
-
-            const CartesianVector innerCentroid(m_pCluster->GetCentroid(innerLayer));
-            const CartesianVector outerCentroid(m_pCluster->GetCentroid(outerLayer));
-
-            if ( (outerCentroid - innerCentroid).GetMagnitudeSquared() > std::numeric_limits<float>::epsilon() )
-	    {
-	        position = innerCentroid;
-                direction = (outerCentroid - innerCentroid).GetUnitVector();
-	    }
-            else 
-            {
-                // Single-layer clusters aren't pointing clusters!
-                throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-	    }
-	}
-    }
-
-    else
-    {   
-        // Calculate inner and outer layers
-        unsigned int innerFitLayer = innerLayer;
-        unsigned int outerFitLayer = outerLayer;
-
-        if ( outerLayer > innerLayer + nLayersToSkip ) 
-            outerFitLayer = outerLayer - nLayersToSkip; 
-        else outerFitLayer = innerLayer;
-
-        if ( innerLayer + (m_numberOfLayersToFit-1) < outerFitLayer )
-	    innerFitLayer = outerFitLayer - (m_numberOfLayersToFit-1);
-        else innerFitLayer = innerLayer;
-
-        if ( innerFitLayer + (m_minNumberOfLayersToFit-1) > outerFitLayer )
-	{
-	    if ( innerFitLayer + (m_minNumberOfLayersToFit-1) < outerLayer )
-	        outerFitLayer = innerFitLayer + (m_minNumberOfLayersToFit-1);
-	    else outerFitLayer = outerLayer;
-	}
-
-        // Apply a linear fit to these layers
-        ClusterHelper::ClusterFitResult clusterFitResult;
-
-        if ( STATUS_CODE_SUCCESS == ClusterHelper::FitLayers(m_pCluster, innerFitLayer, outerFitLayer, clusterFitResult) )
-	{
-            const CartesianVector &fitIntercept(clusterFitResult.GetIntercept());
-            const CartesianVector fitDirection(clusterFitResult.GetDirection() * -1.f);
-            const CartesianVector outerCentroid(m_pCluster->GetCentroid(outerLayer));
-
-            rms = clusterFitResult.GetRms();
-            position = fitIntercept + fitDirection * (fitDirection.GetDotProduct(outerCentroid - fitIntercept));
-            direction = fitDirection;
-	}
-        else
-	{
-            // Try to use the inner and outer centroids
-            rms = std::numeric_limits<float>::max();
-
-            const CartesianVector innerCentroid(m_pCluster->GetCentroid(innerLayer));
-            const CartesianVector outerCentroid(m_pCluster->GetCentroid(outerLayer));
-
-            if ( (outerCentroid - innerCentroid).GetMagnitudeSquared() > std::numeric_limits<float>::epsilon() )
-	    {
-                position = outerCentroid;
-                direction = (innerCentroid - outerCentroid).GetUnitVector();
-	    }
-            else
-	    { 
-                // Single-layer clusters aren't pointing clusters!
-                throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-	    }
-	}
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArPointingCluster::GetLengthSquared() const
-{
-    return (m_outerVertex.GetPosition() - m_innerVertex.GetPosition()).GetMagnitudeSquared();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArPointingCluster::GetLength() const
-{
-    return std::sqrt( GetLengthSquared() );
 }
 
 } // namespace lar

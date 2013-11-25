@@ -490,7 +490,7 @@ inline unsigned int SeedConsolidationAlgorithm::OverlapAssociation::GetNContactL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int SeedConsolidationAlgorithm::OverlapAssociation::GetNNonContactLayers() const
+inline unsigned int SeedConsolidationAlgorithm::OverlapAssociation::GetNNonContactLayers() const
 {
     return m_nNonContactLayers;
 }
@@ -504,7 +504,7 @@ inline unsigned int SeedConsolidationAlgorithm::OverlapAssociation::GetNContactG
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int SeedConsolidationAlgorithm::OverlapAssociation::GetNNonVtxContactGroups() const
+inline unsigned int SeedConsolidationAlgorithm::OverlapAssociation::GetNNonVtxContactGroups() const
 {
     return m_nNonVtxContactGroups;
 }

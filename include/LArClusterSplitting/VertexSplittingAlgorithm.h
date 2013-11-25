@@ -32,11 +32,14 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    pandora::StatusCode FindBestSplitLayer(const pandora::Cluster *const pCluster, unsigned int &splitLayer) const;
+    pandora::StatusCode FindBestSplitPosition(const pandora::Cluster *const pCluster, pandora::CartesianVector &splitPosition) const;
     bool IsPossibleSplit(const pandora::Cluster *const pCluster) const;
 
-    float   m_minSplitDisplacement;
-    float   m_minSplitDisplacementSquared;  
+    unsigned int    m_slidingFitLayerHalfWindow;    ///< Layer half window for sliding fit
+    float           m_splitDisplacement;            ///< Maximum displacement of vertex from cluster
+    float           m_splitDisplacementSquared;     ///< Maximum displacement squared
+    float           m_vertexDisplacement;           ///< Maximum displacement of split from vertex
+    float           m_vertexDisplacementSquared;    ///< Maximum displacement squared
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

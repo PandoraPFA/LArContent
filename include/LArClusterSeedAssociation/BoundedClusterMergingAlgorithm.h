@@ -82,7 +82,7 @@ private:
     std::string         m_nonSeedClusterListName;   ///< The non seed cluster list name
 
     float               m_vertexVetoRadius;
-    int                 m_minClusterSize;
+    unsigned int        m_minClusterSize;
 
 private:
     void ConstructBoundingBox( const pandora::Cluster* pCluster );

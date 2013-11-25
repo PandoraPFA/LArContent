@@ -24,9 +24,31 @@ namespace lar
 {
 
 StatusCode VertexFindingAlgorithm::Run()
-{
+{ 
+    // Build true vertex (TODO: Replace these hard-coded numbers!)
+    CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f 
+    CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f, 0.f, 151.f
+    CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f, 0.f, 100.f 
+    CartesianVector trueVertex3D(130.5f, 0.f, 100.f); // 128.2f, 0.f, 100.f 
+
+    LArVertexHelper::AddVertex("TrueVertexU", trueVertexU);
+    LArVertexHelper::AddVertex("TrueVertexV", trueVertexV);
+    LArVertexHelper::AddVertex("TrueVertexW", trueVertexW);
+    LArVertexHelper::AddVertex("TrueVertex3D", trueVertex3D);
+
     // Cheat the vertex
-    if ( m_useTrueVertex ) return SetTrueVertex();
+    if ( m_useTrueVertex )
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexU, m_vertexNameU ));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexV, m_vertexNameV ));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertexW, m_vertexNameW ));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( trueVertex3D, m_vertexName3D ));
+
+        return STATUS_CODE_SUCCESS;
+    }
 
 
     // Get the cluster lists for each view
@@ -103,6 +125,16 @@ StatusCode VertexFindingAlgorithm::Run()
 
 
 
+    // Calculate 3D Vertex
+    float chiSquared(0.f);
+    CartesianVector recoVertex3D(0.f,0.f,0.f);
+    
+    LArGeometryHelper::MergeThreePositions3D(VIEW_U, VIEW_V, VIEW_W,
+                                             recoVertexU, recoVertexV, recoVertexW,
+                                             recoVertex3D, chiSquared);
+                          
+
+
     // Clean up
     this->CleanUp( theFigureOfMeritMapU ); 
     this->CleanUp( theFigureOfMeritMapV ); 
@@ -115,6 +147,8 @@ StatusCode VertexFindingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertexV, m_vertexNameV ));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertexW, m_vertexNameW ));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SetVertex( recoVertex3D, m_vertexName3D ));
 
 
 
@@ -181,13 +215,13 @@ void VertexFindingAlgorithm::GetListOfCleanVertexClusters( const LArPointingClus
         // select clean clusters
         if( clusterI.GetLength() > 10.f 
          || LArClusterHelper::GetLength( clusterI.GetCluster() ) > 10.f
-	 || LArClusterHelper::GetLength( clusterI.GetCluster() ) > 0.1 * totalLength )
+         || LArClusterHelper::GetLength( clusterI.GetCluster() ) > 0.1 * totalLength )
         {
             fullClusterList.push_back(clusterI);
             cleanClusterList.push_back(clusterI);
 
             continue;
-	}
+        }
 
         // separate vertex-like and shower-like clusters
         bool isVertexLike(false), isShowerLike(false);
@@ -199,23 +233,23 @@ void VertexFindingAlgorithm::GetListOfCleanVertexClusters( const LArPointingClus
             if ( clusterI.GetCluster() == clusterJ.GetCluster() ) continue; 
             
             if ( this->IsAdjacent(clusterJ.GetInnerVertex(), clusterI.GetInnerVertex().GetPosition()) == true
-	      || this->IsAdjacent(clusterJ.GetOuterVertex(), clusterI.GetOuterVertex().GetPosition()) == true )
-	    {
-	        isVertexLike = true;
+                || this->IsAdjacent(clusterJ.GetOuterVertex(), clusterI.GetOuterVertex().GetPosition()) == true )
+            {
+                isVertexLike = true;
             }
 
-	    if ( this->IsAdjacent(clusterJ.GetInnerVertex(), clusterI.GetInnerVertex().GetPosition()) == true
-	      && this->IsAdjacent(clusterJ.GetOuterVertex(), clusterI.GetOuterVertex().GetPosition()) == true )
-	    {
-	        isShowerLike = true;
+            if ( this->IsAdjacent(clusterJ.GetInnerVertex(), clusterI.GetInnerVertex().GetPosition()) == true
+                && this->IsAdjacent(clusterJ.GetOuterVertex(), clusterI.GetOuterVertex().GetPosition()) == true )
+            {
+                isShowerLike = true;
             }
-	}
+        }
 
         if ( true == isVertexLike && false == isShowerLike )
-	{
+        {
             fullClusterList.push_back(clusterI);
             possibleClusterList.push_back(clusterI);
-	}
+        }
     }
 
 
@@ -253,29 +287,29 @@ void VertexFindingAlgorithm::GetListOfCleanVertexClusters( const LArPointingClus
         bool isVertexLike(false), isShowerLike(false);
 
         for (LArPointingClusterVertexList::const_iterator iterJ = fullVertexList.begin(), iterEndJ = fullVertexList.end(); iterJ != iterEndJ; ++iterJ)
-        { 
+        {
             const LArPointingCluster::Vertex& vertexJ = *iterJ;
-            
-            if ( vertexI.GetCluster() == vertexJ.GetCluster() ) continue;
-	   
-            if ( this->IsAdjacent(vertexJ, vertexI.GetPosition()) == true
-	      && this->IsDownstream(vertexJ, vertexI.GetPosition()) == true )
-	    {
-                isVertexLike = true;  
-	    }
 
-	    if ( this->IsNode(vertexJ.GetPosition(), vertexJ.GetDirection(), vertexI.GetPosition()) == true )
-	    {
-	        isVertexLike = true;  
-	    }
+            if ( vertexI.GetCluster() == vertexJ.GetCluster() ) continue;
+
+            if ( this->IsAdjacent(vertexJ, vertexI.GetPosition()) == true
+                && this->IsDownstream(vertexJ, vertexI.GetPosition()) == true )
+            {
+                isVertexLike = true;  
+            }
+
+            if ( this->IsNode(vertexJ.GetPosition(), vertexJ.GetDirection(), vertexI.GetPosition()) == true )
+            {
+                isVertexLike = true;  
+            }
 
             if ( this->IsAdjacent(vertexI, vertexJ.GetPosition()) == true
-	      && this->IsAdjacent(vertexJ, vertexI.GetPosition()) == true 
-	      && this->IsNode(vertexJ.GetPosition(), vertexJ.GetDirection(), vertexI.GetPosition()) == false
-	      && this->IsNode(vertexI.GetPosition(), vertexI.GetDirection(), vertexJ.GetPosition()) == false )
-	    {
-	        isShowerLike = true;
-	    }
+                && this->IsAdjacent(vertexJ, vertexI.GetPosition()) == true 
+                && this->IsNode(vertexJ.GetPosition(), vertexJ.GetDirection(), vertexI.GetPosition()) == false
+                && this->IsNode(vertexI.GetPosition(), vertexI.GetDirection(), vertexJ.GetPosition()) == false )
+            {
+                isShowerLike = true;
+            }
         }
 
         if ( true == isVertexLike && false == isShowerLike )
@@ -311,7 +345,7 @@ void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointin
         bool foundIntersect(false);
         float closestDisplacement(10.f);
         CartesianVector closestPosition(0.f,0.f,0.f);
-        Cluster* closestCluster(NULL);
+// Cluster* closestCluster(NULL); // (For event display below)
 
         for (LArPointingClusterVertexList::const_iterator iterJ = cleanClusterList.begin(), iterEndJ = cleanClusterList.end(); iterJ != iterEndJ; ++iterJ)
         {
@@ -332,22 +366,22 @@ void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointin
             const float innerDistanceSquared = (innerJ.GetPosition() - vertexI.GetPosition()).GetMagnitudeSquared();
             const float outerDistanceSquared = (outerJ.GetPosition() - vertexI.GetPosition()).GetMagnitudeSquared();
 
-            if ( ( vertexJ.IsInner() == true  && innerDistanceSquared > outerDistanceSquared ) 
-	      || ( vertexJ.IsInner() == false && innerDistanceSquared < outerDistanceSquared ) ) 
+            if ( ( vertexJ.IsInnerVertex() == true  && innerDistanceSquared > outerDistanceSquared ) 
+                || ( vertexJ.IsInnerVertex() == false && innerDistanceSquared < outerDistanceSquared ) ) 
                 continue;
 
 
             // Primary vertex must not be nodally associated with target cluster
             if ( this->IsAdjacent( vertexJ, vertexI.GetPosition() ) == true 
-	      || this->IsNode( vertexJ.GetPosition(), vertexJ.GetDirection(), vertexI.GetPosition() ) == true )
-	    {
-	        foundIntersect = false;  break;
-	    }
+                || this->IsNode( vertexJ.GetPosition(), vertexJ.GetDirection(), vertexI.GetPosition() ) == true )
+            {
+                foundIntersect = false;  break;
+            }
 
 
             // Check that vertex trajectory will pass through cluster
             if ( innerJ.GetDirection().GetDotProduct(vertexI.GetPosition()-innerJ.GetPosition()) < 0
-	      || outerJ.GetDirection().GetDotProduct(vertexI.GetPosition()-outerJ.GetPosition()) < 0 ) 
+                || outerJ.GetDirection().GetDotProduct(vertexI.GetPosition()-outerJ.GetPosition()) < 0 ) 
                 continue;
 
 
@@ -366,24 +400,24 @@ void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointin
 
             // New vertex is closest to the original vertex
             if( intersectDisplacement < closestDisplacement )
-	    {
+            {
                 closestDisplacement = intersectDisplacement;
                 foundIntersect = false;
-	    }
+            }
 
 
             // New vertex must not be nodally associated with target cluster
             if( this->IsNode( vertexJ.GetPosition(), vertexJ.GetDirection(), intersectPosition ) == false 
              && this->IsNode( vertexI.GetPosition(), vertexI.GetDirection(), intersectPosition ) == false )
-	    {
-	        closestPosition = intersectPosition;  
-                closestCluster = vertexJ.GetCluster();
+            {
+                closestPosition = intersectPosition;  
+// closestCluster = vertexJ.GetCluster(); // (For event display below)
                 foundIntersect = true;
-	    }
-	}
+            }
+        }
 
         if( foundIntersect ) 
-	{
+        {
             candidateVertexList.push_back( closestPosition );
 
 // ClusterList tempListI, tempListJ;
@@ -395,8 +429,7 @@ void VertexFindingAlgorithm::GetListOfCandidateVertexPositions( const LArPointin
 // PandoraMonitoringApi::AddMarkerToVisualization(&vertexI.GetPosition(), "PRIMARY VERTEX", BLUE, 1.75);
 // PandoraMonitoringApi::AddMarkerToVisualization(&closestPosition, "INTERSECTION", RED, 1.75);
 // PandoraMonitoringApi::ViewEvent();
-
-	}
+        }
     }
 }
 
@@ -429,17 +462,17 @@ void VertexFindingAlgorithm::GetListOfCleanVertexPositions( const LArPointingClu
             const LArPointingCluster::Vertex& outerVertex = cluster.GetOuterVertex();
 
             if ( this->IsNode( innerVertex.GetPosition(), innerVertex.GetDirection(), seedPosition )
-	      || this->IsNode( outerVertex.GetPosition(), outerVertex.GetDirection(), seedPosition )
-              || this->IsAdjacent( innerVertex, seedPosition ) || this->IsAdjacent( outerVertex, seedPosition ) )
-	    {
-	        thisLengthSquared += LArClusterHelper::GetLengthSquared( cluster.GetCluster() );
-	    }
-	}
+                || this->IsNode( outerVertex.GetPosition(), outerVertex.GetDirection(), seedPosition )
+                || this->IsAdjacent( innerVertex, seedPosition ) || this->IsAdjacent( outerVertex, seedPosition ) )
+            {
+                thisLengthSquared += LArClusterHelper::GetLengthSquared( cluster.GetCluster() );
+            }
+        }
 
         if ( thisLengthSquared > 100.f || thisLengthSquared > 0.1 * totalLengthSquared )
-	{
+        {
             outputList.push_back(seedPosition);
-	}
+        }
     }
 
 // ClusterList clusterList;
@@ -537,15 +570,15 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions2D( const HitType vi
         const CartesianVector& position1 = *iter1;
 
         for (CartesianPointList::const_iterator iter2 = inputList2.begin(), iterEnd2 = inputList2.end(); iter2 != iterEnd2; ++iter2 )
-	{
+        {
             const CartesianVector& position2 = *iter2;
 
             if ( std::fabs(position1.GetX()-position2.GetX()) > m_maxSeparation ) continue;
  
-	    LArGeometryHelper::MergeTwoPositions( view1, view2, position1, position2, position3, chi2 );
-            
+            LArGeometryHelper::MergeTwoPositions( view1, view2, position1, position2, position3, chi2 );
+
             projectedList3.push_back(position3);
-	}
+        }
     }
 }
 
@@ -576,11 +609,11 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions3D( const CartesianP
         const CartesianVector& positionU = *iterU;
 
         for (CartesianPointList::const_iterator iterV = inputListV.begin(), iterEndV = inputListV.end(); iterV != iterEndV; ++iterV )
-	{
+        {
             const CartesianVector& positionV = *iterV;
 
             for (CartesianPointList::const_iterator iterW = inputListW.begin(), iterEndW = inputListW.end(); iterW != iterEndW; ++iterW )
-	    {
+            {
                 const CartesianVector& positionW = *iterW;
 
                 if ( std::fabs(positionU.GetX()-positionV.GetX()) > m_maxSeparation 
@@ -588,19 +621,19 @@ void VertexFindingAlgorithm::GetListOfMatchedVertexPositions3D( const CartesianP
                   || std::fabs(positionW.GetX()-positionU.GetX()) > m_maxSeparation ) 
                     continue;
 
-		LArGeometryHelper::MergeThreePositions( positionU, positionV, positionW,
+                LArGeometryHelper::MergeThreePositions( positionU, positionV, positionW,
                                                         projectedPositionU, projectedPositionV, projectedPositionW, chi2 );
 
                 if ( (positionU - projectedPositionU).GetMagnitudeSquared() > m_maxSeparationSquared
-                  || (positionV - projectedPositionV).GetMagnitudeSquared() > m_maxSeparationSquared
-		  || (positionW - projectedPositionW).GetMagnitudeSquared() > m_maxSeparationSquared )
-		    continue;
+                    || (positionV - projectedPositionV).GetMagnitudeSquared() > m_maxSeparationSquared
+                    || (positionW - projectedPositionW).GetMagnitudeSquared() > m_maxSeparationSquared )
+                    continue;
 
                 matchedListU.push_back(positionU);
                 matchedListV.push_back(positionV);
                 matchedListW.push_back(positionW);
-	    }
-	}
+            }
+        }
     }
 
     this->GetReducedListOfVertexPositions( matchedListU, outputListU );
@@ -627,15 +660,15 @@ void VertexFindingAlgorithm::GetReducedListOfVertexPositions( const CartesianPoi
             const CartesianVector& positionJ = inputList.at(j);
 
             if ( (positionI - positionJ).GetMagnitudeSquared() < m_minSeparationSquared )
-	    {
-	        vetoThisEntry = true;  break;
-	    }
-	}
+            {
+                vetoThisEntry = true;  break;
+            }
+        }
 
         if ( false == vetoThisEntry )
-	{
-	    outputList.push_back(positionI);
-	}
+        {
+            outputList.push_back(positionI);
+        }
     }
 }
 
@@ -754,8 +787,8 @@ void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFi
                 const CartesianVector& directionU = candidateU->GetDirection();
                 float              figureOfMeritU = iterU->second;
 
-		if ( m_runBeamMode 
-		  && this->IsConsistentWithBeamDirectionUV(directionU,directionV) == false ) 
+            if ( m_runBeamMode 
+                && this->IsConsistentWithBeamDirectionUV(directionU,directionV) == false ) 
                     continue;
 
                 //
@@ -772,9 +805,9 @@ void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFi
                                                         chiSquared );
 
                 if ( (vertexU - mergedVertexU).GetMagnitudeSquared() > m_maxSeparationSquared
-                  || (vertexV - mergedVertexV).GetMagnitudeSquared() > m_maxSeparationSquared
-		  || (vertexW - mergedVertexW).GetMagnitudeSquared() > m_maxSeparationSquared )
-		    continue;
+                    || (vertexV - mergedVertexV).GetMagnitudeSquared() > m_maxSeparationSquared
+                    || (vertexW - mergedVertexW).GetMagnitudeSquared() > m_maxSeparationSquared )
+                    continue;
 
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::AddMarkerToVisualization(&vertexU, "testVertexU", RED, 3.5);
@@ -786,15 +819,15 @@ void VertexFindingAlgorithm::ProcessVertex3D( const VertexFigureOfMeritMap theFi
 
                 if( mergedFigureOfMerit>bestFigureOfMerit )
                 {
-		    foundVertex = true;
+                    foundVertex = true;
                     bestVertexU = mergedVertexU;
                     bestVertexV = mergedVertexV;
                     bestVertexW = mergedVertexW;
                     bestFigureOfMerit = mergedFigureOfMerit;
-		}
-	    }
-	}
-    }    
+                }
+            }
+        }
+    }
 
     if( false == foundVertex )
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -824,11 +857,11 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
         // TODO: Calculate a seed direction for this vertex
         //
 
-	const CartesianVector seedVertexDirection(0.f,0.f,1.f); // beam direction
+        const CartesianVector seedVertexDirection(0.f,0.f,1.f); // beam direction
 
   
         
-	// Find associated clusters
+        // Find associated clusters
         float associatedEnergy(0.f);
         float associatedMomentumModulus(0.f);
         CartesianVector associatedMomentum(0.f,0.f,0.f);
@@ -842,24 +875,24 @@ void VertexFindingAlgorithm::ProcessView1D( const LArPointingClusterMap& pointin
         associatedMomentumModulus = associatedMomentum.GetMagnitude();
 
         if (totalEnergy > 0.f)
-	{
+        {
             energyFraction = associatedEnergy/totalEnergy;
             momentumFraction = associatedMomentumModulus/totalEnergy;
-	}
+        }
 
         // Some quality requirements on candidate vertex
         if ( associatedClusterVertexList.empty() )
-	    continue;
+            continue;
 
         // Fill the output list
         float thisFigureOfMerit(0.f);
 
         if( totalEnergy > 0.f )
-	    thisFigureOfMerit = energyFraction * momentumFraction;
-	
+            thisFigureOfMerit = energyFraction * momentumFraction;
+
         outputFigureOfMeritMap.insert( std::pair<const LArVertexCandidate*,float>
-	    ( new LArVertexCandidate(seedVertexPosition,associatedMomentum.GetUnitVector(),
-                                      energyFraction,momentumFraction),thisFigureOfMerit) );  	      
+            ( new LArVertexCandidate(seedVertexPosition,associatedMomentum.GetUnitVector(),
+              energyFraction,momentumFraction),thisFigureOfMerit) );
     }
 
 // ClusterList clusterList;
@@ -913,25 +946,23 @@ void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap&
         const float innerDistanceSquared = (innerVertex.GetPosition() - seedVertexPosition ).GetMagnitudeSquared();
         const float outerDistanceSquared = (outerVertex.GetPosition() - seedVertexPosition ).GetMagnitudeSquared();
 
-        if ( ( clusterVertex.IsInner()==true  && innerDistanceSquared < outerDistanceSquared ) 
-	  || ( clusterVertex.IsInner()==false && innerDistanceSquared > outerDistanceSquared ) )
-	    associatedList.push_back(clusterVertex);
+        if ( ( clusterVertex.IsInnerVertex()==true  && innerDistanceSquared < outerDistanceSquared ) 
+            || ( clusterVertex.IsInnerVertex()==false && innerDistanceSquared > outerDistanceSquared ) )
+            associatedList.push_back(clusterVertex);
     }
 
     for (LArPointingClusterVertexList::const_iterator iter0 = associatedList.begin(), iterEnd0 = associatedList.end(); iter0 != iterEnd0; ++iter0)
     {
         const LArPointingCluster::Vertex &clusterVertex = *iter0;
 
-        const float thisEnergy( LArClusterHelper::GetEnergyFromLength( clusterVertex.GetCluster() ) );
-
         if ( this->IsPrimary( clusterVertex, seedVertexPosition, seedVertexDirection ) )
-	{
-	    strongList.push_back(clusterVertex);  
-	}
+        {
+            strongList.push_back(clusterVertex);  
+        }
         else
-	{
+        {
             weakList.push_back(clusterVertex);
-	}
+        }
     }
 
     for (LArPointingClusterVertexList::const_iterator iter1 = weakList.begin(), iterEnd1 = weakList.end(); iter1 != iterEnd1; ++iter1 )
@@ -942,13 +973,13 @@ void VertexFindingAlgorithm::RunFastReconstruction( const LArPointingClusterMap&
 
         for (LArPointingClusterVertexList::const_iterator iter2 = strongList.begin(), iterEnd2 = strongList.end(); iter2 != iterEnd2; ++iter2 )
         {
-	   const LArPointingCluster::Vertex &strongVertex = *iter2;
+            const LArPointingCluster::Vertex &strongVertex = *iter2;
 
-           if ( this->IsWeakAssociation( strongVertex, weakVertex ) )
-	   {
-	       isAssociated = true;   break;
-	   }
-	}
+            if ( this->IsWeakAssociation( strongVertex, weakVertex ) )
+            {
+                isAssociated = true;   break;
+            }
+        }
 
         //
         // TODO: Deal with split clusters! Here is a temporary fix...
@@ -979,13 +1010,13 @@ void VertexFindingAlgorithm::GetEnergyAndMomentum( const LArPointingClusterVerte
     {
         const LArPointingCluster::Vertex &pointingVertex = *iter;
 
-	float thisEnergy(0.f);
+        float thisEnergy(0.f);
         CartesianVector thisMomentum(0.f,0.f,0.f);
 
         this->GetEnergyAndMomentum( pointingVertex, thisVertex, thisEnergy, thisMomentum );
 
         outputEnergy   += thisEnergy;
-	outputMomentum += thisMomentum;
+        outputMomentum += thisMomentum;
     }
 }
 
@@ -996,8 +1027,6 @@ void VertexFindingAlgorithm::GetEnergyAndMomentum( const LArPointingCluster::Ver
     outputEnergy = 0.f;
     outputMomentum.SetValues(0.f,0.f,0.f);
 
-    const Cluster* pCluster = thisCluster.GetCluster();
-    
     const float clusterEnergy = LArClusterHelper::GetEnergyFromLength( thisCluster.GetCluster() );
     const float clusterLength = LArClusterHelper::GetLength( thisCluster.GetCluster() );
 
@@ -1037,7 +1066,7 @@ void VertexFindingAlgorithm::GetIntersection( const LArPointingCluster::Vertex& 
     {
         LArPointingClusterHelper::GetIntersection( firstCluster, secondCluster, intersectPosition,
                                                    firstDisplacement, secondDisplacement );
-	LArPointingClusterHelper::GetAverageDirection( firstCluster, secondCluster, intersectDirection );
+        LArPointingClusterHelper::GetAverageDirection( firstCluster, secondCluster, intersectDirection );
 
         isPhysical = ( firstDisplacement < maxDisplacement && secondDisplacement < maxDisplacement );
     }
@@ -1166,7 +1195,7 @@ bool VertexFindingAlgorithm::IsDaughterDiverging( const LArPointingCluster::Vert
 bool VertexFindingAlgorithm::IsPrimary( const LArPointingCluster::Vertex& clusterTrajectory, const CartesianVector& targetPosition, const CartesianVector& targetDirection )
 {
   return ( this->IsNode( targetPosition, targetDirection, clusterTrajectory.GetPosition(), clusterTrajectory.GetDirection() )
-	|| this->IsEmission( targetPosition, targetDirection, clusterTrajectory.GetPosition(), clusterTrajectory.GetDirection() ) );
+        || this->IsEmission( targetPosition, targetDirection, clusterTrajectory.GetPosition(), clusterTrajectory.GetDirection() ) );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1236,7 +1265,7 @@ bool VertexFindingAlgorithm::IsNode( const CartesianVector& parentPosition, cons
     if ( cosRelativeAngle < -0.966 ) return false;
 
     return ( this->IsNode( parentPosition, parentDirection, daughterPosition ) 
-	  || this->IsNode( daughterPosition, daughterDirection, parentPosition ) );
+        || this->IsNode( daughterPosition, daughterDirection, parentPosition ) );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1302,23 +1331,6 @@ bool VertexFindingAlgorithm::IsConsistentWithBeamDirectionUV( const CartesianVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode VertexFindingAlgorithm::SetTrueVertex()
-{
-    CartesianVector trueVertexU(130.5f, 0.f, 151.f);  // 128.2f,0.f,151.f 
-    CartesianVector trueVertexV(130.5f, 0.f, 151.f);  // 128.2f,0.f,151.f
-    CartesianVector trueVertexW(130.5f, 0.f, 100.f);  // 128.2f,0.f,100.f 
-
-    LArVertexHelper::AddVertex(m_vertexNameU, trueVertexU);
-    LArVertexHelper::AddVertex(m_vertexNameV, trueVertexV);
-    LArVertexHelper::AddVertex(m_vertexNameW, trueVertexW);
-    
-    LArVertexHelper::SetCurrentVertex(m_vertexNameW);
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode VertexFindingAlgorithm::SetVertex(const CartesianVector& eventVertex, std::string vertexName)
 {
     LArVertexHelper::AddVertex(vertexName, eventVertex);
@@ -1342,6 +1354,10 @@ StatusCode VertexFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_vertexNameW = "";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "VertexNameW", m_vertexNameW));
+
+    m_vertexName3D = "";
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "VertexName3D", m_vertexName3D));
 
     m_clusterListNameU = "";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 

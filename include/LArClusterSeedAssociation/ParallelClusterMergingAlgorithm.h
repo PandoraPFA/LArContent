@@ -140,8 +140,8 @@ private:
     std::string         m_seedClusterListName;                  ///< The seed cluster list name
     std::string         m_nonSeedClusterListName;               ///< The non seed cluster list name
 
-    int                 m_maxNumIterations;                     ///< 
-    int                 m_minClusterSize;                       ///< 
+    unsigned int        m_maxNumIterations;                     ///< 
+    unsigned int        m_minClusterSize;                       ///< 
     float               m_clusterWindowLayers;                  ///< 
 
     float               m_clusterWindowRadius;                  ///< 

@@ -21,7 +21,7 @@ namespace lar
 
 bool VertexSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) const
 {
-    if (LArClusterHelper::GetLengthSquared(pCluster) < 4.f * m_minSplitDisplacementSquared)
+    if (LArClusterHelper::GetLengthSquared(pCluster) < 4.f * m_vertexDisplacementSquared)
         return false;
 
     return true;
@@ -29,8 +29,11 @@ bool VertexSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCluster, unsigned int &splitLayer) const
+/*
+// KEEP OLD METHOD FOR NOW
+StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
 {
+
     if (!LArVertexHelper::DoesCurrentVertexExist())
         return STATUS_CODE_NOT_FOUND;
 
@@ -40,13 +43,11 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCl
     const CartesianVector outerCentroid(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
 
     bool foundSplit(false);
-    float minDisplacementSquared(m_minSplitDisplacementSquared);
+    float minDisplacementSquared(m_splitDisplacementSquared);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-// CartesianVector splitPosition(0.f, 0.f, 0.f);
 
     for (OrderedCaloHitList::const_iterator iterI = orderedCaloHitList.begin(), iterEndI = orderedCaloHitList.end(); iterI != iterEndI; ++iterI)
     {
-        const unsigned int thisLayer(iterI->first);
         const CaloHitList *pCaloHitList(iterI->second);
 
         for (CaloHitList::const_iterator iterJ = pCaloHitList->begin(), iterEndJ = pCaloHitList->end(); iterJ != iterEndJ; ++iterJ)
@@ -60,16 +61,56 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCl
             foundSplit = false;
             minDisplacementSquared = thisDisplacementSquared;
 
-            if (((pCaloHit->GetPositionVector() - innerCentroid).GetMagnitudeSquared() < m_minSplitDisplacementSquared) ||
-                ((pCaloHit->GetPositionVector() - outerCentroid).GetMagnitudeSquared() < m_minSplitDisplacementSquared) )
+            if (((pCaloHit->GetPositionVector() - innerCentroid).GetMagnitudeSquared() < m_vertexDisplacementSquared) ||
+                ((pCaloHit->GetPositionVector() - outerCentroid).GetMagnitudeSquared() < m_vertexDisplacementSquared) )
             {
                 continue;
             }
 
             foundSplit = true;
-            splitLayer = thisLayer;
-// splitPosition = pCaloHit->GetPositionVector();
+            splitPosition = pCaloHit->GetPositionVector();
         }
+    }
+
+    if (!foundSplit)
+        return STATUS_CODE_NOT_FOUND;
+
+    return STATUS_CODE_SUCCESS;
+}
+*/
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
+{
+    bool foundSplit(false);
+
+    try
+    {
+        // Get current vertex 
+        const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
+
+        // Project vertex onto sliding window fit
+        LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
+        LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);  
+
+        const CartesianVector innerVertex(twoDSlidingFitResult.GetGlobalMinLayerPosition());
+        const CartesianVector outerVertex(twoDSlidingFitResult.GetGlobalMaxLayerPosition());
+
+        twoDSlidingFitResult.GetGlobalFitProjection(theVertex, splitPosition); 
+
+        const float splitDisplacementSquared((splitPosition - theVertex).GetMagnitudeSquared());
+        const float vertexDisplacementSquared(std::min((splitPosition - innerVertex).GetMagnitudeSquared(), (splitPosition - outerVertex).GetMagnitudeSquared()));
+
+        if (splitDisplacementSquared < m_splitDisplacementSquared &&
+            vertexDisplacementSquared > m_vertexDisplacementSquared &&
+            splitDisplacementSquared < vertexDisplacementSquared )
+        {
+            foundSplit = true;
+        }
+    }
+    catch (StatusCodeException &)
+    {
     }
 
     if (!foundSplit)
@@ -87,15 +128,23 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCl
     return STATUS_CODE_SUCCESS;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode VertexSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minSplitDisplacement = 2.5;
+    m_slidingFitLayerHalfWindow = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSplitDisplacement", m_minSplitDisplacement));
-    m_minSplitDisplacementSquared = m_minSplitDisplacement * m_minSplitDisplacement;
+        "SlidingFitLayerHalfWindow", m_slidingFitLayerHalfWindow));
+
+    m_splitDisplacement = 4.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SplitDisplacement", m_splitDisplacement));
+    m_splitDisplacementSquared = m_splitDisplacement * m_splitDisplacement;
+
+    m_vertexDisplacement = 2.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexDisplacement", m_vertexDisplacement));
+    m_vertexDisplacementSquared = m_vertexDisplacement * m_vertexDisplacement;
 
     return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }

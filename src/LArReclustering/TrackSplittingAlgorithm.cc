@@ -176,11 +176,12 @@ StatusCode TrackSplittingAlgorithm::Run()
 
         std::string chosenListName;
 
-        if ((selectedHitFraction > 0.8f) && ((nProtoClusters10 == 1) || (clustersPerUnitLength < 0.1f)))
+        if (!trackSeedClusters.empty() && (selectedHitFraction > 0.8f) && ((nProtoClusters10 == 1) || (clustersPerUnitLength < 0.1f)))
         {
             chosenListName = reclusterListName;
             allTrackSeedClusters.insert(trackSeedClusters.begin(), trackSeedClusters.end());
             allNonSeedClusters.insert(nonSeedClusters.begin(), nonSeedClusters.end());
+            LArThreeDHelper::StoreClusterComponents(trackSeedClusters, nonSeedClusters);
         }
         else if (!trackSeedClusters.empty())
         {

@@ -17,8 +17,6 @@ using namespace pandora;
 namespace lar
 {
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const CartesianVector &daughterVertex)
 {
     if ((parentVertex - daughterVertex).GetMagnitudeSquared() < m_maxNodeRadiusSquared)
@@ -29,35 +27,12 @@ bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArPointingClusterHelper::IsEmission(const LArPointingCluster::Vertex &parentPointingVertex, const pandora::CartesianVector &daughterVertex)
+bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
-    return LArPointingClusterHelper::IsPointing(daughterVertex, parentPointingVertex);
-}
+    float rL(0.f), rT(0.f);
+    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArPointingClusterHelper::IsEmitted(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterPointingVertex)
-{
-    return LArPointingClusterHelper::IsPointing(parentVertex, daughterPointingVertex);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArPointingClusterHelper::IsPointing(const pandora::CartesianVector &vertex, const LArPointingCluster::Vertex &pointingVertex)
-{
-    const CartesianVector displacement(pointingVertex.GetPosition() - vertex);
-
-    const float longitudinalDistance(pointingVertex.GetDirection().GetDotProduct(displacement));
-
-    if ((longitudinalDistance < m_minPointingLongitudinalDistance) || (longitudinalDistance > m_maxPointingLongitudinalDistance))
-        return false;
-
-    const float maxTransverseDistanceSquared((m_maxPointingTransverseDistance * m_maxPointingTransverseDistance) + 
-        (m_pointingAngularAllowance * m_pointingAngularAllowance * longitudinalDistance * longitudinalDistance));
-
-    const float transverseDistanceSquared(pointingVertex.GetDirection().GetCrossProduct(displacement).GetMagnitudeSquared());
-
-    if (transverseDistanceSquared > maxTransverseDistanceSquared)
+    if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) || rT > m_maxPointingTransverseDistance)
         return false;
 
     return true;
@@ -65,69 +40,86 @@ bool LArPointingClusterHelper::IsPointing(const pandora::CartesianVector &vertex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetAverageDirection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, CartesianVector& averageDirection )
+bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
-    const Cluster* pFirstCluster = firstVertex.GetCluster();
-    const Cluster* pSecondCluster = secondVertex.GetCluster();
+    float rL(0.f), rT(0.f);
+    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
-    if ( pFirstCluster==pSecondCluster )
-        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+    if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) && (rL < 0 || rL > m_maxPointingLongitudinalDistance))
+        return false;
 
-    const float E1 = pFirstCluster->GetHadronicEnergy();
-    const float E2 = pSecondCluster->GetHadronicEnergy();
+    static const float tanSqTheta(std::pow(std::tan(M_PI * m_pointingAngularAllowance / 180.f), 2.f));
 
-    if ( E1 < std::numeric_limits<float>::epsilon() || E2 < std::numeric_limits<float>::epsilon() )
-        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+    if (rT * rT > m_maxPointingTransverseDistance * m_maxPointingTransverseDistance + rL * rL * tanSqTheta)
+        return false;  
 
-    // calculate average direction
-    averageDirection = ( firstVertex.GetDirection() * E1 + secondVertex.GetDirection() * E2 ).GetUnitVector();
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex& firstVertex, const LArPointingCluster::Vertex& secondVertex, CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement )
-{ 
-    const Cluster* pFirstCluster = firstVertex.GetCluster();
-    const Cluster* pSecondCluster = secondVertex.GetCluster();
+void LArPointingClusterHelper::GetAverageDirection(const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
+    CartesianVector &averageDirection)
+{
+    const Cluster *pFirstCluster(firstVertex.GetCluster());
+    const Cluster *pSecondCluster(secondVertex.GetCluster());
 
-    if ( pFirstCluster==pSecondCluster )
+    if (pFirstCluster == pSecondCluster)
+        throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const float energy1(pFirstCluster->GetHadronicEnergy());
+    const float energy2(pSecondCluster->GetHadronicEnergy());
+
+    if ((energy1 < std::numeric_limits<float>::epsilon()) || (energy2 < std::numeric_limits<float>::epsilon()))
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    LArPointingClusterHelper::GetIntersection( firstVertex.GetPosition(), firstVertex.GetDirection(), 
-        secondVertex.GetPosition(), secondVertex.GetDirection(), intersectPosition, 
-        firstDisplacement, secondDisplacement );
+    averageDirection = (firstVertex.GetDirection() * energy1 + secondVertex.GetDirection() * energy2).GetUnitVector();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetIntersection( const CartesianVector& a1, const CartesianVector& a2, const CartesianVector& b1, const CartesianVector& b2, CartesianVector& intersectPosition, float& firstDisplacement, float& secondDisplacement )
-{  
+void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
+    CartesianVector &intersectPosition, float &firstDisplacement, float &secondDisplacement)
+{
+    const Cluster *pFirstCluster(firstVertex.GetCluster());
+    const Cluster *pSecondCluster(secondVertex.GetCluster());
+
+    if (pFirstCluster == pSecondCluster)
+        throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    LArPointingClusterHelper::GetIntersection(firstVertex.GetPosition(), firstVertex.GetDirection(), secondVertex.GetPosition(),
+        secondVertex.GetDirection(), intersectPosition, firstDisplacement, secondDisplacement );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetIntersection(const CartesianVector &a1, const CartesianVector &a2, const CartesianVector &b1,
+    const CartesianVector &b2, CartesianVector &intersectPosition, float &firstDisplacement, float &secondDisplacement)
+{
     // note: input lines are r = a1 + P * a2 and r = b1 + Q * b2
-
-    // relative angle between direction vector
     const float cosTheta = a2.GetDotProduct(b2);
 
     // lines must be non-parallel
-    if ( 1.f - std::fabs(cosTheta) < std::numeric_limits<float>::epsilon() )
+    if (1.f - std::fabs(cosTheta) < std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
     // calculate the intersection (by minimising the distance between the lines)
-    const float P = ( (a2 - b2 * cosTheta).GetDotProduct(b1-a1) ) / (1.0 - cosTheta*cosTheta);
-    const float Q = ( (a2 * cosTheta - b2).GetDotProduct(b1-a1) ) / (1.0 - cosTheta*cosTheta);
+    const float P = ((a2 - b2 * cosTheta).GetDotProduct(b1 - a1)) / (1.f - cosTheta * cosTheta);
+    const float Q = ((a2 * cosTheta - b2).GetDotProduct(b1 - a1)) / (1.f - cosTheta * cosTheta);
 
     // position of intersection (or point of closest approach)
-    intersectPosition = ( a1 + a2 * P + b1 + b2 * Q ) * 0.5;
+    intersectPosition = (a1 + a2 * P + b1 + b2 * Q) * 0.5f;
 
     // displacements of intersection from input vertices
-    firstDisplacement = P;   secondDisplacement = Q;
-
-    return;
+    firstDisplacement = P;
+    secondDisplacement = Q;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex& vertexCluster, const Cluster *const pTargetCluster, CartesianVector& intersectPosition, float& displacementL, float& displacementT )
-{       
+void LArPointingClusterHelper::GetIntersection(const LArPointingCluster::Vertex &vertexCluster, const Cluster *const pTargetCluster,
+    CartesianVector &intersectPosition, float &displacementL, float &displacementT)
+{
     displacementT = +std::numeric_limits<float>::max();
     displacementL = -std::numeric_limits<float>::max();
 
@@ -140,38 +132,38 @@ void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex
     for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList.begin(), iterEnd1 = orderedCaloHitList.end(); iter1 != iterEnd1; ++iter1)
     {
         for (CaloHitList::const_iterator iter2 = iter1->second->begin(), iterEnd2 = iter1->second->end(); iter2 != iterEnd2; ++iter2)
-	{
-	    const CartesianVector& hitPosition = (*iter2)->GetPositionVector();
+        {
+            const CartesianVector &hitPosition = (*iter2)->GetPositionVector();
 
-            LArVertexHelper::GetImpactParameters( vertexCluster.GetPosition(), vertexCluster.GetDirection(), hitPosition, rL, rT );
+            LArVertexHelper::GetImpactParameters(vertexCluster.GetPosition(), vertexCluster.GetDirection(), hitPosition, rL, rT);
 
             if (rT < figureOfMerit)
-	    {
-	        figureOfMerit = rT;
-            
-                displacementL = rL;  
+            {
+                figureOfMerit = rT;
+
+                displacementL = rL;
                 displacementT = rT;
                 intersectPosition = hitPosition; 
                 foundIntersection = true;
-	    }
-	}
+            }
+        }
     }
 
-    if (false == foundIntersection)
+    if (!foundIntersection)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArPointingClusterHelper::m_maxNodeRadiusSquared = 2.5f * 2.5f;
-float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 20.f;
-float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.5f;
-float LArPointingClusterHelper::m_maxPointingTransverseDistance = 2.5f;
-float LArPointingClusterHelper::m_pointingAngularAllowance = 0.0175f; // tan (1 degree)
+float LArPointingClusterHelper::m_maxNodeRadiusSquared = 4.f;
+float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 25.f;
+float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.f;
+float LArPointingClusterHelper::m_maxPointingTransverseDistance = 2.f;
+float LArPointingClusterHelper::m_pointingAngularAllowance = 2.f; // degrees
 
 StatusCode LArPointingClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    float maxNodeRadius = 2.5f;
+    float maxNodeRadius = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxNodeRadius", maxNodeRadius));
     m_maxNodeRadiusSquared = maxNodeRadius * maxNodeRadius;

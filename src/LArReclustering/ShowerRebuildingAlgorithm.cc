@@ -30,7 +30,7 @@ StatusCode ShowerRebuildingAlgorithm::Run()
     // Move any seed showers that did not have promising spines back into the shower seed list
     this->RestoreLoneShowers();
 
-    LArThreeDHelper::RemoveAllStoredClusters();
+    LArThreeDHelper::Reset();
 
     return STATUS_CODE_SUCCESS;
 }
@@ -66,17 +66,17 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShowers() const
                 this->GetSeedClusters(pPfo, pClusterU, pClusterV, pClusterW);
 
                 ClusterList seedMergesU, seedMergesV, seedMergesW, nonSeedMergesU, nonSeedMergesV, nonSeedMergesW;
-                this->RebuildThreeDShower(pPfo, pClusterU, pfoVector, seedMergesU, nonSeedMergesU);
-                this->RebuildThreeDShower(pPfo, pClusterV, pfoVector, seedMergesV, nonSeedMergesV);
-                this->RebuildThreeDShower(pPfo, pClusterW, pfoVector, seedMergesW, nonSeedMergesW);
+                if (pClusterU) this->RebuildThreeDShower(pPfo, pClusterU, pfoVector, seedMergesU, nonSeedMergesU);
+                if (pClusterV) this->RebuildThreeDShower(pPfo, pClusterV, pfoVector, seedMergesV, nonSeedMergesV);
+                if (pClusterW) this->RebuildThreeDShower(pPfo, pClusterW, pfoVector, seedMergesW, nonSeedMergesW);
 
-                this->PerformClusterMerges(pClusterU, seedMergesU, m_seedClusterListNameU, m_seedClusterListNameU);
-                this->PerformClusterMerges(pClusterV, seedMergesV, m_seedClusterListNameV, m_seedClusterListNameV);
-                this->PerformClusterMerges(pClusterW, seedMergesW, m_seedClusterListNameW, m_seedClusterListNameW);
+                if (pClusterU) this->PerformClusterMerges(pClusterU, seedMergesU, m_seedClusterListNameU, m_seedClusterListNameU);
+                if (pClusterV) this->PerformClusterMerges(pClusterV, seedMergesV, m_seedClusterListNameV, m_seedClusterListNameV);
+                if (pClusterW) this->PerformClusterMerges(pClusterW, seedMergesW, m_seedClusterListNameW, m_seedClusterListNameW);
 
-                this->PerformClusterMerges(pClusterU, nonSeedMergesU, m_seedClusterListNameU, m_nonSeedClusterListNameU);
-                this->PerformClusterMerges(pClusterV, nonSeedMergesV, m_seedClusterListNameV, m_nonSeedClusterListNameV);
-                this->PerformClusterMerges(pClusterW, nonSeedMergesW, m_seedClusterListNameW, m_nonSeedClusterListNameW);
+                if (pClusterU) this->PerformClusterMerges(pClusterU, nonSeedMergesU, m_seedClusterListNameU, m_nonSeedClusterListNameU);
+                if (pClusterV) this->PerformClusterMerges(pClusterV, nonSeedMergesV, m_seedClusterListNameV, m_nonSeedClusterListNameV);
+                if (pClusterW) this->PerformClusterMerges(pClusterW, nonSeedMergesW, m_seedClusterListNameW, m_nonSeedClusterListNameW);
             }
             catch (StatusCodeException &statusCodeException)
             {
@@ -125,16 +125,34 @@ void ShowerRebuildingAlgorithm::GetSeedClusters(const ParticleFlowObject *const 
         }
     }
 
-    if (seedClustersU.empty() || seedClustersV.empty() || seedClustersW.empty())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    if ((seedClustersU.empty() && seedClustersV.empty()) ||
+        (seedClustersV.empty() && seedClustersW.empty()) ||
+        (seedClustersW.empty() && seedClustersU.empty()) )
+    {
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+    }
 
-    std::sort(seedClustersU.begin(), seedClustersU.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
-    std::sort(seedClustersV.begin(), seedClustersV.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
-    std::sort(seedClustersW.begin(), seedClustersW.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+    pSeedClusterU = NULL;
+    pSeedClusterV = NULL;
+    pSeedClusterW = NULL;
 
-    pSeedClusterU = seedClustersU.at(0);
-    pSeedClusterV = seedClustersV.at(0);
-    pSeedClusterW = seedClustersW.at(0);
+    if (!seedClustersU.empty())
+    {
+        std::sort(seedClustersU.begin(), seedClustersU.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+        pSeedClusterU = seedClustersU.at(0);
+    }
+
+    if (!seedClustersV.empty())
+    {
+        std::sort(seedClustersV.begin(), seedClustersV.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+        pSeedClusterV = seedClustersV.at(0);
+    }
+
+    if (!seedClustersW.empty())
+    {
+        std::sort(seedClustersW.begin(), seedClustersW.end(), ShowerRebuildingAlgorithm::SortClustersByNHits);
+        pSeedClusterW = seedClustersW.at(0);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -165,6 +183,17 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(const ParticleFlowObject *co
             if (pAlternativePfo->GetClusterList().count(pSiblingSeed) == 0)
                 continue;
 
+            if (pAlternativePfo->GetNClusters() > 1)
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveClusterFromPfo(*this, pAlternativePfo, pSiblingSeed));
+            }
+            else
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeletePfo(*this, pAlternativePfo));
+                *pfoIter = NULL;
+            }
+
+            /*
             if (pPfo == pAlternativePfo)
             {
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveClusterFromPfo(*this, pAlternativePfo, pSiblingSeed));
@@ -175,6 +204,7 @@ void ShowerRebuildingAlgorithm::RebuildThreeDShower(const ParticleFlowObject *co
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeletePfo(*this, pAlternativePfo));
                 *pfoIter = NULL;
             }
+            */
         }
     }
 }
@@ -209,8 +239,13 @@ void ShowerRebuildingAlgorithm::PerformClusterMerges(Cluster *pCluster, const Cl
 {
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
-        if ((*iter) != pCluster)
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *iter, clusterListName1, clusterListName2));
+        if (*iter == pCluster)
+            continue;
+
+        if (!(*iter)->IsAvailable())
+            continue;
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *iter, clusterListName1, clusterListName2));
     }
 }
 
@@ -220,16 +255,18 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
 {
     try
     {
-        const ClusterList *pClusterList = NULL;
-        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, seedClusterListName, pClusterList));
+        const ClusterList *pSeedClusterList = NULL;
+        const ClusterList *pNonSeedClusterList = NULL;
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, seedClusterListName, pSeedClusterList));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetClusterList(*this, nonSeedClusterListName, pNonSeedClusterList));
 
-        if (NULL == pClusterList)
+        if (NULL == pSeedClusterList)
         {
             std::cout << "ShowerRebuildingAlgorithm: cluster list " << seedClusterListName << " unavailable." << std::endl;
             throw StatusCodeException(STATUS_CODE_SUCCESS);
         }
 
-        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+        for (ClusterList::const_iterator iter = pSeedClusterList->begin(), iterEnd = pSeedClusterList->end(); iter != iterEnd; ++iter)
         {
             try
             {
@@ -248,12 +285,33 @@ void ShowerRebuildingAlgorithm::RebuildTwoDShowers(const std::string &seedCluste
                     if (pSeedCluster == *cIter)
                         continue;
 
+                    if (pSeedClusterList->count(*cIter) == 0)
+                        continue;
+
+                    if (!(*cIter)->IsAvailable())
+                        continue;
+
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *cIter, seedClusterListName, seedClusterListName));
+                }
+
+                if ((NULL == pNonSeedClusterList) && !nonSeeds.empty())
+                {
+                    std::cout << "ShowerRebuildingAlgorithm: cluster list " << nonSeedClusterListName << " unavailable." << std::endl;
+                    continue;
                 }
 
                 // Merge-in the associated non-seeds
                 for (ClusterList::const_iterator cIter = nonSeeds.begin(), cIterEnd = nonSeeds.end(); cIter != cIterEnd; ++cIter)
                 {
+                    if (pSeedCluster == *cIter)
+                        continue;
+
+                    if (pNonSeedClusterList->count(*cIter) == 0)
+                        continue;
+
+                    if (!(*cIter)->IsAvailable())
+                        continue;
+
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, *cIter, seedClusterListName, nonSeedClusterListName));
                 }
             }

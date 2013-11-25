@@ -320,11 +320,11 @@ public:
         /**
          *  @brief  Find the largest scatter in the cluster, if above a threshold value
          * 
-         *  @param  largestScatterLayer to receive the layer corresponding to the largest scatter
+         *  @param  largestScatterPosition to receive the position of the largest scatter
          * 
          *  @return STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND
          */
-        pandora::StatusCode FindLargestScatter(unsigned int &largestScatterLayer) const;
+        pandora::StatusCode FindLargestScatter(pandora::CartesianVector &largestScatterPosition) const;
 
         /**
          *  @brief  Get the layer fit result map

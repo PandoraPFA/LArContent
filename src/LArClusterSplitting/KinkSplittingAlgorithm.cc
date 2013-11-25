@@ -44,12 +44,12 @@ bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode KinkSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pCluster, unsigned int &splitLayer) const
+StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
 {
     LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
     LArClusterHelper::LArTwoDSlidingXZFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);
 
-    return twoDSlidingFitResult.FindLargestScatter(splitLayer);
+    return twoDSlidingFitResult.FindLargestScatter(splitPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
