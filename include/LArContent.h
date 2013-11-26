@@ -17,12 +17,14 @@
 #include "LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
+#include "LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
+#include "LArReclustering/LowEnergyTrackSplittingAlgorithm.h"
 #include "LArReclustering/ShowerRebuildingAlgorithm.h"
 #include "LArReclustering/TrackSplittingAlgorithm.h"
 #include "LArThreeDSeed/ThreeDShowersAlgorithm.h"
@@ -69,6 +71,7 @@ public:
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
+        d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
@@ -76,6 +79,7 @@ public:
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArParticleMonitoring",                  lar::ParticleMonitoringAlgorithm::Factory)                                  \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
+        d("LArLowEnergyTrackSplitting",             lar::LowEnergyTrackSplittingAlgorithm::Factory)                             \
         d("LArShowerRebuilding",                    lar::ShowerRebuildingAlgorithm::Factory)                                    \
         d("LArTrackSplitting",                      lar::TrackSplittingAlgorithm::Factory)                                      \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \

@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/ClusterSplitting/ClusterSplittingAlgorithm.cc
  * 
- *  @brief  Implementation of the particle seed algorithm class.
+ *  @brief  Implementation of the cluster splitting algorithm class.
  * 
  *  $Log: $
  */
