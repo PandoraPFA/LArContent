@@ -34,10 +34,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     void GetSeedClusterList(const pandora::ClusterVector &candidateClusters, pandora::ClusterList &seedClusterList) const;
 
-    unsigned int        m_initialLengthCut;         ///< 
-    unsigned int        m_finalLengthCut;           ///< 
-    unsigned int        m_initialChangeIter;        ///< 
-    unsigned int        m_finalChangeIter;          ///< 
+    float           m_lengthCut;         ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -154,24 +154,46 @@ float LArClusterHelper::LArTrackWidth(const Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetLengthSquared(const Cluster* const pCluster)
+float LArClusterHelper::GetLengthSquared(const Cluster *const pCluster)
 {
-    const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
-    const CartesianVector outerCentroid(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
-    return (outerCentroid - innerCentroid).GetMagnitudeSquared();
+    if (orderedCaloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    // ATTN: in 2D case, we will actually calculate the quadrature sum of deltaX and deltaU/V/W
+    float minX(std::numeric_limits<float>::max()), maxX(-std::numeric_limits<float>::max());
+    float minY(std::numeric_limits<float>::max()), maxY(-std::numeric_limits<float>::max());
+    float minZ(std::numeric_limits<float>::max()), maxZ(-std::numeric_limits<float>::max());
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+            const CartesianVector &hitPosition((*hitIter)->GetPositionVector());
+            minX = std::min(hitPosition.GetX(), minX);
+            maxX = std::max(hitPosition.GetX(), maxX);
+            minY = std::min(hitPosition.GetY(), minY);
+            maxY = std::max(hitPosition.GetY(), maxY);
+            minZ = std::min(hitPosition.GetZ(), minZ);
+            maxZ = std::max(hitPosition.GetZ(), maxZ);
+        }
+    }
+
+    const float deltaX(maxX - minX), deltaY(maxY - minY), deltaZ(maxZ - minZ);
+    return (deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetLength(const Cluster* const pCluster)
+float LArClusterHelper::GetLength(const Cluster *const pCluster)
 {
     return std::sqrt(LArClusterHelper::GetLengthSquared(pCluster));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetEnergyFromLength(const Cluster* const pCluster)
+float LArClusterHelper::GetEnergyFromLength(const Cluster *const pCluster)
 {
     static const float dEdX(0.002f); // approximately 2 MeV/cm
 
@@ -180,7 +202,7 @@ float LArClusterHelper::GetEnergyFromLength(const Cluster* const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int LArClusterHelper::GetLayerSpan(const Cluster* const pCluster) 
+unsigned int LArClusterHelper::GetLayerSpan(const Cluster *const pCluster) 
 {
     return (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer());
 }

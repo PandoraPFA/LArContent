@@ -440,7 +440,7 @@ public:
      * 
      *  @return the length
      */
-    static float GetLength(const pandora::Cluster* const pCluster);
+    static float GetLength(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Get energy of cluster, based on length
