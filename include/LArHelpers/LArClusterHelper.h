@@ -226,6 +226,13 @@ public:
         void GetGlobalPosition(const float rL, const float rT, pandora::CartesianVector &position) const;
 
         /**
+         *  @brief  Get interpolated Rms for give longitudinal coordinate
+         * 
+         *  @param  rL the longitudinal coordinate
+         */
+        float GetRms(const float rL) const;
+
+        /**
          *  @brief  Get layer number for given sliding linear fit longitudinal coordinate
          * 
          *  @param  rL the longitudinal coordinate
@@ -262,6 +269,22 @@ public:
          *  @param  layer to receive the layer
          */
         void GetLocalFitPosition(const float x, float &rL, float &rT, int &layer) const;
+
+        /**
+         *  @brief  Get global fit position for a given x or z coordinate
+         * 
+         *  @param  rL the longitudinal coordinate
+         *  @param  position the fitted position at these coordinates
+         */
+        void GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
+
+        /**
+         *  @brief  Get global fit direction for a given x or z coordinate
+         *
+         *  @param  rL the longitudinal coordinate
+         *  @param  direction the fitted direction at these coordinates
+         */
+        void GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
 
         /**
          *  @brief  Get global fit position for a given x or z coordinate
@@ -341,6 +364,42 @@ public:
         const LayerFitContributionMap &GetLayerFitContributionMap() const;
 
     private:
+
+        /**
+         *  @brief  Interpolate a position between two layers
+         *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
+         *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just below the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just above the input coordinate
+         *  @param  position the interpolated position
+         */
+        void GetGlobalFitInterpolatedPosition(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, 
+            const float &firstWeight, const float &secondWeight, pandora::CartesianVector &position) const;
+
+        /**
+         *  @brief  Interpolate a direction between two layers
+         *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
+         *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just below the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just above the input coordinate
+         *  @param  position the interpolated direction
+         */
+        void GetGlobalFitInterpolatedDirection(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, 
+            const float &firstWeight, const float &secondWeight, pandora::CartesianVector &direction) const;
+
+
+        /**
+         *  @brief  Get iterators for layers surrounding the specified x or z position
+         * 
+         *  @param  rL the longitudinal coordinate
+         *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
+         *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just below the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just above the input coordinate
+         */
+        void GetSurroundingLayerIterators(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
+	    LayerFitResultMap::const_iterator &secondLayerIter, float &firstWeight, float &secondWeight) const;
+
         /**
          *  @brief  Get iterators for layers surrounding the specified x or z position
          * 
@@ -348,9 +407,11 @@ public:
          *  @param  useX whether input coordinate is x or z
          *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
          *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just below the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just above the input coordinate
          */
         void GetSurroundingLayerIterators(const float p, const bool useX, LayerFitResultMap::const_iterator &firstLayerIter,
-            LayerFitResultMap::const_iterator &secondLayerIter) const;
+            LayerFitResultMap::const_iterator &secondLayerIter, float &firstWeight, float &secondWeight) const;
 
         /**
          *  @brief  Get iterators for layers surrounding the projection of a given position
@@ -358,9 +419,11 @@ public:
          *  @param  position the input position vector
          *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
          *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just below the input coordinate
+         *  @param  firstWeight the weight assigned to the layer just above the input coordinate
          */
         void GetSurroundingLayerIterators(const pandora::CartesianVector &position, LayerFitResultMap::const_iterator &firstLayerIter,
-            LayerFitResultMap::const_iterator &secondLayerIter) const;
+            LayerFitResultMap::const_iterator &secondLayerIter, float &firstWeight, float &secondWeight) const;
 
         const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
         unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
