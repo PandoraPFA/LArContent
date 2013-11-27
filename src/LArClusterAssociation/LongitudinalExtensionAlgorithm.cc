@@ -24,14 +24,11 @@ void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *c
     {
         Cluster *pCluster = *iter;
 
-        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < 15)
+        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < 5)
             continue;
 
-        const CartesianVector innerVertex(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
-        const CartesianVector outerVertex(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()));
-
-        if ((outerVertex - innerVertex).GetMagnitudeSquared() < 25.f)
-            continue;
+        if (LArClusterHelper::GetLengthSquared(pCluster) < 25.f)
+	    continue;
 
         if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75f)
             continue;
@@ -257,9 +254,8 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
     }
 
 // if (strengthType > LongitudinalAssociation::NONE)
+// {
 // std::cout << " --- ASSOCIATED --- " << std::endl;
-// else 
-// std::cout << " --- NOT ASSOCIATED --- " << std::endl;
 // ClusterList tempList1, tempList2;
 // Cluster* tempCluster1 = (Cluster*)(pClusterI);
 // Cluster* tempCluster2 = (Cluster*)(pClusterJ);
@@ -269,6 +265,20 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 // PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", GREEN);
 // PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
 // PandoraMonitoringApi::ViewEvent();
+// }
+// else 
+// {
+// std::cout << " --- NOT ASSOCIATED --- " << std::endl;
+// ClusterList tempList1, tempList2;
+// Cluster* tempCluster1 = (Cluster*)(pClusterI);
+// Cluster* tempCluster2 = (Cluster*)(pClusterJ);
+// tempList1.insert(tempCluster1);
+// tempList2.insert(tempCluster2);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
+// PandoraMonitoringApi::ViewEvent();
+// }
 
     if (strengthType > LongitudinalAssociation::NONE)
     {
@@ -373,7 +383,7 @@ bool LongitudinalExtensionAlgorithm::AreClustersAssociated(Cluster *pCluster1, C
 // tempList1.insert(tempCluster1);
 // tempList2.insert(tempCluster2);
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", BLUE);
 // PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLACK);
 // PandoraMonitoringApi::ViewEvent();
 
