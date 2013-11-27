@@ -495,7 +495,7 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
             slidingNPoints -= bwdIter->second.GetNPoints();
         }
 
-        if (slidingNPoints > 0)
+        if (slidingNPoints > 2) // require three points for meaningful results
         {
             const double denominator(slidingSumLL - slidingSumL * slidingSumL / static_cast<double>(slidingNPoints));
 
@@ -509,6 +509,10 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
             const double fitT(intercept + gradient * l);
 
             const double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
+
+            if (variance < 0.)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
             const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
 
             const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
@@ -556,11 +560,14 @@ LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::LayerFitContributi
 
 void LArClusterHelper::TwoDSlidingFitResult::LayerFitContribution::AddPoint(const float l, const float t)
 {
-    m_sumT += t;
-    m_sumL += l;
-    m_sumTT += t * t;
-    m_sumLT += l * t;
-    m_sumLL += l * l;
+    const double T = static_cast<double>(t);
+    const double L = static_cast<double>(l);
+
+    m_sumT += T;
+    m_sumL += L;
+    m_sumTT += T * T;
+    m_sumLT += L * T;
+    m_sumLL += L * L;
     ++m_nPoints;
 }
 
