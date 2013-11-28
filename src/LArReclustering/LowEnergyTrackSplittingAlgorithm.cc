@@ -18,6 +18,20 @@ using namespace pandora;
 namespace lar
 {
 
+LowEnergyTrackSplittingAlgorithm::LowEnergyTrackSplittingAlgorithm()
+{
+    PANDORA_MONITORING_API(Create());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LowEnergyTrackSplittingAlgorithm::~LowEnergyTrackSplittingAlgorithm()
+{
+    PANDORA_MONITORING_API(SaveTree(m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode LowEnergyTrackSplittingAlgorithm::Run()
 {
     const ClusterList *pInputClusterList = NULL;
@@ -27,12 +41,26 @@ StatusCode LowEnergyTrackSplittingAlgorithm::Run()
     ClusterVector clusterVector(pInputClusterList->begin(), pInputClusterList->end());
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
 
+    // Monitoring containers
+    FloatVector trackLengths, trackWidths;
+    IntVector pdgCodes;
+
     // The target lists
     ClusterList allShowerSeedClusters, allTrackSeedClusters, allNonSeedClusters;
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
+
+        // Store monitoring information
+        const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+        const int pdgCode(pMCParticle->GetParticleId());
+        const float trackLength(LArClusterHelper::GetLength(pCluster));
+        const float trackWidth(LArClusterHelper::LArTrackWidth(pCluster));
+        pdgCodes.push_back(pdgCode);
+        trackLengths.push_back(trackLength);
+        trackWidths.push_back(trackWidth);
+
         ClusterList trackSeedClusters, nonSeedClusters;
 
         // Input cluster properties
@@ -222,6 +250,12 @@ StatusCode LowEnergyTrackSplittingAlgorithm::Run()
     if (!pInputClusterList->empty())
         return STATUS_CODE_FAILURE;
 
+    // Write monitoring information
+    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "pdgCodes", &pdgCodes));
+    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "trackLengths", &trackLengths));
+    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "trackWidths", &trackWidths));
+    PANDORA_MONITORING_API(FillTree(m_treeName.c_str()));
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -246,6 +280,9 @@ StatusCode LowEnergyTrackSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle, "associationAlgorithms",
         m_clusterAssociationAlgorithms));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputTree", m_treeName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
 
     return STATUS_CODE_SUCCESS;
 }

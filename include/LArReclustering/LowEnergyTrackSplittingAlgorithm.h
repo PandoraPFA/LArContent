@@ -28,6 +28,16 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    LowEnergyTrackSplittingAlgorithm();
+
+    /**
+     *  @brief  Destructor
+     */
+    ~LowEnergyTrackSplittingAlgorithm();
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -39,6 +49,9 @@ private:
 
     std::string             m_clusteringAlgorithmName;          ///< The name of the clustering algorithm to run
     pandora::StringVector   m_clusterAssociationAlgorithms;     ///< The ordered list of cluster association algorithms to be used
+
+    std::string             m_fileName;                         ///< 
+    std::string             m_treeName;                         ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
