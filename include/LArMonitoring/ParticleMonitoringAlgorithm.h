@@ -116,7 +116,6 @@ private:
      */
     int GetPrimaryNeutrino(const pandora::MCParticle *const pMCParticle) const;
 
-
     std::string     m_caloHitListName;                  ///< 
     std::string     m_mcParticleListName;               ///< 
     std::string     m_pfoListName;                      ///< 

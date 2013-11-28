@@ -91,7 +91,7 @@ StatusCode ConeBasedMergingAlgorithm::Run()
 
         std::sort(cosThetaMaxList.begin(), cosThetaMaxList.end(), ConeBasedMergingAlgorithm::SortByCosThetaMax);
         MergeParametersList coneAxisProjectionList;
-//ClusterList angleClusterList;
+
         for (MergeParametersList::iterator mIter = cosThetaMaxList.begin(), mIterEnd = cosThetaMaxList.end(); mIter != mIterEnd; ++mIter)
         {
             MergeParameters &mergeParameters(*mIter);
@@ -100,15 +100,11 @@ StatusCode ConeBasedMergingAlgorithm::Run()
             {
                 coneAxisProjectionList.push_back(mergeParameters);
             }
-//            else
-//            {
-//angleClusterList.insert(mergeParameters.GetDaughterCluster());
-//            }
         }
 
         std::sort(coneAxisProjectionList.begin(), coneAxisProjectionList.end(), ConeBasedMergingAlgorithm::SortByConeAxisProjection);
         ClusterList finalDaughterList;
-//ClusterList distanceClusterList;
+
         for (MergeParametersList::iterator mIter = coneAxisProjectionList.begin(), mIterEnd = coneAxisProjectionList.end(); mIter != mIterEnd; ++mIter)
         {
             MergeParameters &mergeParameters(*mIter);
@@ -117,19 +113,8 @@ StatusCode ConeBasedMergingAlgorithm::Run()
             {
                 finalDaughterList.insert(mergeParameters.GetDaughterCluster());
             }
-//            else
-//            {
-//distanceClusterList.insert(mergeParameters.GetDaughterCluster());
-//            }
         }
-//ClusterList pTempList;
-//pTempList.insert(const_cast<Cluster*>(iter->first));
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(&pTempList, "CBMParent", RED);
-//PandoraMonitoringApi::VisualizeClusters(&finalDaughterList, "CBMDaughters", BLUE);
-//PandoraMonitoringApi::VisualizeClusters(&angleClusterList, "Angle", GREEN);
-//PandoraMonitoringApi::VisualizeClusters(&distanceClusterList, "Distance", ORANGE);
-//PandoraMonitoringApi::ViewEvent();
+
         for (ClusterList::const_iterator dauIter = finalDaughterList.begin(), dauIterEnd = finalDaughterList.end(); dauIter != dauIterEnd; ++dauIter)
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *dauIter,

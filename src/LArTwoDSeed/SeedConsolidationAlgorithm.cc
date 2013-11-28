@@ -83,21 +83,6 @@ StatusCode SeedConsolidationAlgorithm::Run()
 
                 if (this->PassesOverlapAssociation(overlapAssociation))
                 {
-//std::cout << " SEEDCONSOLIDATIONALGORITHM WOULD HAVE MADE MERGE HERE!!!!!!!!! " << std::endl;
-//std::cout << " overlapAssociation.GetNContactLayers() " << overlapAssociation.GetNContactLayers() << std::endl;
-//std::cout << " overlapAssociation.GetLayerDistance50() " << overlapAssociation.GetLayerDistance50() << std::endl;
-//std::cout << " overlapAssociation.GetNEnclosedLayers() " << overlapAssociation.GetNEnclosedLayers() << std::endl;
-//std::cout << " overlapAssociation.GetNNonVtxContactGroups() " << overlapAssociation.GetNNonVtxContactGroups() << std::endl;
-//std::cout << " overlapAssociation.GetNNonContactLayers() " << overlapAssociation.GetNNonContactLayers() << std::endl;
-//std::cout << " overlapAssociation.GetNOverlapLayers() " << overlapAssociation.GetNOverlapLayers() << std::endl;
-//ClusterList parent, daughter;
-//parent.insert(pParentCluster);
-//daughter.insert(pDaughterCluster);
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
-//PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", GREEN);
-//PandoraMonitoringApi::VisualizeClusters(pClusterList, "all", BLUE);
-//PandoraMonitoringApi::ViewEvent();
                     daughterIterators.push_back(iterD);
                     continue;
                 }
@@ -111,14 +96,6 @@ StatusCode SeedConsolidationAlgorithm::Run()
         {
             Cluster *pDaughterCluster = *(*iterJ);
             *(*iterJ) = NULL;
-
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// ClusterList tempList1, tempList2;
-// tempList1.insert(pParentCluster);
-// tempList2.insert(pDaughterCluster);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Parent", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Daughter", GREEN);
-// PandoraMonitoringApi::ViewEvent();
 
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster));
         }
@@ -363,28 +340,6 @@ void SeedConsolidationAlgorithm::ConeAssociation::CalculateProperties(const Clus
 
     if (pParentCluster->GetNCaloHits() > 0)
         m_enclosedParentHitFraction = static_cast<float>(ParentHitsBoundedByDaughter) / static_cast<float>(pParentCluster->GetNCaloHits());
-
-
-// CartesianVector p(0.,1.,0.);
-// CartesianVector Marker1(m_coneApex);
-// CartesianVector Marker2(m_coneApex + m_coneDirection * m_coneLength);
-// CartesianVector Marker3(m_coneApex + m_coneDirection * m_coneLength + m_coneDirection.GetCrossProduct(p) * m_coneLength * sqrt ( 1.0 - m_coneCosHalfAngleParent * m_coneCosHalfAngleParent ) );
-// CartesianVector Marker4(m_coneApex + m_coneDirection * m_coneLength - m_coneDirection.GetCrossProduct(p) * m_coneLength * sqrt ( 1.0 - m_coneCosHalfAngleParent * m_coneCosHalfAngleParent ) );
-
-// ClusterList tempList1, tempList2;
-// Cluster* tempC1 = (Cluster*)pParentCluster;
-// Cluster* tempC2 = (Cluster*)pDaughterCluster;
-// tempList1.insert(tempC1);
-// tempList2.insert(tempC2);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Parent", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Daughter", GREEN);
-// PandoraMonitoringApi::AddMarkerToVisualization(&Marker1, "M1", AUTO, 1.);
-// PandoraMonitoringApi::AddMarkerToVisualization(&Marker2, "M2", AUTO, 1.);
-// PandoraMonitoringApi::AddMarkerToVisualization(&Marker3, "M3", AUTO, 1.);
-// PandoraMonitoringApi::AddMarkerToVisualization(&Marker4, "M4", AUTO, 1.);
-// PandoraMonitoringApi::ViewEvent();
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -475,24 +430,15 @@ void SeedConsolidationAlgorithm::OverlapAssociation::CalculateProperties(const C
     m_nNonVtxContactGroups = ((m_nNonVtxContactGroups > 0) && (std::min(m_innerOverlapDistance, m_outerOverlapDistance) < 5.f)) ?
         m_nContactGroups - 1 : m_nContactGroups;
 
-    if(layerDistances.size()>0){
-      std::sort(layerDistances.begin(), layerDistances.end());
-      m_layerDistance50 = layerDistances[static_cast<unsigned int>(0.5 * layerDistances.size())];
+    if (layerDistances.size() > 0)
+    {
+        std::sort(layerDistances.begin(), layerDistances.end());
+        m_layerDistance50 = layerDistances[static_cast<unsigned int>(0.5 * layerDistances.size())];
     }
-    else{
-      m_layerDistance50 = 0.;     //Will fail anyway as there are no contact layers
+    else
+    {
+        m_layerDistance50 = 0.;     //Will fail anyway as there are no contact layers
     }
-
-// ClusterList tempList1, tempList2;
-// Cluster* tempC1 = (Cluster*)pParentCluster;
-// Cluster* tempC2 = (Cluster*)pDaughterCluster;
-// tempList1.insert(tempC1);
-// tempList2.insert(tempC2);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Parent", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Daughter", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

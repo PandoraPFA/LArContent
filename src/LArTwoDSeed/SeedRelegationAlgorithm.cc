@@ -58,9 +58,6 @@ StatusCode SeedRelegationAlgorithm::Run()
     // Move demoted clusters from Seed List to Non-Seed List
     if(!clustersToDemote.empty())
     {
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&clustersToDemote, "Demoted", RED); // Relegation colours are red and white...
-// PandoraMonitoringApi::ViewEvent();
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveClusterList(*this, 
             m_seedClusterListName, m_nonSeedClusterListName, clustersToDemote));
     }
@@ -103,7 +100,7 @@ bool SeedRelegationAlgorithm::IsSeedClusterConnectedToVertex(const Cluster *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SeedRelegationAlgorithm::IsSeedClusterConnectedToLargerCluster(const Cluster *const pClusterI, const Cluster *const pClusterJ)
+bool SeedRelegationAlgorithm::IsSeedClusterConnectedToLargerCluster(const Cluster *const pClusterI, const Cluster *const pClusterJ) const
 {
     // Bail out if Cluster I is sizeable compared with Cluster J
     if (static_cast<float>(pClusterI->GetNCaloHits()) > 0.15f * static_cast<float>(pClusterJ->GetNCaloHits()))
@@ -203,7 +200,8 @@ bool SeedRelegationAlgorithm::IsSeedClusterConnectedToLargerCluster(const Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SeedRelegationAlgorithm::IsSeedClusterAtSmallAngleToLargerCluster( const pandora::CartesianVector positionI, const pandora::CartesianVector directionI, const pandora::CartesianVector positionJ, const pandora::CartesianVector directionJ )
+bool SeedRelegationAlgorithm::IsSeedClusterAtSmallAngleToLargerCluster(const CartesianVector &positionI, const CartesianVector &directionI,
+    const CartesianVector &positionJ, const CartesianVector &directionJ) const
 {
     const CartesianVector p0(directionJ);
     const CartesianVector p1((positionI - positionJ).GetUnitVector()); 
@@ -212,7 +210,7 @@ bool SeedRelegationAlgorithm::IsSeedClusterAtSmallAngleToLargerCluster( const pa
     if ((180.f / M_PI) * p0.GetOpeningAngle(p1) < 7.5f && (180.f / M_PI) * p1.GetOpeningAngle(p2) < 15.f)   // TODO: move to configuration
         return true;
 
-    else return false;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

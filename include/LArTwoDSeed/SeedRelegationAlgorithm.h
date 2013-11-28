@@ -35,52 +35,62 @@ private:
     /**
      *  @brief  Selection requirement on length of cluster
      * 
+     *  @param  pCluster
+     * 
      *  @return boolean
      */
-    bool IsSeedClusterLongEnough( const pandora::Cluster* const pCluster ) const;
+    bool IsSeedClusterLongEnough(const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Check whether a cluster is associated with the reconstructed vertex
      * 
+     *  @param  pCluster
+     * 
      *  @return boolean
      */
-    bool IsSeedClusterConnectedToVertex( const pandora::Cluster* const pCluster ) const;
+    bool IsSeedClusterConnectedToVertex(const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Check whether a cluster is associated with another, larger, cluster
      * 
+     *  @param  pCluster
+     * 
      *  @return boolean
      */
-    bool IsSeedClusterConnectedToLargerCluster( const pandora::Cluster* const pClusterI, const pandora::Cluster* const pClusterJ );
+    bool IsSeedClusterConnectedToLargerCluster(const pandora::Cluster *const pClusterI, const pandora::Cluster *const pClusterJ) const;
 
     /**
      *  @brief  Check whether a cluster subtends a small angle to another cluster
      * 
+     *  @param  positionI
+     *  @param  directionI
+     *  @param  positionJ
+     *  @param  directionJ
+     * 
      *  @return boolean
      */
-    bool IsSeedClusterAtSmallAngleToLargerCluster( const pandora::CartesianVector positionI, const pandora::CartesianVector directionI, const pandora::CartesianVector positionJ, const pandora::CartesianVector directionJ );
+    bool IsSeedClusterAtSmallAngleToLargerCluster(const pandora::CartesianVector &positionI, const pandora::CartesianVector &directionI,
+        const pandora::CartesianVector &positionJ, const pandora::CartesianVector &directionJ) const;
 
+    std::string m_seedClusterListName;                  ///< The seed cluster list name
+    std::string m_nonSeedClusterListName;               ///< The non seed cluster list name
 
-    std::string         m_seedClusterListName;      ///< The seed cluster list name
-    std::string         m_nonSeedClusterListName;   ///< The non seed cluster list name
+    float       m_minClusterLength;                     ///< 
+    float       m_minClusterDotProduct;                 ///< 
+    float       m_minClusterSeparation;                 ///< 
+    float       m_minClusterRadialSeparation;           ///< 
+    float       m_minClusterVertexSeparation;           ///< 
 
-    float               m_minClusterLength;
-    float               m_minClusterDotProduct;
-    float               m_minClusterSeparation;
-    float               m_minClusterRadialSeparation;
-    float               m_minClusterVertexSeparation;
+    float       m_vertexInnerRadialDistance;            ///< 
+    float       m_vertexOuterRadialDistance;            ///< 
+    float       m_vertexImpactParameter;                ///< 
 
-    float               m_vertexInnerRadialDistance;
-    float               m_vertexOuterRadialDistance;
-    float               m_vertexImpactParameter;
-
-    float               m_minClusterLengthSquared;
-    float               m_minClusterSeparationSquared;
-    float               m_minClusterRadialSeparationSquared;
-    float               m_minClusterVertexSeparationSquared;
-    float               m_vertexInnerRadialDistanceSquared;
-    float               m_vertexOuterRadialDistanceSquared;
-
+    float       m_minClusterLengthSquared;              ///< 
+    float       m_minClusterSeparationSquared;          ///< 
+    float       m_minClusterRadialSeparationSquared;    ///< 
+    float       m_minClusterVertexSeparationSquared;    ///< 
+    float       m_vertexInnerRadialDistanceSquared;     ///< 
+    float       m_vertexOuterRadialDistanceSquared;     ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

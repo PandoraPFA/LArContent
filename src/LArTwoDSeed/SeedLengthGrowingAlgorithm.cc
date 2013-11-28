@@ -138,17 +138,6 @@ SeedLengthGrowingAlgorithm::AssociationType SeedLengthGrowingAlgorithm::AreClust
     const float bestEmissionTheta(std::min(emissionThetaII, std::min(emissionThetaIO, std::min(emissionThetaOI, emissionThetaOO))));
     const AssociationType emissionAssociationType((bestEmissionTheta < 0.174f) ? STANDARD : NONE);
 
-// if (std::max(nodeAssociationType, emissionAssociationType) > NONE)
-// {
-// std::cout << " nodeAssociationType " << nodeAssociationType << " bestNodeTheta " << bestNodeTheta << " nodeThetaII " << nodeThetaII << " nodeThetaIO " << nodeThetaIO << " nodeThetaOI " << nodeThetaOI << " nodeThetaOO " << nodeThetaOO << std::endl;
-// std::cout << " emissionAssociationType " << emissionAssociationType << " bestEmissionTheta " << bestEmissionTheta << " emissionThetaII " << nodeThetaII << " emissionThetaIO " << emissionThetaIO << " emissionThetaOI " << emissionThetaOI << " emissionThetaOO " << emissionThetaOO << std::endl;
-// ClusterList parent, daughter; parent.insert(const_cast<Cluster*>(pClusterSeed)); daughter.insert(const_cast<Cluster*>(pCluster));
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&parent, "parent", RED);
-// PandoraMonitoringApi::VisualizeClusters(&daughter, "daughter", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-
     return std::max(nodeAssociationType, emissionAssociationType);
 }
 

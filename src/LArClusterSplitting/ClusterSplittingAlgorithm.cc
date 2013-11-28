@@ -43,21 +43,9 @@ StatusCode ClusterSplittingAlgorithm::Run()
         if ((splitLayer <= pCluster->GetInnerPseudoLayer()) || (splitLayer >= pCluster->GetOuterPseudoLayer()))
             continue;
 
-// Cluster* tempCluster = (Cluster*)(pCluster);
-// ClusterList tempList;
-// tempList.insert(tempCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "Cluster", GREEN);
-// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition, "Split", RED, 1.75);
-// PandoraMonitoringApi::ViewEvent();
         ClusterSplittingList clusterSplittingList;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pCluster, splitLayer, clusterSplittingList));
 
-// ClusterList tempSplitList(clusterSplittingList.begin(),clusterSplittingList.end());
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempSplitList, "SplitCluster", AUTOITER);
-// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition, "SplitPosition", BLACK, 1.75);
-// PandoraMonitoringApi::ViewEvent();
         internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
         *iter = NULL;
     }

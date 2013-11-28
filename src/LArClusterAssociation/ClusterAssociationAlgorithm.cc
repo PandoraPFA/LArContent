@@ -101,11 +101,6 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(Cluster *pCluster, cons
 
     if (clusterListDelete.size() != 1)
         return;
-// ClusterList tempList; tempList.insert(pClusterToDelete);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList, "PrimaryCluster", GREEN));
-// PANDORA_MONITORING_API(VisualizeClusters(&clusterListDelete, "Daughters", BLUE));
-// PANDORA_MONITORING_API(ViewEvent());
 
     this->UpdateForUnambiguousMerge(pClusterToEnlarge, pClusterToDelete, isForward, clusterAssociationMap);
 
@@ -286,13 +281,6 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
 
     if (clusterAssociationMap.end() == iterAssociation)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-// TODO: Double-check the following...
-//ClusterList::iterator iterCheck1 = clusterList.find(pCluster);
-//if( iterCheck1 != clusterList.end() ){ std::cout << " Already got: " << pCluster << std::endl; }
-//ClusterList clusterList2 = iterAssociation->second.m_forwardAssociations;
-//ClusterList::iterator iterCheck2 = clusterList2.find(pCluster);
-//if( iterCheck2 != clusterList.end() ){ std::cout << " Already got: " << pCluster << " Again!!! " << std::endl; }
 
     clusterList.insert(pCluster);
 

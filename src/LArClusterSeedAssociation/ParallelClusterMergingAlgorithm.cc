@@ -111,20 +111,6 @@ StatusCode ParallelClusterMergingAlgorithm::Run()
             }
         }
 
-// for(ClusterMergeMap::const_iterator iter = clusterMergeMap.begin(), iterEnd = clusterMergeMap.end(); iter != iterEnd; ++iter) 
-// {
-// ClusterList pTempList, dTempList;
-// pTempList.insert(iter->first);
-// for( ClusterList::const_iterator dauIter = iter->second.begin(), dauIterEnd = iter->second.end(); dauIter != dauIterEnd; ++dauIter)
-// {
-// dTempList.insert(*dauIter);
-// }
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&pTempList, "PCMParent", RED);
-// PandoraMonitoringApi::VisualizeClusters(&dTempList, "PCMDaughter", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-
         // Make Merges
         for (ClusterMergeMap::const_iterator iter = clusterMergeMap.begin(), iterEnd = clusterMergeMap.end(); iter != iterEnd; ++iter)
         {

@@ -60,16 +60,6 @@ void ThreeDBaseAlgorithm<T>::SelectInputClusters()
     std::sort(m_clusterVectorU.begin(), m_clusterVectorU.end(), LArClusterHelper::SortByNOccupiedLayers);
     std::sort(m_clusterVectorV.begin(), m_clusterVectorV.end(), LArClusterHelper::SortByNOccupiedLayers);
     std::sort(m_clusterVectorW.begin(), m_clusterVectorW.end(), LArClusterHelper::SortByNOccupiedLayers);
-
-//std::cout << "Clusters for 2D->3D matching " << std::endl;
-//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-//ClusterList clusterListU; clusterListU.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
-//PandoraMonitoringApi::VisualizeClusters(&clusterListU, "ClusterListU", RED);
-//ClusterList clusterListV; clusterListV.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
-//PandoraMonitoringApi::VisualizeClusters(&clusterListV, "ClusterListV", GREEN);
-//ClusterList clusterListW; clusterListW.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
-//PandoraMonitoringApi::VisualizeClusters(&clusterListW, "ClusterListW", BLUE);
-//PandoraMonitoringApi::ViewEvent();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

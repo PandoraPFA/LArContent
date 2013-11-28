@@ -248,33 +248,6 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
         }
     }
 
-// if (strengthType > LongitudinalAssociation::NONE)
-// {
-// std::cout << " --- ASSOCIATED --- " << std::endl;
-// ClusterList tempList1, tempList2;
-// Cluster* tempCluster1 = (Cluster*)(pClusterI);
-// Cluster* tempCluster2 = (Cluster*)(pClusterJ);
-// tempList1.insert(tempCluster1);
-// tempList2.insert(tempCluster2);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-// else 
-// {
-// std::cout << " --- NOT ASSOCIATED --- " << std::endl;
-// ClusterList tempList1, tempList2;
-// Cluster* tempCluster1 = (Cluster*)(pClusterI);
-// Cluster* tempCluster2 = (Cluster*)(pClusterJ);
-// tempList1.insert(tempCluster1);
-// tempList2.insert(tempCluster2);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-
     if (strengthType > LongitudinalAssociation::NONE)
     {
         const LongitudinalAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? LongitudinalAssociation::INNER : LongitudinalAssociation::OUTER);
@@ -371,16 +344,6 @@ bool LongitudinalExtensionAlgorithm::AreClustersAssociated(Cluster *pCluster1, C
             }
         }
     }
-
-// ClusterList tempList1, tempList2;
-// Cluster* tempCluster1 = (Cluster*)(pCluster1);
-// Cluster* tempCluster2 = (Cluster*)(pCluster2);
-// tempList1.insert(tempCluster1);
-// tempList2.insert(tempCluster2);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLACK);
-// PandoraMonitoringApi::ViewEvent();
 
     return true;
 }

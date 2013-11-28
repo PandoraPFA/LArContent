@@ -47,7 +47,6 @@ public:
     static pandora::CartesianVector MergeTwoDirections(const pandora::HitType view1, const pandora::HitType view2,
         const pandora::CartesianVector &direction1, const pandora::CartesianVector &direction2);
 
-
     /**
      *  @brief  Merge 2D positions from two views to give 2D position in third view
      *

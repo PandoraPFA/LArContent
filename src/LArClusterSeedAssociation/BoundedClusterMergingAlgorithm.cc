@@ -17,8 +17,6 @@ namespace lar
 
 StatusCode BoundedClusterMergingAlgorithm::Run()
 {
-
-    // Read in Cluster Lists
     const ClusterList *pSeedClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
 
@@ -31,7 +29,6 @@ StatusCode BoundedClusterMergingAlgorithm::Run()
     if (STATUS_CODE_NOT_INITIALIZED == statusCode)
         return STATUS_CODE_SUCCESS;
 
-    // Form Associations
     this->PrepareAssociations();
 
     for (ClusterList::const_iterator iterI = pSeedClusterList->begin(), iterEndI = pSeedClusterList->end(); iterI != iterEndI; ++iterI)
@@ -51,39 +48,8 @@ StatusCode BoundedClusterMergingAlgorithm::Run()
         }
     }
 
-    // Prepare Merges 
     this->PrepareMerges();
 
-    /*
-    ClusterList bTempList;
-    for( ClusterAssociationMap::const_iterator iter = fBadAssociations.begin(), iterEnd = fBadAssociations.end(); iter != iterEnd; ++iter ) {
-      Cluster* pCluster = iter->first;
-      bTempList.insert(const_cast<Cluster*>(pCluster));
-    }
-
-    ClusterList gTempList;
-    for( ClusterAssociationMap::const_iterator iter = fGoodAssociations.begin(), iterEnd = fGoodAssociations.end(); iter != iterEnd; ++iter ) {
-      Cluster* pCluster = iter->first;
-      gTempList.insert(const_cast<Cluster*>(pCluster));
-    }
-
-    for( ClusterMergeMap::const_iterator iter = fClusterMergeMap.begin(), iterEnd = fClusterMergeMap.end(); iter != iterEnd; ++iter ) {
-      ClusterList pTempList;
-      ClusterList dTempList;
-      pTempList.insert(const_cast<Cluster*>(iter->first));
-      for( ClusterList::const_iterator dauIter = iter->second.begin(), dauIterEnd = iter->second.end(); dauIter != dauIterEnd; ++dauIter ) {
-        dTempList.insert(const_cast<Cluster*>(*dauIter));
-      }
-
-      PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-      PandoraMonitoringApi::VisualizeClusters(&bTempList, "CBMBad", GREEN);
-      PandoraMonitoringApi::VisualizeClusters(&pTempList, "CBMParent", RED);
-      PandoraMonitoringApi::VisualizeClusters(&dTempList, "CBMDaughter", BLUE);
-      PandoraMonitoringApi::ViewEvent();
-    }
-    */
-
-    // Make Merges
     for (ClusterMergeMap::const_iterator iter = fClusterMergeMap.begin(), iterEnd = fClusterMergeMap.end(); iter != iterEnd; ++iter)
     {
         for (ClusterList::const_iterator dauIter = iter->second.begin(), dauIterEnd = iter->second.end(); dauIter != dauIterEnd; ++dauIter)
@@ -102,6 +68,7 @@ void BoundedClusterMergingAlgorithm::ConstructBoundingBox(const Cluster *seedClu
 {
     return fBoundingBox.BuildBoundingBox(seedCluster);
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 unsigned int BoundedClusterMergingAlgorithm::ApplyBoundingBox(const Cluster *candidateCluster)
@@ -155,11 +122,11 @@ void BoundedClusterMergingAlgorithm::PrepareAssociations()
 
 void BoundedClusterMergingAlgorithm::MakeAssociation(Cluster *pSeedCluster, Cluster *pCandidateCluster, unsigned int numEnds)
 {
-  if (numEnds == 0)
-    return;
+    if (numEnds == 0)
+        return;
 
-  if (numEnds == 1)
-  {
+    if (numEnds == 1)
+    {
         ClusterAssociationMap::const_iterator iter1 = fSingleAssociations.find(pCandidateCluster);
 
         if (iter1 == fSingleAssociations.end())
@@ -268,30 +235,11 @@ void BoundedClusterMergingAlgorithm::PrepareMerges()
             }
         }
     }
-
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode BoundedClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
-
-    m_vertexVetoRadius = 2.5; // cm
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "VertexVetoRadius", m_vertexVetoRadius));
-
-    m_minClusterSize = 4;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "MinClusterSize", m_minClusterSize));
-
-    return STATUS_CODE_SUCCESS;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
-  
+
 BoundedCluster::BoundedCluster(const pandora::Cluster *pCluster)
 {
   fBoxFlag = NULL;
@@ -307,6 +255,8 @@ BoundedCluster::BoundedCluster(const pandora::Cluster *pCluster)
 
   BuildBoundingBox( pCluster );
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 BoundedCluster::BoundedCluster(const BoundedCluster& rhs)
 {
@@ -332,6 +282,8 @@ BoundedCluster::BoundedCluster(const BoundedCluster& rhs)
   }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 BoundedCluster::~BoundedCluster()
 {
   if( fBoxFlag ) delete [] fBoxFlag;
@@ -340,6 +292,8 @@ BoundedCluster::~BoundedCluster()
   if( fBoxMinY ) delete [] fBoxMinY;
   if( fBoxMaxY ) delete [] fBoxMaxY;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void BoundedCluster::BuildBoundingBox(const Cluster *pCluster)
 { 
@@ -386,7 +340,7 @@ void BoundedCluster::BuildBoundingBox(const Cluster *pCluster)
     fBoxMinY[ilayer] = 0.0;
     fBoxMaxY[ilayer] = 0.0;  
   }
-   
+
   // generate bounding box
   const OrderedCaloHitList &theHitList( pCluster->GetOrderedCaloHitList() );
 
@@ -427,10 +381,10 @@ void BoundedCluster::BuildBoundingBox(const Cluster *pCluster)
       }
     }
   }
-
-  return;
 }
-     
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 unsigned int BoundedCluster::NumberOfEnclosedEnds( const Cluster* pCluster)
 {
   // sanity check
@@ -474,8 +428,27 @@ unsigned int BoundedCluster::NumberOfEnclosedEnds( const Cluster* pCluster)
      && outerY>fBoxMinY[ilayer]-m_boundingBoxWindow
      && outerY<fBoxMaxY[ilayer]+m_boundingBoxWindow ) ++numEnds;
   }
-  
+
   return numEnds;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode BoundedClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
+
+    m_vertexVetoRadius = 2.5; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "VertexVetoRadius", m_vertexVetoRadius));
+
+    m_minClusterSize = 4;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MinClusterSize", m_minClusterSize));
+
+    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar

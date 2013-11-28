@@ -33,12 +33,6 @@ bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) cons
     if ((innerLayerFit.GetRms() > m_minVertexScatteringRms) && (outerLayerFit.GetRms() > m_minVertexScatteringRms))
         return false;
 
-// Cluster* tempCluster = (Cluster*)(pCluster);
-// ClusterList tempList;
-// tempList.insert(tempCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "PossibleSplit", BLUE);
-// PandoraMonitoringApi::ViewEvent();
     return true;
 }
 
