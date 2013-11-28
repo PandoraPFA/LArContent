@@ -42,7 +42,48 @@ StatusCode BranchSplittingAlgorithm::ReplaceBranch(Cluster *const pBranchCluster
         clusterListToSaveName));
 
     // Create new clusters
+    Cluster *pPrincipalCluster(NULL), *pResidualCluster(NULL);
 
+
+    // Entire replacement cluster goes into principal cluster
+    const OrderedCaloHitList &replacementClusterCaloHitList(pReplacementCluster->GetOrderedCaloHitList());
+
+    for (OrderedCaloHitList::const_iterator iter = replacementClusterCaloHitList.begin(); iter != replacementClusterCaloHitList.end(); ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+            CaloHit *pCaloHit = *hitIter;
+
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pPrincipalCluster, pCaloHit));
+	}
+    }
+
+    // Split the branch cluster between the principal and residual cluster
+    const CartesianVector branchProjection((replacementStartPosition - branchStartPosition).GetUnitVector());
+
+    const OrderedCaloHitList &branchClusterCaloHitList(pBranchCluster->GetOrderedCaloHitList());
+
+    for (OrderedCaloHitList::const_iterator iter = branchClusterCaloHitList.begin(); iter != branchClusterCaloHitList.end(); ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+            CaloHit *pCaloHit = *hitIter;
+
+            if (branchProjection.GetDotProduct((pCaloHit->GetPositionVector() - branchStartPosition)) > 0)
+	    {
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pResidualCluster, pCaloHit));
+	    }
+            else{
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pPrincipalCluster, pCaloHit));
+	    }
+	}
+    }
+
+    //
+    // Delete pBranchCluster and pReplacementCluster
+    //
+    // Keep pPrincipalCluster and pResidualCluster
+    //
 
     // End cluster fragmentation operations
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
