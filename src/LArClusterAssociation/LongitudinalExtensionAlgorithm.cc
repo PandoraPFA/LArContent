@@ -28,7 +28,7 @@ void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *c
             continue;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < 25.f)
-	    continue;
+            continue;
 
         if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75f)
             continue;
@@ -56,8 +56,8 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const ClusterVector &
                 continue;
 
             clusterAssociationMatrix.SetOverlapResult(pClusterI,pClusterJ,NULL,
-	        this->AreClustersAssociated(pClusterI,pClusterJ,longitudinalAssociationMatrix));
-	}
+            this->AreClustersAssociated(pClusterI,pClusterJ,longitudinalAssociationMatrix));
+        }
     }
 }
 
@@ -207,15 +207,10 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
         }
     }
 
-
-    //
     // HANDLE DELTA RAYS
-    //
-
     bool m_handleDeltaRays(true);
 
-    if (m_handleDeltaRays && 
-        (clusterLengthI > 10.f) && (clusterLengthJ > 10.f))
+    if (m_handleDeltaRays && (clusterLengthI > 10.f) && (clusterLengthJ > 10.f))
     {
         // Remove 10 layers and re-calculate impact parameters
         if (strengthType < LongitudinalAssociation::STRONG)

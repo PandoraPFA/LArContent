@@ -27,7 +27,7 @@ StatusCode ClusterMergingAlgorithm::Run()
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
 
     ClusterAssociationMatrix clusterAssociationMatrix;
-    
+
     this->FillAssociationMatrix(clusterVector, clusterAssociationMatrix);
 
     ClusterMergeMap clusterMergeMap;
@@ -44,11 +44,10 @@ StatusCode ClusterMergingAlgorithm::Run()
                 continue;
 
             if (this->AreClustersAssociated(pClusterI, pClusterJ, clusterAssociationMatrix))
-	    {
+            {
                 clusterMergeMap[pClusterI].insert(pClusterJ);
                 clusterMergeMap[pClusterJ].insert(pClusterI);
-	    }
-
+            }
         }
     }
 
@@ -109,17 +108,19 @@ bool ClusterMergingAlgorithm::AreClustersAssociated(Cluster *pCluster1, Cluster 
 { 
     bool isAssociated(false);
 
-    try{
+    try
+    {
         if (!isAssociated)
-            isAssociated = clusterAssociationMatrix.GetOverlapResult(pCluster1,pCluster2,NULL);
+            isAssociated = clusterAssociationMatrix.GetOverlapResult(pCluster1, pCluster2, NULL);
     }
     catch (StatusCodeException &)
     {
     }
 
-    try{
+    try
+    {
         if (!isAssociated)
-	    isAssociated = clusterAssociationMatrix.GetOverlapResult(pCluster2,pCluster1,NULL);
+            isAssociated = clusterAssociationMatrix.GetOverlapResult(pCluster2, pCluster1, NULL);
     }
     catch (StatusCodeException &)
     {

@@ -8,9 +8,9 @@
 #ifndef LAR_GEOMETRY_HELPER_H
 #define LAR_GEOMETRY_HELPER_H 1
 
-#include "Objects/CartesianVector.h"
+#include "Api/PandoraApi.h"
 
-#include "Pandora/StatusCodes.h"
+#include "Objects/CartesianVector.h"
 
 namespace lar
 {

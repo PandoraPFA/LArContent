@@ -45,7 +45,7 @@ private:
          */
         enum VertexType
         {
-	    INNER = 1,
+            INNER = 1,
             OUTER = 2
         };
 
@@ -155,7 +155,6 @@ private:
      */
     void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, const bool useInnerI, const bool useInnerJ, LongitudinalAssociationMatrix &clusterAssociationMatrix) const;
 
-    
      /**
      *  @brief  Use association matrix to form associations between clusters
      * 

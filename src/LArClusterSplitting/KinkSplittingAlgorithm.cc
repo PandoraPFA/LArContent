@@ -49,7 +49,7 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pC
     LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
     LArClusterHelper::LArTwoDSlidingXZFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);
 
-    return twoDSlidingFitResult.FindLargestScatter(splitPosition);
+    return LArClusterHelper::FindLargestScatter(twoDSlidingFitResult, splitPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

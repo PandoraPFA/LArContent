@@ -26,7 +26,6 @@ protected:
 
     typedef std::map<pandora::Cluster*, bool> ClusterVetoMap;
     typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
-
     typedef OverlapTensor<bool> ClusterAssociationMatrix;
 
     /**
@@ -45,9 +44,7 @@ protected:
      */
     virtual void FillAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const = 0;
 
-  
 private:
-
     /**
      *  @brief  Determine whether two clusters are associated and should be merged
      * 
@@ -57,7 +54,6 @@ private:
      *
      *  @return boolean
      */
-
     bool AreClustersAssociated(pandora::Cluster *pCluster1, pandora::Cluster *pCluster2, const ClusterAssociationMatrix &clusterAssociationMatrix);
 
    /**
