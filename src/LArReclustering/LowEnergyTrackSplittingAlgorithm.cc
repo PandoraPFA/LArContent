@@ -53,10 +53,37 @@ StatusCode LowEnergyTrackSplittingAlgorithm::Run()
         Cluster *pCluster = *iter;
 
         // Store monitoring information
-        const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-        const int pdgCode(pMCParticle->GetParticleId());
-        const float trackLength(LArClusterHelper::GetLength(pCluster));
-        const float trackWidth(LArClusterHelper::LArTrackWidth(pCluster));
+        int pdgCode(-std::numeric_limits<int>::max());
+
+        try
+        {
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+            pdgCode = pMCParticle->GetParticleId();
+        }
+        catch (StatusCodeException &)
+        {
+        }
+
+        float trackLength(-std::numeric_limits<float>::max());
+
+        try
+        {
+            trackLength = LArClusterHelper::GetLength(pCluster);
+        }
+        catch (StatusCodeException &)
+        {
+        }
+
+        float trackWidth(-std::numeric_limits<float>::max());
+
+        try
+        {
+            trackWidth = LArClusterHelper::LArTrackWidth(pCluster);
+        }
+        catch (StatusCodeException &)
+        {
+        }
+
         pdgCodes.push_back(pdgCode);
         trackLengths.push_back(trackLength);
         trackWidths.push_back(trackWidth);
