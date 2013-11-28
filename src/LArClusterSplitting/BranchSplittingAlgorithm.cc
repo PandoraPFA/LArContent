@@ -32,60 +32,42 @@ StatusCode BranchSplittingAlgorithm::Run()
 StatusCode BranchSplittingAlgorithm::ReplaceBranch(Cluster *const pBranchCluster, Cluster *const pReplacementCluster,
     const CartesianVector &branchStartPosition, const CartesianVector &replacementStartPosition) const
 {
-    // Begin cluster fragmentation operations
     ClusterList clusterList;
     clusterList.insert(pBranchCluster);
     clusterList.insert(pReplacementCluster);
-    std::string clusterListToSaveName, clusterListToDeleteName;
 
+    std::string clusterListToSaveName, clusterListToDeleteName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,
         clusterListToSaveName));
 
-    // Create new clusters
-    Cluster *pPrincipalCluster(NULL), *pResidualCluster(NULL);
+    // Entire replacement cluster goes into new principal cluster
+    CaloHitList principalCaloHitList;
+    pReplacementCluster->GetOrderedCaloHitList().GetCaloHitList(principalCaloHitList);
 
+    // Distribute hits in branch cluster between new principal and residual clusters
+    CaloHitList caloHitsToDistribute;
+    pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitsToDistribute);
 
-    // Entire replacement cluster goes into principal cluster
-    const OrderedCaloHitList &replacementClusterCaloHitList(pReplacementCluster->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator iter = replacementClusterCaloHitList.begin(); iter != replacementClusterCaloHitList.end(); ++iter)
-    {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            CaloHit *pCaloHit = *hitIter;
-
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pPrincipalCluster, pCaloHit));
-	}
-    }
-
-    // Split the branch cluster between the principal and residual cluster
+    CaloHitList residualCaloHitList;
     const CartesianVector branchProjection((replacementStartPosition - branchStartPosition).GetUnitVector());
 
-    const OrderedCaloHitList &branchClusterCaloHitList(pBranchCluster->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator iter = branchClusterCaloHitList.begin(); iter != branchClusterCaloHitList.end(); ++iter)
+    for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            CaloHit *pCaloHit = *hitIter;
+        CaloHit *pCaloHit = *iter;
 
-            if (branchProjection.GetDotProduct((pCaloHit->GetPositionVector() - branchStartPosition)) > 0)
-	    {
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pResidualCluster, pCaloHit));
-	    }
-            else{
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pPrincipalCluster, pCaloHit));
-	    }
-	}
+        if (branchProjection.GetDotProduct((pCaloHit->GetPositionVector() - branchStartPosition)) > 0)
+        {
+            residualCaloHitList.insert(pCaloHit);
+        }
+        else
+        {
+            principalCaloHitList.insert(pCaloHit);
+        }
     }
 
-    //
-    // Delete pBranchCluster and pReplacementCluster
-    //
-    // Keep pPrincipalCluster and pResidualCluster
-    //
-
-    // End cluster fragmentation operations
+    Cluster *pPrincipalCluster(NULL), *pResidualCluster(NULL);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &principalCaloHitList, pPrincipalCluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &residualCaloHitList, pResidualCluster));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
 
     return STATUS_CODE_SUCCESS;
