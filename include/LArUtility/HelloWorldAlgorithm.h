@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArUtility/HelloWorldAlgorithm.h
  * 
- *  @brief  Header file for the hello world algorithm
+ *  @brief  Header file for the hello world algorithm class.
  * 
  *  $Log: $
  */

@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArUtility/TwoDPreparationAlgorithm.h
+ *  @file   LArContent/include/LArUtility/ListChangingAlgorithm.h
  * 
- *  @brief  Header file for the two dimensional preparation algorithm class.
+ *  @brief  Header file for the list changing algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_TWO_D_PREPARATION_ALGORITHM_H
-#define LAR_TWO_D_PREPARATION_ALGORITHM_H 1
+#ifndef LAR_LIST_CHANGING_ALGORITHM_H
+#define LAR_LIST_CHANGING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  TwoDPreparationAlgorithm::Algorithm class
+ *  @brief  ListChangingAlgorithm::Algorithm class
  */
-class TwoDPreparationAlgorithm : public pandora::Algorithm
+class ListChangingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -32,18 +32,18 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_clusterListName;  ///< The cluster list name to set as the current cluster list
     std::string     m_caloHitListName;  ///< The calo hit list name to set as the current calo hit list
+    std::string     m_clusterListName;  ///< The cluster list name to set as the current cluster list
     std::string     m_vertexName;       ///< The vertex name to set as the current vertex
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *TwoDPreparationAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ListChangingAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new TwoDPreparationAlgorithm();
+    return new ListChangingAlgorithm();
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_TWO_D_PREPARATION_ALGORITHM_H
+#endif // #ifndef LAR_LIST_CHANGING_ALGORITHM_H

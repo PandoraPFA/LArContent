@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/EventPreparationAlgorithm.cc
+ *  @file   LArContent/src/LArUtility/ListPreparationAlgorithm.cc
  * 
  *  @brief  Implementation of the event preparation algorithm class.
  * 
@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/EventPreparationAlgorithm.h"
+#include "LArUtility/ListPreparationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode EventPreparationAlgorithm::Run()
+StatusCode ListPreparationAlgorithm::Run()
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, this->ProcessMCParticles());
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, this->ProcessCaloHits());
@@ -25,7 +25,7 @@ StatusCode EventPreparationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode EventPreparationAlgorithm::ProcessMCParticles()
+StatusCode ListPreparationAlgorithm::ProcessMCParticles()
 {
     // Split input MC particles into different views
     const MCParticleList *pMCParticleList = NULL;
@@ -82,7 +82,7 @@ StatusCode EventPreparationAlgorithm::ProcessMCParticles()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode EventPreparationAlgorithm::ProcessCaloHits()
+StatusCode ListPreparationAlgorithm::ProcessCaloHits()
 {
     // Split input calo hit list into different views
     const CaloHitList *pCaloHitList = NULL;
@@ -149,7 +149,7 @@ StatusCode EventPreparationAlgorithm::ProcessCaloHits()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode EventPreparationAlgorithm::FinalizeHitList(const CaloHitList &originalList, CaloHitList &finalList) const
+StatusCode ListPreparationAlgorithm::FinalizeHitList(const CaloHitList &originalList, CaloHitList &finalList) const
 {
     if (originalList.empty())
         return STATUS_CODE_SUCCESS;
@@ -188,7 +188,7 @@ StatusCode EventPreparationAlgorithm::FinalizeHitList(const CaloHitList &origina
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode EventPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ListPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_mipEquivalentCut = 0.25f; // mips
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

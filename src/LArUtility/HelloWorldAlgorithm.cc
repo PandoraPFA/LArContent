@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/LArUtility/HelloWorldAlgorithm.cc
  * 
- *  @brief  Implementation of the list merging algorithm class.
+ *  @brief  Implementation of the hello world algorithm class.
  * 
  *  $Log: $
  */

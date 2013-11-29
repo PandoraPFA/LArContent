@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArUtility/EventPreparationAlgorithm.h
+ *  @file   LArContent/include/LArUtility/ListPreparationAlgorithm.h
  * 
- *  @brief  Header file for the event preparation algorithm class.
+ *  @brief  Header file for the list preparation algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_EVENT_PREPARATION_ALGORITHM_H
-#define LAR_EVENT_PREPARATION_ALGORITHM_H 1
+#ifndef LAR_LIST_PREPARATION_ALGORITHM_H
+#define LAR_LIST_PREPARATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  EventPreparationAlgorithm class
+ *  @brief  ListPreparationAlgorithm class
  */
-class EventPreparationAlgorithm : public pandora::Algorithm
+class ListPreparationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -68,11 +68,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *EventPreparationAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ListPreparationAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new EventPreparationAlgorithm();
+    return new ListPreparationAlgorithm();
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_EVENT_PREPARATION_ALGORITHM_H
+#endif // #ifndef LAR_LIST_PREPARATION_ALGORITHM_H

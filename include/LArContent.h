@@ -40,11 +40,10 @@
 #include "LArTwoDSeed/SeedRelegationAlgorithm.h"
 #include "LArTwoDSeed/VertexSeedFindingAlgorithm.h"
 #include "LArTwoDSeed/TwoDParticleCreationAlgorithm.h"
-#include "LArUtility/EventPreparationAlgorithm.h"
 #include "LArUtility/HelloWorldAlgorithm.h"
+#include "LArUtility/ListChangingAlgorithm.h"
 #include "LArUtility/ListMergingAlgorithm.h"
-#include "LArUtility/TwoDPreparationAlgorithm.h"
-#include "LArUtility/ThreeDPreparationAlgorithm.h"
+#include "LArUtility/ListPreparationAlgorithm.h"
 #include "LArVertex/VertexFindingAlgorithm.h"
 
 #include "LArHelpers/LArClusterHelper.h"
@@ -96,11 +95,10 @@ public:
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
-        d("LArEventPreparation",                    lar::EventPreparationAlgorithm::Factory)                                    \
         d("LArHelloWorld",                          lar::HelloWorldAlgorithm::Factory)                                          \
+        d("LArListChanging",                        lar::ListChangingAlgorithm::Factory)                                        \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
-        d("LArTwoDPreparation",                     lar::TwoDPreparationAlgorithm::Factory)                                     \
-        d("LArThreeDPreparation",                   lar::ThreeDPreparationAlgorithm::Factory)                                   \
+        d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)                                     \
         d("LArVertexFinding",                       lar::VertexFindingAlgorithm::Factory)                                       \
         d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)
 
