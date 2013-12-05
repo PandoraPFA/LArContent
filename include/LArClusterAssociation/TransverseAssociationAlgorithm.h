@@ -96,58 +96,28 @@ private:
     };
 
     typedef std::vector<LArTransverseCluster*> TransverseClusterList;
+    typedef std::map<pandora::Cluster*, LArTransverseCluster*> TransverseClusterMap;
     typedef std::map<pandora::Cluster*, pandora::ClusterList> LArClusterMergeMap;
 
     /**
-     *  @brief  Separate transverse and longitudinal clusters, transverse clusters are either short or not longitudinal
+     *  @brief  Select building blocks for new transverse clusters
      * 
      *  @param  inputClusters input vector of clusters
-     *  @param  transverseClusters output vector of transverse or small clusters (small clusters are used to build new transverse clusters)
-     *  @param  longitudinalClusters output vector of longitudinal and large clusters
+     *  @param  transverseClusters output vector of building blocks for transverse clusters
+     *  @param  longitudinalClusters output vector of established longitudinal clusters
      */
-    void GetTransverseClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &transverseClusters,
+    void SeparateInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &transverseClusters, 
         pandora::ClusterVector &longitudinalClusters) const;
 
     /**
-     *  @brief  Separate transverse clusters into seed and non-seed types, seed clusters are not already associated with a longitudinal cluster
-     * 
-     *  @param  transverseClusters input vector of selected transverse clusters
-     *  @param  longitudinalClusters input vector of selected longitudinal clusters
-     *  @param  seedClusters output vector of transverse clusters selected as clean clusters
-     *  @param  nonSeedClusters output vector of transverse clusters not selected as clean clusters
-     */
-    void GetSeedClusters(const pandora::ClusterVector &transverseClusters, const pandora::ClusterVector &longitudinalClusters,
-        pandora::ClusterVector &seedClusters, pandora::ClusterVector &nonSeedClusters) const;
-
-    /**
-     *  @brief  Use seed clusters to create transverse cluster objects, these are protoclusters with a direction and inner/outer vertices
+     *  @brief  Create transverse cluster objects, these are protoclusters with a direction and inner/outer vertices
      *
-     *  @param  seedClusters input vector of clean transverse clusters
-     *  @param  transverseClusters input vector of all transverse clusters
-     *  @param  transverseClusterVector the output vector of transverse cluster objects
+     *  @param  transverseClusters vector of building blocks for transverse clusters
+     *  @param  longitudinalClusters vector of established longitudinal clusters
+     *  @param  transverseClusterList output list of transverse cluster objects
      */
-    void FillTransverseClusterList(const pandora::ClusterVector &seedClusters, const pandora::ClusterVector &transverseClusters,
+    void FillTransverseClusterList(const pandora::ClusterVector &transverseClusters, const pandora::ClusterVector &longitudinalClusters,
         TransverseClusterList &transverseClusterList) const;
-
-    /**
-     *  @brief  Find the clusters that are transversely associated with a target cluster
-     * 
-     *  @param  pCluster the target cluster
-     *  @param  inputClusters input vector of clean clusters for this event
-     *  @param  outputClusters output vector of clusters transversely associated with target cluster
-     */
-    void GetTransverseAssociatedClusters(pandora::Cluster *const pCluster, const pandora::ClusterVector &inputClusters,
-        pandora::ClusterVector &outputClusters) const;
-
-    /**
-     *  @brief  Define whether clusters are transversely associated
-     *
-     *  @param  pCluster1 the first cluster
-     *  @param  pCluster2 the second cluster
-     *
-     *  @return boolean
-     */
-    bool IsTransverseAssociated(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     /**
      *  @brief  Use transverse cluster objects to define forward/backward associations
@@ -160,13 +130,34 @@ private:
         LArClusterMergeMap &backwardMergeMap) const;
 
     /**
-     *  @brief  Get minimum and maximum X coordinates for a given cluster
+     *  @brief  Use cluster merge maps to fill the final cluster association map
      *
-     *  @param  pCluster the input cluster
-     *  @param  minX the minimum X position
-     *  @param  maxX the maximum X position
+     *  @param  forwardMergeMap
+     *  @param  backwardMergeMap
+     *  @param  clusterAssociationMap output map of forward/backward associations
      */
-    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, float &minX, float &maxX) const;
+    void FillClusterAssociationMap(LArClusterMergeMap &forwardMergeMap, LArClusterMergeMap &backwardMergeMap,
+        ClusterAssociationMap &clusterAssociationMap) const;
+
+    /**
+     *  @brief  Find the clusters that are transversely associated with a target cluster
+     * 
+     *  @param  pCluster the target cluster
+     *  @param  inputClusters input vector of clean clusters for this event
+     *  @param  outputClusters output vector of clusters transversely associated with target cluster
+     */
+    void GetAssociatedClusters(pandora::Cluster *const pCluster, const pandora::ClusterVector &transverseClusters,
+        const pandora::ClusterVector &longitudinalClusters, pandora::ClusterVector &associatedClusters) const;
+
+    /**
+     *  @brief  Define whether clusters are transversely associated
+     *
+     *  @param  pCluster1 the first cluster
+     *  @param  pCluster2 the second cluster
+     *
+     *  @return boolean
+     */
+    bool IsTransverseAssociated(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     /**
      *  @brief  Define whether two transverse cluster objects are associated
@@ -181,7 +172,7 @@ private:
     /**
      *  @brief  Define whether a transverse cluster object is associated with the vertex position of a second transverse cluster object
      *
-     *  @param  theCluster the target cluster
+     *  @param  pTransverseCluster the target cluster
      *  @param  theVertex the vertex position
      *
      *  @return boolean
@@ -189,23 +180,59 @@ private:
     bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const pandora::CartesianVector &theVertex) const;
 
     /**
-     *  @brief  Use cluster merge maps to fill the final cluster association map
+     *  @brief  Calculate the overall span in X for a set of clusters
      *
-     *  @param  forwardMergeMap
-     *  @param  backwardMergeMap
-     *  @param  clusterAssociationMap output map of forward/backward associations
+     *  @param  pCluster the target cluster
+     *  @param  associatedClusters the vector of associated clusters
+     *
+     *  @return float
      */
-    void FillClusterAssociationMap(LArClusterMergeMap &forwardMergeMap, LArClusterMergeMap &backwardMergeMap,
-        ClusterAssociationMap &clusterAssociationMap) const;
+    float GetTransverseLength(const pandora::Cluster *const pCluster, const pandora::ClusterVector &associatedClusters) const;
 
     /**
-     *  @brief  Prune associations from the cluster association map
-     * 
-     *  @param  clusterAssociationMap the cluster association map
+     *  @brief  Get minimum and maximum X or Z coordinates for a given cluster
+     *
+     *  @param  pCluster the input cluster
+     *  @param  useX calculate extermal coordinates for X (rather than Z)
+     *  @param  minXZ the minimum X or Z position
+     *  @param  maxXZ the maximum X or Z position
      */
-    void PruneAssociations(ClusterAssociationMap &clusterAssociationMap) const;
+    void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, const bool useX, float &minXZ, float &maxXZ) const; 
 
-    unsigned int   m_clusterCaloHits;               ///< 
+    /**
+     *  @brief  Get minimum and maximum X coordinates for a given cluster
+     *
+     *  @param  pCluster the input cluster
+     *  @param  minX the minimum X position
+     *  @param  maxX the maximum X position
+     */
+    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, float &minX, float &maxX) const; 
+
+    /**
+     *  @brief  Get minimum and maximum Z coordinates for a given cluster
+     *
+     *  @param  pCluster the input cluster
+     *  @param  minZ the minimum Z position
+     *  @param  maxZ the maximum Z position
+     */
+    void GetExtremalCoordinatesZ(const pandora::Cluster *const pCluster, float &minZ, float &maxZ) const;  
+
+    /**
+     *  @brief  Get projected X coordinate of a cluster for a given Z coordinate
+     *
+     *  @param  pCluster the input cluster
+     *  @param  inputZ the inputted Z position
+     *  @param  outputZ the outputted Z projection
+     */
+    void GetProjectedCoordinateX(const pandora::Cluster *const pCluster, const float &inputZ, float &outputX) const;  
+
+  
+
+  
+
+
+    
+
 
     float          m_clusterWindow;                 ///< 
     float          m_clusterAngle;                  ///< 
@@ -214,10 +241,13 @@ private:
 
     float          m_minCosRelativeAngle;           ///< 
     float          m_maxTransverseSeparation;       ///< 
-    float          m_maxLongitudinalSeparation;     ///< 
 
-    float          m_minTransverseLength;           ///< 
-    unsigned int   m_minTransverseLayers;           ///< 
+    float          m_minTransverseDisplacement;     ///< 
+    float          m_maxLongitudinalDisplacement;   ///< 
+
+    float          m_transverseClusterMaxCaloHits;  ///< 
+    float          m_transverseClusterMaxLength;    ///< 
+    float          m_longitudinalClusterMinLength;  ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
