@@ -183,6 +183,8 @@ private:
 
     std::string             m_inputCaloHitListName;         ///< The input calo hit list name
     std::string             m_outputClusterListName;        ///< The output cluster list name
+
+    unsigned int            m_maxGapLayers;                 ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

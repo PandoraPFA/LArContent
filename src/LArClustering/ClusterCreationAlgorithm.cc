@@ -45,9 +45,9 @@ void ClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHitList 
     {
         unsigned int nLayersConsidered(0);
 
-        for (OrderedCaloHitList::const_iterator iterJ = iterI, iterJEnd = orderedCaloHitList.end(); (nLayersConsidered++ < 3) && (iterJ != iterJEnd); ++iterJ)
+        for (OrderedCaloHitList::const_iterator iterJ = iterI, iterJEnd = orderedCaloHitList.end(); (nLayersConsidered++ <= m_maxGapLayers + 1) && (iterJ != iterJEnd); ++iterJ)
         {
-            if (iterI->first == iterJ->first)
+            if (iterJ->first == iterI->first || iterJ->first > iterI->first + m_maxGapLayers + 1)
                 continue;
 
             for (CaloHitList::const_iterator hitIterI = iterI->second->begin(), hitIterIEnd = iterI->second->end(); hitIterI != hitIterIEnd; ++hitIterI)
@@ -289,7 +289,11 @@ StatusCode ClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputClusterListName", m_outputClusterListName));
 
-    float maxSeparation = 2.7f; // cm
+    m_maxGapLayers = 2;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxGapLayers", m_maxGapLayers));
+
+    float maxSeparation = 1.3f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSeparation", maxSeparation));
     HitAssociation::m_maxSeparationSquared = maxSeparation * maxSeparation;
