@@ -103,11 +103,12 @@ private:
      *  @brief  Select building blocks for new transverse clusters
      * 
      *  @param  inputClusters input vector of clusters
-     *  @param  transverseClusters output vector of building blocks for transverse clusters
-     *  @param  longitudinalClusters output vector of established longitudinal clusters
+     *  @param  shortClusters output vector 
+     *  @param  mediumClusters output vector 
+     *  @param  longClusters output vector 
      */
-    void SeparateInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &transverseClusters, 
-        pandora::ClusterVector &longitudinalClusters) const;
+    void SortInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &shortClusters, 
+        pandora::ClusterVector &mediumClusters, pandora::ClusterVector &longClusters) const;
 
     /**
      *  @brief  Create transverse cluster objects, these are protoclusters with a direction and inner/outer vertices
@@ -116,28 +117,16 @@ private:
      *  @param  longitudinalClusters vector of established longitudinal clusters
      *  @param  transverseClusterList output list of transverse cluster objects
      */
-    void FillTransverseClusterList(const pandora::ClusterVector &transverseClusters, const pandora::ClusterVector &longitudinalClusters,
-        TransverseClusterList &transverseClusterList) const;
+    void FillTransverseClusterList(const pandora::ClusterVector &inputClusters, const pandora::ClusterVector &transverseClusters, 
+        const pandora::ClusterVector &longitudinalClusters, TransverseClusterList &transverseClusterList) const;
 
     /**
-     *  @brief  Use transverse cluster objects to define forward/backward associations
+     *  @brief  Use transverse cluster objects to fill cluster association map
      *
      *  @param  transverseClusterList input list of transverse cluster objects 
-     *  @param  forwardMergeMap
-     *  @param  backwardMergeMap
-     */
-    void FillClusterMergeMaps(const TransverseClusterList &transverseClusterList, LArClusterMergeMap &forwardMergeMap,
-        LArClusterMergeMap &backwardMergeMap) const;
-
-    /**
-     *  @brief  Use cluster merge maps to fill the final cluster association map
-     *
-     *  @param  forwardMergeMap
-     *  @param  backwardMergeMap
      *  @param  clusterAssociationMap output map of forward/backward associations
      */
-    void FillClusterAssociationMap(LArClusterMergeMap &forwardMergeMap, LArClusterMergeMap &backwardMergeMap,
-        ClusterAssociationMap &clusterAssociationMap) const;
+    void FillClusterAssociationMap(const TransverseClusterList &transverseClusterList, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Find the clusters that are transversely associated with a target cluster
@@ -180,14 +169,26 @@ private:
     bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const pandora::CartesianVector &theVertex) const;
 
     /**
+     *  @brief  Calculate the overall span in X for a clusters
+     *
+     *  @param  pCluster the target cluster
+     */
+    float GetTransverseSpan(const pandora::Cluster *const pCluster) const;
+
+    /**
+     *  @brief  Calculate the overall span in Z for a clusters
+     *
+     *  @param  pCluster the target cluster
+     */
+    float GetLongitudinalSpan(const pandora::Cluster *const pCluster) const;
+
+    /**
      *  @brief  Calculate the overall span in X for a set of clusters
      *
      *  @param  pCluster the target cluster
      *  @param  associatedClusters the vector of associated clusters
-     *
-     *  @return float
      */
-    float GetTransverseLength(const pandora::Cluster *const pCluster, const pandora::ClusterVector &associatedClusters) const;
+    float GetTransverseSpan(const pandora::Cluster *const pCluster, const pandora::ClusterVector &associatedClusters) const;
 
     /**
      *  @brief  Get minimum and maximum X or Z coordinates for a given cluster
@@ -231,9 +232,6 @@ private:
   
 
 
-    
-
-
     float          m_clusterWindow;                 ///< 
     float          m_clusterAngle;                  ///< 
     float          m_clusterCosAngle;               ///< 
@@ -245,9 +243,10 @@ private:
     float          m_minTransverseDisplacement;     ///< 
     float          m_maxLongitudinalDisplacement;   ///< 
 
-    float          m_transverseClusterMaxCaloHits;  ///< 
-    float          m_transverseClusterMaxLength;    ///< 
-    float          m_longitudinalClusterMinLength;  ///< 
+   
+
+    float          m_firstLengthCut;
+    float          m_secondLengthCut;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
