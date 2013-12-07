@@ -22,16 +22,135 @@ StatusCode ClusterCreationAlgorithm::Run()
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList));
 
-    OrderedCaloHitList orderedCaloHitList;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(*pCaloHitList));
+    OrderedCaloHitList orderedCaloHitList, rejectedCaloHitList;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FilterCaloHits(pCaloHitList, orderedCaloHitList, rejectedCaloHitList));
 
     HitAssociationMap forwardHitAssociationMap, backwardHitAssociationMap;
     this->MakePrimaryAssociations(orderedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap);
     this->MakeSecondaryAssociations(orderedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap);
 
     HitJoinMap hitJoinMap;
+    HitToClusterMap hitToClusterMap;
     this->IdentifyJoins(orderedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap, hitJoinMap);
-    this->CreateClusters(orderedCaloHitList, hitJoinMap);
+    this->CreateClusters(orderedCaloHitList, hitJoinMap, hitToClusterMap);
+
+    if( !m_mergeBackFilteredHits )
+        this->CreateClusters(rejectedCaloHitList, hitJoinMap, hitToClusterMap);
+    
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddFilteredCaloHits(orderedCaloHitList, rejectedCaloHitList, hitToClusterMap));
+    
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitList, OrderedCaloHitList &orderedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
+{
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(*pCaloHitList));
+    
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        CaloHitList *pLayerHitList = iter->second;
+
+        for (CaloHitList::const_iterator iterI = pLayerHitList->begin(), iterIEnd = pLayerHitList->end(); iterI != iterIEnd; ++iterI)
+        {
+            CaloHit *pCaloHitI = *iterI;
+            bool useCaloHit(true);
+
+            for (CaloHitList::const_iterator iterJ = pLayerHitList->begin(), iterJEnd = pLayerHitList->end(); iterJ != iterJEnd; ++iterJ)
+            {
+                CaloHit *pCaloHitJ = *iterJ;
+
+                if ((pCaloHitI->GetMipEquivalentEnergy() < pCaloHitJ->GetMipEquivalentEnergy()) &&
+                    ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_minCaloHitSeparationSquared))
+                {
+                    useCaloHit = false;
+                    break;
+                }
+            }
+
+            if (!useCaloHit)
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, rejectedCaloHitList.Add(pCaloHitI));
+        }
+    }
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Remove(rejectedCaloHitList));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &orderedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const
+{
+    for (OrderedCaloHitList::const_iterator iter = rejectedCaloHitList.begin(), iterEnd = rejectedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        CaloHitList* pCaloHitList = NULL;       
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.GetCaloHitsInPseudoLayer(iter->first, pCaloHitList));
+        
+        CaloHitList currentAvailableHits(iter->second->begin(), iter->second->end());
+        CaloHitList currentClusteredHits(pCaloHitList->begin(), pCaloHitList->end());
+      
+        bool carryOn(true);
+ 
+        while (carryOn)  
+	{
+	    carryOn = false;
+ 
+            CaloHitList newClusteredHits;
+
+            for (CaloHitList::const_iterator hitIterI = currentAvailableHits.begin(), hitIterIEnd = currentAvailableHits.end(); hitIterI != hitIterIEnd; ++hitIterI)
+            {
+                CaloHit *pCaloHitI = *hitIterI;
+
+                if (hitToClusterMap.end() != hitToClusterMap.find(pCaloHitI))
+	            continue;
+
+                CaloHit *pClosestHit = NULL;
+
+                float closestSeparationSquared(m_minCaloHitSeparationSquared);
+
+                for (CaloHitList::const_iterator hitIterJ = currentClusteredHits.begin(), hitIterJEnd = currentClusteredHits.end(); hitIterJ != hitIterJEnd; ++hitIterJ)
+	        {
+                    CaloHit *pCaloHitJ = *hitIterJ;
+
+                    if (pCaloHitI->GetMipEquivalentEnergy() > pCaloHitJ->GetMipEquivalentEnergy())
+		        continue;
+
+                    const float separationSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
+
+                    if (separationSquared < closestSeparationSquared)
+		    {
+                        closestSeparationSquared = separationSquared;
+                        pClosestHit = pCaloHitJ;
+		    }
+	        }
+
+                if (!pClosestHit)
+		    continue;
+
+                HitToClusterMap::const_iterator mapIter = hitToClusterMap.find(pClosestHit);
+
+                if (hitToClusterMap.end() == mapIter)
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+           
+                Cluster* pCluster = mapIter->second;
+            
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pCluster, pCaloHitI));
+                hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
+
+                newClusteredHits.insert(pCaloHitI);
+                carryOn = true;
+	    }
+
+            for (CaloHitList::const_iterator hitIter = newClusteredHits.begin(), hitIterEnd = newClusteredHits.end(); hitIter != hitIterEnd; ++hitIter)
+	    {
+                currentClusteredHits.insert(*hitIter);
+	        currentAvailableHits.erase(*hitIter);
+	    }
+	}
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -120,10 +239,8 @@ void ClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orderedCa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap) const
+void ClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap, HitToClusterMap& hitToClusterMap) const
 {
-    HitToClusterMap hitToClusterMap;
-
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
@@ -289,6 +406,10 @@ StatusCode ClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputClusterListName", m_outputClusterListName));
 
+    m_mergeBackFilteredHits = true;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MergeBackFilteredHits", m_mergeBackFilteredHits));
+
     m_maxGapLayers = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGapLayers", m_maxGapLayers));
@@ -302,6 +423,11 @@ StatusCode ClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CloseSeparation", closeSeparation));
     HitAssociation::m_closeSeparationSquared = closeSeparation * closeSeparation;
+
+    float minCaloHitSeparation = 0.4f; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCaloHitSeparation", minCaloHitSeparation));
+    m_minCaloHitSeparationSquared = minCaloHitSeparation * minCaloHitSeparation;
 
     return STATUS_CODE_SUCCESS;
 }

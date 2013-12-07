@@ -97,6 +97,24 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
+     *  @brief  Filter out low pulse height hits in close proximity to high pulse height hits 
+     * 
+     *  @param  pCaloHitList input hit list
+     *  @param  orderedCaloHitList the output ordered list of selected hits
+     *  @param  orderedCaloHitList the output ordered list of rejected hits
+     */
+    pandora::StatusCode FilterCaloHits(const  pandora::CaloHitList *pCaloHitList, pandora::OrderedCaloHitList &orderedCaloHitList, pandora::OrderedCaloHitList& rejectedCaloHitList) const;
+
+    /**
+     *  @brief  Merge previously filtered hits back into their associated clusters
+     * 
+     *  @param  orderedCaloHitList the ordered list of selected hits
+     *  @param  orderedCaloHitList the ordered list of rejected hits 
+     *  @param  hitToClusterMap the mapping between hits and their clusters
+     */
+    pandora::StatusCode AddFilteredCaloHits(const pandora::OrderedCaloHitList &orderedCaloHitList, const pandora::OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const;
+
+    /**
      *  @brief  Control primary association formation
      * 
      *  @param  orderedCaloHitList the ordered calo hit list
@@ -132,8 +150,9 @@ private:
      * 
      *  @param  orderedCaloHitList the ordered calo hit list
      *  @param  hitJoinMap the hit join map
+     *  @param  hitToClusterMap the mapping between hits and their clusters
      */
-    void CreateClusters(const pandora::OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap) const;
+    void CreateClusters(const pandora::OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap, HitToClusterMap& hitToClusterMap) const;
 
     /**
      *  @brief  Create primary association if appropriate, hitI<->hitJ
@@ -181,10 +200,12 @@ private:
     pandora::CaloHit *TraceHitAssociation(pandora::CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ,
         unsigned int &nSteps) const;
 
-    std::string             m_inputCaloHitListName;         ///< The input calo hit list name
-    std::string             m_outputClusterListName;        ///< The output cluster list name
+    std::string          m_inputCaloHitListName;         ///< The input calo hit list name
+    std::string          m_outputClusterListName;        ///< The output cluster list name
 
-    unsigned int            m_maxGapLayers;                 ///< 
+    bool                 m_mergeBackFilteredHits;        ///< Merge rejected hits into their associated clusters
+    unsigned int         m_maxGapLayers;                 ///< Maximum number of layers for a gap 
+    float                m_minCaloHitSeparationSquared;  ///< Square of minimum calo hit separation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
