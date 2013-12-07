@@ -103,9 +103,9 @@ private:
      *  @brief  Select building blocks for new transverse clusters
      * 
      *  @param  inputClusters input vector of clusters
-     *  @param  shortClusters output vector 
-     *  @param  mediumClusters output vector 
-     *  @param  longClusters output vector 
+     *  @param  shortClusters output vector of short clusters (below first length cut)
+     *  @param  mediumClusters output vector of short cluster (below second length cut) with transverse directions
+     *  @param  longClusters output vector of all other clusters
      */
     void SortInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &shortClusters, 
         pandora::ClusterVector &mediumClusters, pandora::ClusterVector &longClusters) const;
@@ -229,9 +229,6 @@ private:
 
   
 
-  
-
-
     float          m_clusterWindow;                 ///< 
     float          m_clusterAngle;                  ///< 
     float          m_clusterCosAngle;               ///< 
@@ -243,10 +240,8 @@ private:
     float          m_minTransverseDisplacement;     ///< 
     float          m_maxLongitudinalDisplacement;   ///< 
 
-   
-
-    float          m_firstLengthCut;
-    float          m_secondLengthCut;
+    float          m_firstLengthCut;                ///< 
+    float          m_secondLengthCut;               ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
