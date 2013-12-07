@@ -22,13 +22,12 @@ using namespace pandora;
 namespace lar
 {
 
-LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, const bool useInnerVertex, const unsigned int nLayersToSkip) :
+LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, const bool useInnerVertex) :
     m_pCluster(pCluster),
     m_position(0.f, 0.f, 0.f),
     m_direction(0.f, 0.f, 0.f),
     m_rms(std::numeric_limits<float>::max()),
-    m_isInner(useInnerVertex),
-    m_nSkippedLayers(nLayersToSkip)
+    m_isInner(useInnerVertex)
 {
     LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
     LArClusterHelper::LArTwoDSlidingFit(pCluster, 10, slidingFitResult);
@@ -36,8 +35,8 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
     const float minLayerZ(slidingFitResult.GetGlobalMinLayerPosition().GetZ());
     const float maxLayerZ(slidingFitResult.GetGlobalMaxLayerPosition().GetZ());
 
-    const int minLayer(std::min(slidingFitResult.GetMinLayer() + static_cast<int>(nLayersToSkip), slidingFitResult.GetMaxLayer()));
-    const int maxLayer(std::max(slidingFitResult.GetMinLayer(), slidingFitResult.GetMaxLayer() - static_cast<int>(nLayersToSkip)));
+    const int minLayer(slidingFitResult.GetMinLayer());
+    const int maxLayer(slidingFitResult.GetMaxLayer());
 
     const int innerLayer((minLayerZ < maxLayerZ) ? minLayer : maxLayer);
     const int outerLayer((minLayerZ < maxLayerZ) ? maxLayer : minLayer);

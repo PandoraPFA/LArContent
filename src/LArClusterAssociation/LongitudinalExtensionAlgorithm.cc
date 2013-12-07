@@ -24,9 +24,6 @@ void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *c
     {
         Cluster *pCluster = *iter;
 
-        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < 5)
-            continue;
-
         if (LArClusterHelper::GetLengthSquared(pCluster) < 25.f)
             continue;
 
@@ -200,47 +197,6 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
                 (rL1 > -5.f && rL1 < +15.f && rL1 + clusterLengthJ > +15.f) && 
                 (rL2 > -5.f && rL2 < +15.f && rL2 + clusterLengthI > +15.f) && 
                 (rT1 < 2.f * m_spatialResolution) && (rT2 < 2.f * m_spatialResolution))
-            {
-                associationType = LongitudinalAssociation::EMISSION;
-                strengthType = LongitudinalAssociation::STRONG;
-            }
-        }
-    }
-
-    // HANDLE DELTA RAYS
-    bool m_handleDeltaRays(true);
-
-    if (m_handleDeltaRays && (clusterLengthI > 10.f) && (clusterLengthJ > 10.f))
-    {
-        // Remove 10 layers and re-calculate impact parameters
-        if (strengthType < LongitudinalAssociation::STRONG)
-        {
-            const LArPointingCluster::Vertex truncatedVertexI(targetVertexI.GetCluster(), targetVertexI.IsInnerVertex(), 10);
-            const float cosTheta(-truncatedVertexI.GetDirection().GetDotProduct(vertexDirectionJ));
-
-            float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-            LArVertexHelper::GetImpactParameters(truncatedVertexI.GetPosition(), truncatedVertexI.GetDirection(), vertexPositionJ, rL1, rT1);
-            LArVertexHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, truncatedVertexI.GetPosition(), rL2, rT2);
-
-            if ((cosTheta > 0.985f) && (truncatedVertexI.GetRms() < 0.5f) && (std::fabs(rL1) < 10.f) && (std::fabs(rL2) < 10.f) &&
-                (rT1 < m_spatialResolution) && (rT2 < m_spatialResolution))
-            {
-                associationType = LongitudinalAssociation::EMISSION;
-                strengthType = LongitudinalAssociation::STRONG;
-            }
-        }
-
-        if (strengthType < LongitudinalAssociation::STRONG)
-        {
-            const LArPointingCluster::Vertex truncatedVertexJ(targetVertexJ.GetCluster(), targetVertexJ.IsInnerVertex(), 10);
-            const float cosTheta(-truncatedVertexJ.GetDirection().GetDotProduct(vertexDirectionI));
-
-            float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-            LArVertexHelper::GetImpactParameters(truncatedVertexJ.GetPosition(), truncatedVertexJ.GetDirection(), vertexPositionI, rL1, rT1);
-            LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, truncatedVertexJ.GetPosition(), rL2, rT2);
-
-            if ((cosTheta > 0.985f) && (truncatedVertexJ.GetRms() < 0.5f) && (std::fabs(rL1) < 10.f) && (std::fabs(rL2) < 10.f) &&
-                (rT1 < m_spatialResolution) && (rT2 < m_spatialResolution))
             {
                 associationType = LongitudinalAssociation::EMISSION;
                 strengthType = LongitudinalAssociation::STRONG;

@@ -30,9 +30,8 @@ public:
          * 
          *  @param  pCluster address of the cluster
          *  @param  useInnerVertex whether to use cluster inner or outer vertex
-         *  @param  nLayersToSkip the number of layers to skip
          */
-        Vertex(pandora::Cluster *const pCluster, const bool useInnerVertex, const unsigned int nLayersToSkip);
+        Vertex(pandora::Cluster *const pCluster, const bool useInnerVertex);
 
         /**
          *  @brief  Get the address of the cluster
@@ -69,20 +68,12 @@ public:
          */
         bool IsInnerVertex() const;
 
-        /**
-         *  @brief  Get the number of skipped layers
-         * 
-         *  @return the number of skipped layers
-         */
-        unsigned int GetNSkippedLayers() const;
-
     private:
         pandora::Cluster           *m_pCluster;             ///< The address of the cluster
         pandora::CartesianVector    m_position;             ///< The vertex position
         pandora::CartesianVector    m_direction;            ///< The vertex direction
         float                       m_rms;                  ///< rms from vertex fit
         bool                        m_isInner;              ///< The inner vertex
-        unsigned int                m_nSkippedLayers;       ///< The number of skipped layers
     };
 
     /**
@@ -141,8 +132,8 @@ typedef std::map<const pandora::Cluster*, LArPointingCluster> LArPointingCluster
 
 inline LArPointingCluster::LArPointingCluster(pandora::Cluster *const pCluster) :
     m_pCluster(pCluster),
-    m_innerVertex(pCluster, true, 0),
-    m_outerVertex(pCluster, false, 0)
+    m_innerVertex(pCluster, true),
+    m_outerVertex(pCluster, false)
 {
 }
 
@@ -215,13 +206,6 @@ inline float LArPointingCluster::Vertex::GetRms() const
 inline bool LArPointingCluster::Vertex::IsInnerVertex() const
 {
     return m_isInner;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline unsigned int LArPointingCluster::Vertex::GetNSkippedLayers() const
-{
-    return m_nSkippedLayers;
 }
 
 } // namespace lar
