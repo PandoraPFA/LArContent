@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 namespace lar
 {
 
@@ -31,6 +33,13 @@ public:
 protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+
+
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+
+
+    void FindBestBranchSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector& branchStartPosition, pandora::CartesianVector& replacementStartPosition) const;
 
     /**
      *  @brief  Remove a branch from a cluster and replace it with a second cluster
