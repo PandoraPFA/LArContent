@@ -196,6 +196,14 @@ public:
     void GetGlobalPosition(const float rL, const float rT, pandora::CartesianVector &position) const;
 
     /**
+     *  @brief  Get global direction coordinates for given sliding linear fit gradient
+     * 
+     *  @param  dTdL the transverse coordinate
+     *  @param  direction to receive the direction cartesian vector
+     */
+    void GetGlobalDirection(const float dTdL, pandora::CartesianVector &direction) const;
+
+    /**
      *  @brief  Get interpolated Rms for give longitudinal coordinate
      * 
      *  @param  rL the longitudinal coordinate
@@ -294,7 +302,21 @@ public:
      * 
      *  @return the position
      */
-    pandora::CartesianVector GetGlobalMaxLayerPosition() const;
+    pandora::CartesianVector GetGlobalMaxLayerPosition() const;   
+
+    /**
+     *  @brief  Get global direction corresponding to the fit result in minimum fit layer
+     * 
+     *  @return the position
+     */
+    pandora::CartesianVector GetGlobalMinLayerDirection() const;
+
+    /**
+     *  @brief  Get global direction corresponding to the fit result in maximum fit layer
+     * 
+     *  @return the position
+     */
+    pandora::CartesianVector GetGlobalMaxLayerDirection() const;
 
     /**
      *  @brief  Get the layer fit result map

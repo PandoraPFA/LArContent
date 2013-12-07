@@ -52,6 +52,18 @@ void TwoDSlidingFitResult::GetGlobalPosition(const float rL, const float rT, Car
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TwoDSlidingFitResult::GetGlobalDirection(const float dTdL, CartesianVector &direction) const
+{
+    const float pL(1.f / std::sqrt(1.f + dTdL * dTdL));
+    const float pT(dTdL / std::sqrt(1.f + dTdL * dTdL));
+
+    CartesianVector globalCoordinates(0.f, 0.f, 0.f);
+    this->GetGlobalPosition(pL, pT, globalCoordinates);
+    direction = (globalCoordinates - m_axisIntercept).GetUnitVector();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 int TwoDSlidingFitResult::GetLayer(const float rL) const
 {
     return std::floor(rL / LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
@@ -172,6 +184,32 @@ CartesianVector TwoDSlidingFitResult::GetGlobalMaxLayerPosition() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+CartesianVector TwoDSlidingFitResult::GetGlobalMinLayerDirection() const
+{
+    if (m_layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    LayerFitResultMap::const_iterator iter = m_layerFitResultMap.begin();
+    CartesianVector direction(0.f, 0.f, 0.f);
+    this->GetGlobalDirection(iter->second.GetGradient(), direction);
+    return direction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector TwoDSlidingFitResult::GetGlobalMaxLayerDirection() const
+{
+    if (m_layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    LayerFitResultMap::const_reverse_iterator iter = m_layerFitResultMap.rbegin();
+    CartesianVector direction(0.f, 0.f, 0.f);
+    this->GetGlobalDirection(iter->second.GetGradient(), direction);
+    return direction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TwoDSlidingFitResult::GetGlobalFitInterpolatedPosition(const LayerFitResultMap::const_iterator &firstLayerIter,
     const LayerFitResultMap::const_iterator &secondLayerIter, const float &firstWeight, const float &secondWeight,
     CartesianVector &position) const
@@ -200,14 +238,8 @@ void TwoDSlidingFitResult::GetGlobalFitInterpolatedDirection(const LayerFitResul
     const LayerFitResultMap::const_iterator &secondLayerIter, const float &firstWeight, const float &secondWeight,
     CartesianVector &direction) const
 {
-    // Get surrounding layer directions
-    const float firstLayerGrad(firstLayerIter->second.GetGradient());
-    const float firstLayerPL(1.f / std::sqrt(1.f + firstLayerGrad * firstLayerGrad));
-    const float firstLayerPT(firstLayerGrad / std::sqrt(1.f + firstLayerGrad * firstLayerGrad));
-
-    CartesianVector firstLayerStep(0.f, 0.f, 0.f);
-    this->GetGlobalPosition(firstLayerPL, firstLayerPT, firstLayerStep);
-    const CartesianVector firstLayerDirection((firstLayerStep - m_axisIntercept).GetUnitVector());
+    CartesianVector firstLayerDirection(0.f,0.f,0.f);
+    this->GetGlobalDirection(firstLayerIter->second.GetGradient(),firstLayerDirection);
 
     if (firstLayerIter == secondLayerIter)
     {
@@ -215,15 +247,9 @@ void TwoDSlidingFitResult::GetGlobalFitInterpolatedDirection(const LayerFitResul
         return;
     }
 
-    const float secondLayerGrad(secondLayerIter->second.GetGradient());
-    const float secondLayerPL(1.f / std::sqrt(1.f + secondLayerGrad * secondLayerGrad));
-    const float secondLayerPT(secondLayerGrad / std::sqrt(1.f + secondLayerGrad * secondLayerGrad));
+    CartesianVector secondLayerDirection(0.f,0.f,0.f);
+    this->GetGlobalDirection(secondLayerIter->second.GetGradient(),secondLayerDirection);
 
-    CartesianVector secondLayerStep(0.f, 0.f, 0.f);
-    this->GetGlobalPosition(secondLayerPL, secondLayerPT, secondLayerStep);
-    const CartesianVector secondLayerDirection((secondLayerStep - m_axisIntercept).GetUnitVector());
-
-    // Linear interpolation
     if (firstWeight + secondWeight < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
