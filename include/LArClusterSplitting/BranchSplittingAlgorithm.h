@@ -34,12 +34,12 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-
+    
 
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
 
-    void FindBestBranchSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector& branchStartPosition, pandora::CartesianVector& replacementStartPosition) const;
+  
 
     /**
      *  @brief  Remove a branch from a cluster and replace it with a second cluster
@@ -51,6 +51,28 @@ protected:
      */
     pandora::StatusCode ReplaceBranch(pandora::Cluster *const pBranchCluster, pandora::Cluster *const pReplacementCluster,
         const pandora::CartesianVector &branchStartPosition, const pandora::CartesianVector &replacementStartPosition) const;
+
+
+private:
+  
+    pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
+        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector& branchStartPosition, 
+        pandora::CartesianVector& replacementStartPosition) const;
+
+
+    unsigned int m_halfWindowLayers;
+
+    unsigned int m_stepSizeLayers;
+
+    float m_minClusterLength;
+
+    float m_maxTransverseDisplacement;
+
+    float m_maxLongitudinalDisplacement;
+
+    float m_minCosRelativeAngle;
+
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
