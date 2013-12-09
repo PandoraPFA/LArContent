@@ -23,7 +23,7 @@ void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList 
     {
         Cluster *pCluster = *iter;
 
-        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()< 4)
+        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < 4)
             continue;
 
         clusterVector.push_back(pCluster);
@@ -90,7 +90,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     }
 
     if ((pInnerCluster->GetOuterPseudoLayer() > pOuterCluster->GetInnerPseudoLayer() + 1) ||
-        (pOuterCluster->GetInnerPseudoLayer() > pInnerCluster->GetOuterPseudoLayer() + 15))
+        (pOuterCluster->GetInnerPseudoLayer() > pInnerCluster->GetOuterPseudoLayer() + 7))
     {
         return false;
     }
@@ -104,7 +104,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     const CartesianVector innerEndCentroid(pInnerCluster->GetCentroid(pInnerCluster->GetOuterPseudoLayer()));
     const CartesianVector outerStartCentroid(pOuterCluster->GetCentroid(pOuterCluster->GetInnerPseudoLayer()));
 
-    if ((innerEndCentroid-outerStartCentroid).GetMagnitudeSquared() > 25.f)
+    if ((innerEndCentroid-outerStartCentroid).GetMagnitudeSquared() > 10.f)
         return false;
 
     CaloHit *pOuterLayerHit = *(pInnerCluster->GetOrderedCaloHitList().rbegin()->second->begin());
