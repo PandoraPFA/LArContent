@@ -69,7 +69,8 @@ private:
         pandora::CartesianVector& replacementStartPosition) const;
 
 
-    unsigned int  m_halfWindowLayers;               ///< 
+    unsigned int  m_shortHalfWindowLayers;          ///<
+    unsigned int  m_longHalfWindowLayers;           ///< 
     unsigned int  m_stepSizeLayers;                 ///< 
     float         m_minClusterLength;               ///< 
     float         m_maxTransverseDisplacement;      ///< 

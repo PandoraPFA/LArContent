@@ -25,7 +25,7 @@ StatusCode BranchSplittingAlgorithm::Run()
 
 
     typedef std::map<pandora::Cluster*,LArClusterHelper::TwoDSlidingFitResult> TwoDSlidingFitResultMap;
-    TwoDSlidingFitResultMap slidingFitResultMap;
+    TwoDSlidingFitResultMap branchSlidingFitResultMap, replacementSlidingFitResultMap;
 
 
     bool carryOn(true);
@@ -39,17 +39,28 @@ StatusCode BranchSplittingAlgorithm::Run()
         std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
 
 
-        // Calculate sliding fit results for new clusters
+        // Calculate sliding fit results 
         for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
         {
-	    if (slidingFitResultMap.end() != slidingFitResultMap.find(*iter))
-                continue;
- 
-            LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
-            LArClusterHelper::LArTwoDSlidingFit(*iter, m_halfWindowLayers, slidingFitResult);
+	    // Possible branch clusters (use a soft sliding fit for these)
+	    if (branchSlidingFitResultMap.end() == branchSlidingFitResultMap.find(*iter))
+	    {                
+                LArClusterHelper::TwoDSlidingFitResult branchSlidingFitResult;
+                LArClusterHelper::LArTwoDSlidingFit(*iter, m_shortHalfWindowLayers, branchSlidingFitResult);
 
-            if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+                if (!branchSlidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, branchSlidingFitResult)).second)
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+	    }
+
+            // Possible replacement clusters (use a hard linear fit for these)
+	    if (replacementSlidingFitResultMap.end() == replacementSlidingFitResultMap.find(*iter))
+	    {
+                LArClusterHelper::TwoDSlidingFitResult replacementSlidingFitResult;
+                LArClusterHelper::LArTwoDSlidingFit(*iter, m_longHalfWindowLayers, replacementSlidingFitResult);
+
+                if (!replacementSlidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, replacementSlidingFitResult)).second)
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+	    }
 	}
 
 
@@ -61,11 +72,11 @@ StatusCode BranchSplittingAlgorithm::Run()
             if (NULL == pBranchCluster)
 	        continue;
 
-            TwoDSlidingFitResultMap::const_iterator iterFitI = slidingFitResultMap.find(*iterI);
-            if (slidingFitResultMap.end() == iterFitI)
+            TwoDSlidingFitResultMap::const_iterator iterBranch = branchSlidingFitResultMap.find(*iterI);
+            if (branchSlidingFitResultMap.end() == iterBranch)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit(iterFitI->second);
+            const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit(iterBranch->second);
 
             // Second loop over possible replacement clusters
             for (ClusterVector::iterator iterJ = clusterVector.begin(), iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
@@ -78,11 +89,11 @@ StatusCode BranchSplittingAlgorithm::Run()
                 if (pBranchCluster == pReplacementCluster)
 	            continue;
 
-                TwoDSlidingFitResultMap::const_iterator iterFitJ = slidingFitResultMap.find(*iterJ);
-                if (slidingFitResultMap.end() == iterFitJ)
+                TwoDSlidingFitResultMap::const_iterator iterReplacement = replacementSlidingFitResultMap.find(*iterJ);
+                if (replacementSlidingFitResultMap.end() == iterReplacement)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit(iterFitJ->second);
+                const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit(iterReplacement->second);
 
                 CartesianVector replacementStartPosition(0.f, 0.f, 0.f);
                 CartesianVector branchStartPosition(0.f, 0.f, 0.f);
@@ -104,8 +115,11 @@ StatusCode BranchSplittingAlgorithm::Run()
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
 	            branchStartPosition, replacementStartPosition));
 
-                slidingFitResultMap.erase(*iterI);
-                slidingFitResultMap.erase(*iterJ);
+                branchSlidingFitResultMap.erase(*iterI);
+                branchSlidingFitResultMap.erase(*iterJ);
+
+                replacementSlidingFitResultMap.erase(*iterI);
+                replacementSlidingFitResultMap.erase(*iterJ);
 
                 *iterI = NULL;
                 *iterJ = NULL;
@@ -161,6 +175,7 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
             const float end_to_vertex((principalEnd - branchVertex).GetMagnitudeSquared());
             const float end_to_end((principalEnd - branchEnd).GetMagnitudeSquared());
 
+            const float vertexProjection(+branchDirection.GetDotProduct(principalVertex - branchVertex));
             const float cosRelativeAngle(-branchDirection.GetDotProduct(principalDirection));
 
             if (vertex_to_vertex > std::min(end_to_end, std::min(vertex_to_end, end_to_vertex)))
@@ -169,10 +184,10 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
             if (end_to_end < std::max(vertex_to_vertex, std::max(vertex_to_end, end_to_vertex)))
 	        continue;
 
-            if ((branchVertex - principalVertex).GetMagnitudeSquared() < m_maxTransverseDisplacement * m_maxTransverseDisplacement)
+            if (vertexProjection < 0.f && cosRelativeAngle > m_minCosRelativeAngle)
 	        continue;
 
-	    if (cosRelativeAngle > m_minCosRelativeAngle || cosRelativeAngle < 0.f)
+            if (cosRelativeAngle < 0.f)
 	        continue;
 
 // ClusterList tempList1, tempList2;
@@ -188,9 +203,9 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
 // PANDORA_MONITORING_API(ViewEvent());
 
             const float stepSize(branchSlidingFit.GetL(m_stepSizeLayers));
-            const float deltaL(0==branchForward ? +branchSlidingFit.GetL(m_halfWindowLayers) : -branchSlidingFit.GetL(m_halfWindowLayers));
+            const float deltaL(0==branchForward ? +branchSlidingFit.GetL(m_shortHalfWindowLayers) : -branchSlidingFit.GetL(m_shortHalfWindowLayers));
 
-	    float branchDistance(0.5 * stepSize);
+	    float branchDistance(std::max(vertexProjection, 0.5f * stepSize));
           
 	    while (!foundSplit)
 	    {
@@ -212,6 +227,12 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
                     branchSlidingFit.GetGlobalFitPosition(localL, truncatedPosition);
                     branchSlidingFit.GetGlobalFitDirection(localL + deltaL, truncatedDirection);
 
+                    const float cosTheta(0==branchForward ? -truncatedDirection.GetDotProduct(principalDirection) : +truncatedDirection.GetDotProduct(principalDirection));
+
+                    float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
+                    LArVertexHelper::GetImpactParameters(truncatedPosition, truncatedDirection, principalVertex, rL1, rT1);
+                    LArVertexHelper::GetImpactParameters(principalVertex, principalDirection, truncatedPosition, rL2, rT2);
+
 // ClusterList tempList1, tempList2;
 // Cluster* pBranchCluster = (Cluster*)(branchSlidingFit.GetCluster());
 // Cluster* pReplacementCluster = (Cluster*)(principalSlidingFit.GetCluster());
@@ -227,12 +248,6 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
 // PANDORA_MONITORING_API(AddMarkerToVisualization(&testPosition, "TestPosition", BLACK, 2.0));
 // }
 // PANDORA_MONITORING_API(ViewEvent());
-
-                    const float cosTheta(0==branchForward ? -truncatedDirection.GetDotProduct(principalDirection) : +truncatedDirection.GetDotProduct(principalDirection));
-
-                    float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-                    LArVertexHelper::GetImpactParameters(truncatedPosition, truncatedDirection, principalVertex, rL1, rT1);
-                    LArVertexHelper::GetImpactParameters(principalVertex, principalDirection, truncatedPosition, rL2, rT2);
 
                     if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
 		    {
@@ -277,6 +292,8 @@ StatusCode BranchSplittingAlgorithm::ReplaceBranch(Cluster *const pBranchCluster
 
     CaloHitList residualCaloHitList;
     const CartesianVector branchProjection((replacementStartPosition - branchStartPosition).GetUnitVector());
+    // TODO: this calculation has a bug when branchStartPosition is downstream of replacementStartPosition
+    //       (then branchProjection will be pointing in the wrong direction!)
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
@@ -304,9 +321,13 @@ StatusCode BranchSplittingAlgorithm::ReplaceBranch(Cluster *const pBranchCluster
 
 StatusCode BranchSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 { 
-    m_halfWindowLayers = 10;
+    m_shortHalfWindowLayers = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HalfWindow", m_halfWindowLayers));
+        "ShortHalfWindow", m_shortHalfWindowLayers));
+
+    m_longHalfWindowLayers = 20;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "LongHalfWindow", m_longHalfWindowLayers));
 
     m_stepSizeLayers = 3;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
