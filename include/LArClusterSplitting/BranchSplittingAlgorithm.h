@@ -34,12 +34,13 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    
-
+    /**
+     *  @brief  Populate cluster vector with good quality clusters
+     * 
+     *  @param  pClusterList address of the cluster list
+     *  @param  clusterVector to receive the populated cluster vector
+     */
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
-
-
-  
 
     /**
      *  @brief  Remove a branch from a cluster and replace it with a second cluster
@@ -55,22 +56,25 @@ protected:
 
 private:
   
+    /**
+     *  @brief  Output the best split positions in branch and replacement clusters
+     * 
+     *  @param  branchSlidingFit the inputted sliding fit result for possible branch cluster
+     *  @param  pReplacementCluster the inputted sliding fit result fot possible replacement cluster
+     *  @param  branchStartPosition the outputted start position of the branch cluster
+     *  @param  replacementStartPosition the outputted start position of the replacement cluster
+     */
     pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
         const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector& branchStartPosition, 
         pandora::CartesianVector& replacementStartPosition) const;
 
 
-    unsigned int m_halfWindowLayers;
-
-    unsigned int m_stepSizeLayers;
-
-    float m_minClusterLength;
-
-    float m_maxTransverseDisplacement;
-
-    float m_maxLongitudinalDisplacement;
-
-    float m_minCosRelativeAngle;
+    unsigned int  m_halfWindowLayers;               ///< 
+    unsigned int  m_stepSizeLayers;                 ///< 
+    float         m_minClusterLength;               ///< 
+    float         m_maxTransverseDisplacement;      ///< 
+    float         m_maxLongitudinalDisplacement;    ///< 
+    float         m_minCosRelativeAngle;            ///< 
 
 
 };
