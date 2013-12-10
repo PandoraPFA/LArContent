@@ -12,6 +12,7 @@
 #include "LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 #include "LArClusterAssociation/TransverseAssociationAlgorithm.h"
+#include "LArClusterAssociation/TransverseExtensionAlgorithm.h"
 #include "LArClustering/ClusterCreationAlgorithm.h"
 #include "LArClustering/ClusteringParentAlgorithm.h"
 #include "LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.h"
@@ -95,6 +96,7 @@ public:
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
+        d("LArTransverseExtension",                 lar::TransverseExtensionAlgorithm::Factory)                                 \
         d("LArHelloWorld",                          lar::HelloWorldAlgorithm::Factory)                                          \
         d("LArListChanging",                        lar::ListChangingAlgorithm::Factory)                                        \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
