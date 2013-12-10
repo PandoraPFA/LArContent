@@ -51,7 +51,7 @@ protected:
      *  @param  replacementStartPosition the position the start of the replacement
      */
     pandora::StatusCode ReplaceBranch(pandora::Cluster *const pBranchCluster, pandora::Cluster *const pReplacementCluster,
-        const pandora::CartesianVector &branchStartPosition, const pandora::CartesianVector &replacementStartPosition) const;
+        const pandora::CartesianVector &branchStartPosition, const pandora::CartesianVector &branchStartDirection) const;
 
 
 private:
@@ -65,8 +65,8 @@ private:
      *  @param  replacementStartPosition the outputted start position of the replacement cluster
      */
     pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
-        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector& branchStartPosition, 
-        pandora::CartesianVector& replacementStartPosition) const;
+        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &branchStartPosition, 
+        pandora::CartesianVector &branchStartDirection) const;
 
 
     unsigned int  m_shortHalfWindowLayers;          ///<

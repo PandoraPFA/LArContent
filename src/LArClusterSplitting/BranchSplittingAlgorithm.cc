@@ -95,11 +95,11 @@ StatusCode BranchSplittingAlgorithm::Run()
 
                 const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit(iterReplacement->second);
 
-                CartesianVector replacementStartPosition(0.f, 0.f, 0.f);
                 CartesianVector branchStartPosition(0.f, 0.f, 0.f);
+                CartesianVector branchStartDirection(0.f, 0.f, 0.f);
 
                 if (STATUS_CODE_SUCCESS != this->FindBestSplitPosition(branchSlidingFit, replacementSlidingFit, 
-                    branchStartPosition, replacementStartPosition))
+                    branchStartPosition, branchStartDirection))
 	            continue;
 
 // ClusterList tempList1, tempList2;
@@ -108,12 +108,11 @@ StatusCode BranchSplittingAlgorithm::Run()
 // PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
 // PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "BranchCluster", RED));
 // PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "ReplacementCluster", BLUE));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&replacementStartPosition, "ReplacementStartPosition", BLACK, 2.75));
 // PANDORA_MONITORING_API(AddMarkerToVisualization(&branchStartPosition, "BranchStartPosition", BLACK, 2.75));
 // PANDORA_MONITORING_API(ViewEvent());
 
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
-	            branchStartPosition, replacementStartPosition));
+	            branchStartPosition, branchStartDirection));
 
                 branchSlidingFitResultMap.erase(*iterI);
                 branchSlidingFitResultMap.erase(*iterJ);
@@ -150,15 +149,15 @@ void BranchSplittingAlgorithm::GetListOfCleanClusters(const ClusterList *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &principalSlidingFit, CartesianVector& branchStartPosition, CartesianVector& principalStartPosition) const
+StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &principalSlidingFit, CartesianVector &branchStartPosition, CartesianVector &branchStartDirection) const
 {
     bool foundSplit(false);
 
     for (unsigned int principalForward = 0; principalForward < 2; ++principalForward)
     {
-        const CartesianVector principalVertex(0==principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
-        const CartesianVector principalEnd(0==principalForward ? principalSlidingFit.GetGlobalMaxLayerPosition() : principalSlidingFit.GetGlobalMinLayerPosition());
-        const CartesianVector principalDirection(0==principalForward ? principalSlidingFit.GetGlobalMinLayerDirection() : principalSlidingFit.GetGlobalMaxLayerDirection() * -1.0);
+        const CartesianVector principalVertex(1==principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
+        const CartesianVector principalEnd(1==principalForward ? principalSlidingFit.GetGlobalMaxLayerPosition() : principalSlidingFit.GetGlobalMinLayerPosition());
+        const CartesianVector principalDirection(1==principalForward ? principalSlidingFit.GetGlobalMinLayerDirection() : principalSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
 
 	if (LArClusterHelper::GetClosestDistance(principalVertex, branchSlidingFit.GetCluster()) > m_maxLongitudinalDisplacement)
             continue;
@@ -166,15 +165,16 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
 
         for (unsigned int branchForward = 0; branchForward < 2; ++branchForward)
         {
-            const CartesianVector branchVertex(0==branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
-            const CartesianVector branchEnd(0==branchForward ? branchSlidingFit.GetGlobalMaxLayerPosition() : branchSlidingFit.GetGlobalMinLayerPosition()); 
-            const CartesianVector branchDirection(0==branchForward ? branchSlidingFit.GetGlobalMinLayerDirection() : branchSlidingFit.GetGlobalMaxLayerDirection() * -1.0); 
+            const CartesianVector branchVertex(1==branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
+            const CartesianVector branchEnd(1==branchForward ? branchSlidingFit.GetGlobalMaxLayerPosition() : branchSlidingFit.GetGlobalMinLayerPosition()); 
+            const CartesianVector branchDirection(1==branchForward ? branchSlidingFit.GetGlobalMinLayerDirection() : branchSlidingFit.GetGlobalMaxLayerDirection() * -1.f); 
 
             const float vertex_to_vertex((principalVertex - branchVertex).GetMagnitudeSquared());
             const float vertex_to_end((principalVertex - branchEnd).GetMagnitudeSquared());
             const float end_to_vertex((principalEnd - branchVertex).GetMagnitudeSquared());
             const float end_to_end((principalEnd - branchEnd).GetMagnitudeSquared());
 
+            // sign convention for vertexProjection: positive means that clusters overlap
             const float vertexProjection(+branchDirection.GetDotProduct(principalVertex - branchVertex));
             const float cosRelativeAngle(-branchDirection.GetDotProduct(principalDirection));
 
@@ -203,9 +203,9 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
 // PANDORA_MONITORING_API(ViewEvent());
 
             const float stepSize(branchSlidingFit.GetL(m_stepSizeLayers));
-            const float deltaL(0==branchForward ? +branchSlidingFit.GetL(m_shortHalfWindowLayers) : -branchSlidingFit.GetL(m_shortHalfWindowLayers));
+            const float deltaL(1==branchForward ? +branchSlidingFit.GetL(m_shortHalfWindowLayers) : -branchSlidingFit.GetL(m_shortHalfWindowLayers));
 
-	    float branchDistance(std::max(vertexProjection, 0.5f * stepSize));
+	    float branchDistance(std::max(0.f,vertexProjection) + 0.5f * stepSize);
           
 	    while (!foundSplit)
 	    {
@@ -222,57 +222,42 @@ StatusCode BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelpe
                 try{
                     float localL(0.f), localT(0.f);
                     CartesianVector truncatedPosition(0.f,0.f,0.f);
-                    CartesianVector truncatedDirection(0.f,0.f,0.f);
+                    CartesianVector forwardDirection(0.f,0.f,0.f);
                     branchSlidingFit.GetLocalPosition(linearProjection, localL, localT);
                     branchSlidingFit.GetGlobalFitPosition(localL, truncatedPosition);
-                    branchSlidingFit.GetGlobalFitDirection(localL + deltaL, truncatedDirection);
+                    branchSlidingFit.GetGlobalFitDirection(localL + deltaL, forwardDirection);
 
-                    const float cosTheta(0==branchForward ? -truncatedDirection.GetDotProduct(principalDirection) : +truncatedDirection.GetDotProduct(principalDirection));
+                    CartesianVector truncatedDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
+                    const float cosTheta(-truncatedDirection.GetDotProduct(principalDirection));
 
                     float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
                     LArVertexHelper::GetImpactParameters(truncatedPosition, truncatedDirection, principalVertex, rL1, rT1);
                     LArVertexHelper::GetImpactParameters(principalVertex, principalDirection, truncatedPosition, rL2, rT2);
 
-// ClusterList tempList1, tempList2;
-// Cluster* pBranchCluster = (Cluster*)(branchSlidingFit.GetCluster());
-// Cluster* pReplacementCluster = (Cluster*)(principalSlidingFit.GetCluster());
-// tempList1.insert(pBranchCluster);
-// tempList2.insert(pReplacementCluster);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "BranchCluster", RED));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "PrincipalCluster", BLUE));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&truncatedPosition, "TestPosition", BLACK, 4.0));
-// for(int nCheck =-10; nCheck<=10; ++nCheck)
-// {
-// CartesianVector testPosition(truncatedPosition + truncatedDirection * 0.5 * (float)(nCheck+0.5));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&testPosition, "TestPosition", BLACK, 2.0));
-// }
-// PANDORA_MONITORING_API(ViewEvent());
-
                     if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
 		    {
                         foundSplit = true;
                         branchStartPosition = truncatedPosition;
-                        principalStartPosition = principalVertex;
+                        branchStartDirection = truncatedDirection * -1.f;
 		    }
 		}
                 catch (StatusCodeException &)
 		{
 		}
 	    }
-	}
-    }
-		    
-    if (!foundSplit)
-        return STATUS_CODE_NOT_FOUND;
 
-    return STATUS_CODE_SUCCESS;
+            if (foundSplit)
+                return STATUS_CODE_SUCCESS;
+        }
+    }
+
+    return STATUS_CODE_NOT_FOUND;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode BranchSplittingAlgorithm::ReplaceBranch(Cluster *const pBranchCluster, Cluster *const pReplacementCluster,
-    const CartesianVector &branchStartPosition, const CartesianVector &replacementStartPosition) const
+    const CartesianVector &branchStartPosition, const CartesianVector &branchStartDirection) const
 {
     ClusterList clusterList;
     clusterList.insert(pBranchCluster);
@@ -291,15 +276,12 @@ StatusCode BranchSplittingAlgorithm::ReplaceBranch(Cluster *const pBranchCluster
     pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitsToDistribute);
 
     CaloHitList residualCaloHitList;
-    const CartesianVector branchProjection((replacementStartPosition - branchStartPosition).GetUnitVector());
-    // TODO: this calculation has a bug when branchStartPosition is downstream of replacementStartPosition
-    //       (then branchProjection will be pointing in the wrong direction!)
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
         CaloHit *pCaloHit = *iter;
 
-        if (branchProjection.GetDotProduct((pCaloHit->GetPositionVector() - branchStartPosition)) > 0)
+        if (branchStartDirection.GetDotProduct((pCaloHit->GetPositionVector() - branchStartPosition)) > 0)
         {
             residualCaloHitList.insert(pCaloHit);
         }
