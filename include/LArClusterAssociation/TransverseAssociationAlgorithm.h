@@ -191,6 +191,14 @@ private:
     float GetTransverseSpan(const pandora::Cluster *const pCluster, const pandora::ClusterVector &associatedClusters) const;
 
     /**
+     *  @brief  Determine whether two clusters are overlapping
+     *
+     *  @param  pFirstCluster the first cluster
+     *  @param  pSecondCluster the second cluster
+     */
+    bool IsOverlappingCluster(const pandora::Cluster *const pFirstCluster, const pandora::Cluster *const pSecondCluster) const;
+
+    /**
      *  @brief  Get minimum and maximum X or Z coordinates for a given cluster
      *
      *  @param  pCluster the input cluster
@@ -234,9 +242,9 @@ private:
     float          m_clusterCosAngle;               ///< 
     float          m_clusterTanAngle;               ///< 
 
+    float          m_maxOverlap;                    ///<
     float          m_minCosRelativeAngle;           ///< 
     float          m_maxTransverseSeparation;       ///< 
-
     float          m_minTransverseDisplacement;     ///< 
     float          m_maxLongitudinalDisplacement;   ///< 
 

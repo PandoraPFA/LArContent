@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 namespace lar
 {
 
@@ -31,6 +33,33 @@ public:
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+
+    void SortInputClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &longVector, pandora::ClusterVector &shortVector) const;
+
+
+
+    
+    bool IsAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const pandora::Cluster *const pCluster) const;
+
+
+    bool IsEndAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const pandora::Cluster *const pCluster) const;
+
+
+
+    bool IsMidAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const pandora::Cluster *const pCluster) const;
+
+
+  
+
+
+
+    float m_minClusterLength;
+
+    float m_maxTransverseDisplacement;
+
+    float m_maxLongitudinalDisplacement;
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

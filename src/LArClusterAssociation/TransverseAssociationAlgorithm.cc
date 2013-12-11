@@ -135,7 +135,9 @@ void TransverseAssociationAlgorithm::FillClusterAssociationMap(const TransverseC
             if (pInnerCluster == pOuterCluster)
                 continue;
 
-            if (this->IsExtremalCluster(true, pInnerCluster, pOuterCluster) && this->IsExtremalCluster(false, pOuterCluster, pInnerCluster))
+            if (this->IsExtremalCluster(true, pInnerCluster, pOuterCluster) && 
+                this->IsExtremalCluster(false, pOuterCluster, pInnerCluster) &&
+                !this->IsOverlappingCluster(pInnerCluster, pOuterCluster))
             {
                 if (this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster))
                 {
@@ -403,6 +405,23 @@ float TransverseAssociationAlgorithm::GetTransverseSpan(const Cluster *const pCe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+bool TransverseAssociationAlgorithm::IsOverlappingCluster(const Cluster *const pFirstCluster, const Cluster *const pSecondCluster) const
+{
+    CartesianVector firstCoordinate1(0.f,0.f,0.f), firstCoordinate2(0.f,0.f,0.f);
+    CartesianVector secondCoordinate1(0.f,0.f,0.f), secondCoordinate2(0.f,0.f,0.f);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pFirstCluster, firstCoordinate1, firstCoordinate2);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pSecondCluster, secondCoordinate1, secondCoordinate2);
+
+    CartesianVector firstCoordinate3(LArClusterHelper::GetClosestPosition(secondCoordinate1,pFirstCluster));
+    CartesianVector firstCoordinate4(LArClusterHelper::GetClosestPosition(secondCoordinate2,pFirstCluster));
+    CartesianVector secondCoordinate3(LArClusterHelper::GetClosestPosition(firstCoordinate1,pSecondCluster));
+    CartesianVector secondCoordinate4(LArClusterHelper::GetClosestPosition(firstCoordinate2,pSecondCluster));
+
+    return ((firstCoordinate3 - firstCoordinate4).GetMagnitudeSquared() > m_maxOverlap * m_maxOverlap ||
+            (secondCoordinate3 - secondCoordinate4).GetMagnitudeSquared() > m_maxOverlap * m_maxOverlap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TransverseAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster,  const Cluster *const pTestCluster) const
 {
@@ -584,6 +603,10 @@ StatusCode TransverseAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     m_clusterCosAngle = std::cos(m_clusterAngle * M_PI / 180.f);
     m_clusterTanAngle = std::tan(m_clusterAngle * M_PI / 180.f);
+
+    m_maxOverlap = 1.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxOverlap", m_maxOverlap));
 
     m_minCosRelativeAngle = 0.866f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

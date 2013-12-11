@@ -371,6 +371,8 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const 
 
 float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
+    // TODO: Remove layer centroids from this method
+
     const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
     const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
 
@@ -404,6 +406,12 @@ float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const
 
 float LArClusterHelper::GetClosestDistance(const CartesianVector &position, const Cluster *const pCluster)
 {
+    //
+    // TODO: Remove layer centroids from this method
+    //
+    // return (position - LArClusterHelper::GetClosestPosition(position, pCluster)).GetMagnitude();
+    //
+
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     bool distanceFound(false);
@@ -425,6 +433,117 @@ float LArClusterHelper::GetClosestDistance(const CartesianVector &position, cons
         return std::sqrt(closestDistanceSquared);
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const Cluster *const pCluster)
+{
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    CaloHit *pClosestCaloHit(NULL);
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+	    CaloHit* pCaloHit = *hitIter;
+            const float distanceSquared((pCaloHit->GetPositionVector() - position).GetMagnitudeSquared());
+
+            if (distanceSquared < closestDistanceSquared)
+	    {
+	        closestDistanceSquared = distanceSquared;
+                pClosestCaloHit = pCaloHit;
+	    }
+	}
+    }
+
+    if(pClosestCaloHit)
+        return pClosestCaloHit->GetPositionVector();
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::GetExtremalCoordinatesXZ(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
+{
+    CaloHitList candidateList;
+
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    // Transfer all inner layer hits
+    OrderedCaloHitList::const_iterator iterInner = orderedCaloHitList.begin();
+    for (CaloHitList::const_iterator hitIter = iterInner->second->begin(), hitIterEnd = iterInner->second->end(); hitIter != hitIterEnd; ++hitIter)
+        candidateList.insert(*hitIter);
+
+    // Transfer all outer layer hits
+    OrderedCaloHitList::const_reverse_iterator iterOuter = orderedCaloHitList.rbegin();
+    for (CaloHitList::const_iterator hitIter = iterOuter->second->begin(), hitIterEnd = iterOuter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        candidateList.insert(*hitIter);
+
+
+    // Transfer the extremal hits in X (assume there are no ties)
+    CaloHit *pFirstCaloHit(NULL);
+    CaloHit *pSecondCaloHit(NULL);
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+	    CaloHit *pCaloHit = *hitIter;
+
+            if (NULL == pFirstCaloHit || pCaloHit->GetPositionVector().GetX() < pFirstCaloHit->GetPositionVector().GetX())
+	        pFirstCaloHit = pCaloHit;
+
+	    if (NULL == pSecondCaloHit || pCaloHit->GetPositionVector().GetX() > pSecondCaloHit->GetPositionVector().GetX())
+	        pSecondCaloHit = pCaloHit;
+        }
+    }
+
+    if (NULL == pFirstCaloHit || NULL == pSecondCaloHit)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    candidateList.insert(pFirstCaloHit);
+    candidateList.insert(pSecondCaloHit);
+
+    // Find the two most separated hits
+    float maxDistanceSquared(0.f);
+
+    for (CaloHitList::const_iterator iterI = candidateList.begin(), iterEndI = candidateList.end(); iterI != iterEndI; ++iterI )
+    {
+        CaloHit* pCaloHitI = *iterI;    
+
+        for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = candidateList.end(); iterJ != iterEndJ; ++iterJ )
+	{
+            CaloHit* pCaloHitJ = *iterJ;
+
+            const float distanceSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
+
+            if (distanceSquared > maxDistanceSquared)
+	    {
+	        maxDistanceSquared = distanceSquared;
+                pFirstCaloHit = pCaloHitI;
+                pSecondCaloHit = pCaloHitJ;
+	    } 
+	}
+    }
+    
+    // Set the inner and outer coordinates (Check Z first, then X in the event of a tie)
+    const float deltaZ(pSecondCaloHit->GetPositionVector().GetZ() - pFirstCaloHit->GetPositionVector().GetZ());
+    const float deltaX(pSecondCaloHit->GetPositionVector().GetX() - pFirstCaloHit->GetPositionVector().GetX());
+    
+    if (deltaZ > 0.f || (0.f == deltaZ && deltaX >0.f))
+    {
+        innerCoordinate = pFirstCaloHit->GetPositionVector();
+        outerCoordinate = pSecondCaloHit->GetPositionVector();  
+    }
+    else
+    {
+        innerCoordinate = pSecondCaloHit->GetPositionVector();
+        outerCoordinate = pFirstCaloHit->GetPositionVector();     
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

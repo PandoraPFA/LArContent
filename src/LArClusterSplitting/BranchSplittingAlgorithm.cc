@@ -36,7 +36,7 @@ StatusCode BranchSplittingAlgorithm::Run()
         
         ClusterVector clusterVector;
         this->GetListOfCleanClusters(pClusterList, clusterVector);
-        std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
+        std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
 
         // Calculate sliding fit results 

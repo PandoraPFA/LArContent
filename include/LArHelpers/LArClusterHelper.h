@@ -186,6 +186,25 @@ public:
     static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
 
     /**
+     *  @brief  Get closest position on a cluster to a specified input position vector
+     * 
+     *  @param  position the position vector
+     *  @param  pCluster address of the cluster
+     * 
+     *  @return the closest position
+     */
+    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Get positions of the two most distant calo hits in a 2D cluster (ordered by Z)
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  the inner extremal position
+     *  @param  the outer extremal position
+     */
+    static void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, pandora::CartesianVector &outerCoordinate);
+
+    /**
      *  @brief  Sort clusters by inner layer (then use SortByNOccupiedLayers method in event of a tie)
      * 
      *  @param  pLhs address of first cluster
