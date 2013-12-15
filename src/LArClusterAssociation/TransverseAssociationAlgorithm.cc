@@ -21,42 +21,87 @@ void TransverseAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *c
 {
     clusterVector.clear();
     clusterVector.insert(clusterVector.begin(), pClusterList->begin(), pClusterList->end());
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &inputClusters, ClusterAssociationMap &clusterAssociationMap) const
+void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &allClusters, ClusterAssociationMap &clusterAssociationMap) const
 {
     TransverseClusterList transverseClusterList;
 
     try
     {
-        ClusterVector shortClusters, mediumClusters, longClusters;
-        this->SortInputClusters(inputClusters, shortClusters, mediumClusters, longClusters);
-        this->FillTransverseClusterList(shortClusters, shortClusters, longClusters, transverseClusterList);
-        this->FillTransverseClusterList(mediumClusters, ClusterVector(), ClusterVector(), transverseClusterList);
+        ClusterVector shortClusters, transverseMediumClusters, longitudinalMediumClusters, longClusters;
+        this->SortInputClusters(allClusters, shortClusters, transverseMediumClusters, longitudinalMediumClusters, longClusters);
+
+        ClusterVector transverseClusters;
+        transverseClusters.insert(transverseClusters.end(), shortClusters.begin(), shortClusters.end());
+        transverseClusters.insert(transverseClusters.end(), transverseMediumClusters.begin(), transverseMediumClusters.end());
+
+	ClusterVector establishedClusters;
+        establishedClusters.insert(establishedClusters.end(), transverseMediumClusters.begin(), transverseMediumClusters.end());
+        establishedClusters.insert(establishedClusters.end(), longitudinalMediumClusters.begin(), longitudinalMediumClusters.end());
+        establishedClusters.insert(establishedClusters.end(), longClusters.begin(), longClusters.end());
+        
+        ClusterAssociationMap firstAssociationMap;
+	this->FillReducedAssociationMap(shortClusters, establishedClusters, firstAssociationMap);
+        this->FillTransverseClusterList(transverseClusters, firstAssociationMap, transverseClusterList);
         
 // ---- BEGIN DISPLAY ----
 // ClusterList tempList1, tempList2, tempList3;
-// tempList1.insert(shortClusters.begin(), shortClusters.end());
-// tempList1.insert(mediumClusters.begin(), mediumClusters.end());
-// tempList2.insert(longClusters.begin(), longClusters.end());
-// for ( unsigned int nCluster = 0; nCluster < transverseClusterList.size(); ++nCluster )
+// tempList1.insert(transverseClusters.begin(), transverseClusters.end());
+// for (unsigned int nCluster = 0; nCluster<transverseClusterList.size(); ++nCluster)
 // {
 // LArTransverseCluster* transverseCluster = transverseClusterList.at(nCluster);
 // Cluster* pCluster = transverseCluster->GetSeedCluster();
-// tempList3.insert(pCluster);
+// tempList2.insert(pCluster);
 // if( tempList1.count(pCluster)) tempList1.erase(pCluster);
 // }
+// tempList3.insert(longitudinalMediumClusters.begin(), longitudinalMediumClusters.end());
+// tempList3.insert(longClusters.begin(), longClusters.end());
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
 // PandoraMonitoringApi::VisualizeClusters(&tempList1, "ShortClusters", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "LongClusters", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList3, "TransverseClusters", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "TransverseClusters", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList3, "LongClusters", BLUE);
 // PandoraMonitoringApi::ViewEvent();
 // ---- END DISPLAY ----
 
-        this->FillClusterAssociationMap(transverseClusterList, clusterAssociationMap);
+        ClusterAssociationMap secondAssociationMap;
+        this->FillReducedAssociationMap(transverseMediumClusters, longClusters, secondAssociationMap);
+        this->FillReducedAssociationMap(transverseClusters, allClusters, secondAssociationMap);
+
+        ClusterAssociationMap transverseAssociationMap;
+	this->FillTransverseAssociationMap(transverseClusterList, secondAssociationMap, transverseAssociationMap);
+
+// ---- BEGIN DISPLAY ----
+// ClusterList tempList, tempListForward, tempListBackward;
+// for (ClusterAssociationMap::iterator iterI = transverseAssociationMap.begin(), iterEndI = transverseAssociationMap.end(); iterI != iterEndI; ++iterI)
+// {
+// Cluster *pCluster = iterI->first;
+// for (ClusterList::iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+// tempListForward.insert(*iterJ);
+// for (ClusterList::iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+// tempListBackward.insert(*iterJ);
+// }
+// for (ClusterAssociationMap::iterator iterI = transverseAssociationMap.begin(), iterEndI = transverseAssociationMap.end(); iterI != iterEndI; ++iterI)
+// {
+// Cluster *pCluster = iterI->first;
+// if(tempListForward.count(pCluster) > 0 && tempListBackward.count(pCluster) > 0)
+// {
+// tempList.insert(pCluster);
+// tempListForward.erase(pCluster);
+// tempListBackward.erase(pCluster);
+// }
+// }
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
+// PandoraMonitoringApi::VisualizeClusters(&tempList, "Associations", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&tempListForward, "ForwardOnly", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempListBackward, "BackwardOnly", GREEN);
+// PandoraMonitoringApi::ViewEvent();
+// ---- END DISPLAY ----
+
+        this->FinalizeClusterAssociationMap(transverseAssociationMap, clusterAssociationMap);
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -71,7 +116,7 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inputVector, ClusterVector &shortVector, ClusterVector &mediumVector, ClusterVector &longVector) const
+void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inputVector, ClusterVector &shortVector, ClusterVector &transverseMediumVector, ClusterVector &longitudinalMediumVector, ClusterVector &longVector) const
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
@@ -85,12 +130,15 @@ void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inpu
 	{
             shortVector.push_back(pCluster);
 	}
-        else if(clusterLengthSquared < m_secondLengthCut * m_secondLengthCut && clusterLengthL < clusterLengthT * std::fabs(m_clusterTanAngle))
+        else if (clusterLengthSquared < m_secondLengthCut * m_secondLengthCut)
 	{
-            mediumVector.push_back(pCluster);
+	    if (clusterLengthL < clusterLengthT * std::fabs(m_clusterTanAngle))
+	        transverseMediumVector.push_back(pCluster);
+            else
+                longitudinalMediumVector.push_back(pCluster);
 	}
         else
-	{
+        {
             longVector.push_back(pCluster);
 	}
     }
@@ -98,18 +146,87 @@ void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterVector &inputVector, const ClusterVector &transverseVector, 
-    const ClusterVector &longitudinalVector, TransverseClusterList &transverseClusterList) const
+void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterVector &firstVector, const ClusterVector &secondVector, ClusterAssociationMap &firstAssociationMap, ClusterAssociationMap &secondAssociationMap) const
+{
+    for (ClusterVector::const_iterator iterI = firstVector.begin(), iterEndI = firstVector.end(); iterI != iterEndI; ++iterI)
+    {
+        Cluster *pClusterI = *iterI;
+
+        for (ClusterVector::const_iterator iterJ = secondVector.begin(), iterEndJ = secondVector.end(); iterJ != iterEndJ; ++iterJ)
+        {
+            Cluster *pClusterJ = *iterJ;
+
+            if (pClusterI == pClusterJ)
+	        continue;
+
+	    if (this->IsAssociated(true, pClusterI, pClusterJ))
+	    {
+	        firstAssociationMap[pClusterI].m_forwardAssociations.insert(pClusterJ);
+                secondAssociationMap[pClusterJ].m_backwardAssociations.insert(pClusterI);
+	    }
+
+            if (this->IsAssociated(false, pClusterI, pClusterJ))
+	    {
+	        firstAssociationMap[pClusterI].m_backwardAssociations.insert(pClusterJ);
+                secondAssociationMap[pClusterJ].m_forwardAssociations.insert(pClusterI);
+	    }
+	}
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+      
+void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterVector &firstVector, const ClusterVector &secondVector, ClusterAssociationMap &clusterAssociationMap) const
+{
+    ClusterAssociationMap firstAssociationMap, firstAssociationMapSwapped;
+    ClusterAssociationMap secondAssociationMap, secondAssociationMapSwapped;
+       
+    this->FillAssociationMap(firstVector, firstVector, firstAssociationMap, firstAssociationMapSwapped);
+    this->FillAssociationMap(firstVector, secondVector, secondAssociationMap, secondAssociationMapSwapped);
+    this->FillReducedAssociationMap(firstAssociationMap, secondAssociationMap, secondAssociationMapSwapped, clusterAssociationMap);
+
+// ---- BEGIN DISPLAY ----
+// for (ClusterAssociationMap::iterator iter = clusterAssociationMap.begin(), iterEnd = clusterAssociationMap.end(); iter != iterEnd; ++iter)
+// {
+// Cluster *pCluster = iter->first;
+// ClusterList tempList;
+// tempList.insert(pCluster);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
+// PandoraMonitoringApi::VisualizeClusters(&tempList, "CentralCluster", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&iter->second.m_forwardAssociations,"ForwardAssociations",RED);
+// PandoraMonitoringApi::VisualizeClusters(&iter->second.m_backwardAssociations,"BackwardAssociations",GREEN);
+// PandoraMonitoringApi::ViewEvent();
+// }
+// ---- END DISPLAY ----
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterVector &inputVector, const ClusterAssociationMap &inputAssociationMap, TransverseClusterList &transverseClusterList) const
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
         ClusterVector associatedClusters;
 
-        this->GetAssociatedClusters(pCluster, transverseVector, longitudinalVector, associatedClusters);
+        this->GetAssociatedClusters(pCluster, inputAssociationMap, associatedClusters);
 
-        if (this->GetTransverseSpan(pCluster,associatedClusters) < m_minTransverseDisplacement)
+        if (this->GetTransverseSpan(pCluster, associatedClusters) < m_transverseClusterMinLength)
 	    continue;
+
+// ---- BEGIN DISPLAY ----
+// ClusterList tempList1, tempList2;
+// tempList1.insert(pCluster);
+// for (unsigned int nCluster = 0; nCluster<associatedClusters.size(); ++nCluster)
+// {
+// Cluster* pTempCluster = associatedClusters.at(nCluster);
+// tempList2.insert(pTempCluster);
+// }
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "CentralCluster", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "AssociatedClusters", GREEN);
+// PandoraMonitoringApi::ViewEvent();
+// ---- END DISPLAY ----
 
         transverseClusterList.push_back(new LArTransverseCluster(pCluster, associatedClusters));
     }
@@ -117,213 +234,140 @@ void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillClusterAssociationMap(const TransverseClusterList &transverseClusterList, ClusterAssociationMap &clusterAssociationMap) const
+void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const TransverseClusterList &transverseClusterList, const ClusterAssociationMap& transverseAssociationMap, ClusterAssociationMap &clusterAssociationMap) const
 {
-    // Construct an initial set of forward/backward associations
-    LArClusterMergeMap forwardMergeMap, backwardMergeMap;
-
     for (TransverseClusterList::const_iterator iter1 = transverseClusterList.begin(), iterEnd1 = transverseClusterList.end(); iter1 != iterEnd1; ++iter1)
     {
         LArTransverseCluster *pInnerTransverseCluster = *iter1;
         Cluster *pInnerCluster(pInnerTransverseCluster->GetSeedCluster());
+
+        ClusterAssociationMap::const_iterator iterInner = transverseAssociationMap.find(pInnerCluster);
+        if(transverseAssociationMap.end() == iterInner)
+	    continue;
 
         for (TransverseClusterList::const_iterator iter2 = transverseClusterList.begin(), iterEnd2 = transverseClusterList.end(); iter2 != iterEnd2; ++iter2)
         {
             LArTransverseCluster *pOuterTransverseCluster = *iter2;
             Cluster *pOuterCluster(pOuterTransverseCluster->GetSeedCluster());
 
+            ClusterAssociationMap::const_iterator iterOuter = transverseAssociationMap.find(pOuterCluster);
+            if(transverseAssociationMap.end() == iterOuter)
+	        continue;
+
             if (pInnerCluster == pOuterCluster)
                 continue;
 
-            if (this->IsExtremalCluster(true, pInnerCluster, pOuterCluster) && 
-                this->IsExtremalCluster(false, pOuterCluster, pInnerCluster) &&
-                !this->IsOverlappingCluster(pInnerCluster, pOuterCluster))
-            {
-                if (this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster))
-                {
-                    forwardMergeMap[pInnerCluster].insert(pOuterCluster);
-                    backwardMergeMap[pOuterCluster].insert(pInnerCluster);
-                }
-            }
+            if (iterInner->second.m_forwardAssociations.count(pOuterCluster) == 0 ||
+                iterOuter->second.m_backwardAssociations.count(pInnerCluster) == 0)
+	        continue;
+
+            if (!this->IsExtremalCluster(true, pInnerCluster, pOuterCluster) ||
+                !this->IsExtremalCluster(false, pOuterCluster, pInnerCluster))
+	        continue;
+
+	    if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster))
+	        continue;
+
+            clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
+            clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
         }
     } 
+}
 
-    // Remove double-counting in forward associations
-    for (LArClusterMergeMap::const_iterator iter1 = forwardMergeMap.begin(), iterEnd1 = forwardMergeMap.end(); iter1 != iterEnd1; ++iter1)
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::GetAssociatedClusters(Cluster *const pClusterI, const ClusterAssociationMap& associationMap, ClusterVector &associatedVector) const
+{
+    ClusterAssociationMap::const_iterator iterI = associationMap.find(pClusterI); 
+    if (associationMap.end() == iterI)
+        return;
+
+    for (ClusterList::iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
-        Cluster *pInnerCluster = iter1->first;
-        const ClusterList &clusterMerges(iter1->second);
-
-        for (ClusterList::iterator iter2 = clusterMerges.begin(), iterEnd2 = clusterMerges.end(); iter2 != iterEnd2; ++iter2)
-        {
-            Cluster *pOuterCluster = *iter2;
-
-            if (pOuterCluster == pInnerCluster)
-                throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-            bool isNeighbouringCluster(true);
-
-            for (ClusterList::iterator iter3 = clusterMerges.begin(), iterEnd3 = clusterMerges.end(); iter3 != iterEnd3; ++iter3)
-            {
-                Cluster *pMiddleCluster = *iter3;
-
-                if (pMiddleCluster == pOuterCluster)
-                    continue;
-
-                if (forwardMergeMap[pMiddleCluster].count(pOuterCluster))
-                {
-                    isNeighbouringCluster = false;
-                    break;
-                }
-            }
-
-            if (isNeighbouringCluster)
-	    {
-	        if (clusterAssociationMap[pInnerCluster].m_forwardAssociations.count(pOuterCluster) == 0)
-                    clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
-
-                if (clusterAssociationMap[pOuterCluster].m_backwardAssociations.count(pInnerCluster) == 0)
-                    clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
-	    }
-        }
+        Cluster *pClusterJ = *iterJ;
+    
+        if (this->IsTransverseAssociated(pClusterI, pClusterJ))
+            associatedVector.push_back(pClusterJ);
     }
 
-    // Remove double-counting in backward associations
-    for (LArClusterMergeMap::const_iterator iter1 = backwardMergeMap.begin(), iterEnd1 = backwardMergeMap.end(); iter1 != iterEnd1; ++iter1)
+    for (ClusterList::iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
-        Cluster *pOuterCluster = iter1->first;
-        const ClusterList &clusterMerges(iter1->second);
-
-        for (ClusterList::iterator iter2 = clusterMerges.begin(), iterEnd2 = clusterMerges.end(); iter2 != iterEnd2; ++iter2)
-        {
-            Cluster *pInnerCluster = *iter2;
-
-            if (pInnerCluster == pOuterCluster)
-                throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-            bool isNeighbouringCluster(true);
-
-            for (ClusterList::iterator iter3 = clusterMerges.begin(), iterEnd3 = clusterMerges.end(); iter3 != iterEnd3; ++iter3)
-            {
-                Cluster *pMiddleCluster = *iter3;
-
-                if (pMiddleCluster == pInnerCluster)
-                    continue;
-
-                if (backwardMergeMap[pMiddleCluster].count(pInnerCluster))
-                {
-                    isNeighbouringCluster = false;
-                    break;
-                }
-            }
-
-            if (isNeighbouringCluster)
-	    {
-	        if (clusterAssociationMap[pInnerCluster].m_forwardAssociations.count(pOuterCluster) == 0)
-                    clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
-
-                if (clusterAssociationMap[pOuterCluster].m_backwardAssociations.count(pInnerCluster) == 0)
-                    clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
-	    }
-        }
+        Cluster *pClusterJ = *iterJ;
+    
+        if (this->IsTransverseAssociated(pClusterJ, pClusterI))
+            associatedVector.push_back(pClusterJ);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::GetAssociatedClusters(Cluster *const pCluster, const ClusterVector &transverseVector,
-    const ClusterVector &longitudinalVector, ClusterVector &associatedVector) const
+bool TransverseAssociationAlgorithm::IsAssociated(const bool isForward, const Cluster *const pFirstCluster, const Cluster *const pSecondCluster) const
 {
-    float windowMinX(-std::numeric_limits<float>::max());
-    float windowMaxX(+std::numeric_limits<float>::max());
+    CartesianVector firstInner(0.f,0.f,0.f), firstOuter(0.f,0.f,0.f);
+    CartesianVector secondInner(0.f,0.f,0.f), secondOuter(0.f,0.f,0.f);
+    this->GetExtremalCoordinatesX(pFirstCluster, firstInner, firstOuter);
+    this->GetExtremalCoordinatesX(pSecondCluster, secondInner, secondOuter);
 
-    float clusterMinX(-std::numeric_limits<float>::max());
-    float clusterMaxX(+std::numeric_limits<float>::max());
-    float clusterMinZ(-std::numeric_limits<float>::max());
-    float clusterMaxZ(+std::numeric_limits<float>::max());
+    const CartesianVector firstCoordinate(isForward ? firstOuter : firstInner);
+    const CartesianVector secondCoordinate(isForward ? secondOuter : secondInner);
+    
+    if ((firstCoordinate.GetZ() > std::max(secondInner.GetZ(),secondOuter.GetZ()) + m_maxLongitudinalOverlap) ||
+        (firstCoordinate.GetZ() < std::min(secondInner.GetZ(),secondOuter.GetZ()) - m_maxLongitudinalOverlap))
+        return false;
 
-    this->GetExtremalCoordinatesX(pCluster, clusterMinX, clusterMaxX);
-    this->GetExtremalCoordinatesZ(pCluster, clusterMinZ, clusterMaxZ);
+    if ((isForward && secondCoordinate.GetX() < firstCoordinate.GetX()) ||
+        (!isForward && secondCoordinate.GetX() > firstCoordinate.GetX()))
+        return false;
 
-    for (ClusterVector::const_iterator iter = longitudinalVector.begin(), iterEnd = longitudinalVector.end(); iter != iterEnd; ++iter)
-    {
-         Cluster *pLongitudinalCluster = *iter;  
+    const CartesianVector firstProjection(LArClusterHelper::GetClosestPosition(firstCoordinate, pSecondCluster));
 
-         if (pCluster == pLongitudinalCluster)
-            continue;
+    if((isForward && firstProjection.GetX() < firstCoordinate.GetX() - m_maxTransverseOverlap) ||
+       (!isForward && firstProjection.GetX() > firstCoordinate.GetX() + m_maxTransverseOverlap))
+        return false;
 
-         float projectedX(0.f);
+    if((isForward && firstProjection.GetX() > firstCoordinate.GetX() + m_clusterWindow) ||
+       (!isForward && firstProjection.GetX() < firstCoordinate.GetX() - m_clusterWindow))
+        return false;
 
-         try{  
-	   this->GetProjectedCoordinateX(pLongitudinalCluster, clusterMinZ, projectedX);
-
-           if (projectedX < clusterMinX)
-	       windowMinX = std::max(windowMinX, projectedX);
-           else if (projectedX > clusterMaxX)
-	       windowMaxX = std::min(windowMaxX, projectedX);
-	 }
-         catch (StatusCodeException &)
-	 {
-	 }
-
-         try{  
-	   this->GetProjectedCoordinateX(pLongitudinalCluster, clusterMaxZ, projectedX);
-
-           if (projectedX < clusterMinX)
-	       windowMinX = std::max(windowMinX, projectedX);
-           else if (projectedX > clusterMaxX)
-	       windowMaxX = std::min(windowMaxX, projectedX);
-	 }
-         catch (StatusCodeException &)
-	 {
-	 }
-    }
-
-    for (ClusterVector::const_iterator iter = transverseVector.begin(), iterEnd = transverseVector.end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pTransverseCluster = *iter;
-
-        if (pCluster == pTransverseCluster)
-            continue;
-
-        this->GetExtremalCoordinatesX(pTransverseCluster, clusterMinX, clusterMaxX);
-
-        if (clusterMinX > windowMaxX || clusterMaxX < windowMinX)
-	    continue;
-
-        if (this->IsTransverseAssociated(pCluster, pTransverseCluster))
-            associatedVector.push_back(pTransverseCluster);
-    }
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const pCluster1, const Cluster *const pCluster2) const
-{
-    const CartesianVector innerCentroid1(pCluster1->GetCentroid(pCluster1->GetInnerPseudoLayer()));
-    const CartesianVector outerCentroid1(pCluster1->GetCentroid(pCluster1->GetOuterPseudoLayer()));
-    const CartesianVector innerCentroid2(pCluster2->GetCentroid(pCluster2->GetInnerPseudoLayer()));
-    const CartesianVector outerCentroid2(pCluster2->GetCentroid(pCluster2->GetOuterPseudoLayer()));
+bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster) const
+{      
+    CartesianVector innerInner(0.f,0.f,0.f), innerOuter(0.f,0.f,0.f);
+    CartesianVector outerInner(0.f,0.f,0.f), outerOuter(0.f,0.f,0.f);
+    this->GetExtremalCoordinatesX(pInnerCluster, innerInner, innerOuter);
+    this->GetExtremalCoordinatesX(pOuterCluster, outerInner, outerOuter);
 
-    const float averageX1(0.5f * (innerCentroid1.GetX() + outerCentroid1.GetX()));
-    const float averageZ1(0.5f * (innerCentroid1.GetZ() + outerCentroid1.GetZ()));
-    const float averageX2(0.5f * (innerCentroid2.GetX() + outerCentroid2.GetX()));
-    const float averageZ2(0.5f * (innerCentroid2.GetZ() + outerCentroid2.GetZ()));
+    const CartesianVector innerCentroid((innerInner + innerOuter) * 0.5);
+    const CartesianVector outerCentroid((outerInner + outerOuter) * 0.5);
+ 
+    if ((std::fabs(innerCentroid.GetZ() - outerInner.GetZ()) > std::fabs(innerCentroid.GetX() - outerInner.GetX()) * std::fabs(m_clusterTanAngle)) &&
+        (std::fabs(innerCentroid.GetZ() - outerOuter.GetZ()) > std::fabs(innerCentroid.GetX() - outerOuter.GetX()) * std::fabs(m_clusterTanAngle)))
+        return false;
 
-    if ((std::fabs(averageX2 - averageX1) < m_clusterWindow) && (std::fabs(averageZ2 - averageZ1) < m_clusterWindow) &&
-        (std::fabs(averageZ2 - averageZ1) < std::fabs(averageX2 - averageX1) * std::fabs(m_clusterTanAngle)))
-    {
-        return true;
-    }
+    if ((std::fabs(outerCentroid.GetZ() - innerInner.GetZ()) > std::fabs(outerCentroid.GetX() - innerInner.GetX()) * std::fabs(m_clusterTanAngle)) &&
+        (std::fabs(outerCentroid.GetZ() - innerOuter.GetZ()) > std::fabs(outerCentroid.GetX() - innerOuter.GetX()) * std::fabs(m_clusterTanAngle)))
+        return false;
 
-    return false;
+    const CartesianVector innerProjection(LArClusterHelper::GetClosestPosition(outerInner, pInnerCluster));
+    const CartesianVector outerProjection(LArClusterHelper::GetClosestPosition(innerOuter, pOuterCluster));
+
+    if (innerOuter.GetX() > innerProjection.GetX() + m_maxTransverseOverlap ||
+        outerInner.GetX() < outerProjection.GetX() - m_maxTransverseOverlap)
+        return false;
+
+    return true;
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseCluster *const pInnerTransverseCluster,
     const LArTransverseCluster *const pOuterTransverseCluster) const
 {
-    if (pInnerTransverseCluster->GetDirection().GetDotProduct(pOuterTransverseCluster->GetDirection()) < m_minCosRelativeAngle)
+    if (pInnerTransverseCluster->GetDirection().GetDotProduct(pOuterTransverseCluster->GetDirection()) < m_transverseClusterMinCosTheta)
         return false;
 
     if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster->GetInnerVertex()))
@@ -332,24 +376,48 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseC
     if (!this->IsTransverseAssociated(pOuterTransverseCluster, pInnerTransverseCluster->GetOuterVertex()))
         return false;
 
+    if (!this->IsTransverseAssociated(pInnerTransverseCluster->GetSeedCluster(),pOuterTransverseCluster->GetSeedCluster()))
+        return false;
+
+    if (this->IsOverlapping(pInnerTransverseCluster->GetSeedCluster(),pOuterTransverseCluster->GetSeedCluster()))
+        return false;
+
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const pandora::CartesianVector& testVertex) const
+bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const CartesianVector& testVertex) const
 {
     const CartesianVector &innerVertex(pTransverseCluster->GetInnerVertex());
     const CartesianVector &outerVertex(pTransverseCluster->GetOuterVertex());
     const CartesianVector &direction(pTransverseCluster->GetDirection());
 
-    if (std::fabs(direction.GetCrossProduct(testVertex - innerVertex).GetMagnitudeSquared()) > m_maxTransverseSeparation * m_maxTransverseSeparation)
+    if (std::fabs(direction.GetCrossProduct(testVertex - innerVertex).GetMagnitudeSquared()) > m_transverseClusterMaxDisplacement * m_transverseClusterMaxDisplacement)
         return false;
 
     if ((direction.GetDotProduct(testVertex - innerVertex) < -m_clusterWindow) || (direction.GetDotProduct(testVertex - outerVertex) > +m_clusterWindow))
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+  
+bool TransverseAssociationAlgorithm::IsOverlapping(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster) const
+{
+    CartesianVector innerInner(0.f,0.f,0.f), innerOuter(0.f,0.f,0.f);
+    CartesianVector outerInner(0.f,0.f,0.f), outerOuter(0.f,0.f,0.f);
+    this->GetExtremalCoordinatesX(pInnerCluster, innerInner, innerOuter);
+    this->GetExtremalCoordinatesX(pOuterCluster, outerInner, outerOuter);
+
+    const CartesianVector innerProjection(LArClusterHelper::GetClosestPosition(outerInner, pInnerCluster));
+    const CartesianVector outerProjection(LArClusterHelper::GetClosestPosition(innerOuter, pOuterCluster));
+
+    const float innerOverlapSquared((innerProjection - innerOuter).GetMagnitudeSquared());
+    const float outerOverlapSquared((outerProjection - outerInner).GetMagnitudeSquared());
+
+    return (std::max(innerOverlapSquared,outerOverlapSquared) > m_maxProjectedOverlap * m_maxProjectedOverlap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -405,25 +473,8 @@ float TransverseAssociationAlgorithm::GetTransverseSpan(const Cluster *const pCe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool TransverseAssociationAlgorithm::IsOverlappingCluster(const Cluster *const pFirstCluster, const Cluster *const pSecondCluster) const
-{
-    CartesianVector firstCoordinate1(0.f,0.f,0.f), firstCoordinate2(0.f,0.f,0.f);
-    CartesianVector secondCoordinate1(0.f,0.f,0.f), secondCoordinate2(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pFirstCluster, firstCoordinate1, firstCoordinate2);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pSecondCluster, secondCoordinate1, secondCoordinate2);
 
-    CartesianVector firstCoordinate3(LArClusterHelper::GetClosestPosition(secondCoordinate1,pFirstCluster));
-    CartesianVector firstCoordinate4(LArClusterHelper::GetClosestPosition(secondCoordinate2,pFirstCluster));
-    CartesianVector secondCoordinate3(LArClusterHelper::GetClosestPosition(firstCoordinate1,pSecondCluster));
-    CartesianVector secondCoordinate4(LArClusterHelper::GetClosestPosition(firstCoordinate2,pSecondCluster));
-
-    return ((firstCoordinate3 - firstCoordinate4).GetMagnitudeSquared() > m_maxOverlap * m_maxOverlap ||
-            (secondCoordinate3 - secondCoordinate4).GetMagnitudeSquared() > m_maxOverlap * m_maxOverlap);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool TransverseAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster,  const Cluster *const pTestCluster) const
+bool TransverseAssociationAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster, const Cluster *const pTestCluster) const
 {
     float currentMinX(0.f), currentMaxX(0.f);
     this->GetExtremalCoordinatesX(pCurrentCluster, currentMinX, currentMaxX);
@@ -439,6 +490,20 @@ bool TransverseAssociationAlgorithm::IsExtremalCluster(const bool isForward, con
     {
         return (testMinX < currentMinX); 
     }
+}
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(const Cluster *const pCluster, float &minX, float &maxX) const
+{
+    return this->GetExtremalCoordinatesXZ(pCluster, true, minX, maxX);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::GetExtremalCoordinatesZ(const Cluster *const pCluster, float &minZ, float &maxZ) const
+{
+    return this->GetExtremalCoordinatesXZ(pCluster, false, minZ, maxZ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -470,52 +535,174 @@ void TransverseAssociationAlgorithm::GetExtremalCoordinatesXZ(const Cluster *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(const Cluster *const pCluster, float &minX, float &maxX) const
+void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate) const
 {
-    return this->GetExtremalCoordinatesXZ(pCluster, true, minX, maxX);
+    CartesianVector firstCoordinate(0.f,0.f,0.f), secondCoordinate(0.f,0.f,0.f);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, firstCoordinate, secondCoordinate);
+
+    innerCoordinate = (firstCoordinate.GetX() < secondCoordinate.GetX() ? firstCoordinate : secondCoordinate);
+    outerCoordinate = (firstCoordinate.GetX() > secondCoordinate.GetX() ? firstCoordinate : secondCoordinate);    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
+{
+    return this->FillReducedAssociationMap(inputAssociationMap, inputAssociationMap, inputAssociationMap, outputAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::GetExtremalCoordinatesZ(const Cluster *const pCluster, float &minZ, float &maxZ) const
+void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap, const ClusterAssociationMap &secondAssociationMap, const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const
 {
-    return this->GetExtremalCoordinatesXZ(pCluster, false, minZ, maxZ);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TransverseAssociationAlgorithm::GetProjectedCoordinateX(const pandora::Cluster *const pCluster, const float &inputZ, float &outputX) const
-{
-    // Initial sanity check using inner/outer centroids
-    const float minZ(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()).GetZ());
-    const float maxZ(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()).GetZ());
-
-    if (inputZ < minZ - m_maxLongitudinalDisplacement || inputZ > maxZ + m_maxLongitudinalDisplacement)
-        throw pandora::StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    // Now search for projected position
-    float deltaZ(m_maxLongitudinalDisplacement);
-    bool foundProjection(false);
-
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    for (ClusterAssociationMap::const_iterator iterFirst = firstAssociationMap.begin(), iterEndFirst = firstAssociationMap.end(); iterFirst != iterEndFirst; ++iterFirst)
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-	    const float newDeltaZ(std::fabs((*hitIter)->GetPositionVector().GetZ() - inputZ));
+        Cluster *pCluster = iterFirst->first;
 
-	    if (newDeltaZ < deltaZ)
+        ClusterAssociationMap::const_iterator iterSecond = secondAssociationMap.find(pCluster);
+
+        // Remove double-counting in forward associations
+        for (ClusterList::iterator iterOuter = iterFirst->second.m_forwardAssociations.begin(), iterEndOuter = iterFirst->second.m_forwardAssociations.end(); iterOuter != iterEndOuter; ++iterOuter)
+        {
+            Cluster *pOuterCluster = *iterOuter;
+
+            bool isNeighbouringCluster(true);
+
+            if (secondAssociationMap.end() != iterSecond)
 	    {
-	        deltaZ = newDeltaZ;
-                outputX = (*hitIter)->GetPositionVector().GetX();
-	        foundProjection = true;
+	        for (ClusterList::iterator iterMiddle = iterSecond->second.m_forwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_forwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
+		{
+                     Cluster *pMiddleCluster = *iterMiddle;     
+
+                     ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
+                     if (secondAssociationMapSwapped.end() == iterSecondCheck)
+	                 continue;
+
+                     if (iterSecondCheck->second.m_forwardAssociations.count(pOuterCluster) > 0)
+		     {
+                         isNeighbouringCluster = false;
+                         break;
+		     } 
+		 }
+	    }
+
+            if (isNeighbouringCluster)
+	        clusterAssociationMap[pCluster].m_forwardAssociations.insert(pOuterCluster);
+	}
+
+
+        // Remove double-counting in backward associations
+        for (ClusterList::iterator iterInner = iterFirst->second.m_backwardAssociations.begin(), iterEndInner = iterFirst->second.m_backwardAssociations.end(); iterInner != iterEndInner; ++iterInner)
+        {
+            Cluster *pInnerCluster = *iterInner;
+
+            bool isNeighbouringCluster(true);
+
+            if (secondAssociationMap.end() != iterSecond)
+	    {
+	        for (ClusterList::iterator iterMiddle = iterSecond->second.m_backwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_backwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
+		{
+                     Cluster *pMiddleCluster = *iterMiddle;     
+
+                     ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
+                     if (secondAssociationMapSwapped.end() == iterSecondCheck)
+	                 continue;
+
+                     if (iterSecondCheck->second.m_backwardAssociations.count(pInnerCluster) > 0)
+		     {
+                         isNeighbouringCluster = false;
+                         break;
+		     } 
+		 }
+	    }
+
+            if (isNeighbouringCluster)
+	        clusterAssociationMap[pCluster].m_backwardAssociations.insert(pInnerCluster);	    
+	}
+
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
+{
+    for (ClusterAssociationMap::const_iterator iter = inputAssociationMap.begin(), iterEnd = inputAssociationMap.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = iter->first;
+
+        // Symmetrise forward associations
+        for (ClusterList::iterator iterForward = iter->second.m_forwardAssociations.begin(), iterEndForward = iter->second.m_forwardAssociations.end(); iterForward != iterEndForward; ++iterForward)
+        {
+            Cluster *pForwardCluster = *iterForward;
+
+            int nCounter(+1);
+
+            if (iter->second.m_backwardAssociations.count(pForwardCluster))
+	        --nCounter;
+
+            ClusterAssociationMap::const_iterator iterCheck = inputAssociationMap.find(pForwardCluster);
+            if (inputAssociationMap.end() != iterCheck)
+	    {
+                if (iterCheck->second.m_forwardAssociations.count(pCluster))
+	            --nCounter;  
+
+	        if (iterCheck->second.m_backwardAssociations.count(pCluster))
+	            ++nCounter;  
+	    }
+
+            if (nCounter > 0)
+	    {
+	        if(!(outputAssociationMap[pCluster].m_backwardAssociations.count(pForwardCluster) == 0 &&
+		     outputAssociationMap[pForwardCluster].m_forwardAssociations.count(pCluster) == 0))
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+
+	        outputAssociationMap[pCluster].m_forwardAssociations.insert(pForwardCluster);
+                outputAssociationMap[pForwardCluster].m_backwardAssociations.insert(pCluster);
+	    }
+	}
+
+        // Symmetrise backward associations
+        for (ClusterList::iterator iterBackward = iter->second.m_backwardAssociations.begin(), iterEndBackward = iter->second.m_backwardAssociations.end(); iterBackward != iterEndBackward; ++iterBackward)
+        {
+            Cluster *pBackwardCluster = *iterBackward;
+ 
+            int nCounter(-1);
+
+            if (iter->second.m_forwardAssociations.count(pBackwardCluster))
+	        ++nCounter;
+
+            ClusterAssociationMap::const_iterator iterCheck = inputAssociationMap.find(pBackwardCluster);
+            if (inputAssociationMap.end() != iterCheck)
+	    {
+                if (iterCheck->second.m_backwardAssociations.count(pCluster))
+	            ++nCounter;  
+
+	        if (iterCheck->second.m_forwardAssociations.count(pCluster))
+	            --nCounter;  
+	    }
+
+            if (nCounter < 0)
+	    {
+	        if(!(outputAssociationMap[pCluster].m_forwardAssociations.count(pBackwardCluster) == 0 &&
+		     outputAssociationMap[pBackwardCluster].m_backwardAssociations.count(pCluster) == 0))
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+
+	        outputAssociationMap[pCluster].m_backwardAssociations.insert(pBackwardCluster);
+                outputAssociationMap[pBackwardCluster].m_forwardAssociations.insert(pCluster);
 	    }
 	}
     }
+}
 
-    if (!foundProjection)
-        throw pandora::StatusCodeException(STATUS_CODE_NOT_FOUND);
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::FinalizeClusterAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
+{
+    ClusterAssociationMap intermediateAssociationMap;
+    this->FillSymmetricAssociationMap(inputAssociationMap, intermediateAssociationMap);
+    this->FillReducedAssociationMap(intermediateAssociationMap, outputAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -592,7 +779,15 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(Clust
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TransverseAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
+{    
+    m_firstLengthCut = 1.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FirstLengthCut", m_firstLengthCut));
+
+    m_secondLengthCut = 7.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SecondLengthCut", m_secondLengthCut));
+
     m_clusterWindow = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterWindow", m_clusterWindow));
@@ -604,34 +799,29 @@ StatusCode TransverseAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     m_clusterCosAngle = std::cos(m_clusterAngle * M_PI / 180.f);
     m_clusterTanAngle = std::tan(m_clusterAngle * M_PI / 180.f);
 
-    m_maxOverlap = 1.5f;
+    m_maxTransverseOverlap = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxOverlap", m_maxOverlap));
+        "MaxTransverseOverlap", m_maxTransverseOverlap));
 
-    m_minCosRelativeAngle = 0.866f;
+    m_maxProjectedOverlap = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosRelativeAngle", m_minCosRelativeAngle));
+        "MaxProjectedOverlap", m_maxProjectedOverlap));
 
-    m_maxTransverseSeparation = 1.5f;
+    m_maxLongitudinalOverlap = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseSeparation", m_maxTransverseSeparation));
+        "MaxLongitudinalOverlap", m_maxLongitudinalOverlap));
 
-    m_minTransverseDisplacement = 1.5f;
+    m_transverseClusterMinCosTheta = 0.866f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinTransverseDisplacement", m_minTransverseDisplacement));
+        "TransverseClusterMinCosTheta", m_transverseClusterMinCosTheta));
 
-    m_maxLongitudinalDisplacement = 1.5f;
+    m_transverseClusterMinLength = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+        "TransverseClusterMinLength", m_transverseClusterMinLength));
 
-    m_firstLengthCut = 1.5f;
+    m_transverseClusterMaxDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FirstLengthCut", m_firstLengthCut));
-
-    m_secondLengthCut = 7.5f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SecondLengthCut", m_secondLengthCut));
-
+        "TransverseClusterMaxDisplacement", m_transverseClusterMaxDisplacement));
 
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }

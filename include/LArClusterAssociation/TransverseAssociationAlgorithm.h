@@ -96,50 +96,84 @@ private:
     };
 
     typedef std::vector<LArTransverseCluster*> TransverseClusterList;
-    typedef std::map<pandora::Cluster*, LArTransverseCluster*> TransverseClusterMap;
-    typedef std::map<pandora::Cluster*, pandora::ClusterList> LArClusterMergeMap;
 
     /**
-     *  @brief  Select building blocks for new transverse clusters
+     *  @brief  Separate input clusters by length
      * 
-     *  @param  inputClusters input vector of clusters
-     *  @param  shortClusters output vector of short clusters (below first length cut)
-     *  @param  mediumClusters output vector of short cluster (below second length cut) with transverse directions
-     *  @param  longClusters output vector of all other clusters
+     *  @param  inputClusters the input vector of clusters
+     *  @param  shortClusters the output vector of short clusters 
+     *  @param  transverseMediumClusters the output vector of transverse medium clusters 
+     *  @param  longitudinalMediumClusters the output vector of longitudinal medium clusters 
+     *  @param  longClusters the output vector of all long clusters 
      */
     void SortInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &shortClusters, 
-        pandora::ClusterVector &mediumClusters, pandora::ClusterVector &longClusters) const;
+        pandora::ClusterVector &transverseMediumClusters, pandora::ClusterVector &longitudinalMediumClusters,
+        pandora::ClusterVector &longClusters) const;
+
+    /**
+     *  @brief  Form associations between two input lists of cluster 
+     * 
+     *  @param  firstVector the first input vector of clusters
+     *  @param  secondVector the second input vector of clusters
+     *  @param  firstAssociationMap the map of associations between first and second cluster vectors
+     *  @param  secondAssociationMap the reversed map of associations between first and cluster vectors
+     */
+    void FillAssociationMap(const pandora::ClusterVector &firstVector, const pandora::ClusterVector &secondVector,
+        ClusterAssociationMap &firstAssociationMap, ClusterAssociationMap &secondAssociationMap) const;
+
+    /**
+     *  @brief  Form a reduced set of associations between two input lists of clusters
+     * 
+     *  @param  firstVector the first input vector of clusters
+     *  @param  secondVector the second input vector of clusters
+     *  @param  clusterAssociationMap the output map of associations between clusters
+     */
+    void FillReducedAssociationMap(const pandora::ClusterVector &firstVector, const pandora::ClusterVector &secondVector,
+        ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Create transverse cluster objects, these are protoclusters with a direction and inner/outer vertices
      *
-     *  @param  transverseClusters vector of building blocks for transverse clusters
-     *  @param  longitudinalClusters vector of established longitudinal clusters
-     *  @param  transverseClusterList output list of transverse cluster objects
+     *  @param  inputClusters the input vector of clusters
+     *  @param  inputAssociationMap the map of associations between input clusters
+     *  @param  transverseClusterList the output vector of transverse cluster objects
      */
-    void FillTransverseClusterList(const pandora::ClusterVector &inputClusters, const pandora::ClusterVector &transverseClusters, 
-        const pandora::ClusterVector &longitudinalClusters, TransverseClusterList &transverseClusterList) const;
+    void FillTransverseClusterList(const  pandora::ClusterVector &inputClusters, const ClusterAssociationMap &inputAssociationMap, 
+        TransverseClusterList &transverseClusterList) const;
 
     /**
-     *  @brief  Use transverse cluster objects to fill cluster association map
+     *  @brief  Form associations between transverse cluster objects
      *
-     *  @param  transverseClusterList input list of transverse cluster objects 
-     *  @param  clusterAssociationMap output map of forward/backward associations
+     *  @param  transverseClusterList the input vector of transverse cluster objects
+     *  @param  transverseAssociationMap the external map of associations between clusters
+     *  @param  clusterAssociationMap the output map of associations between clusters
      */
-    void FillClusterAssociationMap(const TransverseClusterList &transverseClusterList, ClusterAssociationMap &clusterAssociationMap) const;
+    void FillTransverseAssociationMap(const TransverseClusterList &transverseClusterList, const ClusterAssociationMap &transverseAssociationMap, 
+        ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Find the clusters that are transversely associated with a target cluster
      * 
      *  @param  pCluster the target cluster
-     *  @param  inputClusters input vector of clean clusters for this event
-     *  @param  outputClusters output vector of clusters transversely associated with target cluster
+     *  @param  inputAssociationMap the map of associations between clusters
+     *  @param  outputClusters the output vector of clusters transversely associated with target cluster
      */
-    void GetAssociatedClusters(pandora::Cluster *const pCluster, const pandora::ClusterVector &transverseClusters,
-        const pandora::ClusterVector &longitudinalClusters, pandora::ClusterVector &associatedClusters) const;
+    void GetAssociatedClusters(pandora::Cluster *const pCluster, const ClusterAssociationMap &inputAssociationMap, 
+        pandora::ClusterVector &associatedClusters) const;
 
     /**
-     *  @brief  Define whether clusters are transversely associated
+     *  @brief  Determine whether clusters are association
+     *
+     *  @param  isForward whether the association is forwards or backwards
+     *  @param  pCluster1 the first cluster
+     *  @param  pCluster2 the second cluster
+     *
+     *  @return boolean
+     */
+    bool IsAssociated(const bool isForward, const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
+  
+    /**
+     *  @brief  Determine whether two clusters are within the same cluster window
      *
      *  @param  pCluster1 the first cluster
      *  @param  pCluster2 the second cluster
@@ -149,24 +183,34 @@ private:
     bool IsTransverseAssociated(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     /**
-     *  @brief  Define whether two transverse cluster objects are associated
+     *  @brief  Determine whether two transverse clusters are associated
      *
-     *  @param  pTransverseCluster1 the inner cluster
-     *  @param  pTransverseCluster2 the outer cluster
+     *  @param  pTransverseCluster1 the first transverse cluster
+     *  @param  pTransverseCluster2 the second transverse cluster
      *
      *  @return boolean
      */
     bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster1, const LArTransverseCluster *const pTransverseCluster2) const;
 
     /**
-     *  @brief  Define whether a transverse cluster object is associated with the vertex position of a second transverse cluster object
+     *  @brief  Determine whether one transverse cluster is associated with the vertex from a second transverse cluster
      *
      *  @param  pTransverseCluster the target cluster
      *  @param  theVertex the vertex position
      *
      *  @return boolean
      */
-    bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const pandora::CartesianVector &theVertex) const;
+    bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const pandora::CartesianVector &testPosition) const;
+
+    /**
+     *  @brief  Determine whether two clusters are overlapping
+     *
+     *  @param  pCluster1 the first cluster
+     *  @param  pCluster2 the second cluster
+     *
+     *  @return boolean
+     */
+    bool IsOverlapping(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     /**
      *  @brief  Calculate the overall span in X for a clusters
@@ -191,24 +235,6 @@ private:
     float GetTransverseSpan(const pandora::Cluster *const pCluster, const pandora::ClusterVector &associatedClusters) const;
 
     /**
-     *  @brief  Determine whether two clusters are overlapping
-     *
-     *  @param  pFirstCluster the first cluster
-     *  @param  pSecondCluster the second cluster
-     */
-    bool IsOverlappingCluster(const pandora::Cluster *const pFirstCluster, const pandora::Cluster *const pSecondCluster) const;
-
-    /**
-     *  @brief  Get minimum and maximum X or Z coordinates for a given cluster
-     *
-     *  @param  pCluster the input cluster
-     *  @param  useX calculate extermal coordinates for X (rather than Z)
-     *  @param  minXZ the minimum X or Z position
-     *  @param  maxXZ the maximum X or Z position
-     */
-    void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, const bool useX, float &minXZ, float &maxXZ) const; 
-
-    /**
      *  @brief  Get minimum and maximum X coordinates for a given cluster
      *
      *  @param  pCluster the input cluster
@@ -227,29 +253,81 @@ private:
     void GetExtremalCoordinatesZ(const pandora::Cluster *const pCluster, float &minZ, float &maxZ) const;  
 
     /**
-     *  @brief  Get projected X coordinate of a cluster for a given Z coordinate
+     *  @brief  Get minimum and maximum X or Z coordinates for a given cluster
      *
      *  @param  pCluster the input cluster
-     *  @param  inputZ the inputted Z position
-     *  @param  outputZ the outputted Z projection
+     *  @param  useX calculate extermal coordinates for X (rather than Z)
+     *  @param  minXZ the minimum X or Z position
+     *  @param  maxXZ the maximum X or Z position
      */
-    void GetProjectedCoordinateX(const pandora::Cluster *const pCluster, const float &inputZ, float &outputX) const;  
+    void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, const bool useX, float &minXZ, float &maxXZ) const; 
 
-  
+    /**
+     *  @brief  Get extremal 2D coordinates for a given cluster (ordered by X)
+     *
+     *  @param  pCluster the input cluster
+     *  @param  innerCoordinate the inner coordinate 
+     *  @param  outerCoordinate the outer coordinate
+     */
+    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate,
+        pandora::CartesianVector &outerCoordinate) const;
 
-    float          m_clusterWindow;                 ///< 
-    float          m_clusterAngle;                  ///< 
-    float          m_clusterCosAngle;               ///< 
-    float          m_clusterTanAngle;               ///< 
+    /**
+     *  @brief Remove double-counting from association map
+     *
+     *  @param inputAssociationMap the inputted association map
+     *  @param outputAssociationMap the outputted association map
+     */
+    void FillReducedAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const;
 
-    float          m_maxOverlap;                    ///<
-    float          m_minCosRelativeAngle;           ///< 
-    float          m_maxTransverseSeparation;       ///< 
-    float          m_minTransverseDisplacement;     ///< 
-    float          m_maxLongitudinalDisplacement;   ///< 
+    /**
+     *  @brief Use one map to block associations from another map
+     *
+     *  @param firstAssociationMap the first association map
+     *  @param secondAssociationMap the second association map
+     *  @param secondAssociationMap the second association map reversed
+     *  @param clusterAssociationMap the outputted association map
+     */
+    void FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap, const ClusterAssociationMap &secondAssociationMap,
+        const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const;
 
-    float          m_firstLengthCut;                ///< 
-    float          m_secondLengthCut;               ///< 
+    /**
+     *  @brief Symmetrise an association map
+     *
+     *  @param inputAssociationMap the inputted association map
+     *  @param outputAssociationMap the outputted association map
+     */
+    void FillSymmetricAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const;
+
+    /**
+     *  @brief Symmetrise and then remove double-counting from an association map
+     *
+     *  @param inputAssociationMap the inputted association map
+     *  @param outputAssociationMap the outputted association map
+     */
+    void FinalizeClusterAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const;
+
+
+
+
+    float          m_firstLengthCut;                   ///< 
+    float          m_secondLengthCut;                  ///< 
+
+    float          m_clusterWindow;                    ///< 
+    float          m_clusterAngle;                     ///< 
+    float          m_clusterCosAngle;                  ///< 
+    float          m_clusterTanAngle;                  ///< 
+    
+    float          m_maxTransverseOverlap;             ///<
+    float          m_maxLongitudinalOverlap;           ///<
+    float          m_maxProjectedOverlap;              ///<
+
+    float          m_transverseClusterMinCosTheta;     ///< 
+    float          m_transverseClusterMinLength;       ///< 
+    float          m_transverseClusterMaxDisplacement; ///< 
+    
+
+   
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
