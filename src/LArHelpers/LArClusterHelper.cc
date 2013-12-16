@@ -681,6 +681,21 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
 
             const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
 
+            //
+            // TODO: Improve extrapolation in gaps larger than the layer fit window 
+            //       (i.e. when slidingNPoints winds down to 2 points).
+            //
+            // Possibilities:
+            //  (1) Store the layer fit result only if there is a corresponding entry in 
+            //      the layer contribution map (i.e. all extrapolation will be performed 
+            //      by linear interapolation in TwoDSlidingFit). This method should be
+            //      robust but will break any algorithms that access the layer results 
+            //      directly rather than using the linear interpolation methods.
+            //  (2) Don't count gaps as part of the layer fit window (i.e. use the last 
+            //      N active layers rather than N layers to calculate the fit results).
+            //  (3) Use a larger threshold (>2) for the slidingNPoints variable.
+            //
+
             const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
             (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
         }
