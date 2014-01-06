@@ -101,12 +101,12 @@ StatusCode LowEnergyTrackSplittingAlgorithm::Run()
         }
     }
 
-std::cout << "Cheated Track/Shower Separation " << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
-PandoraMonitoringApi::VisualizeClusters(&allTrackSeedClusters, "allTrackSeedClusters", RED);
-PandoraMonitoringApi::VisualizeClusters(&allShowerSeedClusters, "allShowerSeedClusters", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&allNonSeedClusters, "allNonSeedClusters", BLUE);
-PandoraMonitoringApi::ViewEvent();
+//std::cout << "Cheated Track/Shower Separation " << std::endl;
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
+//PandoraMonitoringApi::VisualizeClusters(&allTrackSeedClusters, "allTrackSeedClusters", RED);
+//PandoraMonitoringApi::VisualizeClusters(&allShowerSeedClusters, "allShowerSeedClusters", GREEN);
+//PandoraMonitoringApi::VisualizeClusters(&allNonSeedClusters, "allNonSeedClusters", BLUE);
+//PandoraMonitoringApi::ViewEvent();
 
     // Cluster output
     if (!allShowerSeedClusters.empty())

@@ -12,8 +12,6 @@
 
 #include "LArObjects/LArOverlapTensor.h"
 
-#include "PandoraMonitoringApi.h"
-
 namespace lar
 {
 

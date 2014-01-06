@@ -15,8 +15,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "PandoraMonitoringApi.h"
-
 using namespace pandora;
 
 namespace lar

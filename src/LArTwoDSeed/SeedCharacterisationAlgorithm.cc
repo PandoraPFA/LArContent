@@ -94,16 +94,16 @@ StatusCode SeedCharacterisationAlgorithm::Run()
         // Classify the particle seed
 std::cout << "SeedCharacterisation: NAssociatedSeeds " << associatedSeeds.size() << " (br: " << seedBranches.size() << ", pr: " << seedProngs.size()
           << "), NAssociatedNonSeeds " << associatedNonSeeds.size() << " (br: " << nonSeedBranches.size() << ", pr: " << nonSeedProngs.size() << ")" << std::endl;
-PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-ClusterList tempList; tempList.insert(pParent);
-PandoraMonitoringApi::VisualizeClusters(&tempList, "ParticleSeed", RED);
-PandoraMonitoringApi::VisualizeClusters(&associatedSeeds, "AssociatedSeedClusters", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&associatedNonSeeds, "AssociatedNonSeedClusters", BLUE);
-PandoraMonitoringApi::VisualizeClusters(&seedProngs, "seedProngs", CYAN);
-PandoraMonitoringApi::VisualizeClusters(&seedBranches, "seedBranches", MAGENTA);
-PandoraMonitoringApi::VisualizeClusters(&nonSeedProngs, "nonSeedProngs", CYAN);
-PandoraMonitoringApi::VisualizeClusters(&nonSeedBranches, "nonSeedBranches", MAGENTA);
-PandoraMonitoringApi::ViewEvent();
+//PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+//ClusterList tempList; tempList.insert(pParent);
+//PandoraMonitoringApi::VisualizeClusters(&tempList, "ParticleSeed", RED);
+//PandoraMonitoringApi::VisualizeClusters(&associatedSeeds, "AssociatedSeedClusters", GREEN);
+//PandoraMonitoringApi::VisualizeClusters(&associatedNonSeeds, "AssociatedNonSeedClusters", BLUE);
+//PandoraMonitoringApi::VisualizeClusters(&seedProngs, "seedProngs", CYAN);
+//PandoraMonitoringApi::VisualizeClusters(&seedBranches, "seedBranches", MAGENTA);
+//PandoraMonitoringApi::VisualizeClusters(&nonSeedProngs, "nonSeedProngs", CYAN);
+//PandoraMonitoringApi::VisualizeClusters(&nonSeedBranches, "nonSeedBranches", MAGENTA);
+//PandoraMonitoringApi::ViewEvent();
     }
 
 //std::cout << "SeedCharacterisation: results " << std::endl;
