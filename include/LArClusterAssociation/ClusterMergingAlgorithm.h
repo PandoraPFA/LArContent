@@ -10,8 +10,6 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArOverlapTensor.h"
-
 namespace lar
 {
 
@@ -24,9 +22,8 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<pandora::Cluster*, bool> ClusterVetoMap;
-    typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
-    typedef OverlapTensor<bool> ClusterAssociationMatrix;
+    typedef std::map<const pandora::Cluster*, bool> ClusterVetoMap;
+    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
@@ -40,22 +37,11 @@ protected:
      *  @brief  Form associations between pointing clusters
      * 
      *  @param  clusterVector the vector of clean clusters
-     *  @param  clusterMergingMatrix the matrix of cluster associations
+     *  @param  clusterMergeMap the matrix of cluster associations
      */
-    virtual void FillAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const = 0;
+    virtual void FillClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const = 0;
 
 private:
-    /**
-     *  @brief  Determine whether two clusters are associated and should be merged
-     * 
-     *  @param  pCluster1 the address of the first cluster
-     *  @param  pCluster2 the address of the second cluster
-     *  @param  clusterAssociationMatrix the matrix of cluster associations
-     *
-     *  @return boolean
-     */
-    bool AreClustersAssociated(pandora::Cluster *pCluster1, pandora::Cluster *pCluster2, const ClusterAssociationMatrix &clusterAssociationMatrix);
-
    /**
      *  @brief  Collect up all clusters associations related to a given seed cluster
      * 

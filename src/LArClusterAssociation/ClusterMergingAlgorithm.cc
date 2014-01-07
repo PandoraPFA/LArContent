@@ -26,30 +26,9 @@ StatusCode ClusterMergingAlgorithm::Run()
     this->GetListOfCleanClusters(pClusterList, clusterVector);
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
-    ClusterAssociationMatrix clusterAssociationMatrix;
-
-    this->FillAssociationMatrix(clusterVector, clusterAssociationMatrix);
-
     ClusterMergeMap clusterMergeMap;
 
-    for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterEndI = clusterVector.end(); iterI != iterEndI; ++iterI)
-    {
-        Cluster *pClusterI = *iterI;
-
-        for (ClusterVector::const_iterator iterJ = iterI, iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            Cluster *pClusterJ = *iterJ;
-
-            if (pClusterI == pClusterJ)
-                continue;
-
-            if (this->AreClustersAssociated(pClusterI, pClusterJ, clusterAssociationMatrix))
-            {
-                clusterMergeMap[pClusterI].insert(pClusterJ);
-                clusterMergeMap[pClusterJ].insert(pClusterI);
-            }
-        }
-    }
+    this->FillClusterMergeMap(clusterVector, clusterMergeMap);
 
     ClusterVetoMap clusterVetoMap;
 
@@ -100,33 +79,6 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, C
     }
 
     return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ClusterMergingAlgorithm::AreClustersAssociated(Cluster *pCluster1, Cluster *pCluster2, const ClusterAssociationMatrix &clusterAssociationMatrix)
-{ 
-    bool isAssociated(false);
-
-    try
-    {
-        if (!isAssociated)
-            isAssociated = clusterAssociationMatrix.GetOverlapResult(pCluster1, pCluster2, NULL);
-    }
-    catch (StatusCodeException &)
-    {
-    }
-
-    try
-    {
-        if (!isAssociated)
-            isAssociated = clusterAssociationMatrix.GetOverlapResult(pCluster2, pCluster1, NULL);
-    }
-    catch (StatusCodeException &)
-    {
-    }
-
-    return isAssociated;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
