@@ -20,8 +20,6 @@ namespace lar
 
 void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-std::cout << " --- debug: LongitudinalExtensionAlgorithm::GetListOfCleanClusters(...) " << std::endl;
-
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
@@ -40,14 +38,14 @@ std::cout << " --- debug: LongitudinalExtensionAlgorithm::GetListOfCleanClusters
 
 void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
-std::cout << " --- debug: LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(...) " << std::endl;
-
     LArPointingClusterList pointingClusterList;
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         pointingClusterList.push_back(LArPointingCluster(*iter));
     }
+
+    ClusterAssociationMatrix intermediateAssociationMatrix;
 
     for (LArPointingClusterList::const_iterator iterI = pointingClusterList.begin(), iterEndI = pointingClusterList.end(); iterI != iterEndI; ++iterI)
     {
@@ -60,9 +58,11 @@ std::cout << " --- debug: LongitudinalExtensionAlgorithm::FillClusterAssociation
             if (clusterI.GetCluster() == clusterJ.GetCluster())
                 continue;
 
-            this->FillAssociationMatrix(clusterI, clusterJ, clusterAssociationMatrix);
+            this->FillAssociationMatrix(clusterI, clusterJ, intermediateAssociationMatrix);
         }
     }
+
+    this->FillReducedAssociationMatrix(intermediateAssociationMatrix, clusterAssociationMatrix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -167,15 +167,20 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
             LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL1, rT1);
             LArVertexHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, vertexPositionI, rL2, rT2);
 
-            if ((cosTheta > 0.985f) && (std::fabs(cosThetaI) > 0.25f) && (std::fabs(cosThetaJ) > 0.25f) && 
-                (targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
-                (rL1 > -5.f && rL1 < +15.f && rL1 + clusterLengthJ > +15.f) && 
-                (rL2 > -5.f && rL2 < +15.f && rL2 + clusterLengthI > +15.f) && 
-                (rT1 < 2.f * m_spatialResolution) && (rT2 < 2.f * m_spatialResolution))
-            {
-                associationType = ClusterAssociation::STRONG;
-            }
-        }
+            if ((rL1 > -2.5f && rL1 < +15.f && rL1 < 2.f * clusterLengthJ) && 
+                (rL2 > -2.5f && rL2 < +15.f && rL2 < 2.f * clusterLengthI) && 
+		(rT1 < 3.f * m_spatialResolution) && (rT2 < 3.f * m_spatialResolution))
+	    {
+                associationType = ClusterAssociation::WEAK;
+
+                if ((rT1 < 2.f * m_spatialResolution) && (rT2 < 2.f * m_spatialResolution) &&
+                    (targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
+                    (cosTheta > 0.985f) && (std::fabs(cosThetaI) > 0.25f) && (std::fabs(cosThetaJ) > 0.25f))
+                {
+                    associationType = ClusterAssociation::STRONG;
+		}
+	    }
+	}
     }
 
     if (associationType > ClusterAssociation::NONE)
@@ -184,6 +189,77 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
         const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
         (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
         (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
+
+// ---- BEGIN DISPLAY ----
+// if(associationType == ClusterAssociation::STRONG) 
+// std::cout << " --- STRONG --- " << std::endl; 
+// else std::cout << " --- WEAK --- " << std::endl;
+// ClusterList tempListI, tempListJ;
+// tempListI.insert((Cluster*)pClusterI);
+// tempListJ.insert((Cluster*)pClusterJ);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
+// PandoraMonitoringApi::VisualizeClusters(&tempListI, "ClusterI", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&tempListJ, "ClusterJ", GREEN);
+// PandoraMonitoringApi::ViewEvent();
+// ---- END DISPLAY ----
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LongitudinalExtensionAlgorithm::FillReducedAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const
+{
+    for (ClusterAssociationMatrix::const_iterator iter1 = inputAssociationMatrix.begin(), iterEnd1 = inputAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const Cluster* pCluster1(iter1->first);
+        const ClusterAssociationMap &associationMap1(iter1->second);
+
+        for (ClusterAssociationMatrix::const_iterator iter2 = iter1, iterEnd2 = inputAssociationMatrix.end(); iter2 != iterEnd2; ++iter2)
+        {
+            const Cluster* pCluster2(iter2->first);
+            const ClusterAssociationMap &associationMap2(iter2->second);
+
+            if (pCluster1 == pCluster2)
+	        continue;
+
+            ClusterAssociationMap::const_iterator iter12 = associationMap1.find(pCluster2);
+            if (associationMap1.end() == iter12)
+	        continue; 
+
+            ClusterAssociationMap::const_iterator iter21 = associationMap2.find(pCluster1);
+            if (associationMap2.end() == iter21)
+	        continue;
+
+            const ClusterAssociation &association12(iter12->second);
+            const ClusterAssociation &association21(iter21->second);
+
+            bool isAssociated(true);
+
+            for (ClusterAssociationMap::const_iterator iter13 = associationMap1.begin(), iterEnd13 = associationMap1.end(); iter13 != iterEnd13; ++iter13)
+	    {
+	        const Cluster* pCluster3(iter13->first);
+                
+                ClusterAssociationMap::const_iterator iter23 = associationMap2.find(pCluster3);
+                if (associationMap2.end() == iter23)
+	            continue;
+
+                const ClusterAssociation &association13(iter13->second);
+                const ClusterAssociation &association23(iter23->second);
+
+                if (association12.GetParent() == association13.GetParent() &&
+                    association23.GetParent() == association21.GetParent())
+		{
+		    isAssociated = false;
+                    break;
+		}
+	    }
+
+            if (isAssociated)
+	    {
+                (void) outputAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2, association12));
+                (void) outputAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1, association21));
+	    }
+	}
     }
 }
 
@@ -191,8 +267,6 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 
 void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const
 {
-std::cout << " --- debug: LongitudinalExtensionAlgorithm::FillClusterMergeMap(...) " << std::endl;
-
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
     for (ClusterAssociationMatrix::const_iterator iter1 = clusterAssociationMatrix.begin(), iterEnd1 = clusterAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
@@ -282,11 +356,10 @@ std::cout << " --- debug: LongitudinalExtensionAlgorithm::FillClusterMergeMap(..
 // tempList1.insert((Cluster*)pParentCluster);
 // tempList2.insert((Cluster*)pDaughterCluster);
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", GREEN);
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLACK);
 // PandoraMonitoringApi::ViewEvent();
 // ---- END DISPLAY ----
-
 	    }
 	}
     }
@@ -296,7 +369,7 @@ std::cout << " --- debug: LongitudinalExtensionAlgorithm::FillClusterMergeMap(..
 
 StatusCode LongitudinalExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_spatialResolution = 1.16f; // cm
+    m_spatialResolution = 1.25f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SpatialResolution", m_spatialResolution));
 

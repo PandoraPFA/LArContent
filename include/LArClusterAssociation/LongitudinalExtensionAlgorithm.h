@@ -36,7 +36,6 @@ private:
 
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
   
-
     /**
      *  @brief  Form associations between pointing clusters
      * 
@@ -46,18 +45,25 @@ private:
      */
     void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
-
-
     /**
      *  @brief  Form associations between pointing cluster vertices
      * 
-     *  @param  clusterVertexI the first pointing cluster vertex
-     *  @param  clusterVertexJ the second pointing cluster vertex
+     *  @param  clusterI the first pointing cluster
+     *  @param  clusterJ the second pointing cluster
+     *  @param  useInnerI use the inner vertex of the first pointing cluster
+     *  @param  useInnerJ use the inner vertex of the second pointing cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
     void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, const bool useInnerI, const bool useInnerJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
-    
+    /**
+     *  @brief  Remove double-counting from cluster association matrix
+     * 
+     *  @param  inputAssociationMatrix the input association matrix
+     *  @param  outputAssociationMatrix the output association matrix
+     */
+    void FillReducedAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const;
+
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
