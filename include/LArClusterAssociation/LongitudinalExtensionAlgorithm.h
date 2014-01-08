@@ -45,17 +45,6 @@ private:
     void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     /**
-     *  @brief  Form a specific end-to-end association between two pointing clusters
-     * 
-     *  @param  clusterI the first pointing cluster
-     *  @param  clusterJ the second pointing cluster
-     *  @param  useInnerI use the inner vertex from the first pointing cluster
-     *  @param  useInnerJ use the inner vertex from the second pointing cluster
-     *  @param  clusterAssociationMatrix the matrix of cluster associations
-     */
-    void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, const bool useInnerI, const bool useInnerJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
-
-    /**
      *  @brief  Remove double-counting from cluster association matrix
      * 
      *  @param  inputAssociationMatrix the input matrix of associations
@@ -65,7 +54,15 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float   m_spatialResolution;    ///< 
+
+    float   m_clusterMinLength;                     ///< 
+    float   m_clusterMinLayerOccupancy;             ///<  
+    float   m_nodeMaxDisplacement;                  ///< 
+    float   m_nodeMaxCosRelativeAngle;              ///< 
+    float   m_emissionMaxCosRelativeAngle;          ///<
+    float   m_emissionMaxLongitudinalDisplacement;  ///< 
+    float   m_emissionMaxTransverseDisplacement;    ///< 
+   
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -24,10 +24,10 @@ void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *c
     {
         Cluster *pCluster = *iter;
 
-        if (LArClusterHelper::GetLengthSquared(pCluster) < 25.f)
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_clusterMinLength * m_clusterMinLength)
             continue;
 
-        if (LArClusterHelper::GetLayerOccupancy(pCluster) < 0.75f)
+        if (LArClusterHelper::GetLayerOccupancy(pCluster) < m_clusterMinLayerOccupancy)
             continue;
 
         clusterVector.push_back(pCluster);
@@ -72,127 +72,108 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterV
 void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ,
     ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
-    const bool useInnerI(true), useInnerJ(true);
-    const bool useOuterI(false), useOuterJ(false);
-
-    this->FillAssociationMatrix(clusterI, clusterJ, useInnerI, useInnerJ, clusterAssociationMatrix);
-    this->FillAssociationMatrix(clusterI, clusterJ, useInnerI, useOuterJ, clusterAssociationMatrix);   
-    this->FillAssociationMatrix(clusterI, clusterJ, useOuterI, useInnerJ, clusterAssociationMatrix);
-    this->FillAssociationMatrix(clusterI, clusterJ, useOuterI, useOuterJ, clusterAssociationMatrix);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, 
-    const bool useInnerI, const bool useInnerJ, ClusterAssociationMatrix &clusterAssociationMatrix) const
-{
     const Cluster *const pClusterI(clusterI.GetCluster());
     const Cluster *const pClusterJ(clusterJ.GetCluster());
 
     if (pClusterI == pClusterJ)
         return;
 
-    // Target vertices should satisfy a minimum displacement
-    const LArPointingCluster::Vertex &targetVertexI(useInnerI ? clusterI.GetInnerVertex() : clusterI.GetOuterVertex());
-    const LArPointingCluster::Vertex &targetVertexJ(useInnerJ ? clusterJ.GetInnerVertex() : clusterJ.GetOuterVertex());
-
-    const float distSquared_targetI_to_targetJ((targetVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());
-
-    if( distSquared_targetI_to_targetJ > 400.f )
-        return;
-
-    // Target vertices should be the closest pair of vertices
-    const LArPointingCluster::Vertex &oppositeVertexI(useInnerI ? clusterI.GetOuterVertex() : clusterI.GetInnerVertex());
-    const LArPointingCluster::Vertex &oppositeVertexJ(useInnerJ ? clusterJ.GetOuterVertex() : clusterJ.GetInnerVertex());
-    
-    const float distSquared_targetI_to_oppositeJ((targetVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
-    const float distSquared_oppositeI_to_targetJ((oppositeVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());
-    const float distSquared_oppositeI_to_oppositeJ((oppositeVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
-
-    if (distSquared_targetI_to_targetJ > std::min(distSquared_oppositeI_to_oppositeJ, std::min(distSquared_targetI_to_oppositeJ, distSquared_oppositeI_to_targetJ)))  
-        return;
-
-    if (distSquared_oppositeI_to_oppositeJ < std::max(distSquared_targetI_to_targetJ, std::max(distSquared_targetI_to_oppositeJ, distSquared_oppositeI_to_targetJ)))  
-        return;
-
-    // Check that new layer occupancy would be reasonable
-    if (LArClusterHelper::GetLayerOccupancy(pClusterI, pClusterJ) < 0.75)
-        return;
-
-    // Check that vertices have a reasonable linear fit
-    if (targetVertexI.GetRms() > 1.f || targetVertexJ.GetRms() > 1.f)
-        return;
-    
-
-    // Association types
-    ClusterAssociation::AssociationType associationType(ClusterAssociation::NONE);
-
-
-    // Requirements for Nodes
-    const CartesianVector &vertexPositionI(targetVertexI.GetPosition());
-    const CartesianVector &vertexPositionJ(targetVertexJ.GetPosition());
-    const CartesianVector &vertexDirectionI(targetVertexI.GetDirection());
-    const CartesianVector &vertexDirectionJ(targetVertexJ.GetDirection());
-
-    const float distanceSquared((vertexPositionI - vertexPositionJ).GetMagnitudeSquared());
-
-    if (distanceSquared < 2.f * m_spatialResolution * m_spatialResolution)
+    for (unsigned int useInnerI=0; useInnerI<2; ++useInnerI)
     {
-        associationType = ClusterAssociation::WEAK;
+        for (unsigned int useInnerJ=0; useInnerJ<2; ++useInnerJ)
+	{
+            // Target vertices should satisfy a minimum displacement
+            const LArPointingCluster::Vertex &targetVertexI(useInnerI==1 ? clusterI.GetInnerVertex() : clusterI.GetOuterVertex());
+            const LArPointingCluster::Vertex &targetVertexJ(useInnerJ==1 ? clusterJ.GetInnerVertex() : clusterJ.GetOuterVertex());
 
-        if (distanceSquared < m_spatialResolution * m_spatialResolution)
-        {
-            const float cosTheta(-vertexDirectionI.GetDotProduct(vertexDirectionJ));
+            const float distSquared_targetI_to_targetJ((targetVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());
 
-            if (cosTheta > 0.906f)
+            if (distSquared_targetI_to_targetJ > m_emissionMaxLongitudinalDisplacement * m_emissionMaxLongitudinalDisplacement)
+	        continue;
+
+            // Target vertices should be the closest pair of vertices
+            const LArPointingCluster::Vertex &oppositeVertexI(useInnerI==1 ? clusterI.GetOuterVertex() : clusterI.GetInnerVertex());
+            const LArPointingCluster::Vertex &oppositeVertexJ(useInnerJ==1 ? clusterJ.GetOuterVertex() : clusterJ.GetInnerVertex());
+    
+            const float distSquared_targetI_to_oppositeJ((targetVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
+            const float distSquared_oppositeI_to_targetJ((oppositeVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());
+            const float distSquared_oppositeI_to_oppositeJ((oppositeVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
+
+            if (distSquared_targetI_to_targetJ > std::min(distSquared_oppositeI_to_oppositeJ, std::min(distSquared_targetI_to_oppositeJ, distSquared_oppositeI_to_targetJ)))  
+	        continue;
+
+            if (distSquared_oppositeI_to_oppositeJ < std::max(distSquared_targetI_to_targetJ, std::max(distSquared_targetI_to_oppositeJ, distSquared_oppositeI_to_targetJ)))  
+                continue;
+
+            // Check that new layer occupancy would be reasonable
+            if (LArClusterHelper::GetLayerOccupancy(pClusterI, pClusterJ) < m_clusterMinLayerOccupancy)
+                continue;
+
+            // Check that vertices have a reasonable linear fit
+            if (targetVertexI.GetRms() > 1.f || targetVertexJ.GetRms() > 1.f)
+                continue;
+    
+
+            // Association types
+            ClusterAssociation::AssociationType associationType(ClusterAssociation::NONE);
+
+
+            // Requirements for Nodes
+            const CartesianVector &vertexPositionI(targetVertexI.GetPosition());
+            const CartesianVector &vertexPositionJ(targetVertexJ.GetPosition());
+            const CartesianVector &vertexDirectionI(targetVertexI.GetDirection());
+            const CartesianVector &vertexDirectionJ(targetVertexJ.GetDirection());
+
+            const float distanceSquared((vertexPositionI - vertexPositionJ).GetMagnitudeSquared());
+
+            if (distanceSquared < 2.f * m_nodeMaxDisplacement * m_nodeMaxDisplacement)
             {
-                associationType = ClusterAssociation::STRONG;
-            }
-        }
-    }
-
-
-    // Requirements for Emissions
-    const float clusterLengthI((targetVertexI.GetPosition() - oppositeVertexI.GetPosition()).GetMagnitude());
-    const float clusterLengthJ((targetVertexJ.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitude());
-
-    if ((clusterLengthI > 5.f) && (clusterLengthJ > 5.f))
-    {
-        // Calculate impact parameters
-        if (associationType < ClusterAssociation::STRONG)
-        {
-            const float cosTheta(-vertexDirectionI.GetDotProduct(vertexDirectionJ));
-            const float cosThetaI((vertexPositionI - vertexPositionJ).GetUnitVector().GetDotProduct(vertexDirectionI));
-            const float cosThetaJ((vertexPositionJ - vertexPositionI).GetUnitVector().GetDotProduct(vertexDirectionJ));
-
-            float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-            LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL1, rT1);
-            LArVertexHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, vertexPositionI, rL2, rT2);
-
-            if ((rL1 > -2.5f && rL1 < +15.f && rL1 < 2.f * clusterLengthJ) && 
-                (rL2 > -2.5f && rL2 < +15.f && rL2 < 2.f * clusterLengthI) && 
-		(rT1 < 3.f * m_spatialResolution) && (rT2 < 3.f * m_spatialResolution))
-	    {
                 associationType = ClusterAssociation::WEAK;
 
-                if ((rT1 < 2.f * m_spatialResolution) && (rT2 < 2.f * m_spatialResolution) &&
-                    (targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
-                    (cosTheta > 0.985f) && (std::fabs(cosThetaI) > 0.25f) && (std::fabs(cosThetaJ) > 0.25f))
+                if (distanceSquared < m_nodeMaxDisplacement * m_nodeMaxDisplacement)
                 {
-                    associationType = ClusterAssociation::STRONG;
+                    const float cosTheta(-vertexDirectionI.GetDotProduct(vertexDirectionJ));
+
+                    if (cosTheta > m_nodeMaxCosRelativeAngle)
+                    {
+                        associationType = ClusterAssociation::STRONG;
+		    }
 		}
 	    }
-	}
-    }
 
-    if (associationType > ClusterAssociation::NONE)
-    {
-        const ClusterAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-        const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-        (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
-        (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
 
-// ---- BEGIN DISPLAY ----
+            // Requirements for Emissions
+            const float clusterLengthI((targetVertexI.GetPosition() - oppositeVertexI.GetPosition()).GetMagnitude());
+            const float clusterLengthJ((targetVertexJ.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitude());
+
+            if (associationType < ClusterAssociation::STRONG)
+            {
+                const float cosTheta(-vertexDirectionI.GetDotProduct(vertexDirectionJ));
+                const float cosThetaI((vertexPositionI - vertexPositionJ).GetUnitVector().GetDotProduct(vertexDirectionI));
+                const float cosThetaJ((vertexPositionJ - vertexPositionI).GetUnitVector().GetDotProduct(vertexDirectionJ));
+
+                float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
+                LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL1, rT1);
+                LArVertexHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, vertexPositionI, rL2, rT2);
+
+                if ((rL1 > -2.5f && rL1 < m_emissionMaxLongitudinalDisplacement && rL1 < 2.f * clusterLengthJ) && 
+                    (rL2 > -2.5f && rL2 < m_emissionMaxLongitudinalDisplacement && rL2 < 2.f * clusterLengthI) && 
+                    (rT1 < 1.5f * m_emissionMaxTransverseDisplacement) && (rT2 < 1.5f * m_emissionMaxTransverseDisplacement))
+	        {
+                    associationType = ClusterAssociation::WEAK;
+
+                    if ((rT1 < m_emissionMaxTransverseDisplacement) && (rT2 < m_emissionMaxTransverseDisplacement) &&
+                        (targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
+                        (cosTheta > m_emissionMaxCosRelativeAngle) && (std::fabs(cosThetaI) > 0.25f) && (std::fabs(cosThetaJ) > 0.25f))
+                    {
+                        associationType = ClusterAssociation::STRONG;
+		    }
+		}
+	    }
+
+//---- BEGIN DISPLAY ----
+// if (associationType > ClusterAssociation::NONE)
+// {
 // if(associationType == ClusterAssociation::STRONG) 
 // std::cout << " --- STRONG --- " << std::endl; 
 // else std::cout << " --- WEAK --- " << std::endl;
@@ -200,10 +181,21 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 // tempListI.insert((Cluster*)pClusterI);
 // tempListJ.insert((Cluster*)pClusterJ);
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
-// PandoraMonitoringApi::VisualizeClusters(&tempListI, "ClusterI", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempListJ, "ClusterJ", GREEN);
+// PandoraMonitoringApi::VisualizeClusters(&tempListI, "ClusterI", GREEN);
+// PandoraMonitoringApi::VisualizeClusters(&tempListJ, "ClusterJ", BLUE);
 // PandoraMonitoringApi::ViewEvent();
-// ---- END DISPLAY ----
+// }
+//---- END DISPLAY ----
+
+            if (associationType > ClusterAssociation::NONE)
+            {
+                const ClusterAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+                const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+                (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
+                (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
+                return;
+	    }
+	}
     }
 }
 
@@ -211,7 +203,6 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 
 void LongitudinalExtensionAlgorithm::FillReducedAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const
 {
-
     // Remove double-counting from the map of associations
     // i.e. if the map has A -> B, B -> C, A -> C, then remove A -> C
 
@@ -275,10 +266,9 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
 {
     // Decide which associations will become merges
     // To make the merge A <-> B, both A -> B and B -> A must be strong associations
-    // with the largest figures of merit of all the A -> X and B -> X associations
+    // with the largest figures of merit of all the A -> X and B -> Y associations
 
-
-    // First step: find the best associations A -> X and B -> X
+    // First step: find the best associations A -> X and B -> Y
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
     for (ClusterAssociationMatrix::const_iterator iter1 = clusterAssociationMatrix.begin(), iterEnd1 = clusterAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
@@ -336,7 +326,7 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
     }
 
 
-    // Second step: make the merge if A -> X and B -> X is in fact A -> B and B -> A
+    // Second step: make the merge if A -> X and B -> Y is in fact A -> B and B -> A
     for (ClusterAssociationMatrix::const_iterator iter3 = intermediateAssociationMatrix.begin(), iterEnd3 = intermediateAssociationMatrix.end(); iter3 != iterEnd3; ++iter3)
     {
         const Cluster* pParentCluster(iter3->first);
@@ -382,9 +372,33 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
 
 StatusCode LongitudinalExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_spatialResolution = 1.25f; // cm
+    m_clusterMinLength = 5.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SpatialResolution", m_spatialResolution));
+        "ClusterMinLength", m_clusterMinLength));
+
+    m_clusterMinLayerOccupancy = 0.75f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterMinLayerOccupancy", m_clusterMinLayerOccupancy));
+
+    m_nodeMaxDisplacement = 1.5f; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NodeMaxDisplacement", m_nodeMaxDisplacement));
+
+    m_nodeMaxCosRelativeAngle = 0.906f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NodeMaxCosRelativeAngle", m_nodeMaxCosRelativeAngle));
+
+    m_emissionMaxLongitudinalDisplacement = 15.f; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EmissionMaxLongitudinalDisplacement", m_emissionMaxLongitudinalDisplacement));
+
+    m_emissionMaxTransverseDisplacement = 2.5f; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EmissionMaxTransverseDisplacement", m_emissionMaxTransverseDisplacement));
+
+    m_emissionMaxCosRelativeAngle = 0.985f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EmissionMaxCosRelativeAngle", m_emissionMaxCosRelativeAngle));
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
