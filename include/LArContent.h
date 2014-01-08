@@ -10,6 +10,7 @@
 
 #include "LArClusterAssociation/IsolatedHitMergingAlgorithm.h"
 #include "LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
+#include "LArClusterAssociation/LongitudinalConsolidationAlgorithm.h"
 #include "LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 #include "LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArClusterAssociation/TransverseExtensionAlgorithm.h"
@@ -75,6 +76,7 @@ public:
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
+        d("LArLongitudinalConsolidation",           lar::LongitudinalConsolidationAlgorithm::Factory)                           \
         d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArParticleMonitoring",                  lar::ParticleMonitoringAlgorithm::Factory)                                  \
