@@ -33,11 +33,10 @@ public:
 private:
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
     void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
-
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
   
     /**
-     *  @brief  Form associations between pointing clusters
+     *  @brief  Form association between two pointing clusters
      * 
      *  @param  clusterI the first pointing cluster
      *  @param  clusterJ the second pointing cluster
@@ -46,12 +45,12 @@ private:
     void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     /**
-     *  @brief  Form associations between pointing cluster vertices
+     *  @brief  Form a specific end-to-end association between two pointing clusters
      * 
      *  @param  clusterI the first pointing cluster
      *  @param  clusterJ the second pointing cluster
-     *  @param  useInnerI use the inner vertex of the first pointing cluster
-     *  @param  useInnerJ use the inner vertex of the second pointing cluster
+     *  @param  useInnerI use the inner vertex from the first pointing cluster
+     *  @param  useInnerJ use the inner vertex from the second pointing cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
     void FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, const bool useInnerI, const bool useInnerJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
@@ -59,11 +58,10 @@ private:
     /**
      *  @brief  Remove double-counting from cluster association matrix
      * 
-     *  @param  inputAssociationMatrix the input association matrix
-     *  @param  outputAssociationMatrix the output association matrix
+     *  @param  inputAssociationMatrix the input matrix of associations
+     *  @param  outputAssociationMatrix the output matrix of reduced associations
      */
     void FillReducedAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const;
-
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
