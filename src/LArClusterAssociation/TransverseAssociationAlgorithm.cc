@@ -32,6 +32,10 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
 
     try
     {
+        // Step 1: Sort the input clusters into sub-samples 
+        //         (a) shortClusters:  below first length cut
+        //         (b) mediumClusters: between first and second length cuts (separated into transverse and longitudinal)
+        //         (c) longClusters:   above second length cut
         ClusterVector shortClusters, transverseMediumClusters, longitudinalMediumClusters, longClusters;
         this->SortInputClusters(allClusters, shortClusters, transverseMediumClusters, longitudinalMediumClusters, longClusters);
 
@@ -44,8 +48,15 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
         establishedClusters.insert(establishedClusters.end(), longitudinalMediumClusters.begin(), longitudinalMediumClusters.end());
         establishedClusters.insert(establishedClusters.end(), longClusters.begin(), longClusters.end());
         
+        // Step 2: Form loose transverse associations between short clusters, 
+        //         without hopping over any established clusters
         ClusterAssociationMap firstAssociationMap;
 	this->FillReducedAssociationMap(shortClusters, establishedClusters, firstAssociationMap);
+
+        // Step 3: Form transverse cluster objects. Basically, try to assign a direction to each
+        //         of the clusters in the 'transverseClusters' list. For the short clusters in 
+	//         this list, the direction is obtained from a straight line fit to its associated 
+        //         clusters as selected in the previous step.
         this->FillTransverseClusterList(transverseClusters, firstAssociationMap, transverseClusterList);
         
 // ---- BEGIN DISPLAY ----
@@ -67,10 +78,16 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
 // PandoraMonitoringApi::ViewEvent();
 // ---- END DISPLAY ----
 
+        // Step 4: Form loose transverse associations between transverse clusters
+        //         (First, associate medium clusters, without hopping over long clusters
+        //          Next, associate all transverse clusters, without hopping over any clusters)
         ClusterAssociationMap secondAssociationMap;
         this->FillReducedAssociationMap(transverseMediumClusters, longClusters, secondAssociationMap);
         this->FillReducedAssociationMap(transverseClusters, allClusters, secondAssociationMap);
 
+        // Step 5: Form associations between transverse cluster objects
+        //         (These transverse associations must already exist as loose associations
+        //          between transverse clusters as identified in the previous step).
         ClusterAssociationMap transverseAssociationMap;
 	this->FillTransverseAssociationMap(transverseClusterList, secondAssociationMap, transverseAssociationMap);
 
@@ -101,6 +118,8 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
 // PandoraMonitoringApi::ViewEvent();
 // ---- END DISPLAY ----
 
+        // Step 6: Finalise the forward/backward transverse associations by symmetrising the 
+        //         transverse association map and removing any double-counting
         this->FinalizeClusterAssociationMap(transverseAssociationMap, clusterAssociationMap);
     }
     catch (StatusCodeException &statusCodeException)
@@ -178,6 +197,10 @@ void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterVector &fir
       
 void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterVector &firstVector, const ClusterVector &secondVector, ClusterAssociationMap &clusterAssociationMap) const
 {
+    // To build a 'reduced' association map, form associations between clusters in the first cluster vector,
+    // but prevent these associations from hopping over any clusters in the second cluster vector.
+    // i.e. A->B from the first vector is forbidden if A->C->B exists with C from the second vector
+
     ClusterAssociationMap firstAssociationMap, firstAssociationMapSwapped;
     ClusterAssociationMap secondAssociationMap, secondAssociationMapSwapped;
        
@@ -556,6 +579,13 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
 void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap, const ClusterAssociationMap &secondAssociationMap, const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const
 {
+    // Remove associations A->B from the first association map
+    // if A->C exists in the second map and C->B exists in the reversed second map
+
+    // Method can also be accessed through FillReducedAssociationMap(input,output) method,
+    // which will remove association A->B from the input map if an association A->C and C->B
+    // already exists in the map.
+
     for (ClusterAssociationMap::const_iterator iterFirst = firstAssociationMap.begin(), iterEndFirst = firstAssociationMap.end(); iterFirst != iterEndFirst; ++iterFirst)
     {
         Cluster *pCluster = iterFirst->first;
@@ -628,6 +658,10 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
 void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
 {
+    // Generate a symmetrised association map, so that both A--Fwd-->B and B--Bwd-->A both exist.
+    // If A is associated to B through both a backward and forward association (very bad!),
+    // try to rationalise this through majority voting, otherwise remove the association.
+
     for (ClusterAssociationMap::const_iterator iter = inputAssociationMap.begin(), iterEnd = inputAssociationMap.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = iter->first;
