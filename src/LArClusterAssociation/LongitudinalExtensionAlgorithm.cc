@@ -45,6 +45,7 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterV
         pointingClusterList.push_back(LArPointingCluster(*iter));
     }
 
+    // Form associations between pairs of pointing clusters
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
     for (LArPointingClusterList::const_iterator iterI = pointingClusterList.begin(), iterEndI = pointingClusterList.end(); iterI != iterEndI; ++iterI)
@@ -62,6 +63,7 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterV
         }
     }
 
+    //Remove any double-counting from the map of associations
     this->FillReducedAssociationMatrix(intermediateAssociationMatrix, clusterAssociationMatrix);
 }
 
@@ -209,6 +211,10 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 
 void LongitudinalExtensionAlgorithm::FillReducedAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const
 {
+
+    // Remove double-counting from the map of associations
+    // i.e. if the map has A -> B, B -> C, A -> C, then remove A -> C
+
     for (ClusterAssociationMatrix::const_iterator iter1 = inputAssociationMatrix.begin(), iterEnd1 = inputAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
     {
         const Cluster* pCluster1(iter1->first);
@@ -267,6 +273,12 @@ void LongitudinalExtensionAlgorithm::FillReducedAssociationMatrix(const ClusterA
 
 void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const
 {
+    // Decide which associations will become merges
+    // To make the merge A <-> B, both A -> B and B -> A must be strong associations
+    // with the largest figures of merit of all the A -> X and B -> X associations
+
+
+    // First step: find the best associations A -> X and B -> X
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
     for (ClusterAssociationMatrix::const_iterator iter1 = clusterAssociationMatrix.begin(), iterEnd1 = clusterAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
@@ -324,6 +336,7 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
     }
 
 
+    // Second step: make the merge if A -> X and B -> X is in fact A -> B and B -> A
     for (ClusterAssociationMatrix::const_iterator iter3 = intermediateAssociationMatrix.begin(), iterEnd3 = intermediateAssociationMatrix.end(); iter3 != iterEnd3; ++iter3)
     {
         const Cluster* pParentCluster(iter3->first);
