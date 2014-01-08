@@ -11,219 +11,186 @@
 #include "LArClusterAssociation/TransverseExtensionAlgorithm.h"
 
 #include "LArHelpers/LArVertexHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode TransverseExtensionAlgorithm::Run()
+  
+void TransverseExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
+   for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+        clusterVector.push_back(*iter);
 
-
-    const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
-
-
-
-    typedef std::map<pandora::Cluster*,LArClusterHelper::TwoDSlidingFitResult> TwoDSlidingFitResultMap;
-    TwoDSlidingFitResultMap slidingFitResultMap;
-
-
-    bool carryOn(true);
-
-    while(carryOn)
-    {
-        carryOn = false;
-
-        ClusterVector longVector, shortVector;
-        this->SortInputClusters(pClusterList, longVector, shortVector);
-
-        std::sort(longVector.begin(), longVector.end(), LArClusterHelper::SortByNHits);
-        std::sort(shortVector.begin(), shortVector.end(), LArClusterHelper::SortByNHits);
-
-        for (ClusterVector::const_iterator iter = longVector.begin(), iterEnd = longVector.end(); iter != iterEnd; ++iter)
-        {
-            if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
-	    {             
-                LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
-                LArClusterHelper::LArTwoDSlidingFit(*iter, 20, slidingFitResult);
-
-                if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-	    }
-	}
-
-        for (ClusterVector::iterator iterI = longVector.begin(), iterEndI = longVector.end(); iterI != iterEndI; ++iterI)
-        {
-            TwoDSlidingFitResultMap::const_iterator iterFit = slidingFitResultMap.find(*iterI);
-            if (slidingFitResultMap.end() == iterFit)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult(iterFit->second);
-
-            bool isExpanded(false);
-
-            for (ClusterVector::iterator iterJ = shortVector.begin(), iterEndJ = shortVector.end(); iterJ != iterEndJ; ++iterJ)
-            {
-                if (NULL == *iterJ)
-	            continue;
-
-                if (this->IsAssociated(slidingFitResult, *iterJ))
-	        {
-// ClusterList tempListI, tempListJ;
-// tempListI.insert(*iterI);
-// tempListJ.insert(*iterJ);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempListI, "ClusterToEnlarge", RED));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempListJ, "ClusterToDelete", BLUE));
-// PANDORA_MONITORING_API(ViewEvent());
-
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, *iterI, *iterJ));
-                    isExpanded = true;
-                    *iterJ = NULL;
-	        }
-
-	    }
-
-            if (isExpanded)
-	    {
-	        slidingFitResultMap.erase(*iterI);
-                *iterI = NULL;
-                carryOn = true;
-	    }
-	}
-    }
-
-
-
-    return STATUS_CODE_SUCCESS;
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
-
+ 
 //------------------------------------------------------------------------------------------------------------------------------------------
+   
+void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
+{  
+    // Step 1: Separate input clusters into candidate parent and daughter clusters.
+    //         Convert parent clusters into pointing clusters.
+    ClusterVector daughterClusterList;
+    LArPointingClusterList parentClusterList;
 
-void TransverseExtensionAlgorithm::SortInputClusters(const ClusterList *const pClusterList, ClusterVector &longVector, ClusterVector &shortVector) const
-{
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        Cluster* const pCluster(*iter);
 
-        if (LArClusterHelper::GetLengthSquared(pCluster) > m_minClusterLength * m_minClusterLength)
-	{
-	    longVector.push_back(pCluster);
-	}
+        if (LArClusterHelper::GetLengthSquared(pCluster) > m_maxClusterLength * m_maxClusterLength )
+            parentClusterList.push_back(LArPointingCluster(pCluster));
         else
+	    daughterClusterList.push_back(pCluster);	
+    }
+
+  
+    // Step 2: Form associations between parent and daughter clusters
+    for (LArPointingClusterList::const_iterator iter1 = parentClusterList.begin(), iterEnd1 = parentClusterList.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const LArPointingCluster &parentPointingCluster = *iter1;
+
+        // First, associate pointing clusters with each other
+        for (LArPointingClusterList::const_iterator iter2 = parentClusterList.begin(), iterEnd2 = parentClusterList.end(); iter2 != iterEnd2; ++iter2)
+        {
+            const LArPointingCluster &daughterPointingCluster = *iter2;
+
+            if (parentPointingCluster.GetCluster() == daughterPointingCluster.GetCluster())
+                continue;
+
+            this->FillAssociationMatrix(parentPointingCluster, daughterPointingCluster, clusterAssociationMatrix);
+        }
+
+        // Next, associate pointing clusters with candidate daughter clusters
+        for (ClusterVector::const_iterator iter2 = daughterClusterList.begin(), iterEnd2 = daughterClusterList.end(); iter2 != iterEnd2; ++iter2)
 	{
-	    shortVector.push_back(pCluster);
+	    const Cluster* pDaughterCluster = *iter2;
+
+            if (parentPointingCluster.GetCluster() == pDaughterCluster)
+	        continue;
+
+            this->FillAssociationMatrix(parentPointingCluster, pDaughterCluster, clusterAssociationMatrix);
 	}
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseExtensionAlgorithm::IsAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const Cluster *const pCluster) const
+void TransverseExtensionAlgorithm::FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
-    return (this->IsEndAssociated(slidingFitResult,pCluster) || this->IsMidAssociated(slidingFitResult,pCluster));
+    const Cluster *const pClusterI(clusterI.GetCluster());
+    const Cluster *const pClusterJ(clusterJ.GetCluster());
+
+    if (pClusterI == pClusterJ)
+        return;
+
+    for (unsigned int useInnerI=0; useInnerI<2; ++useInnerI)
+    {
+        for (unsigned int useInnerJ=0; useInnerJ<2; ++useInnerJ)
+	{
+            
+            const LArPointingCluster::Vertex &targetVertexI(useInnerI==1 ? clusterI.GetInnerVertex() : clusterI.GetOuterVertex());
+            const LArPointingCluster::Vertex &oppositeVertexI(useInnerI==1 ? clusterI.GetOuterVertex() : clusterI.GetInnerVertex());
+
+            const LArPointingCluster::Vertex &targetVertexJ(useInnerJ==1 ? clusterJ.GetInnerVertex() : clusterJ.GetOuterVertex());
+            const LArPointingCluster::Vertex &oppositeVertexJ(useInnerJ==1 ? clusterJ.GetOuterVertex() : clusterJ.GetInnerVertex());
+
+            const float distSquared_targetI_to_targetJ((targetVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());    
+            const float distSquared_targetI_to_oppositeJ((targetVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
+
+            const float distSquared_oppositeI_to_targetJ((oppositeVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());
+            const float distSquared_oppositeI_to_oppositeJ((oppositeVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
+
+            const float distSquared_targetI_to_oppositeI((targetVertexI.GetPosition() - oppositeVertexI.GetPosition()).GetMagnitudeSquared());
+            const float distSquared_targetJ_to_oppositeJ((targetVertexJ.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
+
+            if (distSquared_oppositeI_to_targetJ < distSquared_targetI_to_targetJ ||
+                distSquared_oppositeI_to_targetJ < distSquared_targetI_to_oppositeI ||
+                distSquared_targetI_to_oppositeJ < distSquared_targetI_to_targetJ ||
+                distSquared_targetI_to_oppositeJ < distSquared_targetJ_to_oppositeJ)    
+	        continue;  
+
+            const CartesianVector &vertexPositionI(targetVertexI.GetPosition());
+            const CartesianVector &vertexPositionJ(targetVertexJ.GetPosition());
+            const CartesianVector &vertexDirectionI(targetVertexI.GetDirection());
+ 
+            float rT(0.f), rL(0.f);
+            LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL, rT);
+            
+            if (rL > -2.5f && rL < m_maxLongitudinalDisplacement && rT < 3.f * m_maxTransverseDisplacement)
+	    {
+
+	    }
+                  
+	}
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseExtensionAlgorithm::IsEndAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const Cluster *const pCluster) const
+void TransverseExtensionAlgorithm::FillAssociationMatrix(const LArPointingCluster &parentCluster, const Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
 
-    CartesianVector firstCoordinate(0.f, 0.f, 0.f);
-    CartesianVector secondCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, firstCoordinate, secondCoordinate);
-
-    for (unsigned int iForward = 0; iForward < 2; ++iForward)
-    {
-        const CartesianVector vertex(1==iForward ? slidingFitResult.GetGlobalMinLayerPosition() : slidingFitResult.GetGlobalMaxLayerPosition());
-        const CartesianVector direction(1==iForward ? slidingFitResult.GetGlobalMinLayerDirection() : slidingFitResult.GetGlobalMaxLayerDirection() * -1.f);
-
-        float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f);
-        LArVertexHelper::GetImpactParameters(vertex, direction, firstCoordinate, firstL, firstT);
-        LArVertexHelper::GetImpactParameters(vertex, direction, secondCoordinate, secondL, secondT);
-
-        const float innerL(firstL < secondL ? firstL : secondL);
-        const float innerT(firstL < secondL ? firstT : secondT);
-        const float outerT(firstL > secondL ? firstT : secondT);
-
-        if ( innerL > 0.f && innerL < m_maxLongitudinalDisplacement && 
-             innerT < m_maxTransverseDisplacement && outerT < 1.5f * m_maxTransverseDisplacement )
-	    return true;
-    }
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseExtensionAlgorithm::IsMidAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const Cluster *const pCluster) const
+void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const
 {
-    bool isFirstAssociated(false), isSecondAssociated(false);
-    float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f); 
+  std::cout << " *** TransverseExtensionAlgorithm::FillClusterMergeMap(...) *** " << std::endl;
 
-    CartesianVector firstCoordinate(0.f, 0.f, 0.f);
-    CartesianVector secondCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, firstCoordinate, secondCoordinate);
-
-    try{
-        CartesianVector projectedFirstCoordinate(0.f, 0.f, 0.f);
-        slidingFitResult.GetGlobalFitProjection(firstCoordinate, projectedFirstCoordinate);
-        slidingFitResult.GetLocalPosition(projectedFirstCoordinate, firstL, firstT);
-        isFirstAssociated = ((projectedFirstCoordinate - firstCoordinate).GetMagnitudeSquared() < m_maxTransverseDisplacement * m_maxTransverseDisplacement);
-    }
-    catch (StatusCodeException &)
-    {
-    }
-
-    try{
-        CartesianVector projectedSecondCoordinate(0.f, 0.f, 0.f);
-        slidingFitResult.GetGlobalFitProjection(secondCoordinate, projectedSecondCoordinate);
-        slidingFitResult.GetLocalPosition(projectedSecondCoordinate, secondL, secondT);
-        isSecondAssociated = ((projectedSecondCoordinate - secondCoordinate).GetMagnitudeSquared() < m_maxTransverseDisplacement * m_maxTransverseDisplacement);
-    }
-    catch (StatusCodeException &)
-    {
-    }
-
-    if (!isFirstAssociated || !isSecondAssociated)
-        return false;
-
-
-    const float minL(std::min(firstL,secondL));
-    const float maxL(std::max(firstL,secondL));
-    const int minLayer(slidingFitResult.GetLayer(minL));
-    const int maxLayer(slidingFitResult.GetLayer(maxL));
-
-    const TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap = slidingFitResult.GetLayerFitContributionMap();
-
-    for (int iLayer = minLayer; iLayer<=maxLayer; ++iLayer)
-    {
-        if (layerFitContributionMap.end() != layerFitContributionMap.find(iLayer))
-	    return false;
-    }
-
-    return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+// bool TransverseExtensionAlgorithm::IsEndAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const Cluster *const pCluster) const
+// {
+
+//     CartesianVector firstCoordinate(0.f, 0.f, 0.f);
+//     CartesianVector secondCoordinate(0.f, 0.f, 0.f);
+//     LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, firstCoordinate, secondCoordinate);
+
+//     for (unsigned int iForward = 0; iForward < 2; ++iForward)
+//     {
+//         const CartesianVector vertex(1==iForward ? slidingFitResult.GetGlobalMinLayerPosition() : slidingFitResult.GetGlobalMaxLayerPosition());
+//         const CartesianVector direction(1==iForward ? slidingFitResult.GetGlobalMinLayerDirection() : slidingFitResult.GetGlobalMaxLayerDirection() * -1.f);
+
+//         float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f);
+//         LArVertexHelper::GetImpactParameters(vertex, direction, firstCoordinate, firstL, firstT);
+//         LArVertexHelper::GetImpactParameters(vertex, direction, secondCoordinate, secondL, secondT);
+
+//         const float innerL(firstL < secondL ? firstL : secondL);
+//         const float innerT(firstL < secondL ? firstT : secondT);
+//         const float outerT(firstL > secondL ? firstT : secondT);
+
+//         if ( innerL > 0.f && innerL < m_maxLongitudinalDisplacement && 
+//              innerT < m_maxTransverseDisplacement && outerT < 1.5f * m_maxTransverseDisplacement )
+// 	    return true;
+//     }
+
+//     return false;
+// }
+
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TransverseExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterLength = 5.f; // cm
+    m_maxClusterLength = 5.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+        "MaxClusterLength", m_maxClusterLength));
 
-    m_maxTransverseDisplacement = 0.75f; // cm
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
-
-    m_maxLongitudinalDisplacement = 3.f; // cm
+    m_maxLongitudinalDisplacement = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    return STATUS_CODE_SUCCESS;
+    m_maxTransverseDisplacement = 1.f; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+
+    return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

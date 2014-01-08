@@ -10,7 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "LArClusterAssociation/ClusterExtensionAlgorithm.h"
+
+#include "LArObjects/LArPointingCluster.h"
 
 namespace lar
 {
@@ -18,7 +20,7 @@ namespace lar
 /**
  *  @brief  TransverseExtensionAlgorithm class
  */
-class TransverseExtensionAlgorithm : public pandora::Algorithm
+class TransverseExtensionAlgorithm : public ClusterExtensionAlgorithm
 {
 public:
     /**
@@ -31,34 +33,40 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+    void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
+
+
+
+    /**
+     *  @brief  Form association between two pointing clusters
+     * 
+     *  @param  parentCluster the parent pointing cluster
+     *  @param  daughterCluster the daughter pointing cluster
+     *  @param  clusterAssociationMatrix the matrix of cluster associations
+     */
+    void FillAssociationMatrix(const LArPointingCluster &parentCluster, const LArPointingCluster &daughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+
+
+    /**
+     *  @brief  Form association between a parent pointing cluster and a daughter cluster
+     * 
+     *  @param  parentCluster the parent pointing cluster
+     *  @param  pDaughterCluster the daughter cluster
+     *  @param  clusterAssociationMatrix the matrix of cluster associations
+     */
+    void FillAssociationMatrix(const LArPointingCluster &parentCluster, const pandora::Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+    
+
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 
-    void SortInputClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &longVector, pandora::ClusterVector &shortVector) const;
-
-
-
-    
-    bool IsAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const pandora::Cluster *const pCluster) const;
-
-
-    bool IsEndAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const pandora::Cluster *const pCluster) const;
-
-
-
-    bool IsMidAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const pandora::Cluster *const pCluster) const;
-
-
-  
-
-
-
-    float m_minClusterLength;
-
-    float m_maxTransverseDisplacement;
+    float m_maxClusterLength;
 
     float m_maxLongitudinalDisplacement;
+    float m_maxTransverseDisplacement;
 
 };
 
