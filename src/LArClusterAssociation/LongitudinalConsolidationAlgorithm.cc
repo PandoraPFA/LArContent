@@ -103,6 +103,9 @@ void LongitudinalConsolidationAlgorithm::FillClusterMergeMap(const ClusterVector
 
 bool LongitudinalConsolidationAlgorithm::IsAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const Cluster *const pCluster) const
 {
+    // Project each end of the candidate cluster onto the sliding fit and require
+    // a sufficiently small displacement
+
     bool isFirstAssociated(false), isSecondAssociated(false);
     float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f); 
 
