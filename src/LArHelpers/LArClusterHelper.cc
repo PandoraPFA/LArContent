@@ -406,33 +406,7 @@ float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const
 
 float LArClusterHelper::GetClosestDistance(const CartesianVector &position, const Cluster *const pCluster)
 {
-    //
-    // TODO: Remove layer centroids from this method
-    //
-    // return (position - LArClusterHelper::GetClosestPosition(position, pCluster)).GetMagnitude();
-    //
-
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    bool distanceFound(false);
-    float closestDistanceSquared(std::numeric_limits<float>::max());
-
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
-    {
-        const CartesianVector layerCentroid(pCluster->GetCentroid(iter->first));
-        const float distanceSquared((layerCentroid - position).GetMagnitudeSquared());
-
-        if (distanceSquared < closestDistanceSquared)
-        {
-            closestDistanceSquared = distanceSquared;
-            distanceFound = true;
-        }
-    }
-    
-    if (distanceFound)
-        return std::sqrt(closestDistanceSquared);
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    return (position - LArClusterHelper::GetClosestPosition(position, pCluster)).GetMagnitude();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
