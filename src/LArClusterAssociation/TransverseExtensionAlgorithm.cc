@@ -39,7 +39,7 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVec
     {
         Cluster* const pCluster(*iter);
 
-        if (LArClusterHelper::GetLengthSquared(pCluster) > m_maxClusterLength * m_maxClusterLength )
+        if (LArClusterHelper::GetLengthSquared(pCluster) > m_minClusterLength * m_minClusterLength )
             pointingClusterList.push_back(LArPointingCluster(*iter));
     }
   
@@ -209,9 +209,9 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 
 StatusCode TransverseExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_maxClusterLength = 5.f; // cm
+    m_minClusterLength = 5.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterLength", m_maxClusterLength));
+        "MinClusterLength", m_minClusterLength));
 
     m_maxLongitudinalDisplacement = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

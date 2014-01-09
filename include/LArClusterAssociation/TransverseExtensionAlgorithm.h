@@ -37,8 +37,6 @@ private:
     void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
 
-
-
     /**
      *  @brief  Form associations between parent and daughter clusters
      * 
@@ -49,17 +47,12 @@ private:
     void FillClusterAssociationMatrix(const LArPointingCluster &parentCluster, const pandora::Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
 
-    
-
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 
-    float m_maxClusterLength;
-
-    float m_maxLongitudinalDisplacement;
-    float m_maxTransverseDisplacement;
-
+    float m_minClusterLength;              ///< 
+    float m_maxLongitudinalDisplacement;   ///< 
+    float m_maxTransverseDisplacement;     ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
