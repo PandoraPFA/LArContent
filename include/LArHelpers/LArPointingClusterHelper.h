@@ -52,6 +52,26 @@ public:
     static bool IsEmission(const pandora::CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex);
 
     /**
+     *  @brief  Get projected distance between a cluster and a pointing cluster vertex
+     * 
+     *  @param  pointingVertex the pointing vertex
+     *  @param  pCluster address of the cluster
+     * 
+     *  @return the projected distance
+     */
+    static float GetProjectedDistance(const LArPointingCluster::Vertex &pointingVertex, const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Get projected position on a cluster from a pointing cluster vertex
+     * 
+     *  @param  pointingVertex the pointing vertex
+     *  @param  pCluster address of the cluster
+     * 
+     *  @return the projected position
+     */
+    static pandora::CartesianVector GetProjectedPosition(const LArPointingCluster::Vertex &pointingVertex, const pandora::Cluster *const pCluster);
+
+    /**
      *  @brief  Get intersection of two vertices
      * 
      *  @param  firstVertex the first vertex
@@ -113,6 +133,7 @@ private:
     static float    m_minPointingLongitudinalDistance;      ///<
     static float    m_maxPointingTransverseDistance;        ///< 
     static float    m_pointingAngularAllowance;             ///< 
+    static float    m_projectionAngularAllowance;           ///< 
 };
 
 } // namespace lar

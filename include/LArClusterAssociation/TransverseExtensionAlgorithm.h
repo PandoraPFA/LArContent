@@ -40,23 +40,15 @@ private:
 
 
     /**
-     *  @brief  Form association between two pointing clusters
+     *  @brief  Form associations between parent and daughter clusters
      * 
      *  @param  parentCluster the parent pointing cluster
-     *  @param  daughterCluster the daughter pointing cluster
+     *  @param  pDaughterCluster the address of the daughter cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
-    void FillAssociationMatrix(const LArPointingCluster &parentCluster, const LArPointingCluster &daughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+    void FillClusterAssociationMatrix(const LArPointingCluster &parentCluster, const pandora::Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
 
-    /**
-     *  @brief  Form association between a parent pointing cluster and a daughter cluster
-     * 
-     *  @param  parentCluster the parent pointing cluster
-     *  @param  pDaughterCluster the daughter cluster
-     *  @param  clusterAssociationMatrix the matrix of cluster associations
-     */
-    void FillAssociationMatrix(const LArPointingCluster &parentCluster, const pandora::Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const;
     
 
 

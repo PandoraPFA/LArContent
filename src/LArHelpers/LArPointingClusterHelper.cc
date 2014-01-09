@@ -58,6 +58,59 @@ bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArPointingClusterHelper::GetProjectedDistance(const LArPointingCluster::Vertex &pointingVertex, const Cluster *const pCluster)
+{
+    return (pointingVertex.GetPosition() - LArPointingClusterHelper::GetProjectedPosition(pointingVertex, pCluster)).GetMagnitude();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+ 
+CartesianVector LArPointingClusterHelper::GetProjectedPosition(const LArPointingCluster::Vertex &pointingVertex, const Cluster *const pCluster)
+{ 
+    const CartesianVector &vertexPosition(pointingVertex.GetPosition());
+    const CartesianVector &vertexDirection(pointingVertex.GetDirection());
+
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    CaloHit *pClosestCaloHit(NULL);
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+	    CaloHit* pCaloHit = *hitIter;
+
+            const CartesianVector hitProjection(pCaloHit->GetPositionVector() - vertexPosition);
+            const float distanceSquared(hitProjection.GetMagnitudeSquared());
+
+            if (distanceSquared > 0.f)
+	    {
+	        const float cosTheta(-hitProjection.GetUnitVector().GetDotProduct(vertexDirection));
+                static const float minCosTheta(std::cos(M_PI * m_projectionAngularAllowance / 180.f));
+
+                // TODO: Try to give more weight to on-axis projections
+                if (distanceSquared < closestDistanceSquared && cosTheta > minCosTheta)
+		{
+		    pClosestCaloHit = pCaloHit;
+                    closestDistanceSquared = distanceSquared;
+		}
+	    }
+            else
+	    {
+	        return pCaloHit->GetPositionVector();
+	    }
+	}
+    }
+
+    if(pClosestCaloHit)
+        return pClosestCaloHit->GetPositionVector();
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPointingClusterHelper::GetAverageDirection(const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
     CartesianVector &averageDirection)
 {
@@ -160,6 +213,7 @@ float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 25.f;
 float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.f;
 float LArPointingClusterHelper::m_maxPointingTransverseDistance = 2.f;
 float LArPointingClusterHelper::m_pointingAngularAllowance = 2.f; // degrees
+float LArPointingClusterHelper::m_projectionAngularAllowance = 20.f; // degrees
 
 StatusCode LArPointingClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -179,6 +233,9 @@ StatusCode LArPointingClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "PointingAngularAllowance", m_pointingAngularAllowance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ProjectionAngularAllowance", m_projectionAngularAllowance));
 
     return STATUS_CODE_SUCCESS;
 }

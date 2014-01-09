@@ -12,6 +12,7 @@
 
 #include "LArHelpers/LArVertexHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
 
 using namespace pandora;
 
@@ -31,148 +32,178 @@ void TransverseExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *con
    
 void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {  
-    // Step 1: Separate input clusters into candidate parent and daughter clusters.
-    //         Convert parent clusters into pointing clusters.
-    ClusterVector daughterClusterList;
-    LArPointingClusterList parentClusterList;
+    // Convert long clusters into pointing clusters
+    LArPointingClusterList pointingClusterList;
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         Cluster* const pCluster(*iter);
 
         if (LArClusterHelper::GetLengthSquared(pCluster) > m_maxClusterLength * m_maxClusterLength )
-            parentClusterList.push_back(LArPointingCluster(pCluster));
-        else
-	    daughterClusterList.push_back(pCluster);	
+            pointingClusterList.push_back(LArPointingCluster(*iter));
     }
-
   
-    // Step 2: Form associations between parent and daughter clusters
-    for (LArPointingClusterList::const_iterator iter1 = parentClusterList.begin(), iterEnd1 = parentClusterList.end(); iter1 != iterEnd1; ++iter1)
+    // Form associations between clusters
+    for (LArPointingClusterList::const_iterator iter1 = pointingClusterList.begin(), iterEnd1 = pointingClusterList.end(); iter1 != iterEnd1; ++iter1)
     {
-        const LArPointingCluster &parentPointingCluster = *iter1;
+        const LArPointingCluster &parentCluster = *iter1;
 
-        // First, associate pointing clusters with each other
-        for (LArPointingClusterList::const_iterator iter2 = parentClusterList.begin(), iterEnd2 = parentClusterList.end(); iter2 != iterEnd2; ++iter2)
-        {
-            const LArPointingCluster &daughterPointingCluster = *iter2;
-
-            if (parentPointingCluster.GetCluster() == daughterPointingCluster.GetCluster())
-                continue;
-
-            this->FillAssociationMatrix(parentPointingCluster, daughterPointingCluster, clusterAssociationMatrix);
-        }
-
-        // Next, associate pointing clusters with candidate daughter clusters
-        for (ClusterVector::const_iterator iter2 = daughterClusterList.begin(), iterEnd2 = daughterClusterList.end(); iter2 != iterEnd2; ++iter2)
+        for (ClusterVector::const_iterator iter2 = clusterVector.begin(), iterEnd2 = clusterVector.end(); iter2 != iterEnd2; ++iter2)
 	{
-	    const Cluster* pDaughterCluster = *iter2;
+	    const Cluster* pDaughterCluster(*iter2);
 
-            if (parentPointingCluster.GetCluster() == pDaughterCluster)
+            if (parentCluster.GetCluster() == pDaughterCluster)
 	        continue;
 
-            this->FillAssociationMatrix(parentPointingCluster, pDaughterCluster, clusterAssociationMatrix);
+            this->FillClusterAssociationMatrix(parentCluster, pDaughterCluster, clusterAssociationMatrix);
 	}
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseExtensionAlgorithm::FillAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const
-{
-    const Cluster *const pClusterI(clusterI.GetCluster());
-    const Cluster *const pClusterJ(clusterJ.GetCluster());
-
-    if (pClusterI == pClusterJ)
+void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointingCluster &pointingCluster, const Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const
+{ 
+    const Cluster *const pParentCluster(pointingCluster.GetCluster());
+    
+    if (pParentCluster == pDaughterCluster)
         return;
 
-    for (unsigned int useInnerI=0; useInnerI<2; ++useInnerI)
+    for (unsigned int useInner = 0; useInner < 2; ++useInner)
     {
-        for (unsigned int useInnerJ=0; useInnerJ<2; ++useInnerJ)
-	{
-            
-            const LArPointingCluster::Vertex &targetVertexI(useInnerI==1 ? clusterI.GetInnerVertex() : clusterI.GetOuterVertex());
-            const LArPointingCluster::Vertex &oppositeVertexI(useInnerI==1 ? clusterI.GetOuterVertex() : clusterI.GetInnerVertex());
+        const LArPointingCluster::Vertex &pointingVertex(useInner==1 ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
+        const ClusterAssociation::VertexType vertexType(useInner==1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
 
-            const LArPointingCluster::Vertex &targetVertexJ(useInnerJ==1 ? clusterJ.GetInnerVertex() : clusterJ.GetOuterVertex());
-            const LArPointingCluster::Vertex &oppositeVertexJ(useInnerJ==1 ? clusterJ.GetOuterVertex() : clusterJ.GetInnerVertex());
+        float projectedDisplacement(std::numeric_limits<float>::max());
 
-            const float distSquared_targetI_to_targetJ((targetVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());    
-            const float distSquared_targetI_to_oppositeJ((targetVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
-
-            const float distSquared_oppositeI_to_targetJ((oppositeVertexI.GetPosition() - targetVertexJ.GetPosition()).GetMagnitudeSquared());
-            const float distSquared_oppositeI_to_oppositeJ((oppositeVertexI.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
-
-            const float distSquared_targetI_to_oppositeI((targetVertexI.GetPosition() - oppositeVertexI.GetPosition()).GetMagnitudeSquared());
-            const float distSquared_targetJ_to_oppositeJ((targetVertexJ.GetPosition() - oppositeVertexJ.GetPosition()).GetMagnitudeSquared());
-
-            if (distSquared_oppositeI_to_targetJ < distSquared_targetI_to_targetJ ||
-                distSquared_oppositeI_to_targetJ < distSquared_targetI_to_oppositeI ||
-                distSquared_targetI_to_oppositeJ < distSquared_targetI_to_targetJ ||
-                distSquared_targetI_to_oppositeJ < distSquared_targetJ_to_oppositeJ)    
-	        continue;  
-
-            const CartesianVector &vertexPositionI(targetVertexI.GetPosition());
-            const CartesianVector &vertexPositionJ(targetVertexJ.GetPosition());
-            const CartesianVector &vertexDirectionI(targetVertexI.GetDirection());
- 
-            float rT(0.f), rL(0.f);
-            LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL, rT);
-            
-            if (rL > -2.5f && rL < m_maxLongitudinalDisplacement && rT < 3.f * m_maxTransverseDisplacement)
-	    {
-
-	    }
-                  
+        try{
+	    projectedDisplacement = LArPointingClusterHelper::GetProjectedDistance(pointingVertex, pDaughterCluster);
 	}
+        catch (StatusCodeException &)
+	{
+	}
+
+        if (projectedDisplacement > m_maxLongitudinalDisplacement)
+	    continue;
+
+        ClusterAssociation::AssociationType associationType(ClusterAssociation::WEAK);
+        float figureOfMerit(projectedDisplacement);
+                 
+        CartesianVector vertex(pointingVertex.GetPosition());
+        CartesianVector direction(pointingVertex.GetDirection());
+
+        CartesianVector firstCoordinate(0.f, 0.f, 0.f);
+        CartesianVector secondCoordinate(0.f, 0.f, 0.f);
+        LArClusterHelper::GetExtremalCoordinatesXZ(pDaughterCluster, firstCoordinate, secondCoordinate);
+
+        float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f);
+        LArVertexHelper::GetImpactParameters(vertex, direction, firstCoordinate, firstL, firstT);
+        LArVertexHelper::GetImpactParameters(vertex, direction, secondCoordinate, secondL, secondT);
+
+        const float innerL(firstL < secondL ? firstL : secondL);
+        const float innerT(firstL < secondL ? firstT : secondT);
+        const float outerL(firstL > secondL ? firstL : secondL);
+        const float outerT(firstL > secondL ? firstT : secondT);
+
+        if ( innerL > 0.f && outerL < m_maxLongitudinalDisplacement &&
+             innerT < m_maxTransverseDisplacement && outerT < 1.5f * m_maxTransverseDisplacement )
+	{
+	    associationType = ClusterAssociation::STRONG;  
+            figureOfMerit = innerL;
+	}
+            
+        (void) clusterAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster, 
+	           ClusterAssociation(vertexType, vertexType, associationType, figureOfMerit)));
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TransverseExtensionAlgorithm::FillAssociationMatrix(const LArPointingCluster &parentCluster, const Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const
-{
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const
 {
-  std::cout << " *** TransverseExtensionAlgorithm::FillClusterMergeMap(...) *** " << std::endl;
+    ClusterAssociationMatrix intermediateAssociationMatrix;
 
+    // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
+    for (ClusterAssociationMatrix::const_iterator iter1 = clusterAssociationMatrix.begin(), iterEnd1 = clusterAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const Cluster* pParentCluster(iter1->first);
+        const ClusterAssociationMap &parentToDaughterMap(iter1->second);
+
+        float maxDisplacementInner(std::numeric_limits<float>::max());
+        float maxDisplacementOuter(std::numeric_limits<float>::max());
+
+        // Find the nearest parent cluster
+        for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
+        {
+            const Cluster* pDaughterCluster(iter2->first);   
+            const ClusterAssociation &clusterAssociation(iter2->second);
+
+            if (clusterAssociation.GetAssociation() == ClusterAssociation::WEAK)
+	    {
+                if (clusterAssociation.GetParent() == ClusterAssociation::INNER && clusterAssociation.GetFigureOfMerit() < maxDisplacementInner)
+	            maxDisplacementInner = clusterAssociation.GetFigureOfMerit();
+
+                if (clusterAssociation.GetParent() == ClusterAssociation::OUTER && clusterAssociation.GetFigureOfMerit() < maxDisplacementOuter)
+	            maxDisplacementOuter = clusterAssociation.GetFigureOfMerit();
+	    }
+	}
+
+        // Select daughter clusters that are closer than the nearest parent cluster
+        for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
+        {
+            const Cluster* pDaughterCluster(iter2->first);   
+            const ClusterAssociation &clusterAssociation(iter2->second);
+
+            if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
+	    {
+                if (clusterAssociation.GetParent() == ClusterAssociation::INNER && clusterAssociation.GetFigureOfMerit() <= maxDisplacementInner)
+	            (void) intermediateAssociationMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster,clusterAssociation));
+
+                if (clusterAssociation.GetParent() == ClusterAssociation::OUTER && clusterAssociation.GetFigureOfMerit() <= maxDisplacementOuter)
+	            (void) intermediateAssociationMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster,clusterAssociation));
+	    }
+	}
+    }
+
+    // Loop over daughter clusters and select the nearest parent clusters
+    for (ClusterAssociationMatrix::const_iterator iter1 = intermediateAssociationMatrix.begin(), iterEnd1 = intermediateAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const Cluster* pDaughterCluster(iter1->first);
+        const ClusterAssociationMap &daughterToParentMap(iter1->second);
+
+        Cluster* pParentCluster = NULL;
+        float minDisplacement(std::numeric_limits<float>::max());
+
+        for (ClusterAssociationMap::const_iterator iter2 = daughterToParentMap.begin(), iterEnd2 = daughterToParentMap.end(); iter2 != iterEnd2; ++iter2)
+	{
+            const Cluster* pCandidateCluster(iter2->first);
+            const ClusterAssociation &clusterAssociation(iter2->second);
+
+            if (clusterAssociation.GetFigureOfMerit() < minDisplacement)
+	    {
+	        minDisplacement = clusterAssociation.GetFigureOfMerit();
+                pParentCluster = (Cluster*)pCandidateCluster;
+	    }
+	}
+
+        if (pParentCluster)
+	{
+	    clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
+            clusterMergeMap[pDaughterCluster].insert(pParentCluster);
+
+// --- BEGIN DISPLAY ---
+// ClusterList tempList1, tempList2;
+// tempList1.insert((Cluster*)pParentCluster);
+// tempList2.insert((Cluster*)pDaughterCluster);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", GREEN);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
+// PandoraMonitoringApi::ViewEvent();
+// --- END DISPLAY --- 
+
+	}
+    }
 }
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-// bool TransverseExtensionAlgorithm::IsEndAssociated(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, const Cluster *const pCluster) const
-// {
-
-//     CartesianVector firstCoordinate(0.f, 0.f, 0.f);
-//     CartesianVector secondCoordinate(0.f, 0.f, 0.f);
-//     LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, firstCoordinate, secondCoordinate);
-
-//     for (unsigned int iForward = 0; iForward < 2; ++iForward)
-//     {
-//         const CartesianVector vertex(1==iForward ? slidingFitResult.GetGlobalMinLayerPosition() : slidingFitResult.GetGlobalMaxLayerPosition());
-//         const CartesianVector direction(1==iForward ? slidingFitResult.GetGlobalMinLayerDirection() : slidingFitResult.GetGlobalMaxLayerDirection() * -1.f);
-
-//         float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f);
-//         LArVertexHelper::GetImpactParameters(vertex, direction, firstCoordinate, firstL, firstT);
-//         LArVertexHelper::GetImpactParameters(vertex, direction, secondCoordinate, secondL, secondT);
-
-//         const float innerL(firstL < secondL ? firstL : secondL);
-//         const float innerT(firstL < secondL ? firstT : secondT);
-//         const float outerT(firstL > secondL ? firstT : secondT);
-
-//         if ( innerL > 0.f && innerL < m_maxLongitudinalDisplacement && 
-//              innerT < m_maxTransverseDisplacement && outerT < 1.5f * m_maxTransverseDisplacement )
-// 	    return true;
-//     }
-
-//     return false;
-// }
-
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
