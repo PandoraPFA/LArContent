@@ -72,6 +72,17 @@ public:
     static pandora::CartesianVector GetProjectedPosition(const LArPointingCluster::Vertex &pointingVertex, const pandora::Cluster *const pCluster);
 
     /**
+     *  @brief  Get projected position on a cluster from a specified position and direction
+     * 
+     *  @param  initialPosition the initial position of the cluster
+     *  @param  initialDirection the initial direction of the cluster
+     *  @param  pCluster address of the cluster
+     * 
+     *  @return the projected position
+     */
+    static pandora::CartesianVector GetProjectedPosition(const pandora::CartesianVector &initialPosition, const pandora::CartesianVector &initialDirection, const pandora::Cluster *const pCluster);
+
+    /**
      *  @brief  Calculate impact parameters between a pointing cluster vertex and a target position
      * 
      *  @param  pointingVertex the pointing vertex

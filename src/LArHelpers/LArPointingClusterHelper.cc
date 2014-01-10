@@ -64,12 +64,16 @@ float LArPointingClusterHelper::GetProjectedDistance(const LArPointingCluster::V
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- 
-CartesianVector LArPointingClusterHelper::GetProjectedPosition(const LArPointingCluster::Vertex &pointingVertex, const Cluster *const pCluster)
-{ 
-    const CartesianVector &vertexPosition(pointingVertex.GetPosition());
-    const CartesianVector &vertexDirection(pointingVertex.GetDirection());
 
+CartesianVector LArPointingClusterHelper::GetProjectedPosition(const LArPointingCluster::Vertex &pointingVertex, const Cluster *const pCluster)
+{
+    return LArPointingClusterHelper::GetProjectedPosition(pointingVertex.GetPosition(), pointingVertex.GetDirection(), pCluster);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVector &vertexPosition, const CartesianVector &vertexDirection, const pandora::Cluster *const pCluster)
+{ 
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     CaloHit *pClosestCaloHit(NULL);
@@ -121,7 +125,7 @@ void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Ver
 
 void LArPointingClusterHelper::GetImpactParameters(const CartesianVector &initialPosition, const CartesianVector &initialDirection, const CartesianVector &targetPosition, float &longitudinal, float &transverse)
 {
-    // sign convention for longitudinal distance:
+    // sign convention for longitudinal distance: 
     // -positive value means initial position is downstream of target position 
     transverse = initialDirection.GetCrossProduct(targetPosition-initialPosition).GetMagnitude();
     longitudinal = -initialDirection.GetDotProduct(targetPosition-initialPosition);
