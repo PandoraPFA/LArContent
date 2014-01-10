@@ -110,6 +110,24 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const LArPointing
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+ 
+void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Vertex &pointingVertex, const CartesianVector &targetPosition, float &longitudinal, float &transverse)
+{
+    return LArPointingClusterHelper::GetImpactParameters(pointingVertex.GetPosition(), pointingVertex.GetDirection(), 
+        targetPosition, longitudinal, transverse);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetImpactParameters(const CartesianVector &initialPosition, const CartesianVector &initialDirection, const CartesianVector &targetPosition, float &longitudinal, float &transverse)
+{
+    // sign convention for longitudinal distance:
+    // -positive value means initial position is downstream of target position 
+    transverse = initialDirection.GetCrossProduct(targetPosition-initialPosition).GetMagnitude();
+    longitudinal = -initialDirection.GetDotProduct(targetPosition-initialPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPointingClusterHelper::GetAverageDirection(const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
     CartesianVector &averageDirection)

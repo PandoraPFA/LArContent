@@ -72,6 +72,29 @@ public:
     static pandora::CartesianVector GetProjectedPosition(const LArPointingCluster::Vertex &pointingVertex, const pandora::Cluster *const pCluster);
 
     /**
+     *  @brief  Calculate impact parameters between a pointing cluster vertex and a target position
+     * 
+     *  @param  pointingVertex the pointing vertex
+     *  @param  targetPosition the target position
+     *  @param  longitidinal the longitudinal displacement
+     *  @param  transverse the transverse displacement
+     */
+    static void GetImpactParameters(const LArPointingCluster::Vertex &pointingVertex, const pandora::CartesianVector &targetPosition, 
+        float &longitudinal, float &transverse);
+
+    /**
+     *  @brief  Calculate impact parameters of a specified position and direction to a target position
+     * 
+     *  @param  initialPosition the initial position of the cluster
+     *  @param  initialDirection the initial direction of the cluster
+     *  @param  targetPosition the target position
+     *  @param  longitidinal the longitudinal displacement
+     *  @param  transverse the transverse displacement
+     */
+    static void GetImpactParameters(const pandora::CartesianVector &initialPosition, const pandora::CartesianVector &initialDirection, 
+        const pandora::CartesianVector &targetPosition, float &longitudinal, float &transverse);
+
+    /**
      *  @brief  Get intersection of two vertices
      * 
      *  @param  firstVertex the first vertex

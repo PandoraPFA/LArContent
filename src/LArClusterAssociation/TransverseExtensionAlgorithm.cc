@@ -10,7 +10,6 @@
 
 #include "LArClusterAssociation/TransverseExtensionAlgorithm.h"
 
-#include "LArHelpers/LArVertexHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
@@ -89,16 +88,13 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
         ClusterAssociation::AssociationType associationType(ClusterAssociation::WEAK);
         float figureOfMerit(projectedDisplacement);
                  
-        CartesianVector vertex(pointingVertex.GetPosition());
-        CartesianVector direction(pointingVertex.GetDirection());
-
         CartesianVector firstCoordinate(0.f, 0.f, 0.f);
         CartesianVector secondCoordinate(0.f, 0.f, 0.f);
         LArClusterHelper::GetExtremalCoordinatesXZ(pDaughterCluster, firstCoordinate, secondCoordinate);
-
+       
         float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f);
-        LArVertexHelper::GetImpactParameters(vertex, direction, firstCoordinate, firstL, firstT);
-        LArVertexHelper::GetImpactParameters(vertex, direction, secondCoordinate, secondL, secondT);
+        LArPointingClusterHelper::GetImpactParameters(pointingVertex, firstCoordinate, firstL, firstT);
+        LArPointingClusterHelper::GetImpactParameters(pointingVertex, secondCoordinate, secondL, secondT);
 
         const float innerL(firstL < secondL ? firstL : secondL);
         const float innerT(firstL < secondL ? firstT : secondT);

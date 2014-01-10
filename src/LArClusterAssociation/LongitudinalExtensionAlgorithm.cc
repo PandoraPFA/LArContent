@@ -10,8 +10,8 @@
 
 #include "LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 
-#include "LArHelpers/LArVertexHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
 
 using namespace pandora;
 
@@ -153,8 +153,8 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
                 const float cosThetaJ((vertexPositionJ - vertexPositionI).GetUnitVector().GetDotProduct(vertexDirectionJ));
 
                 float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-                LArVertexHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL1, rT1);
-                LArVertexHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, vertexPositionI, rL2, rT2);
+                LArPointingClusterHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL1, rT1);
+                LArPointingClusterHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, vertexPositionI, rL2, rT2);
 
                 if ((rL1 > -2.5f && rL1 < m_emissionMaxLongitudinalDisplacement && rL1 < 2.f * clusterLengthJ) && 
                     (rL2 > -2.5f && rL2 < m_emissionMaxLongitudinalDisplacement && rL2 < 2.f * clusterLengthI) && 

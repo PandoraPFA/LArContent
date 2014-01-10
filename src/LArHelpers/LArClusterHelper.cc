@@ -371,35 +371,7 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const 
 
 float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
-    // TODO: Remove layer centroids from this method
-
-    const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
-    const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
-
-    bool distanceFound(false);
-    float closestDistanceSquared(std::numeric_limits<float>::max());
-
-    for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iterEnd1 = orderedCaloHitList1.end(); iter1 != iterEnd1; ++iter1)
-    {
-        const CartesianVector position1(pCluster1->GetCentroid(iter1->first));
-        
-        for (OrderedCaloHitList::const_iterator iter2 = orderedCaloHitList2.begin(), iterEnd2 = orderedCaloHitList2.end(); iter2 != iterEnd2; ++iter2)
-        {
-            const CartesianVector position2(pCluster2->GetCentroid(iter2->first));
-            const float distanceSquared((position2 - position1).GetMagnitudeSquared());
-
-            if (distanceSquared < closestDistanceSquared)
-            {
-                closestDistanceSquared = distanceSquared;
-                distanceFound = true;
-            }
-        }
-    }
-
-    if (distanceFound)
-        return std::sqrt(closestDistanceSquared);
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    return ClusterHelper::GetDistanceToClosestHit(pCluster1, pCluster2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -657,7 +629,7 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
 
             //
             // TODO: Improve extrapolation in gaps larger than the layer fit window 
-            //       (i.e. when slidingNPoints winds down to 2 points).
+            //       (i.e. when there are a small number of points, or when the end hit is isolated).
             //
             // Possibilities:
             //  (1) Store the layer fit result only if there is a corresponding entry in 
