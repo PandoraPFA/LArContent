@@ -143,7 +143,7 @@ StatusCode DeltaRaySplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
 
-    return BranchSplittingAlgorithm::ReadSettings(xmlHandle);
+    return ClusterSplittingAndExtensionAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

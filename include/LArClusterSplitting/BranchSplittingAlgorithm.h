@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArClusterSplitting/BranchSplittingAlgorithm.h
  * 
- *  @brief  Header file for the branch splitting algorithm class.
+ *  @brief  Header file for the delta ray splitting algorithm class.
  * 
  *  $Log: $
  */
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "LArClusterSplitting/ClusterSplittingAndExtensionAlgorithm.h"
 
 namespace lar
 {
@@ -18,43 +18,33 @@ namespace lar
 /**
  *  @brief  BranchSplittingAlgorithm class
  */
-class BranchSplittingAlgorithm : public pandora::Algorithm
+class BranchSplittingAlgorithm : public ClusterSplittingAndExtensionAlgorithm
 {
-
-protected:
-    virtual pandora::StatusCode Run();
-    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
+public:
     /**
-     *  @brief  Remove a branch from a cluster and replace it with a second cluster
-     * 
-     *  @param  pBranchCluster the cluster containing a branch to be removed
-     *  @param  pReplacementCluster the replacement cluster
-     *  @param  branchStartPosition the position of the start of the branch
-     *  @param  replacementStartPosition the position the start of the replacement
+     *  @brief  Factory class for instantiating algorithm
      */
-    pandora::StatusCode ReplaceBranch(pandora::Cluster *const pBranchCluster, pandora::Cluster *const pReplacementCluster,
-        const pandora::CartesianVector &branchStartPosition, const pandora::CartesianVector &branchStartDirection) const;
-  
-    /**
-     *  @brief  Output the best split positions in branch and replacement clusters
-     * 
-     *  @param  branchSlidingFit the inputted sliding fit result for possible branch cluster
-     *  @param  pReplacementCluster the inputted sliding fit result fot possible replacement cluster
-     *  @param  branchStartPosition the outputted start position of the branch cluster
-     *  @param  replacementStartPosition the outputted start position of the replacement cluster
-     */
-    virtual pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
-        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &branchStartPosition, 
-        pandora::CartesianVector &branchStartDirection) const = 0;
-
+    class Factory : public pandora::AlgorithmFactory
+    {
+    public:
+        pandora::Algorithm *CreateAlgorithm() const;
+    };
+ 
 private:
+    pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
+        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &branchStartPosition, 
+        pandora::CartesianVector &branchStartDirection) const;
 
-    unsigned int  m_shortHalfWindowLayers;          ///<
-    unsigned int  m_longHalfWindowLayers;           ///< 
-    float         m_minClusterLength;               ///< 
-   
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Algorithm *BranchSplittingAlgorithm::Factory::CreateAlgorithm() const
+{
+    return new BranchSplittingAlgorithm();
+}
 
 } // namespace lar
 
