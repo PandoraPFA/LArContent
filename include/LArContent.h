@@ -19,7 +19,7 @@
 #include "LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ConeBasedMergingAlgorithm.h"
 #include "LArClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
-#include "LArClusterSplitting/BranchSplittingAlgorithm.h"
+#include "LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArMonitoring/EventDisplayAlgorithm.h"
@@ -72,7 +72,7 @@ public:
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
-        d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
+        d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \

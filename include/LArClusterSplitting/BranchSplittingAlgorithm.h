@@ -20,27 +20,10 @@ namespace lar
  */
 class BranchSplittingAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
 
 protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Populate cluster vector with good quality clusters
-     * 
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
-     */
-    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
     /**
      *  @brief  Remove a branch from a cluster and replace it with a second cluster
@@ -52,9 +35,6 @@ protected:
      */
     pandora::StatusCode ReplaceBranch(pandora::Cluster *const pBranchCluster, pandora::Cluster *const pReplacementCluster,
         const pandora::CartesianVector &branchStartPosition, const pandora::CartesianVector &branchStartDirection) const;
-
-
-private:
   
     /**
      *  @brief  Output the best split positions in branch and replacement clusters
@@ -64,28 +44,17 @@ private:
      *  @param  branchStartPosition the outputted start position of the branch cluster
      *  @param  replacementStartPosition the outputted start position of the replacement cluster
      */
-    pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
+    virtual pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
         const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &branchStartPosition, 
-        pandora::CartesianVector &branchStartDirection) const;
+        pandora::CartesianVector &branchStartDirection) const = 0;
 
+private:
 
     unsigned int  m_shortHalfWindowLayers;          ///<
     unsigned int  m_longHalfWindowLayers;           ///< 
-    unsigned int  m_stepSizeLayers;                 ///< 
     float         m_minClusterLength;               ///< 
-    float         m_maxTransverseDisplacement;      ///< 
-    float         m_maxLongitudinalDisplacement;    ///< 
-    float         m_minCosRelativeAngle;            ///< 
-
-
+   
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *BranchSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new BranchSplittingAlgorithm();
-}
 
 } // namespace lar
 
