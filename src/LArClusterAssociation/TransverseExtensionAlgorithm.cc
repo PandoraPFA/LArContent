@@ -107,7 +107,20 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
 	    associationType = ClusterAssociation::STRONG;  
             figureOfMerit = innerL;
 	}
-            
+          
+// --- BEGIN DISPLAY ---
+// if(associationType == ClusterAssociation::STRONG)
+// {
+// ClusterList tempList1, tempList2;
+// tempList1.insert((Cluster*)pParentCluster);
+// tempList2.insert((Cluster*)pDaughterCluster);
+// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f); 
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", GREEN);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
+// PandoraMonitoringApi::ViewEvent();
+// }
+// --- END DISPLAY ---   
+
         (void) clusterAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster, 
 	           ClusterAssociation(vertexType, vertexType, associationType, figureOfMerit)));
     }
@@ -117,19 +130,19 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
 
 void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterAssociationMatrix intermediateAssociationMatrix;
+    ClusterAssociationMatrix parentToDaughterMatrix, daughterToParentMatrix;
 
     // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
     for (ClusterAssociationMatrix::const_iterator iter1 = clusterAssociationMatrix.begin(), iterEnd1 = clusterAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
     {
         const Cluster* pParentCluster(iter1->first);
-        const ClusterAssociationMap &parentToDaughterMap(iter1->second);
+        const ClusterAssociationMap &clusterAssociationMap(iter1->second);
 
         float maxDisplacementInner(std::numeric_limits<float>::max());
         float maxDisplacementOuter(std::numeric_limits<float>::max());
 
         // Find the nearest parent cluster
-        for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
+        for (ClusterAssociationMap::const_iterator iter2 = clusterAssociationMap.begin(), iterEnd2 = clusterAssociationMap.end(); iter2 != iterEnd2; ++iter2)
         {
             const Cluster* pDaughterCluster(iter2->first);   
             const ClusterAssociation &clusterAssociation(iter2->second);
@@ -145,24 +158,46 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 	}
 
         // Select daughter clusters that are closer than the nearest parent cluster
-        for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
+        for (ClusterAssociationMap::const_iterator iter2 = clusterAssociationMap.begin(), iterEnd2 = clusterAssociationMap.end(); iter2 != iterEnd2; ++iter2)
         {
             const Cluster* pDaughterCluster(iter2->first);   
             const ClusterAssociation &clusterAssociation(iter2->second);
 
             if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
 	    {
-                if (clusterAssociation.GetParent() == ClusterAssociation::INNER && clusterAssociation.GetFigureOfMerit() <= maxDisplacementInner)
-	            (void) intermediateAssociationMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster,clusterAssociation));
+                if (clusterAssociation.GetParent() == ClusterAssociation::INNER && clusterAssociation.GetFigureOfMerit() < maxDisplacementInner)
+	            (void) parentToDaughterMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster, clusterAssociation));
 
-                if (clusterAssociation.GetParent() == ClusterAssociation::OUTER && clusterAssociation.GetFigureOfMerit() <= maxDisplacementOuter)
-	            (void) intermediateAssociationMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster,clusterAssociation));
+                if (clusterAssociation.GetParent() == ClusterAssociation::OUTER && clusterAssociation.GetFigureOfMerit() < maxDisplacementOuter)
+	            (void) parentToDaughterMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster, clusterAssociation));
 	    }
 	}
     }
 
+    
+
+    //
+    // Reverse the matrix (TODO: Select daughter clusters)
+    //
+
+    for (ClusterAssociationMatrix::const_iterator iter1 = parentToDaughterMatrix.begin(), iterEnd1 = parentToDaughterMatrix.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const Cluster* pParentCluster(iter1->first);
+        const ClusterAssociationMap &parentToDaughterMap(iter1->second);
+
+        for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
+        {
+            const Cluster* pDaughterCluster(iter2->first);   
+            const ClusterAssociation &clusterAssociation(iter2->second);
+    
+            (void) daughterToParentMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster, clusterAssociation));
+	}
+    }
+
+
+
     // Loop over daughter clusters and select the nearest parent clusters
-    for (ClusterAssociationMatrix::const_iterator iter1 = intermediateAssociationMatrix.begin(), iterEnd1 = intermediateAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
+    for (ClusterAssociationMatrix::const_iterator iter1 = daughterToParentMatrix.begin(), iterEnd1 = daughterToParentMatrix.end(); iter1 != iterEnd1; ++iter1)
     {
         const Cluster* pDaughterCluster(iter1->first);
         const ClusterAssociationMap &daughterToParentMap(iter1->second);
