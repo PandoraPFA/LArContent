@@ -22,28 +22,40 @@ StatusCode ClusterMergingAlgorithm::Run()
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
 
-    ClusterVector clusterVector;
-    this->GetListOfCleanClusters(pClusterList, clusterVector);
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
+    bool carryOn(true);
 
-    ClusterMergeMap clusterMergeMap;
-
-    this->FillClusterMergeMap(clusterVector, clusterMergeMap);
-
-    ClusterVetoMap clusterVetoMap;
-
-    for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
+    while (carryOn)
     {
-        Cluster *pSeedCluster = *iter1;
+        carryOn = false;
 
-        ClusterList mergeList;
-        this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
+        ClusterVector clusterVector;
+        this->GetListOfCleanClusters(pClusterList, clusterVector);
+        std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
-        for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
+        ClusterMergeMap clusterMergeMap;
+
+        this->FillClusterMergeMap(clusterVector, clusterMergeMap);
+
+        ClusterVetoMap clusterVetoMap;
+
+        for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
         {
-            Cluster *pAssociatedCluster = *iter2;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
-            (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
+            Cluster *pSeedCluster = *iter1;
+
+            ClusterList mergeList;
+            this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
+
+            for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
+            {
+                Cluster *pAssociatedCluster = *iter2;
+
+                if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
+                    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
+                (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
+                carryOn = true;
+            }
         }
     }
 
