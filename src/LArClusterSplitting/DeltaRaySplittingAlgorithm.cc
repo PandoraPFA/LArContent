@@ -17,9 +17,13 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &principalSlidingFit, CartesianVector &branchStartPosition, CartesianVector &branchStartDirection) const
+void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &principalSlidingFit, CartesianVector &branchSplitPosition, CartesianVector &branchSplitDirection) const
 {
-    bool foundSplit(false);
+    // Conventions: 
+    // (1) Delta ray is split from the branch cluster
+    // (2) Delta ray occurs where the vertex of the principal cluster meets the vertex of the branch cluster
+    //     Method loops over the inner and outer positions of the principal and branch clusters, trying all 
+    //     possible assignments of vertex and end position until a split is found
 
     for (unsigned int principalForward = 0; principalForward < 2; ++principalForward)
     {
@@ -30,19 +34,19 @@ StatusCode DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHel
 	if (LArClusterHelper::GetClosestDistance(principalVertex, branchSlidingFit.GetCluster()) > m_maxLongitudinalDisplacement)
             continue;
 
-
         for (unsigned int branchForward = 0; branchForward < 2; ++branchForward)
         {
             const CartesianVector branchVertex(1==branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
             const CartesianVector branchEnd(1==branchForward ? branchSlidingFit.GetGlobalMaxLayerPosition() : branchSlidingFit.GetGlobalMinLayerPosition()); 
             const CartesianVector branchDirection(1==branchForward ? branchSlidingFit.GetGlobalMinLayerDirection() : branchSlidingFit.GetGlobalMaxLayerDirection() * -1.f); 
 
+            // Require vertices to be closest two ends
             const float vertex_to_vertex((principalVertex - branchVertex).GetMagnitudeSquared());
             const float vertex_to_end((principalVertex - branchEnd).GetMagnitudeSquared());
             const float end_to_vertex((principalEnd - branchVertex).GetMagnitudeSquared());
             const float end_to_end((principalEnd - branchEnd).GetMagnitudeSquared());
 
-            // sign convention for vertexProjection: positive means that clusters overlap
+            // (sign convention for vertexProjection: positive means that clusters overlap)
             const float vertexProjection(+branchDirection.GetDotProduct(principalVertex - branchVertex));
             const float cosRelativeAngle(-branchDirection.GetDotProduct(principalDirection));
 
@@ -58,24 +62,15 @@ StatusCode DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHel
             if (cosRelativeAngle < 0.f)
 	        continue;
 
-// ClusterList tempList1, tempList2;
-// Cluster* pBranchCluster = (Cluster*)(branchSlidingFit.GetCluster());
-// Cluster* pReplacementCluster = (Cluster*)(principalSlidingFit.GetCluster());
-// tempList1.insert(pBranchCluster);
-// tempList2.insert(pReplacementCluster);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "BranchCluster", GREEN));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "PrincipalCluster", BLUE));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&principalVertex, "PrincipalVertex", BLACK, 2.75));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&branchVertex, "BranchVertex", BLACK, 2.75));
-// PANDORA_MONITORING_API(ViewEvent());
+            // Serach for a split by winding back the branch cluster sliding fit
+            bool foundSplit(false);
 
             const unsigned int halfWindowLayers(branchSlidingFit.GetLayerFitHalfWindow());
             const float stepSize(branchSlidingFit.GetL(m_stepSizeLayers));
             const float deltaL(1==branchForward ? +branchSlidingFit.GetL(halfWindowLayers) : -branchSlidingFit.GetL(halfWindowLayers));
 
 	    float branchDistance(std::max(0.f,vertexProjection) + 0.5f * stepSize);
-          
+
 	    while (!foundSplit)
 	    {
 	        branchDistance += stepSize;
@@ -106,8 +101,8 @@ StatusCode DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHel
                     if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
 		    {
                         foundSplit = true;
-                        branchStartPosition = truncatedPosition;
-                        branchStartDirection = truncatedDirection * -1.f;
+                        branchSplitPosition = truncatedPosition;
+                        branchSplitDirection = truncatedDirection * -1.f;
 		    }
 		}
                 catch (StatusCodeException &)
@@ -116,11 +111,11 @@ StatusCode DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHel
 	    }
 
             if (foundSplit)
-                return STATUS_CODE_SUCCESS;
+	        return;
         }
     }
 
-    return STATUS_CODE_NOT_FOUND;
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

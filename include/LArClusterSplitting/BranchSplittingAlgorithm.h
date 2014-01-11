@@ -31,12 +31,15 @@ public:
     };
  
 private:
-    pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
-        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &branchStartPosition, 
-        pandora::CartesianVector &branchStartDirection) const;
+    void FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
+        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &branchSplitPosition, 
+        pandora::CartesianVector &branchSplitDirection) const;
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);   
 
+    float         m_maxTransverseDisplacement;      ///< 
+    float         m_maxLongitudinalDisplacement;    ///< 
+    float         m_minCosRelativeAngle;            ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
