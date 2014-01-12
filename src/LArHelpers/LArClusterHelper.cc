@@ -559,7 +559,7 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
     const int outerLayer(layerFitContributionMap.rbegin()->first);
     const int layerFitHalfWindow(twoDSlidingFitResult.m_layerFitHalfWindow);
 
-    // Summation for first layers
+    // Use sliding fit to fill occupied layers
     unsigned int slidingNPoints(0);
     double slidingSumT(0.), slidingSumL(0.), slidingSumTT(0.), slidingSumLT(0.), slidingSumLL(0.);
 
@@ -578,7 +578,6 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
         }
     }
 
-    // Sliding fit
     for (int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
     {
         const int fwdLayer(iLayer + layerFitHalfWindow);
@@ -627,23 +626,52 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
 
             const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
 
-            //
-            // TODO: Improve extrapolation in gaps larger than the layer fit window 
-            //       (i.e. when there are a small number of points, or when the end hit is isolated).
-            //
-            // Possibilities:
-            //  (1) Store the layer fit result only if there is a corresponding entry in 
-            //      the layer contribution map (i.e. all extrapolation will be performed 
-            //      by linear interapolation in TwoDSlidingFit). This method should be
-            //      robust but will break any algorithms that access the layer results 
-            //      directly rather than using the linear interpolation methods.
-            //  (2) Don't count gaps as part of the layer fit window (i.e. use the last 
-            //      N active layers rather than N layers to calculate the fit results).
-            //  (3) Use a larger threshold (>2) for the slidingNPoints variable.
-            //
+            if (layerFitContributionMap.end() != layerFitContributionMap.find(iLayer))
+	    { 
+                const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
+                (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
+	    }
+        }
+    }
 
-            const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
-            (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
+    // Use interpolation to fill unoccupied layers (more robust in large gaps)
+    TwoDSlidingFitResult::LayerFitResultMap::const_iterator bwdIter = layerFitResultMap.end();
+    TwoDSlidingFitResult::LayerFitResultMap::const_iterator fwdIter = layerFitResultMap.end();
+
+    for (int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
+    { 
+        TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.find(iLayer);
+
+        if (iter != layerFitResultMap.end())
+	{
+            bwdIter = iter;
+	    fwdIter = ++iter;
+            continue;
+	}
+       
+	if (layerFitResultMap.end() == bwdIter || layerFitResultMap.end() == fwdIter)
+	    continue;
+
+        try{
+            const float rL(twoDSlidingFitResult.GetL(iLayer));
+
+            CartesianVector globalPosition(0.f, 0.f, 0.f);
+            CartesianVector globalDirection(0.f, 0.f, 0.f);
+            float rms(0.f);
+	    
+            twoDSlidingFitResult.GetGlobalFitInterpolatedPosition(rL, bwdIter, fwdIter, globalPosition);
+            twoDSlidingFitResult.GetGlobalFitInterpolatedDirection(rL, bwdIter, fwdIter, globalDirection);
+            twoDSlidingFitResult.GetGlobalFitInterpolatedRms(rL, bwdIter, fwdIter, rms);
+
+            float L(0.f), fitT(0.f), gradient(0.f);
+            twoDSlidingFitResult.GetLocalPosition(globalPosition, L, fitT);
+            twoDSlidingFitResult.GetLocalDirection(globalDirection, gradient);
+        
+            const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(L, fitT, gradient, rms);
+                (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
+	}
+        catch (StatusCodeException &) 
+        { 
         }
     }
 }

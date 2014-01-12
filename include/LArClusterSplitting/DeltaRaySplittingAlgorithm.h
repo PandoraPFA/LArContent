@@ -37,7 +37,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int  m_stepSizeLayers;                 ///< 
+    float         m_stepSize;                       ///< 
     float         m_maxTransverseDisplacement;      ///< 
     float         m_maxLongitudinalDisplacement;    ///< 
     float         m_minCosRelativeAngle;            ///< 

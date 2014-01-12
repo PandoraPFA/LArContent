@@ -12,7 +12,6 @@
 #include "Objects/Cluster.h"
 
 #include "LArObjects/LArPointingCluster.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
@@ -40,15 +39,18 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
     const int outerLayer((minLayerZ < maxLayerZ) ? maxLayer : minLayer);
     const int fitLayer(useInnerVertex ? innerLayer : outerLayer);
 
-    const float rL(slidingFitResult.GetL(fitLayer));
-    CartesianVector vertexPosition(0.f, 0.f, 0.f);
-    slidingFitResult.GetGlobalFitPosition(rL, vertexPosition);
-    CartesianVector vertexDirection(0.f, 0.f, 0.f);
-    slidingFitResult.GetGlobalFitDirection(rL, vertexDirection);
-
-    m_rms = slidingFitResult.GetRms(rL);
-    m_position = vertexPosition;
-    m_direction = (fitLayer == minLayer) ? vertexDirection : vertexDirection * -1.f;
+    if (fitLayer == minLayer)
+    {
+        m_position  = slidingFitResult.GetGlobalMinLayerPosition();
+        m_direction = slidingFitResult.GetGlobalMinLayerDirection();
+        m_rms       = slidingFitResult.GetGlobalMinLayerRms();
+    }
+    else
+    {
+        m_position  = slidingFitResult.GetGlobalMaxLayerPosition();
+        m_direction = slidingFitResult.GetGlobalMaxLayerDirection() * -1.f;
+        m_rms       = slidingFitResult.GetGlobalMaxLayerRms();
+    }
 }
 
 } // namespace lar

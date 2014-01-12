@@ -65,15 +65,14 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::T
             // Serach for a split by winding back the branch cluster sliding fit
             bool foundSplit(false);
 
-            const unsigned int halfWindowLayers(branchSlidingFit.GetLayerFitHalfWindow());
-            const float stepSize(branchSlidingFit.GetL(m_stepSizeLayers));
-            const float deltaL(1==branchForward ? +branchSlidingFit.GetL(halfWindowLayers) : -branchSlidingFit.GetL(halfWindowLayers));
+            const float halfWindowLength(branchSlidingFit.GetLayerFitHalfWindowLength());
+            const float deltaL(1==branchForward ? +halfWindowLength : -halfWindowLength);
 
-	    float branchDistance(std::max(0.f,vertexProjection) + 0.5f * stepSize);
+	    float branchDistance(std::max(0.f,vertexProjection) + 0.5f * m_stepSize);
 
 	    while (!foundSplit)
 	    {
-	        branchDistance += stepSize;
+	        branchDistance += m_stepSize;
 
 	        const CartesianVector linearProjection(branchVertex + branchDirection * branchDistance);
  
@@ -122,9 +121,9 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::T
 
 StatusCode DeltaRaySplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 { 
-    m_stepSizeLayers = 3;
+    m_stepSize = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "StepSize", m_stepSizeLayers));
+        "StepSize", m_stepSize));
 
     m_maxTransverseDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

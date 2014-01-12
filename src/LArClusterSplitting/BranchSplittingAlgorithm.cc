@@ -69,8 +69,8 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::Two
             // Require that principal vertex and branch projection have good pointing
             bool foundSplit(false);
 
-            const unsigned int halfWindowLayers(branchSlidingFit.GetLayerFitHalfWindow());
-            const float deltaL(1==branchForward ? +branchSlidingFit.GetL(halfWindowLayers) : -branchSlidingFit.GetL(halfWindowLayers));
+            const float halfWindowLength(branchSlidingFit.GetLayerFitHalfWindowLength());
+            const float deltaL(1==branchForward ? +halfWindowLength : -halfWindowLength);
 
             try{
                 float localL(0.f), localT(0.f);
