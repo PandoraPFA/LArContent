@@ -5,8 +5,8 @@
  * 
  *  $Log: $
  */
-#ifndef CLUSTER_CREATION_ALGORITHM_H
-#define CLUSTER_CREATION_ALGORITHM_H 1
+#ifndef LAR_CLUSTER_CREATION_ALGORITHM_H
+#define LAR_CLUSTER_CREATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -264,4 +264,4 @@ inline float ClusterCreationAlgorithm::HitAssociation::GetSecondaryDistanceSquar
 
 } // namespace lar
 
-#endif // #ifndef CLUSTER_CREATION_ALGORITHM_H
+#endif // #ifndef LAR_CLUSTER_CREATION_ALGORITHM_H
