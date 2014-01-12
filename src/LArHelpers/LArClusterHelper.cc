@@ -25,6 +25,8 @@ namespace lar
 
 void LArClusterHelper::LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
+    // TODO: This breaks when the cluster trajectory lies on a single layer
+
     ClusterHelper::ClusterFitResult clusterFitResult;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitFullCluster(pCluster, clusterFitResult));
 
@@ -622,7 +624,7 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
             const double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
 
             if (variance < 0.)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+	        continue;
 
             const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
 
