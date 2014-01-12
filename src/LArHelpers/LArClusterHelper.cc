@@ -636,7 +636,8 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
         }
     }
 
-    // Use interpolation to fill unoccupied layers (more robust in large gaps)
+    // Use interpolation to fill the unoccupied layers. More robust in the gaps
+    // TODO: Question... does John agree?
     TwoDSlidingFitResult::LayerFitResultMap::const_iterator bwdIter = layerFitResultMap.end();
     TwoDSlidingFitResult::LayerFitResultMap::const_iterator fwdIter = layerFitResultMap.end();
 
