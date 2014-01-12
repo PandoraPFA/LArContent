@@ -136,15 +136,20 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::Run()
                 // Re-calculate chi2 values if both clusters have a split
                 if (branchChisqI > 0.f && branchChisqJ > 0.f)  
 		{
-                    try{
-		        const CartesianVector relativeDirection((branchSplitPositionJ - branchSplitPositionI).GetUnitVector());
-                        const float newBranchChisqI(this->CalculateBranchChi2(pClusterI, branchSplitPositionI, relativeDirection));
-                        const float newBranchChisqJ(this->CalculateBranchChi2(pClusterJ, branchSplitPositionJ, relativeDirection * -1.f));
-                        branchChisqI = newBranchChisqI;
-                        branchChisqJ = newBranchChisqJ;
-		    }
-                    catch (StatusCodeException &)
+		    const CartesianVector relativeDirection((branchSplitPositionJ - branchSplitPositionI).GetUnitVector());
+
+                    if (branchSplitDirectionI.GetDotProduct(relativeDirection) > 0.f && 
+                        branchSplitDirectionJ.GetDotProduct(relativeDirection) < 0.f )
 		    {
+                        try{
+                            const float newBranchChisqI(this->CalculateBranchChi2(pClusterI, branchSplitPositionI, relativeDirection));
+                            const float newBranchChisqJ(this->CalculateBranchChi2(pClusterJ, branchSplitPositionJ, relativeDirection * -1.f));
+                            branchChisqI = newBranchChisqI;
+                            branchChisqJ = newBranchChisqJ;
+			}
+                        catch (StatusCodeException &)
+		        {
+		        }
 		    }
 	        }
 
