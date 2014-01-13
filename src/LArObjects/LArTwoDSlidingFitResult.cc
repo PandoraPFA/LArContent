@@ -194,6 +194,19 @@ void TwoDSlidingFitResult::GetGlobalFitDirection(const float rL, CartesianVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float TwoDSlidingFitResult::GetGlobalFitRms(const float rL) const
+{
+    float rms(std::numeric_limits<float>::max());
+    float firstWeight(0.f), secondWeight(0.f);
+    LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
+    this->GetSurroundingLayerIterators(rL, firstLayerIter, secondLayerIter);
+    this->GetLayerInterpolationWeights(rL, firstLayerIter, secondLayerIter, firstWeight, secondWeight);
+    this->GetGlobalFitInterpolatedRms(firstLayerIter, secondLayerIter, firstWeight, secondWeight, rms);
+    return rms;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TwoDSlidingFitResult::GetGlobalFitPosition(const float p, const bool useX, CartesianVector &position) const
 {
     float firstWeight(0.f), secondWeight(0.f);
@@ -221,33 +234,6 @@ void TwoDSlidingFitResult::GetGlobalFitProjection(const CartesianVector &inputPo
     float rL(0.f), rT(0.f);
     this->GetLocalPosition(inputPosition, rL, rT); 
     this->GetGlobalFitPosition(rL, projectedPosition);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetGlobalFitInterpolatedPosition(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, CartesianVector &position) const
-{
-    float firstWeight(0.f), secondWeight(0.f);
-    this->GetLayerInterpolationWeights(rL, firstLayerIter, secondLayerIter, firstWeight, secondWeight);
-    this->GetGlobalFitInterpolatedPosition(firstLayerIter, secondLayerIter, firstWeight, secondWeight, position);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetGlobalFitInterpolatedDirection(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, CartesianVector &direction) const
-{
-    float firstWeight(0.f), secondWeight(0.f);
-    this->GetLayerInterpolationWeights(rL, firstLayerIter, secondLayerIter, firstWeight, secondWeight);
-    this->GetGlobalFitInterpolatedDirection(firstLayerIter, secondLayerIter, firstWeight, secondWeight, direction);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetGlobalFitInterpolatedRms(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, float &rms) const
-{
-    float firstWeight(0.f), secondWeight(0.f);
-    this->GetLayerInterpolationWeights(rL, firstLayerIter, secondLayerIter, firstWeight, secondWeight);
-    this->GetGlobalFitInterpolatedRms(firstLayerIter, secondLayerIter, firstWeight, secondWeight, rms);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

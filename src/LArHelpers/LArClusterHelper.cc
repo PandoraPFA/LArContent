@@ -608,74 +608,34 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
             slidingNPoints -= bwdIter->second.GetNPoints();
         }
 
-        if (slidingNPoints > 2) // require three points for meaningful results
-        {
-            const double denominator(slidingSumLL - slidingSumL * slidingSumL / static_cast<double>(slidingNPoints));
-
-            if (std::fabs(denominator) < std::numeric_limits<double>::epsilon())
-                continue;
-
-            const double gradient((slidingSumLT - slidingSumL * slidingSumT / static_cast<double>(slidingNPoints)) / denominator);
-            const double intercept((slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
-
-            const double l(twoDSlidingFitResult.GetL(iLayer));
-            const double fitT(intercept + gradient * l);
-
-            const double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
-
-            if (variance < 0.)
-	        continue;
-
-            const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
-
-            if (layerFitContributionMap.end() != layerFitContributionMap.find(iLayer))
-	    { 
-                const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
-                (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
-	    }
-        }
-    }
-
-    // Use interpolation to fill the unoccupied layers. More robust in the gaps
-    // TODO: Question... does John agree?
-    TwoDSlidingFitResult::LayerFitResultMap::const_iterator bwdIter = layerFitResultMap.end();
-    TwoDSlidingFitResult::LayerFitResultMap::const_iterator fwdIter = layerFitResultMap.end();
-
-    for (int iLayer = innerLayer; iLayer <= outerLayer; ++iLayer)
-    { 
-        TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.find(iLayer);
-
-        if (iter != layerFitResultMap.end())
-	{
-            bwdIter = iter;
-	    fwdIter = ++iter;
-            continue;
-	}
-       
-	if (layerFitResultMap.end() == bwdIter || layerFitResultMap.end() == fwdIter)
+        // only fill the result map if there is an entry in the contribution map
+        if (layerFitContributionMap.end() == layerFitContributionMap.find(iLayer))
 	    continue;
 
-        try{
-            const float rL(twoDSlidingFitResult.GetL(iLayer));
+        // require three points for meaningful results
+        if (slidingNPoints <=2) 
+	    continue;
 
-            CartesianVector globalPosition(0.f, 0.f, 0.f);
-            CartesianVector globalDirection(0.f, 0.f, 0.f);
-            float rms(0.f);
-	    
-            twoDSlidingFitResult.GetGlobalFitInterpolatedPosition(rL, bwdIter, fwdIter, globalPosition);
-            twoDSlidingFitResult.GetGlobalFitInterpolatedDirection(rL, bwdIter, fwdIter, globalDirection);
-            twoDSlidingFitResult.GetGlobalFitInterpolatedRms(rL, bwdIter, fwdIter, rms);
+        const double denominator(slidingSumLL - slidingSumL * slidingSumL / static_cast<double>(slidingNPoints));
 
-            float L(0.f), fitT(0.f), gradient(0.f);
-            twoDSlidingFitResult.GetLocalPosition(globalPosition, L, fitT);
-            twoDSlidingFitResult.GetLocalDirection(globalDirection, gradient);
-        
-            const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(L, fitT, gradient, rms);
-                (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
-	}
-        catch (StatusCodeException &) 
-        { 
-        }
+        if (std::fabs(denominator) < std::numeric_limits<double>::epsilon())
+            continue;
+
+        const double gradient((slidingSumLT - slidingSumL * slidingSumT / static_cast<double>(slidingNPoints)) / denominator);
+        const double intercept((slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
+
+        const double l(twoDSlidingFitResult.GetL(iLayer));
+        const double fitT(intercept + gradient * l);
+
+        const double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
+
+        if (variance < 0.)
+	    continue;
+
+        const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
+
+        const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
+            (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));   
     }
 }
 

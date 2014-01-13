@@ -289,7 +289,7 @@ public:
     float GetGlobalMaxLayerRms() const;
 
     /**
-     *  @brief  Get global fit position for a given x or z coordinate
+     *  @brief  Get global fit position for a given longitudinal coordinate
      * 
      *  @param  rL the longitudinal coordinate
      *  @param  position the fitted position at these coordinates
@@ -297,12 +297,21 @@ public:
     void GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
 
     /**
-     *  @brief  Get global fit direction for a given x or z coordinate
+     *  @brief  Get global fit direction for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
      *  @param  direction the fitted direction at these coordinates
      */
     void GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
+
+    /**
+     *  @brief  Get global fit rms for a given longitudinal coordinate
+     *
+     *  @param  rL the longitudinal coordinate
+     *  
+     *  @return the global fit rms
+     */ 
+    float GetGlobalFitRms(const float rL) const;
 
     /**
      *  @brief  Get global fit position for a given x or z coordinate
@@ -344,37 +353,7 @@ public:
      */
     const LayerFitContributionMap &GetLayerFitContributionMap() const;
 
-private:  
-
-    /**
-     *  @brief  Interpolate a position between two layers
-     *
-     *  @param  rL the input longitudinal coordinate
-     *  @param  firstLayerIter the iterator for the layer below the input coordinate
-     *  @param  secondLayerIter the iterator for the layer above the input coordinate
-     *  @param  position the interpolated position
-     */
-     void GetGlobalFitInterpolatedPosition(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, pandora::CartesianVector &position) const;
-
-    /**
-     *  @brief  Interpolate a direction between two layers
-     *
-     *  @param  rL the input longitudinal coordinate
-     *  @param  firstLayerIter the iterator for the layer below the input coordinate
-     *  @param  secondLayerIter the iterator for the layer above the input coordinate
-     *  @param  position the interpolated direction
-     */
-    void GetGlobalFitInterpolatedDirection(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, pandora::CartesianVector &direction) const;
- 
-    /**
-     *  @brief  Interpolate an rms between two layers
-     *
-     *  @param  rL the input longitudinal coordinate
-     *  @param  firstLayerIter the iterator for the layer below the input coordinate
-     *  @param  secondLayerIter the iterator for the layer above the input coordinate
-     *  @param  rms the interpolated rms
-     */
-    void GetGlobalFitInterpolatedRms(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter, float &rms) const;
+private:
 
     /**
      *  @brief  Interpolate a position between two layers
