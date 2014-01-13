@@ -34,8 +34,9 @@ protected:
          */
         enum VertexType
         {
-            INNER = 1,
-            OUTER = 2
+	    UNDEFINED = 0,
+            INNER     = 1,
+            OUTER     = 2
         };
 
         /**
