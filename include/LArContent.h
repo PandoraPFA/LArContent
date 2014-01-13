@@ -8,6 +8,7 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
+#include "LArClusterAssociation/EndToEndMergingAlgorithm.h"
 #include "LArClusterAssociation/IsolatedHitMergingAlgorithm.h"
 #include "LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArClusterAssociation/LongitudinalConsolidationAlgorithm.h"
@@ -67,6 +68,7 @@ class LArContent
 {
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
+        d("LArEndToEndMerging",                     lar::EndToEndMergingAlgorithm::Factory)                                     \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
