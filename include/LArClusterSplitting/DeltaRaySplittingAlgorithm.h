@@ -32,8 +32,8 @@ public:
  
 private:
     void FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
-        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &branchSplitPosition, 
-        pandora::CartesianVector &branchSplitDirection) const;
+        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
+        pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

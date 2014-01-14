@@ -17,7 +17,7 @@ using namespace pandora;
 namespace lar
 {
 
-void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &principalSlidingFit, CartesianVector &branchSplitPosition, CartesianVector &branchSplitDirection) const
+void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, const LArClusterHelper::TwoDSlidingFitResult &principalSlidingFit, CartesianVector &principalStartPosition, CartesianVector &branchSplitPosition, CartesianVector &branchSplitDirection) const
 {
     // Conventions: 
     // (1) Delta ray is split from the branch cluster
@@ -100,6 +100,7 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::T
                     if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
 		    {
                         foundSplit = true;
+                        principalStartPosition = principalVertex;
                         branchSplitPosition = truncatedPosition;
                         branchSplitDirection = truncatedDirection * -1.f;
 		    }
