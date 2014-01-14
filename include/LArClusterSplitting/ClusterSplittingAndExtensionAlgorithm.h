@@ -182,6 +182,7 @@ private:
 
     unsigned int  m_shortHalfWindowLayers;          ///<
     unsigned int  m_longHalfWindowLayers;           ///< 
+    float         m_vetoDisplacement;               ///< 
     float         m_minClusterLength;               ///< 
 };
 

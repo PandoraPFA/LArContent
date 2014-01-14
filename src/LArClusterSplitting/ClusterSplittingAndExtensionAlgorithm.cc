@@ -198,17 +198,64 @@ void ClusterSplittingAndExtensionAlgorithm::BuildClusterExtensionList(const Clus
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClusterSplittingAndExtensionAlgorithm::FinalizeClusterExtensionList(const ClusterExtensionList &inputList, 
-    const TwoDSlidingFitResultMap &branchResultMap, const TwoDSlidingFitResultMap &replacementResultMap, 
-    ClusterExtensionList &outputList) const
+    const TwoDSlidingFitResultMap &branchMap, const TwoDSlidingFitResultMap &replacementMap, ClusterExtensionList &outputList) const
 {
     for (ClusterExtensionList::const_iterator iter = inputList.begin(), iterEnd = inputList.end(); iter != iterEnd; ++iter)
     {
+        const ClusterExtension &thisSplit = *iter;   
+
+        Cluster* pBranchCluster = thisSplit.GetBranchCluster();
+        Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
+        const CartesianVector &branchVertex = thisSplit.GetBranchVertex();
+        const CartesianVector &replacementVertex = thisSplit.GetReplacementVertex();
+
+        const float distanceSquared((branchVertex - replacementVertex).GetMagnitudeSquared());
+        const float vetoDistanceSquared(m_vetoDisplacement * m_vetoDisplacement);
+
+        bool branchVeto(false), replacementVeto(false);
+      
+        // Veto the merge if another cluster is closer to the replacement vertex
+        for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
+	{
+	    const TwoDSlidingFitResult slidingFit(iter->second);
+
+            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+	        continue;
+
+            const float minDistanceSquared((replacementVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
+            const float maxDistanceSquared((replacementVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+
+            if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
+	    {
+	        branchVeto = true;
+                break;
+            }
+	}
+
+        // Veto the merge if another cluster is closer to the branch vertex 
+        for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
+	{
+	    const TwoDSlidingFitResult slidingFit(iter->second);
+
+            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+	        continue;
+
+            const float minDistanceSquared((branchVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
+            const float maxDistanceSquared((branchVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+
+            if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
+	    {
+	        replacementVeto = true;
+                break;
+            }
+	}
+    
+        if (branchVeto || replacementVeto)
+	    continue;
 
         outputList.push_back(*iter);
     } 
 }
- 
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -364,6 +411,10 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::ReadSettings(const TiXmlHandle
     m_minClusterLength = 7.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", m_minClusterLength));
+
+    m_vetoDisplacement = 1.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VetoDisplacement", m_vetoDisplacement));
 
     return STATUS_CODE_SUCCESS;
 }
