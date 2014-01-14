@@ -39,7 +39,7 @@ protected:
      *  @param  clusterVector the vector of clean clusters
      *  @param  clusterMergeMap the matrix of cluster associations
      */
-    virtual void FillClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const = 0;
+    virtual void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const = 0;
 
 private:
    /**

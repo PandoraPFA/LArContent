@@ -15,7 +15,7 @@ using namespace pandora;
 namespace lar
 {
 
-void ClusterExtensionAlgorithm::FillClusterMergeMap(const ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
+void ClusterExtensionAlgorithm::PopulateClusterMergeMap(const ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterAssociationMatrix clusterAssociationMatrix;
     this->FillClusterAssociationMatrix(clusterVector, clusterAssociationMatrix);

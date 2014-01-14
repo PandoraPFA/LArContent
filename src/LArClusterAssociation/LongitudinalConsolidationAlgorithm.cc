@@ -28,7 +28,7 @@ void LongitudinalConsolidationAlgorithm::GetListOfCleanClusters(const ClusterLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-void LongitudinalConsolidationAlgorithm::FillClusterMergeMap(const ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
+void LongitudinalConsolidationAlgorithm::PopulateClusterMergeMap(const ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
 {   
     ClusterMergeMap intermediateMergeMap;
 

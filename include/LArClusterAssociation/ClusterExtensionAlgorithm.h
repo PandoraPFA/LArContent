@@ -21,7 +21,7 @@ class ClusterExtensionAlgorithm : public ClusterMergingAlgorithm
 protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void FillClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMatrix) const;
+    void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMatrix) const;
 
     /**
      *  @brief  ClusterAssociation class

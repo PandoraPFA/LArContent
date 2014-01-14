@@ -34,7 +34,7 @@ StatusCode ClusterMergingAlgorithm::Run()
 
         ClusterMergeMap clusterMergeMap;
 
-        this->FillClusterMergeMap(clusterVector, clusterMergeMap);
+        this->PopulateClusterMergeMap(clusterVector, clusterMergeMap);
 
         ClusterVetoMap clusterVetoMap;
 
