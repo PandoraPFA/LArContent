@@ -22,7 +22,6 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::Run()
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
 
-
     TwoDSlidingFitResultMap branchSlidingFitResultMap, replacementSlidingFitResultMap;
 
     bool carryOn(true);
@@ -47,7 +46,7 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::Run()
 	this->FinalizeClusterExtensionList(intermediateList, branchSlidingFitResultMap, replacementSlidingFitResultMap, splitList);
 
 	// Run splitting and extension
-	if (STATUS_CODE_SUCCESS == this->RunSplittingAndExtension(splitList, branchSlidingFitResultMap, replacementSlidingFitResultMap))
+	if (STATUS_CODE_SUCCESS == this->RunSplitAndExtension(splitList, branchSlidingFitResultMap, replacementSlidingFitResultMap))
 	    carryOn = true;
     }
 
@@ -217,7 +216,7 @@ void ClusterSplittingAndExtensionAlgorithm::FinalizeClusterExtensionList(const C
 	// Veto the merge if another cluster is closer to the replacement vertex
 	for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
 	{
-	    const TwoDSlidingFitResult slidingFit(iter->second);
+	    const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
 
 	    if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
 		continue;
@@ -235,7 +234,7 @@ void ClusterSplittingAndExtensionAlgorithm::FinalizeClusterExtensionList(const C
 	// Veto the merge if another cluster is closer to the branch vertex
 	for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
 	{
-	    const TwoDSlidingFitResult slidingFit(iter->second);
+	    const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
 
 	    if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
 		continue;
@@ -315,7 +314,7 @@ void ClusterSplittingAndExtensionAlgorithm::SplitBranchCluster(const Cluster* co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterSplittingAndExtensionAlgorithm::RunSplittingAndExtension(const ClusterExtensionList &splitList,
+StatusCode ClusterSplittingAndExtensionAlgorithm::RunSplitAndExtension(const ClusterExtensionList &splitList,
     TwoDSlidingFitResultMap &branchResultMap, TwoDSlidingFitResultMap &replacementResultMap) const
 {
     bool foundSplit(false);

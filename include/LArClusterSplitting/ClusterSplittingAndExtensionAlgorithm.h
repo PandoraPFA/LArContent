@@ -165,7 +165,7 @@ private:
      *  @param  branchResultMap the sliding fit result map for branch clusters
      *  @param  replacementResultMap the sliding fit result map for replacement clusters
      */
-    pandora::StatusCode RunSplittingAndExtension(const ClusterExtensionList &splitList, TwoDSlidingFitResultMap &branchResultMap,
+    pandora::StatusCode RunSplitAndExtension(const ClusterExtensionList &splitList, TwoDSlidingFitResultMap &branchResultMap,
 	TwoDSlidingFitResultMap &replacementResultMap) const;
 
    /**
