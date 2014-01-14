@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArClusterSplitting/BranchSplittingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the delta ray splitting algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_BRANCH_SPLITTING_ALGORITHM_H
@@ -27,19 +27,19 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
- 
+
 private:
-    void FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit, 
+    void FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit,
 	const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
-        pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const;
+	pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const;
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);   
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float         m_maxTransverseDisplacement;      ///< 
-    float         m_maxLongitudinalDisplacement;    ///< 
-    float         m_minCosRelativeAngle;            ///< 
+    float         m_maxTransverseDisplacement;      ///<
+    float         m_maxLongitudinalDisplacement;    ///<
+    float         m_minCosRelativeAngle;            ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
