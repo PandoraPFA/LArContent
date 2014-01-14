@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArClusterAssociation/ClusterExtensionAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the longitudinal extension algorithm class.
- * 
+ *
  *  $Log: $
  */
 

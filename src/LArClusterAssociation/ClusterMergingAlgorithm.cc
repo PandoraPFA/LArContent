@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArClusterAssociation/ClusterMergingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cluster association algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -26,37 +26,37 @@ StatusCode ClusterMergingAlgorithm::Run()
 
     while (carryOn)
     {
-        carryOn = false;
+	carryOn = false;
 
-        ClusterVector clusterVector;
-        this->GetListOfCleanClusters(pClusterList, clusterVector);
-        std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
+	ClusterVector clusterVector;
+	this->GetListOfCleanClusters(pClusterList, clusterVector);
+	std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
-        ClusterMergeMap clusterMergeMap;
+	ClusterMergeMap clusterMergeMap;
 
-        this->PopulateClusterMergeMap(clusterVector, clusterMergeMap);
+	this->PopulateClusterMergeMap(clusterVector, clusterMergeMap);
 
-        ClusterVetoMap clusterVetoMap;
+	ClusterVetoMap clusterVetoMap;
 
-        for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
-        {
-            Cluster *pSeedCluster = *iter1;
+	for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
+	{
+	    Cluster *pSeedCluster = *iter1;
 
-            ClusterList mergeList;
-            this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
+	    ClusterList mergeList;
+	    this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
 
-            for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
-            {
-                Cluster *pAssociatedCluster = *iter2;
+	    for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
+	    {
+		Cluster *pAssociatedCluster = *iter2;
 
-                if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
-                    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+		if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
+		    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
-                (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
-                carryOn = true;
-            }
-        }
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
+		(void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
+		carryOn = true;
+	    }
+	}
     }
 
     return STATUS_CODE_SUCCESS;
@@ -70,24 +70,24 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, C
     ClusterVetoMap::const_iterator iter0 = clusterVetoMap.find(pCurrentCluster);
 
     if (iter0 != clusterVetoMap.end())
-        return;
+	return;
 
     ClusterMergeMap::const_iterator iter1 = clusterMergeMap.find(pCurrentCluster);
 
     if (iter1 == clusterMergeMap.end())
-        return;
+	return;
 
     for (ClusterList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
     {
-        Cluster *pAssociatedCluster = *iter2;
+	Cluster *pAssociatedCluster = *iter2;
 
-        if (pAssociatedCluster == pSeedCluster)
-            continue;
+	if (pAssociatedCluster == pSeedCluster)
+	    continue;
 
-        if (!associatedClusterList.insert(pAssociatedCluster).second)
-            continue;
+	if (!associatedClusterList.insert(pAssociatedCluster).second)
+	    continue;
 
-        this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoMap, associatedClusterList);
+	this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoMap, associatedClusterList);
     }
 
     return;

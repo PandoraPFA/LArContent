@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArClusterAssociation/ClusterMergingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster merging algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CLUSTER_MERGING_ALGORITHM_H
@@ -27,7 +27,7 @@ protected:
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
-     * 
+     *
      *  @param  pClusterList address of the cluster list
      *  @param  clusterVector to receive the populated cluster vector
      */
@@ -35,7 +35,7 @@ protected:
 
     /**
      *  @brief  Form associations between pointing clusters
-     * 
+     *
      *  @param  clusterVector the vector of clean clusters
      *  @param  clusterMergeMap the matrix of cluster associations
      */
@@ -44,15 +44,15 @@ protected:
 private:
    /**
      *  @brief  Collect up all clusters associations related to a given seed cluster
-     * 
+     *
      *  @param  pSeedCluster pointer to the initial cluster
-     *  @param  pCurrentCluster pointer to the current cluster 
+     *  @param  pCurrentCluster pointer to the current cluster
      *  @param  clusterMergeMap the map of clusters to be merged
      *  @param  clusterVetoMap the map of clusters that have already been merged
      *  @param  associatedClusterList the list of associated clusters
      */
     void CollectAssociatedClusters(pandora::Cluster *pSeedCluster, pandora::Cluster *pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-        const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
+	const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
 };
 
 } // namespace lar

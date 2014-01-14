@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArClusterAssociation/LongitudinalExtensionAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster extension algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_LONGITUDINAL_EXTENSION_ALGORITHM_H
@@ -27,17 +27,17 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
     void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
-  
+
     /**
      *  @brief  Form association between two pointing clusters
-     * 
+     *
      *  @param  clusterI the first pointing cluster
      *  @param  clusterJ the second pointing cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
@@ -46,7 +46,7 @@ private:
 
     /**
      *  @brief  Remove double-counting from cluster association matrix
-     * 
+     *
      *  @param  inputAssociationMatrix the input matrix of associations
      *  @param  outputAssociationMatrix the output matrix of reduced associations
      */
@@ -55,14 +55,14 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 
-    float   m_clusterMinLength;                     ///< 
-    float   m_clusterMinLayerOccupancy;             ///<  
-    float   m_nodeMaxDisplacement;                  ///< 
-    float   m_nodeMaxCosRelativeAngle;              ///< 
+    float   m_clusterMinLength;                     ///<
+    float   m_clusterMinLayerOccupancy;             ///<
+    float   m_nodeMaxDisplacement;                  ///<
+    float   m_nodeMaxCosRelativeAngle;              ///<
     float   m_emissionMaxCosRelativeAngle;          ///<
-    float   m_emissionMaxLongitudinalDisplacement;  ///< 
-    float   m_emissionMaxTransverseDisplacement;    ///< 
-   
+    float   m_emissionMaxLongitudinalDisplacement;  ///<
+    float   m_emissionMaxTransverseDisplacement;    ///<
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

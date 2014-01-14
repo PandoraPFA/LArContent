@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArClusterAssociation/TransverseAssociationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster merging algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_TRANSVERSE_ASSOCIATION_ALGORITHM_H
@@ -29,7 +29,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
@@ -44,92 +44,92 @@ private:
     class LArTransverseCluster
     {
     public:
-        /**
-         *  @brief  Constructor
-         * 
-         *  @param  pSeedCluster
-         *  @param  associatedClusters
-         */
-        LArTransverseCluster(pandora::Cluster *pSeedCluster, const pandora::ClusterVector &associatedClusters);
+	/**
+	 *  @brief  Constructor
+	 *
+	 *  @param  pSeedCluster
+	 *  @param  associatedClusters
+	 */
+	LArTransverseCluster(pandora::Cluster *pSeedCluster, const pandora::ClusterVector &associatedClusters);
 
-        /**
-         *  @brief  Constructor
-         * 
-         *  @return the address of the seed cluster
-         */
-        pandora::Cluster *GetSeedCluster() const;
+	/**
+	 *  @brief  Constructor
+	 *
+	 *  @return the address of the seed cluster
+	 */
+	pandora::Cluster *GetSeedCluster() const;
 
-        /**
-         *  @brief  Get the associated cluster vector
-         * 
-         *  @return the associated cluster vector
-         */
-        const pandora::ClusterVector &GetAssociatedClusters() const;
+	/**
+	 *  @brief  Get the associated cluster vector
+	 *
+	 *  @return the associated cluster vector
+	 */
+	const pandora::ClusterVector &GetAssociatedClusters() const;
 
-        /**
-         *  @brief  Get the inner vertex position
-         * 
-         *  @return the inner vertex position
-         */
-        const pandora::CartesianVector &GetInnerVertex() const;
+	/**
+	 *  @brief  Get the inner vertex position
+	 *
+	 *  @return the inner vertex position
+	 */
+	const pandora::CartesianVector &GetInnerVertex() const;
 
-        /**
-         *  @brief  Get the outer vertex position
-         * 
-         *  @return the outer vertex position
-         */
-        const pandora::CartesianVector &GetOuterVertex() const;
+	/**
+	 *  @brief  Get the outer vertex position
+	 *
+	 *  @return the outer vertex position
+	 */
+	const pandora::CartesianVector &GetOuterVertex() const;
 
-        /**
-         *  @brief  Get the direction
-         * 
-         *  @return the direction
-         */
-        const pandora::CartesianVector &GetDirection() const;
+	/**
+	 *  @brief  Get the direction
+	 *
+	 *  @return the direction
+	 */
+	const pandora::CartesianVector &GetDirection() const;
 
     private:
-        pandora::Cluster           *m_pSeedCluster;
-        pandora::ClusterVector      m_associatedClusters;
-        pandora::CartesianVector    m_innerVertex;
-        pandora::CartesianVector    m_outerVertex;
-        pandora::CartesianVector    m_direction;
+	pandora::Cluster           *m_pSeedCluster;
+	pandora::ClusterVector      m_associatedClusters;
+	pandora::CartesianVector    m_innerVertex;
+	pandora::CartesianVector    m_outerVertex;
+	pandora::CartesianVector    m_direction;
     };
 
     typedef std::vector<LArTransverseCluster*> TransverseClusterList;
 
     /**
      *  @brief  Separate input clusters by length
-     * 
+     *
      *  @param  inputClusters the input vector of clusters
-     *  @param  shortClusters the output vector of short clusters 
-     *  @param  transverseMediumClusters the output vector of transverse medium clusters 
-     *  @param  longitudinalMediumClusters the output vector of longitudinal medium clusters 
-     *  @param  longClusters the output vector of all long clusters 
+     *  @param  shortClusters the output vector of short clusters
+     *  @param  transverseMediumClusters the output vector of transverse medium clusters
+     *  @param  longitudinalMediumClusters the output vector of longitudinal medium clusters
+     *  @param  longClusters the output vector of all long clusters
      */
-    void SortInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &shortClusters, 
-        pandora::ClusterVector &transverseMediumClusters, pandora::ClusterVector &longitudinalMediumClusters,
-        pandora::ClusterVector &longClusters) const;
+    void SortInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &shortClusters,
+	pandora::ClusterVector &transverseMediumClusters, pandora::ClusterVector &longitudinalMediumClusters,
+	pandora::ClusterVector &longClusters) const;
 
     /**
-     *  @brief  Form associations between two input lists of cluster 
-     * 
+     *  @brief  Form associations between two input lists of cluster
+     *
      *  @param  firstVector the first input vector of clusters
      *  @param  secondVector the second input vector of clusters
      *  @param  firstAssociationMap the map of associations between first and second cluster vectors
      *  @param  secondAssociationMap the reversed map of associations between first and cluster vectors
      */
     void FillAssociationMap(const pandora::ClusterVector &firstVector, const pandora::ClusterVector &secondVector,
-        ClusterAssociationMap &firstAssociationMap, ClusterAssociationMap &secondAssociationMap) const;
+	ClusterAssociationMap &firstAssociationMap, ClusterAssociationMap &secondAssociationMap) const;
 
     /**
      *  @brief  Form a reduced set of associations between two input lists of clusters
-     * 
+     *
      *  @param  firstVector the first input vector of clusters
      *  @param  secondVector the second input vector of clusters
      *  @param  clusterAssociationMap the output map of associations between clusters
      */
     void FillReducedAssociationMap(const pandora::ClusterVector &firstVector, const pandora::ClusterVector &secondVector,
-        ClusterAssociationMap &clusterAssociationMap) const;
+	ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Create transverse cluster objects, these are protoclusters with a direction and inner/outer vertices
@@ -138,8 +138,8 @@ private:
      *  @param  inputAssociationMap the map of associations between input clusters
      *  @param  transverseClusterList the output vector of transverse cluster objects
      */
-    void FillTransverseClusterList(const  pandora::ClusterVector &inputClusters, const ClusterAssociationMap &inputAssociationMap, 
-        TransverseClusterList &transverseClusterList) const;
+    void FillTransverseClusterList(const  pandora::ClusterVector &inputClusters, const ClusterAssociationMap &inputAssociationMap,
+	TransverseClusterList &transverseClusterList) const;
 
     /**
      *  @brief  Form associations between transverse cluster objects
@@ -148,18 +148,18 @@ private:
      *  @param  transverseAssociationMap the external map of associations between clusters
      *  @param  clusterAssociationMap the output map of associations between clusters
      */
-    void FillTransverseAssociationMap(const TransverseClusterList &transverseClusterList, const ClusterAssociationMap &transverseAssociationMap, 
-        ClusterAssociationMap &clusterAssociationMap) const;
+    void FillTransverseAssociationMap(const TransverseClusterList &transverseClusterList, const ClusterAssociationMap &transverseAssociationMap,
+	ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Find the clusters that are transversely associated with a target cluster
-     * 
+     *
      *  @param  pCluster the target cluster
      *  @param  inputAssociationMap the map of associations between clusters
      *  @param  outputClusters the output vector of clusters transversely associated with target cluster
      */
-    void GetAssociatedClusters(pandora::Cluster *const pCluster, const ClusterAssociationMap &inputAssociationMap, 
-        pandora::ClusterVector &associatedClusters) const;
+    void GetAssociatedClusters(pandora::Cluster *const pCluster, const ClusterAssociationMap &inputAssociationMap,
+	pandora::ClusterVector &associatedClusters) const;
 
     /**
      *  @brief  Determine whether clusters are association
@@ -171,7 +171,7 @@ private:
      *  @return boolean
      */
     bool IsAssociated(const bool isForward, const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
-  
+
     /**
      *  @brief  Determine whether two clusters are within the same cluster window
      *
@@ -241,7 +241,7 @@ private:
      *  @param  minX the minimum X position
      *  @param  maxX the maximum X position
      */
-    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, float &minX, float &maxX) const; 
+    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, float &minX, float &maxX) const;
 
     /**
      *  @brief  Get minimum and maximum Z coordinates for a given cluster
@@ -250,7 +250,7 @@ private:
      *  @param  minZ the minimum Z position
      *  @param  maxZ the maximum Z position
      */
-    void GetExtremalCoordinatesZ(const pandora::Cluster *const pCluster, float &minZ, float &maxZ) const;  
+    void GetExtremalCoordinatesZ(const pandora::Cluster *const pCluster, float &minZ, float &maxZ) const;
 
     /**
      *  @brief  Get minimum and maximum X or Z coordinates for a given cluster
@@ -260,17 +260,17 @@ private:
      *  @param  minXZ the minimum X or Z position
      *  @param  maxXZ the maximum X or Z position
      */
-    void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, const bool useX, float &minXZ, float &maxXZ) const; 
+    void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, const bool useX, float &minXZ, float &maxXZ) const;
 
     /**
      *  @brief  Get extremal 2D coordinates for a given cluster (ordered by X)
      *
      *  @param  pCluster the input cluster
-     *  @param  innerCoordinate the inner coordinate 
+     *  @param  innerCoordinate the inner coordinate
      *  @param  outerCoordinate the outer coordinate
      */
     void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate,
-        pandora::CartesianVector &outerCoordinate) const;
+	pandora::CartesianVector &outerCoordinate) const;
 
     /**
      *  @brief Remove double-counting from association map
@@ -289,7 +289,7 @@ private:
      *  @param clusterAssociationMap the outputted association map
      */
     void FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap, const ClusterAssociationMap &secondAssociationMap,
-        const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const;
+	const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief Symmetrise an association map
@@ -310,24 +310,24 @@ private:
 
 
 
-    float          m_firstLengthCut;                   ///< 
-    float          m_secondLengthCut;                  ///< 
+    float          m_firstLengthCut;                   ///<
+    float          m_secondLengthCut;                  ///<
 
-    float          m_clusterWindow;                    ///< 
-    float          m_clusterAngle;                     ///< 
-    float          m_clusterCosAngle;                  ///< 
-    float          m_clusterTanAngle;                  ///< 
-    
+    float          m_clusterWindow;                    ///<
+    float          m_clusterAngle;                     ///<
+    float          m_clusterCosAngle;                  ///<
+    float          m_clusterTanAngle;                  ///<
+
     float          m_maxTransverseOverlap;             ///<
     float          m_maxLongitudinalOverlap;           ///<
     float          m_maxProjectedOverlap;              ///<
 
-    float          m_transverseClusterMinCosTheta;     ///< 
-    float          m_transverseClusterMinLength;       ///< 
-    float          m_transverseClusterMaxDisplacement; ///< 
-    
+    float          m_transverseClusterMinCosTheta;     ///<
+    float          m_transverseClusterMinLength;       ///<
+    float          m_transverseClusterMaxDisplacement; ///<
 
-   
+
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
