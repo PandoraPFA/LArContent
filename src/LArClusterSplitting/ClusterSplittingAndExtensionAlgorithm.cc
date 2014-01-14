@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/ClusterSplitting/ClusterSplittingAndExtensionAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the branch splitting algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -25,32 +25,32 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::Run()
 
     TwoDSlidingFitResultMap branchSlidingFitResultMap, replacementSlidingFitResultMap;
 
-    bool carryOn(true);    
+    bool carryOn(true);
 
     while (carryOn)
     {
-        carryOn = false;        
+	carryOn = false;
 
-        // Get ordered list of candidate clusters
-        ClusterVector clusterVector;
-        this->GetListOfCleanClusters(pClusterList, clusterVector);
-       
-        // Calculate sliding fit results for branch clusters (use a soft sliding fit for these)
-        this->BuildSlidingFitResultMap(clusterVector, m_shortHalfWindowLayers, branchSlidingFitResultMap);
+	// Get ordered list of candidate clusters
+	ClusterVector clusterVector;
+	this->GetListOfCleanClusters(pClusterList, clusterVector);
 
-        // Calculate sliding fit results for replacement clusters (use a hard linear fit for these)
-        this->BuildSlidingFitResultMap(clusterVector, m_longHalfWindowLayers, replacementSlidingFitResultMap);
+	// Calculate sliding fit results for branch clusters (use a soft sliding fit for these)
+	this->BuildSlidingFitResultMap(clusterVector, m_shortHalfWindowLayers, branchSlidingFitResultMap);
 
-        // Compile a list of possible splits
-        ClusterExtensionList intermediateList, splitList;
-        this->BuildClusterExtensionList(clusterVector, branchSlidingFitResultMap, replacementSlidingFitResultMap, intermediateList);
-        this->FinalizeClusterExtensionList(intermediateList, branchSlidingFitResultMap, replacementSlidingFitResultMap, splitList);
+	// Calculate sliding fit results for replacement clusters (use a hard linear fit for these)
+	this->BuildSlidingFitResultMap(clusterVector, m_longHalfWindowLayers, replacementSlidingFitResultMap);
 
-        // Run splitting and extension
-        if (STATUS_CODE_SUCCESS == this->RunSplittingAndExtension(splitList, branchSlidingFitResultMap, replacementSlidingFitResultMap))
+	// Compile a list of possible splits
+	ClusterExtensionList intermediateList, splitList;
+	this->BuildClusterExtensionList(clusterVector, branchSlidingFitResultMap, replacementSlidingFitResultMap, intermediateList);
+	this->FinalizeClusterExtensionList(intermediateList, branchSlidingFitResultMap, replacementSlidingFitResultMap, splitList);
+
+	// Run splitting and extension
+	if (STATUS_CODE_SUCCESS == this->RunSplittingAndExtension(splitList, branchSlidingFitResultMap, replacementSlidingFitResultMap))
 	    carryOn = true;
     }
-    
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -60,136 +60,136 @@ void ClusterSplittingAndExtensionAlgorithm::GetListOfCleanClusters(const Cluster
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+	Cluster *pCluster = *iter;
 
-        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
-            continue;
+	if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
+	    continue;
 
-        clusterVector.push_back(pCluster);
+	clusterVector.push_back(pCluster);
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
-  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterSplittingAndExtensionAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, const unsigned int halfWindowLayers, 
-        TwoDSlidingFitResultMap &slidingFitResultMap) const
+void ClusterSplittingAndExtensionAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, const unsigned int halfWindowLayers,
+	TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
-        if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
-	{                
-            LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
-            LArClusterHelper::LArTwoDSlidingFit(*iter, halfWindowLayers, slidingFitResult);
+	if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
+	{
+	    LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+	    LArClusterHelper::LArTwoDSlidingFit(*iter, halfWindowLayers, slidingFitResult);
 
-            if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-	}    
+	    if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+		throw StatusCodeException(STATUS_CODE_FAILURE);
+	}
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterSplittingAndExtensionAlgorithm::BuildClusterExtensionList(const ClusterVector &clusterVector, 
-    const TwoDSlidingFitResultMap &branchSlidingFitResultMap, const TwoDSlidingFitResultMap &replacementSlidingFitResultMap, 
+void ClusterSplittingAndExtensionAlgorithm::BuildClusterExtensionList(const ClusterVector &clusterVector,
+    const TwoDSlidingFitResultMap &branchSlidingFitResultMap, const TwoDSlidingFitResultMap &replacementSlidingFitResultMap,
     ClusterExtensionList &clusterExtensionList) const
 {
     // Loop over each possible pair of clusters
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterEndI = clusterVector.end(); iterI != iterEndI; ++iterI)
     {
-        Cluster* pClusterI = *iterI;
+	Cluster* pClusterI = *iterI;
 
-        for (ClusterVector::const_iterator iterJ = iterI, iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            Cluster* pClusterJ = *iterJ;
+	for (ClusterVector::const_iterator iterJ = iterI, iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
+	{
+	    Cluster* pClusterJ = *iterJ;
 
-            if (pClusterI == pClusterJ)
-	        continue;
+	    if (pClusterI == pClusterJ)
+		continue;
 
-            // Get the branch and replacement sliding fits for this pair of clusters
-            TwoDSlidingFitResultMap::const_iterator iterBranchI = branchSlidingFitResultMap.find(*iterI);
-            TwoDSlidingFitResultMap::const_iterator iterBranchJ = branchSlidingFitResultMap.find(*iterJ);
+	    // Get the branch and replacement sliding fits for this pair of clusters
+	    TwoDSlidingFitResultMap::const_iterator iterBranchI = branchSlidingFitResultMap.find(*iterI);
+	    TwoDSlidingFitResultMap::const_iterator iterBranchJ = branchSlidingFitResultMap.find(*iterJ);
 
-            TwoDSlidingFitResultMap::const_iterator iterReplacementI = replacementSlidingFitResultMap.find(*iterI);
-            TwoDSlidingFitResultMap::const_iterator iterReplacementJ = replacementSlidingFitResultMap.find(*iterJ);
+	    TwoDSlidingFitResultMap::const_iterator iterReplacementI = replacementSlidingFitResultMap.find(*iterI);
+	    TwoDSlidingFitResultMap::const_iterator iterReplacementJ = replacementSlidingFitResultMap.find(*iterJ);
 
-            if (branchSlidingFitResultMap.end() == iterBranchI || branchSlidingFitResultMap.end() == iterBranchJ ||
-                replacementSlidingFitResultMap.end() == iterReplacementI || replacementSlidingFitResultMap.end() == iterReplacementJ)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+	    if (branchSlidingFitResultMap.end() == iterBranchI || branchSlidingFitResultMap.end() == iterBranchJ ||
+		replacementSlidingFitResultMap.end() == iterReplacementI || replacementSlidingFitResultMap.end() == iterReplacementJ)
+		throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFitI(iterBranchI->second);
-            const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFitJ(iterBranchJ->second);
+	    const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFitI(iterBranchI->second);
+	    const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFitJ(iterBranchJ->second);
 
-            const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFitI(iterReplacementI->second);
-            const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFitJ(iterReplacementJ->second);
+	    const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFitI(iterReplacementI->second);
+	    const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFitJ(iterReplacementJ->second);
 
-            // Search for a split in clusterI
-            float branchChisqI(0.f);
-            CartesianVector branchSplitPositionI(0.f, 0.f, 0.f);
-            CartesianVector branchSplitDirectionI(0.f, 0.f, 0.f);
-            CartesianVector replacementStartPositionJ(0.f, 0.f, 0.f);
+	    // Search for a split in clusterI
+	    float branchChisqI(0.f);
+	    CartesianVector branchSplitPositionI(0.f, 0.f, 0.f);
+	    CartesianVector branchSplitDirectionI(0.f, 0.f, 0.f);
+	    CartesianVector replacementStartPositionJ(0.f, 0.f, 0.f);
 
-            try{
-	        this->FindBestSplitPosition(branchSlidingFitI, replacementSlidingFitJ, replacementStartPositionJ,
-                    branchSplitPositionI, branchSplitDirectionI);
-                branchChisqI = this->CalculateBranchChi2(pClusterI, branchSplitPositionI, branchSplitDirectionI);
+	    try{
+		this->FindBestSplitPosition(branchSlidingFitI, replacementSlidingFitJ, replacementStartPositionJ,
+		    branchSplitPositionI, branchSplitDirectionI);
+		branchChisqI = this->CalculateBranchChi2(pClusterI, branchSplitPositionI, branchSplitDirectionI);
 	    }
-            catch (StatusCodeException &)
+	    catch (StatusCodeException &)
 	    {
 	    }
 
-            // Search for a split in clusterJ
-            float branchChisqJ(0.f);
-            CartesianVector branchSplitPositionJ(0.f, 0.f, 0.f);
-            CartesianVector branchSplitDirectionJ(0.f, 0.f, 0.f);
-            CartesianVector replacementStartPositionI(0.f, 0.f, 0.f);
+	    // Search for a split in clusterJ
+	    float branchChisqJ(0.f);
+	    CartesianVector branchSplitPositionJ(0.f, 0.f, 0.f);
+	    CartesianVector branchSplitDirectionJ(0.f, 0.f, 0.f);
+	    CartesianVector replacementStartPositionI(0.f, 0.f, 0.f);
 
-            try{
-                this->FindBestSplitPosition(branchSlidingFitJ, replacementSlidingFitI, replacementStartPositionI,
-                    branchSplitPositionJ, branchSplitDirectionJ);
-                branchChisqJ = this->CalculateBranchChi2(pClusterJ, branchSplitPositionJ, branchSplitDirectionJ); 
+	    try{
+		this->FindBestSplitPosition(branchSlidingFitJ, replacementSlidingFitI, replacementStartPositionI,
+		    branchSplitPositionJ, branchSplitDirectionJ);
+		branchChisqJ = this->CalculateBranchChi2(pClusterJ, branchSplitPositionJ, branchSplitDirectionJ);
 	    }
-            catch (StatusCodeException &)
+	    catch (StatusCodeException &)
 	    {
 	    }
 
-            // Re-calculate chi2 values if both clusters have a split
-            if (branchChisqI > 0.f && branchChisqJ > 0.f)  
+	    // Re-calculate chi2 values if both clusters have a split
+	    if (branchChisqI > 0.f && branchChisqJ > 0.f)
 	    {
-	        const CartesianVector relativeDirection((branchSplitPositionJ - branchSplitPositionI).GetUnitVector());
+		const CartesianVector relativeDirection((branchSplitPositionJ - branchSplitPositionI).GetUnitVector());
 
-                if (branchSplitDirectionI.GetDotProduct(relativeDirection) > 0.f && 
-                    branchSplitDirectionJ.GetDotProduct(relativeDirection) < 0.f )
+		if (branchSplitDirectionI.GetDotProduct(relativeDirection) > 0.f &&
+		    branchSplitDirectionJ.GetDotProduct(relativeDirection) < 0.f )
 		{
-                    try{
-                        const float newBranchChisqI(this->CalculateBranchChi2(pClusterI, branchSplitPositionI, relativeDirection));
-                        const float newBranchChisqJ(this->CalculateBranchChi2(pClusterJ, branchSplitPositionJ, relativeDirection * -1.f));
-                        branchChisqI = newBranchChisqI;
-                        branchChisqJ = newBranchChisqJ;
+		    try{
+			const float newBranchChisqI(this->CalculateBranchChi2(pClusterI, branchSplitPositionI, relativeDirection));
+			const float newBranchChisqJ(this->CalculateBranchChi2(pClusterJ, branchSplitPositionJ, relativeDirection * -1.f));
+			branchChisqI = newBranchChisqI;
+			branchChisqJ = newBranchChisqJ;
 		    }
-                    catch (StatusCodeException &)
+		    catch (StatusCodeException &)
 		    {
 		    }
 		}
 	    }
 
-            // Select the overall best split position
-            Cluster* pBranchCluster = NULL;
-            Cluster* pReplacementCluster = NULL;
-            CartesianVector branchSplitPosition(0.f, 0.f, 0.f);
-            CartesianVector branchSplitDirection(0.f, 0.f, 0.f);
+	    // Select the overall best split position
+	    Cluster* pBranchCluster = NULL;
+	    Cluster* pReplacementCluster = NULL;
+	    CartesianVector branchSplitPosition(0.f, 0.f, 0.f);
+	    CartesianVector branchSplitDirection(0.f, 0.f, 0.f);
 
-            if (branchChisqI > branchChisqJ)
+	    if (branchChisqI > branchChisqJ)
 	    {
-	        (void) clusterExtensionList.push_back(ClusterExtension(pClusterI, pClusterJ, 
-	            replacementStartPositionJ, branchSplitPositionI, branchSplitDirectionI));	
+		(void) clusterExtensionList.push_back(ClusterExtension(pClusterI, pClusterJ,
+		    replacementStartPositionJ, branchSplitPositionI, branchSplitDirectionI));
 	    }
 
-            else if (branchChisqJ > branchChisqI)
+	    else if (branchChisqJ > branchChisqI)
 	    {
-                (void) clusterExtensionList.push_back(ClusterExtension(pClusterJ, pClusterI, 
-		    replacementStartPositionI, branchSplitPositionJ, branchSplitDirectionJ));      
+		(void) clusterExtensionList.push_back(ClusterExtension(pClusterJ, pClusterI,
+		    replacementStartPositionI, branchSplitPositionJ, branchSplitDirectionJ));
 	    }
 	}
     }
@@ -197,72 +197,72 @@ void ClusterSplittingAndExtensionAlgorithm::BuildClusterExtensionList(const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterSplittingAndExtensionAlgorithm::FinalizeClusterExtensionList(const ClusterExtensionList &inputList, 
+void ClusterSplittingAndExtensionAlgorithm::FinalizeClusterExtensionList(const ClusterExtensionList &inputList,
     const TwoDSlidingFitResultMap &branchMap, const TwoDSlidingFitResultMap &replacementMap, ClusterExtensionList &outputList) const
 {
     for (ClusterExtensionList::const_iterator iter = inputList.begin(), iterEnd = inputList.end(); iter != iterEnd; ++iter)
     {
-        const ClusterExtension &thisSplit = *iter;   
+	const ClusterExtension &thisSplit = *iter;
 
-        Cluster* pBranchCluster = thisSplit.GetBranchCluster();
-        Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
-        const CartesianVector &branchVertex = thisSplit.GetBranchVertex();
-        const CartesianVector &replacementVertex = thisSplit.GetReplacementVertex();
+	Cluster* pBranchCluster = thisSplit.GetBranchCluster();
+	Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
+	const CartesianVector &branchVertex = thisSplit.GetBranchVertex();
+	const CartesianVector &replacementVertex = thisSplit.GetReplacementVertex();
 
-        const float distanceSquared((branchVertex - replacementVertex).GetMagnitudeSquared());
-        const float vetoDistanceSquared(m_vetoDisplacement * m_vetoDisplacement);
+	const float distanceSquared((branchVertex - replacementVertex).GetMagnitudeSquared());
+	const float vetoDistanceSquared(m_vetoDisplacement * m_vetoDisplacement);
 
-        bool branchVeto(false), replacementVeto(false);
-      
-        // Veto the merge if another cluster is closer to the replacement vertex
-        for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
+	bool branchVeto(false), replacementVeto(false);
+
+	// Veto the merge if another cluster is closer to the replacement vertex
+	for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
 	{
 	    const TwoDSlidingFitResult slidingFit(iter->second);
 
-            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
-	        continue;
+	    if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+		continue;
 
-            const float minDistanceSquared((replacementVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
-            const float maxDistanceSquared((replacementVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+	    const float minDistanceSquared((replacementVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
+	    const float maxDistanceSquared((replacementVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
 
-            if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
+	    if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
 	    {
-	        branchVeto = true;
-                break;
-            }
+		branchVeto = true;
+		break;
+	    }
 	}
 
-        // Veto the merge if another cluster is closer to the branch vertex 
-        for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
+	// Veto the merge if another cluster is closer to the branch vertex
+	for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
 	{
 	    const TwoDSlidingFitResult slidingFit(iter->second);
 
-            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
-	        continue;
+	    if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+		continue;
 
-            const float minDistanceSquared((branchVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
-            const float maxDistanceSquared((branchVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+	    const float minDistanceSquared((branchVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
+	    const float maxDistanceSquared((branchVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
 
-            if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
+	    if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
 	    {
-	        replacementVeto = true;
-                break;
-            }
+		replacementVeto = true;
+		break;
+	    }
 	}
-    
-        if (branchVeto || replacementVeto)
+
+	if (branchVeto || replacementVeto)
 	    continue;
 
-        outputList.push_back(*iter);
-    } 
+	outputList.push_back(*iter);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ClusterSplittingAndExtensionAlgorithm::CalculateBranchChi2(const Cluster* const pCluster, const CartesianVector &splitPosition, 
+float ClusterSplittingAndExtensionAlgorithm::CalculateBranchChi2(const Cluster* const pCluster, const CartesianVector &splitPosition,
     const CartesianVector &splitDirection) const
 {
-    CaloHitList principalCaloHitList, branchCaloHitList; 
+    CaloHitList principalCaloHitList, branchCaloHitList;
 
     this->SplitBranchCluster(pCluster, splitPosition, splitDirection, principalCaloHitList, branchCaloHitList);
 
@@ -271,24 +271,24 @@ float ClusterSplittingAndExtensionAlgorithm::CalculateBranchChi2(const Cluster* 
 
     for (CaloHitList::const_iterator iter = branchCaloHitList.begin(), iterEnd = branchCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+	CaloHit *pCaloHit = *iter;
 
-        const CartesianVector hitPosition(pCaloHit->GetPositionVector());
-        const CartesianVector projectedPosition(splitPosition + splitDirection * splitDirection.GetDotProduct(hitPosition - splitPosition));
+	const CartesianVector hitPosition(pCaloHit->GetPositionVector());
+	const CartesianVector projectedPosition(splitPosition + splitDirection * splitDirection.GetDotProduct(hitPosition - splitPosition));
 
-        totalChi2 += (hitPosition - projectedPosition).GetMagnitudeSquared();
-        totalHits += 1.f;
+	totalChi2 += (hitPosition - projectedPosition).GetMagnitudeSquared();
+	totalHits += 1.f;
     }
 
     if (totalHits > 0.f)
-        return std::sqrt(totalChi2/totalHits);
+	return std::sqrt(totalChi2/totalHits);
 
     throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterSplittingAndExtensionAlgorithm::SplitBranchCluster(const Cluster* const pCluster, const CartesianVector &splitPosition, 
+void ClusterSplittingAndExtensionAlgorithm::SplitBranchCluster(const Cluster* const pCluster, const CartesianVector &splitPosition,
     const CartesianVector &splitDirection, CaloHitList &principalCaloHitList, CaloHitList &branchCaloHitList) const
 {
     // Distribute hits in branch cluster between new principal and residual clusters
@@ -297,46 +297,46 @@ void ClusterSplittingAndExtensionAlgorithm::SplitBranchCluster(const Cluster* co
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+	CaloHit *pCaloHit = *iter;
 
-        if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
-        {
-            branchCaloHitList.insert(pCaloHit);
-        }
-        else
-        {
-            principalCaloHitList.insert(pCaloHit);
-        }
+	if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
+	{
+	    branchCaloHitList.insert(pCaloHit);
+	}
+	else
+	{
+	    principalCaloHitList.insert(pCaloHit);
+	}
     }
 
     if (branchCaloHitList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+	throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterSplittingAndExtensionAlgorithm::RunSplittingAndExtension(const ClusterExtensionList &splitList, 
+StatusCode ClusterSplittingAndExtensionAlgorithm::RunSplittingAndExtension(const ClusterExtensionList &splitList,
     TwoDSlidingFitResultMap &branchResultMap, TwoDSlidingFitResultMap &replacementResultMap) const
 {
     bool foundSplit(false);
 
     for (ClusterExtensionList::const_iterator iter = splitList.begin(), iterEnd = splitList.end(); iter != iterEnd; ++iter)
     {
-        const ClusterExtension &thisSplit = *iter;   
+	const ClusterExtension &thisSplit = *iter;
 
-        Cluster* pBranchCluster = thisSplit.GetBranchCluster();
-        Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
-        const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
-        const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
+	Cluster* pBranchCluster = thisSplit.GetBranchCluster();
+	Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
+	const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
+	const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
 
-        TwoDSlidingFitResultMap::iterator iterBranch1 = branchResultMap.find(pBranchCluster);
-        TwoDSlidingFitResultMap::iterator iterBranch2 = branchResultMap.find(pReplacementCluster);
+	TwoDSlidingFitResultMap::iterator iterBranch1 = branchResultMap.find(pBranchCluster);
+	TwoDSlidingFitResultMap::iterator iterBranch2 = branchResultMap.find(pReplacementCluster);
 
-        TwoDSlidingFitResultMap::iterator iterReplacement1 = replacementResultMap.find(pBranchCluster);
-        TwoDSlidingFitResultMap::iterator iterReplacement2 = replacementResultMap.find(pReplacementCluster);
+	TwoDSlidingFitResultMap::iterator iterReplacement1 = replacementResultMap.find(pBranchCluster);
+	TwoDSlidingFitResultMap::iterator iterReplacement2 = replacementResultMap.find(pReplacementCluster);
 
-        if (branchResultMap.end() == iterBranch1 || branchResultMap.end() == iterBranch2 ||
-            replacementResultMap.end() == iterReplacement1 || replacementResultMap.end() == iterReplacement2)
+	if (branchResultMap.end() == iterBranch1 || branchResultMap.end() == iterBranch2 ||
+	    replacementResultMap.end() == iterReplacement1 || replacementResultMap.end() == iterReplacement2)
 	    continue;
 
 // --- BEGIN DISPLAY ---
@@ -349,20 +349,20 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::RunSplittingAndExtension(const
 // PANDORA_MONITORING_API(AddMarkerToVisualization(&branchSplitPosition, "BranchStartPosition", RED, 2.75));
 // PANDORA_MONITORING_API(ViewEvent());
 // --- END DISPLAY ---
-	
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
+
+	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
 									      branchSplitPosition, branchSplitDirection));
-        branchResultMap.erase(iterBranch1);
-        branchResultMap.erase(iterBranch2);
+	branchResultMap.erase(iterBranch1);
+	branchResultMap.erase(iterBranch2);
 
-        replacementResultMap.erase(iterReplacement1);
-        replacementResultMap.erase(iterReplacement2);
+	replacementResultMap.erase(iterReplacement1);
+	replacementResultMap.erase(iterReplacement2);
 
-        foundSplit = true;  
+	foundSplit = true;
     }
 
     if (foundSplit)
-        return STATUS_CODE_SUCCESS;
+	return STATUS_CODE_SUCCESS;
 
     return STATUS_CODE_NOT_FOUND;
 }
@@ -378,7 +378,7 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::ReplaceBranch(Cluster *const p
 
     std::string clusterListToSaveName, clusterListToDeleteName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,
-        clusterListToSaveName));
+	clusterListToSaveName));
 
     // Entire replacement cluster goes into new principal cluster
     CaloHitList principalCaloHitList;
@@ -399,22 +399,22 @@ StatusCode ClusterSplittingAndExtensionAlgorithm::ReplaceBranch(Cluster *const p
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ClusterSplittingAndExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{ 
+{
     m_shortHalfWindowLayers = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShortHalfWindow", m_shortHalfWindowLayers));
+	"ShortHalfWindow", m_shortHalfWindowLayers));
 
     m_longHalfWindowLayers = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LongHalfWindow", m_longHalfWindowLayers));
+	"LongHalfWindow", m_longHalfWindowLayers));
 
     m_minClusterLength = 7.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+	"MinClusterLength", m_minClusterLength));
 
     m_vetoDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VetoDisplacement", m_vetoDisplacement));
+	"VetoDisplacement", m_vetoDisplacement));
 
     return STATUS_CODE_SUCCESS;
 }
