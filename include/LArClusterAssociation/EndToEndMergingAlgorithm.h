@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArClusterAssociation/EndToEndMergingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster extension algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_END_TO_END_MERGING_ALGORITHM_H
@@ -27,18 +27,18 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
     void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
-  
-   
 
-    void FillClusterAssociationMatrix(const pandora::Cluster* const pParentCluster, const pandora::Cluster* const pDaughterCluster, 
-        ClusterAssociationMatrix &clusterAssociationMatrix) const;
+
+
+    void FillClusterAssociationMatrix(const pandora::Cluster* const pParentCluster, const pandora::Cluster* const pDaughterCluster,
+	ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
 
 
@@ -48,7 +48,7 @@ private:
     float m_minClusterLength;
     float m_maxLongitudinalDisplacement;
     float m_maxTransverseDisplacement;
-   
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
