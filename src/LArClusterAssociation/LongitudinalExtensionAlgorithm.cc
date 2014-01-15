@@ -156,18 +156,13 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 		LArPointingClusterHelper::GetImpactParameters(vertexPositionI, vertexDirectionI, vertexPositionJ, rL1, rT1);
 		LArPointingClusterHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, vertexPositionI, rL2, rT2);
 
-		if ((rL1 > -2.5f && rL1 < m_emissionMaxLongitudinalDisplacement && rL1 < 2.f * clusterLengthJ) &&
-		    (rL2 > -2.5f && rL2 < m_emissionMaxLongitudinalDisplacement && rL2 < 2.f * clusterLengthI) &&
-		    (rT1 < 1.5f * m_emissionMaxTransverseDisplacement) && (rT2 < 1.5f * m_emissionMaxTransverseDisplacement))
+		if ((rL1 > -2.5f && rL1 < std::min(0.66f * clusterLengthJ, m_emissionMaxLongitudinalDisplacement)) &&
+		    (rL2 > -2.5f && rL2 < std::min(0.66f * clusterLengthI, m_emissionMaxLongitudinalDisplacement)) &&
+		    (rT1 < m_emissionMaxTransverseDisplacement) && (rT2 < m_emissionMaxTransverseDisplacement) &&
+		    (targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
+		    (cosTheta > m_emissionMaxCosRelativeAngle) && (std::fabs(cosThetaI) > 0.25f) && (std::fabs(cosThetaJ) > 0.25f))
 		{
-		    associationType = ClusterAssociation::WEAK;
-
-		    if ((rT1 < m_emissionMaxTransverseDisplacement) && (rT2 < m_emissionMaxTransverseDisplacement) &&
-			(targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
-			(cosTheta > m_emissionMaxCosRelativeAngle) && (std::fabs(cosThetaI) > 0.25f) && (std::fabs(cosThetaJ) > 0.25f))
-		    {
-			associationType = ClusterAssociation::STRONG;
-		    }
+		    associationType = ClusterAssociation::STRONG;
 		}
 	    }
 
@@ -244,7 +239,8 @@ void LongitudinalExtensionAlgorithm::FillReducedAssociationMatrix(const ClusterA
 		const ClusterAssociation &association23(iter23->second);
 
 		if (association12.GetParent() == association13.GetParent() &&
-		    association23.GetParent() == association21.GetParent())
+		    association23.GetParent() == association21.GetParent() &&
+		    association13.GetDaughter() != association23.GetDaughter())
 		{
 		    isAssociated = false;
 		    break;
