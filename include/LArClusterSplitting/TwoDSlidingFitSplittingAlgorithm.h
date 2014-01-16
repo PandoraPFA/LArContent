@@ -52,8 +52,8 @@ private:
 	const pandora::CartesianVector& splitPosition, pandora::CaloHitList &firstCaloHitList,
 	pandora::CaloHitList &secondCaloHitList) const;
 
-    unsigned int    m_minClusterLayers;       ///<
     unsigned int    m_slidingFitHalfWindow;   ///<
+    float           m_minClusterLength;       ///<
 };
 
 } // namespace lar

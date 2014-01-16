@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.cc
  *
- *  @brief  Implementation of the kink splitting algorithm class.
+ *  @brief  Implementation of the sliding fit splitting algorithm class.
  *
  *  $Log: $
  */
@@ -17,7 +17,7 @@ namespace lar
 
 StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
 {
-    if (pCluster->GetOrderedCaloHitList().size() < m_minClusterLayers)
+    if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
 	return STATUS_CODE_NOT_FOUND;
 
     LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
@@ -78,9 +78,9 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 	"SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
-    m_minClusterLayers = 30;
+    m_minClusterLength = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MinClusterLayers", m_minClusterLayers));
+	"MinClusterLength", m_minClusterLength));
 
     return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }
