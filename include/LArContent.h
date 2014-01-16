@@ -23,6 +23,7 @@
 #include "LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArClusterSplitting/KinkSplittingAlgorithm.h"
+#include "LArClusterSplitting/LayerSplittingAlgorithm.h"
 #include "LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
@@ -78,6 +79,7 @@ public:
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
+        d("LArLayerSplitting",                      lar::LayerSplittingAlgorithm::Factory)                                      \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
         d("LArLongitudinalConsolidation",           lar::LongitudinalConsolidationAlgorithm::Factory)                           \
