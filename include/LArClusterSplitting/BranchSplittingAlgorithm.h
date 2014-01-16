@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArClusterSplitting/ClusterSplittingAndExtensionAlgorithm.h"
+#include "LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
 
 namespace lar
 {
@@ -18,7 +18,7 @@ namespace lar
 /**
  *  @brief  BranchSplittingAlgorithm class
  */
-class BranchSplittingAlgorithm : public ClusterSplittingAndExtensionAlgorithm
+class BranchSplittingAlgorithm : public TwoDSlidingFitSplittingAndSplicingAlgorithm
 {
 public:
     /**

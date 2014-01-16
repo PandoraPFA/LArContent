@@ -121,7 +121,7 @@ StatusCode BranchSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 	"MinCosRelativeAngle", m_minCosRelativeAngle));
 
-    return ClusterSplittingAndExtensionAlgorithm::ReadSettings(xmlHandle);
+    return TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar
