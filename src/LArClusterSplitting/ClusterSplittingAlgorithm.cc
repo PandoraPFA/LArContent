@@ -1,16 +1,12 @@
 /**
  *  @file   LArContent/src/ClusterSplitting/ClusterSplittingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cluster splitting algorithm class.
- * 
+ *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArParticleIdHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
@@ -28,26 +24,14 @@ StatusCode ClusterSplittingAlgorithm::Run()
 
     for (ClusterSplittingList::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
     {
-        Cluster* pCluster = *iter;
+	Cluster* pCluster = *iter;
 
-        if (!this->IsPossibleSplit(pCluster))
-            continue;
+	ClusterSplittingList clusterSplittingList;
+	if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, clusterSplittingList))
+	    continue;
 
-        CartesianVector splitPosition(0.f, 0.f, 0.f);
-
-        if (STATUS_CODE_SUCCESS != this->FindBestSplitPosition(pCluster,splitPosition))
-            continue;
-
-        const unsigned int splitLayer(GeometryHelper::GetPseudoLayer(splitPosition));
-
-        if ((splitLayer <= pCluster->GetInnerPseudoLayer()) || (splitLayer >= pCluster->GetOuterPseudoLayer()))
-            continue;
-
-        ClusterSplittingList clusterSplittingList;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pCluster, splitLayer, clusterSplittingList));
-
-        internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
-        *iter = NULL;
+	internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
+	*iter = NULL;
     }
 
     return STATUS_CODE_SUCCESS;
@@ -55,9 +39,15 @@ StatusCode ClusterSplittingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, const unsigned int splitLayer, ClusterSplittingList &clusterSplittingList) const
+StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, ClusterSplittingList &clusterSplittingList) const
 {
-    // TODO: Use projection of split position on cluster trajectory rather than layer number (i.e. use rL, not Z).
+    // Split cluster into two CaloHit lists
+    CaloHitList firstCaloHitList, secondCaloHitList;
+    if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, firstCaloHitList, secondCaloHitList))
+	return STATUS_CODE_NOT_FOUND;
+
+    if (firstCaloHitList.empty() || secondCaloHitList.empty())
+	return STATUS_CODE_NOT_ALLOWED;
 
     // Begin cluster fragmentation operations
     ClusterList clusterList;
@@ -65,32 +55,16 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, cons
     std::string clusterListToSaveName, clusterListToDeleteName;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,
-        clusterListToSaveName));
+	clusterListToSaveName));
 
     // Create new clusters
-    Cluster *pCluster1(NULL), *pCluster2(NULL);
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);
 
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
-    {
-        const unsigned int thisLayer(iter->first);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &firstCaloHitList, pFirstCluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &secondCaloHitList, pSecondCluster));
 
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            CaloHit *pCaloHit = *hitIter;
-            Cluster *&pClusterToModify((thisLayer < splitLayer) ? pCluster1 : pCluster2);
-
-            if (NULL == pClusterToModify)
-            {
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pCaloHit, pClusterToModify));
-                clusterSplittingList.push_back(pClusterToModify);
-            }
-            else
-            {
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pClusterToModify, pCaloHit));
-            }
-        }
-    }
+    clusterSplittingList.push_back(pFirstCluster);
+    clusterSplittingList.push_back(pSecondCluster);
 
     // End cluster fragmentation operations
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));

@@ -8,43 +8,32 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
-
 #include "LArClusterSplitting/VertexSplittingAlgorithm.h"
+
+#include "LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
 
 namespace lar
 {
-
-bool VertexSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) const
+ 
+StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
+    CartesianVector &splitPosition) const
 {
-    if (LArClusterHelper::GetLengthSquared(pCluster) < 4.f * m_vertexDisplacementSquared)
-        return false;
+    
+    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
 
-    return true;
-}
+    const CartesianVector innerVertex(slidingFitResult.GetGlobalMinLayerPosition());
+    const CartesianVector outerVertex(slidingFitResult.GetGlobalMaxLayerPosition());
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    if ((outerVertex - innerVertex).GetMagnitudeSquared() < 4.f * m_vertexDisplacementSquared)
+        return STATUS_CODE_NOT_FOUND;
 
-StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
-{
     bool foundSplit(false);
 
     try
     {
-        const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
-
-        // Project vertex onto sliding window fit
-        LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);  
-
-        const CartesianVector innerVertex(twoDSlidingFitResult.GetGlobalMinLayerPosition());
-        const CartesianVector outerVertex(twoDSlidingFitResult.GetGlobalMaxLayerPosition());
-
-        twoDSlidingFitResult.GetGlobalFitProjection(theVertex, splitPosition); 
+        slidingFitResult.GetGlobalFitProjection(theVertex, splitPosition); 
 
         const float splitDisplacementSquared((splitPosition - theVertex).GetMagnitudeSquared());
         const float vertexDisplacementSquared(std::min((splitPosition - innerVertex).GetMagnitudeSquared(), (splitPosition - outerVertex).GetMagnitudeSquared()));
@@ -70,10 +59,6 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const Cluster *const 
 
 StatusCode VertexSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_slidingFitLayerHalfWindow = 10;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitLayerHalfWindow", m_slidingFitLayerHalfWindow));
-
     m_splitDisplacement = 4.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SplitDisplacement", m_splitDisplacement));
@@ -84,7 +69,7 @@ StatusCode VertexSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "VertexDisplacement", m_vertexDisplacement));
     m_vertexDisplacementSquared = m_vertexDisplacement * m_vertexDisplacement;
 
-    return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
+    return TwoDSlidingFitSplittingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

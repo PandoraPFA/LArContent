@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArClusterSplitting/KinkSplittingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the kink splitting algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -10,63 +10,107 @@
 
 #include "LArClusterSplitting/KinkSplittingAlgorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-
 using namespace pandora;
 
 namespace lar
 {
 
-bool KinkSplittingAlgorithm::IsPossibleSplit(const Cluster *const pCluster) const
+StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
+    CartesianVector& splitPosition) const
 {
-    if ((1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) < m_minClusterLayers)
-        return false;
+    // Search for scatters by scanning over the layers in the sliding fit result
+    const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
+    const int minLayer(layerFitResultMap.begin()->first), maxLayer(layerFitResultMap.rbegin()->first);
 
-    ClusterHelper::ClusterFitResult innerLayerFit, outerLayerFit, fullLayerFit;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pCluster, m_minClusterLayers, innerLayerFit));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pCluster, m_minClusterLayers, outerLayerFit));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitFullCluster(pCluster, fullLayerFit));
+    const int nLayersHalfWindow(slidingFitResult.GetLayerFitHalfWindow());
+    const int nLayersSpanned(1 + maxLayer - minLayer);
 
-    if (fullLayerFit.GetRms() < m_minOverallScatteringRms)
-        return false; 
+    if (nLayersSpanned <= 2 * nLayersHalfWindow)
+	return STATUS_CODE_NOT_FOUND;
 
-    if ((innerLayerFit.GetRms() > m_minVertexScatteringRms) && (outerLayerFit.GetRms() > m_minVertexScatteringRms))
-        return false;
+    bool foundSplit(false);
 
-    return true;
-}
+    float bestRms(0.f);
+    float bestCosTheta(1.f);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end();
+	iter != iterEnd; ++iter)
+    {
+	const int iLayer(iter->first);
 
-StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const Cluster *const pCluster, CartesianVector &splitPosition) const
-{
-    LArClusterHelper::TwoDSlidingFitResult twoDSlidingFitResult;
-    LArClusterHelper::LArTwoDSlidingXZFit(pCluster, m_slidingFitLayerHalfWindow, twoDSlidingFitResult);
+	const float rL(slidingFitResult.GetL(iLayer));
+	const float rL1(slidingFitResult.GetL(iLayer - nLayersHalfWindow));
+	const float rL2(slidingFitResult.GetL(iLayer + nLayersHalfWindow));
 
-    return LArClusterHelper::FindLargestScatter(twoDSlidingFitResult, splitPosition);
+	try{
+	    CartesianVector centralPosition(0.f,0.f,0.f);
+	    CartesianVector firstDirection(0.f,0.f,0.f);
+	    CartesianVector secondDirection(0.f,0.f,0.f);
+
+	    slidingFitResult.GetGlobalFitPosition(rL, centralPosition);
+	    slidingFitResult.GetGlobalFitDirection(rL1, firstDirection);
+	    slidingFitResult.GetGlobalFitDirection(rL2, secondDirection);
+
+	    const float cosTheta(firstDirection.GetDotProduct(secondDirection));
+	    const float rms1(slidingFitResult.GetGlobalFitRms(rL1));
+	    const float rms2(slidingFitResult.GetGlobalFitRms(rL2));
+	    const float rms(std::max(rms1, rms2));
+
+	    float rmsCut(m_maxScatterRms);
+
+	    if (cosTheta > m_maxScatterCosTheta)
+	    {
+		rmsCut *= ((m_maxSlidingCosTheta > cosTheta) ? (m_maxSlidingCosTheta - cosTheta) /
+			    (m_maxSlidingCosTheta - m_maxScatterCosTheta) : 0.f);
+	    }
+
+	    if (rms < rmsCut && cosTheta < bestCosTheta)
+	    {
+		bestRms = rms;
+		bestCosTheta = cosTheta;
+
+		splitPosition = centralPosition;
+		foundSplit = true;
+	    }
+	}
+	catch (StatusCodeException &)
+	{
+	}
+    }
+
+    if (!foundSplit)
+	return STATUS_CODE_NOT_FOUND;
+
+// --- BEGIN DISPLAY ---
+// std::cout << " bestCosTheta=" << bestCosTheta << " bestRms=" << bestRms << std::endl;
+// ClusterList tempList;
+// tempList.insert((Cluster*)slidingFitResult.GetCluster());
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempList, "Cluster", GREEN));
+// PANDORA_MONITORING_API(AddMarkerToVisualization(&splitPosition, "SplitPosition", RED, 2.75));
+// PANDORA_MONITORING_API(ViewEvent());
+// --- END DISPLAY ---
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_slidingFitLayerHalfWindow = 20;
+    m_maxScatterRms = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitLayerHalfWindow", m_slidingFitLayerHalfWindow));
+	"MaxScatterRms", m_maxScatterRms));
 
-    m_minClusterLayers = 20;
+    m_maxScatterCosTheta = 0.905;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLayers", m_minClusterLayers));
+	"MaxScatterCosTheta", m_maxScatterCosTheta));
 
-    m_minVertexScatteringRms = 0.25;
+    m_maxSlidingCosTheta = 0.985;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexScatteringRms", m_minVertexScatteringRms));
+	"MaxSlidingCosTeta", m_maxSlidingCosTheta));
 
-    m_minOverallScatteringRms = 0.75;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinOverallScatteringRms", m_minOverallScatteringRms));
-
-    return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
+    return TwoDSlidingFitSplittingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

@@ -1,14 +1,14 @@
 /**
  *  @file   LArContent/include/ClusterSplitting/KinkSplittingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the kink splitting algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_KINK_SPLITTING_ALGORITHM_H
 #define LAR_KINK_SPLITTING_ALGORITHM_H 1
 
-#include "LArClusterSplitting/ClusterSplittingAlgorithm.h"
+#include "LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 namespace lar
 {
@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  KinkSplittingAlgorithm class
  */
-class KinkSplittingAlgorithm : public ClusterSplittingAlgorithm
+class KinkSplittingAlgorithm : public TwoDSlidingFitSplittingAlgorithm
 {
 public:
     /**
@@ -25,18 +25,26 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    pandora::StatusCode FindBestSplitPosition(const pandora::Cluster *const pCluster, pandora::CartesianVector &splitPosition) const;
-    bool IsPossibleSplit(const pandora::Cluster *const pCluster) const;
 
-    unsigned int    m_slidingFitLayerHalfWindow;    ///< Layer half window for sliding fit
-    unsigned int    m_minClusterLayers;             ///< Min number of cluster layers for kink identification
-    float           m_minVertexScatteringRms;       ///< Min scattering rms at ends of cluster for kink identification
-    float           m_minOverallScatteringRms;      ///< Min scattering rms of full cluster for kink identification
+    /**
+     *  @brief  Use sliding linear fit to identify the best split position
+     *
+     *  @param  slidingFitResult the input sliding fit result
+     *  @param  splitPosition the best split position
+     *
+     *  @return pandora::StatusCode
+     */
+    pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
+	pandora::CartesianVector& splitPosition) const;
+
+    float           m_maxScatterRms;          ///<
+    float           m_maxScatterCosTheta;     ///<
+    float           m_maxSlidingCosTheta;     ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
