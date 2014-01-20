@@ -171,17 +171,14 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 		}
 	    }
 
-	    if (ClusterAssociation::NONE == associationType)
-		continue;
-
-	    if (m_runCosmicMode && ClusterAssociation::STRONG != associationType)
-		continue;
-
-	    const ClusterAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-	    const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-	    (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
-	    (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
-	    return;
+	    if (ClusterAssociation::NONE != associationType)
+	    {
+	        const ClusterAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+	        const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+	        (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
+	        (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
+	        return;
+	    }
 	}
     }
 }
@@ -387,10 +384,6 @@ StatusCode LongitudinalExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     m_emissionMaxCosRelativeAngle = 0.985f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 	"EmissionMaxCosRelativeAngle", m_emissionMaxCosRelativeAngle));
-
-    m_runCosmicMode = false;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"CosmicMode", m_runCosmicMode));
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }

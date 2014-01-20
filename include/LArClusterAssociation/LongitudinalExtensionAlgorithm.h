@@ -70,7 +70,6 @@ private:
     float   m_emissionMaxCosRelativeAngle;          ///<
     float   m_emissionMaxLongitudinalDisplacement;  ///<
     float   m_emissionMaxTransverseDisplacement;    ///<
-    bool    m_runCosmicMode;                        ///<
 
 };
 
