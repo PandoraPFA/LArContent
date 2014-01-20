@@ -10,8 +10,6 @@
 
 #include "LArClustering/ClusterCreationAlgorithm.h"
 
-#include <cassert>
-
 using namespace pandora;
 
 namespace lar
