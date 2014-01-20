@@ -36,6 +36,14 @@ private:
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
 
     /**
+     *  @brief  Populate the association matrix
+     *
+     *  @param  clusterVector the input cluster vector
+     *  @param  clusterAssociationMatrix the matrix of cluster associations
+     */
+    void FillAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+
+    /**
      *  @brief  Form association between two pointing clusters
      *
      *  @param  clusterI the first pointing cluster
@@ -50,7 +58,7 @@ private:
      *  @param  inputAssociationMatrix the input matrix of associations
      *  @param  outputAssociationMatrix the output matrix of reduced associations
      */
-    void FillReducedAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const;
+    void PruneAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -62,6 +70,7 @@ private:
     float   m_emissionMaxCosRelativeAngle;          ///<
     float   m_emissionMaxLongitudinalDisplacement;  ///<
     float   m_emissionMaxTransverseDisplacement;    ///<
+    bool    m_runCosmicMode;                        ///<
 
 };
 

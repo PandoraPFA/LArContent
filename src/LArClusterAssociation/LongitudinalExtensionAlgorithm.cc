@@ -38,6 +38,16 @@ void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *c
 
 void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
+    ClusterAssociationMatrix intermediateAssociationMatrix;
+    this->FillAssociationMatrix(clusterVector, intermediateAssociationMatrix);
+    this->PruneAssociationMatrix(intermediateAssociationMatrix, clusterAssociationMatrix);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
+{
+    // Convert each input cluster into a pointing cluster
     LArPointingClusterList pointingClusterList;
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
@@ -46,8 +56,6 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterV
     }
 
     // Form associations between pairs of pointing clusters
-    ClusterAssociationMatrix intermediateAssociationMatrix;
-
     for (LArPointingClusterList::const_iterator iterI = pointingClusterList.begin(), iterEndI = pointingClusterList.end(); iterI != iterEndI; ++iterI)
     {
 	const LArPointingCluster &clusterI = *iterI;
@@ -59,12 +67,9 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterV
 	    if (clusterI.GetCluster() == clusterJ.GetCluster())
 		continue;
 
-	    this->FillAssociationMatrix(clusterI, clusterJ, intermediateAssociationMatrix);
+	    this->FillAssociationMatrix(clusterI, clusterJ, clusterAssociationMatrix);
 	}
     }
-
-    //Remove any double-counting from the map of associations
-    this->FillReducedAssociationMatrix(intermediateAssociationMatrix, clusterAssociationMatrix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -114,7 +119,7 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 		continue;
 
 
-	    // Association types
+	    // Association type
 	    ClusterAssociation::AssociationType associationType(ClusterAssociation::NONE);
 
 
@@ -166,37 +171,24 @@ void LongitudinalExtensionAlgorithm::FillAssociationMatrix(const LArPointingClus
 		}
 	    }
 
-//---- BEGIN DISPLAY ----
-// if (associationType > ClusterAssociation::NONE)
-// {
-// if(associationType == ClusterAssociation::STRONG)
-// std::cout << " --- STRONG --- " << std::endl;
-// else std::cout << " --- WEAK --- " << std::endl;
-// ClusterList tempListI, tempListJ;
-// tempListI.insert((Cluster*)pClusterI);
-// tempListJ.insert((Cluster*)pClusterJ);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempListI, "ClusterI", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&tempListJ, "ClusterJ", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-//---- END DISPLAY ----
+	    if (ClusterAssociation::NONE == associationType)
+		continue;
 
-	    if (associationType > ClusterAssociation::NONE)
-	    {
-		const ClusterAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-		const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-		(void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
-		(void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
-		return;
-	    }
+	    if (m_runCosmicMode && ClusterAssociation::STRONG != associationType)
+		continue;
+
+	    const ClusterAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+	    const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+	    (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
+	    (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
+	    return;
 	}
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LongitudinalExtensionAlgorithm::FillReducedAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const
+void LongitudinalExtensionAlgorithm::PruneAssociationMatrix(const ClusterAssociationMatrix &inputAssociationMatrix, ClusterAssociationMatrix &outputAssociationMatrix) const
 {
     // Remove double-counting from the map of associations
     // i.e. if the map has A -> B, B -> C, A -> C, then remove A -> C
@@ -356,7 +348,7 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
 // tempList2.insert((Cluster*)pDaughterCluster);
 // PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLACK);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
 // PandoraMonitoringApi::ViewEvent();
 // ---- END DISPLAY ----
 	    }
@@ -395,6 +387,10 @@ StatusCode LongitudinalExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     m_emissionMaxCosRelativeAngle = 0.985f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 	"EmissionMaxCosRelativeAngle", m_emissionMaxCosRelativeAngle));
+
+    m_runCosmicMode = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"CosmicMode", m_runCosmicMode));
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
