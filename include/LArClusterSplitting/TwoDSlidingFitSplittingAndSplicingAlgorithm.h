@@ -134,7 +134,7 @@ private:
      *  @param  replacementResultMap the sliding fit result map for replacement clusters
      *  @param  outputList the output list of definite splits
      */
-    void FinalizeClusterExtensionList(const ClusterExtensionList &inputList, const TwoDSlidingFitResultMap &branchResultMap,
+    void PruneClusterExtensionList(const ClusterExtensionList &inputList, const TwoDSlidingFitResultMap &branchResultMap,
 	const TwoDSlidingFitResultMap &replacementResultMap, ClusterExtensionList &outputList) const;
 
     /**
@@ -186,6 +186,7 @@ private:
     unsigned int  m_longHalfWindowLayers;           ///<
     float         m_vetoDisplacement;               ///<
     float         m_minClusterLength;               ///<
+    bool          m_runCosmicMode;                  ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

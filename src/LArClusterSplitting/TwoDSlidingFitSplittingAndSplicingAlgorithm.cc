@@ -41,9 +41,18 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::Run()
 	this->BuildSlidingFitResultMap(clusterVector, m_longHalfWindowLayers, replacementSlidingFitResultMap);
 
 	// Compile a list of possible splits
-	ClusterExtensionList intermediateList, splitList;
-	this->BuildClusterExtensionList(clusterVector, branchSlidingFitResultMap, replacementSlidingFitResultMap, intermediateList);
-	this->FinalizeClusterExtensionList(intermediateList, branchSlidingFitResultMap, replacementSlidingFitResultMap, splitList);
+	ClusterExtensionList splitList;
+
+        if (m_runCosmicMode)
+	{
+            this->BuildClusterExtensionList(clusterVector, branchSlidingFitResultMap, replacementSlidingFitResultMap, splitList);
+	}
+        else
+	{
+	    ClusterExtensionList intermediateList;
+	    this->BuildClusterExtensionList(clusterVector, branchSlidingFitResultMap, replacementSlidingFitResultMap, intermediateList);
+	    this->PruneClusterExtensionList(intermediateList, branchSlidingFitResultMap, replacementSlidingFitResultMap, splitList);
+	}
 
 	// Run splitting and extension
 	if (STATUS_CODE_SUCCESS == this->RunSplitAndExtension(splitList, branchSlidingFitResultMap, replacementSlidingFitResultMap))
@@ -196,7 +205,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitSplittingAndSplicingAlgorithm::FinalizeClusterExtensionList(const ClusterExtensionList &inputList,
+void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(const ClusterExtensionList &inputList,
     const TwoDSlidingFitResultMap &branchMap, const TwoDSlidingFitResultMap &replacementMap, ClusterExtensionList &outputList) const
 {
     for (ClusterExtensionList::const_iterator iter = inputList.begin(), iterEnd = inputList.end(); iter != iterEnd; ++iter)
@@ -414,6 +423,10 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(const TiXml
     m_vetoDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 	"VetoDisplacement", m_vetoDisplacement));
+
+    m_runCosmicMode = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"CosmicMode", m_runCosmicMode));
 
     return STATUS_CODE_SUCCESS;
 }
