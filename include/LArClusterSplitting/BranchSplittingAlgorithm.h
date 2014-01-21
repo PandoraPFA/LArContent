@@ -39,6 +39,7 @@ private:
 
     float         m_maxTransverseDisplacement;      ///<
     float         m_maxLongitudinalDisplacement;    ///<
+    float         m_minLongitudinalExtension;       ///<
     float         m_minCosRelativeAngle;            ///<
 };
 

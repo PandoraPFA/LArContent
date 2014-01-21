@@ -63,7 +63,7 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::Two
 	    if ((projectedBranchPosition - branchEndPosition).GetMagnitudeSquared() < projectedDistanceSquared)
 		continue;
 
-	    if ((branchVertexPosition - projectedBranchPosition).GetMagnitudeSquared() > (principalEndPosition - projectedBranchPosition).GetMagnitudeSquared())
+	    if (principalVertexDirection.GetDotProduct(principalEndPosition - branchVertexPosition) < m_minLongitudinalExtension)
 		continue;
 
 	    // Require that principal vertex and branch projection have good pointing
@@ -116,6 +116,10 @@ StatusCode BranchSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_maxLongitudinalDisplacement = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 	"MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+
+    m_minLongitudinalExtension = 3.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"MinLongitudinalExtension", m_minLongitudinalExtension));
 
     m_minCosRelativeAngle = 0.966;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
