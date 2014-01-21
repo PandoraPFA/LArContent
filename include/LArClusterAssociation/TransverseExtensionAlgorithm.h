@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArClusterAssociation/TransverseExtensionAlgorithm.h
- * 
+ *
  *  @brief  Header file for the hello world algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_TRANSVERSE_EXTENSION_ALGORITHM_H
@@ -29,7 +29,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
@@ -39,7 +39,7 @@ private:
 
     /**
      *  @brief  Form associations between parent and daughter clusters
-     * 
+     *
      *  @param  parentCluster the parent pointing cluster
      *  @param  pDaughterCluster the address of the daughter cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
@@ -50,9 +50,9 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 
-    float m_minClusterLength;              ///< 
-    float m_maxLongitudinalDisplacement;   ///< 
-    float m_maxTransverseDisplacement;     ///< 
+    float m_minClusterLength;              ///<
+    float m_maxLongitudinalDisplacement;   ///<
+    float m_maxTransverseDisplacement;     ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
