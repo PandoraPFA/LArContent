@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArClusterAssociation/TransverseExtensionAlgorithm.h
  *
- *  @brief  Header file for the hello world algorithm class.
+ *  @brief  Header file for the transverse extension algorithm class.
  *
  *  $Log: $
  */

@@ -38,8 +38,15 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVec
     {
 	Cluster* const pCluster(*iter);
 
-	if (LArClusterHelper::GetLengthSquared(pCluster) > m_minClusterLength * m_minClusterLength )
+	if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength )
+	    continue;
+
+	try{
 	    pointingClusterList.push_back(LArPointingCluster(*iter));
+	}
+	catch (StatusCodeException &)
+	{
+	}
     }
 
     // Form associations between clusters
