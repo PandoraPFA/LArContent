@@ -39,10 +39,10 @@ void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
-        try{
-            pointingClusterList.push_back(LArPointingCluster(*iter));
+	try{
+	    pointingClusterList.push_back(LArPointingCluster(*iter));
 	}
-        catch (StatusCodeException &)
+	catch (StatusCodeException &)
 	{
 	}
     }
@@ -50,101 +50,101 @@ void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
     // Form associations between pairs of pointing clusters
     for (LArPointingClusterList::const_iterator iterI = pointingClusterList.begin(), iterEndI = pointingClusterList.end(); iterI != iterEndI; ++iterI)
     {
-        const LArPointingCluster &clusterI = *iterI;
+	const LArPointingCluster &clusterI = *iterI;
 
-        for (LArPointingClusterList::const_iterator iterJ = iterI, iterEndJ = pointingClusterList.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            const LArPointingCluster &clusterJ = *iterJ;
+	for (LArPointingClusterList::const_iterator iterJ = iterI, iterEndJ = pointingClusterList.end(); iterJ != iterEndJ; ++iterJ)
+	{
+	    const LArPointingCluster &clusterJ = *iterJ;
 
-            if (clusterI.GetCluster() == clusterJ.GetCluster())
-                continue;
+	    if (clusterI.GetCluster() == clusterJ.GetCluster())
+		continue;
 
-            this->FillClusterAssociationMatrix(clusterI, clusterJ, clusterAssociationMatrix);
-        }
+	    this->FillClusterAssociationMatrix(clusterI, clusterJ, clusterAssociationMatrix);
+	}
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, 
+void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ,
     ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
     const Cluster *const pClusterI(clusterI.GetCluster());
     const Cluster *const pClusterJ(clusterJ.GetCluster());
 
     if (pClusterI == pClusterJ)
-        return;
+	return;
 
     for (unsigned int useInnerI = 0; useInnerI < 2; ++useInnerI)
-    { 
-        const CartesianVector vertexI(useInnerI == 1 ? clusterI.GetInnerVertex().GetPosition() : clusterI.GetOuterVertex().GetPosition());
-        const CartesianVector endI(useInnerI == 1 ? clusterI.GetOuterVertex().GetPosition() : clusterI.GetInnerVertex().GetPosition());
-        const float lengthSquaredI((endI - vertexI).GetMagnitudeSquared());
+    {
+	const CartesianVector vertexI(useInnerI == 1 ? clusterI.GetInnerVertex().GetPosition() : clusterI.GetOuterVertex().GetPosition());
+	const CartesianVector endI(useInnerI == 1 ? clusterI.GetOuterVertex().GetPosition() : clusterI.GetInnerVertex().GetPosition());
+	const float lengthSquaredI((endI - vertexI).GetMagnitudeSquared());
 
-        for (unsigned int useInnerJ = 0; useInnerJ < 2; ++useInnerJ)
-        {
-            const CartesianVector vertexJ(useInnerJ == 1 ? clusterJ.GetInnerVertex().GetPosition() : clusterJ.GetOuterVertex().GetPosition());
-            const CartesianVector endJ(useInnerJ == 1 ? clusterJ.GetOuterVertex().GetPosition() : clusterJ.GetInnerVertex().GetPosition());
-            const float lengthSquaredJ((endJ - vertexJ).GetMagnitudeSquared());
+	for (unsigned int useInnerJ = 0; useInnerJ < 2; ++useInnerJ)
+	{
+	    const CartesianVector vertexJ(useInnerJ == 1 ? clusterJ.GetInnerVertex().GetPosition() : clusterJ.GetOuterVertex().GetPosition());
+	    const CartesianVector endJ(useInnerJ == 1 ? clusterJ.GetOuterVertex().GetPosition() : clusterJ.GetInnerVertex().GetPosition());
+	    const float lengthSquaredJ((endJ - vertexJ).GetMagnitudeSquared());
 
-            // Requirements on length
-            if (std::max(lengthSquaredI, lengthSquaredJ) < m_minSeedClusterLength * m_minSeedClusterLength)
-	        continue;
+	    // Requirements on length
+	    if (std::max(lengthSquaredI, lengthSquaredJ) < m_minSeedClusterLength * m_minSeedClusterLength)
+		continue;
 
-            // Select the closest vertices
-            const float vertex_to_vertex((vertexI - vertexJ).GetMagnitudeSquared());
-            const float vertex_to_end((vertexI - endJ).GetMagnitudeSquared());
-            const float end_to_vertex((endI - vertexJ).GetMagnitudeSquared());
-            const float end_to_end((endI - endJ).GetMagnitudeSquared());
+	    // Select the closest vertices
+	    const float vertex_to_vertex((vertexI - vertexJ).GetMagnitudeSquared());
+	    const float vertex_to_end((vertexI - endJ).GetMagnitudeSquared());
+	    const float end_to_vertex((endI - vertexJ).GetMagnitudeSquared());
+	    const float end_to_end((endI - endJ).GetMagnitudeSquared());
 
-            if (vertex_to_vertex > std::min(end_to_end, std::min(vertex_to_end, end_to_vertex)))
-                continue;
+	    if (vertex_to_vertex > std::min(end_to_end, std::min(vertex_to_end, end_to_vertex)))
+		continue;
 
-            if (end_to_end < std::max(vertex_to_vertex, std::max(vertex_to_end, end_to_vertex)))
-                continue;
+	    if (end_to_end < std::max(vertex_to_vertex, std::max(vertex_to_end, end_to_vertex)))
+		continue;
 
-            if (vertex_to_vertex > m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement)
-	        continue;
+	    if (vertex_to_vertex > m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement)
+		continue;
 
-            // Requirements on pointing information
-            const CartesianVector directionI((endI - vertexI).GetUnitVector());
-            const CartesianVector directionJ((endJ - vertexJ).GetUnitVector());
+	    // Requirements on pointing information
+	    const CartesianVector directionI((endI - vertexI).GetUnitVector());
+	    const CartesianVector directionJ((endJ - vertexJ).GetUnitVector());
 
-            const float cosTheta(-directionI.GetDotProduct(directionJ));
-            const float cosThetaCut(-1.f + 2.f * m_minCosRelativeAngle);
+	    const float cosTheta(-directionI.GetDotProduct(directionJ));
+	    const float cosThetaCut(-1.f + 2.f * m_minCosRelativeAngle);
 
-            if (cosTheta < cosThetaCut)
-	        continue;
+	    if (cosTheta < cosThetaCut)
+		continue;
 
-            // Requirements on overlap between clusters
-            const CartesianVector directionIJ((endJ - endI).GetUnitVector());
-            const CartesianVector directionJI((endI - endJ).GetUnitVector());
+	    // Requirements on overlap between clusters
+	    const CartesianVector directionIJ((endJ - endI).GetUnitVector());
+	    const CartesianVector directionJI((endI - endJ).GetUnitVector());
 
-            const float overlapL(directionIJ.GetDotProduct(vertexJ - vertexI));
-            const float overlapT(directionIJ.GetCrossProduct(vertexJ - vertexI).GetMagnitude());
+	    const float overlapL(directionIJ.GetDotProduct(vertexJ - vertexI));
+	    const float overlapT(directionIJ.GetCrossProduct(vertexJ - vertexI).GetMagnitude());
 
 	    if (overlapL < -1.f || overlapL * overlapL > 2.f * std::min(lengthSquaredI, lengthSquaredJ) ||
-                overlapT > m_maxTransverseDisplacement + std::fabs(overlapL) * std::tan(5.f * M_PI / 180.f))
-	        continue;
+		overlapT > m_maxTransverseDisplacement + std::fabs(overlapL) * std::tan(5.f * M_PI / 180.f))
+		continue;
 
-            // Calculate RMS deviations on composite cluster
+	    // Calculate RMS deviations on composite cluster
 	    const float rms1(this->CalculateRms(pClusterI, endI, directionIJ));
 	    const float rms2(this->CalculateRms(pClusterJ, endJ, directionJI));
 
-            const float rms(0.5f * (rms1 + rms2));
-            const float rmsCut(2.f * m_maxAverageRms * (cosTheta - cosThetaCut) / (1.0 - cosThetaCut));
+	    const float rms(0.5f * (rms1 + rms2));
+	    const float rmsCut(2.f * m_maxAverageRms * (cosTheta - cosThetaCut) / (1.0 - cosThetaCut));
 
-            if (rms > rmsCut)
-                continue;
+	    if (rms > rmsCut)
+		continue;
 
-            const ClusterAssociation::VertexType vertexTypeI(useInnerI == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-            const ClusterAssociation::VertexType vertexTypeJ(useInnerJ == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-            const ClusterAssociation::AssociationType associationType(ClusterAssociation::STRONG);
+	    const ClusterAssociation::VertexType vertexTypeI(useInnerI == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+	    const ClusterAssociation::VertexType vertexTypeJ(useInnerJ == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+	    const ClusterAssociation::AssociationType associationType(ClusterAssociation::STRONG);
 
-            (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ,
-                ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, lengthSquaredJ)));
+	    (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ,
+		ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, lengthSquaredJ)));
 
-            (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI,
+	    (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI,
 		ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, lengthSquaredI)));
 	}
     }
@@ -317,17 +317,17 @@ float CosmicRayExtensionAlgorithm::CalculateRms(const Cluster *const pCluster, c
 
     for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+	CaloHit *pCaloHit = *iter;
 
-        const CartesianVector hitPosition(pCaloHit->GetPositionVector());
-        const CartesianVector predictedPosition(position + direction * direction.GetDotProduct(hitPosition - position));
+	const CartesianVector hitPosition(pCaloHit->GetPositionVector());
+	const CartesianVector predictedPosition(position + direction * direction.GetDotProduct(hitPosition - position));
 
-        totalChi2 += (predictedPosition - hitPosition).GetMagnitudeSquared();
-        totalHits += 1.f;
+	totalChi2 += (predictedPosition - hitPosition).GetMagnitudeSquared();
+	totalHits += 1.f;
     }
 
     if (totalHits > 0.f)
-        return std::sqrt(totalChi2/totalHits);
+	return std::sqrt(totalChi2/totalHits);
 
     return 0.f;
 }
@@ -338,27 +338,27 @@ StatusCode CosmicRayExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 {
     m_minClusterLength = 3.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+	"MinClusterLength", m_minClusterLength));
 
     m_minSeedClusterLength = 6.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSeedClusterLength", m_minSeedClusterLength));
+	"MinSeedClusterLength", m_minSeedClusterLength));
 
     m_maxLongitudinalDisplacement = 30.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+	"MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
     m_maxTransverseDisplacement = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+	"MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
     m_minCosRelativeAngle = 0.966f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosRelativeAngle", m_minCosRelativeAngle));
+	"MinCosRelativeAngle", m_minCosRelativeAngle));
 
     m_maxAverageRms = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAverageRms", m_maxAverageRms));
+	"MaxAverageRms", m_maxAverageRms));
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }

@@ -44,18 +44,18 @@ private:
      *  @param  clusterJ the second pointing cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
-    void FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, 
-        ClusterAssociationMatrix &clusterAssociationMatrix) const;
+    void FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ,
+	ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     /**
-     *  @brief  Calculate RMS deviation of a cluster with respect to the reference line 
+     *  @brief  Calculate RMS deviation of a cluster with respect to the reference line
      *
      *  @param  pCluster the input cluster
      *  @param  position the intercept of the reference line
      *  @param  direction the direction of the reference line
      */
-    float CalculateRms(const pandora::Cluster *const pCluster, const pandora::CartesianVector &position, 
-        const  pandora::CartesianVector &direction) const;
+    float CalculateRms(const pandora::Cluster *const pCluster, const pandora::CartesianVector &position,
+	const  pandora::CartesianVector &direction) const;
 
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
