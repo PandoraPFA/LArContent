@@ -36,6 +36,7 @@
 #include "LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDSeed/ThreeDPairedTracksAlgorithm.h"
+#include "LArTwoDSeed/CosmicRaySeedFindingAlgorithm.h"
 #include "LArTwoDSeed/LengthSeedFindingAlgorithm.h"
 #include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
 #include "LArTwoDSeed/SeedCharacterisationAlgorithm.h"
@@ -94,6 +95,7 @@ public:
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArThreeDPairedTracks",                  lar::ThreeDPairedTracksAlgorithm::Factory)                                  \
+        d("LArCosmicRaySeedFinding",                lar::CosmicRaySeedFindingAlgorithm::Factory)                                \
         d("LArLengthSeedFinding",                   lar::LengthSeedFindingAlgorithm::Factory)                                   \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
         d("LArSeedCharacterisation",                lar::SeedCharacterisationAlgorithm::Factory)                                \
