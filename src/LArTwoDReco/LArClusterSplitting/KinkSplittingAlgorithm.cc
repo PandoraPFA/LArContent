@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArClusterSplitting/KinkSplittingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the kink splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterSplitting/KinkSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 
 using namespace pandora;
 
@@ -26,7 +26,7 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper:
     const int nLayersSpanned(1 + maxLayer - minLayer);
 
     if (nLayersSpanned <= 2 * nLayersHalfWindow)
-	return STATUS_CODE_NOT_FOUND;
+        return STATUS_CODE_NOT_FOUND;
 
     bool foundSplit(false);
 
@@ -34,52 +34,53 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper:
     float bestCosTheta(1.f);
 
     for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end();
-	iter != iterEnd; ++iter)
+        iter != iterEnd; ++iter)
     {
-	const int iLayer(iter->first);
+        const int iLayer(iter->first);
 
-	const float rL(slidingFitResult.GetL(iLayer));
-	const float rL1(slidingFitResult.GetL(iLayer - nLayersHalfWindow));
-	const float rL2(slidingFitResult.GetL(iLayer + nLayersHalfWindow));
+        const float rL(slidingFitResult.GetL(iLayer));
+        const float rL1(slidingFitResult.GetL(iLayer - nLayersHalfWindow));
+        const float rL2(slidingFitResult.GetL(iLayer + nLayersHalfWindow));
 
-	try{
-	    CartesianVector centralPosition(0.f,0.f,0.f);
-	    CartesianVector firstDirection(0.f,0.f,0.f);
-	    CartesianVector secondDirection(0.f,0.f,0.f);
+        try
+        {
+            CartesianVector centralPosition(0.f,0.f,0.f);
+            CartesianVector firstDirection(0.f,0.f,0.f);
+            CartesianVector secondDirection(0.f,0.f,0.f);
 
-	    slidingFitResult.GetGlobalFitPosition(rL, centralPosition);
-	    slidingFitResult.GetGlobalFitDirection(rL1, firstDirection);
-	    slidingFitResult.GetGlobalFitDirection(rL2, secondDirection);
+            slidingFitResult.GetGlobalFitPosition(rL, centralPosition);
+            slidingFitResult.GetGlobalFitDirection(rL1, firstDirection);
+            slidingFitResult.GetGlobalFitDirection(rL2, secondDirection);
 
-	    const float cosTheta(firstDirection.GetDotProduct(secondDirection));
-	    const float rms1(slidingFitResult.GetGlobalFitRms(rL1));
-	    const float rms2(slidingFitResult.GetGlobalFitRms(rL2));
-	    const float rms(std::max(rms1, rms2));
+            const float cosTheta(firstDirection.GetDotProduct(secondDirection));
+            const float rms1(slidingFitResult.GetGlobalFitRms(rL1));
+            const float rms2(slidingFitResult.GetGlobalFitRms(rL2));
+            const float rms(std::max(rms1, rms2));
 
-	    float rmsCut(m_maxScatterRms);
+            float rmsCut(m_maxScatterRms);
 
-	    if (cosTheta > m_maxScatterCosTheta)
-	    {
-		rmsCut *= ((m_maxSlidingCosTheta > cosTheta) ? (m_maxSlidingCosTheta - cosTheta) /
-			    (m_maxSlidingCosTheta - m_maxScatterCosTheta) : 0.f);
-	    }
+            if (cosTheta > m_maxScatterCosTheta)
+            {
+                rmsCut *= ((m_maxSlidingCosTheta > cosTheta) ? (m_maxSlidingCosTheta - cosTheta) /
+                        (m_maxSlidingCosTheta - m_maxScatterCosTheta) : 0.f);
+            }
 
-	    if (rms < rmsCut && cosTheta < bestCosTheta)
-	    {
-		bestRms = rms;
-		bestCosTheta = cosTheta;
+            if (rms < rmsCut && cosTheta < bestCosTheta)
+            {
+                bestRms = rms;
+                bestCosTheta = cosTheta;
 
-		splitPosition = centralPosition;
-		foundSplit = true;
-	    }
-	}
-	catch (StatusCodeException &)
-	{
-	}
+                splitPosition = centralPosition;
+                foundSplit = true;
+            }
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 
     if (!foundSplit)
-	return STATUS_CODE_NOT_FOUND;
+        return STATUS_CODE_NOT_FOUND;
 
 // --- BEGIN DISPLAY ---
 // std::cout << " bestCosTheta=" << bestCosTheta << " bestRms=" << bestRms << std::endl;
@@ -100,15 +101,15 @@ StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_maxScatterRms = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MaxScatterRms", m_maxScatterRms));
+        "MaxScatterRms", m_maxScatterRms));
 
     m_maxScatterCosTheta = 0.905;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MaxScatterCosTheta", m_maxScatterCosTheta));
+        "MaxScatterCosTheta", m_maxScatterCosTheta));
 
     m_maxSlidingCosTheta = 0.985;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MaxSlidingCosTeta", m_maxSlidingCosTheta));
+        "MaxSlidingCosTeta", m_maxSlidingCosTheta));
 
     return TwoDSlidingFitSplittingAlgorithm::ReadSettings(xmlHandle);
 }

@@ -32,7 +32,12 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StatusCode CreatePFOs( const pandora::ClusterList* pClusterList );
+    /**
+     *  @brief  Create pfos for provided clusters
+     * 
+     *  @param  pClusterList address of the cluster list
+     */
+    pandora::StatusCode CreatePFOs(const pandora::ClusterList *const pClusterList) const;
 
     std::string     m_inputClusterListNameU;                 ///< The input cluster list name for the U view
     std::string     m_inputClusterListNameV;                 ///< The input cluster list name for the V view

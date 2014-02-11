@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArHelpers/LArTransformationCalculator.h
+ *  @file   LArContent/include/LArCalculators/LArTransformationCalculator.h
  * 
  *  @brief  Header file for the transformation calculator interface class.
  * 

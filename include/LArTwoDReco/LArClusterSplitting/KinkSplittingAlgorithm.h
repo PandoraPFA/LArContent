@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/ClusterSplitting/KinkSplittingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/ClusterSplitting/KinkSplittingAlgorithm.h
  *
  *  @brief  Header file for the kink splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_KINK_SPLITTING_ALGORITHM_H
 #define LAR_KINK_SPLITTING_ALGORITHM_H 1
 
-#include "LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 namespace lar
 {
@@ -25,7 +25,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
@@ -40,7 +40,7 @@ private:
      *  @return pandora::StatusCode
      */
     pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-	pandora::CartesianVector& splitPosition) const;
+        pandora::CartesianVector &splitPosition) const;
 
     float           m_maxScatterRms;          ///<
     float           m_maxScatterCosTheta;     ///<

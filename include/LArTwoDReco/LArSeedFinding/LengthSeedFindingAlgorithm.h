@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDSeed/LengthSeedFindingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/LengthSeedFindingAlgorithm.h
  * 
  *  @brief  Header file for the length seed finding algorithm class.
  * 

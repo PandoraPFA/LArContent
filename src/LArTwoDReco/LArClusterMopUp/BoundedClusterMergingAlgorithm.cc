@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the bounded cluster merging algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterSeedAssociation/BoundedClusterMergingAlgorithm.h"
+#include "LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
 
 using namespace pandora;
 

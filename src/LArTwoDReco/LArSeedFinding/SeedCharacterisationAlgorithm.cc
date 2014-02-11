@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDSeed/SeedCharacterisationAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArSeedFinding/SeedCharacterisationAlgorithm.cc
  * 
  *  @brief  Implementation of the seed characterisation algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDSeed/SeedCharacterisationAlgorithm.h"
+#include "LArTwoDReco/LArSeedFinding/SeedCharacterisationAlgorithm.h"
 
 using namespace pandora;
 

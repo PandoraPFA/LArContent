@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/include/LArClusterAssociation/ClusterAssociationAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h
  * 
- *  @brief  Header file for the cluster merging algorithm class.
+ *  @brief  Header file for the cluster association algorithm class.
  * 
  *  $Log: $
  */

@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.cc
  * 
- *  @brief  Implementation of the three dimensional tracks algorithm class.
+ *  @brief  Implementation of the three dimensional longitudinal tracks algorithm class.
  * 
  *  $Log: $
  */
@@ -12,7 +12,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
-#include "LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 
 using namespace pandora;
 

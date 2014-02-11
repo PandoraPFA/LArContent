@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDSeed/SeedFindingBaseAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/SeedFindingBaseAlgorithm.h
  * 
  *  @brief  Header file for the seed finding base algorithm class.
  * 

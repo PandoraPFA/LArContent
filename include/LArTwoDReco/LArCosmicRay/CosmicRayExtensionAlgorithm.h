@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArClusterAssociation/CosmicRayExtensionAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h
  *
  *  @brief  Header file for the cosmic-ray extension algorithm class.
  *
@@ -10,9 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArClusterAssociation/ClusterExtensionAlgorithm.h"
-
 #include "LArObjects/LArPointingCluster.h"
+
+#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 namespace lar
 {
@@ -29,7 +29,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
@@ -45,7 +45,7 @@ private:
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
     void FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ,
-	ClusterAssociationMatrix &clusterAssociationMatrix) const;
+        ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     /**
      *  @brief  Calculate RMS deviation of a cluster with respect to the reference line
@@ -55,11 +55,9 @@ private:
      *  @param  direction the direction of the reference line
      */
     float CalculateRms(const pandora::Cluster *const pCluster, const pandora::CartesianVector &position,
-	const  pandora::CartesianVector &direction) const;
-
+        const  pandora::CartesianVector &direction) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
 
     float    m_minClusterLength;                ///<
     float    m_minSeedClusterLength;            ///<

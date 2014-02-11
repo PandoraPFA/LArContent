@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArClusterAssociation/IsolatedHitMergingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the isolated hit merging algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterAssociation/IsolatedHitMergingAlgorithm.h"
-
 #include "LArHelpers/LArClusterHelper.h"
+
+#include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDSeed/SeedConsolidationAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/SeedConsolidationAlgorithm.h
  * 
  *  @brief  Header file for the seed consolidation algorithm class.
  * 

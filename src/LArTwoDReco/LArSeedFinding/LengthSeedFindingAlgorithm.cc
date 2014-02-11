@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDSeed/LengthSeedFindingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArSeedFinding//LengthSeedFindingAlgorithm.cc
  * 
  *  @brief  Implementation of the length seed finding algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDSeed/LengthSeedFindingAlgorithm.h"
+#include "LArTwoDReco/LArSeedFinding/LengthSeedFindingAlgorithm.h"
 
 using namespace pandora;
 

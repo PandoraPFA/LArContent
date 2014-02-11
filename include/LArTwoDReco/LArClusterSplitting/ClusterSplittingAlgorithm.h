@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArClusterSplitting/ClusterSplittingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h
  *
  *  @brief  Header file for the cluster splitting algorithm class.
  *
@@ -32,7 +32,7 @@ protected:
      *  @param  secondCaloHitList the hits in the second fragment
      */
     virtual pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
-	pandora::CaloHitList &secondCaloHitList) const = 0;
+        pandora::CaloHitList &secondCaloHitList) const = 0;
 
 private:
     typedef std::list<pandora::Cluster*> ClusterSplittingList;

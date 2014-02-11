@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDSeed/ThreeDBaseAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/ThreeDBaseAlgorithm.h
  * 
  *  @brief  Header file for the three dimension algorithm base class.
  * 

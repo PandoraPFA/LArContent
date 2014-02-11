@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDSeed/ThreeDLongitudinalTracksAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h
  * 
  *  @brief  Header file for the three dimensional longitudinal tracks algorithm class.
  * 
@@ -14,7 +14,7 @@
 
 #include "LArObjects/LArOverlapTensor.h"
 
-#include "ThreeDBaseAlgorithm.h"
+#include "LArThreeDReco/ThreeDBaseAlgorithm.h"
 
 namespace lar
 {

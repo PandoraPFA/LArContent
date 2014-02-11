@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArClusterSeedAssociation/ConeBasedMergingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h
  * 
  *  @brief  Header file for the cone based merging algorithm class.
  * 

@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArTwoDSeed/SeedBranchGrowingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.cc
  * 
- *  @brief  Implementation of the seed growing algorithm class.
+ *  @brief  Implementation of the seed branch growing algorithm class.
  * 
  *  $Log: $
  */
@@ -11,7 +11,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
-#include "LArTwoDSeed/SeedBranchGrowingAlgorithm.h"
+#include "LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.h"
 
 using namespace pandora;
 

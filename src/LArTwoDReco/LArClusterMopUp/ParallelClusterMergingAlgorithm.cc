@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArClusterSeedAssociation/ParallelClusterMergingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterMopUp/ParallelClusterMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the bounded cluster merging algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterSeedAssociation/ParallelClusterMergingAlgorithm.h"
-
 #include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
+
+#include "LArTwoDReco/LArClusterMopUp/ParallelClusterMergingAlgorithm.h"
 
 using namespace pandora;
 

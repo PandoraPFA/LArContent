@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDShowersAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.cc
  * 
  *  @brief  Implementation of the three dimensional showers algorithm class.
  * 
@@ -11,7 +11,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDSeed/ThreeDShowersAlgorithm.h"
+#include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
 using namespace pandora;
 

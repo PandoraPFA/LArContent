@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDSeed/TwoDParticleCreationAlgorithm.h"
+#include "LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 using namespace pandora;
 
@@ -20,29 +20,29 @@ StatusCode TwoDParticleCreationAlgorithm::Run()
     const PfoList *pPfoList = NULL; std::string pfoListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryPfoListAndSetCurrent(*this, pPfoList, pfoListName));
 
-
-
     const ClusterList *pClusterListU = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameU, pClusterListU));
 
-    if( NULL != pClusterListU ){
-      PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, CreatePFOs(pClusterListU));
+    if (NULL != pClusterListU)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListU));
     }
 
     const ClusterList *pClusterListV = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameV, pClusterListV));
 
-    if( NULL != pClusterListV ){
-      PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, CreatePFOs(pClusterListV));
+    if (NULL != pClusterListV)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListV));
     }
 
     const ClusterList *pClusterListW = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameW, pClusterListW));
 
-    if( NULL != pClusterListW ){
-      PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, CreatePFOs(pClusterListW));
-    }  
-
+    if (NULL != pClusterListW)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListW));
+    }
 
     if (!pPfoList->empty())
     {
@@ -53,9 +53,10 @@ StatusCode TwoDParticleCreationAlgorithm::Run()
     return STATUS_CODE_SUCCESS;
 }
 
-StatusCode TwoDParticleCreationAlgorithm::CreatePFOs( const ClusterList *pClusterList )
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TwoDParticleCreationAlgorithm::CreatePFOs(const ClusterList *const pClusterList) const
 {
-    
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;

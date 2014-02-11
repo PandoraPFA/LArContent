@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDSeed/ThreeDShowersAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
  * 
  *  @brief  Header file for the three dimensional showers algorithm class.
  * 
@@ -12,7 +12,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "ThreeDBaseAlgorithm.h"
+#include "LArThreeDReco/ThreeDBaseAlgorithm.h"
 
 namespace lar
 {

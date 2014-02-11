@@ -1,16 +1,16 @@
 /**
- *  @file   LArContent/src/LArClusterAssociation/LongitudinalAssociationAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.cc
  * 
- *  @brief  Implementation of the cluster association algorithm class.
+ *  @brief  Implementation of the longitudinal association algorithm class.
  * 
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
-
 #include "LArHelpers/LArClusterHelper.h"
+
+#include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 
 using namespace pandora;
 
