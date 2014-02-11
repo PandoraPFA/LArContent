@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArClustering/ClusterCreationAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the cluster creation algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClustering/ClusterCreationAlgorithm.h"
+#include "LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.h"
 
 using namespace pandora;
 
@@ -45,7 +45,7 @@ StatusCode ClusterCreationAlgorithm::Run()
 StatusCode ClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitList, OrderedCaloHitList &orderedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(*pCaloHitList));
-    
+
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         CaloHitList *pLayerHitList = iter->second;
@@ -91,11 +91,11 @@ StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitLis
         CaloHitList currentClusteredHits(pCaloHitList->begin(), pCaloHitList->end());
       
         bool carryOn(true);
- 
-        while (carryOn)  
-	{
-	    carryOn = false;
- 
+
+        while (carryOn)
+        {
+            carryOn = false;
+
             CaloHitList newClusteredHits;
 
             for (CaloHitList::const_iterator hitIterI = currentAvailableHits.begin(), hitIterIEnd = currentAvailableHits.end(); hitIterI != hitIterIEnd; ++hitIterI)
@@ -103,30 +103,30 @@ StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitLis
                 CaloHit *pCaloHitI = *hitIterI;
 
                 if (hitToClusterMap.end() != hitToClusterMap.find(pCaloHitI))
-	            continue;
+                    continue;
 
                 CaloHit *pClosestHit = NULL;
 
                 float closestSeparationSquared(m_minCaloHitSeparationSquared);
 
                 for (CaloHitList::const_iterator hitIterJ = currentClusteredHits.begin(), hitIterJEnd = currentClusteredHits.end(); hitIterJ != hitIterJEnd; ++hitIterJ)
-	        {
+                {
                     CaloHit *pCaloHitJ = *hitIterJ;
 
                     if (pCaloHitI->GetMipEquivalentEnergy() > pCaloHitJ->GetMipEquivalentEnergy())
-		        continue;
+                        continue;
 
                     const float separationSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
 
                     if (separationSquared < closestSeparationSquared)
-		    {
+                    {
                         closestSeparationSquared = separationSquared;
                         pClosestHit = pCaloHitJ;
-		    }
-	        }
+                    }
+                }
 
                 if (!pClosestHit)
-		    continue;
+                    continue;
 
                 HitToClusterMap::const_iterator mapIter = hitToClusterMap.find(pClosestHit);
 
@@ -140,14 +140,14 @@ StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitLis
 
                 newClusteredHits.insert(pCaloHitI);
                 carryOn = true;
-	    }
+            }
 
             for (CaloHitList::const_iterator hitIter = newClusteredHits.begin(), hitIterEnd = newClusteredHits.end(); hitIter != hitIterEnd; ++hitIter)
-	    {
+            {
                 currentClusteredHits.insert(*hitIter);
-	        currentAvailableHits.erase(*hitIter);
-	    }
-	}
+                currentAvailableHits.erase(*hitIter);
+            }
+        }
     }
 
     return STATUS_CODE_SUCCESS;

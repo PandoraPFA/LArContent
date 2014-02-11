@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArClusterAssociation/LongitudinalExtensionAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h
  *
  *  @brief  Header file for the longitudinal extension algorithm class.
  *
@@ -8,9 +8,9 @@
 #ifndef LAR_LONGITUDINAL_EXTENSION_ALGORITHM_H
 #define LAR_LONGITUDINAL_EXTENSION_ALGORITHM_H 1
 
-#include "LArClusterAssociation/ClusterExtensionAlgorithm.h"
-
 #include "LArObjects/LArPointingCluster.h"
+
+#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 namespace lar
 {
@@ -27,7 +27,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
@@ -46,7 +46,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-
     float   m_clusterMinLength;                     ///<
     float   m_clusterMinLayerOccupancy;             ///<
     float   m_nodeMaxDisplacement;                  ///<
@@ -54,7 +53,6 @@ private:
     float   m_emissionMaxCosRelativeAngle;          ///<
     float   m_emissionMaxLongitudinalDisplacement;  ///<
     float   m_emissionMaxTransverseDisplacement;    ///<
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

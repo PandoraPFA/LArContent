@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArVertex/VertexSplittingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.cc
  * 
  *  @brief  Implementation of the vertex splitting algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterSplitting/VertexSplittingAlgorithm.h"
-
 #include "LArHelpers/LArVertexHelper.h"
+
+#include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 
 using namespace pandora;
 

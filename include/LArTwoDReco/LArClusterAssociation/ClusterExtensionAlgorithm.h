@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArClusterAssociation/ClusterExtensionAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h
  *
  *  @brief  Header file for the cluster extension algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_CLUSTER_EXTENSION_ALGORITHM_H
 #define LAR_CLUSTER_EXTENSION_ALGORITHM_H 1
 
-#include "LArClusterAssociation/ClusterMergingAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
 
 namespace lar
 {
@@ -29,69 +29,69 @@ protected:
     class ClusterAssociation
     {
     public:
-	/**
-	 *  @brief  Vertex enumeration
-	 */
-	enum VertexType
-	{
-	    UNDEFINED = 0,
-	    INNER     = 1,
-	    OUTER     = 2
-	};
+        /**
+         *  @brief  Vertex enumeration
+         */
+        enum VertexType
+        {
+            UNDEFINED = 0,
+            INNER     = 1,
+            OUTER     = 2
+        };
 
-	/**
-	 *  @brief  Association enumeration
-	 */
-	enum AssociationType
-	{
-	    NONE   = 0,
-	    WEAK   = 1,
-	    STRONG = 2
-	};
+        /**
+         *  @brief  Association enumeration
+         */
+        enum AssociationType
+        {
+            NONE   = 0,
+            WEAK   = 1,
+            STRONG = 2
+        };
 
-	/**
-	 *  @brief  Constructor
-	 *
-	 *  @param  parent
-	 *  @param  daughter
-	 *  @param  association
-	 *  @param  fom
-	 */
-	ClusterAssociation(const VertexType parent, const VertexType daughter, const AssociationType association, const float fom);
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  parent
+         *  @param  daughter
+         *  @param  association
+         *  @param  fom
+         */
+        ClusterAssociation(const VertexType parent, const VertexType daughter, const AssociationType association, const float fom);
 
-	/**
-	 *  @brief  Get parent
-	 *
-	 *  @return the parent
-	 */
-	VertexType GetParent() const;
+        /**
+         *  @brief  Get parent
+         *
+         *  @return the parent
+         */
+        VertexType GetParent() const;
 
-	/**
-	 *  @brief  Get daughter
-	 *
-	 *  @return the daughter
-	 */
-	VertexType GetDaughter() const;
+        /**
+         *  @brief  Get daughter
+         *
+         *  @return the daughter
+         */
+        VertexType GetDaughter() const;
 
-	/**
-	 *  @brief  Get association
-	 *
-	 *  @return the association
-	 */
-	AssociationType GetAssociation() const;
+        /**
+         *  @brief  Get association
+         *
+         *  @return the association
+         */
+        AssociationType GetAssociation() const;
 
-	/**
-	 *  @brief  Get figure of merit
-	 *
-	 *  @return the figure of merit
-	 */
-	float GetFigureOfMerit() const;
+        /**
+         *  @brief  Get figure of merit
+         *
+         *  @return the figure of merit
+         */
+        float GetFigureOfMerit() const;
 
     private:
-	VertexType      m_parent;           ///<
-	VertexType      m_daughter;         ///<
-	AssociationType m_association;      ///<
-	float           m_fom;              ///<
+        VertexType      m_parent;           ///<
+        VertexType      m_daughter;         ///<
+        AssociationType m_association;      ///<
+        float           m_fom;              ///<
     };
 
     typedef std::map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
@@ -119,7 +119,7 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ClusterExtensionAlgorithm::ClusterAssociation::ClusterAssociation(const VertexType parent, const VertexType daughter,
-	const AssociationType association, const float fom) :
+        const AssociationType association, const float fom) :
     m_parent(parent),
     m_daughter(daughter),
     m_association(association),

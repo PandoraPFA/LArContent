@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDTransverseTracksAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.cc
  * 
  *  @brief  Implementation of the three dimensional transverse tracks algorithm class.
  * 
@@ -12,7 +12,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
-#include "LArThreeDSeed/ThreeDTransverseTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 using namespace pandora;
 

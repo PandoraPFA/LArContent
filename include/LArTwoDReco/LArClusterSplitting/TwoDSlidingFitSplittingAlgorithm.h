@@ -1,16 +1,16 @@
 /**
- *  @file   LArContent/include/ClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/ClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h
  *
- *  @brief  Header file for the kink splitting algorithm class.
+ *  @brief  Header file for the two dimensional sliding fit splitting algorithm class.
  *
  *  $Log: $
  */
 #ifndef LAR_TWO_D_SLIDING_FIT_SPLITTING_ALGORITHM_H
 #define LAR_TWO_D_SLIDING_FIT_SPLITTING_ALGORITHM_H 1
 
-#include "LArClusterSplitting/ClusterSplittingAlgorithm.h"
-
 #include "LArHelpers/LArClusterHelper.h"
+
+#include "LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 namespace lar
 {
@@ -32,11 +32,11 @@ protected:
      *  @return pandora::StatusCode
      */
     virtual pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-	pandora::CartesianVector& splitPosition) const = 0;
+        pandora::CartesianVector& splitPosition) const = 0;
 
 private:
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
-	pandora::CaloHitList &secondCaloHitList) const;
+        pandora::CaloHitList &secondCaloHitList) const;
 
     /**
      *  @brief  Use sliding linear fit to separate cluster into two fragments
@@ -49,8 +49,8 @@ private:
      *  @return pandora::StatusCode
      */
     pandora::StatusCode SplitCluster(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-	const pandora::CartesianVector& splitPosition, pandora::CaloHitList &firstCaloHitList,
-	pandora::CaloHitList &secondCaloHitList) const;
+        const pandora::CartesianVector& splitPosition, pandora::CaloHitList &firstCaloHitList,
+        pandora::CaloHitList &secondCaloHitList) const;
 
     unsigned int    m_slidingFitHalfWindow;   ///<
     float           m_minClusterLength;       ///<

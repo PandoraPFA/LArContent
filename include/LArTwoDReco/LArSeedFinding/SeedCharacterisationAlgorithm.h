@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDSeed/SeedCharacterisationAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/SeedCharacterisationAlgorithm.h
  * 
  *  @brief  Header file for the seed characterisation algorithm class.
  * 

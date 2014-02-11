@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDPairedTracksAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArTrackMatching/ThreeDPairedTracksAlgorithm.cc
  * 
- *  @brief  Implementation of the 3D seed finding algorithm class.
+ *  @brief  Implementation of the 3D paired tracks algorithm class.
  * 
  *  $Log: $
  */
@@ -11,7 +11,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDSeed/ThreeDPairedTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDPairedTracksAlgorithm.h"
 
 using namespace pandora;
 

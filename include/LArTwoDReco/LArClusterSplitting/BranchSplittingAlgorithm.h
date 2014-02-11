@@ -1,16 +1,14 @@
 /**
- *  @file   LArContent/include/LArClusterSplitting/BranchSplittingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h
  *
- *  @brief  Header file for the delta ray splitting algorithm class.
+ *  @brief  Header file for the branch splitting algorithm class.
  *
  *  $Log: $
  */
 #ifndef LAR_BRANCH_SPLITTING_ALGORITHM_H
 #define LAR_BRANCH_SPLITTING_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
-
-#include "LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
 
 namespace lar
 {
@@ -27,13 +25,13 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
     void FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit,
-	const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
-	pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const;
+        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
+        pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

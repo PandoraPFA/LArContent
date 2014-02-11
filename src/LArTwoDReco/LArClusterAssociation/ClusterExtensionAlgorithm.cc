@@ -1,14 +1,14 @@
 /**
- *  @file   LArContent/src/LArClusterAssociation/ClusterExtensionAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.cc
  *
- *  @brief  Implementation of the longitudinal extension algorithm class.
+ *  @brief  Implementation of the cluster extension algorithm class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterAssociation/ClusterExtensionAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 using namespace pandora;
 

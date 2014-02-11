@@ -1,14 +1,14 @@
 /**
- *  @file   LArContent/include/ClusterSplitting/LayerSplittingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/ClusterSplitting/LayerSplittingAlgorithm.h
  *
- *  @brief  Header file for the kink splitting algorithm class.
+ *  @brief  Header file for the layer splitting algorithm class.
  *
  *  $Log: $
  */
 #ifndef LAR_LAYER_SPLITTING_ALGORITHM_H
 #define LAR_LAYER_SPLITTING_ALGORITHM_H 1
 
-#include "LArClusterSplitting/ClusterSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 namespace lar
 {
@@ -25,13 +25,13 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
-	pandora::CaloHitList &secondCaloHitList) const;
+        pandora::CaloHitList &secondCaloHitList) const;
 
     /**
      *  @brief Find the best layer for splitting the cluster
@@ -50,7 +50,7 @@ private:
      *  @param  secondCaloHitList the hits in the second cluster fragment
      */
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, const unsigned int &splitLayer,
-	pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
+        pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
     /**
      *  @brief  Calculate rms deviation of cluster centroids between two extremal layers

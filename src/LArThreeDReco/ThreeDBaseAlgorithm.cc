@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDSeed/ThreeDBaseAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/ThreeDBaseAlgorithm.cc
  * 
  *  @brief  Implementation of the three dimension algorithm base class.
  * 
@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArOverlapTensor.h"
 
-#include "LArThreeDSeed/ThreeDBaseAlgorithm.h"
+#include "LArThreeDReco/ThreeDBaseAlgorithm.h"
 
 using namespace pandora;
 

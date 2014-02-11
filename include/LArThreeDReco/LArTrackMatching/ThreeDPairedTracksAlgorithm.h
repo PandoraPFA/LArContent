@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDSeed/ThreeDPairedTracksAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArTrackMatching/ThreeDPairedTracksAlgorithm.h
  * 
  *  @brief  Header file for the 3D paired tracks algorithm class.
  * 

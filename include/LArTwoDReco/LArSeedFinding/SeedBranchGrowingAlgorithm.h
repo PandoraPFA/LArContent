@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/include/LArTwoDSeed/SeedBranchGrowingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.h
  * 
- *  @brief  Header file for the seed growing algorithm class.
+ *  @brief  Header file for the seed branch growing algorithm class.
  * 
  *  $Log: $
  */

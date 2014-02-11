@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/ClusterSplitting/ClusterSplittingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/ClusterSplitting/ClusterSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the cluster splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArClusterSplitting/ClusterSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 using namespace pandora;
 
@@ -24,14 +24,14 @@ StatusCode ClusterSplittingAlgorithm::Run()
 
     for (ClusterSplittingList::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
     {
-	Cluster* pCluster = *iter;
+        Cluster* pCluster = *iter;
 
-	ClusterSplittingList clusterSplittingList;
-	if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, clusterSplittingList))
-	    continue;
+        ClusterSplittingList clusterSplittingList;
+        if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, clusterSplittingList))
+            continue;
 
-	internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
-	*iter = NULL;
+        internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
+        *iter = NULL;
     }
 
     return STATUS_CODE_SUCCESS;
@@ -44,10 +44,10 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, Clus
     // Split cluster into two CaloHit lists
     CaloHitList firstCaloHitList, secondCaloHitList;
     if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, firstCaloHitList, secondCaloHitList))
-	return STATUS_CODE_NOT_FOUND;
+        return STATUS_CODE_NOT_FOUND;
 
     if (firstCaloHitList.empty() || secondCaloHitList.empty())
-	return STATUS_CODE_NOT_ALLOWED;
+        return STATUS_CODE_NOT_ALLOWED;
 
     // Begin cluster fragmentation operations
     ClusterList clusterList;
@@ -55,7 +55,7 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, Clus
     std::string clusterListToSaveName, clusterListToDeleteName;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,
-	clusterListToSaveName));
+        clusterListToSaveName));
 
     // Create new clusters
     Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);

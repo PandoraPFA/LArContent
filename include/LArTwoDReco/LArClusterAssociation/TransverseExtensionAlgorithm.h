@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArClusterAssociation/TransverseExtensionAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h
  *
  *  @brief  Header file for the transverse extension algorithm class.
  *
@@ -10,9 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArClusterAssociation/ClusterExtensionAlgorithm.h"
-
 #include "LArObjects/LArPointingCluster.h"
+
+#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 namespace lar
 {
@@ -29,7 +29,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
 private:

@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/include/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
  * 
- *  @brief  Header file for the cluster merging algorithm class.
+ *  @brief  Header file for the longitudinal association algorithm class.
  * 
  *  $Log: $
  */
@@ -10,9 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArClusterAssociation/ClusterAssociationAlgorithm.h"
-
 #include "Helpers/ClusterHelper.h"
+
+#include "LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
 
 namespace lar
 {

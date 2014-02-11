@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDSeed/SeedLengthGrowingAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/SeedLengthGrowingAlgorithm.h
  * 
  *  @brief  Header file for the seed length growing algorithm class.
  * 
@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArPointingCluster.h"
 
-#include "LArTwoDSeed/SeedGrowingAlgorithm.h"
+#include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 namespace lar
 {

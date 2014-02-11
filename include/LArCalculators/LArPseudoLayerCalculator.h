@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArPseudoLayerCalculator.h
+ *  @file   LArContent/include/LArCalculators/LArPseudoLayerCalculator.h
  * 
  *  @brief  Header file for the lar pseudo layer calculator class.
  * 
