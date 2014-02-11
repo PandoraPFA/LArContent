@@ -40,6 +40,8 @@
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/ParallelClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
@@ -54,6 +56,7 @@
 #include "LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 #include "LArUtility/ListChangingAlgorithm.h"
+#include "LArUtility/ListDissolutionAlgorithm.h"
 #include "LArUtility/ListMergingAlgorithm.h"
 #include "LArUtility/ListPreparationAlgorithm.h"
 
@@ -83,6 +86,8 @@ public:
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
+        d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
+        d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
@@ -96,6 +101,7 @@ public:
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArListChanging",                        lar::ListChangingAlgorithm::Factory)                                        \
+        d("LArListDissolution",                     lar::ListDissolutionAlgorithm::Factory)                                     \
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 

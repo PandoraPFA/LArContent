@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArMCParticleHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
@@ -79,7 +80,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             const MCParticle *pMCParticle3D(mcIter->second);
             ++nMCParticles;
 
-            neutrinoVector.push_back(this->GetPrimaryNeutrino(pMCParticle3D));
+            neutrinoVector.push_back(LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle3D));
 
             pidVector.push_back(pMCParticle3D->GetParticleId());
             pxVector.push_back(pMCParticle3D->GetMomentum().GetX());
@@ -190,9 +191,9 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
         const MCParticle *pMCParticle = *iter;
         uidToMCParticleMap[pMCParticle->GetUid()] = pMCParticle;
 
-        if (pMCParticle->GetParentList().empty() || this->IsNeutrinoInduced(pMCParticle))
+        if (pMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))
         {
-            if (!this->IsNeutrino(pMCParticle))
+            if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
                 uidToPrimaryMap[pMCParticle->GetUid()] = pMCParticle->GetUid();
         }
 
@@ -209,7 +210,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
                     uidToPrimaryMap[pMCParticle->GetUid()] = uidToPrimaryMap[pParentMCParticle->GetUid()];
                     break;
                 }
-                else if (pParentMCParticle->GetParentList().empty() || this->IsNeutrinoInduced(pParentMCParticle))
+                else if (pParentMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoInduced(pParentMCParticle))
                 {
                     uidToPrimaryMap[pMCParticle->GetUid()] = pParentMCParticle->GetUid();
                     break;
@@ -319,42 +320,6 @@ CartesianVector ParticleMonitoringAlgorithm::GetSpacePoint(const ClusterList &cl
     }
 
     return spacePoint;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ParticleMonitoringAlgorithm::IsNeutrinoInduced(const MCParticle *const pMCParticle) const
-{
-    return ((pMCParticle->GetParentList().size() == 1) && (this->IsNeutrino(*(pMCParticle->GetParentList().begin()))));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ParticleMonitoringAlgorithm::IsNeutrino(const MCParticle *const pMCParticle) const
-{
-    const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
-
-    if ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId))
-        return true;
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int ParticleMonitoringAlgorithm::GetPrimaryNeutrino(const pandora::MCParticle *const pMCParticle) const
-{
-    const MCParticle *pParentMCParticle = pMCParticle;
-
-    while (pParentMCParticle->GetParentList().empty() == false)
-    {
-        pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
-    }
-
-    if (this->IsNeutrino(pParentMCParticle))
-        return pParentMCParticle->GetParticleId();
-
-    return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

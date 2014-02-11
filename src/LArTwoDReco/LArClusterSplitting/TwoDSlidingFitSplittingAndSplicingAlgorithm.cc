@@ -413,23 +413,23 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(const TiXml
 {
     m_shortHalfWindowLayers = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"ShortHalfWindow", m_shortHalfWindowLayers));
+        "ShortHalfWindow", m_shortHalfWindowLayers));
 
     m_longHalfWindowLayers = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"LongHalfWindow", m_longHalfWindowLayers));
+        "LongHalfWindow", m_longHalfWindowLayers));
 
     m_minClusterLength = 7.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MinClusterLength", m_minClusterLength));
+        "MinClusterLength", m_minClusterLength));
 
     m_vetoDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"VetoDisplacement", m_vetoDisplacement));
+        "VetoDisplacement", m_vetoDisplacement));
 
     m_runCosmicMode = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"CosmicMode", m_runCosmicMode));
+        "CosmicMode", m_runCosmicMode));
 
     return STATUS_CODE_SUCCESS;
 }
