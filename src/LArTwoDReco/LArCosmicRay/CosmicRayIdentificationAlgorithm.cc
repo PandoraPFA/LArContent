@@ -39,7 +39,7 @@ StatusCode CosmicRayIdentificationAlgorithm::Run()
             {
                 const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
-                if (NULL == LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle))
+                if (NULL != LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle))
                     isCosmicRay = false;
             }
             catch (StatusCodeException &)
