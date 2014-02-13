@@ -41,9 +41,6 @@ private:
      *  @param  seedAssociationList to receive the populated seed association list
      */
     void GetSeedAssociationList(const pandora::ClusterVector &particleSeedVector, SeedAssociationList &seedAssociationList) const;
-
-    std::string         m_trackSeedClusterListName;     ///< The track seed cluster list name
-    std::string         m_showerSeedClusterListName;    ///< The shower seed cluster list name
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
