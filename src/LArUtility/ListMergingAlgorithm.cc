@@ -25,7 +25,25 @@ StatusCode ListMergingAlgorithm::Run()
     {
         const std::string &sourceListName(m_sourceClusterListNames.at(iIndex));
         const std::string &targetListName(m_targetClusterListNames.at(iIndex));
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, PandoraContentApi::SaveClusterList(*this, sourceListName, targetListName));
+
+        const StatusCode statusCode(PandoraContentApi::SaveClusterList(*this, sourceListName, targetListName));
+
+        if (STATUS_CODE_SUCCESS != statusCode)
+        {
+            if (STATUS_CODE_NOT_FOUND == statusCode)
+            {
+                std::cout << "ListMergingAlgorithm: Cluster list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
+            }
+            else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+            {
+                std::cout << "ListMergingAlgorithm: No clusters to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
+            }
+            else
+            {
+                std::cout << "ListMergingAlgorithm: Error in cluster merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                return statusCode;
+            }
+        }
     }
 
     // Pfo list merging
@@ -36,7 +54,25 @@ StatusCode ListMergingAlgorithm::Run()
     {
         const std::string &sourceListName(m_sourcePfoListNames.at(iIndex));
         const std::string &targetListName(m_targetPfoListNames.at(iIndex));
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, PandoraContentApi::SavePfoList(*this, sourceListName, targetListName));
+
+        const StatusCode statusCode(PandoraContentApi::SavePfoList(*this, sourceListName, targetListName));
+
+        if (STATUS_CODE_SUCCESS != statusCode)
+        {
+            if (STATUS_CODE_NOT_FOUND == statusCode)
+            {
+                std::cout << "ListMergingAlgorithm: Pfo list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
+            }
+            else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+            {
+                std::cout << "ListMergingAlgorithm: No pfos to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
+            }
+            else
+            {
+                std::cout << "ListMergingAlgorithm: Error in pfo merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                return statusCode;
+            }
+        }
     }
 
     return STATUS_CODE_SUCCESS;
