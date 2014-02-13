@@ -38,6 +38,15 @@ public:
     static bool IsNeutrino(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Get the primary parent mc particle
+     * 
+     *  @param  pMCParticle
+     * 
+     *  @return address of the primary parent mc particle
+     */
+    static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Get primary neutrino or antineutrino
      * 
      *  @param  pMCParticle

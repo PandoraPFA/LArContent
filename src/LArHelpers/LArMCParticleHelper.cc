@@ -34,7 +34,7 @@ bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int LArMCParticleHelper::GetPrimaryNeutrino(const pandora::MCParticle *const pMCParticle)
+const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *const pMCParticle)
 {
     const MCParticle *pParentMCParticle = pMCParticle;
 
@@ -43,10 +43,19 @@ int LArMCParticleHelper::GetPrimaryNeutrino(const pandora::MCParticle *const pMC
         pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
     }
 
+    return pParentMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int LArMCParticleHelper::GetPrimaryNeutrino(const MCParticle *const pMCParticle)
+{
+    const MCParticle *pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
+
     if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
         return pParentMCParticle->GetParticleId();
 
-    return NULL;
+    return 0;
 }
 
 } // namespace lar
