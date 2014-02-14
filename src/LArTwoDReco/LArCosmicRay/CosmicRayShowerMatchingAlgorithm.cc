@@ -23,6 +23,7 @@ StatusCode CosmicRayShowerMatchingAlgorithm::Run()
     const PfoList *pPfoList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputPfoListName, pPfoList));
 
+    // TODO Pfo sorting and dissolution of small daughter pfos.
     for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
     {
         ParticleFlowObject *pPfo = *iter;
