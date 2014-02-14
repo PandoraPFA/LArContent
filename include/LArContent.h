@@ -28,6 +28,10 @@
 #include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDPairedTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ClearTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/MissingTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/OvershootTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
@@ -105,6 +109,12 @@ public:
         d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 
+    #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
+        d("LArMissingTracks",                       lar::MissingTracksTool::Factory)                                            \
+        d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
+        d("LArUndershootTracks",                    lar::UndershootTracksTool::Factory)
+
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
         d("LArEmShowerId",                          &lar::LArParticleIdHelper::LArEmShowerId)                                   \
         d("LArPhotonId",                            &lar::LArParticleIdHelper::LArPhotonId)                                     \
@@ -120,7 +130,7 @@ public:
         d("LArVertexHelper",                        &lar::LArVertexHelper::ReadSettings)
 
     /**
-     *  @brief  Register all the lar content algorithms with pandora
+     *  @brief  Register all the lar content algorithms and tools with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
      */
@@ -170,6 +180,7 @@ public:
 inline pandora::StatusCode LArContent::RegisterAlgorithms(pandora::Pandora &pandora)
 {
     LAR_ALGORITHM_LIST(PANDORA_REGISTER_ALGORITHM);
+    LAR_ALGORITHM_TOOL_LIST(PANDORA_REGISTER_ALGORITHM_TOOL);
 
     return pandora::STATUS_CODE_SUCCESS;
 }

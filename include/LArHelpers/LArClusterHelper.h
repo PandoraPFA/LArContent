@@ -62,7 +62,7 @@ public:
      *  @param  twoDSlidingFitResult to receive the fit result
      */
     static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
-	const pandora::CartesianVector &axisDirection, TwoDSlidingFitResult &twoDSlidingFitResult);
+        const pandora::CartesianVector &axisDirection, TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis

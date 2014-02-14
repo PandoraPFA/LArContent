@@ -9,6 +9,7 @@
 #define LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
+#include "Pandora/AlgorithmTool.h"
 
 #include "LArHelpers/LArClusterHelper.h"
 
@@ -310,11 +311,13 @@ private:
 
     typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
 
-    float               m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
-    float               m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
-    float               m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
-    unsigned int        m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
-    SlidingFitResultMap m_slidingFitResultMap;      ///< The sliding fit result map
+    float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
+    float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
+    float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
+    unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
+    SlidingFitResultMap         m_slidingFitResultMap;      ///< The sliding fit result map
+
+    pandora::AlgorithmToolList  m_algorithmToolList;        ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
