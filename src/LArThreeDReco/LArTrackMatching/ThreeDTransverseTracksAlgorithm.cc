@@ -12,6 +12,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
+#include "LArThreeDReco/LArTrackMatching/TensorManipulationTool.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 using namespace pandora;
@@ -21,6 +22,11 @@ namespace lar
 
 void ThreeDTransverseTracksAlgorithm::PreparationStep()
 {
+    for (AlgorithmToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, dynamic_cast<TensorManipulationTool*>(*iter)->Run(m_overlapTensor));
+    }
+
     ClusterList allClustersList;
     allClustersList.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
     allClustersList.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
@@ -542,6 +548,9 @@ ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::
 
 StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
+        "TrackTools", m_algorithmToolList));
+
     m_pseudoChi2Cut = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
