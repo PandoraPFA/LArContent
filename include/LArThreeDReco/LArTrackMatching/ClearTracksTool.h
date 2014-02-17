@@ -8,7 +8,7 @@
 #ifndef CLEAR_TRACKS_TOOL_H
 #define CLEAR_TRACKS_TOOL_H 1
 
-#include "LArThreeDReco/LArTrackMatching/TensorManipulationTool.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar
 {

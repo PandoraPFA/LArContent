@@ -75,7 +75,7 @@ public:
      *  @param  twoDSlidingFitResult to receive the fit result
      */
     static void LArTwoDShowerEdgeFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
-	const pandora::CartesianVector &axisDirection, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult);
+        const pandora::CartesianVector &axisDirection, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Whether fit results are multivalued in x

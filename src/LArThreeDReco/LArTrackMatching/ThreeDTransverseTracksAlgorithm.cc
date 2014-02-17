@@ -12,7 +12,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArVertexHelper.h"
 
-#include "LArThreeDReco/LArTrackMatching/TensorManipulationTool.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 using namespace pandora;
