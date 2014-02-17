@@ -20,6 +20,9 @@
 namespace lar
 {
 
+typedef OverlapTensor<TrackOverlapResult> TrackOverlapTensor;
+typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
+
 /**
  *  @brief  TensorManipulationTool class
  */
@@ -29,10 +32,14 @@ public:
     /**
      *  @brief  Run the algorithm tool
      * 
-     *  @param  overlapTensor the overlap tensor
+     *  @param  slidingFitResultMap the sliding fit result map
+     *  @param  overlapTensor the track overlap result tensor
+     *  @param  protoParticleVector the proto particle vector
      */
-    virtual pandora::StatusCode Run(OverlapTensor<TrackOverlapResult> &overlapTensor) = 0;
+    virtual bool Run(const SlidingFitResultMap &slidingFitResultMap, TrackOverlapTensor &overlapTensor, ProtoParticleVector &protoParticleVector) = 0;
 };
+
+typedef std::vector<TensorManipulationTool*> TensorManipulationToolList;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -146,59 +153,6 @@ private:
     typedef std::map<unsigned int, FitSegmentToOverlapResultMap> FitSegmentMatrix;
     typedef std::map<unsigned int, FitSegmentMatrix> FitSegmentTensor;
 
-    /**
-     *  @brief  ParticleComponent class
-     */
-    class ParticleComponent
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         * 
-         *  @param  pClusterU the u cluster
-         *  @param  pClusterV the v cluster
-         *  @param  pClusterW the w cluster
-         *  @param  trackOverlapResult the track overlap result
-         */
-        ParticleComponent(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW, const TrackOverlapResult &trackOverlapResult);
-
-        /**
-         *  @brief  Get the u cluster
-         * 
-         *  @return the u cluster
-         */
-        pandora::Cluster *GetClusterU() const;
-
-        /**
-         *  @brief  Get the v cluster
-         * 
-         *  @return the v cluster
-         */
-        pandora::Cluster *GetClusterV() const;
-
-        /**
-         *  @brief  Get the w cluster
-         * 
-         *  @return the w cluster
-         */
-        pandora::Cluster *GetClusterW() const;
-
-        /**
-         *  @brief  Get the track overlap result
-         * 
-         *  @return the track overlap result
-         */
-        const TrackOverlapResult &GetTrackOverlapResult() const;
-
-    private:
-        pandora::Cluster   *m_pClusterU;            ///< 
-        pandora::Cluster   *m_pClusterV;            ///< 
-        pandora::Cluster   *m_pClusterW;            ///< 
-        TrackOverlapResult  m_trackOverlapResult;   ///< 
-    };
-
-    typedef std::vector<ParticleComponent> ParticleComponentList;
-
     void PreparationStep();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
@@ -261,71 +215,9 @@ private:
     void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW, const unsigned int maxIndexU,
         const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor, TrackOverlapResultVector &trackOverlapResultVector) const;
 
-    /**
-     *  @brief  Whether a requested (adjacent) element of the fit segment tensor exists
-     * 
-     *  @param  fitSegmentTensor the fit segment tensor
-     *  @param  indexU the u index
-     *  @param  indexV the v index
-     *  @param  indexW the w index
-     *  @param  incrementU whether to increment the u index
-     *  @param  incrementV whether to increment the v index
-     *  @param  incrementW whether to increment the w index
-     *  @param  newIndexU to receive the new u index
-     *  @param  newIndexV to receive the new v index
-     *  @param  newIndexW to receive the new w index
-     *  @param  trackOverlapResult to receive the track overlap result
-     * 
-     *  @return boolean
-     */
-    bool IsPresent(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
-        const bool incrementU, const bool incrementV, const bool incrementW, unsigned int &newIndexU, unsigned int &newIndexV,
-        unsigned int &newIndexW, TrackOverlapResult &trackOverlapResult) const;
-
     bool ExamineTensor();
-
-    /**
-     *  @brief  Build proto particle, starting with provided component and picking up any matched components in the overlap tensor
-     * 
-     *  @param  firstComponent the first particle component
-     *  @param  protoParticle to receive the populated proto particle
-     */
-    void BuildProtoParticle(const ParticleComponent &firstComponent, ProtoParticle &protoParticle) const;
-
-    /**
-     *  @brief  Whether two particle components match, representing the same particle
-     * 
-     *  @param  firstComponent the first particle component
-     *  @param  secondComponent the second particle component
-     * 
-     *  @return boolean
-     */
-    bool IsParticleMatch(const ParticleComponent &firstComponent, const ParticleComponent &secondComponent) const;
-
-    /**
-     *  @brief  Whether two clusters might match and represent the same particle
-     * 
-     *  @param  pFirstCluster the address of the first cluster
-     *  @param  pSecondCluster the address of the second cluster
-     * 
-     *  @return boolean
-     */
-    bool IsPossibleMatch(pandora::Cluster *const pFirstCluster, pandora::Cluster *const pSecondCluster) const;
-
-    /**
-     *  @brief  Whether two clusters match, representing the same particle
-     * 
-     *  @param  pFirstCluster the address of the first cluster
-     *  @param  pSecondCluster the address of the second cluster
-     * 
-     *  @return boolean
-     */
-    bool IsParticleMatch(pandora::Cluster *const pFirstCluster, pandora::Cluster *const pSecondCluster) const;
-
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
 
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
@@ -333,7 +225,7 @@ private:
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
     SlidingFitResultMap         m_slidingFitResultMap;      ///< The sliding fit result map
 
-    pandora::AlgorithmToolList  m_algorithmToolList;        ///< The algorithm tool list
+    TensorManipulationToolList  m_algorithmToolList;        ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -391,46 +283,6 @@ inline float ThreeDTransverseTracksAlgorithm::FitSegment::GetEndValue() const
 inline bool ThreeDTransverseTracksAlgorithm::FitSegment::IsIncreasingX() const
 {
     return m_isIncreasingX;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline ThreeDTransverseTracksAlgorithm::ParticleComponent::ParticleComponent(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV,
-        pandora::Cluster *pClusterW, const TrackOverlapResult &trackOverlapResult) :
-    m_pClusterU(pClusterU),
-    m_pClusterV(pClusterV),
-    m_pClusterW(pClusterW),
-    m_trackOverlapResult(trackOverlapResult)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Cluster *ThreeDTransverseTracksAlgorithm::ParticleComponent::GetClusterU() const
-{
-    return m_pClusterU;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Cluster *ThreeDTransverseTracksAlgorithm::ParticleComponent::GetClusterV() const
-{
-    return m_pClusterV;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Cluster *ThreeDTransverseTracksAlgorithm::ParticleComponent::GetClusterW() const
-{
-    return m_pClusterW;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const TrackOverlapResult &ThreeDTransverseTracksAlgorithm::ParticleComponent::GetTrackOverlapResult() const
-{
-    return m_trackOverlapResult;
 }
 
 } // namespace lar

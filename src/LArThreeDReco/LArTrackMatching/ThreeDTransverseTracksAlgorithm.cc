@@ -21,11 +21,6 @@ namespace lar
 
 void ThreeDTransverseTracksAlgorithm::PreparationStep()
 {
-    for (AlgorithmToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, dynamic_cast<TensorManipulationTool*>(*iter)->Run(m_overlapTensor));
-    }
-
     ClusterList allClustersList;
     allClustersList.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
     allClustersList.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
@@ -303,214 +298,16 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTransverseTracksAlgorithm::IsPresent(const FitSegmentTensor &fitSegmentTensor, const unsigned int indexU, const unsigned int indexV,
-    const unsigned int indexW, const bool incrementU, const bool incrementV, const bool incrementW, unsigned int &newIndexU,
-    unsigned int &newIndexV, unsigned int &newIndexW, TrackOverlapResult &trackOverlapResult) const
-{
-    FitSegmentTensor::const_iterator iterU = fitSegmentTensor.find(indexU);
-
-    if ((fitSegmentTensor.end() == iterU) || (incrementU && (fitSegmentTensor.end() == ++iterU)))
-        return false;
-
-    const FitSegmentMatrix &fitSegmentMatrix(iterU->second);
-    FitSegmentMatrix::const_iterator iterV = fitSegmentMatrix.find(indexV);
-
-    if ((fitSegmentMatrix.end() == iterV) || (incrementV && ((fitSegmentMatrix.end() == ++iterV))))
-        return false;
-
-    const FitSegmentToOverlapResultMap &fitSegmentToOverlapResultMap(iterV->second);
-    FitSegmentToOverlapResultMap::const_iterator iterW = fitSegmentToOverlapResultMap.find(indexW);
-
-    if ((fitSegmentToOverlapResultMap.end() == iterW) || (incrementW && ((fitSegmentToOverlapResultMap.end() == ++iterW))))
-        return false;
-
-    newIndexU = iterU->first;
-    newIndexV = iterV->first;
-    newIndexW = iterW->first;
-    trackOverlapResult = iterW->second;
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
-    Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
-    TrackOverlapResult bestTrackOverlapResult(0, 1, 0.f);
-
-    const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
-    const ClusterList &clusterListV(m_overlapTensor.GetClusterListV());
-    const ClusterList &clusterListW(m_overlapTensor.GetClusterListW());
-
-    for (ClusterList::const_iterator iterU = clusterListU.begin(), iterUEnd = clusterListU.end(); iterU != iterUEnd; ++iterU)
+    bool toolResult(false);
+    for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        for (ClusterList::const_iterator iterV = clusterListV.begin(), iterVEnd = clusterListV.end(); iterV != iterVEnd; ++iterV)
-        {
-            for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
-            {
-                try
-                {
-                    const TrackOverlapResult &trackOverlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
-
-                    if (trackOverlapResult < bestTrackOverlapResult)
-                        continue;
-
-                    bestTrackOverlapResult = trackOverlapResult;
-                    pBestClusterU = *iterU;
-                    pBestClusterV = *iterV;
-                    pBestClusterW = *iterW;
-                }
-                catch (StatusCodeException &)
-                {
-                }
-            }
-        }
+        if ((*iter)->Run(m_slidingFitResultMap, m_overlapTensor, m_protoParticleVector))
+            toolResult = true;
     }
 
-    if (!pBestClusterU || !pBestClusterV || !pBestClusterW)
-        return false;
-
-    ProtoParticle protoParticle;
-    this->BuildProtoParticle(ParticleComponent(pBestClusterU, pBestClusterV, pBestClusterW, bestTrackOverlapResult), protoParticle);
-    m_protoParticleVector.push_back(protoParticle);
-
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDTransverseTracksAlgorithm::BuildProtoParticle(const ParticleComponent &firstComponent, ProtoParticle &protoParticle) const
-{
-    Cluster *pClusterU(firstComponent.GetClusterU()), *pClusterV(firstComponent.GetClusterV()), *pClusterW(firstComponent.GetClusterW());
-    protoParticle.m_clusterListU.insert(pClusterU);
-    protoParticle.m_clusterListV.insert(pClusterV);
-    protoParticle.m_clusterListW.insert(pClusterW);
-
-    ParticleComponentList particleComponentList;
-    const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
-    const ClusterList &clusterListV(m_overlapTensor.GetClusterListV());
-    const ClusterList &clusterListW(m_overlapTensor.GetClusterListW());
-
-    for (ClusterList::const_iterator iterU = clusterListU.begin(), iterUEnd = clusterListU.end(); iterU != iterUEnd; ++iterU)
-    {
-        for (ClusterList::const_iterator iterV = clusterListV.begin(), iterVEnd = clusterListV.end(); iterV != iterVEnd; ++iterV)
-        {
-            for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
-            {
-                try
-                {
-                    if ((pClusterU != *iterU) && (pClusterV != *iterV) && (pClusterW != *iterW))
-                        continue;
-
-                    const TrackOverlapResult &trackOverlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
-                    particleComponentList.push_back(ParticleComponent(*iterU, *iterV, *iterW, trackOverlapResult));
-                }
-                catch (StatusCodeException &)
-                {
-                }
-            }
-        }
-    }
-
-    for (ParticleComponentList::const_iterator iter = particleComponentList.begin(), iterEnd = particleComponentList.end(); iter != iterEnd; ++iter)
-    {
-        if (protoParticle.m_clusterListU.count(iter->GetClusterU()) && protoParticle.m_clusterListV.count(iter->GetClusterV()) &&
-            protoParticle.m_clusterListW.count(iter->GetClusterW()))
-        {
-            continue;
-        }
-
-        if (this->IsParticleMatch(firstComponent, *iter))
-        {
-            this->BuildProtoParticle(*iter, protoParticle);
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(const ParticleComponent &firstComponent, const ParticleComponent &secondComponent) const
-{
-    return ((this->IsPossibleMatch(firstComponent.GetClusterU(), secondComponent.GetClusterU()) &&
-             this->IsPossibleMatch(firstComponent.GetClusterV(), secondComponent.GetClusterV()) &&
-             this->IsPossibleMatch(firstComponent.GetClusterW(), secondComponent.GetClusterW())) &&
-            (this->IsParticleMatch(firstComponent.GetClusterU(), secondComponent.GetClusterU()) ||
-             this->IsParticleMatch(firstComponent.GetClusterV(), secondComponent.GetClusterV()) ||
-             this->IsParticleMatch(firstComponent.GetClusterW(), secondComponent.GetClusterW())));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ThreeDTransverseTracksAlgorithm::IsPossibleMatch(Cluster *const pFirstCluster, Cluster *const pSecondCluster) const
-{
-    if (pFirstCluster == pSecondCluster)
-        return true;
-
-    SlidingFitResultMap::const_iterator iter1 = m_slidingFitResultMap.find(pFirstCluster);
-    SlidingFitResultMap::const_iterator iter2 = m_slidingFitResultMap.find(pSecondCluster);
-
-    if ((m_slidingFitResultMap.end() == iter1) || (m_slidingFitResultMap.end() == iter2))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult1(iter1->second);
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult2(iter2->second);
-
-    // Check there is no significant overlap between clusters
-    const CartesianVector minLayerPosition1(slidingFitResult1.GetGlobalMinLayerPosition());
-    const CartesianVector maxLayerPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
-    const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
-    const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
-
-    const CartesianVector linearDirection1((maxLayerPosition1 - minLayerPosition1).GetUnitVector());
-    const CartesianVector linearDirection2((maxLayerPosition2 - minLayerPosition2).GetUnitVector());
-
-    const float clusterOverlap1_Pos0((maxLayerPosition1 - minLayerPosition1).GetMagnitude());
-    const float clusterOverlap1_Pos1(linearDirection1.GetDotProduct(minLayerPosition2 - minLayerPosition1));
-    const float clusterOverlap1_Pos2(linearDirection1.GetDotProduct(maxLayerPosition2 - minLayerPosition1));
-
-    const float clusterOverlap2_Pos0((maxLayerPosition2 - minLayerPosition2).GetMagnitude());
-    const float clusterOverlap2_Pos1(linearDirection2.GetDotProduct(minLayerPosition1 - minLayerPosition2));
-    const float clusterOverlap2_Pos2(linearDirection2.GetDotProduct(maxLayerPosition1 - minLayerPosition2));
-
-    return ((std::min(clusterOverlap1_Pos1, clusterOverlap1_Pos2) > clusterOverlap1_Pos0 - 2.f) ||
-            (std::min(clusterOverlap2_Pos1, clusterOverlap2_Pos2) > clusterOverlap2_Pos0 - 2.f) ||
-            (std::max(clusterOverlap1_Pos1, clusterOverlap1_Pos2) < 2.f) ||
-            (std::max(clusterOverlap2_Pos1, clusterOverlap2_Pos2) < 2.f));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ThreeDTransverseTracksAlgorithm::IsParticleMatch(Cluster *const pFirstCluster, Cluster *const pSecondCluster) const
-{
-    if (pFirstCluster == pSecondCluster)
-        return false;
-
-    if (!LArVertexHelper::DoesCurrentVertexExist())
-        return false;
-
-    SlidingFitResultMap::const_iterator iter1 = m_slidingFitResultMap.find(pFirstCluster);
-    SlidingFitResultMap::const_iterator iter2 = m_slidingFitResultMap.find(pSecondCluster);
-
-    if ((m_slidingFitResultMap.end() == iter1) || (m_slidingFitResultMap.end() == iter2))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult1(iter1->second);
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult2(iter2->second);
-
-    const CartesianVector minLayerPosition1(slidingFitResult1.GetGlobalMinLayerPosition());
-    const CartesianVector maxLayerPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
-    const CartesianVector minLayerPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
-    const CartesianVector maxLayerPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
-
-    const bool isForward1(LArVertexHelper::IsForwardInZ3D(pFirstCluster));
-    const bool isForward2(LArVertexHelper::IsForwardInZ3D(pSecondCluster));
-    const bool isBackward1(LArVertexHelper::IsBackwardInZ3D(pFirstCluster));
-    const bool isBackward2(LArVertexHelper::IsBackwardInZ3D(pSecondCluster));
-
-    return ((((minLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||
-            (((maxLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isForward2)  && !(isBackward1 && isBackward2)) ||
-            (((minLayerPosition1 - maxLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isBackward2) && !(isBackward1 && isForward2)) ||
-            (((maxLayerPosition1 - minLayerPosition2).GetMagnitudeSquared() < 4.f) && !(isForward1 && isBackward2) && !(isBackward1 && isForward2)) );
+    return toolResult;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -547,8 +344,19 @@ ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::
 
 StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    AlgorithmToolList algorithmToolList;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", m_algorithmToolList));
+        "TrackTools", algorithmToolList));
+
+    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    {
+        TensorManipulationTool *pTensorManipulationTool(dynamic_cast<TensorManipulationTool*>(*iter));
+
+        if (NULL == pTensorManipulationTool)
+            return STATUS_CODE_INVALID_PARAMETER;
+
+        m_algorithmToolList.push_back(pTensorManipulationTool);
+    }
 
     m_pseudoChi2Cut = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
