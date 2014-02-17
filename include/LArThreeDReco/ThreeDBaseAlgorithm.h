@@ -16,6 +16,21 @@ namespace lar
 {
 
 /**
+ *  @brief  ProtoParticle
+ */
+class ProtoParticle
+{
+public:
+    pandora::ClusterList    m_clusterListU;                 ///< List of 2D U clusters in a 3D proto particle
+    pandora::ClusterList    m_clusterListV;                 ///< List of 2D V clusters in a 3D proto particle
+    pandora::ClusterList    m_clusterListW;                 ///< List of 2D W clusters in a 3D proto particle
+};
+
+typedef std::vector<ProtoParticle> ProtoParticleVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
  *  @brief  ThreeDBaseAlgorithm class
  */
 template<typename T>
@@ -76,18 +91,6 @@ protected:
      */
     virtual void TidyUp();
 
-    /**
-     *  @brief  ProtoParticle
-     */
-    class ProtoParticle
-    {
-    public:
-        pandora::ClusterList    m_clusterListU;                 ///< List of 2D U clusters in a 3D proto particle
-        pandora::ClusterList    m_clusterListV;                 ///< List of 2D V clusters in a 3D proto particle
-        pandora::ClusterList    m_clusterListW;                 ///< List of 2D W clusters in a 3D proto particle
-    };
-
-    typedef std::vector<ProtoParticle> ProtoParticleVector;
     ProtoParticleVector         m_protoParticleVector;          ///< The proto particle vector
 
     const pandora::ClusterList *m_pInputClusterListU;           ///< Address of the input cluster list U

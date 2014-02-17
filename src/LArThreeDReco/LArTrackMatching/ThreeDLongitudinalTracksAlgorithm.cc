@@ -28,119 +28,97 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 
     TrackOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut);
 
-    for (unsigned int nU = 0; nU <= 1; ++nU)
+    for (unsigned int iPermutation = 0; iPermutation < 8; ++iPermutation)
     {
-        const bool isForwardU((0 == nU) ? true : false);
+        const bool isForwardU((iPermutation >> 0) & 0x1);
+        const bool isForwardV((iPermutation >> 1) & 0x1);
+        const bool isForwardW((iPermutation >> 2) & 0x1);
 
-        for (unsigned int nV = 0; nV <= 1; ++nV)
+        // Get 2D start and end positions for each sliding window fit
+        const CartesianVector vtxU((isForwardU)  ? slidingFitResultU.GetGlobalMinLayerPosition() : slidingFitResultU.GetGlobalMaxLayerPosition());
+        const CartesianVector endU((!isForwardU) ? slidingFitResultU.GetGlobalMinLayerPosition() : slidingFitResultU.GetGlobalMaxLayerPosition());
+
+        const CartesianVector vtxV((isForwardV)  ? slidingFitResultV.GetGlobalMinLayerPosition() : slidingFitResultV.GetGlobalMaxLayerPosition());
+        const CartesianVector endV((!isForwardV) ? slidingFitResultV.GetGlobalMinLayerPosition() : slidingFitResultV.GetGlobalMaxLayerPosition());
+
+        const CartesianVector vtxW((isForwardW)  ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
+        const CartesianVector endW((!isForwardW) ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
+
+        float chi2(0.f);
+        CartesianVector position3D(0.f,0.f,0.f);
+        CartesianPointList vtxList3D, endList3D;
+
+        // Calculate possible 3D start positions
+        LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, vtxU, vtxV, position3D, chi2);
+        if (chi2 < m_vertexChi2Cut)
+            vtxList3D.push_back(position3D);
+
+        LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, vtxV, vtxW, position3D, chi2);
+        if (chi2 < m_vertexChi2Cut)
+            vtxList3D.push_back(position3D);
+
+        LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, vtxW, vtxU, position3D, chi2);
+        if (chi2 < m_vertexChi2Cut)
+            vtxList3D.push_back(position3D);
+
+        // Calculate possible 3D end positions
+        LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, endU, endV, position3D, chi2);
+        if (chi2 < m_vertexChi2Cut)
+            endList3D.push_back(position3D);
+
+        LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, endV, endW, position3D, chi2);
+        if (chi2 < m_vertexChi2Cut)
+            endList3D.push_back(position3D);
+
+        LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, endW, endU, position3D, chi2);
+        if (chi2 < m_vertexChi2Cut)
+            endList3D.push_back(position3D);
+
+        // Find best matched 3D trajactory
+        for (CartesianPointList::const_iterator iterI = vtxList3D.begin(), iterEndI = vtxList3D.end(); iterI != iterEndI; ++iterI)
         {
-            const bool isForwardV((0 == nV) ? true : false);
+            const CartesianVector &vtxMerged3D(*iterI);
 
-            for (unsigned int nW = 0; nW <= 1; ++nW)
+            const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_U));
+            const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_V));
+            const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_W));
+
+            for (CartesianPointList::const_iterator iterJ = endList3D.begin(), iterEndJ = endList3D.end(); iterJ != iterEndJ; ++iterJ)
             {
-                const bool isForwardW((0 == nW) ? true : false);
+                const CartesianVector &endMerged3D(*iterJ);
 
-                // Check consistency of directions with reconstructed vertex 
-                if (LArVertexHelper::DoesCurrentVertexExist())
+                const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_U));
+                const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_V));
+                const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_W));
+
+                if ( ((endMergedU - vtxMergedU).GetCosOpeningAngle(endU - vtxU) < m_cosOpeningAngleCut) ||
+                     ((endMergedV - vtxMergedV).GetCosOpeningAngle(endV - vtxV) < m_cosOpeningAngleCut) ||
+                     ((endMergedW - vtxMergedW).GetCosOpeningAngle(endW - vtxW) < m_cosOpeningAngleCut) )
                 {
-                    if ( (isForwardU && LArVertexHelper::IsBackwardInZ3D(slidingFitResultU.GetCluster())) ||
-                         (!isForwardU && LArVertexHelper::IsForwardInZ3D(slidingFitResultU.GetCluster())) ||
-                         (isForwardV && LArVertexHelper::IsBackwardInZ3D(slidingFitResultV.GetCluster())) ||
-                         (!isForwardV && LArVertexHelper::IsForwardInZ3D(slidingFitResultV.GetCluster())) ||
-                         (isForwardW && LArVertexHelper::IsBackwardInZ3D(slidingFitResultW.GetCluster())) ||
-                         (!isForwardW && LArVertexHelper::IsForwardInZ3D(slidingFitResultW.GetCluster())) )
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
-                // Get 2D start and end positions for each sliding window fit
-                const CartesianVector vtxU((isForwardU)  ? slidingFitResultU.GetGlobalMinLayerPosition() : slidingFitResultU.GetGlobalMaxLayerPosition());
-                const CartesianVector endU((!isForwardU) ? slidingFitResultU.GetGlobalMinLayerPosition() : slidingFitResultU.GetGlobalMaxLayerPosition());
-
-                const CartesianVector vtxV((isForwardV)  ? slidingFitResultV.GetGlobalMinLayerPosition() : slidingFitResultV.GetGlobalMaxLayerPosition());
-                const CartesianVector endV((!isForwardV) ? slidingFitResultV.GetGlobalMinLayerPosition() : slidingFitResultV.GetGlobalMaxLayerPosition());
-
-                const CartesianVector vtxW((isForwardW)  ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
-                const CartesianVector endW((!isForwardW) ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
-
-                float chi2(0.f);
-                CartesianVector position3D(0.f,0.f,0.f);
-                CartesianPointList vtxList3D, endList3D;
-
-                // Calculate possible 3D start positions
-                LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, vtxU, vtxV, position3D, chi2);
-                if (chi2 < m_vertexChi2Cut)
-                    vtxList3D.push_back(position3D);
-
-                LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, vtxV, vtxW, position3D, chi2);
-                if (chi2 < m_vertexChi2Cut)
-                    vtxList3D.push_back(position3D);
-
-                LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, vtxW, vtxU, position3D, chi2);
-                if (chi2 < m_vertexChi2Cut)
-                    vtxList3D.push_back(position3D);
-
-                // Calculate possible 3D end positions
-                LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, endU, endV, position3D, chi2);
-                if (chi2 < m_vertexChi2Cut)
-                    endList3D.push_back(position3D);
-
-                LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, endV, endW, position3D, chi2);
-                if (chi2 < m_vertexChi2Cut)
-                    endList3D.push_back(position3D);
-
-                LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, endW, endU, position3D, chi2);
-                if (chi2 < m_vertexChi2Cut)
-                    endList3D.push_back(position3D);
-
-                // Find best matched 3D trajactory
-                for (CartesianPointList::const_iterator iterI = vtxList3D.begin(), iterEndI = vtxList3D.end(); iterI != iterEndI; ++iterI)
+                if ( ((vtxMergedU - vtxU).GetMagnitudeSquared() > (vtxMergedU - endU).GetMagnitudeSquared()) ||
+                     ((vtxMergedV - vtxV).GetMagnitudeSquared() > (vtxMergedV - endV).GetMagnitudeSquared()) ||
+                     ((vtxMergedW - vtxW).GetMagnitudeSquared() > (vtxMergedW - endW).GetMagnitudeSquared()) ||
+                     ((endMergedU - endU).GetMagnitudeSquared() > (endMergedU - vtxU).GetMagnitudeSquared()) ||
+                     ((endMergedV - endV).GetMagnitudeSquared() > (endMergedV - vtxV).GetMagnitudeSquared()) ||
+                     ((endMergedW - endW).GetMagnitudeSquared() > (endMergedW - vtxW).GetMagnitudeSquared()) ||
+                     ((vtxMergedU - vtxU).GetMagnitudeSquared() > (endMergedU - vtxU).GetMagnitudeSquared()) ||
+                     ((vtxMergedV - vtxV).GetMagnitudeSquared() > (endMergedV - vtxV).GetMagnitudeSquared()) ||
+                     ((vtxMergedW - vtxW).GetMagnitudeSquared() > (endMergedW - vtxW).GetMagnitudeSquared()) ||
+                     ((endMergedU - endU).GetMagnitudeSquared() > (vtxMergedU - endU).GetMagnitudeSquared()) ||
+                     ((endMergedV - endV).GetMagnitudeSquared() > (vtxMergedV - endV).GetMagnitudeSquared()) ||
+                     ((endMergedW - endW).GetMagnitudeSquared() > (vtxMergedW - endW).GetMagnitudeSquared()) )
                 {
-                    const CartesianVector &vtxMerged3D(*iterI);
-
-                    const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_U));
-                    const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_V));
-                    const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_W));
-
-                    for (CartesianPointList::const_iterator iterJ = endList3D.begin(), iterEndJ = endList3D.end(); iterJ != iterEndJ; ++iterJ)
-                    {
-                        const CartesianVector &endMerged3D(*iterJ);
-
-                        const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_U));
-                        const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_V));
-                        const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_W));
-
-                        if ( ((endMergedU - vtxMergedU).GetCosOpeningAngle(endU - vtxU) < m_cosOpeningAngleCut) ||
-                             ((endMergedV - vtxMergedV).GetCosOpeningAngle(endV - vtxV) < m_cosOpeningAngleCut) ||
-                             ((endMergedW - vtxMergedW).GetCosOpeningAngle(endW - vtxW) < m_cosOpeningAngleCut) )
-                        {
-                            continue;
-                        }
-
-                        if ( ((vtxMergedU - vtxU).GetMagnitudeSquared() > (vtxMergedU - endU).GetMagnitudeSquared()) ||
-                             ((vtxMergedV - vtxV).GetMagnitudeSquared() > (vtxMergedV - endV).GetMagnitudeSquared()) ||
-                             ((vtxMergedW - vtxW).GetMagnitudeSquared() > (vtxMergedW - endW).GetMagnitudeSquared()) ||
-                             ((endMergedU - endU).GetMagnitudeSquared() > (endMergedU - vtxU).GetMagnitudeSquared()) ||
-                             ((endMergedV - endV).GetMagnitudeSquared() > (endMergedV - vtxV).GetMagnitudeSquared()) ||
-                             ((endMergedW - endW).GetMagnitudeSquared() > (endMergedW - vtxW).GetMagnitudeSquared()) ||
-                             ((vtxMergedU - vtxU).GetMagnitudeSquared() > (endMergedU - vtxU).GetMagnitudeSquared()) ||
-                             ((vtxMergedV - vtxV).GetMagnitudeSquared() > (endMergedV - vtxV).GetMagnitudeSquared()) ||
-                             ((vtxMergedW - vtxW).GetMagnitudeSquared() > (endMergedW - vtxW).GetMagnitudeSquared()) ||
-                             ((endMergedU - endU).GetMagnitudeSquared() > (vtxMergedU - endU).GetMagnitudeSquared()) ||
-                             ((endMergedV - endV).GetMagnitudeSquared() > (vtxMergedV - endV).GetMagnitudeSquared()) ||
-                             ((endMergedW - endW).GetMagnitudeSquared() > (vtxMergedW - endW).GetMagnitudeSquared()) )
-                        {
-                            continue;
-                        }
-
-                        TrackOverlapResult thisOverlapResult(0, 1, m_reducedChi2Cut);
-                        this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, thisOverlapResult);
-
-                        if (thisOverlapResult.GetNMatchedSamplingPoints() > 0 && thisOverlapResult.GetReducedChi2() < bestOverlapResult.GetReducedChi2())
-                            bestOverlapResult = thisOverlapResult;
-                    }
+                    continue;
                 }
+
+                TrackOverlapResult thisOverlapResult(0, 1, m_reducedChi2Cut);
+                this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, thisOverlapResult);
+
+                if (thisOverlapResult.GetNMatchedSamplingPoints() > 0 && thisOverlapResult.GetReducedChi2() < bestOverlapResult.GetReducedChi2())
+                    bestOverlapResult = thisOverlapResult;
             }
         }
     }
@@ -155,13 +133,13 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, TrackOverlapResult &overlapResult) const
 {
     // Calculate start and end positions of linear trajectory
-    const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D,VIEW_U));
-    const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D,VIEW_V));
-    const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D,VIEW_W));
+    const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_U));
+    const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_V));
+    const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_W));
 
-    const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D,VIEW_U));
-    const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D,VIEW_V)); 
-    const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D,VIEW_W));
+    const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_U));
+    const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_V)); 
+    const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_W));
 
     const unsigned int nTotalSamplingPoints = static_cast<unsigned int>((endMerged3D - vtxMerged3D).GetMagnitude()/ m_samplingPitch);
 

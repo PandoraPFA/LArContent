@@ -14,11 +14,10 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode OvershootTracksTool::Run(OverlapTensor<TrackOverlapResult> &overlapTensor)
+bool OvershootTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, TrackOverlapTensor &overlapTensor, ProtoParticleVector &protoParticleVector)
 {
     std::cout << "OvershootTracksTool::Run() " << std::endl;
-
-    return STATUS_CODE_SUCCESS;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
