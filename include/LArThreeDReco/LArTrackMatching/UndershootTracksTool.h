@@ -8,7 +8,7 @@
 #ifndef UNDERSHOOT_TRACKS_TOOL_H
 #define UNDERSHOOT_TRACKS_TOOL_H 1
 
-#include "LArThreeDReco/LArTrackMatching/TensorManipulationTool.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar
 {

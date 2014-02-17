@@ -21,6 +21,22 @@ namespace lar
 {
 
 /**
+ *  @brief  TensorManipulationTool class
+ */
+class TensorManipulationTool : public pandora::AlgorithmTool
+{
+public:
+    /**
+     *  @brief  Run the algorithm tool
+     * 
+     *  @param  overlapTensor the overlap tensor
+     */
+    virtual pandora::StatusCode Run(OverlapTensor<TrackOverlapResult> &overlapTensor) = 0;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
  *  @brief  ThreeDTransverseTracksAlgorithm class
  */
 class ThreeDTransverseTracksAlgorithm : public ThreeDBaseAlgorithm<TrackOverlapResult>

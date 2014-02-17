@@ -23,8 +23,11 @@ StatusCode CosmicRayShowerMatchingAlgorithm::Run()
     const PfoList *pPfoList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputPfoListName, pPfoList));
 
-    // TODO Pfo sorting and dissolution of small daughter pfos.
-    for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
+    PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
+    std::sort(pfoVector.begin(), pfoVector.end(), CosmicRayShowerMatchingAlgorithm::SortPfosByNHits);
+
+    // TODO Dissolution of small daughter pfos.
+    for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
         ParticleFlowObject *pPfo = *iter;
         const ClusterList &pfoClusterList(pPfo->GetClusterList());
@@ -93,6 +96,21 @@ StatusCode CosmicRayShowerMatchingAlgorithm::CosmicRayShowerMatching(const Strin
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CosmicRayShowerMatchingAlgorithm::SortPfosByNHits(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
+{
+    unsigned int nHitsLhs(0);
+    for (ClusterList::const_iterator iter = pLhs->GetClusterList().begin(), iterEnd = pLhs->GetClusterList().end(); iter != iterEnd; ++iter)
+        nHitsLhs += (*iter)->GetNCaloHits();
+
+    unsigned int nHitsRhs(0);
+    for (ClusterList::const_iterator iter = pRhs->GetClusterList().begin(), iterEnd = pRhs->GetClusterList().end(); iter != iterEnd; ++iter)
+        nHitsRhs += (*iter)->GetNCaloHits();
+
+    return (nHitsLhs > nHitsRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
