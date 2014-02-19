@@ -46,6 +46,7 @@
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
@@ -92,6 +93,7 @@ public:
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
         d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
+        d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
