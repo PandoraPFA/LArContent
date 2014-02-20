@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h
  *
- *  @brief  Header file for the cosmic-ray extension algorithm class.
+ *  @brief  Header file for the delta ray extension algorithm class.
  *
  *  $Log: $
  */
@@ -9,8 +9,6 @@
 #define LAR_DELTA_RAY_EXTENSION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
-
-#include "LArObjects/LArPointingCluster.h"
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
@@ -47,9 +45,7 @@ private:
     void FillClusterAssociationMatrix(const pandora::Cluster *const pParentCluster, const pandora::Cluster *const pDaughterCluster,
         ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
-  
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
 
     float    m_minClusterLength;                ///<
     float    m_maxClusterLength;                ///<
