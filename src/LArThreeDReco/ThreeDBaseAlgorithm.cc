@@ -86,6 +86,7 @@ void ThreeDBaseAlgorithm<T>::CreateThreeDParticles()
         pfoParameters.m_mass = 0.f;
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = CartesianVector(0., 0., 0.);
+        pfoParameters.m_vertex = CartesianVector(0., 0., 0.);
         pfoParameters.m_clusterList.insert(iter->m_clusterListU.begin(), iter->m_clusterListU.end());
         pfoParameters.m_clusterList.insert(iter->m_clusterListV.begin(), iter->m_clusterListV.end());
         pfoParameters.m_clusterList.insert(iter->m_clusterListW.begin(), iter->m_clusterListW.end());
