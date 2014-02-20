@@ -228,6 +228,7 @@ bool ThreeDPairedTracksAlgorithm::BuildNextParticle() const
         pfoParameters.m_mass = 0.f;
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = CartesianVector(0., 0., 0.);
+        pfoParameters.m_vertex = CartesianVector(0., 0., 0.);
 
         if (pBestClusterU->IsAvailable())
             pfoParameters.m_clusterList.insert(pBestClusterU);
