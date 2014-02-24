@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArTwoDReco/LArSeedFinding/LArSeedFinding/VertexSeedFindingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the vertex seed finding algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -19,11 +19,25 @@ using namespace pandora;
 namespace lar
 {
 
-void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &candidateClusters, ClusterList &seedClusterList) const
+void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &inputClusters, ClusterList &seedClusterList) const
 {
+    // Select clean clusters
+    ClusterVector cleanClusters;
+
+    for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
+    {
+        Cluster* pCluster = *iter;
+
+        if (pCluster->GetNCaloHits() < std::min(m_minClusterHitsNode, m_minClusterHitsEmission))
+            continue;
+
+        cleanClusters.push_back(pCluster);
+    }
+
+    // Build map of pointing clusters
     LArPointingClusterMap pointingClusterMap;
 
-    for (ClusterVector::const_iterator iter = candidateClusters.begin(), iterEnd = candidateClusters.end(); iter != iterEnd; ++iter)
+    for (ClusterVector::const_iterator iter = cleanClusters.begin(), iterEnd = cleanClusters.end(); iter != iterEnd; ++iter)
     {
         pointingClusterMap.insert(LArPointingClusterMap::value_type(*iter, LArPointingCluster(*iter)));
     }
@@ -131,11 +145,11 @@ void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &candida
 StatusCode VertexSeedFindingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_minClusterHitsNode = 5;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterHitsNode", m_minClusterHitsNode));
 
     m_minClusterHitsEmission = 15;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterHitsEmission", m_minClusterHitsEmission));
 
     return SeedFindingBaseAlgorithm::ReadSettings(xmlHandle);

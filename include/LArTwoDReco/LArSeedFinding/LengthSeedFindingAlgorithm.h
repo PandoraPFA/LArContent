@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/LengthSeedFindingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the length seed finding algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_LENGTH_SEED_FINDING_ALGORITHM_H
@@ -34,7 +34,8 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     void GetSeedClusterList(const pandora::ClusterVector &candidateClusters, pandora::ClusterList &seedClusterList) const;
 
-    float           m_lengthCut;         ///< 
+    unsigned int        m_minClusterLayers;             ///< The min number of layers for a clean cluster
+    float               m_minClusterLengthSquared;      ///< The min length (squared) for a clean cluster
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
