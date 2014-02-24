@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArTwoDReco/LArSeedFinding/LArSeedFinding/SeedFindingBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the seed finding base algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -37,10 +37,8 @@ StatusCode SeedFindingBaseAlgorithm::Run()
     }
 
     // Select the new particle seeds
-    ClusterVector clusterVector;
-    this->GetListOfCleanClusters(pNonSeedClusterList, clusterVector);
-
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
+    ClusterVector clusterVector(pNonSeedClusterList->begin(), pNonSeedClusterList->end());
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
     ClusterList seedClusterList;
     this->GetSeedClusterList(clusterVector, seedClusterList);
@@ -83,37 +81,10 @@ StatusCode SeedFindingBaseAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedFindingBaseAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
-{
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
-            continue;
-
-        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
-            continue;
-
-        clusterVector.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode SeedFindingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
-
-    float minClusterLength = 3.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "MinClusterLength", minClusterLength));
-    m_minClusterLengthSquared = minClusterLength * minClusterLength;
-
-    m_minClusterLayers = 5;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
-        "MinClusterLayers", m_minClusterLayers));
 
     return STATUS_CODE_SUCCESS;
 }
