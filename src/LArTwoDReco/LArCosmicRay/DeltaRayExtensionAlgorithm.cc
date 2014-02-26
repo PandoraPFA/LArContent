@@ -55,6 +55,10 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVecto
 void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *const pParentCluster, const Cluster *const pDaughterCluster,
     ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
+    // Daughter cluster must be available for any association to proceed
+    if (!pDaughterCluster->IsAvailable())
+        return;
+
     // Weak association:   between parent cosmic-ray muon and daughter delta ray
     // Strong association: between parent and daughter fragments of delta ray
     // Figure of merit:    distance between parent and daughter clusters
@@ -73,13 +77,13 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
         const float daughterEndDistanceSquared((projectedVertex - daughterEnd).GetMagnitudeSquared());
         const float daughterLengthSquared((daughterEnd - daughterVertex).GetMagnitudeSquared());
 
-            // Cut on proximity of daughter cluster to parent cluster
-        if (daughterVertexDistanceSquared > std::min(m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement,
-            std::min(daughterEndDistanceSquared, daughterLengthSquared)))
+        // Daughter cluster must be available and below a length cut for any association
+        if (!pDaughterCluster->IsAvailable() || daughterLengthSquared > m_maxClusterLength * m_maxClusterLength)
             continue;
 
-        // Cut on length of daughter cluster
-        if (daughterLengthSquared > m_maxClusterLength * m_maxClusterLength)
+        // Cut on proximity of daughter cluster to parent cluster
+        if (daughterVertexDistanceSquared > std::min(m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement,
+            std::min(daughterEndDistanceSquared, daughterLengthSquared)))
             continue;
 
         const ClusterAssociation::VertexType daughterVertexType(useInnerD == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
@@ -98,15 +102,15 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
             const float parentLengthSquared((parentEnd - parentVertex).GetMagnitudeSquared());
 
             if (parentVertexDistanceSquared < parentEndDistanceSquared)
-            parentVertexType = (useInnerP == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+                parentVertexType = (useInnerP == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+
+            // Parent cluster must be available and below a length cut for a strong association
+            if (!pParentCluster->IsAvailable() || parentLengthSquared > m_maxClusterLength * m_maxClusterLength)
+                continue;
 
             // Require an end-to-end join between parent and daughter cluster
             if (parentVertexDistanceSquared > std::min(m_maxTransverseDisplacement * m_maxTransverseDisplacement,
-            std::min(parentEndDistanceSquared, daughterEndDistanceSquared)))
-                continue;
-
-            // Cut on length of parent cluster
-            if (parentLengthSquared > m_maxClusterLength * m_maxClusterLength)
+                std::min(parentEndDistanceSquared, daughterEndDistanceSquared)))
                 continue;
 
             // Cut on pointing information
@@ -125,6 +129,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
             associationType = ClusterAssociation::STRONG;
             break;
         }
+
 // if(associationType == ClusterAssociation::STRONG)
 // {
 // ClusterList tempList1, tempList2;
