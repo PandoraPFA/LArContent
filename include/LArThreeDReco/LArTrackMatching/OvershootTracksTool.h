@@ -29,7 +29,7 @@ public:
     };
 
 private:
-    bool Run(const SlidingFitResultMap &slidingFitResultMap, TrackOverlapTensor &overlapTensor, ProtoParticleVector &protoParticleVector);
+    pandora::StatusCode Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 

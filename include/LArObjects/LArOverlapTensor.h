@@ -19,6 +19,21 @@ class OverlapTensor
 {
 public:
     typedef T OverlapResult;
+    typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
+    typedef std::map<pandora::Cluster*, OverlapResult> OverlapList;
+    typedef std::map<pandora::Cluster*, OverlapList> OverlapMatrix;
+    typedef std::map<pandora::Cluster*, OverlapMatrix> TheTensor;
+    typedef typename TheTensor::const_iterator const_iterator;
+
+    /**
+     *  @brief  Returns an iterator referring to the first element in the overlap tensor
+     */
+    const_iterator begin() const;
+
+    /**
+     *  @brief  Returns an iterator referring to the past-the-end element in the overlap tensor
+     */
+    const_iterator end() const;
 
     /**
      *  @brief  Get the overlap result for a specified trio of clusters
@@ -31,8 +46,6 @@ public:
      */
     const OverlapResult &GetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW) const;
 
-    typedef std::map<pandora::Cluster*, T> OverlapList;
-
     /**
      *  @brief  Get the  overlap list for a specified pair of clusters
      * 
@@ -42,8 +55,6 @@ public:
      *  @return the cluster overlap list
      */
     const OverlapList &GetOverlapList(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV) const;
-
-    typedef std::map<pandora::Cluster*, OverlapList> OverlapMatrix;
 
     /**
      *  @brief  Get the cluster overlap matrix for a specified cluster
@@ -55,25 +66,25 @@ public:
     const OverlapMatrix &GetOverlapMatrix(pandora::Cluster *pClusterU) const;
 
     /**
-     *  @brief  Get the cluster list U
+     *  @brief  Get the cluster navigation map U->V
      * 
-     *  @return the cluster list U
+     *  @return the cluster navigation map U->V
      */
-    const pandora::ClusterList &GetClusterListU() const;
+    const ClusterNavigationMap &GetClusterNavigationMapUV() const;
 
     /**
-     *  @brief  Get the cluster list V
+     *  @brief  Get the cluster navigation map V->W
      * 
-     *  @return the cluster list V
+     *  @return the cluster navigation map V->W
      */
-    const pandora::ClusterList &GetClusterListV() const;
+    const ClusterNavigationMap &GetClusterNavigationMapVW() const;
 
     /**
-     *  @brief  Get the cluster list W
+     *  @brief  Get the cluster navigation map W->U
      * 
-     *  @return the cluster list W
+     *  @return the cluster navigation map W->U
      */
-    const pandora::ClusterList &GetClusterListW() const;
+    const ClusterNavigationMap &GetClusterNavigationMapWU() const;
 
     /**
      *  @brief  Set overlap result
@@ -98,12 +109,10 @@ public:
     void Clear();
 
 private:
-    typedef std::map<pandora::Cluster*, OverlapMatrix> TheTensor;
-
     TheTensor               m_overlapTensor;                ///< The overlap tensor
-    pandora::ClusterList    m_clusterListU;                 ///< The cluster list U
-    pandora::ClusterList    m_clusterListV;                 ///< The cluster list V
-    pandora::ClusterList    m_clusterListW;                 ///< The cluster list W
+    ClusterNavigationMap    m_clusterNavigationMapUV;       ///< The cluster navigation map U->V
+    ClusterNavigationMap    m_clusterNavigationMapVW;       ///< The cluster navigation map V->W
+    ClusterNavigationMap    m_clusterNavigationMapWU;       ///< The cluster navigation map W->U
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,6 +216,10 @@ private:
     float           m_reducedChi2;                  ///< The chi2 per samping point value
 };
 
+typedef std::vector<TrackOverlapResult> TrackOverlapResultVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  Track overlap result + operator
  * 
@@ -216,6 +229,22 @@ private:
 TrackOverlapResult operator+(const TrackOverlapResult &lhs, const TrackOverlapResult &rhs);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline typename OverlapTensor<T>::const_iterator OverlapTensor<T>::begin() const
+{
+    return m_overlapTensor.begin();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline typename OverlapTensor<T>::const_iterator OverlapTensor<T>::end() const
+{
+    return m_overlapTensor.end();
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
@@ -263,25 +292,25 @@ inline const typename OverlapTensor<T>::OverlapMatrix &OverlapTensor<T>::GetOver
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline const pandora::ClusterList &OverlapTensor<T>::GetClusterListU() const
+inline const typename OverlapTensor<T>::ClusterNavigationMap &OverlapTensor<T>::GetClusterNavigationMapUV() const
 {
-    return m_clusterListU;
+    return m_clusterNavigationMapUV;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline const pandora::ClusterList &OverlapTensor<T>::GetClusterListV() const
+inline const typename OverlapTensor<T>::ClusterNavigationMap &OverlapTensor<T>::GetClusterNavigationMapVW() const
 {
-    return m_clusterListV;
+    return m_clusterNavigationMapVW;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline const pandora::ClusterList &OverlapTensor<T>::GetClusterListW() const
+inline const typename OverlapTensor<T>::ClusterNavigationMap &OverlapTensor<T>::GetClusterNavigationMapWU() const
 {
-    return m_clusterListW;
+    return m_clusterNavigationMapWU;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -299,9 +328,9 @@ inline void OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pand
     if (!overlapList.insert(typename OverlapList::value_type(pClusterW, overlapResult)).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
-    m_clusterListU.insert(pClusterU);
-    m_clusterListV.insert(pClusterV);
-    m_clusterListW.insert(pClusterW);
+    m_clusterNavigationMapUV[pClusterU].insert(pClusterV);
+    m_clusterNavigationMapVW[pClusterV].insert(pClusterW);
+    m_clusterNavigationMapWU[pClusterW].insert(pClusterU);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -309,7 +338,7 @@ inline void OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pand
 template <typename T>
 inline void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
 {
-    if (m_clusterListU.erase(pCluster) > 0)
+    if (m_clusterNavigationMapUV.erase(pCluster) > 0)
     {
         typename TheTensor::iterator iter = m_overlapTensor.find(pCluster);
 
@@ -317,7 +346,7 @@ inline void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
             m_overlapTensor.erase(iter);
     }
 
-    if (m_clusterListV.erase(pCluster) > 0)
+    if (m_clusterNavigationMapVW.erase(pCluster) > 0)
     {
         for (typename TheTensor::iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
         {
@@ -328,7 +357,7 @@ inline void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
         }
     }
 
-    if (m_clusterListW.erase(pCluster) > 0)
+    if (m_clusterNavigationMapWU.erase(pCluster) > 0)
     {
         for (typename TheTensor::iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
         {
@@ -349,9 +378,9 @@ template <typename T>
 inline void OverlapTensor<T>::Clear()
 {
     m_overlapTensor.clear();
-    m_clusterListU.clear();
-    m_clusterListV.clear();
-    m_clusterListW.clear();
+    m_clusterNavigationMapUV.clear();
+    m_clusterNavigationMapVW.clear();
+    m_clusterNavigationMapWU.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

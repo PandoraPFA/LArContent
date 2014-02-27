@@ -300,14 +300,15 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
-    bool toolResult(false);
     for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->Run(m_slidingFitResultMap, m_overlapTensor, m_protoParticleVector))
-            toolResult = true;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(m_slidingFitResultMap, m_overlapTensor, m_protoParticleVector));
+        this->CreateThreeDParticles();
+        this->UpdateTensor();
     }
 
-    return toolResult;
+    // ATTN Reconstruction only uses a single pass over tensor
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

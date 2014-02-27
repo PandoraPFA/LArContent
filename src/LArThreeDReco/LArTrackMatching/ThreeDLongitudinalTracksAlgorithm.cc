@@ -190,30 +190,20 @@ bool ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
     float bestReducedChi2(m_reducedChi2Cut);
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
-    const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
-    const ClusterList &clusterListV(m_overlapTensor.GetClusterListV());
-    const ClusterList &clusterListW(m_overlapTensor.GetClusterListW());
-
-    for (ClusterList::const_iterator iterU = clusterListU.begin(), iterUEnd = clusterListU.end(); iterU != iterUEnd; ++iterU)
+    for (TensorType::const_iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
-        for (ClusterList::const_iterator iterV = clusterListV.begin(), iterVEnd = clusterListV.end(); iterV != iterVEnd; ++iterV)
+        for (TensorType::OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
         {
-            for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
+            for (TensorType::OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
             {
-                try
-                {
-                    const TrackOverlapResult &overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+                const TrackOverlapResult &overlapResult(iterW->second);
 
-                    if (overlapResult.GetReducedChi2() < bestReducedChi2)
-                    {
-                        bestReducedChi2 = overlapResult.GetReducedChi2();
-                        pBestClusterU = *iterU;
-                        pBestClusterV = *iterV;
-                        pBestClusterW = *iterW;
-                    }
-                }
-                catch (StatusCodeException &)
+                if (overlapResult.GetReducedChi2() < bestReducedChi2)
                 {
+                    bestReducedChi2 = overlapResult.GetReducedChi2();
+                    pBestClusterU = iterU->first;
+                    pBestClusterV = iterV->first;
+                    pBestClusterW = iterW->first;
                 }
             }
         }

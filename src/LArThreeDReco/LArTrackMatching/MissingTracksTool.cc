@@ -14,10 +14,10 @@ using namespace pandora;
 namespace lar
 {
 
-bool MissingTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, TrackOverlapTensor &overlapTensor, ProtoParticleVector &protoParticleVector)
+StatusCode MissingTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector)
 {
     std::cout << "MissingTracksTool::Run() " << std::endl;
-    return false;
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

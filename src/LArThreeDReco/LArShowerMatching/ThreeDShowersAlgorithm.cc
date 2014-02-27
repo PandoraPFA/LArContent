@@ -291,26 +291,22 @@ bool ThreeDShowersAlgorithm::ExamineTensor()
     float bestOverlapResult(0.5f); // TODO Min overlap result for PFO creation
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
-    const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
-    const ClusterList &clusterListV(m_overlapTensor.GetClusterListV());
-    const ClusterList &clusterListW(m_overlapTensor.GetClusterListW());
-
-    for (ClusterList::const_iterator iterU = clusterListU.begin(), iterUEnd = clusterListU.end(); iterU != iterUEnd; ++iterU)
+    for (TensorType::const_iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
-        for (ClusterList::const_iterator iterV = clusterListV.begin(), iterVEnd = clusterListV.end(); iterV != iterVEnd; ++iterV)
+        for (TensorType::OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
         {
-            for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
+            for (TensorType::OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
             {
                 try
                 {
-                    const float overlapResult(m_overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+                    const float overlapResult(iterW->second);
 
                     if (overlapResult > bestOverlapResult)
                     {
                         bestOverlapResult = overlapResult;
-                        pBestClusterU = *iterU;
-                        pBestClusterV = *iterV;
-                        pBestClusterW = *iterW;
+                        pBestClusterU = iterU->first;
+                        pBestClusterV = iterV->first;
+                        pBestClusterW = iterW->first;
                     }
                 }
                 catch (StatusCodeException &)

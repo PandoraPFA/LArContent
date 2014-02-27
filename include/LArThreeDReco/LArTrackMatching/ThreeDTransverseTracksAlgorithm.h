@@ -20,26 +20,7 @@
 namespace lar
 {
 
-typedef OverlapTensor<TrackOverlapResult> TrackOverlapTensor;
-typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
-
-/**
- *  @brief  TensorManipulationTool class
- */
-class TensorManipulationTool : public pandora::AlgorithmTool
-{
-public:
-    /**
-     *  @brief  Run the algorithm tool
-     * 
-     *  @param  slidingFitResultMap the sliding fit result map
-     *  @param  overlapTensor the track overlap result tensor
-     *  @param  protoParticleVector the proto particle vector
-     */
-    virtual bool Run(const SlidingFitResultMap &slidingFitResultMap, TrackOverlapTensor &overlapTensor, ProtoParticleVector &protoParticleVector) = 0;
-};
-
-typedef std::vector<TensorManipulationTool*> TensorManipulationToolList;
+class TensorManipulationTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -57,6 +38,8 @@ public:
     public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
+
+    typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
 
 private:
     /**
@@ -199,8 +182,6 @@ private:
      */
     TrackOverlapResult GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const;
 
-    typedef std::vector<TrackOverlapResult> TrackOverlapResultVector;
-
     /**
      *  @brief  Get track overlap results for possible connected segments
      * 
@@ -225,9 +206,32 @@ private:
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
     SlidingFitResultMap         m_slidingFitResultMap;      ///< The sliding fit result map
 
+    typedef std::vector<TensorManipulationTool*> TensorManipulationToolList;
     TensorManipulationToolList  m_algorithmToolList;        ///< The algorithm tool list
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  TensorManipulationTool class
+ */
+class TensorManipulationTool : public pandora::AlgorithmTool
+{
+public:
+    typedef ThreeDTransverseTracksAlgorithm::TensorType TensorType;
+    typedef ThreeDTransverseTracksAlgorithm::SlidingFitResultMap SlidingFitResultMap;
+
+    /**
+     *  @brief  Run the algorithm tool
+     * 
+     *  @param  slidingFitResultMap the sliding fit result map
+     *  @param  overlapTensor the track overlap result tensor
+     *  @param  protoParticleVector the proto particle vector
+     */
+    virtual pandora::StatusCode Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) = 0;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgorithm() const
