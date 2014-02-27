@@ -43,12 +43,13 @@ private:
      */
     bool BuildNextParticle() const;
 
-    OverlapTensor<TrackOverlapResult> m_overlapTensor;          ///< The overlap tensor
+    typedef OverlapTensor<TrackOverlapResult> TensorType;
+    TensorType      m_overlapTensor;                ///< The overlap tensor
 
-    std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
-    std::string                 m_outputPfoListName;            ///< The output pfo list name
+    std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
+    std::string     m_inputClusterListNameV;        ///< The name of the view V cluster list
+    std::string     m_inputClusterListNameW;        ///< The name of the view W cluster list
+    std::string     m_outputPfoListName;            ///< The output pfo list name
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

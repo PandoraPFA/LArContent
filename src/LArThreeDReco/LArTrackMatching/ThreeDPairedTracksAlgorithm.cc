@@ -174,19 +174,16 @@ bool ThreeDPairedTracksAlgorithm::BuildNextParticle() const
     unsigned int bestSamplingPoints(5);
 
     Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
-    const ClusterList &clusterListU(m_overlapTensor.GetClusterListU());
-    const ClusterList &clusterListV(m_overlapTensor.GetClusterListV());
-    const ClusterList &clusterListW(m_overlapTensor.GetClusterListW());
 
-    for (ClusterList::const_iterator iterU = clusterListU.begin(), iterUEnd = clusterListU.end(); iterU != iterUEnd; ++iterU)
+    for (TensorType::const_iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
-        for (ClusterList::const_iterator iterV = clusterListV.begin(), iterVEnd = clusterListV.end(); iterV != iterVEnd; ++iterV)
+        for (TensorType::OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
         {
-            for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
+            for (TensorType::OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
             {
-                Cluster *pClusterU = *iterU;
-                Cluster *pClusterV = *iterV;
-                Cluster *pClusterW = *iterW;
+                Cluster *pClusterU = iterU->first;
+                Cluster *pClusterV = iterV->first;
+                Cluster *pClusterW = iterW->first;
 
                 if ((!pClusterU->IsAvailable() && !pClusterV->IsAvailable()) ||
                     (!pClusterV->IsAvailable() && !pClusterW->IsAvailable()) ||
@@ -195,23 +192,17 @@ bool ThreeDPairedTracksAlgorithm::BuildNextParticle() const
                     continue;
                 }
 
-                try
-                {
-                    const TrackOverlapResult &overlapResult(m_overlapTensor.GetOverlapResult(pClusterU, pClusterV, pClusterW));
+                const TrackOverlapResult &overlapResult(iterW->second);
 
-                    if ((overlapResult.GetNMatchedSamplingPoints() > bestSamplingPoints) ||
-                        ((overlapResult.GetNMatchedSamplingPoints() == bestSamplingPoints) && (overlapResult.GetReducedChi2() < bestReducedChi2)))
-                    {
-                        bestSamplingPoints = overlapResult.GetNMatchedSamplingPoints();
-                        bestReducedChi2 = overlapResult.GetReducedChi2();
-
-                        pBestClusterU = pClusterU;
-                        pBestClusterV = pClusterV;
-                        pBestClusterW = pClusterW;
-                    }
-                }
-                catch (StatusCodeException &)
+                if ((overlapResult.GetNMatchedSamplingPoints() > bestSamplingPoints) ||
+                    ((overlapResult.GetNMatchedSamplingPoints() == bestSamplingPoints) && (overlapResult.GetReducedChi2() < bestReducedChi2)))
                 {
+                    bestSamplingPoints = overlapResult.GetNMatchedSamplingPoints();
+                    bestReducedChi2 = overlapResult.GetReducedChi2();
+
+                    pBestClusterU = pClusterU;
+                    pBestClusterV = pClusterV;
+                    pBestClusterW = pClusterW;
                 }
             }
         }

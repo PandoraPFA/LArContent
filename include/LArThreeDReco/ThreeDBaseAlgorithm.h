@@ -37,6 +37,8 @@ template<typename T>
 class ThreeDBaseAlgorithm : public pandora::Algorithm
 {
 public:
+    typedef OverlapTensor<T> TensorType;
+
     /**
      *  @brief  Default constructor
      */
@@ -101,7 +103,7 @@ protected:
     pandora::ClusterVector      m_clusterVectorV;               ///< The selected modified and sorted cluster vector V
     pandora::ClusterVector      m_clusterVectorW;               ///< The selected modified and sorted cluster vector W
 
-    OverlapTensor<T>            m_overlapTensor;                ///< The overlap tensor
+    TensorType                  m_overlapTensor;                ///< The overlap tensor
 
 private:
     pandora::StatusCode Run();

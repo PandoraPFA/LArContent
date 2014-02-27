@@ -14,51 +14,64 @@ using namespace pandora;
 namespace lar
 {
 
-bool ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, TrackOverlapTensor &overlapTensor, ProtoParticleVector &protoParticleVector)
+StatusCode ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector)
 {
     std::cout << "ClearTracksTool::Run() " << std::endl;
-    TrackOverlapResult bestTrackOverlapResult;
-    Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
-    const ClusterList &clusterListU(overlapTensor.GetClusterListU());
-    const ClusterList &clusterListV(overlapTensor.GetClusterListV());
-    const ClusterList &clusterListW(overlapTensor.GetClusterListW());
+    ClusterList usedClusters;
 
-    for (ClusterList::const_iterator iterU = clusterListU.begin(), iterUEnd = clusterListU.end(); iterU != iterUEnd; ++iterU)
+    while (true)
     {
-        for (ClusterList::const_iterator iterV = clusterListV.begin(), iterVEnd = clusterListV.end(); iterV != iterVEnd; ++iterV)
+        TrackOverlapResult bestTrackOverlapResult;
+        Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
+
+        for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
         {
-            for (ClusterList::const_iterator iterW = clusterListW.begin(), iterWEnd = clusterListW.end(); iterW != iterWEnd; ++iterW)
+            Cluster *pClusterU = iterU->first;
+            const TensorType::OverlapMatrix &overlapMatrix(iterU->second);
+
+            if (usedClusters.count(pClusterU))
+                continue;
+
+            if (overlapMatrix.size() != 1)
+                continue;
+
+            for (TensorType::OverlapMatrix::const_iterator iterV = overlapMatrix.begin(), iterVEnd = overlapMatrix.end(); iterV != iterVEnd; ++iterV)
             {
-                try
-                {
-                    const TrackOverlapResult &trackOverlapResult(overlapTensor.GetOverlapResult(*iterU, *iterV, *iterW));
+                Cluster *pClusterV = iterV->first;
+                const TensorType::OverlapList &overlapList(iterV->second);
 
-                    if (trackOverlapResult < bestTrackOverlapResult)
-                        continue;
+                if (usedClusters.count(pClusterV))
+                    continue;
 
-                    bestTrackOverlapResult = trackOverlapResult;
-                    pBestClusterU = *iterU;
-                    pBestClusterV = *iterV;
-                    pBestClusterW = *iterW;
-                }
-                catch (StatusCodeException &)
-                {
-                }
+                if (overlapList.size() != 1)
+                    continue;
+
+                const TrackOverlapResult &trackOverlapResult(overlapList.begin()->second);
+
+                if (trackOverlapResult < bestTrackOverlapResult)
+                    continue;
+
+                bestTrackOverlapResult = trackOverlapResult;
+                pBestClusterU = pClusterU;
+                pBestClusterV = iterV->first;
+                pBestClusterW = overlapList.begin()->first;
             }
         }
+
+        if (!pBestClusterU || !pBestClusterV || !pBestClusterW)
+            break;
+
+        ProtoParticle protoParticle;
+        protoParticle.m_clusterListU.insert(pBestClusterU);
+        protoParticle.m_clusterListV.insert(pBestClusterV);
+        protoParticle.m_clusterListW.insert(pBestClusterW);
+        protoParticleVector.push_back(protoParticle);
+
+        usedClusters.insert(pBestClusterU); usedClusters.insert(pBestClusterV); usedClusters.insert(pBestClusterW);
     }
 
-    if (!pBestClusterU || !pBestClusterV || !pBestClusterW)
-        return false;
-
-    ProtoParticle protoParticle;
-    protoParticle.m_clusterListU.insert(pBestClusterU);
-    protoParticle.m_clusterListV.insert(pBestClusterV);
-    protoParticle.m_clusterListW.insert(pBestClusterW);
-
-    protoParticleVector.push_back(protoParticle);
-    return true;
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
