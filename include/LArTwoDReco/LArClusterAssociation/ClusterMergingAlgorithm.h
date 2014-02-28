@@ -41,18 +41,26 @@ protected:
      */
     virtual void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const = 0;
 
-private:
+    /**
+     *  @brief  Collect up all clusters associations related to a given seed cluster
+     *
+     *  @param  pSeedCluster pointer to the initial cluster
+     *  @param  clusterMergeMap the map of cluster associations
+     *  @param  associatedClusterList the output list of associated clusters
+     */
+    void CollectAssociatedClusters(pandora::Cluster *pSeedCluster, const ClusterMergeMap &clusterMergeMap, pandora::ClusterList& associatedClusterList) const;
+
    /**
      *  @brief  Collect up all clusters associations related to a given seed cluster
      *
      *  @param  pSeedCluster pointer to the initial cluster
      *  @param  pCurrentCluster pointer to the current cluster
-     *  @param  clusterMergeMap the map of clusters to be merged
+     *  @param  clusterMergeMap the map of cluster associations
      *  @param  clusterVetoMap the map of clusters that have already been merged
-     *  @param  associatedClusterList the list of associated clusters
+     *  @param  associatedClusterList the output list of associated clusters
      */
     void CollectAssociatedClusters(pandora::Cluster *pSeedCluster, pandora::Cluster *pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-	const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
+        const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
 };
 
 } // namespace lar

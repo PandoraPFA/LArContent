@@ -63,6 +63,15 @@ StatusCode ClusterMergingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList& associatedClusterList) const
+{
+    ClusterVetoMap clusterVetoMap;
+
+    this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, associatedClusterList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, Cluster *pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
     const ClusterVetoMap &clusterVetoMap, ClusterList &associatedClusterList) const
 {
