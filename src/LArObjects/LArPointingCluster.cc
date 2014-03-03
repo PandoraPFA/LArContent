@@ -36,7 +36,7 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
     const int maxLayer(slidingFitResult.GetMaxLayer());
 
     if (minLayer >= maxLayer)
-	throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const int innerLayer((minLayerZ < maxLayerZ) ? minLayer : maxLayer);
     const int outerLayer((minLayerZ < maxLayerZ) ? maxLayer : minLayer);
@@ -44,15 +44,15 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
 
     if (fitLayer == minLayer)
     {
-	m_position  = slidingFitResult.GetGlobalMinLayerPosition();
-	m_direction = slidingFitResult.GetGlobalMinLayerDirection();
-	m_rms       = slidingFitResult.GetGlobalMinLayerRms();
+        m_position  = slidingFitResult.GetGlobalMinLayerPosition();
+        m_direction = slidingFitResult.GetGlobalMinLayerDirection();
+        m_rms       = slidingFitResult.GetGlobalMinLayerRms();
     }
     else
     {
-	m_position  = slidingFitResult.GetGlobalMaxLayerPosition();
-	m_direction = slidingFitResult.GetGlobalMaxLayerDirection() * -1.f;
-	m_rms       = slidingFitResult.GetGlobalMaxLayerRms();
+        m_position  = slidingFitResult.GetGlobalMaxLayerPosition();
+        m_direction = slidingFitResult.GetGlobalMaxLayerDirection() * -1.f;
+        m_rms       = slidingFitResult.GetGlobalMaxLayerRms();
     }
 }
 
