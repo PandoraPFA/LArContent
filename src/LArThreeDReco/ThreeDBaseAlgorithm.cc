@@ -42,24 +42,20 @@ void ThreeDBaseAlgorithm<T>::SelectInputClusters()
     for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
     {
         if ((*iter)->IsAvailable())
-            m_clusterVectorU.push_back(*iter);
+            m_clusterListU.insert(*iter);
     }
 
     for (ClusterList::const_iterator iter = m_pInputClusterListV->begin(), iterEnd = m_pInputClusterListV->end(); iter != iterEnd; ++iter)
     {
         if ((*iter)->IsAvailable())
-            m_clusterVectorV.push_back(*iter);
+            m_clusterListV.insert(*iter);
     }
 
     for (ClusterList::const_iterator iter = m_pInputClusterListW->begin(), iterEnd = m_pInputClusterListW->end(); iter != iterEnd; ++iter)
     {
         if ((*iter)->IsAvailable())
-            m_clusterVectorW.push_back(*iter);
+            m_clusterListW.insert(*iter);
     }
-
-    std::sort(m_clusterVectorU.begin(), m_clusterVectorU.end(), LArClusterHelper::SortByNOccupiedLayers);
-    std::sort(m_clusterVectorV.begin(), m_clusterVectorV.end(), LArClusterHelper::SortByNOccupiedLayers);
-    std::sort(m_clusterVectorW.begin(), m_clusterVectorW.end(), LArClusterHelper::SortByNOccupiedLayers);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -125,6 +121,47 @@ void ThreeDBaseAlgorithm<T>::UpdateTensor()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
+void ThreeDBaseAlgorithm<T>::UpdateTensorUponMerge(const Cluster *const pEnlargedCluster, const Cluster *const pDeletedCluster)
+{
+    // TODO
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::UpdateTensorUponSplit(const Cluster *const pSplitCluster1, const Cluster *const pSplitCluster2,
+    const Cluster *const pDeletedCluster)
+{
+    // TODO
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::UpdateTensorForNewCluster(const Cluster *const pNewCluster)
+{
+    // TODO
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::UpdateTensorUponDeletion(const Cluster *const pDeletedCluster)
+{
+    // TODO
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
+{
+    // TODO
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
 void ThreeDBaseAlgorithm<T>::TidyUp()
 {
     m_overlapTensor.Clear();
@@ -134,9 +171,9 @@ void ThreeDBaseAlgorithm<T>::TidyUp()
     m_pInputClusterListV = NULL;
     m_pInputClusterListW = NULL;
 
-    m_clusterVectorU.clear();
-    m_clusterVectorV.clear();
-    m_clusterVectorW.clear();
+    m_clusterListU.clear();
+    m_clusterListV.clear();
+    m_clusterListW.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -163,11 +200,11 @@ StatusCode ThreeDBaseAlgorithm<T>::Run()
         this->PreparationStep();
 
         // Loop over selected modified input clusters and allow derived algorithm to populate tensor
-        for (ClusterVector::const_iterator iterU = m_clusterVectorU.begin(), iterUEnd = m_clusterVectorU.end(); iterU != iterUEnd; ++iterU)
+        for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
         {
-            for (ClusterVector::const_iterator iterV = m_clusterVectorV.begin(), iterVEnd = m_clusterVectorV.end(); iterV != iterVEnd; ++iterV)
+            for (ClusterList::const_iterator iterV = m_clusterListV.begin(), iterVEnd = m_clusterListV.end(); iterV != iterVEnd; ++iterV)
             {
-                for (ClusterVector::const_iterator iterW = m_clusterVectorW.begin(), iterWEnd = m_clusterVectorW.end(); iterW != iterWEnd; ++iterW)
+                for (ClusterList::const_iterator iterW = m_clusterListW.begin(), iterWEnd = m_clusterListW.end(); iterW != iterWEnd; ++iterW)
                     this->CalculateOverlapResult(*iterU, *iterV, *iterW);
             }
         }

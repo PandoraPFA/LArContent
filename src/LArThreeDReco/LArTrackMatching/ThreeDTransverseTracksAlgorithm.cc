@@ -22,9 +22,9 @@ namespace lar
 void ThreeDTransverseTracksAlgorithm::PreparationStep()
 {
     ClusterList allClustersList;
-    allClustersList.insert(m_clusterVectorU.begin(), m_clusterVectorU.end());
-    allClustersList.insert(m_clusterVectorV.begin(), m_clusterVectorV.end());
-    allClustersList.insert(m_clusterVectorW.begin(), m_clusterVectorW.end());
+    allClustersList.insert(m_clusterListU.begin(), m_clusterListU.end());
+    allClustersList.insert(m_clusterListV.begin(), m_clusterListV.end());
+    allClustersList.insert(m_clusterListW.begin(), m_clusterListW.end());
 
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {

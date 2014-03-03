@@ -89,6 +89,43 @@ protected:
     virtual void UpdateTensor();
 
     /**
+     *  @brief  Update tensor to reflect a cluster merge
+     * 
+     *  @param  pEnlargedCluster address of the enlarged cluster
+     *  @param  pDeletedCluster address of the deleted cluster
+     */
+    virtual void UpdateTensorUponMerge(const pandora::Cluster *const pEnlargedCluster, const pandora::Cluster *const pDeletedCluster);
+
+    /**
+     *  @brief  Update tensor to reflect a cluster split
+     * 
+     *  @param  pSplitCluster1 address of the first cluster fragment
+     *  @param  pSplitCluster2 address of the second cluster fragment
+     *  @param  pDeletedCluster address of the deleted cluster
+     */
+    virtual void UpdateTensorUponSplit(const pandora::Cluster *const pSplitCluster1, const pandora::Cluster *const pSplitCluster2,
+        const pandora::Cluster *const pDeletedCluster);
+
+    /**
+     *  @brief  Update tensor to reflect addition of a new cluster to the problem space
+     * 
+     *  @param  pNewCluster address of the new cluster
+     */
+    virtual void UpdateTensorForNewCluster(const pandora::Cluster *const pNewCluster);
+
+    /**
+     *  @brief  Update tensor to reflect cluster deletion
+     * 
+     *  @param  pDeletedCluster address of the deleted cluster
+     */
+    virtual void UpdateTensorUponDeletion(const pandora::Cluster *const pDeletedCluster);
+
+    /**
+     *  @brief  Update tensor to remove all elements that have been added to pfos and so are unavailable
+     */
+    virtual void RemoveUnavailableTensorElements();
+
+    /**
      *  @brief  Tidy member variables in derived class
      */
     virtual void TidyUp();
@@ -99,9 +136,9 @@ protected:
     const pandora::ClusterList *m_pInputClusterListV;           ///< Address of the input cluster list V
     const pandora::ClusterList *m_pInputClusterListW;           ///< Address of the input cluster list W
 
-    pandora::ClusterVector      m_clusterVectorU;               ///< The selected modified and sorted cluster vector U
-    pandora::ClusterVector      m_clusterVectorV;               ///< The selected modified and sorted cluster vector V
-    pandora::ClusterVector      m_clusterVectorW;               ///< The selected modified and sorted cluster vector W
+    pandora::ClusterList        m_clusterListU;                 ///< The selected modified cluster list U
+    pandora::ClusterList        m_clusterListV;                 ///< The selected modified cluster list V
+    pandora::ClusterList        m_clusterListW;                 ///< The selected modified cluster list W
 
     TensorType                  m_overlapTensor;                ///< The overlap tensor
 
