@@ -58,6 +58,14 @@ protected:
     virtual void SelectInputClusters();
 
     /**
+     *  @brief  Select a subset of input clusters for processing in this algorithm
+     * 
+     *  @param  pInputClusterList address of an input cluster list
+     *  @param  selectedClusterList to receive the selected cluster list
+     */
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+    /**
      *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters
      */
     virtual void PreparationStep();
@@ -142,6 +150,9 @@ private:
     std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
     std::string                 m_outputPfoListName;            ///< The output pfo list name
+
+    unsigned int                m_minClusterLayers;             ///< The min number of layers in base cluster selection method
+    float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 };
 
 } // namespace lar
