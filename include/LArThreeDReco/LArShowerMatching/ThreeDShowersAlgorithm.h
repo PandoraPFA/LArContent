@@ -34,7 +34,7 @@ public:
 
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
-    bool ExamineTensor();
+    void ExamineTensor();
 
     typedef std::map<unsigned int, pandora::CartesianVector> ShowerEdgeMap;
 

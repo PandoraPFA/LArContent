@@ -298,17 +298,14 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTransverseTracksAlgorithm::ExamineTensor()
+void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
     for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(m_slidingFitResultMap, m_overlapTensor, m_protoParticleVector));
-        this->CreateThreeDParticles();
-        this->UpdateTensor();
+        ProtoParticleVector protoParticleVector;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(m_slidingFitResultMap, m_overlapTensor, protoParticleVector));
+        this->CreateThreeDParticles(protoParticleVector);
     }
-
-    // ATTN Reconstruction only uses a single pass over tensor
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

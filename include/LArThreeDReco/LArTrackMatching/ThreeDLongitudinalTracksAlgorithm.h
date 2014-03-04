@@ -54,7 +54,7 @@ private:
         const TwoDSlidingFitResult &slidingFitResultW, const pandora::CartesianVector &vtxMerged3D, const pandora::CartesianVector &endMerged3D,
         TrackOverlapResult &overlapResult) const;
 
-    bool ExamineTensor();
+    void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float           m_vertexChi2Cut;                ///< 

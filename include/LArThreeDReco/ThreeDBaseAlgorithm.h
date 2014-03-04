@@ -73,20 +73,15 @@ protected:
 
     /**
      *  @brief  Examine contents of tensor, collect together best-matching 2D particles and modify clusters as required
-     * 
-     *  @return whether to proceed with another round of tensor update and examination
      */
-    virtual bool ExamineTensor() = 0;
+    virtual void ExamineTensor() = 0;
 
     /**
      *  @brief  Create particles using findings from recent algorithm processing
+     * 
+     *  @param  protoParticleVector the proto particle vector
      */
-    virtual void CreateThreeDParticles();
-
-    /**
-     *  @brief  Update tensor to reflect changes made during recent processing
-     */
-    virtual void UpdateTensor();
+    virtual void CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
 
     /**
      *  @brief  Update tensor to reflect a cluster merge
@@ -94,7 +89,7 @@ protected:
      *  @param  pEnlargedCluster address of the enlarged cluster
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateTensorUponMerge(const pandora::Cluster *const pEnlargedCluster, const pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateTensorUponMerge(pandora::Cluster *const pEnlargedCluster, pandora::Cluster *const pDeletedCluster);
 
     /**
      *  @brief  Update tensor to reflect a cluster split
@@ -103,22 +98,22 @@ protected:
      *  @param  pSplitCluster2 address of the second cluster fragment
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateTensorUponSplit(const pandora::Cluster *const pSplitCluster1, const pandora::Cluster *const pSplitCluster2,
-        const pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateTensorUponSplit(pandora::Cluster *const pSplitCluster1, pandora::Cluster *const pSplitCluster2,
+        pandora::Cluster *const pDeletedCluster);
 
     /**
      *  @brief  Update tensor to reflect addition of a new cluster to the problem space
      * 
      *  @param  pNewCluster address of the new cluster
      */
-    virtual void UpdateTensorForNewCluster(const pandora::Cluster *const pNewCluster);
+    virtual void UpdateTensorForNewCluster(pandora::Cluster *const pNewCluster);
 
     /**
      *  @brief  Update tensor to reflect cluster deletion
      * 
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateTensorUponDeletion(const pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateTensorUponDeletion(pandora::Cluster *const pDeletedCluster);
 
     /**
      *  @brief  Update tensor to remove all elements that have been added to pfos and so are unavailable
@@ -129,8 +124,6 @@ protected:
      *  @brief  Tidy member variables in derived class
      */
     virtual void TidyUp();
-
-    ProtoParticleVector         m_protoParticleVector;          ///< The proto particle vector
 
     const pandora::ClusterList *m_pInputClusterListU;           ///< Address of the input cluster list U
     const pandora::ClusterList *m_pInputClusterListV;           ///< Address of the input cluster list V

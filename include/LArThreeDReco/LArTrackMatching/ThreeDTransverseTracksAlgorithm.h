@@ -196,7 +196,7 @@ private:
     void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW, const unsigned int maxIndexU,
         const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor, TrackOverlapResultVector &trackOverlapResultVector) const;
 
-    bool ExamineTensor();
+    void ExamineTensor();
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
