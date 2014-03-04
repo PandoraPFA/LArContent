@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArOverlapTensor.h"
 
@@ -68,12 +69,12 @@ void ThreeDBaseAlgorithm<T>::PreparationStep()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::CreateThreeDParticles()
+void ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &protoParticleVector)
 {
     const PfoList *pPfoList = NULL; std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryPfoListAndSetCurrent(*this, pPfoList, pfoListName));
 
-    for (typename ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
+    for (typename ProtoParticleVector::const_iterator iter = protoParticleVector.begin(), iterEnd = protoParticleVector.end(); iter != iterEnd; ++iter)
     {
         // TODO - correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
@@ -99,56 +100,62 @@ void ThreeDBaseAlgorithm<T>::CreateThreeDParticles()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensor()
+void ThreeDBaseAlgorithm<T>::UpdateTensorUponMerge(Cluster *const pEnlargedCluster, Cluster *const pDeletedCluster)
 {
-    ClusterList usedClusters;
+    m_overlapTensor.RemoveCluster(pDeletedCluster);
+    m_overlapTensor.RemoveCluster(pEnlargedCluster);
+    this->UpdateTensorForNewCluster(pEnlargedCluster);
+}
 
-    for (typename ProtoParticleVector::const_iterator iter = m_protoParticleVector.begin(), iterEnd = m_protoParticleVector.end(); iter != iterEnd; ++iter)
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::UpdateTensorUponSplit(Cluster *const pSplitCluster1, Cluster *const pSplitCluster2, Cluster *const pDeletedCluster)
+{
+    m_overlapTensor.RemoveCluster(pDeletedCluster);
+    this->UpdateTensorForNewCluster(pSplitCluster1);
+    this->UpdateTensorForNewCluster(pSplitCluster2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::UpdateTensorForNewCluster(Cluster *const pNewCluster)
+{
+    const HitType hitType(LArThreeDHelper::GetClusterHitType(pNewCluster));
+
+    if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const typename TensorType::ClusterNavigationMap &navigationMap1((VIEW_U == hitType) ? m_overlapTensor.GetClusterNavigationMapVW() : m_overlapTensor.GetClusterNavigationMapUV());
+    const typename TensorType::ClusterNavigationMap &navigationMap2((VIEW_W == hitType) ? m_overlapTensor.GetClusterNavigationMapVW() : m_overlapTensor.GetClusterNavigationMapWU());
+
+    for (typename TensorType::ClusterNavigationMap::const_iterator iter1 = navigationMap1.begin(), iter1End = navigationMap1.end(); iter1 != iter1End; ++iter1)
     {
-        usedClusters.insert(iter->m_clusterListU.begin(), iter->m_clusterListU.end());
-        usedClusters.insert(iter->m_clusterListV.begin(), iter->m_clusterListV.end());
-        usedClusters.insert(iter->m_clusterListW.begin(), iter->m_clusterListW.end());
+        for (typename TensorType::ClusterNavigationMap::const_iterator iter2 = navigationMap2.begin(), iter2End = navigationMap2.end(); iter2 != iter2End; ++iter2)
+        {
+            if (VIEW_U == hitType)
+            {
+                this->CalculateOverlapResult(pNewCluster, iter1->first, iter2->first);
+            }
+            else if (VIEW_V == hitType)
+            {
+                this->CalculateOverlapResult(iter1->first, pNewCluster, iter2->first);
+            }
+            else
+            {
+                this->CalculateOverlapResult(iter1->first, iter2->first, pNewCluster);
+            }
+        }
     }
-
-    for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
-    {
-        m_overlapTensor.RemoveCluster(*iter);
-    }
-
-    m_protoParticleVector.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorUponMerge(const Cluster *const pEnlargedCluster, const Cluster *const pDeletedCluster)
+void ThreeDBaseAlgorithm<T>::UpdateTensorUponDeletion(Cluster *const pDeletedCluster)
 {
-    // TODO
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorUponSplit(const Cluster *const pSplitCluster1, const Cluster *const pSplitCluster2,
-    const Cluster *const pDeletedCluster)
-{
-    // TODO
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorForNewCluster(const Cluster *const pNewCluster)
-{
-    // TODO
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorUponDeletion(const Cluster *const pDeletedCluster)
-{
-    // TODO
+    m_overlapTensor.RemoveCluster(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -156,7 +163,33 @@ void ThreeDBaseAlgorithm<T>::UpdateTensorUponDeletion(const Cluster *const pDele
 template <typename T>
 void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
 {
-    // TODO
+    const typename TensorType::ClusterNavigationMap &navigationMapUV(m_overlapTensor.GetClusterNavigationMapUV());
+    const typename TensorType::ClusterNavigationMap &navigationMapVW(m_overlapTensor.GetClusterNavigationMapVW());
+    const typename TensorType::ClusterNavigationMap &navigationMapWU(m_overlapTensor.GetClusterNavigationMapWU());
+    ClusterList usedClusters;
+
+    for (typename TensorType::ClusterNavigationMap::const_iterator iter = navigationMapUV.begin(), iterEnd = navigationMapUV.end(); iter != iterEnd; ++iter)
+    {
+        if (!(iter->first->IsAvailable()))
+            usedClusters.insert(iter->first);
+    }
+
+    for (typename TensorType::ClusterNavigationMap::const_iterator iter = navigationMapVW.begin(), iterEnd = navigationMapVW.end(); iter != iterEnd; ++iter)
+    {
+        if (!(iter->first->IsAvailable()))
+            usedClusters.insert(iter->first);
+    }
+
+    for (typename TensorType::ClusterNavigationMap::const_iterator iter = navigationMapWU.begin(), iterEnd = navigationMapWU.end(); iter != iterEnd; ++iter)
+    {
+        if (!(iter->first->IsAvailable()))
+            usedClusters.insert(iter->first);
+    }
+
+    for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
+    {
+        m_overlapTensor.RemoveCluster(*iter);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -165,7 +198,6 @@ template <typename T>
 void ThreeDBaseAlgorithm<T>::TidyUp()
 {
     m_overlapTensor.Clear();
-    m_protoParticleVector.clear();
 
     m_pInputClusterListU = NULL;
     m_pInputClusterListV = NULL;
@@ -209,13 +241,7 @@ StatusCode ThreeDBaseAlgorithm<T>::Run()
             }
         }
 
-        // Process results encoded in tensor
-        while (this->ExamineTensor())
-        {
-            this->CreateThreeDParticles();
-            this->UpdateTensor();
-        }
-
+        this->ExamineTensor();
         this->TidyUp();
     }
     catch (StatusCodeException &statusCodeException)

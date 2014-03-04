@@ -286,46 +286,52 @@ PandoraMonitoringApi::ViewEvent();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDShowersAlgorithm::ExamineTensor()
+void ThreeDShowersAlgorithm::ExamineTensor()
 {
-    float bestOverlapResult(0.5f); // TODO Min overlap result for PFO creation
-    Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
-
-    for (TensorType::const_iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    while (true)
     {
-        for (TensorType::OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
-        {
-            for (TensorType::OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
-            {
-                try
-                {
-                    const float overlapResult(iterW->second);
+        float bestOverlapResult(0.5f); // TODO Min overlap result for PFO creation
+        Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
 
-                    if (overlapResult > bestOverlapResult)
-                    {
-                        bestOverlapResult = overlapResult;
-                        pBestClusterU = iterU->first;
-                        pBestClusterV = iterV->first;
-                        pBestClusterW = iterW->first;
-                    }
-                }
-                catch (StatusCodeException &)
+        for (TensorType::const_iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
+        {
+            for (TensorType::OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
+            {
+                for (TensorType::OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
                 {
+                    try
+                    {
+                        const float overlapResult(iterW->second);
+
+                        if (overlapResult > bestOverlapResult)
+                        {
+                            bestOverlapResult = overlapResult;
+                            pBestClusterU = iterU->first;
+                            pBestClusterV = iterV->first;
+                            pBestClusterW = iterW->first;
+                        }
+                    }
+                    catch (StatusCodeException &)
+                    {
+                    }
                 }
             }
         }
+
+        if (!pBestClusterU || !pBestClusterV || !pBestClusterW)
+            break;
+
+        ProtoParticle protoParticle;
+        protoParticle.m_clusterListU.insert(pBestClusterU);
+        protoParticle.m_clusterListV.insert(pBestClusterV);
+        protoParticle.m_clusterListW.insert(pBestClusterW);
+
+        ProtoParticleVector protoParticleVector;
+        protoParticleVector.push_back(protoParticle);
+
+        this->CreateThreeDParticles(protoParticleVector);
+        this->RemoveUnavailableTensorElements();
     }
-
-    if (!pBestClusterU || !pBestClusterV || !pBestClusterW)
-        return false;
-
-    ProtoParticle protoParticle;
-    protoParticle.m_clusterListU.insert(pBestClusterU);
-    protoParticle.m_clusterListV.insert(pBestClusterV);
-    protoParticle.m_clusterListW.insert(pBestClusterW);
-    m_protoParticleVector.push_back(protoParticle);
-
-    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
