@@ -20,7 +20,15 @@ namespace lar
 StatusCode ClusterMergingAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
+
+    if (m_inputClusterListName.empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListName, pClusterList));
+    }
 
     bool carryOn(true);
 
@@ -103,8 +111,12 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterMergingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode ClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_inputClusterListName.clear();
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputClusterListName", m_inputClusterListName));
+
     return STATUS_CODE_SUCCESS;
 }
 

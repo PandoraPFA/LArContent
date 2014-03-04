@@ -61,6 +61,8 @@ protected:
      */
     void CollectAssociatedClusters(pandora::Cluster *pSeedCluster, pandora::Cluster *pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
         const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
+
+    std::string     m_inputClusterListName;     ///< The name of the input cluster list. If not specified, will access current list.
 };
 
 } // namespace lar
