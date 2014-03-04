@@ -59,7 +59,16 @@ StatusCode ClusterMergingAlgorithm::Run()
                 if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
                     throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
+                if (m_inputClusterListName.empty())
+                {
+                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
+                }
+                else
+                {
+                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
+                        m_inputClusterListName, m_inputClusterListName));
+                }
+
                 (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
                 carryOn = true;
             }

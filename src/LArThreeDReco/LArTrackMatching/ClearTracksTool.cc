@@ -47,7 +47,11 @@ StatusCode ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, 
                 if (overlapList.size() != 1)
                     continue;
 
+                Cluster *pClusterW = overlapList.begin()->first;
                 const TrackOverlapResult &trackOverlapResult(overlapList.begin()->second);
+
+                if (usedClusters.count(pClusterW))
+                    continue;
 
                 if (trackOverlapResult < bestTrackOverlapResult)
                     continue;

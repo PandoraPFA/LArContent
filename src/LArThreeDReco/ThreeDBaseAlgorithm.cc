@@ -40,22 +40,30 @@ ThreeDBaseAlgorithm<T>::~ThreeDBaseAlgorithm()
 template <typename T>
 void ThreeDBaseAlgorithm<T>::SelectInputClusters()
 {
-    for (ClusterList::const_iterator iter = m_pInputClusterListU->begin(), iterEnd = m_pInputClusterListU->end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsAvailable())
-            m_clusterListU.insert(*iter);
-    }
+    this->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
+    this->SelectInputClusters(m_pInputClusterListV, m_clusterListV);
+    this->SelectInputClusters(m_pInputClusterListW, m_clusterListW);
+}
 
-    for (ClusterList::const_iterator iter = m_pInputClusterListV->begin(), iterEnd = m_pInputClusterListV->end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsAvailable())
-            m_clusterListV.insert(*iter);
-    }
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    for (ClusterList::const_iterator iter = m_pInputClusterListW->begin(), iterEnd = m_pInputClusterListW->end(); iter != iterEnd; ++iter)
+template <typename T>
+void ThreeDBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+{
+    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
-        if ((*iter)->IsAvailable())
-            m_clusterListW.insert(*iter);
+        Cluster *pCluster = *iter;
+
+        if (!pCluster->IsAvailable())
+            continue;
+
+        if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
+            continue;
+
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+            continue;
+
+        selectedClusterList.insert(pCluster);
     }
 }
 
@@ -264,6 +272,15 @@ StatusCode ThreeDBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
+
+    m_minClusterLayers = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterLayers", m_minClusterLayers));
+
+    float minClusterLength = 3.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterLength", minClusterLength));
+    m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
     return STATUS_CODE_SUCCESS;
 }

@@ -54,9 +54,8 @@
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
-#include "LArTwoDReco/LArSeedFinding/LengthSeedFindingAlgorithm.h"
+#include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.h"
-#include "LArTwoDReco/LArSeedFinding/SeedCharacterisationAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/SeedConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/SeedLengthGrowingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/VertexSeedFindingAlgorithm.h"
@@ -103,9 +102,8 @@ public:
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLayerSplitting",                      lar::LayerSplittingAlgorithm::Factory)                                      \
         d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
-        d("LArLengthSeedFinding",                   lar::LengthSeedFindingAlgorithm::Factory)                                   \
+        d("LArClusterCharacterisation",             lar::ClusterCharacterisationAlgorithm::Factory)                             \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
-        d("LArSeedCharacterisation",                lar::SeedCharacterisationAlgorithm::Factory)                                \
         d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
         d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
