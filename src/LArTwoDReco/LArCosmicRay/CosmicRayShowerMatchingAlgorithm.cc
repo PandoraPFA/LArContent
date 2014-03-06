@@ -636,61 +636,55 @@ bool CosmicRayShowerMatchingAlgorithm::SortPfosByNHits(const ParticleFlowObject 
         return STATUS_CODE_SUCCESS;
         
     }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-    StatusCode CosmicRayShowerMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-    {
- 
+StatusCode CosmicRayShowerMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputCosmicRayPfoListName", m_inputCosmicRayPfoListName));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                        "InputCosmicRayPfoListName", m_inputCosmicRayPfoListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                        "InputPfoListName", m_inputPfoListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-                                                        "InputClusterListNamesU", m_inputClusterListNamesU));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-                                                        "InputClusterListNamesV", m_inputClusterListNamesV));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-                                                        "InputClusterListNamesW", m_inputClusterListNamesW));
- 
-        bool debugPrintingOn = true;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                               "DebugPrintingOn", debugPrintingOn));
-        CosmicRayShowerMatchingAlgorithm::m_debugPrintingOn = debugPrintingOn;
-        
-        bool visualiseBadMatches = false;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                               "VisualiseBadMatches", visualiseBadMatches));
-        CosmicRayShowerMatchingAlgorithm::m_visualiseBadMatches = visualiseBadMatches;
-       
-        bool visualiseAllMatches = false;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                               "VisualiseAllMatches", visualiseAllMatches));
-        CosmicRayShowerMatchingAlgorithm::m_visualiseAllMatches = visualiseAllMatches;
-        
-        float chi2For3ViewMatching = 100.f;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                               "Chi2For3ViewMatching", chi2For3ViewMatching));
-        m_chi2For3ViewMatching = chi2For3ViewMatching;
-        
-        float distanceFor3ViewMatching = 10.f;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                               "DistanceFor3ViewMatching", distanceFor3ViewMatching));
-        m_distanceFor3ViewMatching = distanceFor3ViewMatching;
-        
-        
-        float distanceFor2ViewMatching = 5.f;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                               "DistanceFor2ViewMatching", distanceFor2ViewMatching));
-        m_distanceFor2ViewMatching = distanceFor2ViewMatching;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputPfoListName", m_inputPfoListName));
 
-        float distanceFor1ViewMatching = 5.f;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                               "DistanceFor1ViewMatching", distanceFor1ViewMatching));
-        m_distanceFor1ViewMatching = distanceFor1ViewMatching;
-        
-        return STATUS_CODE_SUCCESS;
-    }
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputClusterListNamesU", m_inputClusterListNamesU));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputClusterListNamesV", m_inputClusterListNamesV));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputClusterListNamesW", m_inputClusterListNamesW));
+
+    bool debugPrintingOn = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DebugPrintingOn", m_debugPrintingOn));
+
+    m_visualiseBadMatches = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VisualiseBadMatches", m_visualiseBadMatches));
+
+    m_visualiseAllMatches = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VisualiseAllMatches", m_visualiseAllMatches));
+
+    m_chi2For3ViewMatching = 100.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Chi2For3ViewMatching", m_chi2For3ViewMatching));
+
+    m_distanceFor3ViewMatching = 10.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DistanceFor3ViewMatching", m_distanceFor3ViewMatching));
+
+    m_distanceFor2ViewMatching = 5.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DistanceFor2ViewMatching", m_distanceFor2ViewMatching));
+
+    m_distanceFor1ViewMatching = 5.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DistanceFor1ViewMatching", m_distanceFor1ViewMatching));
+
+    return STATUS_CODE_SUCCESS;
+}
 
 } // namespace lar
