@@ -10,7 +10,7 @@
 #include "Helpers/XmlHelper.h"
 
 #include "LArCalculators/LArPseudoLayerCalculator.h"
-
+#include "LArObjects/LArTwoDSlidingFitResult.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
@@ -358,6 +358,100 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
+    
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+void LArClusterHelper::GetClusterSpanXZ(const Cluster *const pCluster, CartesianVector &minimumCoordinate, CartesianVector &maximumCoordinate)
+{
+  
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    
+    float xmin(std::numeric_limits<float>::max());
+    float ymin(std::numeric_limits<float>::max());
+    float zmin(std::numeric_limits<float>::max());
+    float xmax(std::numeric_limits<float>::min());
+    float ymax(std::numeric_limits<float>::min());
+    float zmax(std::numeric_limits<float>::min());
+        
+    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
+    {
+        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            const CaloHit *pCaloHit = *hIter;
+            const CartesianVector hit(pCaloHit->GetPositionVector());
+            
+            xmin = std::min(hit.GetX(), xmin);
+            xmax = std::max(hit.GetX(), xmax);
+            ymin = std::min(hit.GetY(), ymin);
+            ymax = std::max(hit.GetY(), ymax);
+            zmin = std::min(hit.GetZ(), zmin);
+            zmax = std::max(hit.GetZ(), zmax);
+        }
+    }
+    
+    minimumCoordinate.SetValues(xmin,ymin,zmin);
+    maximumCoordinate.SetValues(xmax,ymax,zmax);
+    
+}
+
+    //------------------------------------------------------------------------------------------------------------------------------------------
+
+    void LArClusterHelper::GetClusterSpanX(const Cluster *const pCluster, float &xmin, float &xmax)
+    {
+        
+        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        
+        xmin = std::numeric_limits<float>::max();
+        xmax = std::numeric_limits<float>::min();
+        
+        for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
+        {
+            for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
+            {
+                const CaloHit *pCaloHit = *hIter;
+                const CartesianVector hit(pCaloHit->GetPositionVector());
+                
+                xmin = std::min(hit.GetX(), xmin);
+                xmax = std::max(hit.GetX(), xmax);
+            }
+        }
+    }
+    
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+{
+        
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    float zsum(0.f);
+    int count(0);
+    float zsumall(0.f);
+    int countall(0);
+    
+    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
+    {
+        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            const CaloHit *pCaloHit = *hIter;
+            const CartesianVector hit(pCaloHit->GetPositionVector());
+            zsumall+= hit.GetZ();
+            countall++;
+            if(hit.GetX()>=xmin && hit.GetX()<=xmax){
+                count++;
+                zsum += hit.GetZ();
+            }
+        }
+    }
+    if(count==0)return zsumall/static_cast<float>(countall);
+
+        
+    return zsum/static_cast<float>(count);
+    
+}
+
+    
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
