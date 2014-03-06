@@ -18,61 +18,16 @@ StatusCode ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, 
 {
     std::cout << "ClearTracksTool::Run() " << std::endl;
 
-    ClusterList usedClusters;
+    TensorType::ElementList elementList;
+    overlapTensor.GetUnambiguousElements(elementList);
 
-    while (true)
+    for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        TrackOverlapResult bestTrackOverlapResult;
-        Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
-
-        for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
-        {
-            Cluster *pClusterU = iterU->first;
-            const TensorType::OverlapMatrix &overlapMatrix(iterU->second);
-
-            if (usedClusters.count(pClusterU))
-                continue;
-
-            if (overlapMatrix.size() != 1)
-                continue;
-
-            for (TensorType::OverlapMatrix::const_iterator iterV = overlapMatrix.begin(), iterVEnd = overlapMatrix.end(); iterV != iterVEnd; ++iterV)
-            {
-                Cluster *pClusterV = iterV->first;
-                const TensorType::OverlapList &overlapList(iterV->second);
-
-                if (usedClusters.count(pClusterV))
-                    continue;
-
-                if (overlapList.size() != 1)
-                    continue;
-
-                Cluster *pClusterW = overlapList.begin()->first;
-                const TrackOverlapResult &trackOverlapResult(overlapList.begin()->second);
-
-                if (usedClusters.count(pClusterW))
-                    continue;
-
-                if (trackOverlapResult < bestTrackOverlapResult)
-                    continue;
-
-                bestTrackOverlapResult = trackOverlapResult;
-                pBestClusterU = pClusterU;
-                pBestClusterV = iterV->first;
-                pBestClusterW = overlapList.begin()->first;
-            }
-        }
-
-        if (!pBestClusterU || !pBestClusterV || !pBestClusterW)
-            break;
-
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.insert(pBestClusterU);
-        protoParticle.m_clusterListV.insert(pBestClusterV);
-        protoParticle.m_clusterListW.insert(pBestClusterW);
+        protoParticle.m_clusterListU.insert(iter->GetClusterU());
+        protoParticle.m_clusterListV.insert(iter->GetClusterV());
+        protoParticle.m_clusterListW.insert(iter->GetClusterW());
         protoParticleVector.push_back(protoParticle);
-
-        usedClusters.insert(pBestClusterU); usedClusters.insert(pBestClusterV); usedClusters.insert(pBestClusterW);
     }
 
     return STATUS_CODE_SUCCESS;

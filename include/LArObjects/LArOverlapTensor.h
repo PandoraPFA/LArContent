@@ -88,7 +88,7 @@ public:
      *  @param  nV to receive the number of v connections
      *  @param  nW to receive the number of w connections
      */
-    void GetNConnections(const pandora::Cluster *const pCluster, unsigned int &nU, unsigned int &nV, unsigned int &nW) const;
+    void GetNConnections(pandora::Cluster *const pCluster, unsigned int &nU, unsigned int &nV, unsigned int &nW) const;
 
     /**
      *  @brief  Get a list of elements connected to a specified cluster
@@ -96,7 +96,7 @@ public:
      *  @param  pCluster address of a cluster
      *  @param  elementList to receive the connected element list
      */
-    void GetConnectedElements(const pandora::Cluster *const pCluster, ElementList &elementList) const;
+    void GetConnectedElements(pandora::Cluster *const pCluster, ElementList &elementList) const;
 
     /**
      *  @brief  Get a list of elements connected to a specified cluster
@@ -107,7 +107,7 @@ public:
      *  @param  nV to receive the number of v connections
      *  @param  nW to receive the number of w connections
      */
-    void GetConnectedElements(const pandora::Cluster *const pCluster, ElementList &elementList, unsigned int &nU, unsigned int &nV, unsigned int &nW) const;
+    void GetConnectedElements(pandora::Cluster *const pCluster, ElementList &elementList, unsigned int &nU, unsigned int &nV, unsigned int &nW) const;
 
     typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
     typedef std::map<pandora::Cluster*, OverlapResult> OverlapList;
@@ -200,6 +200,17 @@ public:
     void Clear();
 
 private:
+    /**
+     *  @brief  Get elements connected to a specified cluster
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  clusterListU connected u clusters
+     *  @param  clusterListV connected v clusters
+     *  @param  clusterListW connected w clusters
+     */
+    void GetConnectedElements(pandora::Cluster *const pCluster, pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV,
+        pandora::ClusterList &clusterListW) const;
+
     TheTensor               m_overlapTensor;                ///< The overlap tensor
     ClusterNavigationMap    m_clusterNavigationMapUV;       ///< The cluster navigation map U->V
     ClusterNavigationMap    m_clusterNavigationMapVW;       ///< The cluster navigation map V->W
@@ -323,7 +334,7 @@ TrackOverlapResult operator+(const TrackOverlapResult &lhs, const TrackOverlapRe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline void OverlapTensor<T>::GetNConnections(const pandora::Cluster *const pCluster, unsigned int &nU, unsigned int &nV, unsigned int &nW) const
+inline void OverlapTensor<T>::GetNConnections(pandora::Cluster *const pCluster, unsigned int &nU, unsigned int &nV, unsigned int &nW) const
 {
     ElementList elementList;
     this->GetConnectedElements(pCluster, elementList, nU, nV, nW);
@@ -332,7 +343,7 @@ inline void OverlapTensor<T>::GetNConnections(const pandora::Cluster *const pClu
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline void OverlapTensor<T>::GetConnectedElements(const pandora::Cluster *const pCluster, ElementList &elementList) const
+inline void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, ElementList &elementList) const
 {
     unsigned int nU(0), nV(0), nW(0);
     this->GetConnectedElements(pCluster, elementList, nU, nV, nW);

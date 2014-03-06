@@ -26,6 +26,12 @@ ClusterList LArThreeDHelper::m_loneClusterList;
 
 HitType LArThreeDHelper::GetClusterHitType(const Cluster *const pCluster)
 {
+    // TODO make this function more robust (no mixed-hit checking yet)
+    if (0 == pCluster->GetNCaloHits())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
+/*
     HitType hitType(CUSTOM);
 
     if (pCluster->ContainsHitType(VIEW_U))
@@ -50,6 +56,7 @@ HitType LArThreeDHelper::GetClusterHitType(const Cluster *const pCluster)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     return hitType;
+*/
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
