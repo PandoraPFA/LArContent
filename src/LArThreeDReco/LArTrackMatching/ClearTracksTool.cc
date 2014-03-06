@@ -19,7 +19,7 @@ StatusCode ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, 
     std::cout << "ClearTracksTool::Run() " << std::endl;
 
     TensorType::ElementList elementList;
-    overlapTensor.GetUnambiguousElements(elementList);
+    overlapTensor.GetUnambiguousElements(true, elementList);
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
