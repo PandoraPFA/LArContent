@@ -76,38 +76,65 @@ public:
     /**
      *  @brief  Get unambiguous elements
      * 
+     *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  elementList to receive the unambiguous element list
      */
-    void GetUnambiguousElements(ElementList &elementList) const;
+    void GetUnambiguousElements(const bool ignoreUnavailable, ElementList &elementList) const;
+
+    typedef bool (AmbiguityFunction)(const pandora::ClusterList &, const pandora::ClusterList &, const pandora::ClusterList &);
+
+    /**
+     *  @brief  Get unambiguous elements with a custom definition of unambiguous
+     * 
+     *  @param  ignoreUnavailable whether to ignore unavailable clusters
+     *  @param  pAmbiguityFunction the address of the ambiguity function
+     *  @param  elementList to receive the unambiguous element list
+     */
+    void GetUnambiguousElements(const bool ignoreUnavailable, AmbiguityFunction *pAmbiguityFunction, ElementList &elementList) const;
+
+    /**
+     *  @brief  Default ambiguity function, checking that only one U, V and W cluster is found
+     * 
+     *  @param  clusterListU cluster list U
+     *  @param  clusterListV cluster list V
+     *  @param  clusterListW cluster list W
+     * 
+     *  @return boolean
+     */
+    static bool DefaultAmbiguityFunction(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
 
     /**
      *  @brief  Get the number of connections for a specified cluster
      * 
      *  @param  pCluster address of a cluster
+     *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  nU to receive the number of u connections
      *  @param  nV to receive the number of v connections
      *  @param  nW to receive the number of w connections
      */
-    void GetNConnections(pandora::Cluster *const pCluster, unsigned int &nU, unsigned int &nV, unsigned int &nW) const;
+    void GetNConnections(pandora::Cluster *const pCluster, const bool ignoreUnavailable, unsigned int &nU, unsigned int &nV, unsigned int &nW) const;
 
     /**
      *  @brief  Get a list of elements connected to a specified cluster
      * 
      *  @param  pCluster address of a cluster
+     *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  elementList to receive the connected element list
      */
-    void GetConnectedElements(pandora::Cluster *const pCluster, ElementList &elementList) const;
+    void GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList) const;
 
     /**
      *  @brief  Get a list of elements connected to a specified cluster
      * 
      *  @param  pCluster address of a cluster
+     *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  elementList to receive the connected element list
      *  @param  nU to receive the number of u connections
      *  @param  nV to receive the number of v connections
      *  @param  nW to receive the number of w connections
      */
-    void GetConnectedElements(pandora::Cluster *const pCluster, ElementList &elementList, unsigned int &nU, unsigned int &nV, unsigned int &nW) const;
+    void GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList, unsigned int &nU,
+        unsigned int &nV, unsigned int &nW) const;
 
     typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
     typedef std::map<pandora::Cluster*, OverlapResult> OverlapList;
@@ -208,8 +235,8 @@ private:
      *  @param  clusterListV connected v clusters
      *  @param  clusterListW connected w clusters
      */
-    void GetConnectedElements(pandora::Cluster *const pCluster, pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV,
-        pandora::ClusterList &clusterListW) const;
+    void GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterListU,
+        pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
     TheTensor               m_overlapTensor;                ///< The overlap tensor
     ClusterNavigationMap    m_clusterNavigationMapUV;       ///< The cluster navigation map U->V
@@ -334,19 +361,28 @@ TrackOverlapResult operator+(const TrackOverlapResult &lhs, const TrackOverlapRe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline void OverlapTensor<T>::GetNConnections(pandora::Cluster *const pCluster, unsigned int &nU, unsigned int &nV, unsigned int &nW) const
+inline void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, ElementList &elementList) const
 {
-    ElementList elementList;
-    this->GetConnectedElements(pCluster, elementList, nU, nV, nW);
+    this->GetUnambiguousElements(ignoreUnavailable, &DefaultAmbiguityFunction, elementList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, ElementList &elementList) const
+inline void OverlapTensor<T>::GetNConnections(pandora::Cluster *const pCluster, const bool ignoreUnavailable, unsigned int &nU, unsigned int &nV,
+    unsigned int &nW) const
+{
+    ElementList elementList;
+    this->GetConnectedElements(pCluster, ignoreUnavailable, elementList, nU, nV, nW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+inline void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList) const
 {
     unsigned int nU(0), nV(0), nW(0);
-    this->GetConnectedElements(pCluster, elementList, nU, nV, nW);
+    this->GetConnectedElements(pCluster, ignoreUnavailable, elementList, nU, nV, nW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

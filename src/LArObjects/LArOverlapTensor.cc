@@ -10,6 +10,8 @@
 #include "Pandora/PandoraInputTypes.h"
 #include "Pandora/StatusCodes.h"
 
+#include "Objects/Cluster.h"
+
 #include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArOverlapTensor.h"
@@ -20,14 +22,14 @@ namespace lar
 {
 
 template <typename T>
-void OverlapTensor<T>::GetUnambiguousElements(ElementList &elementList) const
+void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, AmbiguityFunction *pAmbiguityFunction, ElementList &elementList) const
 {
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
         ClusterList clusterListU, clusterListV, clusterListW;
-        this->GetConnectedElements(iterU->first, clusterListU, clusterListV, clusterListW);
+        this->GetConnectedElements(iterU->first, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
 
-        if ((1 != clusterListU.size()) || (1 != clusterListV.size()) || (1 != clusterListW.size()))
+        if (!(*pAmbiguityFunction)(clusterListU, clusterListV, clusterListW))
             continue;
 
         typename OverlapMatrix::const_iterator iterV = iterU->second.find(*(clusterListV.begin()));
@@ -46,10 +48,22 @@ void OverlapTensor<T>::GetUnambiguousElements(ElementList &elementList) const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, ElementList &elementList, unsigned int &nU, unsigned int &nV, unsigned int &nW) const
+bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW)
+{
+    if ((1 != clusterListU.size()) || (1 != clusterListV.size()) || (1 != clusterListW.size()))
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
+    unsigned int &nU, unsigned int &nV, unsigned int &nW) const
 {
     ClusterList clusterListU, clusterListV, clusterListW;
-    this->GetConnectedElements(pCluster, clusterListU, clusterListV, clusterListW);
+    this->GetConnectedElements(pCluster, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
     nU = clusterListU.size(); nV = clusterListV.size(); nW = clusterListW.size();
 
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
@@ -130,8 +144,12 @@ void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterListU,
+    ClusterList &clusterListV, ClusterList &clusterListW) const
 {
+    if (ignoreUnavailable && !pCluster->IsAvailable())
+        return;
+
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
 
     if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
@@ -149,7 +167,7 @@ void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, ClusterList
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     for (ClusterList::const_iterator cIter = iter->second.begin(), cIterEnd = iter->second.end(); cIter != cIterEnd; ++cIter)
-        this->GetConnectedElements(*cIter, clusterListU, clusterListV, clusterListW);
+        this->GetConnectedElements(*cIter, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
