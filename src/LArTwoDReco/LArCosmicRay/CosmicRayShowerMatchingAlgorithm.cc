@@ -89,6 +89,8 @@ namespace lar
                 }
             }
         }
+
+        return STATUS_CODE_SUCCESS;
     }
     
     
@@ -620,22 +622,21 @@ bool CosmicRayShowerMatchingAlgorithm::SortPfosByNHits(const ParticleFlowObject 
         
     }
 
-    
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
-    
-    StatusCode CosmicRayShowerMatchingAlgorithm::GetAllPfos(PfoList &tempPfoList) const
-    {
-    
-        const PfoList *pPfoList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputCosmicRayPfoListName, pPfoList));
-        const PfoList *pOtherPfoList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputPfoListName, pOtherPfoList));
-        for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)tempPfoList.insert(*iter);
-        for (PfoList::const_iterator iter = pOtherPfoList->begin(), iterEnd = pOtherPfoList->end(); iter != iterEnd; ++iter)tempPfoList.insert(*iter);
-        return STATUS_CODE_SUCCESS;
-        
-    }
+
+StatusCode CosmicRayShowerMatchingAlgorithm::GetAllPfos(PfoList &tempPfoList) const
+{
+    const PfoList *pPfoList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputCosmicRayPfoListName, pPfoList));
+
+    const PfoList *pOtherPfoList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputPfoListName, pOtherPfoList));
+
+    tempPfoList.insert(pPfoList->begin(), pPfoList->end());
+    tempPfoList.insert(pOtherPfoList->begin(), pOtherPfoList->end());
+
+    return STATUS_CODE_SUCCESS;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
