@@ -195,6 +195,39 @@ public:
      */
     static void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, pandora::CartesianVector &outerCoordinate);
 
+    
+    /**
+     *  @brief  Get minimum and maximum X, Y and Z positions of the calo hits in a 2D cluster
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  the minimum positions (x,y,z)
+     *  @param  the maximum positions (x,y,z)
+     */
+    static void GetClusterSpanXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, pandora::CartesianVector &maximumCoordinate);
+    
+    
+    /**
+     *  @brief  Get minimum and maximum x of the calo hits in a 2D cluster
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  the minimum position of x
+     *  @param  the maximum position of x
+     */
+    static void GetClusterSpanX(const pandora::Cluster *const pCluster, float &xmin, float &xmax);
+    
+    
+    /**
+     *  @brief  Get average Z positions of the calo hits in a 2D cluster in range xmin to xmax
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  xmin for range in x
+     *  @param  xmax for range in x
+     */
+    static float GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax);
+    
+
+    
+    
     /**
      *  @brief  Sort clusters by inner layer (then use SortByNOccupiedLayers method in event of a tie)
      *
