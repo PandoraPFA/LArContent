@@ -29,18 +29,26 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Ambi
         ClusterList clusterListU, clusterListV, clusterListW;
         this->GetConnectedElements(iterU->first, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
 
-        if (!(*pAmbiguityFunction)(clusterListU, clusterListV, clusterListW))
+        Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
+        if (!(*pAmbiguityFunction)(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
             continue;
 
-        typename OverlapMatrix::const_iterator iterV = iterU->second.find(*(clusterListV.begin()));
+        // ATTN: With custom definitions, it is possible to navigate from different U clusters to same combination
+        if (iterU->first != pClusterU)
+            continue;
+
+        if ((NULL == pClusterU) || (NULL == pClusterV) || (NULL == pClusterW))
+            continue;
+
+        typename OverlapMatrix::const_iterator iterV = iterU->second.find(pClusterV);
         if (iterU->second.end() == iterV)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        typename OverlapList::const_iterator iterW = iterV->second.find(*(clusterListW.begin()));
+        typename OverlapList::const_iterator iterW = iterV->second.find(pClusterW);
         if (iterV->second.end() == iterW)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        Element element(iterU->first, iterV->first, iterW->first, iterW->second);
+        Element element(pClusterU, pClusterV, pClusterW, iterW->second);
         elementList.push_back(element);
     }
 }
@@ -48,10 +56,15 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Ambi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW)
+bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
+    Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW)
 {
     if ((1 != clusterListU.size()) || (1 != clusterListV.size()) || (1 != clusterListW.size()))
         return false;
+
+    pClusterU = *(clusterListU.begin());
+    pClusterV = *(clusterListV.begin());
+    pClusterW = *(clusterListW.begin());
 
     return true;
 }
