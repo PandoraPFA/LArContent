@@ -31,6 +31,21 @@ public:
 private:
     pandora::StatusCode Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    /**
+     *  @brief  Ambiguity function for three-track case
+     * 
+     *  @param  clusterListU cluster list U
+     *  @param  clusterListV cluster list V
+     *  @param  clusterListW cluster list W
+     *  @param  pClusterU to receive the address of the unambiguous U cluster
+     *  @param  pClusterV to receive the address of the unambiguous V cluster
+     *  @param  pClusterW to receive the address of the unambiguous W cluster
+     * 
+     *  @return boolean
+     */
+    static bool TrackTrackTrackAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW,
+        pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
