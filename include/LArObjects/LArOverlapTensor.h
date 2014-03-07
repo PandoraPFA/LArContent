@@ -81,7 +81,8 @@ public:
      */
     void GetUnambiguousElements(const bool ignoreUnavailable, ElementList &elementList) const;
 
-    typedef bool (AmbiguityFunction)(const pandora::ClusterList &, const pandora::ClusterList &, const pandora::ClusterList &);
+    typedef bool (AmbiguityFunction)(const pandora::ClusterList &, const pandora::ClusterList &, const pandora::ClusterList &,
+        pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
 
     /**
      *  @brief  Get unambiguous elements with a custom definition of unambiguous
@@ -98,10 +99,14 @@ public:
      *  @param  clusterListU cluster list U
      *  @param  clusterListV cluster list V
      *  @param  clusterListW cluster list W
+     *  @param  pClusterU to receive the address of the unambiguous U cluster
+     *  @param  pClusterV to receive the address of the unambiguous V cluster
+     *  @param  pClusterW to receive the address of the unambiguous W cluster
      * 
      *  @return boolean
      */
-    static bool DefaultAmbiguityFunction(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
+    static bool DefaultAmbiguityFunction(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW,
+        pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
 
     /**
      *  @brief  Get the number of connections for a specified cluster
