@@ -224,11 +224,10 @@ public:
     /**
      *  @brief  Run the algorithm tool
      * 
-     *  @param  slidingFitResultMap the sliding fit result map
-     *  @param  overlapTensor the track overlap result tensor
+     *  @param  pAlgorithm address of the calling algorithm
      *  @param  protoParticleVector the proto particle vector
      */
-    virtual pandora::StatusCode Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) = 0;
+    virtual pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

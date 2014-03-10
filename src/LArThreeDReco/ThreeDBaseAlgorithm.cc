@@ -38,45 +38,6 @@ ThreeDBaseAlgorithm<T>::~ThreeDBaseAlgorithm()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::SelectInputClusters()
-{
-    this->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
-    this->SelectInputClusters(m_pInputClusterListV, m_clusterListV);
-    this->SelectInputClusters(m_pInputClusterListW, m_clusterListW);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
-{
-    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (!pCluster->IsAvailable())
-            continue;
-
-        if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
-            continue;
-
-        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
-            continue;
-
-        selectedClusterList.insert(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::PreparationStep()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
 void ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &protoParticleVector)
 {
     const PfoList *pPfoList = NULL; std::string pfoListName;
@@ -198,6 +159,45 @@ void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
     {
         m_overlapTensor.RemoveCluster(*iter);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::SelectInputClusters()
+{
+    this->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
+    this->SelectInputClusters(m_pInputClusterListV, m_clusterListV);
+    this->SelectInputClusters(m_pInputClusterListW, m_clusterListW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+{
+    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (!pCluster->IsAvailable())
+            continue;
+
+        if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
+            continue;
+
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+            continue;
+
+        selectedClusterList.insert(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::PreparationStep()
+{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

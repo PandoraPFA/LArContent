@@ -29,23 +29,37 @@ public:
     };
 
 private:
-    pandora::StatusCode Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector);
+    pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Ambiguity function for three-track case
+     *  @brief  Create three dimensional particles for a given tensor element list
      * 
-     *  @param  clusterListU cluster list U
-     *  @param  clusterListV cluster list V
-     *  @param  clusterListW cluster list W
-     *  @param  pClusterU to receive the address of the unambiguous U cluster
-     *  @param  pClusterV to receive the address of the unambiguous V cluster
-     *  @param  pClusterW to receive the address of the unambiguous W cluster
-     * 
-     *  @return boolean
+     *  @param  pAlgorithm address of the calling algorithm (ultimately responsible for the particles)
+     *  @param  elementList the tensor element list
      */
-    static bool TrackTrackTrackAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW,
-        pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
+    void CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList) const;
+
+    /**
+     *  @brief  Classify elements of a cluster list as track-like or shower-like (uses IsMipTrack cluster flags, set by previous algs).
+     * 
+     *  @param  clusterList the input cluster list
+     *  @param  trackClusterList to receive the list of track-like clusters
+     *  @param  showerClusterList to receive the list of shower-like clusters
+     */
+    static void ClassifyClusters(const pandora::ClusterList &clusterList, pandora::ClusterList &trackClusterList, pandora::ClusterList &showerClusterList);
+
+    static bool TrackTrackTrackAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
+        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
+
+    static bool TrackTrackShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
+        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
+
+    static bool TrackShowerShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
+        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
+
+    static bool ShowerShowerShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
+        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -302,9 +302,7 @@ void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
     for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        ProtoParticleVector protoParticleVector;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(m_slidingFitResultMap, m_overlapTensor, protoParticleVector));
-        this->CreateThreeDParticles(protoParticleVector);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(this, m_overlapTensor));
     }
 }
 

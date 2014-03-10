@@ -14,14 +14,40 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, TensorType &overlapTensor, ProtoParticleVector &protoParticleVector)
+StatusCode ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
-    std::cout << "ClearTracksTool::Run() " << std::endl;
+    if (PandoraSettings::ShouldDisplayAlgorithmInfo())
+       std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
     // TODO x-overlap and definitions of unambiguous using x-overlap
     TensorType::ElementList elementList;
     overlapTensor.GetUnambiguousElements(true, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList);
+
+    elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &TrackTrackTrackAmbiguity, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList);
+
+    elementList.clear();
+    overlapTensor.GetUnambiguousElements(true, &TrackTrackShowerAmbiguity, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList);
+
+    elementList.clear();
+    overlapTensor.GetUnambiguousElements(true, &TrackShowerShowerAmbiguity, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList);
+
+    elementList.clear();
+    overlapTensor.GetUnambiguousElements(true, &ShowerShowerShowerAmbiguity, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList);
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList) const
+{
+    ProtoParticleVector protoParticleVector;
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
@@ -32,7 +58,24 @@ StatusCode ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, 
         protoParticleVector.push_back(protoParticle);
     }
 
-    return STATUS_CODE_SUCCESS;
+    pAlgorithm->CreateThreeDParticles(protoParticleVector);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClearTracksTool::ClassifyClusters(const ClusterList &clusterList, ClusterList &trackClusterList, ClusterList &showerClusterList)
+{
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        if ((*iter)->IsMipTrack())
+        {
+            trackClusterList.insert(*iter);
+        }
+        else
+        {
+            showerClusterList.insert(*iter);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,67 +83,145 @@ StatusCode ClearTracksTool::Run(const SlidingFitResultMap &slidingFitResultMap, 
 bool ClearTracksTool::TrackTrackTrackAmbiguity(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
     Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW)
 {
-    if ((1 == clusterListU.size()) || (1 == clusterListV.size()) || (1 == clusterListW.size()))
+    ClusterList trackClustersU, showerClustersU;
+    ClearTracksTool::ClassifyClusters(clusterListU, trackClustersU, showerClustersU);
+
+    if (1 != trackClustersU.size())
         return false;
 
-    unsigned int nTracksU(0), nTracksV(0), nTracksW(0);
-    Cluster *pTrackClusterU(NULL), *pTrackClusterV(NULL), *pTrackClusterW(NULL);
+    ClusterList trackClustersV, showerClustersV;
+    ClearTracksTool::ClassifyClusters(clusterListV, trackClustersV, showerClustersV);
 
-    // ATTN For later development
-    unsigned int nShowersU(0), nShowersV(0), nShowersW(0);
-    Cluster *pShowerClusterU(NULL), *pShowerClusterV(NULL), *pShowerClusterW(NULL);
-
-    for (ClusterList::const_iterator iter = clusterListU.begin(), iterEnd = clusterListU.end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsMipTrack())
-        {
-            ++nTracksU;
-            pTrackClusterU = *iter;
-        }
-        else
-        {
-            ++nShowersU;
-            pShowerClusterU = *iter;
-        }
-    }
-
-    for (ClusterList::const_iterator iter = clusterListV.begin(), iterEnd = clusterListV.end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsMipTrack())
-        {
-            ++nTracksV;
-            pTrackClusterV = *iter;
-        }
-        else
-        {
-            ++nShowersU;
-            pShowerClusterU = *iter;
-        }
-    }
-
-    for (ClusterList::const_iterator iter = clusterListW.begin(), iterEnd = clusterListW.end(); iter != iterEnd; ++iter)
-    {
-        if ((*iter)->IsMipTrack())
-        {
-            ++nTracksW;
-            pTrackClusterW = *iter;
-        }
-        else
-        {
-            ++nShowersU;
-            pShowerClusterU = *iter;
-        }
-    }
-
-    if ((1 != nTracksU) || (1 != nTracksV) || (1 != nTracksW))
+    if (1 != trackClustersV.size())
         return false;
 
-    if ((NULL == pTrackClusterU) || (NULL == pTrackClusterV) || (NULL == pTrackClusterW))
+    ClusterList trackClustersW, showerClustersW;
+    ClearTracksTool::ClassifyClusters(clusterListW, trackClustersW, showerClustersW);
+
+    if (1 != trackClustersW.size())
         return false;
 
-    pClusterU = pTrackClusterU;
-    pClusterV = pTrackClusterV;
-    pClusterW = pTrackClusterW;
+    pClusterU = *(trackClustersU.begin());
+    pClusterV = *(trackClustersV.begin());
+    pClusterW = *(trackClustersW.begin());
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ClearTracksTool::TrackTrackShowerAmbiguity(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
+    Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW)
+{
+    ClusterList trackClustersU, showerClustersU;
+    ClearTracksTool::ClassifyClusters(clusterListU, trackClustersU, showerClustersU);
+
+    ClusterList trackClustersV, showerClustersV;
+    ClearTracksTool::ClassifyClusters(clusterListV, trackClustersV, showerClustersV);
+
+    ClusterList trackClustersW, showerClustersW;
+    ClearTracksTool::ClassifyClusters(clusterListW, trackClustersW, showerClustersW);
+
+    const unsigned int nTracksU(trackClustersU.size()), nTracksV(trackClustersV.size()), nTracksW(trackClustersW.size());
+    const unsigned int nShowersU(showerClustersU.size()), nShowersV(showerClustersV.size()), nShowersW(showerClustersW.size());
+
+    if ((1 == nTracksU * nTracksV * nShowersW) && (1 != nTracksU * nShowersV * nTracksW) && (1 != nShowersU * nTracksV * nTracksW))
+    {
+        pClusterU = *(trackClustersU.begin());
+        pClusterV = *(trackClustersV.begin());
+        pClusterW = *(showerClustersW.begin());
+        return true;
+    }
+
+    if ((1 != nTracksU * nTracksV * nShowersW) && (1 == nTracksU * nShowersV * nTracksW) && (1 != nShowersU * nTracksV * nTracksW))
+    {
+        pClusterU = *(trackClustersU.begin());
+        pClusterV = *(showerClustersV.begin());
+        pClusterW = *(trackClustersW.begin());
+        return true;
+    }
+
+    if ((1 != nTracksU * nTracksV * nShowersW) && (1 != nTracksU * nShowersV * nTracksW) && (1 == nShowersU * nTracksV * nTracksW))
+    {
+        pClusterU = *(showerClustersU.begin());
+        pClusterV = *(trackClustersV.begin());
+        pClusterW = *(trackClustersW.begin());
+        return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ClearTracksTool::TrackShowerShowerAmbiguity(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
+    Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW)
+{
+    ClusterList trackClustersU, showerClustersU;
+    ClearTracksTool::ClassifyClusters(clusterListU, trackClustersU, showerClustersU);
+
+    ClusterList trackClustersV, showerClustersV;
+    ClearTracksTool::ClassifyClusters(clusterListV, trackClustersV, showerClustersV);
+
+    ClusterList trackClustersW, showerClustersW;
+    ClearTracksTool::ClassifyClusters(clusterListW, trackClustersW, showerClustersW);
+
+    const unsigned int nTracksU(trackClustersU.size()), nTracksV(trackClustersV.size()), nTracksW(trackClustersW.size());
+    const unsigned int nShowersU(showerClustersU.size()), nShowersV(showerClustersV.size()), nShowersW(showerClustersW.size());
+
+    if ((1 == nTracksU * nShowersV * nShowersW) && (1 != nShowersU * nTracksV * nShowersW) && (1 != nShowersU * nShowersV * nTracksW))
+    {
+        pClusterU = *(trackClustersU.begin());
+        pClusterV = *(showerClustersV.begin());
+        pClusterW = *(showerClustersW.begin());
+        return true;
+    }
+
+    if ((1 != nTracksU * nShowersV * nShowersW) && (1 == nShowersU * nTracksV * nShowersW) && (1 != nShowersU * nShowersV * nTracksW))
+    {
+        pClusterU = *(showerClustersU.begin());
+        pClusterV = *(trackClustersV.begin());
+        pClusterW = *(showerClustersW.begin());
+        return true;
+    }
+
+    if ((1 != nTracksU * nShowersV * nShowersW) && (1 != nShowersU * nTracksV * nShowersW) && (1 == nShowersU * nShowersV * nTracksW))
+    {
+        pClusterU = *(showerClustersU.begin());
+        pClusterV = *(showerClustersV.begin());
+        pClusterW = *(trackClustersW.begin());
+        return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ClearTracksTool::ShowerShowerShowerAmbiguity(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
+    Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW)
+{
+    ClusterList trackClustersU, showerClustersU;
+    ClearTracksTool::ClassifyClusters(clusterListU, trackClustersU, showerClustersU);
+
+    if (1 != showerClustersU.size())
+        return false;
+
+    ClusterList trackClustersV, showerClustersV;
+    ClearTracksTool::ClassifyClusters(clusterListV, trackClustersV, showerClustersV);
+
+    if (1 != showerClustersV.size())
+        return false;
+
+    ClusterList trackClustersW, showerClustersW;
+    ClearTracksTool::ClassifyClusters(clusterListW, trackClustersW, showerClustersW);
+
+    if (1 != showerClustersW.size())
+        return false;
+
+    pClusterU = *(showerClustersU.begin());
+    pClusterV = *(showerClustersV.begin());
+    pClusterW = *(showerClustersW.begin());
 
     return true;
 }
