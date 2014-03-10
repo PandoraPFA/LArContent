@@ -49,41 +49,7 @@ public:
      */
     virtual ~ThreeDBaseAlgorithm();
 
-protected:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Select a subset of input clusters for processing in this algorithm
-     */
-    virtual void SelectInputClusters();
-
-    /**
-     *  @brief  Select a subset of input clusters for processing in this algorithm
-     * 
-     *  @param  pInputClusterList address of an input cluster list
-     *  @param  selectedClusterList to receive the selected cluster list
-     */
-    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
-
-    /**
-     *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters
-     */
-    virtual void PreparationStep();
-
-    /**
-     *  @brief  Calculate cluster overlap result and store in tensor
-     * 
-     *  @param  pClusterU address of U view cluster
-     *  @param  pClusterV address of V view cluster
-     *  @param  pClusterW address of W view cluster
-     */
-    virtual void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW) = 0;
-
-    /**
-     *  @brief  Examine contents of tensor, collect together best-matching 2D particles and modify clusters as required
-     */
-    virtual void ExamineTensor() = 0;
-
+public:
     /**
      *  @brief  Create particles using findings from recent algorithm processing
      * 
@@ -127,6 +93,41 @@ protected:
      *  @brief  Update tensor to remove all elements that have been added to pfos and so are unavailable
      */
     virtual void RemoveUnavailableTensorElements();
+
+protected:
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    /**
+     *  @brief  Select a subset of input clusters for processing in this algorithm
+     */
+    virtual void SelectInputClusters();
+
+    /**
+     *  @brief  Select a subset of input clusters for processing in this algorithm
+     * 
+     *  @param  pInputClusterList address of an input cluster list
+     *  @param  selectedClusterList to receive the selected cluster list
+     */
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+    /**
+     *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters
+     */
+    virtual void PreparationStep();
+
+    /**
+     *  @brief  Calculate cluster overlap result and store in tensor
+     * 
+     *  @param  pClusterU address of U view cluster
+     *  @param  pClusterV address of V view cluster
+     *  @param  pClusterW address of W view cluster
+     */
+    virtual void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW) = 0;
+
+    /**
+     *  @brief  Examine contents of tensor, collect together best-matching 2D particles and modify clusters as required
+     */
+    virtual void ExamineTensor() = 0;
 
     /**
      *  @brief  Tidy member variables in derived class
