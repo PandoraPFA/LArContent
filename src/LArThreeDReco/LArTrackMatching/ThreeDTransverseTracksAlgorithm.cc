@@ -55,6 +55,9 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
     this->GetFitSegmentTensor(slidingFitResultU, slidingFitResultV, slidingFitResultW, fitSegmentTensor);
     const TrackOverlapResult trackOverlapResult(this->GetBestOverlapResult(fitSegmentTensor));
 
+    if ((trackOverlapResult.GetMatchedFraction() < m_minOverallMatchedFraction) || (trackOverlapResult.GetNMatchedSamplingPoints() < m_minOverallMatchedPoints))
+        return;
+
     const int nLayersSpannedU(slidingFitResultU.GetMaxLayer() - slidingFitResultU.GetMinLayer());
     const int nLayersSpannedV(slidingFitResultV.GetMaxLayer() - slidingFitResultV.GetMinLayer());
     const int nLayersSpannedW(slidingFitResultW.GetMaxLayer() - slidingFitResultW.GetMinLayer());
@@ -65,8 +68,10 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
 
     const float nSamplingPointsPerLayer(static_cast<float>(trackOverlapResult.GetNSamplingPoints()) / static_cast<float>(meanLayersSpanned));
 
-    if (nSamplingPointsPerLayer > m_minOverallMatchedFraction)
-         m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, trackOverlapResult);
+    if (nSamplingPointsPerLayer < m_minSamplingPointsPerLayer)
+        return;
+
+     m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, trackOverlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -358,10 +363,6 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    m_minOverallMatchedFraction = 0.2f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinOverallMatchedFraction", m_minOverallMatchedFraction));
-
     m_minSegmentMatchedFraction = 0.1f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSegmentMatchedFraction", m_minSegmentMatchedFraction));
@@ -369,6 +370,18 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     m_minSegmentMatchedPoints = 3;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSegmentMatchedPoints", m_minSegmentMatchedPoints));
+
+    m_minOverallMatchedFraction = 0.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinOverallMatchedFraction", m_minOverallMatchedFraction));
+
+    m_minOverallMatchedPoints = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinOverallMatchedPoints", m_minOverallMatchedPoints));
+
+    m_minSamplingPointsPerLayer = 0.1f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinSamplingPointsPerLayer", m_minSamplingPointsPerLayer));
 
     return ThreeDBaseAlgorithm<TrackOverlapResult>::ReadSettings(xmlHandle);
 }

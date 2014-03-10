@@ -201,9 +201,11 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
-    float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
+    float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
+    unsigned int                m_minOverallMatchedPoints;  ///< The minimum number of matched segment sampling points to allow particle creation
+    float                       m_minSamplingPointsPerLayer;///< The minimum number of sampling points per layer to allow particle creation
     SlidingFitResultMap         m_slidingFitResultMap;      ///< The sliding fit result map
 
     typedef std::vector<TensorManipulationTool*> TensorManipulationToolList;
