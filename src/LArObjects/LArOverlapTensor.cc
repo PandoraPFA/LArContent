@@ -15,6 +15,7 @@
 #include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArOverlapTensor.h"
+#include "LArObjects/LArTrackOverlapResult.h"
 
 using namespace pandora;
 
