@@ -305,6 +305,70 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
+ClusterList clusterListU, clusterListV, clusterListW;
+
+for (TensorType::const_iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
+{
+    Cluster *pClusterU = iterU->first;
+    clusterListU.insert(pClusterU);
+
+    const TensorType::OverlapMatrix &overlapMatrix(iterU->second);
+
+    for (TensorType::OverlapMatrix::const_iterator iterV = overlapMatrix.begin(), iterVEnd = overlapMatrix.end(); iterV != iterVEnd; ++iterV)
+    {
+        Cluster *pClusterV = iterV->first;
+        clusterListV.insert(pClusterV);
+
+        const TensorType::OverlapList &overlapList(iterV->second);
+
+        for (TensorType::OverlapList::const_iterator iterW = overlapList.begin(), iterWEnd = overlapList.end(); iterW != iterWEnd; ++iterW)
+        {
+            Cluster *pClusterW = iterW->first;
+            clusterListW.insert(pClusterW);
+
+            ClusterList clusterList2U, clusterList2V, clusterList2W;
+            clusterList2U.insert(pClusterU);
+            clusterList2V.insert(pClusterV);
+            clusterList2W.insert(pClusterW);
+
+            unsigned int nU(0), nV(0), nW(0);
+            TensorType::ElementList elementList;
+            m_overlapTensor.GetConnectedElements(pClusterU, true, elementList, nU, nV, nW);
+
+            if (1 == nU * nV * nW)
+                continue;
+
+            std::cout << " nU " << nU << " nV " << nV << " nW " << nW << std::endl;
+            PANDORA_MONITORING_API(VisualizeClusters(&clusterList2U, "UClusters", RED));
+            PANDORA_MONITORING_API(VisualizeClusters(&clusterList2V, "VClusters", GREEN));
+            PANDORA_MONITORING_API(VisualizeClusters(&clusterList2W, "WClusters", BLUE));
+            PANDORA_MONITORING_API(ViewEvent());
+
+            int counter(0);
+
+            for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
+            {
+                std::cout << "  Element " << counter++ << ", mf " << eIter->GetOverlapResult().GetMatchedFraction() << ", msp " << eIter->GetOverlapResult().GetNMatchedSamplingPoints() << std::endl;
+                clusterList2U.insert(eIter->GetClusterU());
+                clusterList2V.insert(eIter->GetClusterV());
+                clusterList2W.insert(eIter->GetClusterW());
+/*
+                ClusterList clusterList3U, clusterList3V, clusterList3W;
+                PANDORA_MONITORING_API(VisualizeClusters(&clusterList3U, "UCluster", RED));
+                PANDORA_MONITORING_API(VisualizeClusters(&clusterList3V, "VCluster", GREEN));
+                PANDORA_MONITORING_API(VisualizeClusters(&clusterList3W, "WCluster", BLUE));
+                PANDORA_MONITORING_API(ViewEvent());
+*/            }
+
+std::cout << "All connected clusters " << std::endl;
+            PANDORA_MONITORING_API(VisualizeClusters(&clusterList2U, "AllUClusters", RED));
+            PANDORA_MONITORING_API(VisualizeClusters(&clusterList2V, "AllVClusters", GREEN));
+            PANDORA_MONITORING_API(VisualizeClusters(&clusterList2W, "AllWClusters", BLUE));
+            PANDORA_MONITORING_API(ViewEvent());
+        }
+    }
+}
+
     for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(this, m_overlapTensor));
