@@ -33,6 +33,8 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 
+    float m_minTrackLength;
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
