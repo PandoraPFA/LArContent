@@ -14,6 +14,7 @@
 
 #include "LArCheating/CheatingClusterCharacterisationAlg.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
+#include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
@@ -81,6 +82,7 @@ public:
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
         d("LArCheatingClusterCharacterisation",     lar::CheatingClusterCharacterisationAlg::Factory)                           \
         d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
+        d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
