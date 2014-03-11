@@ -11,7 +11,9 @@
 
 #include "Pandora/Algorithm.h"
 
+#ifdef MONITORING
 #include "PandoraMonitoringApi.h"
+#endif
 
 namespace lar
 {
@@ -43,7 +45,6 @@ private:
     std::string        m_nonSeedClusterListName;
     std::string        m_vertexName;
     std::string        m_particleListName;
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
