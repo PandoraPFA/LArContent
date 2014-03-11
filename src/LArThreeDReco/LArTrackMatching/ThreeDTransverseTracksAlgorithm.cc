@@ -53,9 +53,12 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
 
     FitSegmentTensor fitSegmentTensor;
     this->GetFitSegmentTensor(slidingFitResultU, slidingFitResultV, slidingFitResultW, fitSegmentTensor);
-    const TrackOverlapResult trackOverlapResult(this->GetBestOverlapResult(fitSegmentTensor));
+    const TransverseOverlapResult transverseOverlapResult(this->GetBestOverlapResult(fitSegmentTensor));
 
-    if ((trackOverlapResult.GetMatchedFraction() < m_minOverallMatchedFraction) || (trackOverlapResult.GetNMatchedSamplingPoints() < m_minOverallMatchedPoints))
+    if (!transverseOverlapResult.IsInitialized())
+        return;
+
+    if ((transverseOverlapResult.GetMatchedFraction() < m_minOverallMatchedFraction) || (transverseOverlapResult.GetNMatchedSamplingPoints() < m_minOverallMatchedPoints))
         return;
 
     const int nLayersSpannedU(slidingFitResultU.GetMaxLayer() - slidingFitResultU.GetMinLayer());
@@ -66,12 +69,12 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
     if (0 == meanLayersSpanned)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const float nSamplingPointsPerLayer(static_cast<float>(trackOverlapResult.GetNSamplingPoints()) / static_cast<float>(meanLayersSpanned));
+    const float nSamplingPointsPerLayer(static_cast<float>(transverseOverlapResult.GetNSamplingPoints()) / static_cast<float>(meanLayersSpanned));
 
     if (nSamplingPointsPerLayer < m_minSamplingPointsPerLayer)
         return;
 
-     m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, trackOverlapResult);
+     m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, transverseOverlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,7 +101,7 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitRe
 
                 try
                 {
-                    const TrackOverlapResult segmentOverlap(this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW,
+                    const TransverseOverlapResult segmentOverlap(this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW,
                         slidingFitResultU, slidingFitResultV, slidingFitResultW));
 
                     if ((segmentOverlap.GetMatchedFraction() < m_minSegmentMatchedFraction) || (segmentOverlap.GetNMatchedSamplingPoints() < m_minSegmentMatchedPoints))
@@ -164,7 +167,7 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
+TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
     const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW) const
 {
     // Assess x-overlap
@@ -227,12 +230,13 @@ TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitS
     if (0 == nSamplingPoints)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum);
+    return TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum,
+        TransverseOverlapResult::XOverlap(xSpanU, xSpanV, xSpanW, xOverlap));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const
+TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const
 {
     // TODO - try to work with tensor that a) is const and b) contains only the non-zero entries
     const unsigned int maxIndexU(fitSegmentTensor.size());
@@ -240,7 +244,7 @@ TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(FitSegm
     const unsigned int maxIndexW(fitSegmentTensor[0][0].size());
 
     if ((0 == maxIndexU) || (0 == maxIndexV) || (0 == maxIndexW))
-        return TrackOverlapResult();
+        return TransverseOverlapResult();
 
     FitSegmentTensor fitSegmentSumTensor;
     for (unsigned int indexU = 0; indexU < maxIndexU; ++indexU)
@@ -249,38 +253,38 @@ TrackOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(FitSegm
         {
             for (unsigned int indexW = 0; indexW < maxIndexW; ++indexW)
             {
-                TrackOverlapResultVector trackOverlapResultVector;
-                this->GetPreviousOverlapResults(indexU, indexV, indexW, maxIndexU, maxIndexV, maxIndexW, fitSegmentSumTensor, trackOverlapResultVector);
-                TrackOverlapResultVector::const_iterator maxElement = std::max_element(trackOverlapResultVector.begin(), trackOverlapResultVector.end());
-                TrackOverlapResult maxTrackOverlapResult((trackOverlapResultVector.end() != maxElement) ? *maxElement : TrackOverlapResult());
-                fitSegmentSumTensor[indexU][indexV][indexW] = maxTrackOverlapResult + fitSegmentTensor[indexU][indexV][indexW];
+                TransverseOverlapResultVector transverseOverlapResultVector;
+                this->GetPreviousOverlapResults(indexU, indexV, indexW, maxIndexU, maxIndexV, maxIndexW, fitSegmentSumTensor, transverseOverlapResultVector);
+                TransverseOverlapResultVector::const_iterator maxElement = std::max_element(transverseOverlapResultVector.begin(), transverseOverlapResultVector.end());
+                TransverseOverlapResult maxTransverseOverlapResult((transverseOverlapResultVector.end() != maxElement) ? *maxElement : TransverseOverlapResult());
+                fitSegmentSumTensor[indexU][indexV][indexW] = maxTransverseOverlapResult + fitSegmentTensor[indexU][indexV][indexW];
             }
         }
     }
 
-    TrackOverlapResult bestTrackOverlapResult;
+    TransverseOverlapResult bestTransverseOverlapResult;
     for (unsigned int indexU = 0; indexU < maxIndexU; ++indexU)
     {
         for (unsigned int indexV = 0; indexV < maxIndexV; ++indexV)
         {
             for (unsigned int indexW = 0; indexW < maxIndexW; ++indexW)
             {
-                const TrackOverlapResult &trackOverlapResult(fitSegmentSumTensor[indexU][indexV][indexW]);
+                const TransverseOverlapResult &transverseOverlapResult(fitSegmentSumTensor[indexU][indexV][indexW]);
 
-                if (trackOverlapResult > bestTrackOverlapResult)
-                    bestTrackOverlapResult = trackOverlapResult;
+                if (transverseOverlapResult > bestTransverseOverlapResult)
+                    bestTransverseOverlapResult = transverseOverlapResult;
             }
         }
     }
 
-    return bestTrackOverlapResult;
+    return bestTransverseOverlapResult;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
     const unsigned int maxIndexU, const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor,
-    TrackOverlapResultVector &trackOverlapResultVector) const
+    TransverseOverlapResultVector &transverseOverlapResultVector) const
 {
     for (unsigned int iPermutation = 1; iPermutation < 8; ++iPermutation)
     {
@@ -294,11 +298,11 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
         const unsigned int newIndexU(decrementU ? indexU - 1 : indexU);
         const unsigned int newIndexV(decrementV ? indexV - 1 : indexV);
         const unsigned int newIndexW(decrementW ? indexW - 1 : indexW);
-        trackOverlapResultVector.push_back(fitSegmentSumTensor[newIndexU][newIndexV][newIndexW]);
+        transverseOverlapResultVector.push_back(fitSegmentSumTensor[newIndexU][newIndexV][newIndexW]);
     }
 
-    if (trackOverlapResultVector.empty())
-        trackOverlapResultVector.push_back(TrackOverlapResult());
+    if (transverseOverlapResultVector.empty())
+        transverseOverlapResultVector.push_back(TransverseOverlapResult());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -316,7 +320,7 @@ void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 void ThreeDTransverseTracksAlgorithm::TidyUp()
 {
     m_slidingFitResultMap.clear();
-    return ThreeDBaseAlgorithm<TrackOverlapResult>::TidyUp();
+    return ThreeDBaseAlgorithm<TransverseOverlapResult>::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -383,7 +387,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSamplingPointsPerLayer", m_minSamplingPointsPerLayer));
 
-    return ThreeDBaseAlgorithm<TrackOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeDBaseAlgorithm<TransverseOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

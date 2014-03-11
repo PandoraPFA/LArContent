@@ -7,7 +7,6 @@
  */
 
 #include "Pandora/PandoraInternal.h"
-#include "Pandora/StatusCodes.h"
 
 #include "LArObjects/LArTrackOverlapResult.h"
 
@@ -57,22 +56,8 @@ TrackOverlapResult::TrackOverlapResult(const TrackOverlapResult &rhs) :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackOverlapResult::operator<(const TrackOverlapResult &rhs) const
+TrackOverlapResult::~TrackOverlapResult()
 {
-    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
-        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
-
-    return (m_reducedChi2 > rhs.m_reducedChi2);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool TrackOverlapResult::operator>(const TrackOverlapResult &rhs) const
-{
-    if (this == &rhs)
-        return false;
-
-    return !(*this < rhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -95,13 +80,101 @@ TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResult &rhs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackOverlapResult operator+(const TrackOverlapResult &lhs, const TrackOverlapResult &rhs)
+TransverseOverlapResult::TransverseOverlapResult() :
+    TrackOverlapResult(),
+    m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f))
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TransverseOverlapResult::TransverseOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+        const float chi2, const XOverlap &xOverlap) :
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
+    m_xOverlap(xOverlap)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TransverseOverlapResult::TransverseOverlapResult(const TransverseOverlapResult &rhs) :
+    TrackOverlapResult(rhs),
+    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : XOverlap(0.f, 0.f, 0.f, 0.f))
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TransverseOverlapResult::~TransverseOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TransverseOverlapResult::operator<(const TransverseOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.IsInitialized())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.IsInitialized())
+        return false;
+
+    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
+        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+
+    return (m_reducedChi2 > rhs.m_reducedChi2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TransverseOverlapResult::operator>(const TransverseOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    return !(*this < rhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TransverseOverlapResult &TransverseOverlapResult::operator=(const TransverseOverlapResult &rhs)
+{
+    this->TrackOverlapResult::operator=(rhs);
+    m_xOverlap = rhs.GetXOverlap();
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const TransverseOverlapResult &rhs)
 {
     if (!lhs.IsInitialized() && !rhs.IsInitialized())
-        return TrackOverlapResult();
+        return TransverseOverlapResult();
 
-    return TrackOverlapResult(lhs.GetNMatchedSamplingPoints() + rhs.GetNMatchedSamplingPoints(),
-        lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(), lhs.GetChi2() + rhs.GetChi2());
+    if (!lhs.IsInitialized())
+        return rhs;
+
+    if (!rhs.IsInitialized())
+        return lhs;
+
+    const TransverseOverlapResult::XOverlap &xOverlapLhs(lhs.GetXOverlap());
+    const TransverseOverlapResult::XOverlap &xOverlapRhs(rhs.GetXOverlap());
+
+    const TransverseOverlapResult::XOverlap xOverlapSum(xOverlapLhs.GetXSpanU() + xOverlapRhs.GetXSpanU(),
+        xOverlapLhs.GetXSpanV() + xOverlapRhs.GetXSpanV(),
+        xOverlapLhs.GetXSpanW() + xOverlapRhs.GetXSpanW(),
+        xOverlapLhs.GetXOverlapSpan() + xOverlapRhs.GetXOverlapSpan());
+
+    return TransverseOverlapResult(lhs.GetNMatchedSamplingPoints() + rhs.GetNMatchedSamplingPoints(),
+        lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(), lhs.GetChi2() + rhs.GetChi2(), xOverlapSum);
 }
 
 } // namespace lar
