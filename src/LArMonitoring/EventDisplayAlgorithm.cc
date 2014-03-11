@@ -6,8 +6,6 @@
  *  $Log: $
  */
 
-#ifdef MONITORING
-
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
@@ -212,5 +210,3 @@ StatusCode EventDisplayAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 }
 
 } // namespace lar
-
-#endif // #ifdef MONITORING
