@@ -28,7 +28,7 @@ class TensorManipulationTool;
 /**
  *  @brief  ThreeDTransverseTracksAlgorithm class
  */
-class ThreeDTransverseTracksAlgorithm : public ThreeDBaseAlgorithm<TrackOverlapResult>
+class ThreeDTransverseTracksAlgorithm : public ThreeDBaseAlgorithm<TransverseOverlapResult>
 {
 public:
     /**
@@ -133,7 +133,7 @@ private:
     };
 
     typedef std::vector<FitSegment> FitSegmentList;
-    typedef std::map<unsigned int, TrackOverlapResult> FitSegmentToOverlapResultMap;
+    typedef std::map<unsigned int, TransverseOverlapResult> FitSegmentToOverlapResultMap;
     typedef std::map<unsigned int, FitSegmentToOverlapResultMap> FitSegmentMatrix;
     typedef std::map<unsigned int, FitSegmentMatrix> FitSegmentTensor;
 
@@ -171,7 +171,7 @@ private:
      * 
      *  @return the overlap result
      */
-    TrackOverlapResult GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
+    TransverseOverlapResult GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
         const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW) const;
 
     /**
@@ -181,7 +181,7 @@ private:
      * 
      *  @return the best overlap result
      */
-    TrackOverlapResult GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const;
+    TransverseOverlapResult GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const;
 
     /**
      *  @brief  Get track overlap results for possible connected segments
@@ -192,10 +192,11 @@ private:
      *  @param  maxIndexU the max index u
      *  @param  maxIndexV the max index v
      *  @param  maxIndexW the max index w
-     *  @param  trackOverlapResultVector the track overlap result vector
+     *  @param  transverseOverlapResultVector the transverse overlap result vector
      */
     void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW, const unsigned int maxIndexU,
-        const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor, TrackOverlapResultVector &trackOverlapResultVector) const;
+        const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor,
+        TransverseOverlapResultVector &transverseOverlapResultVector) const;
 
     void ExamineTensor();
     void TidyUp();

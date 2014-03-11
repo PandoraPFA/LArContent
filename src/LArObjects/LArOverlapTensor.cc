@@ -186,7 +186,8 @@ void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template class OverlapTensor<TrackOverlapResult>;
 template class OverlapTensor<float>;
+template class OverlapTensor<TrackOverlapResult>;
+template class OverlapTensor<TransverseOverlapResult>;
 
 } // namespace lar
