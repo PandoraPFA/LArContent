@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArHelpers/LArPointingClusterHelper.cc
- * 
+ *
  *  @brief  Implementation of the pointing cluster helper class.
- * 
+ *
  *  $Log: $
  */
 
@@ -48,10 +48,10 @@ bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, c
     if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) && (rL < 0 || rL > m_maxPointingLongitudinalDistance))
         return false;
 
-    static const float tanSqTheta(std::pow(std::tan(M_PI * m_pointingAngularAllowance / 180.f), 2.f));
+    static const float tanSqTheta(std::pow(std::tan(M_PI * m_pointingAngularAllowance / 180.f), 2.0));
 
     if (rT * rT > m_maxPointingTransverseDistance * m_maxPointingTransverseDistance + rL * rL * tanSqTheta)
-        return false;  
+        return false;
 
     return true;
 }
@@ -73,7 +73,7 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const LArPointing
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVector &vertexPosition, const CartesianVector &vertexDirection, const pandora::Cluster *const pCluster)
-{ 
+{
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     CaloHit *pClosestCaloHit(NULL);
@@ -83,28 +83,28 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVe
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-	    CaloHit* pCaloHit = *hitIter;
+            CaloHit* pCaloHit = *hitIter;
 
             const CartesianVector hitProjection(pCaloHit->GetPositionVector() - vertexPosition);
             const float distanceSquared(hitProjection.GetMagnitudeSquared());
 
             if (distanceSquared > 0.f)
-	    {
-	        const float cosTheta(-hitProjection.GetUnitVector().GetDotProduct(vertexDirection));
+            {
+                const float cosTheta(-hitProjection.GetUnitVector().GetDotProduct(vertexDirection));
                 static const float minCosTheta(std::cos(M_PI * m_projectionAngularAllowance / 180.f));
 
                 // TODO: Try to give more weight to on-axis projections
                 if (distanceSquared < closestDistanceSquared && cosTheta > minCosTheta)
-		{
-		    pClosestCaloHit = pCaloHit;
+                {
+                    pClosestCaloHit = pCaloHit;
                     closestDistanceSquared = distanceSquared;
-		}
-	    }
+                }
+            }
             else
-	    {
-	        return pCaloHit->GetPositionVector();
-	    }
-	}
+            {
+                return pCaloHit->GetPositionVector();
+            }
+        }
     }
 
     if(pClosestCaloHit)
@@ -114,10 +114,10 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- 
+
 void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Vertex &pointingVertex, const CartesianVector &targetPosition, float &longitudinal, float &transverse)
 {
-    return LArPointingClusterHelper::GetImpactParameters(pointingVertex.GetPosition(), pointingVertex.GetDirection(), 
+    return LArPointingClusterHelper::GetImpactParameters(pointingVertex.GetPosition(), pointingVertex.GetDirection(),
         targetPosition, longitudinal, transverse);
 }
 
@@ -125,8 +125,8 @@ void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Ver
 
 void LArPointingClusterHelper::GetImpactParameters(const CartesianVector &initialPosition, const CartesianVector &initialDirection, const CartesianVector &targetPosition, float &longitudinal, float &transverse)
 {
-    // sign convention for longitudinal distance: 
-    // -positive value means initial position is downstream of target position 
+    // sign convention for longitudinal distance:
+    // -positive value means initial position is downstream of target position
     transverse = initialDirection.GetCrossProduct(targetPosition-initialPosition).GetMagnitude();
     longitudinal = -initialDirection.GetDotProduct(targetPosition-initialPosition);
 }
@@ -218,7 +218,7 @@ void LArPointingClusterHelper::GetIntersection(const LArPointingCluster::Vertex 
 
                 displacementL = rL;
                 displacementT = rT;
-                intersectPosition = hitPosition; 
+                intersectPosition = hitPosition;
                 foundIntersection = true;
             }
         }
@@ -240,23 +240,23 @@ float LArPointingClusterHelper::m_projectionAngularAllowance = 20.f; // degrees
 StatusCode LArPointingClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
 {
     float maxNodeRadius = 2.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxNodeRadius", maxNodeRadius));
     m_maxNodeRadiusSquared = maxNodeRadius * maxNodeRadius;
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxPointingLongitudinalDistance", m_maxPointingLongitudinalDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinPointingLongitudinalDistance", m_minPointingLongitudinalDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxPointingTransverseDistance", m_maxPointingTransverseDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PointingAngularAllowance", m_pointingAngularAllowance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ProjectionAngularAllowance", m_projectionAngularAllowance));
 
     return STATUS_CODE_SUCCESS;
