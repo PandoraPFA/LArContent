@@ -30,29 +30,12 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListName, pClusterList));
     }
 
-    // ATTN Use MC information for now...
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
 
-        try
-        {
-            const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-            const int pdgCode(pMCParticle->GetParticleId());
-
-            // Maybe able to distinguish protons using reco properties? Unlikely to distinguish between mu+-/pi+- and e+-/photons?
-            if ((std::abs(pdgCode) == PROTON) || (std::abs(pdgCode) == MU_MINUS) || (std::abs(pdgCode) == PI_PLUS))
-            {
-                pCluster->SetIsMipTrackFlag(true);
-            }
-            else if ((std::abs(pdgCode) == E_MINUS) || (std::abs(pdgCode) == PHOTON))
-            {
-                pCluster->SetIsFixedElectronFlag(true);
-            }
-        }
-        catch (StatusCodeException &)
-        {
-        }
+        // TODO: 'SetIsMipTrackFlag' for tracks and 'SetIsFixedElectronFlag' for showers
+        
     }
 
     return STATUS_CODE_SUCCESS;
