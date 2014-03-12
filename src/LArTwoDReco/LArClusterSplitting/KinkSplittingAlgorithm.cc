@@ -30,7 +30,6 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper:
 
     bool foundSplit(false);
 
-    float bestRms(0.f);
     float bestCosTheta(1.f);
 
     for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end();
@@ -67,9 +66,7 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper:
 
             if (rms < rmsCut && cosTheta < bestCosTheta)
             {
-                bestRms = rms;
                 bestCosTheta = cosTheta;
-
                 splitPosition = centralPosition;
                 foundSplit = true;
             }
@@ -83,7 +80,6 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper:
         return STATUS_CODE_NOT_FOUND;
 
 // --- BEGIN DISPLAY ---
-// std::cout << " bestCosTheta=" << bestCosTheta << " bestRms=" << bestRms << std::endl;
 // ClusterList tempList;
 // tempList.insert((Cluster*)slidingFitResult.GetCluster());
 // PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
