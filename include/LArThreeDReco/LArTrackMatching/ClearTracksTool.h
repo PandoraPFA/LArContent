@@ -60,6 +60,17 @@ private:
 
     static bool ShowerShowerShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
         const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
+
+    /**
+     *  @brief  Resolve simple ambiguities in the tensor, cases where it is clear which element corresponds to primary track overlap
+     * 
+     *  @param  overlapTensor the overlap tensor
+     *  @param  elementList to receive the list of tensor elements for particle creation
+     */
+    void ResolveSimpleAmbiguities(const TensorType &overlapTensor, TensorType::ElementList &elementList) const;
+
+    float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
+    unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -19,7 +19,6 @@ StatusCode ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Ten
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
-    // TODO x-overlap and definitions of unambiguous using x-overlap
     TensorType::ElementList elementList;
     overlapTensor.GetUnambiguousElements(true, elementList);
     this->CreateThreeDParticles(pAlgorithm, elementList);
@@ -40,6 +39,10 @@ StatusCode ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Ten
     overlapTensor.GetUnambiguousElements(true, &ShowerShowerShowerAmbiguity, elementList);
     this->CreateThreeDParticles(pAlgorithm, elementList);
 
+    elementList.clear();
+    this->ResolveSimpleAmbiguities(overlapTensor, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList);
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -51,6 +54,17 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAl
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
+        const TransverseOverlapResult::XOverlap &xOverlap(iter->GetOverlapResult().GetXOverlap());
+
+        if ((xOverlap.GetXSpanU() < std::numeric_limits<float>::epsilon()) || (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanU() < m_minXOverlapFraction))
+            continue;
+
+        if ((xOverlap.GetXSpanV() < std::numeric_limits<float>::epsilon()) || (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanV() < m_minXOverlapFraction))
+            continue;
+
+        if ((xOverlap.GetXSpanW() < std::numeric_limits<float>::epsilon()) || (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanW() < m_minXOverlapFraction))
+            continue;
+
         ProtoParticle protoParticle;
         protoParticle.m_clusterListU.insert(iter->GetClusterU());
         protoParticle.m_clusterListV.insert(iter->GetClusterV());
@@ -228,9 +242,72 @@ bool ClearTracksTool::ShowerShowerShowerAmbiguity(const ClusterList &clusterList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClearTracksTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+void ClearTracksTool::ResolveSimpleAmbiguities(const TensorType &overlapTensor, TensorType::ElementList &elementList) const
 {
-    // Read settings from xml file here
+    ClusterList usedClusters;
+
+    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    {
+        unsigned int nU(0), nV(0), nW(0);
+        TensorType::ElementList localElementList;
+        overlapTensor.GetConnectedElements(iterU->first, true, localElementList, nU, nV, nW);
+
+        if (nU * nV * nW < 2)
+            continue;
+
+        unsigned int nElementsPassingTrackOverlapCut(0), highestMSP(0), secondHighestMSP(0);
+        TensorType::ElementList::const_iterator passedTrackOverlapElement(localElementList.end());
+        TensorType::ElementList::const_iterator highestMSPElement(localElementList.end());
+
+        for (TensorType::ElementList::const_iterator eIter = localElementList.begin(); eIter != localElementList.end(); ++eIter)
+        {
+            const TransverseOverlapResult::XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
+
+            if ((xOverlap.GetXSpanU() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanU() > m_minXOverlapFraction) &&
+                (xOverlap.GetXSpanV() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanV() > m_minXOverlapFraction) &&
+                (xOverlap.GetXSpanW() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanW() > m_minXOverlapFraction))
+            {
+                ++nElementsPassingTrackOverlapCut;
+                passedTrackOverlapElement = eIter;
+            }
+
+            const unsigned int nMatchedSamplingPoints(eIter->GetOverlapResult().GetNMatchedSamplingPoints());
+
+            if (nMatchedSamplingPoints > highestMSP)
+            {
+                highestMSP = nMatchedSamplingPoints;
+                highestMSPElement = eIter;
+            }
+            else if (nMatchedSamplingPoints > secondHighestMSP)
+            {
+                secondHighestMSP = nMatchedSamplingPoints;
+            }
+        }
+
+        if ((1 != nElementsPassingTrackOverlapCut) || (highestMSPElement != passedTrackOverlapElement) || (highestMSP < m_minMatchedSamplingPointRatio * secondHighestMSP))
+            continue;
+
+        if (usedClusters.count(passedTrackOverlapElement->GetClusterU()) || usedClusters.count(passedTrackOverlapElement->GetClusterV()) || usedClusters.count(passedTrackOverlapElement->GetClusterW()))
+            continue;
+
+        elementList.push_back(*passedTrackOverlapElement);
+        usedClusters.insert(passedTrackOverlapElement->GetClusterU());
+        usedClusters.insert(passedTrackOverlapElement->GetClusterV());
+        usedClusters.insert(passedTrackOverlapElement->GetClusterW());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    m_minXOverlapFraction = 0.9f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinXOverlapFraction", m_minXOverlapFraction));
+
+    m_minMatchedSamplingPointRatio = 2;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
     return STATUS_CODE_SUCCESS;
 }
