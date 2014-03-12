@@ -30,13 +30,15 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListName, pClusterList));
     }
 
+    /*
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster* pCluster = *iter;
 
         // TODO: 'SetIsMipTrackFlag' for tracks and 'SetIsFixedElectronFlag' for showers
         
     }
+    */
 
     return STATUS_CODE_SUCCESS;
 }
