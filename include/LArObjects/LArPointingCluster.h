@@ -8,7 +8,7 @@
 #ifndef LAR_POINTING_CLUSTER_H
 #define LAR_POINTING_CLUSTER_H 1
 
-namespace pandora {class Cluster;};
+namespace pandora {class Cluster;}
 
 namespace lar
 {
