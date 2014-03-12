@@ -28,14 +28,14 @@ private:
 
 inline void LArBFieldCalculator::Initialize(const pandora::GeometryHelper *const pGeometryHelper)
 {
-};
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float LArBFieldCalculator::GetBField(const pandora::CartesianVector &/*positionVector*/) const
 {
     return 0.f;
-};
+}
 
 } // namespace lar
 
