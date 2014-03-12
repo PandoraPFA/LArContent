@@ -55,7 +55,7 @@ namespace lar
             
             
             bool neutrinoPfo(false);
-            bool foundMCParticle(false);
+            //bool foundMCParticle(false); // --- UNUSED ---
             ClusterList pfoClusterList(pPfo->GetClusterList());
             for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
             {
@@ -64,7 +64,7 @@ namespace lar
                     const MCParticle *pPfoMCParticle(MCParticleHelper::GetMainMCParticle(pPfoCluster));
                     const MCParticle *pPfoParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pPfoMCParticle));
                     if(abs(pPfoParentMCParticle->GetParticleId())==12 || abs(pPfoParentMCParticle->GetParticleId())==14 )neutrinoPfo = true;
-                    foundMCParticle= true;
+                    //foundMCParticle= true; // --- UNUSED ---
                 } catch (StatusCodeException &) {                }
             }
             
@@ -248,8 +248,8 @@ namespace lar
                                     const MCParticle *pParentMCParticleU(LArMCParticleHelper::GetParentMCParticle(pMCParticleU));
                                     const MCParticle *pMCParticleV(MCParticleHelper::GetMainMCParticle(pVCluster));
                                     const MCParticle *pParentMCParticleV(LArMCParticleHelper::GetParentMCParticle(pMCParticleV));
-                                    const MCParticle *pMCParticleW(MCParticleHelper::GetMainMCParticle(pWCluster));
-                                    const MCParticle *pParentMCParticleW(LArMCParticleHelper::GetParentMCParticle(pMCParticleW));
+                                    // const MCParticle *pMCParticleW(MCParticleHelper::GetMainMCParticle(pWCluster)); // --- UNUSED ---
+                                    // const MCParticle *pParentMCParticleW(LArMCParticleHelper::GetParentMCParticle(pMCParticleW)); // --- UNUSED ---
                                     if( (pParentMCParticleU==pParentMCParticleV) && (pParentMCParticleU==pParentMCParticleV)){
                                         if(pParentMCParticleU==pPfoParentMCParticle)std::cout << " GOOD MATCH " << std::endl;
                                         if(pParentMCParticleU!=pPfoParentMCParticle)std::cout << " CONSISTENT MATCH - WRONG PFO" << std::endl;
@@ -355,7 +355,6 @@ namespace lar
  
         // find x overlap
         pseudoChi2 = std::numeric_limits<float>::max();
-        float chi2 = std::numeric_limits<float>::max();
         CartesianVector minimumCoordinates(std::numeric_limits<float>::max(),std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
         CartesianVector maximumCoordinates(std::numeric_limits<float>::min(),std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
         LArClusterHelper::GetClusterSpanXZ(pClusterU,  minimumCoordinates, maximumCoordinates);
@@ -657,7 +656,6 @@ StatusCode CosmicRayShowerMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "InputClusterListNamesW", m_inputClusterListNamesW));
 
-    bool debugPrintingOn = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DebugPrintingOn", m_debugPrintingOn));
 
