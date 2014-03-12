@@ -36,7 +36,6 @@ StatusCode LayerSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pClu
 
     bool foundSplit(false);
 
-    float bestRms(0.f);
     float bestCosTheta(1.f);
     CartesianVector bestPosition(0.f,0.f,0.f);
 
@@ -90,7 +89,6 @@ StatusCode LayerSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pClu
         if (rms < rmsCut && cosTheta < bestCosTheta)
         {
             bestCosTheta = cosTheta;
-            bestRms = rms;
             bestPosition = splitPosition;
 
             splitLayer = iLayer;
@@ -102,7 +100,6 @@ StatusCode LayerSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pClu
         return STATUS_CODE_NOT_FOUND;
 
 // --- BEGIN DISPLAY ---
-// std::cout << " bestCosTheta=" << bestCosTheta << " bestRms=" << bestRms << std::endl;
 // ClusterList tempList;
 // tempList.insert((Cluster*)pCluster);
 // PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
