@@ -186,11 +186,6 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
             }
 
             // Select the overall best split position
-            Cluster *pBranchCluster = NULL;
-            Cluster *pReplacementCluster = NULL;
-            CartesianVector branchSplitPosition(0.f, 0.f, 0.f);
-            CartesianVector branchSplitDirection(0.f, 0.f, 0.f);
-
             if (branchChisqI > branchChisqJ)
             {
                 (void) clusterExtensionList.push_back(ClusterExtension(pClusterI, pClusterJ,
@@ -213,58 +208,58 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
 {
     for (ClusterExtensionList::const_iterator iter = inputList.begin(), iterEnd = inputList.end(); iter != iterEnd; ++iter)
     {
-	const ClusterExtension &thisSplit = *iter;
+        const ClusterExtension &thisSplit = *iter;
 
-	Cluster* pBranchCluster = thisSplit.GetBranchCluster();
-	Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
-	const CartesianVector &branchVertex = thisSplit.GetBranchVertex();
-	const CartesianVector &replacementVertex = thisSplit.GetReplacementVertex();
+        Cluster* pBranchCluster = thisSplit.GetBranchCluster();
+        Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
+        const CartesianVector &branchVertex = thisSplit.GetBranchVertex();
+        const CartesianVector &replacementVertex = thisSplit.GetReplacementVertex();
 
-	const float distanceSquared((branchVertex - replacementVertex).GetMagnitudeSquared());
-	const float vetoDistanceSquared(m_vetoDisplacement * m_vetoDisplacement);
+        const float distanceSquared((branchVertex - replacementVertex).GetMagnitudeSquared());
+        const float vetoDistanceSquared(m_vetoDisplacement * m_vetoDisplacement);
 
-	bool branchVeto(false), replacementVeto(false);
+        bool branchVeto(false), replacementVeto(false);
 
-	// Veto the merge if another cluster is closer to the replacement vertex
-	for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
-	{
-	    const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
+        // Veto the merge if another cluster is closer to the replacement vertex
+        for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
+        {
+            const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
 
-	    if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
-		continue;
+            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+                continue;
 
-	    const float minDistanceSquared((replacementVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
-	    const float maxDistanceSquared((replacementVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+            const float minDistanceSquared((replacementVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
+            const float maxDistanceSquared((replacementVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
 
-	    if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
-	    {
-		branchVeto = true;
-		break;
-	    }
-	}
+            if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
+            {
+                branchVeto = true;
+                break;
+            }
+        }
 
-	// Veto the merge if another cluster is closer to the branch vertex
-	for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
-	{
-	    const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
+        // Veto the merge if another cluster is closer to the branch vertex
+        for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
+        {
+            const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
 
-	    if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
-		continue;
+            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+                continue;
 
-	    const float minDistanceSquared((branchVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
-	    const float maxDistanceSquared((branchVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
+            const float minDistanceSquared((branchVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
+            const float maxDistanceSquared((branchVertex - slidingFit.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
 
-	    if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
-	    {
-		replacementVeto = true;
-		break;
-	    }
-	}
+            if (std::min(minDistanceSquared, maxDistanceSquared) < std::max(distanceSquared, vetoDistanceSquared))
+            {
+                replacementVeto = true;
+                break;
+            }
+        }
 
-	if (branchVeto || replacementVeto)
-	    continue;
+        if (branchVeto || replacementVeto)
+            continue;
 
-	outputList.push_back(*iter);
+        outputList.push_back(*iter);
     }
 }
 
@@ -282,17 +277,17 @@ float TwoDSlidingFitSplittingAndSplicingAlgorithm::CalculateBranchChi2(const Clu
 
     for (CaloHitList::const_iterator iter = branchCaloHitList.begin(), iterEnd = branchCaloHitList.end(); iter != iterEnd; ++iter)
     {
-	CaloHit *pCaloHit = *iter;
+        CaloHit *pCaloHit = *iter;
 
-	const CartesianVector hitPosition(pCaloHit->GetPositionVector());
-	const CartesianVector projectedPosition(splitPosition + splitDirection * splitDirection.GetDotProduct(hitPosition - splitPosition));
+        const CartesianVector hitPosition(pCaloHit->GetPositionVector());
+        const CartesianVector projectedPosition(splitPosition + splitDirection * splitDirection.GetDotProduct(hitPosition - splitPosition));
 
-	totalChi2 += (hitPosition - projectedPosition).GetMagnitudeSquared();
-	totalHits += 1.f;
+        totalChi2 += (hitPosition - projectedPosition).GetMagnitudeSquared();
+        totalHits += 1.f;
     }
 
     if (totalHits > 0.f)
-	return std::sqrt(totalChi2/totalHits);
+        return std::sqrt(totalChi2/totalHits);
 
     throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
@@ -308,20 +303,20 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::SplitBranchCluster(const Clust
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
-	CaloHit *pCaloHit = *iter;
+        CaloHit *pCaloHit = *iter;
 
-	if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
-	{
-	    branchCaloHitList.insert(pCaloHit);
-	}
-	else
-	{
-	    principalCaloHitList.insert(pCaloHit);
-	}
+        if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
+        {
+            branchCaloHitList.insert(pCaloHit);
+        }
+        else
+        {
+            principalCaloHitList.insert(pCaloHit);
+        }
     }
 
     if (branchCaloHitList.empty())
-	throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -333,22 +328,22 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
 
     for (ClusterExtensionList::const_iterator iter = splitList.begin(), iterEnd = splitList.end(); iter != iterEnd; ++iter)
     {
-	const ClusterExtension &thisSplit = *iter;
+        const ClusterExtension &thisSplit = *iter;
 
-	Cluster* pBranchCluster = thisSplit.GetBranchCluster();
-	Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
-	const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
-	const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
+        Cluster* pBranchCluster = thisSplit.GetBranchCluster();
+        Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
+        const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
+        const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
 
-	TwoDSlidingFitResultMap::iterator iterBranch1 = branchResultMap.find(pBranchCluster);
-	TwoDSlidingFitResultMap::iterator iterBranch2 = branchResultMap.find(pReplacementCluster);
+        TwoDSlidingFitResultMap::iterator iterBranch1 = branchResultMap.find(pBranchCluster);
+        TwoDSlidingFitResultMap::iterator iterBranch2 = branchResultMap.find(pReplacementCluster);
 
-	TwoDSlidingFitResultMap::iterator iterReplacement1 = replacementResultMap.find(pBranchCluster);
-	TwoDSlidingFitResultMap::iterator iterReplacement2 = replacementResultMap.find(pReplacementCluster);
+        TwoDSlidingFitResultMap::iterator iterReplacement1 = replacementResultMap.find(pBranchCluster);
+        TwoDSlidingFitResultMap::iterator iterReplacement2 = replacementResultMap.find(pReplacementCluster);
 
-	if (branchResultMap.end() == iterBranch1 || branchResultMap.end() == iterBranch2 ||
-	    replacementResultMap.end() == iterReplacement1 || replacementResultMap.end() == iterReplacement2)
-	    continue;
+        if (branchResultMap.end() == iterBranch1 || branchResultMap.end() == iterBranch2 ||
+            replacementResultMap.end() == iterReplacement1 || replacementResultMap.end() == iterReplacement2)
+            continue;
 
 // --- BEGIN DISPLAY ---
 // ClusterList tempList1, tempList2;
@@ -361,19 +356,19 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
 // PANDORA_MONITORING_API(ViewEvent());
 // --- END DISPLAY ---
 
-	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
-									      branchSplitPosition, branchSplitDirection));
-	branchResultMap.erase(iterBranch1);
-	branchResultMap.erase(iterBranch2);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
+                                                                              branchSplitPosition, branchSplitDirection));
+        branchResultMap.erase(iterBranch1);
+        branchResultMap.erase(iterBranch2);
 
-	replacementResultMap.erase(iterReplacement1);
-	replacementResultMap.erase(iterReplacement2);
+        replacementResultMap.erase(iterReplacement1);
+        replacementResultMap.erase(iterReplacement2);
 
-	foundSplit = true;
+        foundSplit = true;
     }
 
     if (foundSplit)
-	return STATUS_CODE_SUCCESS;
+        return STATUS_CODE_SUCCESS;
 
     return STATUS_CODE_NOT_FOUND;
 }
@@ -389,7 +384,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(Cluster *c
 
     std::string clusterListToSaveName, clusterListToDeleteName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,
-	clusterListToSaveName));
+        clusterListToSaveName));
 
     // Entire replacement cluster goes into new principal cluster
     CaloHitList principalCaloHitList;
