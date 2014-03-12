@@ -149,7 +149,6 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
         // Find the nearest parent cluster
         for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pDaughterCluster(iter2->first);
             const ClusterAssociation &clusterAssociation(iter2->second);
 
             if (clusterAssociation.GetAssociation() == ClusterAssociation::WEAK)
