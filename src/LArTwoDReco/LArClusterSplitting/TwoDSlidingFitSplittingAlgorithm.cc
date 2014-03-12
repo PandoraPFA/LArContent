@@ -44,8 +44,6 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const LArClusterHelper
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)
     {
-        const unsigned int thisLayer(iter->first);
-
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
             CaloHit *pCaloHit = *hitIter;
