@@ -89,6 +89,9 @@ void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, co
         {
             for (typename OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
             {
+                if (ignoreUnavailable && (!iterU->first->IsAvailable() || !iterV->first->IsAvailable() || !iterW->first->IsAvailable()))
+                    continue;
+
                 Element element(iterU->first, iterV->first, iterW->first, iterW->second);
                 elementList.push_back(element);
             }
