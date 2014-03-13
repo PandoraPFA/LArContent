@@ -34,6 +34,7 @@
 #include "LArThreeDReco/LArTrackMatching/ClearTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/MissingTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/OvershootTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/TensorVisualizationTool.h"
 #include "LArThreeDReco/LArTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
@@ -122,6 +123,7 @@ public:
         d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
         d("LArMissingTracks",                       lar::MissingTracksTool::Factory)                                            \
         d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
+        d("LArTensorVisualization",                 lar::TensorVisualizationTool::Factory)                                      \
         d("LArUndershootTracks",                    lar::UndershootTracksTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
