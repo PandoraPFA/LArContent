@@ -248,6 +248,9 @@ void ClearTracksTool::ResolveSimpleAmbiguities(const TensorType &overlapTensor, 
 
     for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
+        if (!iterU->first->IsAvailable())
+            continue;
+
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList localElementList;
         overlapTensor.GetConnectedElements(iterU->first, true, localElementList, nU, nV, nW);
@@ -256,11 +259,13 @@ void ClearTracksTool::ResolveSimpleAmbiguities(const TensorType &overlapTensor, 
             continue;
 
         unsigned int nElementsPassingTrackOverlapCut(0), highestMSP(0), secondHighestMSP(0);
-        TensorType::ElementList::const_iterator passedTrackOverlapElement(localElementList.end());
-        TensorType::ElementList::const_iterator highestMSPElement(localElementList.end());
+        TensorType::ElementList::const_iterator passedTrackOverlapIter(localElementList.end()), highestMSPIter(localElementList.end());
 
         for (TensorType::ElementList::const_iterator eIter = localElementList.begin(); eIter != localElementList.end(); ++eIter)
         {
+            if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))
+                continue;
+
             const TransverseOverlapResult::XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
 
             if ((xOverlap.GetXSpanU() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanU() > m_minXOverlapFraction) &&
@@ -268,15 +273,16 @@ void ClearTracksTool::ResolveSimpleAmbiguities(const TensorType &overlapTensor, 
                 (xOverlap.GetXSpanW() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanW() > m_minXOverlapFraction))
             {
                 ++nElementsPassingTrackOverlapCut;
-                passedTrackOverlapElement = eIter;
+                passedTrackOverlapIter = eIter;
             }
 
             const unsigned int nMatchedSamplingPoints(eIter->GetOverlapResult().GetNMatchedSamplingPoints());
 
             if (nMatchedSamplingPoints > highestMSP)
             {
+                highestMSPIter = eIter;
+                secondHighestMSP = highestMSP;
                 highestMSP = nMatchedSamplingPoints;
-                highestMSPElement = eIter;
             }
             else if (nMatchedSamplingPoints > secondHighestMSP)
             {
@@ -284,16 +290,13 @@ void ClearTracksTool::ResolveSimpleAmbiguities(const TensorType &overlapTensor, 
             }
         }
 
-        if ((1 != nElementsPassingTrackOverlapCut) || (highestMSPElement != passedTrackOverlapElement) || (highestMSP < m_minMatchedSamplingPointRatio * secondHighestMSP))
+        if ((1 != nElementsPassingTrackOverlapCut) || (highestMSPIter != passedTrackOverlapIter) || (highestMSP < m_minMatchedSamplingPointRatio * secondHighestMSP))
             continue;
 
-        if (usedClusters.count(passedTrackOverlapElement->GetClusterU()) || usedClusters.count(passedTrackOverlapElement->GetClusterV()) || usedClusters.count(passedTrackOverlapElement->GetClusterW()))
-            continue;
-
-        elementList.push_back(*passedTrackOverlapElement);
-        usedClusters.insert(passedTrackOverlapElement->GetClusterU());
-        usedClusters.insert(passedTrackOverlapElement->GetClusterV());
-        usedClusters.insert(passedTrackOverlapElement->GetClusterW());
+        elementList.push_back(*passedTrackOverlapIter);
+        usedClusters.insert(passedTrackOverlapIter->GetClusterU());
+        usedClusters.insert(passedTrackOverlapIter->GetClusterV());
+        usedClusters.insert(passedTrackOverlapIter->GetClusterW());
     }
 }
 
