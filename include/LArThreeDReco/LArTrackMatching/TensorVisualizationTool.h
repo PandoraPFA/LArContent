@@ -32,8 +32,8 @@ private:
     pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    int     m_minClusterConnections;        ///< The minimum number of cluster connections for display
-    bool    m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters in the tensor
+    unsigned int    m_minClusterConnections;        ///< The minimum number of cluster connections for display
+    bool            m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters in the tensor
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
