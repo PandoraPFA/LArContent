@@ -20,7 +20,7 @@ namespace lar
 StatusCode IsolatedHitMergingAlgorithm::Run()
 {
     const ClusterList *pNonSeedClusterList = NULL;
-    const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
 
     if (STATUS_CODE_NOT_INITIALIZED == statusCode)
         return STATUS_CODE_SUCCESS;
@@ -29,7 +29,7 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
         return statusCode;
 
     const ClusterList *pSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList));
 
     // Delete small clusters from the current list of non-seeds to free the underlying hits
     ClusterList clustersToDelete;
@@ -46,7 +46,7 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
         }
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DeleteClusters(*this, clustersToDelete, m_nonSeedClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, &clustersToDelete, m_nonSeedClusterListName));
 
     // Reassign available hits to be most appropriate seed clusters
     ClusterVector clusterVector(pSeedClusterList->begin(), pSeedClusterList->end());
@@ -59,7 +59,7 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
     {
         CaloHit *pCaloHit = *iterI;
 
-        if (!PandoraContentApi::IsCaloHitAvailable(*this, pCaloHit))
+        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
 
         Cluster *pBestHostCluster(NULL);
@@ -85,7 +85,7 @@ StatusCode IsolatedHitMergingAlgorithm::Run()
 
         if (NULL != pBestHostCluster)
         {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedCaloHitToCluster(*this, pBestHostCluster, pCaloHit));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pBestHostCluster, pCaloHit));
         }
     }
 

@@ -18,7 +18,7 @@ namespace lar
 StatusCode ClusterCreationAlgorithm::Run()
 {
     const CaloHitList *pCaloHitList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
     OrderedCaloHitList orderedCaloHitList, rejectedCaloHitList;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FilterCaloHits(pCaloHitList, orderedCaloHitList, rejectedCaloHitList));
@@ -135,7 +135,7 @@ StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitLis
            
                 Cluster* pCluster = mapIter->second;
             
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pCluster, pCaloHitI));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHitI));
                 hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
 
                 newClusteredHits.insert(pCaloHitI);
@@ -266,7 +266,7 @@ void ClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedC
             if (hitToClusterMap.end() != hitToClusterMap.find(joinIter->second))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pCluster, joinIter->second));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, joinIter->second));
             hitToClusterMap.insert(HitToClusterMap::value_type(joinIter->second, pCluster));
         }
     }

@@ -21,7 +21,7 @@ namespace lar
 StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputCosmicRayPfoListName, pPfoList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCosmicRayPfoListName, pPfoList));
 
     PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
     std::sort(pfoVector.begin(), pfoVector.end(), CheatingCosmicRayShowerMatchingAlg::SortPfosByNHits);
@@ -66,7 +66,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const Str
         for (StringVector::const_iterator sIter = clusterListNames.begin(), sIterEnd = clusterListNames.end(); sIter != sIterEnd; ++sIter)
         {
             const ClusterList *pClusterList = NULL;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, *sIter, pClusterList));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *sIter, pClusterList));
 
             for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
             {
@@ -82,7 +82,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const Str
 
                     if (pPfoParentMCParticle == pParentMCParticle)
                     {
-                        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddClusterToPfo(*this, pPfo, pCluster));
+                        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster));
                     }
                 }
                 catch (StatusCodeException &)

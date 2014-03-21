@@ -20,7 +20,7 @@ namespace lar
 StatusCode CheatingCosmicRayIdentificationAlg::Run()
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputPfoListName, pPfoList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     PfoList outputPfoList;
 
@@ -56,7 +56,7 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
     if (!outputPfoList.empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SavePfoList(*this, m_inputPfoListName, m_outputPfoListName, outputPfoList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_inputPfoListName, m_outputPfoListName, outputPfoList));
     }
 
     return STATUS_CODE_SUCCESS;

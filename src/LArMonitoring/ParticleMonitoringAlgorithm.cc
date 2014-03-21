@@ -44,13 +44,13 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     {
         // Input lists
         const MCParticleList *pMCParticleList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetMCParticleList(*this, m_mcParticleListName, pMCParticleList));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
         const CaloHitList *pCaloHitList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCaloHitList(*this, m_caloHitListName, pCaloHitList));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
         const PfoList *pPfoList = NULL;
-        (void) PandoraContentApi::GetPfoList(*this, m_pfoListName, pPfoList);
+        (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
         const PfoList pfoList((NULL != pPfoList) ? PfoList(*pPfoList) : PfoList());
         nPfos = pfoList.size();
 
