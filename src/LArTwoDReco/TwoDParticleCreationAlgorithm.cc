@@ -18,10 +18,10 @@ namespace lar
 StatusCode TwoDParticleCreationAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL; std::string pfoListName;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryPfoListAndSetCurrent(*this, pPfoList, pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
     const ClusterList *pClusterListU = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameU, pClusterListU));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameU, pClusterListU));
 
     if (NULL != pClusterListU)
     {
@@ -29,7 +29,7 @@ StatusCode TwoDParticleCreationAlgorithm::Run()
     }
 
     const ClusterList *pClusterListV = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameV, pClusterListV));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameV, pClusterListV));
 
     if (NULL != pClusterListV)
     {
@@ -37,7 +37,7 @@ StatusCode TwoDParticleCreationAlgorithm::Run()
     }
 
     const ClusterList *pClusterListW = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_inputClusterListNameW, pClusterListW));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameW, pClusterListW));
 
     if (NULL != pClusterListW)
     {
@@ -46,8 +46,8 @@ StatusCode TwoDParticleCreationAlgorithm::Run()
 
     if (!pPfoList->empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SavePfoList(*this, m_outputPfoListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentPfoList(*this, m_outputPfoListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Pfo>(*this, m_outputPfoListName));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -89,7 +89,8 @@ StatusCode TwoDParticleCreationAlgorithm::CreatePFOs(const ClusterList *const pC
         pfoParameters.m_vertex = CartesianVector(0., 0., 0.);
         pfoParameters.m_clusterList.insert(pCluster);
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters));
+        ParticleFlowObject *pPfo(NULL);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
     }
 
     return STATUS_CODE_SUCCESS;

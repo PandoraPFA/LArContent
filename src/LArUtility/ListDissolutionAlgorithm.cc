@@ -24,13 +24,13 @@ StatusCode ListDissolutionAlgorithm::Run()
         try
         {
             const PfoList *pPfoList = NULL;
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, != , PandoraContentApi::GetPfoList(*this, listName, pPfoList));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, != , PandoraContentApi::GetList(*this, listName, pPfoList));
 
             const PfoList pfoList(*pPfoList);
 
             for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
            {
-                if (STATUS_CODE_SUCCESS != PandoraContentApi::DeletePfo(*this, *pIter, listName))
+                if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, *pIter, listName))
                 {
                     std::cout << "ListDissolutionAlgorithm: Could not delete Pfo." << std::endl;
                 }
@@ -49,7 +49,7 @@ StatusCode ListDissolutionAlgorithm::Run()
         try
         {
             const ClusterList *pClusterList = NULL;
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, != , PandoraContentApi::GetClusterList(*this, listName, pClusterList));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, != , PandoraContentApi::GetList(*this, listName, pClusterList));
 
             const ClusterList clusterList(*pClusterList);
 
@@ -58,7 +58,7 @@ StatusCode ListDissolutionAlgorithm::Run()
                 if (!m_warnIfClustersUnavailable && !(*cIter)->IsAvailable())
                     continue;
 
-                if (STATUS_CODE_SUCCESS != PandoraContentApi::DeleteCluster(*this, *cIter, listName))
+                if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, *cIter, listName))
                 {
                     if (m_warnIfClustersUnavailable)
                         std::cout << "ListDissolutionAlgorithm: Could not delete Pfo." << std::endl;

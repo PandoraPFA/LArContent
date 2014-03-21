@@ -31,7 +31,7 @@ StatusCode ListPreparationAlgorithm::ProcessCaloHits()
 {
     // Split input calo hit list into different views
     const CaloHitList *pCaloHitList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCaloHitList(*this, m_inputCaloHitListName, pCaloHitList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitListName, pCaloHitList));
 
     if (pCaloHitList->empty())
         return STATUS_CODE_NOT_INITIALIZED;
@@ -42,7 +42,7 @@ StatusCode ListPreparationAlgorithm::ProcessCaloHits()
     {
         CaloHit *pCaloHit = *hitIter;
 
-        if (m_onlyAvailableCaloHits && !PandoraContentApi::IsCaloHitAvailable(*this, pCaloHit))
+        if (m_onlyAvailableCaloHits && !PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
 
         if (pCaloHit->GetMipEquivalentEnergy() < m_mipEquivalentCut)
@@ -73,19 +73,19 @@ StatusCode ListPreparationAlgorithm::ProcessCaloHits()
 
     // Save the lists
     if (!filteredInputList.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveCaloHitList(*this, filteredInputList, m_filteredCaloHitListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredInputList, m_filteredCaloHitListName));
 
     if (!filteredCaloHitListU.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveCaloHitList(*this, filteredCaloHitListU, m_outputCaloHitListNameU));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListU, m_outputCaloHitListNameU));
 
     if (!filteredCaloHitListV.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveCaloHitList(*this, filteredCaloHitListV, m_outputCaloHitListNameV));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListV, m_outputCaloHitListNameV));
 
     if (!filteredCaloHitListW.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveCaloHitList(*this, filteredCaloHitListW, m_outputCaloHitListNameW));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListW, m_outputCaloHitListNameW));
 
     if (!m_currentCaloHitListReplacement.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentCaloHitList(*this, m_currentCaloHitListReplacement));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_currentCaloHitListReplacement));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -96,7 +96,7 @@ StatusCode ListPreparationAlgorithm::ProcessMCParticles()
 {
     // Split input MC particles into different views
     const MCParticleList *pMCParticleList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetMCParticleList(*this, m_inputMCParticleListName, pMCParticleList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputMCParticleListName, pMCParticleList));
 
     if (pMCParticleList->empty())
         return STATUS_CODE_NOT_INITIALIZED;
@@ -132,19 +132,19 @@ StatusCode ListPreparationAlgorithm::ProcessMCParticles()
 
     // Save the lists
     if (!mcParticleListU.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveMCParticleList(*this, mcParticleListU, m_outputMCParticleListNameU));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleListU, m_outputMCParticleListNameU));
 
     if (!mcParticleListV.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveMCParticleList(*this, mcParticleListV, m_outputMCParticleListNameV));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleListV, m_outputMCParticleListNameV));
 
     if (!mcParticleListW.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveMCParticleList(*this, mcParticleListW, m_outputMCParticleListNameW));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleListW, m_outputMCParticleListNameW));
 
     if (!mcParticleList3D.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveMCParticleList(*this, mcParticleList3D, m_outputMCParticleListName3D));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleList3D, m_outputMCParticleListName3D));
 
     if (!m_currentMCParticleListReplacement.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentMCParticleList(*this, m_currentMCParticleListReplacement));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<MCParticle>(*this, m_currentMCParticleListReplacement));
 
     return STATUS_CODE_SUCCESS;
 }

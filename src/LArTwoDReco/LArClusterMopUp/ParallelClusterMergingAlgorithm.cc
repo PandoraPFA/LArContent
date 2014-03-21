@@ -21,10 +21,10 @@ namespace lar
 StatusCode ParallelClusterMergingAlgorithm::Run()
 {
     const ClusterList *pSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList));
 
     const ClusterList *pNonSeedClusterList = NULL;
-    const StatusCode statusCode(PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
 
     if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
         return statusCode;

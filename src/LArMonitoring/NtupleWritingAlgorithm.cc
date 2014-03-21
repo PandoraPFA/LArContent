@@ -25,15 +25,16 @@ StatusCode NtupleWritingAlgorithm::Run()
     const ClusterList *pSeedClusterList = NULL;
     const ClusterList *pNonSeedClusterList = NULL;
 
-    if ( STATUS_CODE_SUCCESS == PandoraContentApi::GetClusterList(*this, m_seedClusterListName, pSeedClusterList) )
+    if ( STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList) )
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
     }
-    else if ( STATUS_CODE_SUCCESS != PandoraContentApi::GetClusterList(*this, m_nonSeedClusterListName, pNonSeedClusterList) )
+    else if ( STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList) )
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pNonSeedClusterList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pNonSeedClusterList));
     }
-    else{
+    else
+    {
         std::cout << " Cannot find an input cluster list " << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
     }
