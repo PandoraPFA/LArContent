@@ -23,14 +23,14 @@ namespace lar
 
         ctopmap_t clusterToPfoMap;
         ptocmultimap_t pfoAssociatedClusterMap;
-        
+
         // check the input PFO lists exists
         const PfoList *pPfoList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputPfoListName, pPfoList));
-        
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+
         const PfoList *pCosmicPfoList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputCosmicRayPfoListName, pCosmicPfoList));
-        
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCosmicRayPfoListName, pCosmicPfoList));
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CosmicRay3DShowerMatching(clusterToPfoMap,pfoAssociatedClusterMap));
         if(m_visualiseAllMatches||m_visualiseBadMatches)this->VisualiseMatches(clusterToPfoMap,pfoAssociatedClusterMap);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CosmicRayShowerMatching(clusterToPfoMap,pfoAssociatedClusterMap));
@@ -48,7 +48,7 @@ namespace lar
         // associated clusters to matched cosmics
         
         const PfoList *pCosmicPfoList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputCosmicRayPfoListName, pCosmicPfoList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCosmicRayPfoListName, pCosmicPfoList));
         for (PfoList::const_iterator iterPfo = pCosmicPfoList->begin(), iterPfoEnd = pCosmicPfoList->end(); iterPfo != iterPfoEnd; ++iterPfo)
         {
             ParticleFlowObject *pPfo = *iterPfo;
@@ -81,7 +81,7 @@ namespace lar
                         const MCParticle *pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
                         if(abs(pParentMCParticle->GetParticleId())==12 || abs(pParentMCParticle->GetParticleId())==14 )neutrinoCluster = true;
                     } catch (StatusCodeException &) {     }
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddClusterToPfo(*this, pPfo, pCluster));
+                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster));
                     if(m_debugPrintingOn){
                         if(neutrinoCluster && !neutrinoPfo)std::cout << " Error   - part of neutrino matched to COSMIC? " << std::endl;
                         if(neutrinoCluster && neutrinoPfo)std::cout  << " success - part of neutrino matched to neutrino " << std::endl;
@@ -178,21 +178,21 @@ namespace lar
         // Loop over W clusters
         for (StringVector::const_iterator sIterW = m_inputClusterListNamesW.begin(), sIterEndW = m_inputClusterListNamesW.end(); sIterW != sIterEndW; ++sIterW){
             const ClusterList *pClusterListW = NULL;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, *sIterW, pClusterListW))
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *sIterW, pClusterListW))
             for (ClusterList::const_iterator cIterW = pClusterListW->begin(), cIterWEnd = pClusterListW->end(); cIterW != cIterWEnd; ++cIterW)WClusters.push_back(*cIterW);
         }
         
         // Loop over U clusters
         for (StringVector::const_iterator sIterU = m_inputClusterListNamesU.begin(), sIterEndU = m_inputClusterListNamesU.end(); sIterU != sIterEndU; ++sIterU){
             const ClusterList *pClusterListU = NULL;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, *sIterU, pClusterListU));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *sIterU, pClusterListU));
             for(ClusterList::const_iterator cIterU = pClusterListU->begin(), cIterUEnd = pClusterListU->end(); cIterU != cIterUEnd; ++cIterU)UClusters.push_back(*cIterU);
         }
     
         // Loop over V clusters
         for (StringVector::const_iterator sIterV = m_inputClusterListNamesV.begin(), sIterEndV = m_inputClusterListNamesV.end(); sIterV != sIterEndV; ++sIterV){
             const ClusterList *pClusterListV = NULL;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetClusterList(*this, *sIterV, pClusterListV));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *sIterV, pClusterListV));
             for(ClusterList::const_iterator cIterV = pClusterListV->begin(), cIterVEnd = pClusterListV->end(); cIterV != cIterVEnd; ++cIterV)VClusters.push_back(*cIterV);
         }
         
@@ -626,10 +626,10 @@ bool CosmicRayShowerMatchingAlgorithm::SortPfosByNHits(const ParticleFlowObject 
 StatusCode CosmicRayShowerMatchingAlgorithm::GetAllPfos(PfoList &tempPfoList) const
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputCosmicRayPfoListName, pPfoList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCosmicRayPfoListName, pPfoList));
 
     const PfoList *pOtherPfoList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetPfoList(*this, m_inputPfoListName, pOtherPfoList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pOtherPfoList));
 
     tempPfoList.insert(pPfoList->begin(), pPfoList->end());
     tempPfoList.insert(pOtherPfoList->begin(), pOtherPfoList->end());

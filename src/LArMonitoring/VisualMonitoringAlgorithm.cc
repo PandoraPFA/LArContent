@@ -103,7 +103,7 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
 
     if (listName.empty())
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentMCParticleList(*this, pMCParticleList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pMCParticleList))
         {
             std::cout << "VisualMonitoringAlgorithm: mc particle list unavailable." << std::endl;
             return;
@@ -111,7 +111,7 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
     }
     else
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetMCParticleList(*this, listName, pMCParticleList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pMCParticleList))
         {
             std::cout << "VisualMonitoringAlgorithm: mc particle list unavailable." << std::endl;
             return;
@@ -152,7 +152,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
 
     if (listName.empty())
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pCaloHitList))
         {
             std::cout << "VisualMonitoringAlgorithm: current calo hit list unavailable." << std::endl;
             return;
@@ -160,7 +160,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
     }
     else
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCaloHitList(*this, listName, pCaloHitList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pCaloHitList))
         {
             std::cout << "VisualMonitoringAlgorithm: calo hit list " << listName << " unavailable." << std::endl;
             return;
@@ -176,7 +176,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
         {
             caloHitList.erase(hitIter++);
         }
-        else if (m_showOnlyAvailable && !PandoraContentApi::IsCaloHitAvailable(*this, *hitIter))
+        else if (m_showOnlyAvailable && !PandoraContentApi::IsAvailable(*this, *hitIter))
         {
             caloHitList.erase(hitIter++);
         }
@@ -198,7 +198,7 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
 
     if (listName.empty())
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentClusterList(*this, pClusterList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pClusterList))
         {
             std::cout << "VisualMonitoringAlgorithm: current cluster list unavailable." << std::endl;
             return;
@@ -206,7 +206,7 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
     }
     else
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetClusterList(*this, listName, pClusterList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pClusterList))
         {
             std::cout << "VisualMonitoringAlgorithm: cluster list " << listName << " unavailable." << std::endl;
             return;
@@ -244,7 +244,7 @@ void VisualMonitoringAlgorithm::VisualizeParticleFlowList(const std::string &lis
 
     if (listName.empty())
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentPfoList(*this, pPfoList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pPfoList))
         {
             std::cout << "VisualMonitoringAlgorithm: current pfo list unavailable." << std::endl;
             return;
@@ -252,7 +252,7 @@ void VisualMonitoringAlgorithm::VisualizeParticleFlowList(const std::string &lis
     }
     else
     {
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetPfoList(*this, listName, pPfoList))
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pPfoList))
         {
             std::cout << "VisualMonitoringAlgorithm: pfo list " << listName << " unavailable." << std::endl;
             return;

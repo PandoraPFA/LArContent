@@ -20,7 +20,7 @@ namespace lar
 StatusCode ClusterAssociationAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
     m_mergeMade = true;
     ClusterAssociationMap clusterAssociationMap;

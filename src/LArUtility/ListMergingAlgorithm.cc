@@ -26,7 +26,7 @@ StatusCode ListMergingAlgorithm::Run()
         const std::string &sourceListName(m_sourceClusterListNames.at(iIndex));
         const std::string &targetListName(m_targetClusterListNames.at(iIndex));
 
-        const StatusCode statusCode(PandoraContentApi::SaveClusterList(*this, sourceListName, targetListName));
+        const StatusCode statusCode(PandoraContentApi::SaveList<Cluster>(*this, sourceListName, targetListName));
 
         if (STATUS_CODE_SUCCESS != statusCode)
         {
@@ -55,7 +55,7 @@ StatusCode ListMergingAlgorithm::Run()
         const std::string &sourceListName(m_sourcePfoListNames.at(iIndex));
         const std::string &targetListName(m_targetPfoListNames.at(iIndex));
 
-        const StatusCode statusCode(PandoraContentApi::SavePfoList(*this, sourceListName, targetListName));
+        const StatusCode statusCode(PandoraContentApi::SaveList<Pfo>(*this, sourceListName, targetListName));
 
         if (STATUS_CODE_SUCCESS != statusCode)
         {

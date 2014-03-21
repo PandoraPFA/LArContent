@@ -18,7 +18,7 @@ namespace lar
 StatusCode ClusterSplittingAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
     ClusterSplittingList internalClusterList(pClusterList->begin(), pClusterList->end());
 

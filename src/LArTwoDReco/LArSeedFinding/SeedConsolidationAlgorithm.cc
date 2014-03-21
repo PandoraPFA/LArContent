@@ -21,7 +21,7 @@ namespace lar
 StatusCode SeedConsolidationAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentClusterList(*this, pClusterList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
     // Create ordered list of shower-like clusters
     ClusterVector clusterVector;
