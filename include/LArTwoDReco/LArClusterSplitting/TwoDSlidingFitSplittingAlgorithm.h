@@ -31,8 +31,11 @@ protected:
      *
      *  @return pandora::StatusCode
      */
-    virtual pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
+    virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, 
         pandora::CartesianVector& splitPosition) const = 0;
+
+    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
+    typedef LArClusterHelper::TwoDSlidingFitResultMap TwoDSlidingFitResultMap;
 
 private:
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
@@ -48,9 +51,8 @@ private:
      *
      *  @return pandora::StatusCode
      */
-    pandora::StatusCode SplitCluster(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-        const pandora::CartesianVector& splitPosition, pandora::CaloHitList &firstCaloHitList,
-        pandora::CaloHitList &secondCaloHitList) const;
+    pandora::StatusCode SplitCluster(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector& splitPosition, 
+        pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
     unsigned int    m_slidingFitHalfWindow;   ///<
     float           m_minClusterLength;       ///<

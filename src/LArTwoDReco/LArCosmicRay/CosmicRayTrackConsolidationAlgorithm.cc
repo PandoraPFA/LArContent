@@ -23,11 +23,37 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
 
-  
+    ClusterVector shortClusters, longClusters;
 
-    // TODO
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster* pCluster = *iter;
 
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minTrackLength * m_minTrackLength)
+        {
+            shortClusters.push_back(pCluster);
+        }
+        else
+        {
+            longClusters.push_back(pCluster);
+        }
+    }
 
+    std::sort(longClusters.begin(), longClusters.end(), LArClusterHelper::SortByNHits);
+
+ 
+
+    // for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    // {
+    //     if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
+    //     {
+    //         LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+    //         LArClusterHelper::LArTwoDSlidingFit(*iter, halfWindowLayers, slidingFitResult);
+
+    //         if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+    //             throw StatusCodeException(STATUS_CODE_FAILURE);
+    //     }
+    // }
 
 
     return STATUS_CODE_SUCCESS;
