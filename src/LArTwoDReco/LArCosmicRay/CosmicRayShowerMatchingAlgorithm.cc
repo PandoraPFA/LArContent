@@ -520,7 +520,7 @@ namespace lar
         const bool useX(true);
     
         // first try sliding fits
-        LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+        TwoDSlidingFitResult slidingFitResult;
         try {
             LArClusterHelper::LArTwoDSlidingFit(pCluster, span, slidingFitResult);
             slidingFitResult.GetGlobalFitPosition(x, useX, fitVector);

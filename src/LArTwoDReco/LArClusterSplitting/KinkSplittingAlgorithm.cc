@@ -15,7 +15,7 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
+StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult,
     CartesianVector& splitPosition) const
 {
     // Search for scatters by scanning over the layers in the sliding fit result

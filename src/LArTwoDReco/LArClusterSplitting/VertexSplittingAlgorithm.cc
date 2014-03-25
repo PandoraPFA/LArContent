@@ -15,8 +15,7 @@ using namespace pandora;
 namespace lar
 {
  
-StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-    CartesianVector &splitPosition) const
+StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, CartesianVector &splitPosition) const
 {
     // Identify event vertex
     const VertexList *pVertexList(NULL);

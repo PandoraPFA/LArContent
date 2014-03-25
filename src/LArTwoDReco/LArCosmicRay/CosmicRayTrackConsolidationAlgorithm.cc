@@ -43,17 +43,21 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::Run()
 
  
 
-    // for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
-    // {
-    //     if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
-    //     {
-    //         LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
-    //         LArClusterHelper::LArTwoDSlidingFit(*iter, halfWindowLayers, slidingFitResult);
+    const unsigned int m_halfWindowLayers(20);
 
-    //         if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-    //             throw StatusCodeException(STATUS_CODE_FAILURE);
-    //     }
-    // }
+   
+    
+    TwoDSlidingFitResultMap slidingFitResultMap;
+
+    for (ClusterVector::const_iterator iter = longClusters.begin(), iterEnd = longClusters.end(); iter != iterEnd; ++iter)
+    {
+         TwoDSlidingFitResult slidingFitResult;
+         LArClusterHelper::LArTwoDSlidingFit(*iter, m_halfWindowLayers, slidingFitResult);
+
+         if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+              throw StatusCodeException(STATUS_CODE_FAILURE);
+    }     
+    
 
 
     return STATUS_CODE_SUCCESS;

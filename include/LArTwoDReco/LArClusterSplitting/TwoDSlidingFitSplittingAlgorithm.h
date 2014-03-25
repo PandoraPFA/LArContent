@@ -34,9 +34,6 @@ protected:
     virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, 
         pandora::CartesianVector& splitPosition) const = 0;
 
-    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
-    typedef LArClusterHelper::TwoDSlidingFitResultMap TwoDSlidingFitResultMap;
-
 private:
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
         pandora::CaloHitList &secondCaloHitList) const;
