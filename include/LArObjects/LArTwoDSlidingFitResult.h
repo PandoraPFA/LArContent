@@ -448,6 +448,8 @@ private:
     friend class LArClusterHelper;
 };
 
+typedef std::map<pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::Cluster *TwoDSlidingFitResult::GetCluster() const

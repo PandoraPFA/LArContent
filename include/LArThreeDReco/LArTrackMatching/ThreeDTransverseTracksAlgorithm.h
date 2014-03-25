@@ -52,8 +52,6 @@ private:
         UNKNOWN
     };
 
-    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
-    typedef LArClusterHelper::TwoDSlidingFitResultMap TwoDSlidingFitResultMap;
     typedef TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
 
     /**

@@ -20,7 +20,7 @@ namespace lar
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
+    TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
     LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);

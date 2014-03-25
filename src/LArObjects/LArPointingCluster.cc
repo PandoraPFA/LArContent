@@ -26,7 +26,7 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
     m_rms(std::numeric_limits<float>::max()),
     m_isInner(useInnerVertex)
 {
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+    TwoDSlidingFitResult slidingFitResult;
     LArClusterHelper::LArTwoDSlidingFit(pCluster, 10, slidingFitResult);
 
     const float minLayerZ(slidingFitResult.GetGlobalMinLayerPosition().GetZ());

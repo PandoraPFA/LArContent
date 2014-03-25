@@ -79,9 +79,6 @@ protected:
 
     typedef std::vector<ClusterExtension> ClusterExtensionList;
 
-    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
-    typedef LArClusterHelper::TwoDSlidingFitResultMap TwoDSlidingFitResultMap;
-
     /**
      *  @brief  Output the best split positions in branch and replacement clusters
      *
