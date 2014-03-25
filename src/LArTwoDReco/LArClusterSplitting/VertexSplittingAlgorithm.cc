@@ -8,8 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArVertexHelper.h"
-
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 
 using namespace pandora;
@@ -20,9 +18,21 @@ namespace lar
 StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
     CartesianVector &splitPosition) const
 {
-    
-    const CartesianVector &theVertex(LArVertexHelper::GetCurrentVertex());
+    // Identify event vertex
+    const VertexList *pVertexList(NULL);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
 
+    Vertex *pSelectedVertex(NULL);
+    for (VertexList::const_iterator iter = pVertexList->begin(), iterEnd = pVertexList->end(); iter != iterEnd; ++iter)
+    {
+        // TODO vertex selection
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
+
+    if (!pSelectedVertex)
+        return STATUS_CODE_SUCCESS;
+
+    const CartesianVector &theVertex(pSelectedVertex->GetPosition());
     const CartesianVector innerVertex(slidingFitResult.GetGlobalMinLayerPosition());
     const CartesianVector outerVertex(slidingFitResult.GetGlobalMaxLayerPosition());
 

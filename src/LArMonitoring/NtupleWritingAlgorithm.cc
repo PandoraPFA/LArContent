@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
 
@@ -100,12 +99,6 @@ StatusCode NtupleWritingAlgorithm::Run()
     ntupleWriter.NewEntry( eventNumber, viewType );
 
 
-    // Add the vertex 
-    if ( LArVertexHelper::DoesVertexExist( m_vertexName ) )
-    {
-        ntupleWriter.SetVertex( LArVertexHelper::GetVertex( m_vertexName ) );
-    }
-
     // Add the seed clusters
     if( NULL != pSeedClusterList )
     {
@@ -143,17 +136,6 @@ StatusCode NtupleWritingAlgorithm::Run()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NtupleWritingAlgorithm::NtupleWriter::SetVertex( const CartesianVector& theVertex )
-{
-    m_foundVertex = 1;
-
-    m_vertexPosX = theVertex.GetX();
-    m_vertexPosY = theVertex.GetY();
-    m_vertexPosZ = theVertex.GetZ();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void NtupleWritingAlgorithm::NtupleWriter::AddCluster( Cluster* pCluster, bool isSeed )
 {   
     // Write out hit info
@@ -183,55 +165,37 @@ void NtupleWritingAlgorithm::NtupleWriter::AddCluster( Cluster* pCluster, bool i
     m_clusterIsSeed.push_back( isSeed );
     m_clusterEnergy.push_back( pCluster->GetHadronicEnergy() );
     m_clusterLayers.push_back( orderedCaloHitList.size() );
-    
 
     if ( orderedCaloHitList.size() > 1 )
     {
-        const LArPointingCluster& pointingCluster(pCluster);
-         
-        int directionInZ = LArVertexHelper::GetDirectionInZ(pCluster);
-      
+        const LArPointingCluster &pointingCluster(pCluster);
+
+        // TODO use new vertex functionality to determine direction
+        const int directionInZ(0);
+
         m_clusterDirectionInZ.push_back( directionInZ );
         m_clusterLength.push_back( pointingCluster.GetLength() );
 
-        if ( directionInZ != BACKWARD )
-        {
-            m_clusterStartPosX.push_back( pointingCluster.GetInnerVertex().GetPosition().GetX() );
-            m_clusterStartPosY.push_back( pointingCluster.GetInnerVertex().GetPosition().GetY() );
-            m_clusterStartPosZ.push_back( pointingCluster.GetInnerVertex().GetPosition().GetZ() );
-            m_clusterStartDirX.push_back( pointingCluster.GetInnerVertex().GetDirection().GetX() );
-            m_clusterStartDirY.push_back( pointingCluster.GetInnerVertex().GetDirection().GetY() );
-            m_clusterStartDirZ.push_back( pointingCluster.GetInnerVertex().GetDirection().GetZ() );
-            m_clusterEndPosX.push_back( pointingCluster.GetOuterVertex().GetPosition().GetX() );
-            m_clusterEndPosY.push_back( pointingCluster.GetOuterVertex().GetPosition().GetY() );
-            m_clusterEndPosZ.push_back( pointingCluster.GetOuterVertex().GetPosition().GetZ() );
-            m_clusterEndDirX.push_back( pointingCluster.GetOuterVertex().GetDirection().GetX() );
-            m_clusterEndDirY.push_back( pointingCluster.GetOuterVertex().GetDirection().GetY() );
-            m_clusterEndDirZ.push_back( pointingCluster.GetOuterVertex().GetDirection().GetZ() );
-        }
-        else
-        {
-            m_clusterStartPosX.push_back( pointingCluster.GetOuterVertex().GetPosition().GetX() );
-            m_clusterStartPosY.push_back( pointingCluster.GetOuterVertex().GetPosition().GetY() );
-            m_clusterStartPosZ.push_back( pointingCluster.GetOuterVertex().GetPosition().GetZ() );
-            m_clusterStartDirX.push_back( pointingCluster.GetOuterVertex().GetDirection().GetX() );
-            m_clusterStartDirY.push_back( pointingCluster.GetOuterVertex().GetDirection().GetY() );
-            m_clusterStartDirZ.push_back( pointingCluster.GetOuterVertex().GetDirection().GetZ() );
-            m_clusterEndPosX.push_back( pointingCluster.GetInnerVertex().GetPosition().GetX() );
-            m_clusterEndPosY.push_back( pointingCluster.GetInnerVertex().GetPosition().GetY() );
-            m_clusterEndPosZ.push_back( pointingCluster.GetInnerVertex().GetPosition().GetZ() );
-            m_clusterEndDirX.push_back( pointingCluster.GetInnerVertex().GetDirection().GetX() );
-            m_clusterEndDirY.push_back( pointingCluster.GetInnerVertex().GetDirection().GetY() );
-            m_clusterEndDirZ.push_back( pointingCluster.GetInnerVertex().GetDirection().GetZ() );
-        }
+        m_clusterStartPosX.push_back( pointingCluster.GetInnerVertex().GetPosition().GetX() );
+        m_clusterStartPosY.push_back( pointingCluster.GetInnerVertex().GetPosition().GetY() );
+        m_clusterStartPosZ.push_back( pointingCluster.GetInnerVertex().GetPosition().GetZ() );
+        m_clusterStartDirX.push_back( pointingCluster.GetInnerVertex().GetDirection().GetX() );
+        m_clusterStartDirY.push_back( pointingCluster.GetInnerVertex().GetDirection().GetY() );
+        m_clusterStartDirZ.push_back( pointingCluster.GetInnerVertex().GetDirection().GetZ() );
+        m_clusterEndPosX.push_back( pointingCluster.GetOuterVertex().GetPosition().GetX() );
+        m_clusterEndPosY.push_back( pointingCluster.GetOuterVertex().GetPosition().GetY() );
+        m_clusterEndPosZ.push_back( pointingCluster.GetOuterVertex().GetPosition().GetZ() );
+        m_clusterEndDirX.push_back( pointingCluster.GetOuterVertex().GetDirection().GetX() );
+        m_clusterEndDirY.push_back( pointingCluster.GetOuterVertex().GetDirection().GetY() );
+        m_clusterEndDirZ.push_back( pointingCluster.GetOuterVertex().GetDirection().GetZ() );
     }
-
-    else{
+    else
+    {
         CartesianVector dummyDirection( 0.f, 0.f, 1.f);
 
-        m_clusterDirectionInZ.push_back( DIRECTION_AMBIGUOUS );
+        m_clusterDirectionInZ.push_back(2);
         m_clusterLength.push_back( 0.f );
-             
+
         m_clusterStartPosX.push_back( pCluster->GetCentroid( pCluster->GetInnerPseudoLayer() ).GetX() );
         m_clusterStartPosY.push_back( pCluster->GetCentroid( pCluster->GetInnerPseudoLayer() ).GetY() );
         m_clusterStartPosZ.push_back( pCluster->GetCentroid( pCluster->GetInnerPseudoLayer() ).GetZ() );
@@ -251,9 +215,8 @@ void NtupleWritingAlgorithm::NtupleWriter::AddCluster( Cluster* pCluster, bool i
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 NtupleWritingAlgorithm::NtupleWriter::NtupleWriter() :
-  m_fileName("file.root"), m_treeExistsU(0), m_treeExistsV(0), m_treeExistsW(0),
-    m_event(0), m_view(0), m_nHits(0), m_nClusters(0), m_nSeedClusters(0),
-    m_foundVertex(0), m_vertexPosX(0.f), m_vertexPosY(0.f), m_vertexPosZ(0.f)
+    m_fileName("file.root"), m_treeExistsU(0), m_treeExistsV(0), m_treeExistsW(0),
+    m_event(0), m_view(0), m_nHits(0), m_nClusters(0), m_nSeedClusters(0)
 {    
     std::string treeName("tree");
  
@@ -268,8 +231,7 @@ NtupleWritingAlgorithm::NtupleWriter::NtupleWriter() :
 
 NtupleWritingAlgorithm::NtupleWriter::NtupleWriter( std::string fileName, std::string treeName ) :
     m_fileName(fileName), m_treeExistsU(0), m_treeExistsV(0), m_treeExistsW(0),
-    m_event(0), m_view(0), m_nHits(0), m_nClusters(0), m_nSeedClusters(0),
-    m_foundVertex(0), m_vertexPosX(0.f), m_vertexPosY(0.f), m_vertexPosZ(0.f)
+    m_event(0), m_view(0), m_nHits(0), m_nClusters(0), m_nSeedClusters(0)
 {    
     m_treeNameU = treeName;  m_treeNameU.append("U");
     m_treeNameV = treeName;  m_treeNameV.append("V");
@@ -324,11 +286,6 @@ void NtupleWritingAlgorithm::NtupleWriter::NewEntry( int eventNumber, int viewTy
     m_nClusters = 0;
     m_nSeedClusters = 0;
 
-    m_foundVertex = 0;
-    m_vertexPosX = 0.f;
-    m_vertexPosY = 0.f;
-    m_vertexPosZ = 0.f;
-
     m_hitID.clear();
     m_hitClusterID.clear();
     m_hitPosX.clear();
@@ -370,11 +327,6 @@ void NtupleWritingAlgorithm::NtupleWriter::WriteEntry()
     PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "event", m_event));
     PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "view", m_view));
 
-    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "foundVertex", m_foundVertex));
-    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "vertexPosX", m_vertexPosX));
-    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "vertexPosY", m_vertexPosY));
-    PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "vertexPosZ", m_vertexPosZ));
-
     PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "nHits", m_nHits)); 
     PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitID", &m_hitID)); 
     PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "hitClusterID", &m_hitClusterID)); 
@@ -414,7 +366,6 @@ StatusCode NtupleWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexName", m_vertexName));
 
     m_outputFileName = "LArRecoResults.root";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

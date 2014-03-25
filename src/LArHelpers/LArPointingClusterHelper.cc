@@ -10,7 +10,6 @@
 #include "Helpers/XmlHelper.h"
 
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
 
@@ -30,7 +29,7 @@ bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const
 bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
     float rL(0.f), rT(0.f);
-    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
+    LArPointingClusterHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
     if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) || rT > m_maxPointingTransverseDistance)
         return false;
@@ -43,7 +42,7 @@ bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const
 bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
     float rL(0.f), rT(0.f);
-    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
+    LArPointingClusterHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
     if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) && (rL < 0 || rL > m_maxPointingLongitudinalDistance))
         return false;
@@ -210,7 +209,7 @@ void LArPointingClusterHelper::GetIntersection(const LArPointingCluster::Vertex 
         {
             const CartesianVector &hitPosition = (*iter2)->GetPositionVector();
 
-            LArVertexHelper::GetImpactParameters(vertexCluster.GetPosition(), vertexCluster.GetDirection(), hitPosition, rL, rT);
+            LArPointingClusterHelper::GetImpactParameters(vertexCluster.GetPosition(), vertexCluster.GetDirection(), hitPosition, rL, rT);
 
             if (rT < figureOfMerit)
             {

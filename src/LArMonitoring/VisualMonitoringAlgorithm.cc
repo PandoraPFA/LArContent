@@ -8,8 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArVertexHelper.h"
-
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include <algorithm>
