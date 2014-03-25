@@ -40,18 +40,18 @@ private:
     void VisualizeMCParticleList(const std::string &listName) const;
 
     /**
-     *  @brief  Visualize a named vertex
-     * 
-     *  @param  vertexName the vertex name
-     */
-    void VisualizeVertex(const std::string &vertexName) const;
-
-    /**
      *  @brief  Visualize a specified calo hit list
      * 
      *  @param  listName the list name
      */
     void VisualizeCaloHitList(const std::string &listName) const;
+
+    /**
+     *  @brief  Visualize a specified track list
+     * 
+     *  @param  listName the list name
+     */
+    void VisualizeTrackList(const std::string &listName) const;
 
     /**
      *  @brief  Visualize a specified calo hit list
@@ -61,22 +61,29 @@ private:
     void VisualizeClusterList(const std::string &listName) const;
 
     /**
-     *  @brief  Visualize a specified calo hit list
+     *  @brief  Visualize a specified pfo list
      * 
      *  @param  listName the list name
      */
     void VisualizeParticleFlowList(const std::string &listName) const;
+
+    /**
+     *  @brief  Visualize a specified vertex list
+     * 
+     *  @param  listName the list name
+     */
+    void VisualizeVertexList(const std::string &listName) const;
 
     typedef std::map<int, float> PdgCodeToEnergyMap;
 
     bool                    m_showCurrentMCParticles;   ///< Whether to show current mc particles
     pandora::StringVector   m_mcParticleListNames;      ///< Names of mc particles lists to show
 
-    bool                    m_showCurrentVertex;        ///< Whether to show current vertex
-    pandora::StringVector   m_vertexNames;              ///< Names of the vertices to show
-
     bool                    m_showCurrentCaloHits;      ///< Whether to show current calohitlist
     pandora::StringVector   m_caloHitListNames;         ///< Names of calo hit lists to show
+
+    bool                    m_showCurrentTracks;        ///< Whether to show current tracks
+    pandora::StringVector   m_trackListNames;           ///< Names of track lists to show
 
     bool                    m_showCurrentClusters;      ///< Whether to show current clusters
     pandora::StringVector   m_clusterListNames;         ///< Names of cluster lists to show
@@ -84,13 +91,15 @@ private:
     bool                    m_showCurrentPfos;          ///< Whether to show current particle flow object list
     pandora::StringVector   m_pfoListNames;             ///< Names of pfo lists to show
 
-    bool                    m_showOnlyAvailable;        ///< Whether to show only available  (i.e. non-clustered) calohits and tracks
+    bool                    m_showCurrentVertices;      ///< Whether to show current vertex list
+    pandora::StringVector   m_vertexListNames;          ///< Names of vertex lists to show
+
     bool                    m_displayEvent;             ///< Whether to display the event
-
-    bool                    m_blackBackground;          ///< Whether to use a black background color, rather than white
     bool                    m_showDetector;             ///< Whether to display the detector geometry
-    std::string             m_hitColors;                ///< Define the hit coloring scheme (default: pfo, choices: pfo, particleid)
+    std::string             m_detectorView;             ///< The detector view, default, xy or xz
 
+    bool                    m_showOnlyAvailable;        ///< Whether to show only available  (i.e. non-clustered) calohits and tracks
+    std::string             m_hitColors;                ///< Define the hit coloring scheme (default: pfo, choices: pfo, particleid)
     float                   m_thresholdEnergy;          ///< Cell energy threshold for display (em scale)
     float                   m_transparencyThresholdE;   ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float                   m_energyScaleThresholdE;    ///< Cell energy for which color is at top end of continous color palette

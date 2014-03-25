@@ -86,7 +86,6 @@ StatusCode TwoDParticleCreationAlgorithm::CreatePFOs(const ClusterList *const pC
         pfoParameters.m_mass = 0.;
         pfoParameters.m_energy = clusterEnergy;
         pfoParameters.m_momentum = CartesianVector(fitToAllHitsResult.GetDirection() * clusterEnergy);
-        pfoParameters.m_vertex = CartesianVector(0., 0., 0.);
         pfoParameters.m_clusterList.insert(pCluster);
 
         ParticleFlowObject *pPfo(NULL);

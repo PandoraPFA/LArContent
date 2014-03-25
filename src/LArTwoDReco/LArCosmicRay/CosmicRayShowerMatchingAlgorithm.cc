@@ -148,7 +148,6 @@ namespace lar
                 if(neutrinoPfo && !foundNeutrinoCluster)badMatch=true;
                 if(!neutrinoPfo && foundNeutrinoCluster)badMatch=true;
                 if(m_visualiseAllMatches||(m_visualiseBadMatches&& badMatch)){
-                    PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
                     if(foundMCParticle){
                         if(neutrinoPfo)PANDORA_MONITORING_API(VisualizeClusters(&pfoClusterList, "PfoCluster", BLACK));
                         if(!neutrinoPfo)PANDORA_MONITORING_API(VisualizeClusters(&pfoClusterList, "PfoCluster", GREEN));

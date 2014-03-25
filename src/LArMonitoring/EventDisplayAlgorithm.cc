@@ -98,8 +98,6 @@ StatusCode EventDisplayAlgorithm::Run()
     // Start Drawing Stuff
     unsigned int n(0);
 
-    PANDORA_MONITORING_API(SetEveDisplayParameters(0, 0, -1.f, 1.f));
-
     if ( NULL != pPfoList )
     {
         PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
