@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 
@@ -147,10 +146,11 @@ StatusCode EventDisplayAlgorithm::Run()
         }
     }
 
-    if( LArVertexHelper::DoesVertexExist(m_vertexName) ){
-      CartesianVector theVertex = LArVertexHelper::GetVertex(m_vertexName);
-      PANDORA_MONITORING_API(AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0));
-    }
+// TODO use new vertex functionality
+// if( LArVertexHelper::DoesVertexExist(m_vertexName) ){
+//     CartesianVector theVertex = LArVertexHelper::GetVertex(m_vertexName);
+//     PANDORA_MONITORING_API(AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0));
+// }
 
     PANDORA_MONITORING_API(ViewEvent());
 

@@ -45,8 +45,6 @@ private:
 
         void NewEntry( int eventNumber, int viewType );
 
-        void SetVertex(const pandora::CartesianVector& theVertex);
-
         void AddCluster(pandora::Cluster* pCluster, bool IsSeed);
 
         void WriteEntry();
@@ -69,11 +67,6 @@ private:
         int m_nHits;
         int m_nClusters;
         int m_nSeedClusters;
-
-        int m_foundVertex;
-        float m_vertexPosX;
-        float m_vertexPosY;
-        float m_vertexPosZ;
 
         IntVector m_hitID;
         IntVector m_hitClusterID;
@@ -106,7 +99,6 @@ private:
 
     std::string        m_seedClusterListName;
     std::string        m_nonSeedClusterListName;
-    std::string        m_vertexName;
 
     std::string        m_outputFileName;
     std::string        m_outputTreeName;

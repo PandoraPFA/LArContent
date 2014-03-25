@@ -10,7 +10,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArTwoDReco/LArSeedFinding/VertexSeedFindingAlgorithm.h"
 
@@ -42,9 +41,24 @@ void VertexSeedFindingAlgorithm::GetSeedClusterList(const ClusterVector &inputCl
         pointingClusterMap.insert(LArPointingClusterMap::value_type(*iter, LArPointingCluster(*iter)));
     }
 
+    // Identify event vertex
+    const VertexList *pVertexList(NULL);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
+
+    Vertex *pSelectedVertex(NULL);
+    for (VertexList::const_iterator iter = pVertexList->begin(), iterEnd = pVertexList->end(); iter != iterEnd; ++iter)
+    {
+        // TODO vertex selection
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    }
+
+    if (!pSelectedVertex)
+        return;
+
+    const CartesianVector &eventVertex(pSelectedVertex->GetPosition());
+
     // Identify nodes and emissions
     LArPointingClusterVertexList emissions, associations, seeds;
-    const CartesianVector &eventVertex(LArVertexHelper::GetCurrentVertex());
 
     for (LArPointingClusterMap::const_iterator iter = pointingClusterMap.begin(), iterEnd = pointingClusterMap.end(); iter != iterEnd; ++iter)
     {

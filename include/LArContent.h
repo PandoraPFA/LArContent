@@ -21,7 +21,6 @@
 #include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 #include "LArHelpers/LArThreeDHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
@@ -46,7 +45,6 @@
 #include "LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
-#include "LArTwoDReco/LArClusterMopUp/ParallelClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
@@ -60,8 +58,6 @@
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.h"
-#include "LArTwoDReco/LArSeedFinding/SeedConsolidationAlgorithm.h"
-#include "LArTwoDReco/LArSeedFinding/SeedLengthGrowingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/VertexSeedFindingAlgorithm.h"
 #include "LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
@@ -96,7 +92,6 @@ public:
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
-        d("LArParallelClusterMerging",              lar::ParallelClusterMergingAlgorithm::Factory)                              \
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
         d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
@@ -110,8 +105,6 @@ public:
         d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
         d("LArClusterCharacterisation",             lar::ClusterCharacterisationAlgorithm::Factory)                             \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
-        d("LArSeedConsolidation",                   lar::SeedConsolidationAlgorithm::Factory)                                   \
-        d("LArSeedLengthGrowing",                   lar::SeedLengthGrowingAlgorithm::Factory)                                   \
         d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArListChanging",                        lar::ListChangingAlgorithm::Factory)                                        \
@@ -137,8 +130,7 @@ public:
         d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
         d("LArParticleIdHelper",                    &lar::LArParticleIdHelper::ReadSettings)                                    \
         d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)                               \
-        d("LArThreeDHelper",                        &lar::LArThreeDHelper::ReadSettings)                                        \
-        d("LArVertexHelper",                        &lar::LArVertexHelper::ReadSettings)
+        d("LArThreeDHelper",                        &lar::LArThreeDHelper::ReadSettings)
 
     /**
      *  @brief  Register all the lar content algorithms and tools with pandora
@@ -210,7 +202,6 @@ inline pandora::StatusCode LArContent::RegisterHelperFunctions(pandora::Pandora 
 
 inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &pandora)
 {
-    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterResetFunction(pandora, &lar::LArVertexHelper::Reset));
     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterResetFunction(pandora, &lar::LArThreeDHelper::Reset));
 
     return pandora::STATUS_CODE_SUCCESS;

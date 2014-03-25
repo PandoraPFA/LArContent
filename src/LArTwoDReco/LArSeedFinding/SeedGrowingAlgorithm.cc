@@ -10,7 +10,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArParticleIdHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
