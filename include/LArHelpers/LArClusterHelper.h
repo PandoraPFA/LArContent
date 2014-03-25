@@ -34,6 +34,8 @@ class LArClusterHelper
 public:
     typedef lar::TwoDSlidingFitResult TwoDSlidingFitResult;
 
+    typedef std::map<pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
+
     /**
      *  @brief  Perform two dimensional sliding fit, using a three dimensional fit to the cluster to define primary axis
      *

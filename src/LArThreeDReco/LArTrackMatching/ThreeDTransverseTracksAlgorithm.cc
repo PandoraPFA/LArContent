@@ -8,7 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
@@ -27,10 +26,10 @@ void ThreeDTransverseTracksAlgorithm::PreparationStep()
 
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {
-        LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+        TwoDSlidingFitResult slidingFitResult;
         LArClusterHelper::LArTwoDSlidingFit(*iter, 20, slidingFitResult);
 
-        if (!m_slidingFitResultMap.insert(SlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+        if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
             throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 }
@@ -39,16 +38,16 @@ void ThreeDTransverseTracksAlgorithm::PreparationStep()
 
 void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    SlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
-    SlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
-    SlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
+    TwoDSlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
+    TwoDSlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
+    TwoDSlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
 
     if ((m_slidingFitResultMap.end() == iterU) || (m_slidingFitResultMap.end() == iterV) || (m_slidingFitResultMap.end() == iterW))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU(iterU->second);
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV(iterV->second);
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW(iterW->second);
+    const TwoDSlidingFitResult &slidingFitResultU(iterU->second);
+    const TwoDSlidingFitResult &slidingFitResultV(iterV->second);
+    const TwoDSlidingFitResult &slidingFitResultW(iterW->second);
 
     FitSegmentTensor fitSegmentTensor;
     this->GetFitSegmentTensor(slidingFitResultU, slidingFitResultV, slidingFitResultW, fitSegmentTensor);
@@ -120,7 +119,7 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitRe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
+void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
 {
     unsigned int nSustainedSteps(0);
     CartesianVector previousPosition(0.f, 0.f, 0.f);
@@ -325,7 +324,7 @@ void ThreeDTransverseTracksAlgorithm::TidyUp()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::TwoDSlidingFitResult &twoDSlidingFitResult,
+ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const TwoDSlidingFitResult &twoDSlidingFitResult,
         LayerFitResultMap::const_iterator startLayerIter, LayerFitResultMap::const_iterator endLayerIter) :
     m_startLayer(startLayerIter->first),
     m_endLayer(endLayerIter->first)

@@ -78,9 +78,9 @@ protected:
     };
 
     typedef std::vector<ClusterExtension> ClusterExtensionList;
-    typedef std::map<pandora::Cluster*,LArClusterHelper::TwoDSlidingFitResult> TwoDSlidingFitResultMap;
 
-
+    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
+    typedef LArClusterHelper::TwoDSlidingFitResultMap TwoDSlidingFitResultMap;
 
     /**
      *  @brief  Output the best split positions in branch and replacement clusters
@@ -91,8 +91,8 @@ protected:
      *  @param  branchSplitPosition the outputted start position of the branch
      *  @param  branchSplitDirection the outputted start direction of the branch
      */
-    virtual void FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFit,
-        const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
+    virtual void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, 
+        const TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
         pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const = 0;
 
 private:

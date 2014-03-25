@@ -40,8 +40,6 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-    typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
-
 private:
     /**
      *  @brief  SlidingFitDirection enum
@@ -55,6 +53,7 @@ private:
     };
 
     typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
+    typedef LArClusterHelper::TwoDSlidingFitResultMap TwoDSlidingFitResultMap;
     typedef TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
 
     /**
@@ -208,7 +207,7 @@ private:
     float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
     unsigned int                m_minOverallMatchedPoints;  ///< The minimum number of matched segment sampling points to allow particle creation
     float                       m_minSamplingPointsPerLayer;///< The minimum number of sampling points per layer to allow particle creation
-    SlidingFitResultMap         m_slidingFitResultMap;      ///< The sliding fit result map
+    TwoDSlidingFitResultMap     m_slidingFitResultMap;      ///< The sliding fit result map
 
     typedef std::vector<TensorManipulationTool*> TensorManipulationToolList;
     TensorManipulationToolList  m_algorithmToolList;        ///< The algorithm tool list
@@ -223,7 +222,6 @@ class TensorManipulationTool : public pandora::AlgorithmTool
 {
 public:
     typedef ThreeDTransverseTracksAlgorithm::TensorType TensorType;
-    typedef ThreeDTransverseTracksAlgorithm::SlidingFitResultMap SlidingFitResultMap;
 
     /**
      *  @brief  Run the algorithm tool

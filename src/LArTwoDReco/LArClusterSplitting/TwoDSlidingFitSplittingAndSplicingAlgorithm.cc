@@ -88,7 +88,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const
     {
         if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
         {
-            LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+            TwoDSlidingFitResult slidingFitResult;
             LArClusterHelper::LArTwoDSlidingFit(*iter, halfWindowLayers, slidingFitResult);
 
             if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
@@ -99,7 +99,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(const ClusterVector &clusterVector,
+void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(const ClusterVector &clusterVector, 
     const TwoDSlidingFitResultMap &branchSlidingFitResultMap, const TwoDSlidingFitResultMap &replacementSlidingFitResultMap,
     ClusterExtensionList &clusterExtensionList) const
 {
@@ -126,11 +126,11 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
             replacementSlidingFitResultMap.end() == iterReplacementI || replacementSlidingFitResultMap.end() == iterReplacementJ)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFitI(iterBranchI->second);
-            const LArClusterHelper::TwoDSlidingFitResult &branchSlidingFitJ(iterBranchJ->second);
+            const TwoDSlidingFitResult &branchSlidingFitI(iterBranchI->second);
+            const TwoDSlidingFitResult &branchSlidingFitJ(iterBranchJ->second);
 
-            const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFitI(iterReplacementI->second);
-            const LArClusterHelper::TwoDSlidingFitResult &replacementSlidingFitJ(iterReplacementJ->second);
+            const TwoDSlidingFitResult &replacementSlidingFitI(iterReplacementI->second);
+            const TwoDSlidingFitResult &replacementSlidingFitJ(iterReplacementJ->second);
 
             // Search for a split in clusterI
             float branchChisqI(0.f);
@@ -223,7 +223,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
         // Veto the merge if another cluster is closer to the replacement vertex
         for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
         {
-            const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
+            const TwoDSlidingFitResult &slidingFit(iter->second);
 
             if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
                 continue;
@@ -241,7 +241,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
         // Veto the merge if another cluster is closer to the branch vertex
         for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
         {
-            const LArClusterHelper::TwoDSlidingFitResult &slidingFit(iter->second);
+            const TwoDSlidingFitResult &slidingFit(iter->second);
 
             if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
                 continue;
