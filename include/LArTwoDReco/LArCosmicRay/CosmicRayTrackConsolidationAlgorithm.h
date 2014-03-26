@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 namespace lar
 {
 
@@ -32,8 +34,26 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    typedef std::map<const pandora::Cluster*, pandora::CaloHitList> HitAssociationMap;
+
+
+
+    void GetAssociatedHits(const TwoDSlidingFitResult& slidingFitResult, const pandora::Cluster* pTargetCluster,
+        HitAssociationMap &hitAssociationMap) const;
+
+
+
+    float m_maxClusterLength;
 
     float m_minTrackLength;
+
+    float m_maxTransverseDisplacement;
+
+    float m_minAssociatedSpan;
+
+    float m_minAssociatedFraction;
+
+    unsigned int m_halfWindowLayers;
 
 };
 
