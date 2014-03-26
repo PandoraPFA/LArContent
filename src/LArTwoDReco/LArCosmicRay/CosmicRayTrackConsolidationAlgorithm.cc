@@ -100,9 +100,9 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::Run()
 
         if (!tempListJ.empty())
         {
-        PandoraMonitoringApi::VisualizeClusters(&tempListI, "Cluster", BLUE);
-        PandoraMonitoringApi::VisualizeCaloHits(&tempListK, "AssociatedHits", RED);
-        PandoraMonitoringApi::ViewEvent();
+          //PandoraMonitoringApi::VisualizeClusters(&tempListI, "Cluster", BLUE);
+          //PandoraMonitoringApi::VisualizeCaloHits(&tempListK, "AssociatedHits", RED);
+          //PandoraMonitoringApi::ViewEvent();
         }
 
     }
