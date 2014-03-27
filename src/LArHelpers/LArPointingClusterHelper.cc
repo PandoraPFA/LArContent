@@ -141,7 +141,7 @@ void LArPointingClusterHelper::GetClosestVertices(const LArPointingCluster &poin
             const float endI_to_endJ((endI.GetPosition() - endJ.GetPosition()).GetMagnitudeSquared());
 
             if ((vtxI_to_vtxJ < std::min(vtxI_to_endJ, std::min(endI_to_vtxJ, endI_to_endJ))) &&
-                (endI_to_endJ > std::min(vtxI_to_endJ, std::min(endI_to_vtxJ, vtxI_to_vtxJ))))
+                (endI_to_endJ > std::max(vtxI_to_endJ, std::max(endI_to_vtxJ, vtxI_to_vtxJ))))
             {
                 closestVertexI = vtxI;
                 closestVertexJ = vtxJ;

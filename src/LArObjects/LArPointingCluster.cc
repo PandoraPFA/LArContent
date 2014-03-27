@@ -19,12 +19,8 @@ using namespace pandora;
 namespace lar
 {
 
-LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, const bool useInnerVertex) :
-    m_pCluster(pCluster),
-    m_position(0.f, 0.f, 0.f),
-    m_direction(0.f, 0.f, 0.f),
-    m_rms(std::numeric_limits<float>::max()),
-    m_isInner(useInnerVertex)
+LArPointingCluster::LArPointingCluster(pandora::Cluster *const pCluster) :
+    m_pCluster(pCluster)
 {
     TwoDSlidingFitResult slidingFitResult;
     LArClusterHelper::LArTwoDSlidingFit(pCluster, 10, slidingFitResult);
@@ -40,20 +36,84 @@ LArPointingCluster::LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, 
 
     const int innerLayer((minLayerZ < maxLayerZ) ? minLayer : maxLayer);
     const int outerLayer((minLayerZ < maxLayerZ) ? maxLayer : minLayer);
-    const int fitLayer(useInnerVertex ? innerLayer : outerLayer);
 
-    if (fitLayer == minLayer)
+    if (innerLayer == minLayer)
     {
-        m_position  = slidingFitResult.GetGlobalMinLayerPosition();
-        m_direction = slidingFitResult.GetGlobalMinLayerDirection();
-        m_rms       = slidingFitResult.GetGlobalMinLayerRms();
+        m_innerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
+            slidingFitResult.GetGlobalMinLayerRms(), true);
     }
     else
     {
-        m_position  = slidingFitResult.GetGlobalMaxLayerPosition();
-        m_direction = slidingFitResult.GetGlobalMaxLayerDirection() * -1.f;
-        m_rms       = slidingFitResult.GetGlobalMaxLayerRms();
+        m_innerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
+            slidingFitResult.GetGlobalMaxLayerRms(), true);
     }
+
+    if (outerLayer == minLayer)
+    {
+        m_outerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
+            slidingFitResult.GetGlobalMinLayerRms(), false);
+    }
+    else
+    {
+        m_outerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
+            slidingFitResult.GetGlobalMaxLayerRms(), false);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::Vertex::Vertex() :
+    m_pCluster(NULL),
+    m_position(0.f, 0.f, 0.f),
+    m_direction(0.f, 0.f, 0.f),
+    m_rms(std::numeric_limits<float>::max()),
+    m_isInner(false),
+    m_isInitialized(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::Vertex::Vertex(Cluster *const pCluster, const CartesianVector &position, const CartesianVector &direction,
+        const float rms, const bool isInner) :
+    m_pCluster(pCluster),
+    m_position(position),
+    m_direction(direction),
+    m_rms(rms),
+    m_isInner(isInner),
+    m_isInitialized(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::Vertex::Vertex(const Vertex &rhs) :
+    m_pCluster(rhs.m_pCluster),
+    m_position(rhs.m_position),
+    m_direction(rhs.m_direction),
+    m_rms(rhs.m_rms),
+    m_isInner(rhs.m_isInner),
+    m_isInitialized(rhs.m_isInitialized)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::Vertex::~Vertex()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::Vertex &LArPointingCluster::Vertex::operator=(const Vertex &rhs)
+{
+    m_pCluster = rhs.m_pCluster;
+    m_position = rhs.m_position;
+    m_direction = rhs.m_direction;
+    m_rms = rhs.m_rms;
+    m_isInner = rhs.m_isInner;
+    m_isInitialized = rhs.m_isInitialized;
 }
 
 } // namespace lar
