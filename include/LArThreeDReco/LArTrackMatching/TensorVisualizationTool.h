@@ -34,6 +34,7 @@ private:
 
     unsigned int    m_minClusterConnections;        ///< The minimum number of cluster connections for display
     bool            m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters in the tensor
+    bool            m_showEachIndividualElement;    ///< Whether to draw each individual tensor element
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

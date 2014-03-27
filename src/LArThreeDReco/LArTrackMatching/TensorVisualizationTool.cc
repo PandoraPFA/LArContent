@@ -37,14 +37,14 @@ StatusCode TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgori
             continue;
 
         int counter(0);
-        ClusterList clusterListU, clusterListV, clusterListW;
+        ClusterList allClusterListU, allClusterListV, allClusterListW;
         std::cout << " Connections: nU " << nU << ", nV " << nV << ", nW " << nW << ", nElements " << elementList.size() << std::endl;
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
-            clusterListU.insert(eIter->GetClusterU());
-            clusterListV.insert(eIter->GetClusterV());
-            clusterListW.insert(eIter->GetClusterW());
+            allClusterListU.insert(eIter->GetClusterU());
+            allClusterListV.insert(eIter->GetClusterV());
+            allClusterListW.insert(eIter->GetClusterW());
             usedUClusters.insert(eIter->GetClusterU());
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
@@ -53,11 +53,27 @@ StatusCode TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgori
                       << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
                       << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
                       << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+
+            if (m_showEachIndividualElement)
+            {
+                ClusterList clusterListU, clusterListV, clusterListW;
+                clusterListU.insert(eIter->GetClusterU());
+                clusterListV.insert(eIter->GetClusterV());
+                clusterListW.insert(eIter->GetClusterW());
+
+                PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
+                PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "UCluster", RED));
+                PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "VCluster", GREEN));
+                PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "WCluster", BLUE));
+                PANDORA_MONITORING_API(ViewEvent());
+            }
         }
 
-        PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "UClusters", RED));
-        PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "VClusters", GREEN));
-        PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "WClusters", BLUE));
+        std::cout << " All Connected Clusters " << std::endl;
+        PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
+        PANDORA_MONITORING_API(VisualizeClusters(&allClusterListU, "AllUClusters", RED));
+        PANDORA_MONITORING_API(VisualizeClusters(&allClusterListV, "AllVClusters", GREEN));
+        PANDORA_MONITORING_API(VisualizeClusters(&allClusterListW, "AllWClusters", BLUE));
         PANDORA_MONITORING_API(ViewEvent());
     }
 
@@ -75,6 +91,10 @@ StatusCode TensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_ignoreUnavailableClusters = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IgnoreUnavailableClusters", m_ignoreUnavailableClusters));
+
+    m_showEachIndividualElement = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowEachIndividualElement", m_showEachIndividualElement));
 
     return STATUS_CODE_SUCCESS;
 }
