@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
 
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 
@@ -76,79 +77,82 @@ void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointing
     if (pClusterI == pClusterJ)
         return;
 
-    for (unsigned int useInnerI = 0; useInnerI < 2; ++useInnerI)
+    // Get closest pair of vertices
+    LArPointingCluster::Vertex clusterVertexI, clusterVertexJ;
+
+    try
     {
-        const CartesianVector vertexI(useInnerI == 1 ? clusterI.GetInnerVertex().GetPosition() : clusterI.GetOuterVertex().GetPosition());
-        const CartesianVector endI(useInnerI == 1 ? clusterI.GetOuterVertex().GetPosition() : clusterI.GetInnerVertex().GetPosition());
-        const float lengthSquaredI((endI - vertexI).GetMagnitudeSquared());
-
-        for (unsigned int useInnerJ = 0; useInnerJ < 2; ++useInnerJ)
-        {
-            const CartesianVector vertexJ(useInnerJ == 1 ? clusterJ.GetInnerVertex().GetPosition() : clusterJ.GetOuterVertex().GetPosition());
-            const CartesianVector endJ(useInnerJ == 1 ? clusterJ.GetOuterVertex().GetPosition() : clusterJ.GetInnerVertex().GetPosition());
-            const float lengthSquaredJ((endJ - vertexJ).GetMagnitudeSquared());
-
-            // Requirements on length
-            if (std::max(lengthSquaredI, lengthSquaredJ) < m_minSeedClusterLength * m_minSeedClusterLength)
-                continue;
-
-            // Select the closest vertices
-            const float vertex_to_vertex((vertexI - vertexJ).GetMagnitudeSquared());
-            const float vertex_to_end((vertexI - endJ).GetMagnitudeSquared());
-            const float end_to_vertex((endI - vertexJ).GetMagnitudeSquared());
-            const float end_to_end((endI - endJ).GetMagnitudeSquared());
-
-            if (vertex_to_vertex > std::min(end_to_end, std::min(vertex_to_end, end_to_vertex)))
-                continue;
-
-            if (end_to_end < std::max(vertex_to_vertex, std::max(vertex_to_end, end_to_vertex)))
-                continue;
-
-            if (vertex_to_vertex > m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement)
-                continue;
-
-            // Requirements on pointing information
-            const CartesianVector directionI((endI - vertexI).GetUnitVector());
-            const CartesianVector directionJ((endJ - vertexJ).GetUnitVector());
-
-            const float cosTheta(-directionI.GetDotProduct(directionJ));
-            const float cosThetaCut(-1.f + 2.f * m_minCosRelativeAngle);
-
-            if (cosTheta < cosThetaCut)
-                continue;
-
-            // Requirements on overlap between clusters
-            const CartesianVector directionIJ((endJ - endI).GetUnitVector());
-            const CartesianVector directionJI((endI - endJ).GetUnitVector());
-
-            const float overlapL(directionIJ.GetDotProduct(vertexJ - vertexI));
-            const float overlapT(directionIJ.GetCrossProduct(vertexJ - vertexI).GetMagnitude());
-
-            if (overlapL < -1.f || overlapL * overlapL > 2.f * std::min(lengthSquaredI, lengthSquaredJ) ||
-            overlapT > m_maxTransverseDisplacement + std::fabs(overlapL) * std::tan(5.f * M_PI / 180.f))
-                continue;
-
-            // Calculate RMS deviations on composite cluster
-            const float rms1(this->CalculateRms(pClusterI, endI, directionIJ));
-            const float rms2(this->CalculateRms(pClusterJ, endJ, directionJI));
-
-            const float rms(0.5f * (rms1 + rms2));
-            const float rmsCut(2.f * m_maxAverageRms * (cosTheta - cosThetaCut) / (1.0 - cosThetaCut));
-
-            if (rms > rmsCut)
-                continue;
-
-            const ClusterAssociation::VertexType vertexTypeI(useInnerI == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-            const ClusterAssociation::VertexType vertexTypeJ(useInnerJ == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-            const ClusterAssociation::AssociationType associationType(ClusterAssociation::STRONG);
-
-            (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ,
-            ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, lengthSquaredJ)));
-
-            (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI,
-            ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, lengthSquaredI)));
-        }
+        LArPointingClusterHelper::GetClosestVertices(clusterI, clusterJ, clusterVertexI, clusterVertexJ);
     }
+    catch (StatusCodeException &)
+    {
+        return;
+    }
+
+    // (Just in case...)
+    if (!(clusterVertexI.IsInitialized() && clusterVertexJ.IsInitialized()))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const CartesianVector vertexI(clusterVertexI.GetPosition());
+    const CartesianVector vertexJ(clusterVertexJ.GetPosition());
+
+    const CartesianVector endI(clusterVertexI.IsInnerVertex() ? clusterI.GetOuterVertex().GetPosition() : clusterI.GetInnerVertex().GetPosition());
+    const CartesianVector endJ(clusterVertexJ.IsInnerVertex() ? clusterJ.GetOuterVertex().GetPosition() : clusterJ.GetInnerVertex().GetPosition());
+
+    // Requirements on length
+    const float lengthSquaredI(LArPointingClusterHelper::GetLengthSquared(clusterI));
+    const float lengthSquaredJ(LArPointingClusterHelper::GetLengthSquared(clusterJ));
+    
+    if (std::max(lengthSquaredI, lengthSquaredJ) < m_minSeedClusterLength * m_minSeedClusterLength)
+        return;
+
+    // Requirements on proximity
+    const float distanceSquaredIJ((vertexI - vertexJ).GetMagnitudeSquared());
+
+    if (distanceSquaredIJ > m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement)
+        return;
+
+    // Requirements on pointing information
+    const CartesianVector directionI((endI - vertexI).GetUnitVector());
+    const CartesianVector directionJ((endJ - vertexJ).GetUnitVector());
+
+    const float cosTheta(-directionI.GetDotProduct(directionJ));
+    const float cosThetaCut(-1.f + 2.f * m_minCosRelativeAngle);
+
+    if (cosTheta < cosThetaCut)
+        return;
+
+    // Requirements on overlap between clusters
+    const CartesianVector directionIJ((endJ - endI).GetUnitVector());
+    const CartesianVector directionJI((endI - endJ).GetUnitVector());
+
+    const float overlapL(directionIJ.GetDotProduct(vertexJ - vertexI));
+    const float overlapT(directionIJ.GetCrossProduct(vertexJ - vertexI).GetMagnitude());
+
+    if (overlapL < -1.f || overlapL * overlapL > 2.f * std::min(lengthSquaredI, lengthSquaredJ) ||
+        overlapT > m_maxTransverseDisplacement + std::fabs(overlapL) * std::tan(5.f * M_PI / 180.f))
+        return;
+
+    // Calculate RMS deviations on composite cluster
+    const float rms1(this->CalculateRms(pClusterI, endI, directionIJ));
+    const float rms2(this->CalculateRms(pClusterJ, endJ, directionJI));
+
+    const float rms(0.5f * (rms1 + rms2));
+    const float rmsCut(2.f * m_maxAverageRms * (cosTheta - cosThetaCut) / (1.0 - cosThetaCut));
+
+    if (rms > rmsCut)
+        return;
+
+    // Record the association
+    const ClusterAssociation::VertexType vertexTypeI(clusterVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+    const ClusterAssociation::VertexType vertexTypeJ(clusterVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+    const ClusterAssociation::AssociationType associationType(ClusterAssociation::STRONG);
+
+    (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ,
+        ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, lengthSquaredJ)));
+
+    (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI,
+        ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, lengthSquaredI)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -294,7 +298,6 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 // ClusterList tempList1, tempList2;
 // tempList1.insert((Cluster*)pParentCluster);
 // tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
 // PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
 // PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
 // PandoraMonitoringApi::ViewEvent();
