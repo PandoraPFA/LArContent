@@ -22,6 +22,24 @@ class LArPointingClusterHelper
 {
 public:
     /**
+     *  @brief  Calculate distance squared between inner and outer vertices of pointing cluster
+     * 
+     *  @param  pointingCluster  the input pointing cluster
+     * 
+     *  @return float  the distance squared
+     */
+    static float GetLengthSquared(const LArPointingCluster &pointingCluster);
+
+    /**
+     *  @brief  Calculate distance squared between inner and outer vertices of pointing cluster
+     * 
+     *  @param  pointingCluster  the input pointing cluster
+     * 
+     *  @return float  the distance
+     */
+    static float GetLength(const LArPointingCluster &pointingCluster);
+
+    /**
      *  @brief  Whether specified parent and daughter vertices form a node
      * 
      *  @param  parentVertex the position of the parent cluster vertex
