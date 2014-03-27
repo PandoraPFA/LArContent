@@ -82,11 +82,16 @@ public:
      */
     static pandora::CartesianVector GetProjectedPosition(const pandora::CartesianVector &initialPosition, const pandora::CartesianVector &initialDirection, const pandora::Cluster *const pCluster);
 
-
-
+    /**
+     *  @brief  Given a pair of pointing clusters, receive the closest pair of vertices (one vertex coming from each cluster)
+     * 
+     *  @param  pointingClusterI the first pointing cluster
+     *  @param  pointingClusterJ the second pointing cluster
+     *  @param  closestVertexI to receive the relevant vertex from the first pointing cluster
+     *  @param  closestVertexJ to receive the relevant vertex from the second pointing cluster
+     */
     static void GetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
         LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
-
 
     /**
      *  @brief  Calculate impact parameters between a pointing cluster vertex and a target position
