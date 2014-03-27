@@ -82,6 +82,23 @@ public:
      */
     static pandora::CartesianVector GetProjectedPosition(const pandora::CartesianVector &initialPosition, const pandora::CartesianVector &initialDirection, const pandora::Cluster *const pCluster);
 
+
+
+    static void GetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+        LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
+
+
+    /**
+     *  @brief  Calculate impact parameters between a pointing cluster vertex and a target position
+     * 
+     *  @param  pointingVertex the pointing vertex
+     *  @param  targetPosition the target position
+     *  @param  longitidinal the longitudinal displacement
+     *  @param  transverse the transverse displacement
+     */
+    static void GetImpactParameters(const LArPointingCluster::Vertex &pointingVertex, const LArPointingCluster::Vertex &targetVertex,
+        float &longitudinal, float &transverse);
+
     /**
      *  @brief  Calculate impact parameters between a pointing cluster vertex and a target position
      * 
