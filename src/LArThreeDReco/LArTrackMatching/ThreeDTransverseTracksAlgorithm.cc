@@ -17,6 +17,19 @@ using namespace pandora;
 namespace lar
 {
 
+bool ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs)
+{
+    if (lhs.GetOverlapResult().GetNMatchedSamplingPoints() != rhs.GetOverlapResult().GetNMatchedSamplingPoints())
+        return (lhs.GetOverlapResult().GetNMatchedSamplingPoints() > rhs.GetOverlapResult().GetNMatchedSamplingPoints());
+
+    if (lhs.GetOverlapResult().GetNSamplingPoints() != rhs.GetOverlapResult().GetNSamplingPoints())
+        return (lhs.GetOverlapResult().GetNSamplingPoints() < rhs.GetOverlapResult().GetNSamplingPoints());
+
+    return (lhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan() < rhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTransverseTracksAlgorithm::PreparationStep()
 {
     ClusterList allClustersList;

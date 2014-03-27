@@ -31,6 +31,16 @@ public:
 private:
     pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    /**
+     *  @brief  Find overshoot tracks
+     * 
+     *  @param  overlapTensor the overlap tensor
+     *  @param  protoParticleVector to receive the list of proto particles
+     */
+    void FindOvershootTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+
+    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
