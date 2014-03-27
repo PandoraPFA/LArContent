@@ -50,6 +50,9 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAl
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
+        if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
+            continue;
+
         const TransverseOverlapResult::XOverlap &xOverlap(iter->GetOverlapResult().GetXOverlap());
 
         if ((xOverlap.GetXSpanU() < std::numeric_limits<float>::epsilon()) || (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanU() < m_minXOverlapFraction))
@@ -240,6 +243,10 @@ bool ClearTracksTool::ShowerShowerShowerAmbiguity(const ClusterList &clusterList
 
 StatusCode ClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_minMatchedFraction = 0.9f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedFraction", m_minMatchedFraction));
+
     m_minXOverlapFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
