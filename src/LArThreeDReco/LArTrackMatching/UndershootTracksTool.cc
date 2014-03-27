@@ -49,7 +49,7 @@ void UndershootTracksTool::FindUndershootTracks(const TensorType &overlapTensor,
         if (nU * nV * nW < 2)
             continue;
 
-        std::sort(elementList.begin(), elementList.end(), UndershootTracksTool::SortByNMatchedSamplingPoints);
+        std::sort(elementList.begin(), elementList.end(), ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints);
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
@@ -191,19 +191,6 @@ bool UndershootTracksTool::PassesElementCuts(TensorType::ElementList::const_iter
         return false;
 
     return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool UndershootTracksTool::SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs)
-{
-    if (lhs.GetOverlapResult().GetNMatchedSamplingPoints() != rhs.GetOverlapResult().GetNMatchedSamplingPoints())
-        return (lhs.GetOverlapResult().GetNMatchedSamplingPoints() > rhs.GetOverlapResult().GetNMatchedSamplingPoints());
-
-    if (lhs.GetOverlapResult().GetNSamplingPoints() != rhs.GetOverlapResult().GetNSamplingPoints())
-        return (lhs.GetOverlapResult().GetNSamplingPoints() < rhs.GetOverlapResult().GetNSamplingPoints());
-
-    return (lhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan() < rhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

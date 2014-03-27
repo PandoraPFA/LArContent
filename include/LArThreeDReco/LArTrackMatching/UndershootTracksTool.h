@@ -69,16 +69,6 @@ private:
      */
     bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
 
-    /**
-     *  @brief  Sort tensor elements by number of matched sampling points, using matched fraction then xoverlap span to resolve ties
-     * 
-     *  @param  lhs the first tensor element
-     *  @param  rhs the second tensor element
-     * 
-     *  @return boolean
-     */
-    static bool SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs);
-
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
     float           m_minLongitudinalImpactParameter;   ///< The minimum longitudinal impact parameter for connecting broken clusters
