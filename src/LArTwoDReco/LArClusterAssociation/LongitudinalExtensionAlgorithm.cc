@@ -98,7 +98,7 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const LArPoint
 
     // (Just in case...)
     if (!(targetVertexI.IsInitialized() && targetVertexJ.IsInitialized()))
-        return;
+        throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const CartesianVector &vertexPositionI(targetVertexI.GetPosition());
     const CartesianVector &vertexPositionJ(targetVertexJ.GetPosition());
