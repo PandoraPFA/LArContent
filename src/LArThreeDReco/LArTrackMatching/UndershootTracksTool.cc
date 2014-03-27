@@ -150,10 +150,15 @@ void UndershootTracksTool::BuildProtoParticle(const IteratorList &iteratorList, 
                 LArPointingClusterHelper::GetImpactParameters(vertex1, vertex2, longitudinal12, transverse12);
                 LArPointingClusterHelper::GetImpactParameters(vertex2, vertex1, longitudinal21, transverse21);
 
-                if ((longitudinal12 < m_minLongitudinalImpactParameter) || (longitudinal21 < m_minLongitudinalImpactParameter))
+                if (std::min(longitudinal12, longitudinal21) < m_minLongitudinalImpactParameter)
                     continue;
 
-                if ((transverse12 > m_maxTransverseImpactParameter) || (transverse21 > m_maxTransverseImpactParameter))
+                if (std::min(transverse12, transverse21) > m_maxTransverseImpactParameter)
+                    continue;
+
+                const float cosTheta(-vertex1.GetDirection().GetCosOpeningAngle(vertex2.GetDirection()));
+
+                if (cosTheta < m_minImpactParameterCosTheta)
                     continue;
             }
             catch (StatusCodeException &)
@@ -220,6 +225,10 @@ StatusCode UndershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_maxTransverseImpactParameter = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseImpactParameter", m_maxTransverseImpactParameter));
+
+    m_minImpactParameterCosTheta = 0.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinImpactParameterCosTheta", m_minImpactParameterCosTheta));
 
     return STATUS_CODE_SUCCESS;
 }

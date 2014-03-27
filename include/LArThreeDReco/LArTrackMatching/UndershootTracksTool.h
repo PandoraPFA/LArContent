@@ -83,6 +83,7 @@ private:
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
     float           m_minLongitudinalImpactParameter;   ///< The minimum longitudinal impact parameter for connecting broken clusters
     float           m_maxTransverseImpactParameter;     ///< The maximum transverse impact parameter for connecting broken clusters
+    float           m_minImpactParameterCosTheta;       ///< The minimum cos theta (angle between vertex directions) for connecting broken clusters
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
