@@ -16,6 +16,22 @@ using namespace pandora;
 namespace lar
 {
 
+float LArPointingClusterHelper::GetLengthSquared(const LArPointingCluster &pointingCluster)
+{
+    const LArPointingCluster::Vertex &innerVertex(pointingCluster.GetInnerVertex());
+    const LArPointingCluster::Vertex &outerVertex(pointingCluster.GetOuterVertex());
+    return (innerVertex.GetPosition() - outerVertex.GetPosition()).GetMagnitudeSquared();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArPointingClusterHelper::GetLength(const LArPointingCluster &pointingCluster)
+{
+    return std::sqrt(LArPointingClusterHelper::GetLengthSquared(pointingCluster));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const CartesianVector &daughterVertex)
 {
     if ((parentVertex - daughterVertex).GetMagnitudeSquared() < m_maxNodeRadiusSquared)
