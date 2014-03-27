@@ -61,6 +61,7 @@ private:
     static bool ShowerShowerShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
         const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
 
+    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
 };
 
