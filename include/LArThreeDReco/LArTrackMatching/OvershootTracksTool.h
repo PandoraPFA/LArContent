@@ -41,6 +41,38 @@ private:
     void FindOvershootTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
+
+    /**
+     *  @brief  Select elements representing possible components of a two particles, merged due to an overshoot in the clustering
+     * 
+     *  @param  eIter iterator to a candidate element
+     *  @param  elementList the provided element list
+     *  @param  usedClusters the list of used clusters
+     *  @param  iteratorList to receive a list of iterators to relevant elements
+     */
+    void SelectOvershootElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
+        const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
+
+    /**
+     *  @brief  Build proto particles, splitting clusters merged due to an overshoot in the clustering
+     * 
+     *  @param  iteratorList list of iterators to relevant elements
+     *  @param  protoParticleVector to be populated with proto particles for subsequent pfo construction
+     */
+    void BuildProtoParticle(const IteratorList &iteratorList, ProtoParticleVector &protoParticleVector) const;
+
+    /**
+     *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for overshoot identification
+     * 
+     *  @param  eIter the iterator to the tensor element
+     *  @param  usedClusters the list of used clusters
+     */
+    bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
+
+    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
+    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
+    float           m_minLongitudinalImpactParameter;   ///< The min longitudinal impact parameter for connecting accompanying clusters
+    float           m_maxVertexXSeparation;             ///< The max separation between accompanying clusters vertex x positions to make split
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
