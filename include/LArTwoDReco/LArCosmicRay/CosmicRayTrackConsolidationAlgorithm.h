@@ -34,13 +34,25 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const pandora::Cluster*, pandora::CaloHitList> HitAssociationMap;
+    typedef std::map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitMap;
+
+    void SortInputClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &trackClusters,
+        pandora::ClusterVector &shortClusters) const;
 
 
+
+    void BuildSlidingLinearFits(const pandora::ClusterVector &trackClusters, TwoDSlidingFitResultList &slidingFitResultList) const;
+
+
+
+    void GetAssociatedHits(const TwoDSlidingFitResultList &slidingFitResultList, const pandora::ClusterVector &shortClusters,
+        ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const;
 
     void GetAssociatedHits(const TwoDSlidingFitResult& slidingFitResult, const pandora::Cluster* pTargetCluster,
-        HitAssociationMap &hitAssociationMap) const;
+        ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const;
 
+
+    pandora::StatusCode RunReclustering(const ClusterToHitMap &caloHitsToAdd, const ClusterToHitMap &caloHitsToRemove) const;
 
 
     float m_maxClusterLength;
@@ -55,6 +67,7 @@ private:
 
     unsigned int m_halfWindowLayers;
 
+    std::string m_clusteringAlgorithmName;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
