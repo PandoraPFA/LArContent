@@ -31,16 +31,13 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::Run()
     this->BuildSlidingLinearFits(trackClusters, slidingFitResultList);
    
 
-    ClusterToHitMap caloHitsToAdd, caloHitsToRemove;
-    this->GetAssociatedHits(slidingFitResultList, shortClusters, caloHitsToAdd, caloHitsToRemove);
+    ClusterToHitMap clustersToExpand, clustersToRebuild;
+    this->GetAssociatedHits(slidingFitResultList, shortClusters, clustersToExpand, clustersToRebuild);
 
 
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunReclustering(caloHitsToAdd, caloHitsToRemove));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildShortClusters(clustersToRebuild));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildTrackClusters(clustersToExpand));
    
-
-    // RE-CLUSTERING GOES HERE
-
 
     return STATUS_CODE_SUCCESS;
 }
@@ -150,7 +147,6 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
 void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFitResult& slidingFitResultI, const Cluster* pClusterJ,
     ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
-
     const Cluster* pClusterI(slidingFitResultI.GetCluster());
    
     CaloHitList associatedHits, caloHitListJ;
@@ -218,32 +214,75 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackConsolidationAlgorithm::RunReclustering(const ClusterToHitMap &clustersToSave, const ClusterToHitMap &clustersToDelete) const
+StatusCode CosmicRayTrackConsolidationAlgorithm::RebuildTrackClusters(const ClusterToHitMap &clustersToExpand) const
 {
-
-    for (ClusterToHitMap::const_iterator iterI = clustersToDelete.begin(), iterEndI = clustersToDelete.end(); iterI != iterEndI; ++iterI)
+    for (ClusterToHitMap::const_iterator iterI = clustersToExpand.begin(), iterEndI = clustersToExpand.end(); iterI != iterEndI; ++iterI)
     {
-        Cluster* pClusterToDelete = const_cast<Cluster*>(iterI->first);
-        
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pClusterToDelete));
-    }
-
-    for (ClusterToHitMap::const_iterator iterI = clustersToSave.begin(), iterEndI = clustersToSave.end(); iterI != iterEndI; ++iterI)
-    {
-        Cluster* pClusterToSave = const_cast<Cluster*>(iterI->first);
+        Cluster* pCluster = const_cast<Cluster*>(iterI->first);
         const CaloHitList &caloHitList = iterI->second;
 
         for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
         {
             CaloHit* pCaloHit = *iterJ;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pClusterToSave, pCaloHit));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHit));
         }
     }
 
+    return STATUS_CODE_SUCCESS;
+}
 
-    // Run the initial cluster formation algorithm
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CosmicRayTrackConsolidationAlgorithm::RebuildShortClusters(const ClusterToHitMap &clustersToDelete) const
+{
+    ClusterToHitMap clustersToRebuild;
+
+    for (ClusterToHitMap::const_iterator iterI = clustersToDelete.begin(), iterEndI = clustersToDelete.end(); iterI != iterEndI; ++iterI)
+    {
+        Cluster* pClusterToDelete = const_cast<Cluster*>(iterI->first);
+        const CaloHitList &caloHitListToDelete = iterI->second;
+
+        CaloHitList caloHitList; 
+        pClusterToDelete->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
+        {
+            CaloHit* pCaloHit = *iterJ;
+            if (!caloHitListToDelete.count(pCaloHit))
+                clustersToRebuild[pClusterToDelete].insert(pCaloHit);
+        }
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pClusterToDelete));
+    }
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildNewClusters(clustersToRebuild));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CosmicRayTrackConsolidationAlgorithm::BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const
+{
+    if (clustersToRebuild.empty())
+        return STATUS_CODE_SUCCESS;
+
+    const ClusterList *pClusterList = NULL;
+    std::string currentClusterListName, newClusterListName;
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*this, pClusterList, newClusterListName));
+
+    for (ClusterToHitMap::const_iterator iter = clustersToRebuild.begin(), iterEnd = clustersToRebuild.end(); iter != iterEnd; ++iter)
+    {
+        const CaloHitList &caloHitList = iter->second; 
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildNewClusters(caloHitList));
+    }
     
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
 
+
+    /*
     const ClusterList *pClusterList = NULL;
     std::string currentClusterListName, newClusterListName;
 
@@ -253,28 +292,34 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::RunReclustering(const ClusterTo
         pClusterList, newClusterListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
-
-
-
-    /// -----------------------------
-
-    /*
-    PRR_IF PandoraContentApi::Delete(*this, pCluster, "ClusterListName");
-    
-    PRR_IF PandoraContentApi::AddToCluster(*this, pCluster, pCaloHit);
-
-    // Find example, e.g. ClusteringParentAlgorithm to instantiate daughter clustering alg and receive name
-    PRR_IF PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithmName);
-
-    // No daughter clustering alg?
-    PRR_IF PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, ...);
-    // Then proceed as if you were in the daughter clustering alg
-
-    PRR_IF PandoraContentApi::SaveList<Cluster>(*this, m_chosenClusterListName);
     */
-    /// -----------------------------
 
-  
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CosmicRayTrackConsolidationAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList) const
+{
+    if (inputCaloHitList.empty())
+        return STATUS_CODE_SUCCESS;
+
+    Cluster *pCluster = NULL;
+
+    for (CaloHitList::const_iterator iter = inputCaloHitList.begin(), iterEnd = inputCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        CaloHit* pCaloHit = *iter;
+
+        if (NULL == pCluster)
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pCaloHit, pCluster));
+        }
+        else
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHit));
+        }
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -307,8 +352,6 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle 
         "SlidingFitHalfWindow", m_halfWindowLayers));
 
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle, "Clustering",
-        m_clusteringAlgorithmName));
 
     return STATUS_CODE_SUCCESS;
 }
