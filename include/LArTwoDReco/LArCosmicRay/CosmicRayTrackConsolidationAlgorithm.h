@@ -48,11 +48,23 @@ private:
     void GetAssociatedHits(const TwoDSlidingFitResultList &slidingFitResultList, const pandora::ClusterVector &shortClusters,
         ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const;
 
+
     void GetAssociatedHits(const TwoDSlidingFitResult& slidingFitResult, const pandora::Cluster* pTargetCluster,
         ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const;
 
 
-    pandora::StatusCode RunReclustering(const ClusterToHitMap &caloHitsToAdd, const ClusterToHitMap &caloHitsToRemove) const;
+
+    
+
+
+    pandora::StatusCode RebuildTrackClusters(const ClusterToHitMap &clustersToRebuild) const;
+
+    pandora::StatusCode RebuildShortClusters(const ClusterToHitMap &clustersToRebuild) const;
+
+    pandora::StatusCode BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const;
+
+    pandora::StatusCode BuildNewClusters(const pandora::CaloHitList &inputCaloHitList) const;
+
 
 
     float m_maxClusterLength;
