@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cluster creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -20,33 +20,45 @@ StatusCode ClusterCreationAlgorithm::Run()
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
-    OrderedCaloHitList orderedCaloHitList, rejectedCaloHitList;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FilterCaloHits(pCaloHitList, orderedCaloHitList, rejectedCaloHitList));
+    OrderedCaloHitList selectedCaloHitList, rejectedCaloHitList;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FilterCaloHits(pCaloHitList, selectedCaloHitList, rejectedCaloHitList));
 
     HitAssociationMap forwardHitAssociationMap, backwardHitAssociationMap;
-    this->MakePrimaryAssociations(orderedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap);
-    this->MakeSecondaryAssociations(orderedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap);
+    this->MakePrimaryAssociations(selectedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap);
+    this->MakeSecondaryAssociations(selectedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap);
 
     HitJoinMap hitJoinMap;
     HitToClusterMap hitToClusterMap;
-    this->IdentifyJoins(orderedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap, hitJoinMap);
-    this->CreateClusters(orderedCaloHitList, hitJoinMap, hitToClusterMap);
+    this->IdentifyJoins(selectedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap, hitJoinMap);
+    this->CreateClusters(selectedCaloHitList, hitJoinMap, hitToClusterMap);
 
     if( !m_mergeBackFilteredHits )
         this->CreateClusters(rejectedCaloHitList, hitJoinMap, hitToClusterMap);
-    
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddFilteredCaloHits(orderedCaloHitList, rejectedCaloHitList, hitToClusterMap));
-    
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddFilteredCaloHits(selectedCaloHitList, rejectedCaloHitList, hitToClusterMap));
+
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitList, OrderedCaloHitList &orderedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
+StatusCode ClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitList, OrderedCaloHitList &selectedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(*pCaloHitList));
+    CaloHitList availableHitList;
 
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
+    {
+        CaloHit* pCaloHit = *iter;
+        if (PandoraContentApi::IsAvailable(*this, pCaloHit))
+          availableHitList.insert(pCaloHit);
+    }
+
+    if (availableHitList.empty())
+        return STATUS_CODE_NOT_FOUND;
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.Add(availableHitList));
+
+    for (OrderedCaloHitList::const_iterator iter = selectedCaloHitList.begin(), iterEnd = selectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         CaloHitList *pLayerHitList = iter->second;
 
@@ -72,24 +84,24 @@ StatusCode ClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitL
         }
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Remove(rejectedCaloHitList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.Remove(rejectedCaloHitList));
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &orderedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const
+StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &selectedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = rejectedCaloHitList.begin(), iterEnd = rejectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHitList* pCaloHitList = NULL;       
+        CaloHitList* pCaloHitList = NULL;
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.GetCaloHitsInPseudoLayer(iter->first, pCaloHitList));
-        
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.GetCaloHitsInPseudoLayer(iter->first, pCaloHitList));
+
         CaloHitList currentAvailableHits(iter->second->begin(), iter->second->end());
         CaloHitList currentClusteredHits(pCaloHitList->begin(), pCaloHitList->end());
-      
+
         bool carryOn(true);
 
         while (carryOn)
@@ -132,9 +144,9 @@ StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitLis
 
                 if (hitToClusterMap.end() == mapIter)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
-           
+
                 Cluster* pCluster = mapIter->second;
-            
+
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHitI));
                 hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
 

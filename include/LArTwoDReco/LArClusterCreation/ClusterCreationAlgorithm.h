@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CLUSTER_CREATION_ALGORITHM_H
@@ -37,7 +37,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pPrimaryTarget address of the primary target hit
          *  @param  primaryDistanceSquared distance to the primary target hit squared
          */
@@ -45,7 +45,7 @@ private:
 
         /**
          *  @brief  Set secondary target
-         * 
+         *
          *  @param  pSecondaryTarget address of the secondary target hit
          *  @param  secondaryDistanceSquared distance to the primary target hit squared
          */
@@ -53,28 +53,28 @@ private:
 
         /**
          *  @brief  Get the primary target
-         * 
+         *
          *  @return the target distance
          */
         pandora::CaloHit *GetPrimaryTarget() const;
 
         /**
          *  @brief  Get the secondary target
-         * 
+         *
          *  @return the secondary target
          */
         pandora::CaloHit *GetSecondaryTarget() const;
 
         /**
          *  @brief  Get the primary distance squared
-         * 
+         *
          *  @return the primary distance squared
          */
         float GetPrimaryDistanceSquared() const;
 
         /**
          *  @brief  Get the secondary distance squared
-         * 
+         *
          *  @return the secondary distance squared
          */
         float GetSecondaryDistanceSquared() const;
@@ -97,26 +97,26 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Filter out low pulse height hits in close proximity to high pulse height hits 
-     * 
+     *  @brief  Filter out low pulse height hits in close proximity to high pulse height hits
+     *
      *  @param  pCaloHitList input hit list
-     *  @param  orderedCaloHitList the output ordered list of selected hits
-     *  @param  orderedCaloHitList the output ordered list of rejected hits
+     *  @param  selectedCaloHitList the output selected list of selected hits
+     *  @param  rejectedCaloHitList the output rejected list of rejected hits
      */
-    pandora::StatusCode FilterCaloHits(const  pandora::CaloHitList *pCaloHitList, pandora::OrderedCaloHitList &orderedCaloHitList, pandora::OrderedCaloHitList& rejectedCaloHitList) const;
+    pandora::StatusCode FilterCaloHits(const  pandora::CaloHitList *pCaloHitList, pandora::OrderedCaloHitList &selectedCaloHitList, pandora::OrderedCaloHitList& rejectedCaloHitList) const;
 
     /**
      *  @brief  Merge previously filtered hits back into their associated clusters
-     * 
-     *  @param  orderedCaloHitList the ordered list of selected hits
-     *  @param  orderedCaloHitList the ordered list of rejected hits 
+     *
+     *  @param  selectedCaloHitList the ordered list of selected hits
+     *  @param  rejectedCaloHitList the ordered list of rejected hits
      *  @param  hitToClusterMap the mapping between hits and their clusters
      */
-    pandora::StatusCode AddFilteredCaloHits(const pandora::OrderedCaloHitList &orderedCaloHitList, const pandora::OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const;
+    pandora::StatusCode AddFilteredCaloHits(const pandora::OrderedCaloHitList &selectedCaloHitList, const pandora::OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const;
 
     /**
      *  @brief  Control primary association formation
-     * 
+     *
      *  @param  orderedCaloHitList the ordered calo hit list
      *  @param  forwardHitAssociationMap the forward hit association map
      *  @param  backwardHitAssociationMap the backward hit association map
@@ -126,7 +126,7 @@ private:
 
     /**
      *  @brief  Control secondary association formation
-     * 
+     *
      *  @param  orderedCaloHitList the ordered calo hit list
      *  @param  forwardHitAssociationMap the forward hit association map
      *  @param  backwardHitAssociationMap the backward hit association map
@@ -136,7 +136,7 @@ private:
 
     /**
      *  @brief  Identify final hit joins for use in cluster formation
-     * 
+     *
      *  @param  orderedCaloHitList the ordered calo hit list
      *  @param  forwardHitAssociationMap the forward hit association map
      *  @param  backwardHitAssociationMap the backward hit association map
@@ -147,7 +147,7 @@ private:
 
     /**
      *  @brief  Final cluster formation
-     * 
+     *
      *  @param  orderedCaloHitList the ordered calo hit list
      *  @param  hitJoinMap the hit join map
      *  @param  hitToClusterMap the mapping between hits and their clusters
@@ -156,7 +156,7 @@ private:
 
     /**
      *  @brief  Create primary association if appropriate, hitI<->hitJ
-     * 
+     *
      *  @param  pCaloHitI address of calo hit I
      *  @param  pCaloHitJ address of calo hit J
      *  @param  forwardHitAssociationMap the forward hit association map
@@ -167,7 +167,7 @@ private:
 
     /**
      *  @brief  Create secondary association if appropriate, hitI<->hitJ
-     * 
+     *
      *  @param  pCaloHitI address of calo hit I
      *  @param  pCaloHitJ address of calo hit J
      *  @param  forwardHitAssociationMap the forward hit association map
@@ -178,23 +178,23 @@ private:
 
     /**
      *  @brief  Get hit to join by tracing associations via map I, checking via map J
-     * 
+     *
      *  @param  pCaloHit the initial calo hit
      *  @param  hitAssociationMapI hit association map I
      *  @param  hitAssociationMapJ hit association map J
-     * 
+     *
      *  @return the hit to join
      */
     pandora::CaloHit *GetJoinHit(pandora::CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ) const;
 
     /**
      *  @brief  Get last hit obtained by tracing associations via map I, checking via map J
-     * 
+     *
      *  @param  pCaloHit the initial calo hit
      *  @param  hitAssociationMapI hit association map I
      *  @param  hitAssociationMapJ hit association map J
      *  @param  nSteps to receive the number of association steps
-     * 
+     *
      *  @return the last hit obtained in the chain of associations
      */
     pandora::CaloHit *TraceHitAssociation(pandora::CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ,
@@ -204,7 +204,7 @@ private:
     std::string          m_outputClusterListName;        ///< The output cluster list name
 
     bool                 m_mergeBackFilteredHits;        ///< Merge rejected hits into their associated clusters
-    unsigned int         m_maxGapLayers;                 ///< Maximum number of layers for a gap 
+    unsigned int         m_maxGapLayers;                 ///< Maximum number of layers for a gap
     float                m_minCaloHitSeparationSquared;  ///< Square of minimum calo hit separation
 };
 
