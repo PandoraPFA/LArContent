@@ -1,51 +1,50 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRayTrackConsolidationAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/TwoDTrackConsolidationAlgorithm.cc
  *
- *  @brief  Implementation of the cosmic ray track consolidation algorithm class.
+ *  @brief  Implementation of the 2D track consolidation algorithm class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArCosmicRay/CosmicRayTrackConsolidationAlgorithm.h"
-
-
+#include "LArTwoDReco/LArClusterSplitting/TwoDTrackConsolidationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode CosmicRayTrackConsolidationAlgorithm::Run()
+StatusCode TwoDTrackConsolidationAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
+    // Select tracks and showers for re-clustering (Note: samples not mutually exclusive)
+    ClusterVector trackClusters, showerClusters;
+    this->SortInputClusters(pClusterList, trackClusters, showerClusters);
 
-    ClusterVector trackClusters, shortClusters;
-    this->SortInputClusters(pClusterList, trackClusters, shortClusters);
-  
-
+    // Build sliding linear fits from track clusters
     TwoDSlidingFitResultList slidingFitResultList;
     this->BuildSlidingLinearFits(trackClusters, slidingFitResultList);
-   
 
-    ClusterToHitMap clustersToExpand, clustersToRebuild;
-    this->GetAssociatedHits(slidingFitResultList, shortClusters, clustersToExpand, clustersToRebuild);
+    // Form associations: decide which hits should be moved from shower clusters into track clusters
+    ClusterToHitMap clustersToExpand, clustersToContract;
+    this->GetAssociatedHits(slidingFitResultList, showerClusters, clustersToExpand, clustersToContract);
 
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildShortClusters(clustersToRebuild));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildTrackClusters(clustersToExpand));
-   
+    // Consolidate and re-build clusters
+    ClusterList modifiedShowers, modifiedTracks;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromShowers(clustersToContract, modifiedShowers));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToTracks(clustersToExpand, modifiedTracks));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(modifiedTracks, modifiedShowers));
 
     return STATUS_CODE_SUCCESS;
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackConsolidationAlgorithm::SortInputClusters(const ClusterList *const pClusterList, ClusterVector &trackClusters, 
-    ClusterVector &shortClusters) const
+void TwoDTrackConsolidationAlgorithm::SortInputClusters(const ClusterList *const pClusterList, ClusterVector &trackClusters,
+    ClusterVector &showerClusters) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -54,7 +53,7 @@ void CosmicRayTrackConsolidationAlgorithm::SortInputClusters(const ClusterList *
         const float thisLengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
 
         if (thisLengthSquared < m_maxClusterLength * m_maxClusterLength)
-            shortClusters.push_back(pCluster);
+            showerClusters.push_back(pCluster);
 
         if (thisLengthSquared > m_minTrackLength * m_minTrackLength)
             trackClusters.push_back(pCluster);
@@ -62,25 +61,24 @@ void CosmicRayTrackConsolidationAlgorithm::SortInputClusters(const ClusterList *
 
     std::sort(trackClusters.begin(), trackClusters.end(), LArClusterHelper::SortByNHits);
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector &trackClusters, 
+void TwoDTrackConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector &trackClusters,
     TwoDSlidingFitResultList &slidingFitResultList) const
 {
     for (ClusterVector::const_iterator iter = trackClusters.begin(), iterEnd = trackClusters.end(); iter != iterEnd; ++iter)
     {
          TwoDSlidingFitResult slidingFitResult;
          LArClusterHelper::LArTwoDSlidingFit(*iter, m_halfWindowLayers, slidingFitResult);
-
          slidingFitResultList.push_back(slidingFitResult);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-   
-void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFitResultList &slidingFitResultListI, 
-    const ClusterVector &shortClustersJ, ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
+
+void TwoDTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFitResultList &slidingFitResultListI,
+    const ClusterVector &showerClustersJ, ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
     for (TwoDSlidingFitResultList::const_iterator iterI = slidingFitResultListI.begin(), iterEndI = slidingFitResultListI.end(); iterI != iterEndI; ++iterI)
     {
@@ -89,7 +87,7 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
         const Cluster* pClusterI = slidingFitResultI.GetCluster();
         const float thisLengthSquaredI(LArClusterHelper::GetLengthSquared(pClusterI));
 
-        for (ClusterVector::const_iterator iterJ = shortClustersJ.begin(), iterEndJ = shortClustersJ.end(); iterJ != iterEndJ; ++iterJ)
+        for (ClusterVector::const_iterator iterJ = showerClustersJ.begin(), iterEndJ = showerClustersJ.end(); iterJ != iterEndJ; ++iterJ)
         {
             const Cluster* pClusterJ = *iterJ;
             const float thisLengthSquaredJ(LArClusterHelper::GetLengthSquared(pClusterJ));
@@ -105,7 +103,7 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
     }
 
 // --- EVENT DISPLAY [BEGIN] ---
-// ClusterList tempClusters;    
+// ClusterList tempClusters;
 // CaloHitList tempCaloHitsToKeep, tempCaloHitsToMove;
 
 // for (ClusterToHitMap::const_iterator iterI = caloHitsToAddI.begin(), iterEndI = caloHitsToAddI.end(); iterI != iterEndI; ++iterI)
@@ -122,7 +120,7 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
 // const Cluster* pClusterJ = iterJ->first;
 // const CaloHitList &caloHitListMove = iterJ->second;
 
-// CaloHitList caloHitListKeep; 
+// CaloHitList caloHitListKeep;
 // pClusterJ->GetOrderedCaloHitList().GetCaloHitList(caloHitListKeep);
 // for (CaloHitList::const_iterator iterK = caloHitListKeep.begin(), iterEndK = caloHitListKeep.end(); iterK != iterEndK; ++iterK)
 // {
@@ -132,7 +130,7 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
 // }
 // }
 
-// if (!tempClusters.empty())   
+// if (!tempClusters.empty())
 // {
 // PandoraMonitoringApi::VisualizeClusters(&tempClusters, "Cluster", BLUE);
 // PandoraMonitoringApi::VisualizeCaloHits(&tempCaloHitsToMove, "HitsToMove", RED);
@@ -144,16 +142,30 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFitResult& slidingFitResultI, const Cluster* pClusterJ,
+void TwoDTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFitResult& slidingFitResultI, const Cluster* pClusterJ,
     ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
     const Cluster* pClusterI(slidingFitResultI.GetCluster());
-   
+
     CaloHitList associatedHits, caloHitListJ;
     pClusterJ->GetOrderedCaloHitList().GetCaloHitList(caloHitListJ);
 
     float minL(std::numeric_limits<float>::max());
     float maxL(std::numeric_limits<float>::max());
+
+    // Loop over hits from shower clusters, and make associations with track clusters
+    // (Determine if hits from shower clusters can be used to fill gaps in track cluster)
+    //
+    // Apply the following selection:
+    //  rJ = candidate hit from shower cluster
+    //  rI = nearest hit on track cluster
+    //  rK = projection of shower hit onto track cluster
+    //
+    //                  o rJ
+    //  o o o o o o - - x - - - - o o o o o o o
+    //           rI    rK
+    //
+    //  Require: rJK < std::min(rCut, rIJ, rKI)
 
     for (CaloHitList::const_iterator iterJ = caloHitListJ.begin(), iterEndJ = caloHitListJ.end(); iterJ != iterEndJ; ++iterJ)
     {
@@ -211,10 +223,45 @@ void CosmicRayTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFi
         }
     }
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TwoDTrackConsolidationAlgorithm::RemoveHitsFromShowers(const ClusterToHitMap &clustersToContract, ClusterList &modifiedShowers) const
+{
+    for (ClusterToHitMap::const_iterator iterI = clustersToContract.begin(), iterEndI = clustersToContract.end(); iterI != iterEndI; ++iterI)
+    {
+        Cluster* pCluster = const_cast<Cluster*>(iterI->first);
+        const CaloHitList &caloHitListToRemove = iterI->second;
+
+        CaloHitList caloHitList, caloHitListToKeep;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
+        {
+            CaloHit* pCaloHit = *iterJ;
+            if (!caloHitListToRemove.count(pCaloHit))
+                caloHitListToKeep.insert(pCaloHit);
+        }
+
+        if (caloHitListToKeep.empty())
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pCluster));
+            continue;
+        }
+
+        for (CaloHitList::const_iterator iterJ = caloHitListToRemove.begin(), iterEndJ = caloHitListToRemove.end(); iterJ != iterEndJ; ++iterJ)
+        {
+            CaloHit* pCaloHit = *iterJ;
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pCluster, pCaloHit));
+        }
+
+        modifiedShowers.insert(pCluster);
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackConsolidationAlgorithm::RebuildTrackClusters(const ClusterToHitMap &clustersToExpand) const
+StatusCode TwoDTrackConsolidationAlgorithm::AddHitsToTracks(const ClusterToHitMap &clustersToExpand, ClusterList &modifiedTracks) const
 {
     for (ClusterToHitMap::const_iterator iterI = clustersToExpand.begin(), iterEndI = clustersToExpand.end(); iterI != iterEndI; ++iterI)
     {
@@ -226,6 +273,8 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::RebuildTrackClusters(const Clus
             CaloHit* pCaloHit = *iterJ;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHit));
         }
+
+        modifiedTracks.insert(pCluster);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -233,25 +282,22 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::RebuildTrackClusters(const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackConsolidationAlgorithm::RebuildShortClusters(const ClusterToHitMap &clustersToDelete) const
+StatusCode TwoDTrackConsolidationAlgorithm::RebuildClusters(const ClusterList &tracksToRebuild, const ClusterList &showersToRebuild) const
 {
     ClusterToHitMap clustersToRebuild;
 
-    for (ClusterToHitMap::const_iterator iterI = clustersToDelete.begin(), iterEndI = clustersToDelete.end(); iterI != iterEndI; ++iterI)
+    for (ClusterList::const_iterator iter = showersToRebuild.begin(), iterEnd = showersToRebuild.end(); iter != iterEnd; ++iter)
     {
-        Cluster* pClusterToDelete = const_cast<Cluster*>(iterI->first);
-        const CaloHitList &caloHitListToDelete = iterI->second;
+        Cluster* pCluster = *iter;
 
-        CaloHitList caloHitList; 
-        pClusterToDelete->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            CaloHit* pCaloHit = *iterJ;
-            if (!caloHitListToDelete.count(pCaloHit))
-                clustersToRebuild[pClusterToDelete].insert(pCaloHit);
-        }
+        if (tracksToRebuild.count(pCluster))
+            continue;
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pClusterToDelete));
+        CaloHitList caloHitList;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        clustersToRebuild[pCluster].insert(caloHitList.begin(), caloHitList.end());
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pCluster));
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildNewClusters(clustersToRebuild));
@@ -261,7 +307,7 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::RebuildShortClusters(const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackConsolidationAlgorithm::BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const
+StatusCode TwoDTrackConsolidationAlgorithm::BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const
 {
     if (clustersToRebuild.empty())
         return STATUS_CODE_SUCCESS;
@@ -274,49 +320,68 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::BuildNewClusters(const ClusterT
 
     for (ClusterToHitMap::const_iterator iter = clustersToRebuild.begin(), iterEnd = clustersToRebuild.end(); iter != iterEnd; ++iter)
     {
-        const CaloHitList &caloHitList = iter->second; 
+        const CaloHitList &caloHitList = iter->second;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildNewClusters(caloHitList));
     }
-    
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
-
-
-    /*
-    const ClusterList *pClusterList = NULL;
-    std::string currentClusterListName, newClusterListName;
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentClusterListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithmName,
-        pClusterList, newClusterListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
-    */
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackConsolidationAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList) const
+StatusCode TwoDTrackConsolidationAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList) const
 {
     if (inputCaloHitList.empty())
         return STATUS_CODE_SUCCESS;
 
-    Cluster *pCluster = NULL;
+    // Form simple associations between residual hits from deleted cluster
+    HitToHitMap hitAssociationMap;
 
-    for (CaloHitList::const_iterator iter = inputCaloHitList.begin(), iterEnd = inputCaloHitList.end(); iter != iterEnd; ++iter)
+    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
     {
-        CaloHit* pCaloHit = *iter;
+        CaloHit* pCaloHitI = *iterI;
 
-        if (NULL == pCluster)
+        for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = iterEndI; iterJ != iterEndJ; ++iterJ)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pCaloHit, pCluster));
+            CaloHit* pCaloHitJ = *iterJ;
+
+            if (pCaloHitI == pCaloHitJ)
+                continue;
+
+            if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_reclusteringWindow * m_reclusteringWindow)
+            {
+                hitAssociationMap[pCaloHitI].insert(pCaloHitJ);
+                hitAssociationMap[pCaloHitJ].insert(pCaloHitI);
+            }
         }
-        else
+    }
+
+    // Collect up associations and build new clusters
+    CaloHitList vetoList;
+
+    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
+    {
+        CaloHit* pSeedCaloHit = *iterI;
+
+        if (vetoList.count(pSeedCaloHit))
+            continue;
+
+        CaloHitList mergeList;
+        this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
+
+        Cluster *pCluster = NULL;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pSeedCaloHit, pCluster));
+        vetoList.insert(pSeedCaloHit);
+
+        for (CaloHitList::const_iterator iterJ = mergeList.begin(), iterEndJ = mergeList.end(); iterJ != iterEndJ; ++iterJ)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHit));
+            CaloHit* pAssociatedCaloHit = *iterJ;
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pAssociatedCaloHit));
+            vetoList.insert(pAssociatedCaloHit);
         }
     }
 
@@ -325,7 +390,35 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::BuildNewClusters(const CaloHitL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+void TwoDTrackConsolidationAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit, CaloHit *pCurrentCaloHit,
+    const HitToHitMap &hitAssociationMap, const CaloHitList &vetoList, CaloHitList &mergeList) const
+{
+    if (vetoList.count(pCurrentCaloHit))
+        return;
+
+    HitToHitMap::const_iterator iter1 = hitAssociationMap.find(pCurrentCaloHit);
+    if (iter1 == hitAssociationMap.end())
+        return;
+
+    for (CaloHitList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
+    {
+        CaloHit* pAssociatedCaloHit = *iter2;
+
+        if (pAssociatedCaloHit == pSeedCaloHit)
+            continue;
+
+        if (!mergeList.insert(pAssociatedCaloHit).second)
+            continue;
+
+        this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, vetoList, mergeList);
+    }
+
+    return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TwoDTrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_minTrackLength = 7.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -334,6 +427,10 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle 
     m_maxClusterLength = 15.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterLength", m_maxClusterLength));
+
+     m_halfWindowLayers = 20;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitHalfWindow", m_halfWindowLayers));
 
     m_maxTransverseDisplacement = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -347,11 +444,9 @@ StatusCode CosmicRayTrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinAssociatedFraction", m_minAssociatedFraction));
 
-    m_halfWindowLayers = 20;
+    m_reclusteringWindow = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_halfWindowLayers));
-
-
+        "ReclusteringWindow", m_reclusteringWindow));
 
     return STATUS_CODE_SUCCESS;
 }

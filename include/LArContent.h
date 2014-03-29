@@ -50,12 +50,12 @@
 #include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayTrackConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/TwoDTrackConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.h"
@@ -97,12 +97,12 @@ public:
         d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMerging",              lar::CosmicRayShowerMergingAlgorithm::Factory)                              \
-        d("LArCosmicRayTrackConsolidation",         lar::CosmicRayTrackConsolidationAlgorithm::Factory)                         \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLayerSplitting",                      lar::LayerSplittingAlgorithm::Factory)                                      \
+        d("LArTwoDTrackConsolidation",              lar::TwoDTrackConsolidationAlgorithm::Factory)                              \
         d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
         d("LArClusterCharacterisation",             lar::ClusterCharacterisationAlgorithm::Factory)                             \
         d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
