@@ -20,7 +20,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultL
 {
     for (TwoDSlidingFitResultList::const_iterator iterI = slidingFitResultListI.begin(), iterEndI = slidingFitResultListI.end(); iterI != iterEndI; ++iterI)
     {
-        const TwoDSlidingFitResult slidingFitResultI = *iterI;
+        const TwoDSlidingFitResult &slidingFitResultI = *iterI;
 
         const Cluster* pClusterI = slidingFitResultI.GetCluster();
         const float thisLengthSquaredI(LArClusterHelper::GetLengthSquared(pClusterI));
