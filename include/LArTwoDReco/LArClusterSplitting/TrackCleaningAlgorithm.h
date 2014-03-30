@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/TrackCleaningAlgorithm.h
  *
- *  @brief  Header file for the track consolidation algorithm class.
+ *  @brief  Header file for the track cleaning algorithm class.
  *
  *  $Log: $
  */
@@ -34,7 +34,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief Get the list of hits to be added to track clusters and removed from shower clusters
+     *  @brief Get the list of hits to be added or removed from clusters
      *
      *  @param slidingFitResultList  the list of sliding linear fits to track clusters
      *  @param showerClusters  the vector of shower clusters

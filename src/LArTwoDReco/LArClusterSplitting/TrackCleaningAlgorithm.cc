@@ -15,18 +15,16 @@ using namespace pandora;
 namespace lar
 {
 
-void TrackCleaningAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultList &slidingFitResultListI,
-    const ClusterVector &showerClustersJ, ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
+void TrackCleaningAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultList &slidingFitResultList,
+    const ClusterVector &showerClusters, ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const
 {
-   
+    // TODO: WRITE THIS METHOD!
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TrackCleaningAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-   
-
     return TwoDSlidingFitConsolidationAlgorithm::ReadSettings(xmlHandle);
 }
 
