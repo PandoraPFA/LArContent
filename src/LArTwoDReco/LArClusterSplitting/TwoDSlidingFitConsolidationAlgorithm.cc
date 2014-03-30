@@ -1,21 +1,21 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/TwoDTrackConsolidationAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.cc
  *
- *  @brief  Implementation of the 2D track consolidation algorithm class.
+ *  @brief  Implementation of the 2D sliding fit consolidation algorithm class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDTrackConsolidationAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode TwoDTrackConsolidationAlgorithm::Run()
+StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
@@ -28,22 +28,27 @@ StatusCode TwoDTrackConsolidationAlgorithm::Run()
     TwoDSlidingFitResultList slidingFitResultList;
     this->BuildSlidingLinearFits(trackClusters, slidingFitResultList);
 
-    // Form associations: decide which hits should be moved from shower clusters into track clusters
+    // Get Initial configuration of hits
+    ClusterToHitMap clustersAtStart;
+    this->GetInitialHits(trackClusters, clustersAtStart);
+    this->GetInitialHits(showerClusters, clustersAtStart);
+
+    // Recluster the hits
     ClusterToHitMap clustersToExpand, clustersToContract;
-    this->GetAssociatedHits(slidingFitResultList, showerClusters, clustersToExpand, clustersToContract);
+    this->GetReclusteredHits(slidingFitResultList, showerClusters, clustersToExpand, clustersToContract);
 
     // Consolidate and re-build clusters
     ClusterList modifiedShowers, modifiedTracks;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromShowers(clustersToContract, modifiedShowers));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToTracks(clustersToExpand, modifiedTracks));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(modifiedTracks, modifiedShowers));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromClusters(clustersToContract));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToClusters(clustersToExpand));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(clustersAtStart));
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDTrackConsolidationAlgorithm::SortInputClusters(const ClusterList *const pClusterList, ClusterVector &trackClusters,
+void TwoDSlidingFitConsolidationAlgorithm::SortInputClusters(const ClusterList *const pClusterList, ClusterVector &trackClusters,
     ClusterVector &showerClusters) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -64,7 +69,7 @@ void TwoDTrackConsolidationAlgorithm::SortInputClusters(const ClusterList *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDTrackConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector &trackClusters,
+void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector &trackClusters,
     TwoDSlidingFitResultList &slidingFitResultList) const
 {
     for (ClusterVector::const_iterator iter = trackClusters.begin(), iterEnd = trackClusters.end(); iter != iterEnd; ++iter)
@@ -77,155 +82,24 @@ void TwoDTrackConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFitResultList &slidingFitResultListI,
-    const ClusterVector &showerClustersJ, ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
+void TwoDSlidingFitConsolidationAlgorithm::GetInitialHits(const ClusterVector &inputClusters, ClusterToHitMap &caloHitsAtStart) const
 {
-    for (TwoDSlidingFitResultList::const_iterator iterI = slidingFitResultListI.begin(), iterEndI = slidingFitResultListI.end(); iterI != iterEndI; ++iterI)
+    for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
     {
-        const TwoDSlidingFitResult slidingFitResultI = *iterI;
+        const Cluster* pCluster = *iter;
 
-        const Cluster* pClusterI = slidingFitResultI.GetCluster();
-        const float thisLengthSquaredI(LArClusterHelper::GetLengthSquared(pClusterI));
+        if (caloHitsAtStart[pCluster].size() > 0)
+            continue;
 
-        for (ClusterVector::const_iterator iterJ = showerClustersJ.begin(), iterEndJ = showerClustersJ.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            const Cluster* pClusterJ = *iterJ;
-            const float thisLengthSquaredJ(LArClusterHelper::GetLengthSquared(pClusterJ));
-
-            if (pClusterI == pClusterJ)
-                continue;
-
-            if (2.0 * thisLengthSquaredJ > thisLengthSquaredI)
-                continue;
-
-            this->GetAssociatedHits(slidingFitResultI, pClusterJ, caloHitsToAddI, caloHitsToRemoveJ);
-        }
+        CaloHitList caloHitList;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        caloHitsAtStart[pCluster].insert(caloHitList.begin(), caloHitList.end());
     }
-
-// --- EVENT DISPLAY [BEGIN] ---
-// ClusterList tempClusters;
-// CaloHitList tempCaloHitsToKeep, tempCaloHitsToMove;
-
-// for (ClusterToHitMap::const_iterator iterI = caloHitsToAddI.begin(), iterEndI = caloHitsToAddI.end(); iterI != iterEndI; ++iterI)
-// {
-// const Cluster* pClusterI = iterI->first;
-// const CaloHitList &caloHitListI = iterI->second;
-
-// tempClusters.insert((Cluster*)pClusterI);
-// tempCaloHitsToMove.insert(caloHitListI.begin(), caloHitListI.end());
-// }
-
-// for (ClusterToHitMap::const_iterator iterJ = caloHitsToRemoveJ.begin(), iterEndJ = caloHitsToRemoveJ.end(); iterJ != iterEndJ; ++iterJ)
-// {
-// const Cluster* pClusterJ = iterJ->first;
-// const CaloHitList &caloHitListMove = iterJ->second;
-
-// CaloHitList caloHitListKeep;
-// pClusterJ->GetOrderedCaloHitList().GetCaloHitList(caloHitListKeep);
-// for (CaloHitList::const_iterator iterK = caloHitListKeep.begin(), iterEndK = caloHitListKeep.end(); iterK != iterEndK; ++iterK)
-// {
-// CaloHit* pCaloHit = *iterK;
-// if (0 == caloHitListMove.count(pCaloHit))
-// tempCaloHitsToKeep.insert((CaloHit*)pCaloHit);
-// }
-// }
-
-// if (!tempClusters.empty())
-// {
-// PandoraMonitoringApi::VisualizeClusters(&tempClusters, "Cluster", BLUE);
-// PandoraMonitoringApi::VisualizeCaloHits(&tempCaloHitsToMove, "HitsToMove", RED);
-// PandoraMonitoringApi::VisualizeCaloHits(&tempCaloHitsToKeep, "HitsToKeep", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// }
-// --- EVENT DISPLAY [END] ---
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDTrackConsolidationAlgorithm::GetAssociatedHits(const TwoDSlidingFitResult& slidingFitResultI, const Cluster* pClusterJ,
-    ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
-{
-    const Cluster* pClusterI(slidingFitResultI.GetCluster());
-
-    CaloHitList associatedHits, caloHitListJ;
-    pClusterJ->GetOrderedCaloHitList().GetCaloHitList(caloHitListJ);
-
-    float minL(std::numeric_limits<float>::max());
-    float maxL(std::numeric_limits<float>::max());
-
-    // Loop over hits from shower clusters, and make associations with track clusters
-    // (Determine if hits from shower clusters can be used to fill gaps in track cluster)
-    //
-    // Apply the following selection:
-    //  rJ = candidate hit from shower cluster
-    //  rI = nearest hit on track cluster
-    //  rK = projection of shower hit onto track cluster
-    //
-    //                  o rJ
-    //  o o o o o o - - x - - - - o o o o o o o
-    //           rI    rK
-    //
-    //  Require: rJK < std::min(rCut, rIJ, rKI)
-
-    for (CaloHitList::const_iterator iterJ = caloHitListJ.begin(), iterEndJ = caloHitListJ.end(); iterJ != iterEndJ; ++iterJ)
-    {
-        CaloHit* pCaloHitJ = *iterJ;
-
-        try
-        {
-            const CartesianVector positionJ(pCaloHitJ->GetPositionVector());
-            const CartesianVector positionI(LArClusterHelper::GetClosestPosition(positionJ, pClusterI));
-
-            float rL(0.f), rT(0.f);
-            CartesianVector positionK(0.f, 0.f, 0.f);
-            slidingFitResultI.GetGlobalFitProjection(positionJ, positionK);
-            slidingFitResultI.GetLocalPosition(positionK, rL, rT);
-
-            const float rsqIJ((positionI - positionJ).GetMagnitudeSquared());
-            const float rsqJK((positionJ - positionK).GetMagnitudeSquared());
-            const float rsqKI((positionK - positionI).GetMagnitudeSquared());
-
-            if (rsqJK < std::min(m_maxTransverseDisplacement * m_maxTransverseDisplacement, std::min(rsqIJ, rsqKI)))
-            {
-                if (associatedHits.empty())
-                {
-                    minL = rL;
-                    maxL = rL;
-                }
-                else
-                {
-                    minL = std::min(minL, rL);
-                    maxL = std::max(maxL, rL);
-                }
-
-                associatedHits.insert(pCaloHitJ);
-            }
-        }
-        catch (StatusCodeException &)
-        {
-        }
-    }
-
-    const float associatedSpan(maxL - minL);
-    const float associatedFraction(associatedHits.empty() ? 0.f : static_cast<float>(associatedHits.size()) / static_cast<float>(pClusterJ->GetNCaloHits()));
-
-    if (associatedSpan > m_minAssociatedSpan || associatedFraction > m_minAssociatedFraction)
-    {
-        for (CaloHitList::const_iterator iterK = associatedHits.begin(), iterEndK = associatedHits.end(); iterK != iterEndK; ++iterK)
-        {
-            CaloHit* pCaloHit = *iterK;
-
-            if (caloHitsToRemoveJ[pClusterJ].count(pCaloHit))
-                continue;
-
-            caloHitsToAddI[pClusterI].insert(pCaloHit);
-            caloHitsToRemoveJ[pClusterJ].insert(pCaloHit);
-        }
-    }
-}
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TwoDTrackConsolidationAlgorithm::RemoveHitsFromShowers(const ClusterToHitMap &clustersToContract, ClusterList &modifiedShowers) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract) const
 {
     for (ClusterToHitMap::const_iterator iterI = clustersToContract.begin(), iterEndI = clustersToContract.end(); iterI != iterEndI; ++iterI)
     {
@@ -252,8 +126,6 @@ StatusCode TwoDTrackConsolidationAlgorithm::RemoveHitsFromShowers(const ClusterT
             CaloHit* pCaloHit = *iterJ;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pCluster, pCaloHit));
         }
-
-        modifiedShowers.insert(pCluster);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -261,7 +133,7 @@ StatusCode TwoDTrackConsolidationAlgorithm::RemoveHitsFromShowers(const ClusterT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDTrackConsolidationAlgorithm::AddHitsToTracks(const ClusterToHitMap &clustersToExpand, ClusterList &modifiedTracks) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand) const
 {
     for (ClusterToHitMap::const_iterator iterI = clustersToExpand.begin(), iterEndI = clustersToExpand.end(); iterI != iterEndI; ++iterI)
     {
@@ -273,8 +145,6 @@ StatusCode TwoDTrackConsolidationAlgorithm::AddHitsToTracks(const ClusterToHitMa
             CaloHit* pCaloHit = *iterJ;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHit));
         }
-
-        modifiedTracks.insert(pCluster);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -282,22 +152,22 @@ StatusCode TwoDTrackConsolidationAlgorithm::AddHitsToTracks(const ClusterToHitMa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDTrackConsolidationAlgorithm::RebuildClusters(const ClusterList &tracksToRebuild, const ClusterList &showersToRebuild) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersAtStart) const
 {
     ClusterToHitMap clustersToRebuild;
 
-    for (ClusterList::const_iterator iter = showersToRebuild.begin(), iterEnd = showersToRebuild.end(); iter != iterEnd; ++iter)
+    for (ClusterToHitMap::const_iterator iterI = clustersAtStart.begin(), iterEndI = clustersAtStart.end(); iterI != iterEndI; ++iterI)
     {
-        Cluster* pCluster = *iter;
+        Cluster* pCluster = const_cast<Cluster*>(iterI->first);
+        const CaloHitList &caloHitList = iterI->second;
 
-        if (tracksToRebuild.count(pCluster))
-            continue;
+        for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
+        {
+            CaloHit* pCaloHit = *iterJ;
 
-        CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        clustersToRebuild[pCluster].insert(caloHitList.begin(), caloHitList.end());
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pCluster));
+            if (PandoraContentApi::IsAvailable(*this, pCaloHit))
+                clustersToRebuild[pCluster].insert(pCaloHit);
+        }
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildNewClusters(clustersToRebuild));
@@ -307,7 +177,7 @@ StatusCode TwoDTrackConsolidationAlgorithm::RebuildClusters(const ClusterList &t
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDTrackConsolidationAlgorithm::BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const
 {
     if (clustersToRebuild.empty())
         return STATUS_CODE_SUCCESS;
@@ -332,7 +202,7 @@ StatusCode TwoDTrackConsolidationAlgorithm::BuildNewClusters(const ClusterToHitM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDTrackConsolidationAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList) const
 {
     if (inputCaloHitList.empty())
         return STATUS_CODE_SUCCESS;
@@ -390,7 +260,7 @@ StatusCode TwoDTrackConsolidationAlgorithm::BuildNewClusters(const CaloHitList &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDTrackConsolidationAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit, CaloHit *pCurrentCaloHit,
+void TwoDSlidingFitConsolidationAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit, CaloHit *pCurrentCaloHit,
     const HitToHitMap &hitAssociationMap, const CaloHitList &vetoList, CaloHitList &mergeList) const
 {
     if (vetoList.count(pCurrentCaloHit))
@@ -418,7 +288,7 @@ void TwoDTrackConsolidationAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDTrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TwoDSlidingFitConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_minTrackLength = 7.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -428,21 +298,9 @@ StatusCode TwoDTrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterLength", m_maxClusterLength));
 
-     m_halfWindowLayers = 20;
+    m_halfWindowLayers = 25;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
-
-    m_maxTransverseDisplacement = 1.f; // cm
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
-
-    m_minAssociatedSpan = 1.f; // cm
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinAssociatedSpan", m_minAssociatedSpan));
-
-    m_minAssociatedFraction = 0.5f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinAssociatedFraction", m_minAssociatedFraction));
 
     m_reclusteringWindow = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
