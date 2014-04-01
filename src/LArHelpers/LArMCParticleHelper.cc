@@ -48,14 +48,29 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const MCParticle *LArMCParticleHelper::GetParentNeutrino(const MCParticle *const pMCParticle)
+{
+    const MCParticle *pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);  
+
+    if(!LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return pParentMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 int LArMCParticleHelper::GetPrimaryNeutrino(const MCParticle *const pMCParticle)
 {
-    const MCParticle *pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
-
-    if (LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+    try
+    {
+        const MCParticle *pParentMCParticle = LArMCParticleHelper::GetParentNeutrino(pMCParticle);
         return pParentMCParticle->GetParticleId();
-
-    return 0;
+    }
+    catch (const StatusCodeException &)
+    {
+        return 0;
+    }
 }
 
 } // namespace lar
