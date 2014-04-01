@@ -136,11 +136,6 @@ void LArPointingClusterHelper::GetClosestVertices(const LArPointingCluster &poin
     if (pointingClusterI.GetCluster() == pointingClusterJ.GetCluster())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const float innerI_to_innerJ((pointingClusterI.GetInnerVertex().GetPosition() - pointingClusterJ.GetInnerVertex().GetPosition()).GetMagnitudeSquared());
-    const float innerI_to_outerJ((pointingClusterI.GetInnerVertex().GetPosition() - pointingClusterJ.GetOuterVertex().GetPosition()).GetMagnitudeSquared());
-    const float outerI_to_innerJ((pointingClusterI.GetOuterVertex().GetPosition() - pointingClusterJ.GetInnerVertex().GetPosition()).GetMagnitudeSquared());
-    const float outerI_to_outerJ((pointingClusterI.GetOuterVertex().GetPosition() - pointingClusterJ.GetOuterVertex().GetPosition()).GetMagnitudeSquared());
-
     for (unsigned int useInnerI = 0; useInnerI < 2; ++useInnerI)
     {
         const LArPointingCluster::Vertex &vtxI(useInnerI == 1 ? pointingClusterI.GetInnerVertex() : pointingClusterI.GetOuterVertex());
@@ -155,6 +150,42 @@ void LArPointingClusterHelper::GetClosestVertices(const LArPointingCluster &poin
             const float vtxI_to_endJ((vtxI.GetPosition() - endJ.GetPosition()).GetMagnitudeSquared());
             const float endI_to_vtxJ((endI.GetPosition() - vtxJ.GetPosition()).GetMagnitudeSquared());
             const float endI_to_endJ((endI.GetPosition() - endJ.GetPosition()).GetMagnitudeSquared());
+
+            if ((vtxI_to_vtxJ < std::min(vtxI_to_endJ, std::min(endI_to_vtxJ, endI_to_endJ))) &&
+                (endI_to_endJ > std::max(vtxI_to_endJ, std::max(endI_to_vtxJ, vtxI_to_vtxJ))))
+            {
+                closestVertexI = vtxI;
+                closestVertexJ = vtxJ;
+                return;
+            }
+        }
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetClosestVerticesInX(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+    LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    if (pointingClusterI.GetCluster() == pointingClusterJ.GetCluster())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    for (unsigned int useInnerI = 0; useInnerI < 2; ++useInnerI)
+    {
+        const LArPointingCluster::Vertex &vtxI(useInnerI == 1 ? pointingClusterI.GetInnerVertex() : pointingClusterI.GetOuterVertex());
+        const LArPointingCluster::Vertex &endI(useInnerI == 0 ? pointingClusterI.GetInnerVertex() : pointingClusterI.GetOuterVertex());
+
+        for (unsigned int useInnerJ = 0; useInnerJ < 2; ++useInnerJ)
+        {
+            const LArPointingCluster::Vertex &vtxJ(useInnerJ == 1 ? pointingClusterJ.GetInnerVertex() : pointingClusterJ.GetOuterVertex());
+            const LArPointingCluster::Vertex &endJ(useInnerJ == 0 ? pointingClusterJ.GetInnerVertex() : pointingClusterJ.GetOuterVertex());
+
+            const float vtxI_to_vtxJ(std::fabs(vtxI.GetPosition().GetX() - vtxJ.GetPosition().GetX()));
+            const float vtxI_to_endJ(std::fabs(vtxI.GetPosition().GetX() - endJ.GetPosition().GetX()));
+            const float endI_to_vtxJ(std::fabs(endI.GetPosition().GetX() - vtxJ.GetPosition().GetX()));
+            const float endI_to_endJ(std::fabs(endI.GetPosition().GetX() - endJ.GetPosition().GetX()));
 
             if ((vtxI_to_vtxJ < std::min(vtxI_to_endJ, std::min(endI_to_vtxJ, endI_to_endJ))) &&
                 (endI_to_endJ > std::max(vtxI_to_endJ, std::max(endI_to_vtxJ, vtxI_to_vtxJ))))

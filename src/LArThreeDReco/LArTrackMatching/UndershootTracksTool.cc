@@ -19,16 +19,16 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode UndershootTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool UndershootTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindUndershootTracks(overlapTensor, protoParticleVector);
-    pAlgorithm->CreateThreeDParticles(protoParticleVector);
+    const bool changesMade(this->ApplyChanges(pAlgorithm, protoParticleVector));
 
-    return STATUS_CODE_SUCCESS;
+    return changesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -78,6 +78,20 @@ void UndershootTracksTool::FindUndershootTracks(const TensorType &overlapTensor,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool UndershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ProtoParticleVector &protoParticleVector) const
+{
+    bool changesMade(false);
+
+    for (ProtoParticleVector::const_iterator iter = protoParticleVector.begin(), iterEnd = protoParticleVector.end(); iter != iterEnd; ++iter)
+    {
+        // TODO
+    }
+
+    return changesMade;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void UndershootTracksTool::SelectUndershootElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
     const ClusterList &usedClusters, IteratorList &iteratorList) const
 {
@@ -122,7 +136,7 @@ void UndershootTracksTool::BuildProtoParticle(const IteratorList &iteratorList, 
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
-        for (IteratorList::const_iterator iIter2 = iteratorList.begin(), iIter2End = iteratorList.end(); iIter2 != iIter2End; ++iIter2)
+        for (IteratorList::const_iterator iIter2 = iIter1; iIter2 != iIter1End; ++iIter2) // TODO check this
         {
             if (iIter1 == iIter2)
                 continue;
