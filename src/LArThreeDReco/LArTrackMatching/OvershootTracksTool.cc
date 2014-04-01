@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 
@@ -20,21 +21,21 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode OvershootTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool OvershootTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
-    ProtoParticleVector protoParticleVector;
-    this->FindOvershootTracks(overlapTensor, protoParticleVector);
-    pAlgorithm->CreateThreeDParticles(protoParticleVector);
+    SplitParticleList splitParticleList;
+    this->FindOvershootTracks(overlapTensor, splitParticleList);
+    const bool changesMade(this->ApplyChanges(pAlgorithm, splitParticleList));
 
-    return STATUS_CODE_SUCCESS;
+    return changesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootTracksTool::FindOvershootTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
+void OvershootTracksTool::FindOvershootTracks(const TensorType &overlapTensor, SplitParticleList &splitParticleList) const
 {
     ClusterList usedClusters;
 
@@ -63,22 +64,45 @@ void OvershootTracksTool::FindOvershootTracks(const TensorType &overlapTensor, P
             if (iteratorList.size() < 2)
                 continue;
 
-            ProtoParticleVector localProtoParticleVector;
-            this->BuildProtoParticle(iteratorList, localProtoParticleVector);
+            SplitParticleList localSplitParticleList;
+            this->GetSplitParticles(iteratorList, localSplitParticleList);
 
-            if (localProtoParticleVector.empty())
+            if (localSplitParticleList.empty())
                 continue;
 
-            protoParticleVector.insert(protoParticleVector.end(), localProtoParticleVector.begin(), localProtoParticleVector.end());
-
-            for (ProtoParticleVector::const_iterator pIter = localProtoParticleVector.begin(); pIter != localProtoParticleVector.end(); ++pIter)
+            for (SplitParticleList::const_iterator sIter = localSplitParticleList.begin(), sIterEnd = localSplitParticleList.end(); sIter != sIterEnd; ++sIter)
             {
-                usedClusters.insert(pIter->m_clusterListU.begin(), pIter->m_clusterListU.end());
-                usedClusters.insert(pIter->m_clusterListV.begin(), pIter->m_clusterListV.end());
-                usedClusters.insert(pIter->m_clusterListW.begin(), pIter->m_clusterListW.end());
+                usedClusters.insert(sIter->m_pCommonCluster);
+                usedClusters.insert(sIter->m_pClusterA1);
+                usedClusters.insert(sIter->m_pClusterA2);
+                usedClusters.insert(sIter->m_pClusterB1);
+                usedClusters.insert(sIter->m_pClusterB2);
             }
+
+            splitParticleList.insert(splitParticleList.end(), localSplitParticleList.begin(), localSplitParticleList.end());
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool OvershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const SplitParticleList &splitParticleList) const
+{
+    SplitPositionMap splitPositionMap;
+
+    for (SplitParticleList::const_iterator iter = splitParticleList.begin(), iterEnd = splitParticleList.end(); iter != iterEnd; ++iter)
+    {
+        splitPositionMap[iter->m_pCommonCluster].push_back(iter->m_splitPosition);
+    }
+
+    bool changesMade(false);
+
+    for (SplitPositionMap::const_iterator iter = splitPositionMap.begin(), iterEnd = splitPositionMap.end(); iter != iterEnd; ++iter)
+    {
+        // TODO
+    }
+
+    return changesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -123,115 +147,43 @@ void OvershootTracksTool::SelectOvershootElements(TensorType::ElementList::const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootTracksTool::BuildProtoParticle(const IteratorList &iteratorList, ProtoParticleVector &protoParticleVector) const
+void OvershootTracksTool::GetSplitParticles(const IteratorList &iteratorList, SplitParticleList &splitParticleList) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
-        for (IteratorList::const_iterator iIter2 = iteratorList.begin(), iIter2End = iteratorList.end(); iIter2 != iIter2End; ++iIter2)
+        for (IteratorList::const_iterator iIter2 = iIter1; iIter2 != iIter1End; ++iIter2)
         {
             if (iIter1 == iIter2)
                 continue;
 
-            const unsigned int nMatchedSamplingPoints1((*iIter1)->GetOverlapResult().GetNMatchedSamplingPoints());
-            const unsigned int nMatchedSamplingPoints2((*iIter2)->GetOverlapResult().GetNMatchedSamplingPoints());
-            IteratorList::const_iterator iIterA((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter1 : iIter2);
-            IteratorList::const_iterator iIterB((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter2 : iIter1);
-
-            const HitType commonView(((*iIterA)->GetClusterU() == (*iIterB)->GetClusterU()) ? VIEW_U :
-                 ((*iIterA)->GetClusterV() == (*iIterB)->GetClusterV()) ? VIEW_V : VIEW_W);
-
-            if ((VIEW_W == commonView) && ((*iIterA)->GetClusterW() != (*iIterB)->GetClusterW()))
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            HitType hitType1(CUSTOM), hitType2(CUSTOM);
-            Cluster *pCommonCluster(NULL), *pClusterA1(NULL), *pClusterA2(NULL), *pClusterB1(NULL), *pClusterB2(NULL);
-
-            if (VIEW_U == commonView)
-            {
-                pCommonCluster = (*iIterA)->GetClusterU();
-                pClusterA1 = (*iIterA)->GetClusterV();
-                pClusterA2 = (*iIterA)->GetClusterW();
-                pClusterB1 = (*iIterB)->GetClusterV();
-                pClusterB2 = (*iIterB)->GetClusterW();
-                hitType1 = VIEW_V;
-                hitType2 = VIEW_W;
-            }
-            else if (VIEW_V == commonView)
-            {
-                pCommonCluster = (*iIterA)->GetClusterV();
-                pClusterA1 = (*iIterA)->GetClusterU();
-                pClusterA2 = (*iIterA)->GetClusterW();
-                pClusterB1 = (*iIterB)->GetClusterU();
-                pClusterB2 = (*iIterB)->GetClusterW();
-                hitType1 = VIEW_U;
-                hitType2 = VIEW_W;
-            }
-            else
-            {
-                pCommonCluster = (*iIterA)->GetClusterW();
-                pClusterA1 = (*iIterA)->GetClusterU();
-                pClusterA2 = (*iIterA)->GetClusterV();
-                pClusterB1 = (*iIterB)->GetClusterU();
-                pClusterB2 = (*iIterB)->GetClusterV();
-                hitType1 = VIEW_U;
-                hitType2 = VIEW_V;
-            }
-
-            if ((NULL == pCommonCluster) || (NULL == pClusterA1) || (NULL == pClusterA2) || (NULL == pClusterB1) || (NULL == pClusterB2))
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            if ((pClusterA1 == pClusterB1) || (pClusterA2 == pClusterB2))
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
             try
             {
-                // TODO Replace with something that returns "internal" vertices
-                LArPointingCluster::Vertex vertexA1, vertexB1;
-                LArPointingClusterHelper::GetClosestVertices(LArPointingCluster(pClusterA1), LArPointingCluster(pClusterB1), vertexA1, vertexB1);
+                const unsigned int nMatchedSamplingPoints1((*iIter1)->GetOverlapResult().GetNMatchedSamplingPoints());
+                const unsigned int nMatchedSamplingPoints2((*iIter2)->GetOverlapResult().GetNMatchedSamplingPoints());
+                IteratorList::const_iterator iIterA((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter1 : iIter2);
+                IteratorList::const_iterator iIterB((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter2 : iIter1);
 
-                LArPointingCluster::Vertex vertexA2, vertexB2;
-                LArPointingClusterHelper::GetClosestVertices(LArPointingCluster(pClusterA2), LArPointingCluster(pClusterB2), vertexA2, vertexB2);
+                SplitParticle splitParticle(*(*iIterA), *(*iIterB));
+                const LArPointingCluster pointingClusterA1(splitParticle.m_pClusterA1);
+                const LArPointingCluster pointingClusterB1(splitParticle.m_pClusterB1);
+                const LArPointingCluster pointingClusterA2(splitParticle.m_pClusterA2);
+                const LArPointingCluster pointingClusterB2(splitParticle.m_pClusterB2);
 
-                float transverseAB1(std::numeric_limits<float>::max()), transverseAB2(std::numeric_limits<float>::max());
-                float longitudinalAB1(-std::numeric_limits<float>::max()), longitudinalAB2(-std::numeric_limits<float>::max());
-                LArPointingClusterHelper::GetImpactParameters(vertexA1, vertexB1, longitudinalAB1, transverseAB1);
-                LArPointingClusterHelper::GetImpactParameters(vertexA2, vertexB2, longitudinalAB2, transverseAB2);
+                LArPointingCluster::Vertex vertexA1, vertexB1, vertexA2, vertexB2;
+                LArPointingClusterHelper::GetClosestVerticesInX(pointingClusterA1, pointingClusterB1, vertexA1, vertexB1);
+                LArPointingClusterHelper::GetClosestVerticesInX(pointingClusterA2, pointingClusterB2, vertexA2, vertexB2);
 
-                if (std::min(longitudinalAB1, longitudinalAB2) < m_minLongitudinalImpactParameter)
+                if (!this->PassesVertexCuts(vertexA1, vertexB1) || !this->PassesVertexCuts(vertexA2, vertexB2))
                     continue;
 
-                float transverseBA1(std::numeric_limits<float>::max()), transverseBA2(std::numeric_limits<float>::max());
-                float longitudinalBA1(-std::numeric_limits<float>::max()), longitudinalBA2(-std::numeric_limits<float>::max());
-                LArPointingClusterHelper::GetImpactParameters(vertexB1, vertexA1, longitudinalBA1, transverseBA1);
-                LArPointingClusterHelper::GetImpactParameters(vertexB2, vertexA2, longitudinalBA2, transverseBA2);
-
-                if (std::min(longitudinalBA1, longitudinalBA2) < m_minLongitudinalImpactParameter)
-                    continue;
-
-                bool splitAtElementA(false), splitAtElementB(false);
-
-                if (std::fabs(vertexA1.GetPosition().GetX() - vertexA2.GetPosition().GetX()) < m_maxVertexXSeparation)
-                {
-                    splitAtElementA = true;
-                }
-                else if (std::fabs(vertexB1.GetPosition().GetX() - vertexB2.GetPosition().GetX()) < m_maxVertexXSeparation)
-                {
-                    splitAtElementB = true;
-                }
-
-                if (!splitAtElementA && !splitAtElementB)
-                    continue;
-
-                CartesianVector projectedPosition(0.f, 0.f, 0.f);
-                float chiSquared(std::numeric_limits<float>::max());
-
-                LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, splitAtElementA ? vertexA1.GetPosition() : vertexB1.GetPosition(),
-                     splitAtElementA ? vertexA2.GetPosition() : vertexB2.GetPosition(), projectedPosition, chiSquared);
-
-                // TODO
+                this->SetSplitPosition(vertexA1, vertexA2, vertexB1, vertexB2, splitParticle);
+                splitParticleList.push_back(splitParticle);
             }
-            catch (StatusCodeException &)
+            catch (StatusCodeException &statusCodeException)
             {
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                    throw statusCodeException;
+
                 continue;
             }
         }
@@ -254,6 +206,73 @@ bool OvershootTracksTool::PassesElementCuts(TensorType::ElementList::const_itera
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool OvershootTracksTool::PassesVertexCuts(const LArPointingCluster::Vertex &vertexA, const LArPointingCluster::Vertex &vertexB) const
+{
+    float longitudinalAB(-std::numeric_limits<float>::max()), transverseAB(std::numeric_limits<float>::max());
+    LArPointingClusterHelper::GetImpactParameters(vertexA, vertexB, longitudinalAB, transverseAB);
+
+    float longitudinalBA(-std::numeric_limits<float>::max()), transverseBA(std::numeric_limits<float>::max());
+    LArPointingClusterHelper::GetImpactParameters(vertexB, vertexA, longitudinalBA, transverseBA);
+
+    if (std::min(longitudinalAB, longitudinalBA) < m_minLongitudinalImpactParameter)
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &vertexA1, const LArPointingCluster::Vertex &vertexA2,
+    const LArPointingCluster::Vertex &vertexB1, const LArPointingCluster::Vertex &vertexB2, SplitParticle &splitParticle) const
+{
+    bool splitAtElementA(false), splitAtElementB(false);
+
+    if (std::fabs(vertexA1.GetPosition().GetX() - vertexA2.GetPosition().GetX()) < m_maxVertexXSeparation)
+    {
+        splitAtElementA = true;
+    }
+    else if (std::fabs(vertexB1.GetPosition().GetX() - vertexB2.GetPosition().GetX()) < m_maxVertexXSeparation)
+    {
+        splitAtElementB = true;
+    }
+
+    if (!splitAtElementA && !splitAtElementB)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    CartesianVector splitPosition(0.f, 0.f, 0.f);
+    float chiSquared(std::numeric_limits<float>::max());
+
+    LArGeometryHelper::MergeTwoPositions(LArThreeDHelper::GetClusterHitType(splitParticle.m_pClusterA1),
+        LArThreeDHelper::GetClusterHitType(splitParticle.m_pClusterA2), splitAtElementA ? vertexA1.GetPosition() : vertexB1.GetPosition(),
+        splitAtElementA ? vertexA2.GetPosition() : vertexB2.GetPosition(), splitPosition, chiSquared);
+
+    splitParticle.m_splitPosition = splitPosition;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+OvershootTracksTool::SplitParticle::SplitParticle(const TensorType::Element &elementA, const TensorType::Element &elementB) :
+    m_splitPosition(0.f, 0.f, 0.f)
+{
+    const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU()) ? VIEW_U :
+        (elementA.GetClusterV() == elementB.GetClusterV()) ? VIEW_V :
+        (elementA.GetClusterW() == elementB.GetClusterW()) ? VIEW_W :
+        throw StatusCodeException(STATUS_CODE_FAILURE));
+
+    m_pCommonCluster = (VIEW_U == commonView) ? elementA.GetClusterU() : (VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();
+    m_pClusterA1 = (VIEW_U == commonView) ? elementA.GetClusterV() : (VIEW_V == commonView) ? elementA.GetClusterU() : elementA.GetClusterU();
+    m_pClusterA2 = (VIEW_U == commonView) ? elementA.GetClusterW() : (VIEW_V == commonView) ? elementA.GetClusterW() : elementA.GetClusterV();
+    m_pClusterB1 = (VIEW_U == commonView) ? elementB.GetClusterV() : (VIEW_V == commonView) ? elementB.GetClusterU() : elementB.GetClusterU();
+    m_pClusterB2 = (VIEW_U == commonView) ? elementB.GetClusterW() : (VIEW_V == commonView) ? elementB.GetClusterW() : elementB.GetClusterV();
+
+    if ((m_pClusterA1 == m_pClusterB1) || (m_pClusterA2 == m_pClusterB2))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)

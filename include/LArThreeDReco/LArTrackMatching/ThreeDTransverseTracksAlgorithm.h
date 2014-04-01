@@ -236,8 +236,10 @@ public:
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  protoParticleVector the proto particle vector
+     * 
+     *  @return whether changes have been made by the tool
      */
-    virtual pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

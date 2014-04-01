@@ -29,7 +29,7 @@ public:
     };
 
 private:
-    pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -39,6 +39,16 @@ private:
      *  @param  protoParticleVector to receive the list of proto particles
      */
     void FindUndershootTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+
+    /**
+     *  @brief  Apply the changes cached in a proto particle vector and update the tensor accordingly
+     * 
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  protoParticleVector the proto particle vector
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    bool ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ProtoParticleVector &protoParticleVector) const;
 
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 

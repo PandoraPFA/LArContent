@@ -29,7 +29,7 @@ public:
     };
 
 private:
-    pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int    m_minClusterConnections;        ///< The minimum number of cluster connections for display

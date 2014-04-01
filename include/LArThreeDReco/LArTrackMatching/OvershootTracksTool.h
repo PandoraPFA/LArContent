@@ -29,16 +29,50 @@ public:
     };
 
 private:
-    pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    /**
+     *  @brief  Split particle class
+     */
+    class SplitParticle
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  elementA the tensor element A
+         *  @param  elementB the tensor element B
+         */
+        SplitParticle(const TensorType::Element &elementA, const TensorType::Element &elementB);
+
+        pandora::Cluster           *m_pCommonCluster;       ///< Address of the common cluster
+        pandora::Cluster           *m_pClusterA1;           ///< Address of cluster in element A, view 1
+        pandora::Cluster           *m_pClusterA2;           ///< Address of cluster in element A, view 2
+        pandora::Cluster           *m_pClusterB1;           ///< Address of cluster in element B, view 1
+        pandora::Cluster           *m_pClusterB2;           ///< Address of cluster in element B, view 2
+        pandora::CartesianVector    m_splitPosition;        ///< The candidate split position
+    };
+
+    typedef std::vector<SplitParticle> SplitParticleList;
+
+    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Find overshoot tracks
+     *  @brief  Find overshoot tracks, by receiving a list of details about possible required cluster splits
      * 
      *  @param  overlapTensor the overlap tensor
-     *  @param  protoParticleVector to receive the list of proto particles
+     *  @param  splitParticleList to receive the split particle list
      */
-    void FindOvershootTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+    void FindOvershootTracks(const TensorType &overlapTensor, SplitParticleList &splitParticleList) const;
+
+    /**
+     *  @brief  Apply the changes cached in a split particle list and update the tensor accordingly
+     * 
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  splitParticleList the split particle list
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    bool ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const SplitParticleList &splitParticleList) const;
 
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
@@ -54,12 +88,12 @@ private:
         const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
 
     /**
-     *  @brief  Build proto particles, splitting clusters merged due to an overshoot in the clustering
+     *  @brief  Get split particle objects, identifying required splits for clusters merged due to overshoots in the clustering.
      * 
      *  @param  iteratorList list of iterators to relevant elements
-     *  @param  protoParticleVector to be populated with proto particles for subsequent pfo construction
+     *  @param  splitParticleList to be populated with split particles for 
      */
-    void BuildProtoParticle(const IteratorList &iteratorList, ProtoParticleVector &protoParticleVector) const;
+    void GetSplitParticles(const IteratorList &iteratorList, SplitParticleList &splitParticleList) const;
 
     /**
      *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for overshoot identification
@@ -68,6 +102,28 @@ private:
      *  @param  usedClusters the list of used clusters
      */
     bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
+
+    /**
+     *  @brief  Whether a pair of vertices pass longitudinal projection cuts
+     * 
+     *  @param  vertexA vertex from cluster in tensor element a
+     *  @param  vertexB vertex from cluster in tensor element b
+     */
+    bool PassesVertexCuts(const LArPointingCluster::Vertex &vertexA, const LArPointingCluster::Vertex &vertexB) const;
+
+    /**
+     *  @brief  Set split position for a provided split particle
+     * 
+     *  @param  vertexA1 vertex for tensor element a in view 1
+     *  @param  vertexA2 vertex for tensor element a in view 2
+     *  @param  vertexB1 vertex for tensor element b in view 1
+     *  @param  vertexB2 vertex for tensor element b in view 2
+     *  @param  splitParticle the split particle
+     */
+    void SetSplitPosition(const LArPointingCluster::Vertex &vertexA1, const LArPointingCluster::Vertex &vertexA2,
+        const LArPointingCluster::Vertex &vertexB1, const LArPointingCluster::Vertex &vertexB2, SplitParticle &splitParticle) const;
+
+    typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element

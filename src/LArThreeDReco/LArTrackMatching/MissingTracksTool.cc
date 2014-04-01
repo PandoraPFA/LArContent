@@ -14,12 +14,12 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode MissingTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool MissingTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
-    return STATUS_CODE_SUCCESS;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

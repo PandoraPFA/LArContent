@@ -14,37 +14,40 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
+    bool particlesMade(false);
+
     TensorType::ElementList elementList;
     overlapTensor.GetUnambiguousElements(true, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &TrackTrackTrackAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &TrackTrackShowerAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &TrackShowerShowerAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &ShowerShowerShowerAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
-    return STATUS_CODE_SUCCESS;
+    return particlesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList) const
+void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList,
+    bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
 
@@ -72,6 +75,9 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAl
     }
 
     pAlgorithm->CreateThreeDParticles(protoParticleVector);
+
+    if (!protoParticleVector.empty())
+        particlesMade = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

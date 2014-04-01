@@ -14,7 +14,7 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -77,7 +77,7 @@ StatusCode TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgori
         PANDORA_MONITORING_API(ViewEvent());
     }
 
-    return STATUS_CODE_SUCCESS;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

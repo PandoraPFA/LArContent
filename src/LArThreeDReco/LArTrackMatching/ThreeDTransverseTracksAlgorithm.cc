@@ -320,9 +320,16 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
-    for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(this, m_overlapTensor));
+        if ((*iter)->Run(this, m_overlapTensor))
+        {
+            iter = m_algorithmToolList.begin();
+        }
+        else
+        {
+            ++iter;
+        }
     }
 }
 

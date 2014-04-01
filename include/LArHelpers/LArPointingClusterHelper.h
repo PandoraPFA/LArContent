@@ -112,6 +112,17 @@ public:
         LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
 
     /**
+     *  @brief  Given a pair of pointing clusters, receive the pair of vertices with smallest x-separation (one vertex coming from each cluster)
+     * 
+     *  @param  pointingClusterI the first pointing cluster
+     *  @param  pointingClusterJ the second pointing cluster
+     *  @param  closestVertexI to receive the relevant vertex from the first pointing cluster
+     *  @param  closestVertexJ to receive the relevant vertex from the second pointing cluster
+     */
+    static void GetClosestVerticesInX(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+        LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
+
+    /**
      *  @brief  Calculate impact parameters between a pointing cluster vertex and a target position
      * 
      *  @param  pointingVertex the pointing vertex

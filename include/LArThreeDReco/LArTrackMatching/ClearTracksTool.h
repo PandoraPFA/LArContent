@@ -29,7 +29,7 @@ public:
     };
 
 private:
-    pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -37,8 +37,9 @@ private:
      * 
      *  @param  pAlgorithm address of the calling algorithm (ultimately responsible for the particles)
      *  @param  elementList the tensor element list
+     *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList) const;
+    void CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 
     /**
      *  @brief  Classify elements of a cluster list as track-like or shower-like (uses IsMipTrack cluster flags, set by previous algs).
