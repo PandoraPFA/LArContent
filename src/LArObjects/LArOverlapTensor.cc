@@ -124,12 +124,26 @@ void OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cl
 template <typename T>
 void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
 {
+    ClusterList additionalRemovals;
+
     if (m_clusterNavigationMapUV.erase(pCluster) > 0)
     {
         typename TheTensor::iterator iter = m_overlapTensor.find(pCluster);
 
         if (m_overlapTensor.end() != iter)
             m_overlapTensor.erase(iter);
+
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapWU.begin(); navIter != m_clusterNavigationMapWU.end(); )
+        {
+            ClusterNavigationMap::iterator thisIter = navIter++;
+            ClusterList::iterator listIter = thisIter->second.find(pCluster);
+
+            if (thisIter->second.end() != listIter)
+                thisIter->second.erase(listIter);
+
+            if (thisIter->second.empty())
+                additionalRemovals.insert(thisIter->first);
+        }
     }
 
     if (m_clusterNavigationMapVW.erase(pCluster) > 0)
@@ -140,6 +154,18 @@ void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
 
             if (iterU->second.end() != iter)
                 iterU->second.erase(iter);
+        }
+
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapUV.begin(); navIter != m_clusterNavigationMapUV.end(); )
+        {
+            ClusterNavigationMap::iterator thisIter = navIter++;
+            ClusterList::iterator listIter = thisIter->second.find(pCluster);
+
+            if (thisIter->second.end() != listIter)
+                thisIter->second.erase(listIter);
+
+            if (thisIter->second.empty())
+                additionalRemovals.insert(thisIter->first);
         }
     }
 
@@ -155,6 +181,23 @@ void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
                     iterV->second.erase(iter);
             }
         }
+
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapVW.begin(); navIter != m_clusterNavigationMapVW.end(); )
+        {
+            ClusterNavigationMap::iterator thisIter = navIter++;
+            ClusterList::iterator listIter = thisIter->second.find(pCluster);
+
+            if (thisIter->second.end() != listIter)
+                thisIter->second.erase(listIter);
+
+            if (thisIter->second.empty())
+                additionalRemovals.insert(thisIter->first);
+        }
+    }
+
+    for (ClusterList::const_iterator iter = additionalRemovals.begin(), iterEnd = additionalRemovals.end(); iter != iterEnd; ++iter)
+    {
+        this->RemoveCluster(*iter);
     }
 }
 

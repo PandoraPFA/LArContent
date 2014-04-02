@@ -94,6 +94,21 @@ public:
      */
     virtual void RemoveUnavailableTensorElements();
 
+    /**
+     *  @brief  Get the name of the u cluster list
+     */
+    const std::string &GetClusterListNameU() const;
+
+    /**
+     *  @brief  Get the name of the v cluster list
+     */
+    const std::string &GetClusterListNameV() const;
+
+    /**
+     *  @brief  Get the name of the w cluster list
+     */
+    const std::string &GetClusterListNameW() const;
+
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -155,6 +170,30 @@ private:
     unsigned int                m_minClusterLayers;             ///< The min number of layers in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const std::string &ThreeDBaseAlgorithm<T>::GetClusterListNameU() const
+{
+    return m_inputClusterListNameU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const std::string &ThreeDBaseAlgorithm<T>::GetClusterListNameV() const
+{
+    return m_inputClusterListNameV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const std::string &ThreeDBaseAlgorithm<T>::GetClusterListNameW() const
+{
+    return m_inputClusterListNameW;
+}
 
 } // namespace lar
 
