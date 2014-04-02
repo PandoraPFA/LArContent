@@ -30,6 +30,32 @@ bool ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints(const TensorT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDTransverseTracksAlgorithm::UpdateTensorForNewCluster(Cluster *const pNewCluster)
+{
+    TwoDSlidingFitResult slidingFitResult;
+    LArClusterHelper::LArTwoDSlidingFit(pNewCluster, m_slidingFitWindow, slidingFitResult);
+
+    if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pNewCluster, slidingFitResult)).second)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    ThreeDBaseAlgorithm::UpdateTensorForNewCluster(pNewCluster);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTransverseTracksAlgorithm::UpdateTensorUponDeletion(Cluster *const pDeletedCluster)
+{
+    TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pDeletedCluster);
+
+    if (m_slidingFitResultMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    m_slidingFitResultMap.erase(iter);
+    ThreeDBaseAlgorithm::UpdateTensorUponDeletion(pDeletedCluster);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTransverseTracksAlgorithm::PreparationStep()
 {
     ClusterList allClustersList;
@@ -40,7 +66,7 @@ void ThreeDTransverseTracksAlgorithm::PreparationStep()
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {
         TwoDSlidingFitResult slidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(*iter, 20, slidingFitResult);
+        LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
 
         if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -380,6 +406,10 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
         m_algorithmToolList.push_back(pTensorManipulationTool);
     }
+
+    m_slidingFitWindow = 20;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitWindow", m_slidingFitWindow));
 
     m_pseudoChi2Cut = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

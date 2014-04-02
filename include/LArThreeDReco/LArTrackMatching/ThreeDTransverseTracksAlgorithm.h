@@ -50,6 +50,9 @@ public:
      */
     static bool SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs);
 
+    virtual void UpdateTensorForNewCluster(pandora::Cluster *const pNewCluster);
+    virtual void UpdateTensorUponDeletion(pandora::Cluster *const pDeletedCluster);
+
 private:
     /**
      *  @brief  SlidingFitDirection enum
@@ -209,6 +212,7 @@ private:
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    unsigned int                m_slidingFitWindow;         ///< The layer window for the sliding linear fits
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
