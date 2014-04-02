@@ -73,8 +73,8 @@ void ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
 template <typename T>
 void ThreeDBaseAlgorithm<T>::UpdateTensorUponMerge(Cluster *const pEnlargedCluster, Cluster *const pDeletedCluster)
 {
-    m_overlapTensor.RemoveCluster(pDeletedCluster);
-    m_overlapTensor.RemoveCluster(pEnlargedCluster);
+    this->UpdateTensorUponDeletion(pDeletedCluster);
+    this->UpdateTensorUponDeletion(pEnlargedCluster);
     this->UpdateTensorForNewCluster(pEnlargedCluster);
 }
 
@@ -83,7 +83,7 @@ void ThreeDBaseAlgorithm<T>::UpdateTensorUponMerge(Cluster *const pEnlargedClust
 template <typename T>
 void ThreeDBaseAlgorithm<T>::UpdateTensorUponSplit(Cluster *const pSplitCluster1, Cluster *const pSplitCluster2, Cluster *const pDeletedCluster)
 {
-    m_overlapTensor.RemoveCluster(pDeletedCluster);
+    this->UpdateTensorUponDeletion(pDeletedCluster);
     this->UpdateTensorForNewCluster(pSplitCluster1);
     this->UpdateTensorForNewCluster(pSplitCluster2);
 }
@@ -159,7 +159,7 @@ void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
 
     for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
     {
-        m_overlapTensor.RemoveCluster(*iter);
+        this->UpdateTensorUponDeletion(*iter);
     }
 }
 

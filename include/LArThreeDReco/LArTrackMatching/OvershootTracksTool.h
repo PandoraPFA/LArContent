@@ -123,7 +123,7 @@ private:
     void SetSplitPosition(const LArPointingCluster::Vertex &vertexA1, const LArPointingCluster::Vertex &vertexA2,
         const LArPointingCluster::Vertex &vertexB1, const LArPointingCluster::Vertex &vertexB2, SplitParticle &splitParticle) const;
 
-    typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
+    typedef std::map<pandora::Cluster*, pandora::FloatVector> SplitPositionMap;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
