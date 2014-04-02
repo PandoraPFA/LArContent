@@ -58,36 +58,36 @@ public:
     virtual void CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
 
     /**
-     *  @brief  Update tensor to reflect a cluster merge
+     *  @brief  Update to reflect a cluster merge
      * 
      *  @param  pEnlargedCluster address of the enlarged cluster
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateTensorUponMerge(pandora::Cluster *const pEnlargedCluster, pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateUponMerge(pandora::Cluster *const pEnlargedCluster, pandora::Cluster *const pDeletedCluster);
 
     /**
-     *  @brief  Update tensor to reflect a cluster split
+     *  @brief  Update to reflect a cluster split
      * 
      *  @param  pSplitCluster1 address of the first cluster fragment
      *  @param  pSplitCluster2 address of the second cluster fragment
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateTensorUponSplit(pandora::Cluster *const pSplitCluster1, pandora::Cluster *const pSplitCluster2,
+    virtual void UpdateUponSplit(pandora::Cluster *const pSplitCluster1, pandora::Cluster *const pSplitCluster2,
         pandora::Cluster *const pDeletedCluster);
 
     /**
-     *  @brief  Update tensor to reflect addition of a new cluster to the problem space
+     *  @brief  Update to reflect addition of a new cluster to the problem space
      * 
      *  @param  pNewCluster address of the new cluster
      */
-    virtual void UpdateTensorForNewCluster(pandora::Cluster *const pNewCluster);
+    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
 
     /**
-     *  @brief  Update tensor to reflect cluster deletion
+     *  @brief  Update to reflect cluster deletion
      * 
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateTensorUponDeletion(pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
     /**
      *  @brief  Update tensor to remove all elements that have been added to pfos and so are unavailable

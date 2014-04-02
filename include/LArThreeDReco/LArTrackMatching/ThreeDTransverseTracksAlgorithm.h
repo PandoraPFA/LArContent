@@ -50,8 +50,8 @@ public:
      */
     static bool SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs);
 
-    virtual void UpdateTensorForNewCluster(pandora::Cluster *const pNewCluster);
-    virtual void UpdateTensorUponDeletion(pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
+    virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
 private:
     /**
