@@ -50,6 +50,16 @@ private:
      */
     bool ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ProtoParticleVector &protoParticleVector) const;
 
+    /**
+     *  @brief  Merge together clusters in a provided cluster list
+     * 
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  clusterList the cluster list
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    bool MakeClusterMerges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
+
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**

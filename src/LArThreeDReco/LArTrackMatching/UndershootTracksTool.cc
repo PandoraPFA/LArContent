@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 
@@ -84,7 +85,37 @@ bool UndershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgori
 
     for (ProtoParticleVector::const_iterator iter = protoParticleVector.begin(), iterEnd = protoParticleVector.end(); iter != iterEnd; ++iter)
     {
-        // TODO
+        changesMade |= this->MakeClusterMerges(pAlgorithm, iter->m_clusterListU);
+        changesMade |= this->MakeClusterMerges(pAlgorithm, iter->m_clusterListV);
+        changesMade |= this->MakeClusterMerges(pAlgorithm, iter->m_clusterListW);
+    }
+
+    return changesMade;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool UndershootTracksTool::MakeClusterMerges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ClusterList &clusterList) const
+{
+    if (clusterList.size() < 2)
+        return false;
+
+    bool changesMade(false);
+    Cluster *pParentCluster = *(clusterList.begin());
+
+    const HitType hitType(LArThreeDHelper::GetClusterHitType(pParentCluster));
+    const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() :
+        (VIEW_W == hitType) ? pAlgorithm->GetClusterListNameW() : throw StatusCodeException(STATUS_CODE_FAILURE));
+
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pDaughterCluster = *iter;
+
+        if (pParentCluster == pDaughterCluster)
+            continue;
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
+        pAlgorithm->UpdateTensorUponMerge(pParentCluster, pDaughterCluster);
     }
 
     return changesMade;
