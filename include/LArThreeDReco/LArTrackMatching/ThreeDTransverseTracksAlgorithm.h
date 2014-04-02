@@ -199,14 +199,10 @@ private:
      *  @param  indexU the index u
      *  @param  indexV the index v
      *  @param  indexW the index w
-     *  @param  maxIndexU the max index u
-     *  @param  maxIndexV the max index v
-     *  @param  maxIndexW the max index w
      *  @param  transverseOverlapResultVector the transverse overlap result vector
      */
-    void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW, const unsigned int maxIndexU,
-        const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor,
-        TransverseOverlapResultVector &transverseOverlapResultVector) const;
+    void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
+        FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const;
 
     void ExamineTensor();
     void TidyUp();
