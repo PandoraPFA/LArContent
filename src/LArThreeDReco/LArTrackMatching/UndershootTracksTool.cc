@@ -104,8 +104,10 @@ bool UndershootTracksTool::MakeClusterMerges(ThreeDTransverseTracksAlgorithm *pA
     Cluster *pParentCluster = *(clusterList.begin());
 
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pParentCluster));
-    const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() :
-        (VIEW_W == hitType) ? pAlgorithm->GetClusterListNameW() : throw StatusCodeException(STATUS_CODE_FAILURE));
+    const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
+
+    if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
@@ -115,7 +117,8 @@ bool UndershootTracksTool::MakeClusterMerges(ThreeDTransverseTracksAlgorithm *pA
             continue;
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
-        pAlgorithm->UpdateTensorUponMerge(pParentCluster, pDaughterCluster);
+        pAlgorithm->UpdateUponMerge(pParentCluster, pDaughterCluster);
+        changesMade = true;
     }
 
     return changesMade;

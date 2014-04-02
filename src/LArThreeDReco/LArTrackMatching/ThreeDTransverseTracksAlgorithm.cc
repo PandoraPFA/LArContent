@@ -30,7 +30,7 @@ bool ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints(const TensorT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::UpdateTensorForNewCluster(Cluster *const pNewCluster)
+void ThreeDTransverseTracksAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
 {
     TwoDSlidingFitResult slidingFitResult;
     LArClusterHelper::LArTwoDSlidingFit(pNewCluster, m_slidingFitWindow, slidingFitResult);
@@ -38,12 +38,12 @@ void ThreeDTransverseTracksAlgorithm::UpdateTensorForNewCluster(Cluster *const p
     if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pNewCluster, slidingFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    ThreeDBaseAlgorithm::UpdateTensorForNewCluster(pNewCluster);
+    ThreeDBaseAlgorithm::UpdateForNewCluster(pNewCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::UpdateTensorUponDeletion(Cluster *const pDeletedCluster)
+void ThreeDTransverseTracksAlgorithm::UpdateUponDeletion(Cluster *const pDeletedCluster)
 {
     TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pDeletedCluster);
 
@@ -51,7 +51,7 @@ void ThreeDTransverseTracksAlgorithm::UpdateTensorUponDeletion(Cluster *const pD
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     m_slidingFitResultMap.erase(iter);
-    ThreeDBaseAlgorithm::UpdateTensorUponDeletion(pDeletedCluster);
+    ThreeDBaseAlgorithm::UpdateUponDeletion(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

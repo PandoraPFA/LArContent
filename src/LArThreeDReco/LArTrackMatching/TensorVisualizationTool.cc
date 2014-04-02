@@ -36,6 +36,9 @@ bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
         if ((nU < m_minClusterConnections) && (nV < m_minClusterConnections) && (nW < m_minClusterConnections))
             continue;
 
+        if (nU * nV * nW == 0)
+            continue;
+
         int counter(0);
         ClusterList allClusterListU, allClusterListV, allClusterListW;
         std::cout << " Connections: nU " << nU << ", nV " << nV << ", nW " << nW << ", nElements " << elementList.size() << std::endl;

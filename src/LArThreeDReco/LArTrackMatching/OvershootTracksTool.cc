@@ -104,8 +104,10 @@ bool OvershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorit
         std::sort(splitPositions.begin(), splitPositions.end(), std::less<float>());
 
         const HitType hitType(LArThreeDHelper::GetClusterHitType(pCurrentCluster));
-        const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() :
-            (VIEW_W == hitType) ? pAlgorithm->GetClusterListNameW() : throw StatusCodeException(STATUS_CODE_FAILURE));
+        const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
+
+        if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, clusterListName));
 
@@ -142,7 +144,7 @@ bool OvershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorit
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName));
-            pAlgorithm->UpdateTensorUponSplit(pLowXCluster, pHighXCluster, pCurrentCluster);
+            pAlgorithm->UpdateUponSplit(pLowXCluster, pHighXCluster, pCurrentCluster);
             changesMade = true;
             pCurrentCluster = pHighXCluster;
         }
