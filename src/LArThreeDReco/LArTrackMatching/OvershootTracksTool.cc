@@ -92,7 +92,7 @@ bool OvershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorit
 
     for (SplitParticleList::const_iterator iter = splitParticleList.begin(), iterEnd = splitParticleList.end(); iter != iterEnd; ++iter)
     {
-        splitPositionMap[iter->m_pCommonCluster].push_back(iter->m_splitPosition.GetX());
+        splitPositionMap[iter->m_pCommonCluster].push_back(iter->m_splitPosition);
     }
 
     bool changesMade(false);
@@ -100,8 +100,8 @@ bool OvershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorit
     for (SplitPositionMap::iterator iter = splitPositionMap.begin(), iterEnd = splitPositionMap.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCurrentCluster = iter->first;
-        FloatVector &splitPositions(iter->second);
-        std::sort(splitPositions.begin(), splitPositions.end(), std::less<float>());
+        CartesianPointList &splitPositions(iter->second);
+        std::sort(splitPositions.begin(), splitPositions.end(), OvershootTracksTool::SortSplitPositions);
 
         const HitType hitType(LArThreeDHelper::GetClusterHitType(pCurrentCluster));
         const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
@@ -111,9 +111,9 @@ bool OvershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorit
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, clusterListName));
 
-        for (FloatVector::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
+        for (CartesianPointList::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
         {
-            const float splitXPosition(*sIter);
+            const CartesianVector &splitPosition(*sIter);
 
             ClusterList clusterList;
             clusterList.insert(pCurrentCluster);
@@ -123,12 +123,24 @@ bool OvershootTracksTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorit
             CaloHitList caloHitList;
             pCurrentCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
 
+            LArPointingCluster pointingCluster(pCurrentCluster);
+            const bool innerIsLowX(pointingCluster.GetInnerVertex().GetPosition().GetX() < pointingCluster.GetOuterVertex().GetPosition().GetX());
+            const CartesianVector &lowXEnd(innerIsLowX ? pointingCluster.GetInnerVertex().GetPosition() : pointingCluster.GetOuterVertex().GetPosition());
+            const CartesianVector &highXEnd(innerIsLowX ? pointingCluster.GetOuterVertex().GetPosition() : pointingCluster.GetInnerVertex().GetPosition());
+
+            const CartesianVector lowXUnitVector((lowXEnd -splitPosition).GetUnitVector());
+            const CartesianVector highXUnitVector((highXEnd -splitPosition).GetUnitVector());
+
             Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
 
             for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
             {
                 CaloHit *pCaloHit = *hIter;
-                Cluster *&pClusterToModify((pCaloHit->GetPositionVector().GetX() < splitXPosition) ? pLowXCluster : pHighXCluster);
+                const CartesianVector unitVector((pCaloHit->GetPositionVector() - splitPosition).GetUnitVector());
+
+                const float dotProductLowX(unitVector.GetDotProduct(lowXUnitVector));
+                const float dotProductHighX(unitVector.GetDotProduct(highXUnitVector));
+                Cluster *&pClusterToModify((dotProductLowX > dotProductHighX) ? pLowXCluster : pHighXCluster);
 
                 if (NULL == pClusterToModify)
                 {
@@ -297,6 +309,13 @@ void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &ver
         splitAtElementA ? vertexA2.GetPosition() : vertexB2.GetPosition(), splitPosition, chiSquared);
 
     splitParticle.m_splitPosition = splitPosition;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool OvershootTracksTool::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
+{
+    return (lhs.GetX() < rhs.GetX());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
