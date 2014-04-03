@@ -35,9 +35,9 @@ public:
 
 private:
     /**
-     *  @brief  Split particle class
+     *  @brief  Particle class
      */
-    class SplitParticle
+    class Particle
     {
     public:
         /**
@@ -46,7 +46,7 @@ private:
          *  @param  elementA the tensor element A
          *  @param  elementB the tensor element B
          */
-        SplitParticle(const TensorType::Element &elementA, const TensorType::Element &elementB);
+        Particle(const TensorType::Element &elementA, const TensorType::Element &elementB);
 
         pandora::Cluster           *m_pCommonCluster;       ///< Address of the common cluster
         pandora::Cluster           *m_pClusterA1;           ///< Address of cluster in element A, view 1
@@ -56,9 +56,7 @@ private:
         pandora::CartesianVector    m_splitPosition;        ///< The candidate split position
     };
 
-    typedef std::vector<SplitParticle> SplitParticleList;
-
-    void GetIteratorListModifications(const IteratorList &iteratorList, ModificationList &modificationList) const;
+    void GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const IteratorList &iteratorList, ModificationList &modificationList) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -70,17 +68,18 @@ private:
     bool PassesVertexCuts(const LArPointingCluster::Vertex &vertexA, const LArPointingCluster::Vertex &vertexB) const;
 
     /**
-     *  @brief  Set split position for a provided split particle
+     *  @brief  Set split position for a provided particle
      * 
      *  @param  vertexA1 vertex for tensor element a in view 1
      *  @param  vertexA2 vertex for tensor element a in view 2
      *  @param  vertexB1 vertex for tensor element b in view 1
      *  @param  vertexB2 vertex for tensor element b in view 2
-     *  @param  splitParticle the split particle
+     *  @param  particle the particle
      */
     void SetSplitPosition(const LArPointingCluster::Vertex &vertexA1, const LArPointingCluster::Vertex &vertexA2,
-        const LArPointingCluster::Vertex &vertexB1, const LArPointingCluster::Vertex &vertexB2, SplitParticle &splitParticle) const;
+        const LArPointingCluster::Vertex &vertexB1, const LArPointingCluster::Vertex &vertexB2, Particle &particle) const;
 
+    bool    m_splitMode;                    ///< Whether to run in cluster splitting mode, as opposed to cluster merging mode
     float   m_maxVertexXSeparation;         ///< The max separation between accompanying clusters vertex x positions to make split
 };
 

@@ -50,6 +50,13 @@ public:
      */
     static bool SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs);
 
+    /**
+     *  @brief  Get a sliding fit result from the algorithm cache
+     * 
+     *  @param  pCluster address of the relevant cluster
+     */
+    const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
+
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
