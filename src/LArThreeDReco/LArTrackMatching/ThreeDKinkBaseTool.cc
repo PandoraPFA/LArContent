@@ -50,7 +50,7 @@ bool ThreeDKinkBaseTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
     ModificationList modificationList;
-    this->GetModifications(overlapTensor, modificationList);
+    this->GetModifications(pAlgorithm, overlapTensor, modificationList);
     const bool changesMade(this->ApplyChanges(pAlgorithm, modificationList));
 
     return changesMade;
@@ -58,7 +58,7 @@ bool ThreeDKinkBaseTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDKinkBaseTool::GetModifications(const TensorType &overlapTensor, ModificationList &modificationList) const
+void ThreeDKinkBaseTool::GetModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, ModificationList &modificationList) const
 {
     ClusterList usedClusters;
 
@@ -88,7 +88,7 @@ void ThreeDKinkBaseTool::GetModifications(const TensorType &overlapTensor, Modif
                 continue;
 
             ModificationList localModificationList;
-            this->GetIteratorListModifications(iteratorList, localModificationList);
+            this->GetIteratorListModifications(pAlgorithm, iteratorList, localModificationList);
 
             if (localModificationList.empty())
                 continue;

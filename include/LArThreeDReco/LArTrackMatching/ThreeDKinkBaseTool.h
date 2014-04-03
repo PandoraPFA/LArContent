@@ -56,10 +56,12 @@ protected:
     /**
      *  @brief  Get modification objects for a specific elements of the tensor, identifying required splits and merges for clusters
      * 
+     *  @param  pAlgorithm address of the calling algorithm
      *  @param  iteratorList list of iterators to relevant tensor elements
      *  @param  modificationList to be populated with modifications
      */
-    virtual void GetIteratorListModifications(const IteratorList &iteratorList, ModificationList &modificationList) const = 0;
+    virtual void GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const IteratorList &iteratorList,
+        ModificationList &modificationList) const = 0;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -74,10 +76,11 @@ private:
     /**
      *  @brief  Get modification objects, identifying required splits and merges for clusters
      * 
+     *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  modificationList to be populated with modifications
      */
-    void GetModifications(const TensorType &overlapTensor, ModificationList &modificationList) const;
+    void GetModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, ModificationList &modificationList) const;
 
     /**
      *  @brief  Select elements representing possible components of interest due to overshoots or undershoots in clustering

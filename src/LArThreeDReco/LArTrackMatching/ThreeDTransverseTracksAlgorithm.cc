@@ -30,6 +30,18 @@ bool ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints(const TensorT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const TwoDSlidingFitResult &ThreeDTransverseTracksAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
+{
+    TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
+
+    if (m_slidingFitResultMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTransverseTracksAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
 {
     TwoDSlidingFitResult slidingFitResult;
