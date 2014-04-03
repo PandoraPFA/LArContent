@@ -8,7 +8,7 @@
 #ifndef OVERSHOOT_TRACKS_TOOL_H
 #define OVERSHOOT_TRACKS_TOOL_H 1
 
-#include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDKinkBaseTool.h"
 
 namespace lar
 {
@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  OvershootTracksTool class
  */
-class OvershootTracksTool : public TensorManipulationTool
+class OvershootTracksTool : public ThreeDKinkBaseTool
 {
 public:
     /**
@@ -27,6 +27,11 @@ public:
     public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
+
+    /**
+     *  @brief  Default constructor
+     */
+    OvershootTracksTool();
 
 private:
     /**
@@ -53,55 +58,8 @@ private:
 
     typedef std::vector<SplitParticle> SplitParticleList;
 
-    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    void GetIteratorListModifications(const IteratorList &iteratorList, ModificationList &modificationList) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Find overshoot tracks, by receiving a list of details about possible required cluster splits
-     * 
-     *  @param  overlapTensor the overlap tensor
-     *  @param  splitParticleList to receive the split particle list
-     */
-    void FindOvershootTracks(const TensorType &overlapTensor, SplitParticleList &splitParticleList) const;
-
-    /**
-     *  @brief  Apply the changes cached in a split particle list and update the tensor accordingly
-     * 
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  splitParticleList the split particle list
-     * 
-     *  @return whether changes to the tensor have been made
-     */
-    bool ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const SplitParticleList &splitParticleList) const;
-
-    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
-
-    /**
-     *  @brief  Select elements representing possible components of a two particles, merged due to an overshoot in the clustering
-     * 
-     *  @param  eIter iterator to a candidate element
-     *  @param  elementList the provided element list
-     *  @param  usedClusters the list of used clusters
-     *  @param  iteratorList to receive a list of iterators to relevant elements
-     */
-    void SelectOvershootElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
-        const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
-
-    /**
-     *  @brief  Get split particle objects, identifying required splits for clusters merged due to overshoots in the clustering.
-     * 
-     *  @param  iteratorList list of iterators to relevant elements
-     *  @param  splitParticleList to be populated with split particles for 
-     */
-    void GetSplitParticles(const IteratorList &iteratorList, SplitParticleList &splitParticleList) const;
-
-    /**
-     *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for overshoot identification
-     * 
-     *  @param  eIter the iterator to the tensor element
-     *  @param  usedClusters the list of used clusters
-     */
-    bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
 
     /**
      *  @brief  Whether a pair of vertices pass longitudinal projection cuts
@@ -123,20 +81,7 @@ private:
     void SetSplitPosition(const LArPointingCluster::Vertex &vertexA1, const LArPointingCluster::Vertex &vertexA2,
         const LArPointingCluster::Vertex &vertexB1, const LArPointingCluster::Vertex &vertexB2, SplitParticle &splitParticle) const;
 
-    typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
-
-    /**
-     *  @brief  Sort split position cartesian vectors by increasing x coordinate
-     * 
-     *  @param  lhs the first cartesian vector
-     *  @param  rhs the second cartesian vector
-     */
-    static bool SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
-
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
-    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
-    float           m_minLongitudinalImpactParameter;   ///< The min longitudinal impact parameter for connecting accompanying clusters
-    float           m_maxVertexXSeparation;             ///< The max separation between accompanying clusters vertex x positions to make split
+    float   m_maxVertexXSeparation;         ///< The max separation between accompanying clusters vertex x positions to make split
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
