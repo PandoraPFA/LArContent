@@ -155,18 +155,18 @@ void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &ver
 OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, const TensorType::Element &elementB) :
     m_splitPosition(0.f, 0.f, 0.f)
 {
-    const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU()) ? VIEW_U :
-        (elementA.GetClusterV() == elementB.GetClusterV()) ? VIEW_V :
-        (elementA.GetClusterW() == elementB.GetClusterW()) ? VIEW_W : CUSTOM);
+    const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU()) ? TPC_VIEW_U :
+        (elementA.GetClusterV() == elementB.GetClusterV()) ? TPC_VIEW_V :
+        (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W : CUSTOM);
 
     if (CUSTOM == commonView)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    m_pCommonCluster = (VIEW_U == commonView) ? elementA.GetClusterU() : (VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();
-    m_pClusterA1 = (VIEW_U == commonView) ? elementA.GetClusterV() : (VIEW_V == commonView) ? elementA.GetClusterU() : elementA.GetClusterU();
-    m_pClusterA2 = (VIEW_U == commonView) ? elementA.GetClusterW() : (VIEW_V == commonView) ? elementA.GetClusterW() : elementA.GetClusterV();
-    m_pClusterB1 = (VIEW_U == commonView) ? elementB.GetClusterV() : (VIEW_V == commonView) ? elementB.GetClusterU() : elementB.GetClusterU();
-    m_pClusterB2 = (VIEW_U == commonView) ? elementB.GetClusterW() : (VIEW_V == commonView) ? elementB.GetClusterW() : elementB.GetClusterV();
+    m_pCommonCluster = (TPC_VIEW_U == commonView) ? elementA.GetClusterU() : (TPC_VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();
+    m_pClusterA1 = (TPC_VIEW_U == commonView) ? elementA.GetClusterV() : (TPC_VIEW_V == commonView) ? elementA.GetClusterU() : elementA.GetClusterU();
+    m_pClusterA2 = (TPC_VIEW_U == commonView) ? elementA.GetClusterW() : (TPC_VIEW_V == commonView) ? elementA.GetClusterW() : elementA.GetClusterV();
+    m_pClusterB1 = (TPC_VIEW_U == commonView) ? elementB.GetClusterV() : (TPC_VIEW_V == commonView) ? elementB.GetClusterU() : elementB.GetClusterU();
+    m_pClusterB2 = (TPC_VIEW_U == commonView) ? elementB.GetClusterW() : (TPC_VIEW_V == commonView) ? elementB.GetClusterW() : elementB.GetClusterV();
 
     if ((m_pClusterA1 == m_pClusterB1) || (m_pClusterA2 == m_pClusterB2))
         throw StatusCodeException(STATUS_CODE_FAILURE);

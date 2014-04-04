@@ -49,14 +49,14 @@ StatusCode EventDisplayAlgorithm::Run()
         {
             Cluster *pCluster = *iter;
 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
-                hitType = VIEW_U;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_U)) 
+                hitType = TPC_VIEW_U;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
-                hitType = VIEW_V;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_V)) 
+                hitType = TPC_VIEW_V;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
-                hitType = VIEW_W;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_W)) 
+                hitType = TPC_VIEW_W;
 
             if (pCluster->ContainsHitType(hitType) == false)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -76,14 +76,14 @@ StatusCode EventDisplayAlgorithm::Run()
         {
             Cluster *pCluster = *iter;
 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
-                hitType = VIEW_U;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_U)) 
+                hitType = TPC_VIEW_U;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
-                hitType = VIEW_V;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_V)) 
+                hitType = TPC_VIEW_V;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
-                hitType = VIEW_W;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_W)) 
+                hitType = TPC_VIEW_W;
 
             if (pCluster->ContainsHitType(hitType) == false)
                 throw StatusCodeException(STATUS_CODE_FAILURE);

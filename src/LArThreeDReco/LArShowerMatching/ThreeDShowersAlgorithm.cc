@@ -188,9 +188,9 @@ PandoraMonitoringApi::ViewEvent();
             slidingFitResultW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
 
             const unsigned int xBin((x - minX) / xPitch);
             uMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
@@ -210,9 +210,9 @@ PandoraMonitoringApi::ViewEvent();
             positiveShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
 
             const unsigned int xBin((x - minX) / xPitch);
             uPosMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
@@ -232,9 +232,9 @@ PandoraMonitoringApi::ViewEvent();
             negativeShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
 
             const unsigned int xBin((x - minX) / xPitch);
             uNegMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));

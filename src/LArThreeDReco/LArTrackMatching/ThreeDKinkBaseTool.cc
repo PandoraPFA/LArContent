@@ -191,9 +191,9 @@ bool ThreeDKinkBaseTool::MakeClusterMerges(ThreeDTransverseTracksAlgorithm *pAlg
         Cluster *pParentCluster = iter->first;
 
         const HitType hitType(LArThreeDHelper::GetClusterHitType(pParentCluster));
-        const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
+        const std::string clusterListName((TPC_VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
 
-        if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         for (ClusterList::const_iterator dIter = iter->second.begin(), dIterEnd = iter->second.end(); dIter != dIterEnd; ++dIter)
@@ -225,9 +225,9 @@ bool ThreeDKinkBaseTool::MakeClusterSplits(ThreeDTransverseTracksAlgorithm *pAlg
         std::sort(splitPositions.begin(), splitPositions.end(), ThreeDKinkBaseTool::SortSplitPositions);
 
         const HitType hitType(LArThreeDHelper::GetClusterHitType(pCurrentCluster));
-        const std::string clusterListName((VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
+        const std::string clusterListName((TPC_VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
 
-        if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, clusterListName));
