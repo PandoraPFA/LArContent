@@ -53,7 +53,9 @@ private:
         pandora::Cluster           *m_pClusterA2;           ///< Address of cluster in element A, view 2
         pandora::Cluster           *m_pClusterB1;           ///< Address of cluster in element B, view 1
         pandora::Cluster           *m_pClusterB2;           ///< Address of cluster in element B, view 2
-        pandora::CartesianVector    m_splitPosition;        ///< The candidate split position
+        pandora::CartesianVector    m_splitPosition;        ///< The candidate split position for the common cluster
+        pandora::CartesianVector    m_splitPosition1;       ///< The candidate split position in view 1
+        pandora::CartesianVector    m_splitPosition2;       ///< The candidate split position in view 2
     };
 
     void GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const IteratorList &iteratorList, ModificationList &modificationList) const;
@@ -79,8 +81,23 @@ private:
     void SetSplitPosition(const LArPointingCluster::Vertex &vertexA1, const LArPointingCluster::Vertex &vertexA2,
         const LArPointingCluster::Vertex &vertexB1, const LArPointingCluster::Vertex &vertexB2, Particle &particle) const;
 
-    bool    m_splitMode;                    ///< Whether to run in cluster splitting mode, as opposed to cluster merging mode
-    float   m_maxVertexXSeparation;         ///< The max separation between accompanying clusters vertex x positions to make split
+    /**
+     *  @brief  Whether the provided particle is consistent with being a kink, when examined in three dimensions at the split position
+     * 
+     *  @param  pAlgorithm the calling algorithm
+     *  @param  particle the particle
+     *  @param  isA1LowestInX whether cluster associated with tensor element a extends to lowest x positions in view 1
+     *  @param  isA2LowestInX whether cluster associated with tensor element a extends to lowest x positions in view 2
+     * 
+     *  @return boolean
+     */
+    bool IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, const bool isA1LowestInX,
+        const bool isA2LowestInX) const;
+
+    bool            m_splitMode;                        ///< Whether to run in cluster splitting mode, as opposed to cluster merging mode
+    float           m_maxVertexXSeparation;             ///< The max separation between accompanying clusters vertex x positions to make split
+    unsigned int    m_nLayersForKinkSearch;             ///< The number of sliding fit layers to step in the kink search
+    float           m_cosThetaCutForKinkSearch;         ///< The cos theta cut used for the kink search in three dimensions
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
