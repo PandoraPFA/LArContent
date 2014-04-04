@@ -8,7 +8,6 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
-#include "LArCalculators/LArBFieldCalculator.h"
 #include "LArCalculators/LArTransformationCalculator.h"
 #include "LArCalculators/LArPseudoLayerCalculator.h"
 
@@ -161,14 +160,6 @@ public:
      *  @brief  Register all the lar content functions with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
-     *  @param  pLArBFieldCalculator the address of the lar b field calculator
-     */
-    static pandora::StatusCode SetLArBFieldCalculator(pandora::Pandora &pandora, lar::LArBFieldCalculator *pLArBFieldCalculator);
-
-    /**
-     *  @brief  Register all the lar content functions with pandora
-     * 
-     *  @param  pandora the pandora instance with which to register content
      *  @param  pLArPseudoLayerCalculator the address of the lar pseudo layer calculator
      */
     static pandora::StatusCode SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator);
@@ -209,13 +200,6 @@ inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &
     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterResetFunction(pandora, &lar::LArThreeDHelper::Reset));
 
     return pandora::STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::StatusCode LArContent::SetLArBFieldCalculator(pandora::Pandora &pandora, lar::LArBFieldCalculator *pLArBFieldCalculator)
-{
-    return PandoraApi::SetBFieldCalculator(pandora, pLArBFieldCalculator);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
