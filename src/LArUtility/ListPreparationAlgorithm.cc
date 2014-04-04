@@ -48,17 +48,17 @@ StatusCode ListPreparationAlgorithm::ProcessCaloHits()
         if (pCaloHit->GetMipEquivalentEnergy() < m_mipEquivalentCut)
             continue;
 
-        if (VIEW_U == (*hitIter)->GetHitType())
+        if (TPC_VIEW_U == (*hitIter)->GetHitType())
         {
             if (!filteredCaloHitListU.insert(*hitIter).second)
                 return STATUS_CODE_ALREADY_PRESENT;
         }
-        else if (VIEW_V == (*hitIter)->GetHitType())
+        else if (TPC_VIEW_V == (*hitIter)->GetHitType())
         {
             if (!filteredCaloHitListV.insert(*hitIter).second)
                 return STATUS_CODE_ALREADY_PRESENT;
         }
-        else if (VIEW_W == (*hitIter)->GetHitType())
+        else if (TPC_VIEW_W == (*hitIter)->GetHitType())
         {
             if (!filteredCaloHitListW.insert(*hitIter).second)
                 return STATUS_CODE_ALREADY_PRESENT;

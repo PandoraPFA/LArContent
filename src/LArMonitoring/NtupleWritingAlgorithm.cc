@@ -70,17 +70,17 @@ StatusCode NtupleWritingAlgorithm::Run()
 
     bool foundNewEvent(false);
 
-    if ( VIEW_U == viewType )
+    if ( TPC_VIEW_U == viewType )
     {
         if ( false == foundU ) foundU = true; else foundNewEvent = true;
     }
 
-    if ( VIEW_V == viewType )
+    if ( TPC_VIEW_V == viewType )
     {
         if ( false == foundV ) foundV = true; else foundNewEvent = true;
     }
 
-    if ( VIEW_W == viewType )
+    if ( TPC_VIEW_W == viewType )
     {
         if ( false == foundW ) foundW = true; else foundNewEvent = true;
     }
@@ -319,9 +319,9 @@ void NtupleWritingAlgorithm::NtupleWriter::WriteEntry()
 {    
     std::string treeName = "";
 
-    if ( m_view == VIEW_U )      { treeName = m_treeNameU; m_treeExistsU = true; }
-    else if ( m_view == VIEW_V ) { treeName = m_treeNameV; m_treeExistsV = true; }
-    else if ( m_view == VIEW_W ) { treeName = m_treeNameW; m_treeExistsW = true; }
+    if ( m_view == TPC_VIEW_U )      { treeName = m_treeNameU; m_treeExistsU = true; }
+    else if ( m_view == TPC_VIEW_V ) { treeName = m_treeNameV; m_treeExistsV = true; }
+    else if ( m_view == TPC_VIEW_W ) { treeName = m_treeNameW; m_treeExistsW = true; }
     else return;
 
     PANDORA_MONITORING_API(SetTreeVariable(treeName.c_str(), "event", m_event));

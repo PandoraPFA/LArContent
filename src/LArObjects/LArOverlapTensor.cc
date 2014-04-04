@@ -212,11 +212,11 @@ void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool 
 
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
 
-    if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    ClusterList &clusterList((VIEW_U == hitType) ? clusterListU : (VIEW_V == hitType) ? clusterListV : clusterListW);
-    const ClusterNavigationMap &navigationMap((VIEW_U == hitType) ? m_clusterNavigationMapUV : (VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
+    ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
+    const ClusterNavigationMap &navigationMap((TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
 
     if (!clusterList.insert(pCluster).second)
         return;

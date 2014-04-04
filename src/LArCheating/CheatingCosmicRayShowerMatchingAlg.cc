@@ -37,14 +37,14 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
             const Cluster *const pPfoCluster = *cIter;
             const HitType hitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
 
-            if ((VIEW_U != hitType) && (VIEW_V != hitType) && (VIEW_W != hitType))
+            if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             {
                 std::cout << "CheatingCosmicRayShowerMatchingAlg: Encountered unexpected hit type " << std::endl;
                 return STATUS_CODE_INVALID_PARAMETER;
             }
 
-            const StringVector &clusterListNames((VIEW_U == hitType) ? m_inputClusterListNamesU :
-                (VIEW_V == hitType) ? m_inputClusterListNamesV : m_inputClusterListNamesW);
+            const StringVector &clusterListNames((TPC_VIEW_U == hitType) ? m_inputClusterListNamesU :
+                (TPC_VIEW_V == hitType) ? m_inputClusterListNamesV : m_inputClusterListNamesW);
 
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CosmicRayShowerMatching(clusterListNames, pPfoCluster, pPfo));
         }

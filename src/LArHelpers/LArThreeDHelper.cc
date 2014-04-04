@@ -34,21 +34,21 @@ HitType LArThreeDHelper::GetClusterHitType(const Cluster *const pCluster)
 /*
     HitType hitType(CUSTOM);
 
-    if (pCluster->ContainsHitType(VIEW_U))
+    if (pCluster->ContainsHitType(TPC_VIEW_U))
     {
-        if (CUSTOM == hitType) hitType = VIEW_U;
+        if (CUSTOM == hitType) hitType = TPC_VIEW_U;
         else throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
-    if (pCluster->ContainsHitType(VIEW_V))
+    if (pCluster->ContainsHitType(TPC_VIEW_V))
     {
-        if (CUSTOM == hitType) hitType = VIEW_V;
+        if (CUSTOM == hitType) hitType = TPC_VIEW_V;
         else throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
-    if (pCluster->ContainsHitType(VIEW_W))
+    if (pCluster->ContainsHitType(TPC_VIEW_W))
     {
-        if (CUSTOM == hitType) hitType = VIEW_W;
+        if (CUSTOM == hitType) hitType = TPC_VIEW_W;
         else throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 

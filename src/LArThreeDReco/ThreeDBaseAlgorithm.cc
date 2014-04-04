@@ -95,26 +95,26 @@ void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
 {
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pNewCluster));
 
-    if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    ClusterList &clusterList((VIEW_U == hitType) ? m_clusterListU : (VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
+    ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
 
     if (!clusterList.insert(pNewCluster).second)
         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
-    const ClusterList &clusterList1((VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
-    const ClusterList &clusterList2((VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
+    const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
+    const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
 
     for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
     {
         for (ClusterList::const_iterator iter2 = clusterList2.begin(), iter2End = clusterList2.end(); iter2 != iter2End; ++iter2)
         {
-            if (VIEW_U == hitType)
+            if (TPC_VIEW_U == hitType)
             {
                 this->CalculateOverlapResult(pNewCluster, *iter1, *iter2);
             }
-            else if (VIEW_V == hitType)
+            else if (TPC_VIEW_V == hitType)
             {
                 this->CalculateOverlapResult(*iter1, pNewCluster, *iter2);
             }
@@ -133,10 +133,10 @@ void ThreeDBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedCluster)
 {
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pDeletedCluster));
 
-    if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    ClusterList &clusterList((VIEW_U == hitType) ? m_clusterListU : (VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
+    ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
     ClusterList::iterator iter = clusterList.find(pDeletedCluster);
 
     if (clusterList.end() == iter)

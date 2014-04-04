@@ -45,9 +45,9 @@ private:
     float           m_mipEquivalentCut;                 ///< Minimum mip equivalent energy for calo hit
     bool            m_onlyAvailableCaloHits;            ///< Whether to only include available calo hits
     std::string     m_inputCaloHitListName;             ///< The input calo hit list name
-    std::string     m_outputCaloHitListNameU;           ///< The output calo hit list name for VIEW_U hits
-    std::string     m_outputCaloHitListNameV;           ///< The output calo hit list name for VIEW_V hits
-    std::string     m_outputCaloHitListNameW;           ///< The output calo hit list name for VIEW_W hits
+    std::string     m_outputCaloHitListNameU;           ///< The output calo hit list name for TPC_VIEW_U hits
+    std::string     m_outputCaloHitListNameV;           ///< The output calo hit list name for TPC_VIEW_V hits
+    std::string     m_outputCaloHitListNameW;           ///< The output calo hit list name for TPC_VIEW_W hits
     std::string     m_filteredCaloHitListName;          ///< The output calo hit list name for all U, V and W hits
     std::string     m_currentCaloHitListReplacement;    ///< The name of the calo hit list to replace the current list (optional)
 
