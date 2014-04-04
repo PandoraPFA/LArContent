@@ -8,6 +8,8 @@
 
 #include "Helpers/XmlHelper.h"
 
+#include "Pandora/PandoraSettings.h"
+
 #include "Objects/Cluster.h"
 
 #include "LArHelpers/LArThreeDHelper.h"
@@ -26,12 +28,12 @@ ClusterList LArThreeDHelper::m_loneClusterList;
 
 HitType LArThreeDHelper::GetClusterHitType(const Cluster *const pCluster)
 {
-    // TODO make this function more robust (no mixed-hit checking yet)
     if (0 == pCluster->GetNCaloHits())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
-/*
+    if (PandoraSettings::SingleHitTypeClusteringMode())
+        return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
+
     HitType hitType(CUSTOM);
 
     if (pCluster->ContainsHitType(TPC_VIEW_U))
@@ -56,7 +58,6 @@ HitType LArThreeDHelper::GetClusterHitType(const Cluster *const pCluster)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     return hitType;
-*/
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
