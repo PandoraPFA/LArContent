@@ -63,6 +63,14 @@ protected:
     virtual void GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const IteratorList &iteratorList,
         ModificationList &modificationList) const = 0;
 
+    /**
+     *  @brief  Whether pointing cluster labelled A extends to lowest x positions (as opposed to that labelled B)
+     * 
+     *  @param  pointingClusterA pointing cluster A
+     *  @param  pointingClusterB pointing cluster B
+     */
+    static bool IsALowestInX(const LArPointingCluster &pointingClusterA, const LArPointingCluster &pointingClusterB);
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int    m_nCommonClusters;                  ///< The number of common clusters
