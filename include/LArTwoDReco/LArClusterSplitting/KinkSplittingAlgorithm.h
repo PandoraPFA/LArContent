@@ -39,8 +39,7 @@ private:
      *
      *  @return pandora::StatusCode
      */
-    pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-        pandora::CartesianVector &splitPosition) const;
+    pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, pandora::CartesianVector &splitPosition) const;
 
     float           m_maxScatterRms;          ///<
     float           m_maxScatterCosTheta;     ///<

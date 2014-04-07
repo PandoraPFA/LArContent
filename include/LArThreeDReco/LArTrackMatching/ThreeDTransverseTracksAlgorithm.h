@@ -40,7 +40,25 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-    typedef std::map<pandora::Cluster*, LArClusterHelper::TwoDSlidingFitResult> SlidingFitResultMap;
+    /**
+     *  @brief  Sort tensor elements by number of matched sampling points, using matched fraction then xoverlap span to resolve ties
+     * 
+     *  @param  lhs the first tensor element
+     *  @param  rhs the second tensor element
+     * 
+     *  @return boolean
+     */
+    static bool SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs);
+
+    /**
+     *  @brief  Get a sliding fit result from the algorithm cache
+     * 
+     *  @param  pCluster address of the relevant cluster
+     */
+    const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
+
+    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
+    virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
 private:
     /**
@@ -54,7 +72,6 @@ private:
         UNKNOWN
     };
 
-    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
     typedef TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
 
     /**
@@ -189,26 +206,23 @@ private:
      *  @param  indexU the index u
      *  @param  indexV the index v
      *  @param  indexW the index w
-     *  @param  maxIndexU the max index u
-     *  @param  maxIndexV the max index v
-     *  @param  maxIndexW the max index w
      *  @param  transverseOverlapResultVector the transverse overlap result vector
      */
-    void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW, const unsigned int maxIndexU,
-        const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor,
-        TransverseOverlapResultVector &transverseOverlapResultVector) const;
+    void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
+        FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const;
 
     void ExamineTensor();
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    unsigned int                m_slidingFitWindow;         ///< The layer window for the sliding linear fits
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
     float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
     unsigned int                m_minOverallMatchedPoints;  ///< The minimum number of matched segment sampling points to allow particle creation
     float                       m_minSamplingPointsPerLayer;///< The minimum number of sampling points per layer to allow particle creation
-    SlidingFitResultMap         m_slidingFitResultMap;      ///< The sliding fit result map
+    TwoDSlidingFitResultMap     m_slidingFitResultMap;      ///< The sliding fit result map
 
     typedef std::vector<TensorManipulationTool*> TensorManipulationToolList;
     TensorManipulationToolList  m_algorithmToolList;        ///< The algorithm tool list
@@ -223,15 +237,16 @@ class TensorManipulationTool : public pandora::AlgorithmTool
 {
 public:
     typedef ThreeDTransverseTracksAlgorithm::TensorType TensorType;
-    typedef ThreeDTransverseTracksAlgorithm::SlidingFitResultMap SlidingFitResultMap;
 
     /**
      *  @brief  Run the algorithm tool
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  protoParticleVector the proto particle vector
+     * 
+     *  @return whether changes have been made by the tool
      */
-    virtual pandora::StatusCode Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -32,7 +32,6 @@ enum ShowerEdge
 class LArClusterHelper
 {
 public:
-    typedef lar::TwoDSlidingFitResult TwoDSlidingFitResult;
 
     /**
      *  @brief  Perform two dimensional sliding fit, using a three dimensional fit to the cluster to define primary axis

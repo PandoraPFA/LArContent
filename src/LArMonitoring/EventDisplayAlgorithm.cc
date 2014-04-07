@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 
@@ -50,14 +49,14 @@ StatusCode EventDisplayAlgorithm::Run()
         {
             Cluster *pCluster = *iter;
 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
-                hitType = VIEW_U;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_U)) 
+                hitType = TPC_VIEW_U;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
-                hitType = VIEW_V;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_V)) 
+                hitType = TPC_VIEW_V;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
-                hitType = VIEW_W;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_W)) 
+                hitType = TPC_VIEW_W;
 
             if (pCluster->ContainsHitType(hitType) == false)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -77,14 +76,14 @@ StatusCode EventDisplayAlgorithm::Run()
         {
             Cluster *pCluster = *iter;
 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_U)) 
-                hitType = VIEW_U;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_U)) 
+                hitType = TPC_VIEW_U;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_V)) 
-                hitType = VIEW_V;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_V)) 
+                hitType = TPC_VIEW_V;
                 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(VIEW_W)) 
-                hitType = VIEW_W;
+            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_W)) 
+                hitType = TPC_VIEW_W;
 
             if (pCluster->ContainsHitType(hitType) == false)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -97,8 +96,6 @@ StatusCode EventDisplayAlgorithm::Run()
    
     // Start Drawing Stuff
     unsigned int n(0);
-
-    PANDORA_MONITORING_API(SetEveDisplayParameters(0, 0, -1.f, 1.f));
 
     if ( NULL != pPfoList )
     {
@@ -149,10 +146,11 @@ StatusCode EventDisplayAlgorithm::Run()
         }
     }
 
-    if( LArVertexHelper::DoesVertexExist(m_vertexName) ){
-      CartesianVector theVertex = LArVertexHelper::GetVertex(m_vertexName);
-      PANDORA_MONITORING_API(AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0));
-    }
+// TODO use new vertex functionality
+// if( LArVertexHelper::DoesVertexExist(m_vertexName) ){
+//     CartesianVector theVertex = LArVertexHelper::GetVertex(m_vertexName);
+//     PANDORA_MONITORING_API(AddMarkerToVisualization(&theVertex, "Vertex", BLACK, 2.0));
+// }
 
     PANDORA_MONITORING_API(ViewEvent());
 

@@ -28,32 +28,32 @@ float LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType vi
     if (view1 == view2)
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_V))
     {
         return LArGeometryHelper::GetLArTransformationCalculator()->UVtoW(position1, position2);
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_U))
     {
         return LArGeometryHelper::GetLArTransformationCalculator()->UVtoW(position2, position1);
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_U))
     {
         return LArGeometryHelper::GetLArTransformationCalculator()->WUtoV(position1, position2);
     }
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_W))
     {
         return LArGeometryHelper::GetLArTransformationCalculator()->WUtoV(position2, position1);
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_W))
     {
         return LArGeometryHelper::GetLArTransformationCalculator()->VWtoU(position1, position2);
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_V))
     {
         return LArGeometryHelper::GetLArTransformationCalculator()->VWtoU(position2, position1);
     }
@@ -79,43 +79,43 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const HitType view1, const
     float pX(s1 * direction1.GetX()), pU(0.f), pV(0.f), pW(0.f);
     HitType newView(INNER_DETECTOR);
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_V))
     {
-        pU = s1 * direction1.GetZ(); pV = s2 * direction2.GetZ(); newView = VIEW_W;
+        pU = s1 * direction1.GetZ(); pV = s2 * direction2.GetZ(); newView = TPC_VIEW_W;
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_U))
     {
-        pV = s1 * direction1.GetZ(); pU = s2 * direction2.GetZ(); newView = VIEW_W;
+        pV = s1 * direction1.GetZ(); pU = s2 * direction2.GetZ(); newView = TPC_VIEW_W;
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_U))
     {
-        pW = s1 * direction1.GetZ(); pU = s2 * direction2.GetZ(); newView = VIEW_V;
+        pW = s1 * direction1.GetZ(); pU = s2 * direction2.GetZ(); newView = TPC_VIEW_V;
     }
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_W))
     {
-        pU = s1 * direction1.GetZ(); pW = s2 * direction2.GetZ(); newView = VIEW_V;
+        pU = s1 * direction1.GetZ(); pW = s2 * direction2.GetZ(); newView = TPC_VIEW_V;
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_W))
     {
-        pV = s1 * direction1.GetZ(); pW = s2 * direction2.GetZ(); newView = VIEW_U;
+        pV = s1 * direction1.GetZ(); pW = s2 * direction2.GetZ(); newView = TPC_VIEW_U;
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_V))
     {
-        pW = s1 * direction1.GetZ(); pV = s2 * direction2.GetZ(); newView = VIEW_U;
+        pW = s1 * direction1.GetZ(); pV = s2 * direction2.GetZ(); newView = TPC_VIEW_U;
     }
 
-    if (newView == VIEW_W)
+    if (newView == TPC_VIEW_W)
         return CartesianVector(pX, 0.f, LArGeometryHelper::GetLArTransformationCalculator()->PUPVtoPW(pU, pV)).GetUnitVector();
 
-    if (newView == VIEW_U)
+    if (newView == TPC_VIEW_U)
         return CartesianVector(pX, 0.f, LArGeometryHelper::GetLArTransformationCalculator()->PVPWtoPU(pV, pW)).GetUnitVector();
 
-    if (newView == VIEW_V)
+    if (newView == TPC_VIEW_V)
         return CartesianVector(pX, 0.f, LArGeometryHelper::GetLArTransformationCalculator()->PWPUtoPV(pW, pU)).GetUnitVector();
 
     throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -151,32 +151,32 @@ void LArGeometryHelper::MergeTwoPositions(const HitType view1, const HitType vie
     float aveU(0.f), aveV(0.f), aveW(0.f);
     const float Z1(position1.GetZ()), Z2(position2.GetZ()), Z3(position3.GetZ()), aveX(position3.GetX());
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_V))
     {
         aveU = Z1; aveV = Z2; aveW = Z3;
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_W))
     {
         aveV = Z1; aveW = Z2; aveU = Z3;
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_U))
     {
         aveW = Z1; aveU = Z2; aveV = Z3;
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_U))
     {
         aveV = Z1; aveU = Z2; aveW = Z3;
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_V))
     {
         aveW = Z1; aveV = Z2; aveU = Z3;
     }
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_W))
     {
         aveU = Z1; aveW = Z2; aveV = Z3;
     }
@@ -195,32 +195,32 @@ void LArGeometryHelper::MergeThreePositions(const HitType view1, const HitType v
     if ((view1 == view2) || (view2 == view3) || (view3 == view1))
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_V))
     {
         return LArGeometryHelper::MergeThreePositions(position1, position2, position3, outputU, outputV, outputW, chiSquared);
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_W))
     {
         return LArGeometryHelper::MergeThreePositions(position3, position1, position2, outputU, outputV, outputW, chiSquared );
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_U))
     {
         return LArGeometryHelper::MergeThreePositions(position2, position3, position1, outputU, outputV, outputW, chiSquared);
     }
 
-    if ((view1 == VIEW_V) && (view2 == VIEW_U))
+    if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_U))
     {
         return LArGeometryHelper::MergeThreePositions(position2, position1, position3, outputU, outputV, outputW, chiSquared);
     }
 
-    if ((view1 == VIEW_W) && (view2 == VIEW_V))
+    if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_V))
     {
         return LArGeometryHelper::MergeThreePositions(position3, position2, position1, outputU, outputV, outputW, chiSquared);
     }
 
-    if ((view1 == VIEW_U) && (view2 == VIEW_W))
+    if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_W))
     {
         return LArGeometryHelper::MergeThreePositions(position1, position3, position2, outputU, outputV, outputW, chiSquared);
     }
@@ -284,17 +284,17 @@ void LArGeometryHelper::MergeThreePositions3D(const HitType view1, const HitType
 
 CartesianVector LArGeometryHelper::ProjectPosition(const CartesianVector &position3D, const HitType view)
 {
-    if (view == VIEW_U)
+    if (view == TPC_VIEW_U)
     {
         return CartesianVector(position3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationCalculator()->YZtoU(position3D.GetY(), position3D.GetZ()));
     }
 
-    else if (view == VIEW_V)
+    else if (view == TPC_VIEW_V)
     {
         return CartesianVector(position3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationCalculator()->YZtoV(position3D.GetY(), position3D.GetZ()));
     }
 
-    else if (view == VIEW_W)
+    else if (view == TPC_VIEW_W)
     {
         return CartesianVector(position3D.GetX(), 0.f, position3D.GetZ());
     }
@@ -306,17 +306,17 @@ CartesianVector LArGeometryHelper::ProjectPosition(const CartesianVector &positi
 
 CartesianVector LArGeometryHelper::ProjectDirection(const CartesianVector &direction3D, const HitType view)
 {
-    if (view == VIEW_U)
+    if (view == TPC_VIEW_U)
     {
         return CartesianVector(direction3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationCalculator()->PYPZtoPU(direction3D.GetY(), direction3D.GetZ())).GetUnitVector();
     }
 
-    else if (view == VIEW_V)
+    else if (view == TPC_VIEW_V)
     {
         return CartesianVector(direction3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationCalculator()->PYPZtoPV(direction3D.GetY(), direction3D.GetZ())).GetUnitVector();
     }
 
-    else if (view == VIEW_W)
+    else if (view == TPC_VIEW_W)
     {
         return CartesianVector(direction3D.GetX(), 0.f, direction3D.GetZ()).GetUnitVector();
     }

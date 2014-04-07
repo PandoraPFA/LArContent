@@ -53,7 +53,6 @@ void ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
         pfoParameters.m_mass = 0.f;
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = CartesianVector(0., 0., 0.);
-        pfoParameters.m_vertex = CartesianVector(0., 0., 0.);
         pfoParameters.m_clusterList.insert(iter->m_clusterListU.begin(), iter->m_clusterListU.end());
         pfoParameters.m_clusterList.insert(iter->m_clusterListV.begin(), iter->m_clusterListV.end());
         pfoParameters.m_clusterList.insert(iter->m_clusterListW.begin(), iter->m_clusterListW.end());
@@ -72,51 +71,56 @@ void ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorUponMerge(Cluster *const pEnlargedCluster, Cluster *const pDeletedCluster)
+void ThreeDBaseAlgorithm<T>::UpdateUponMerge(Cluster *const pEnlargedCluster, Cluster *const pDeletedCluster)
 {
-    m_overlapTensor.RemoveCluster(pDeletedCluster);
-    m_overlapTensor.RemoveCluster(pEnlargedCluster);
-    this->UpdateTensorForNewCluster(pEnlargedCluster);
+    this->UpdateUponDeletion(pDeletedCluster);
+    this->UpdateUponDeletion(pEnlargedCluster);
+    this->UpdateForNewCluster(pEnlargedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorUponSplit(Cluster *const pSplitCluster1, Cluster *const pSplitCluster2, Cluster *const pDeletedCluster)
+void ThreeDBaseAlgorithm<T>::UpdateUponSplit(Cluster *const pSplitCluster1, Cluster *const pSplitCluster2, Cluster *const pDeletedCluster)
 {
-    m_overlapTensor.RemoveCluster(pDeletedCluster);
-    this->UpdateTensorForNewCluster(pSplitCluster1);
-    this->UpdateTensorForNewCluster(pSplitCluster2);
+    this->UpdateUponDeletion(pDeletedCluster);
+    this->UpdateForNewCluster(pSplitCluster1);
+    this->UpdateForNewCluster(pSplitCluster2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorForNewCluster(Cluster *const pNewCluster)
+void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
 {
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pNewCluster));
 
-    if (!((VIEW_U == hitType) || (VIEW_V == hitType) || (VIEW_W == hitType)))
+    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const typename TensorType::ClusterNavigationMap &navigationMap1((VIEW_U == hitType) ? m_overlapTensor.GetClusterNavigationMapVW() : m_overlapTensor.GetClusterNavigationMapUV());
-    const typename TensorType::ClusterNavigationMap &navigationMap2((VIEW_W == hitType) ? m_overlapTensor.GetClusterNavigationMapVW() : m_overlapTensor.GetClusterNavigationMapWU());
+    ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
 
-    for (typename TensorType::ClusterNavigationMap::const_iterator iter1 = navigationMap1.begin(), iter1End = navigationMap1.end(); iter1 != iter1End; ++iter1)
+    if (!clusterList.insert(pNewCluster).second)
+        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+    const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
+    const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
+
+    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
     {
-        for (typename TensorType::ClusterNavigationMap::const_iterator iter2 = navigationMap2.begin(), iter2End = navigationMap2.end(); iter2 != iter2End; ++iter2)
+        for (ClusterList::const_iterator iter2 = clusterList2.begin(), iter2End = clusterList2.end(); iter2 != iter2End; ++iter2)
         {
-            if (VIEW_U == hitType)
+            if (TPC_VIEW_U == hitType)
             {
-                this->CalculateOverlapResult(pNewCluster, iter1->first, iter2->first);
+                this->CalculateOverlapResult(pNewCluster, *iter1, *iter2);
             }
-            else if (VIEW_V == hitType)
+            else if (TPC_VIEW_V == hitType)
             {
-                this->CalculateOverlapResult(iter1->first, pNewCluster, iter2->first);
+                this->CalculateOverlapResult(*iter1, pNewCluster, *iter2);
             }
             else
             {
-                this->CalculateOverlapResult(iter1->first, iter2->first, pNewCluster);
+                this->CalculateOverlapResult(*iter1, *iter2, pNewCluster);
             }
         }
     }
@@ -125,8 +129,20 @@ void ThreeDBaseAlgorithm<T>::UpdateTensorForNewCluster(Cluster *const pNewCluste
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateTensorUponDeletion(Cluster *const pDeletedCluster)
+void ThreeDBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedCluster)
 {
+    const HitType hitType(LArThreeDHelper::GetClusterHitType(pDeletedCluster));
+
+    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
+    ClusterList::iterator iter = clusterList.find(pDeletedCluster);
+
+    if (clusterList.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    clusterList.erase(iter);
     m_overlapTensor.RemoveCluster(pDeletedCluster);
 }
 
@@ -160,7 +176,7 @@ void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
 
     for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
     {
-        m_overlapTensor.RemoveCluster(*iter);
+        this->UpdateUponDeletion(*iter);
     }
 }
 

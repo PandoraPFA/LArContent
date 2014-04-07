@@ -55,7 +55,7 @@ public:
      *  @param  position1 the position in the first view
      *  @param  position2 the position in the second view
      *
-     *  @param  position3 output position in the U view
+     *  @param  position3 output position in the third view
      *  @param  chi-squared
      */
     static void MergeTwoPositions(const pandora::HitType view1, const pandora::HitType view2,

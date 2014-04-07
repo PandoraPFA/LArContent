@@ -10,7 +10,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 
@@ -21,7 +20,7 @@ namespace lar
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
+    TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
     LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
@@ -49,28 +48,28 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         CartesianPointList vtxList3D, endList3D;
 
         // Calculate possible 3D start positions
-        LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, vtxU, vtxV, position3D, chi2);
+        LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_U, TPC_VIEW_V, vtxU, vtxV, position3D, chi2);
         if (chi2 < m_vertexChi2Cut)
             vtxList3D.push_back(position3D);
 
-        LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, vtxV, vtxW, position3D, chi2);
+        LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_V, TPC_VIEW_W, vtxV, vtxW, position3D, chi2);
         if (chi2 < m_vertexChi2Cut)
             vtxList3D.push_back(position3D);
 
-        LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, vtxW, vtxU, position3D, chi2);
+        LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_W, TPC_VIEW_U, vtxW, vtxU, position3D, chi2);
         if (chi2 < m_vertexChi2Cut)
             vtxList3D.push_back(position3D);
 
         // Calculate possible 3D end positions
-        LArGeometryHelper::MergeTwoPositions3D(VIEW_U, VIEW_V, endU, endV, position3D, chi2);
+        LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_U, TPC_VIEW_V, endU, endV, position3D, chi2);
         if (chi2 < m_vertexChi2Cut)
             endList3D.push_back(position3D);
 
-        LArGeometryHelper::MergeTwoPositions3D(VIEW_V, VIEW_W, endV, endW, position3D, chi2);
+        LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_V, TPC_VIEW_W, endV, endW, position3D, chi2);
         if (chi2 < m_vertexChi2Cut)
             endList3D.push_back(position3D);
 
-        LArGeometryHelper::MergeTwoPositions3D(VIEW_W, VIEW_U, endW, endU, position3D, chi2);
+        LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_W, TPC_VIEW_U, endW, endU, position3D, chi2);
         if (chi2 < m_vertexChi2Cut)
             endList3D.push_back(position3D);
 
@@ -79,17 +78,17 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         {
             const CartesianVector &vtxMerged3D(*iterI);
 
-            const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_U));
-            const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_V));
-            const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_W));
+            const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_U));
+            const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_V));
+            const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_W));
 
             for (CartesianPointList::const_iterator iterJ = endList3D.begin(), iterEndJ = endList3D.end(); iterJ != iterEndJ; ++iterJ)
             {
                 const CartesianVector &endMerged3D(*iterJ);
 
-                const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_U));
-                const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_V));
-                const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_W));
+                const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_U));
+                const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_V));
+                const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_W));
 
                 if ( ((endMergedU - vtxMergedU).GetCosOpeningAngle(endU - vtxU) < m_cosOpeningAngleCut) ||
                      ((endMergedV - vtxMergedV).GetCosOpeningAngle(endV - vtxV) < m_cosOpeningAngleCut) ||
@@ -133,13 +132,13 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, TrackOverlapResult &overlapResult) const
 {
     // Calculate start and end positions of linear trajectory
-    const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_U));
-    const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_V));
-    const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, VIEW_W));
+    const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_U));
+    const CartesianVector vtxMergedV(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_V));
+    const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_W));
 
-    const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_U));
-    const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_V)); 
-    const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, VIEW_W));
+    const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_U));
+    const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_V)); 
+    const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_W));
 
     const unsigned int nTotalSamplingPoints = static_cast<unsigned int>((endMerged3D - vtxMerged3D).GetMagnitude()/ m_samplingPitch);
 

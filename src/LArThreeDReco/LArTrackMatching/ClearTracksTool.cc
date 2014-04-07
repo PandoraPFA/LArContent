@@ -14,46 +14,48 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
+    bool particlesMade(false);
+
     TensorType::ElementList elementList;
     overlapTensor.GetUnambiguousElements(true, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &TrackTrackTrackAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &TrackTrackShowerAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &TrackShowerShowerAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
     elementList.clear();
     overlapTensor.GetUnambiguousElements(true, &ShowerShowerShowerAmbiguity, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
+    this->CreateThreeDParticles(pAlgorithm, elementList, particlesMade);
 
-    elementList.clear();
-    this->ResolveSimpleAmbiguities(overlapTensor, elementList);
-    this->CreateThreeDParticles(pAlgorithm, elementList);
-
-    return STATUS_CODE_SUCCESS;
+    return particlesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList) const
+void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList,
+    bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
+        if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
+            continue;
+
         const TransverseOverlapResult::XOverlap &xOverlap(iter->GetOverlapResult().GetXOverlap());
 
         if ((xOverlap.GetXSpanU() < std::numeric_limits<float>::epsilon()) || (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanU() < m_minXOverlapFraction))
@@ -73,6 +75,9 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAl
     }
 
     pAlgorithm->CreateThreeDParticles(protoParticleVector);
+
+    if (!protoParticleVector.empty())
+        particlesMade = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -242,75 +247,15 @@ bool ClearTracksTool::ShowerShowerShowerAmbiguity(const ClusterList &clusterList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTracksTool::ResolveSimpleAmbiguities(const TensorType &overlapTensor, TensorType::ElementList &elementList) const
-{
-    ClusterList usedClusters;
-
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
-    {
-        if (!iterU->first->IsAvailable())
-            continue;
-
-        unsigned int nU(0), nV(0), nW(0);
-        TensorType::ElementList localElementList;
-        overlapTensor.GetConnectedElements(iterU->first, true, localElementList, nU, nV, nW);
-
-        if (nU * nV * nW < 2)
-            continue;
-
-        unsigned int nElementsPassingTrackOverlapCut(0), highestMSP(0), secondHighestMSP(0);
-        TensorType::ElementList::const_iterator passedTrackOverlapIter(localElementList.end()), highestMSPIter(localElementList.end());
-
-        for (TensorType::ElementList::const_iterator eIter = localElementList.begin(); eIter != localElementList.end(); ++eIter)
-        {
-            if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))
-                continue;
-
-            const TransverseOverlapResult::XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
-
-            if ((xOverlap.GetXSpanU() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanU() > m_minXOverlapFraction) &&
-                (xOverlap.GetXSpanV() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanV() > m_minXOverlapFraction) &&
-                (xOverlap.GetXSpanW() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanW() > m_minXOverlapFraction))
-            {
-                ++nElementsPassingTrackOverlapCut;
-                passedTrackOverlapIter = eIter;
-            }
-
-            const unsigned int nMatchedSamplingPoints(eIter->GetOverlapResult().GetNMatchedSamplingPoints());
-
-            if (nMatchedSamplingPoints > highestMSP)
-            {
-                highestMSPIter = eIter;
-                secondHighestMSP = highestMSP;
-                highestMSP = nMatchedSamplingPoints;
-            }
-            else if (nMatchedSamplingPoints > secondHighestMSP)
-            {
-                secondHighestMSP = nMatchedSamplingPoints;
-            }
-        }
-
-        if ((1 != nElementsPassingTrackOverlapCut) || (highestMSPIter != passedTrackOverlapIter) || (highestMSP < m_minMatchedSamplingPointRatio * secondHighestMSP))
-            continue;
-
-        elementList.push_back(*passedTrackOverlapIter);
-        usedClusters.insert(passedTrackOverlapIter->GetClusterU());
-        usedClusters.insert(passedTrackOverlapIter->GetClusterV());
-        usedClusters.insert(passedTrackOverlapIter->GetClusterW());
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_minMatchedFraction = 0.9f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedFraction", m_minMatchedFraction));
+
     m_minXOverlapFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
-
-    m_minMatchedSamplingPointRatio = 2;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
     return STATUS_CODE_SUCCESS;
 }

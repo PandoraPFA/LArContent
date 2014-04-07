@@ -10,12 +10,27 @@
 #include "Helpers/XmlHelper.h"
 
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
 
 namespace lar
 {
+
+float LArPointingClusterHelper::GetLengthSquared(const LArPointingCluster &pointingCluster)
+{
+    const LArPointingCluster::Vertex &innerVertex(pointingCluster.GetInnerVertex());
+    const LArPointingCluster::Vertex &outerVertex(pointingCluster.GetOuterVertex());
+    return (innerVertex.GetPosition() - outerVertex.GetPosition()).GetMagnitudeSquared();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArPointingClusterHelper::GetLength(const LArPointingCluster &pointingCluster)
+{
+    return std::sqrt(LArPointingClusterHelper::GetLengthSquared(pointingCluster));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const CartesianVector &daughterVertex)
 {
@@ -30,7 +45,7 @@ bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const
 bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
     float rL(0.f), rT(0.f);
-    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
+    LArPointingClusterHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
     if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) || rT > m_maxPointingTransverseDistance)
         return false;
@@ -43,7 +58,7 @@ bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const
 bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
 {
     float rL(0.f), rT(0.f);
-    LArVertexHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
+    LArPointingClusterHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
     if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) && (rL < 0 || rL > m_maxPointingLongitudinalDistance))
         return false;
@@ -115,7 +130,88 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Vertex &pointingVertex, const CartesianVector &targetPosition, float &longitudinal, float &transverse)
+void LArPointingClusterHelper::GetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+    LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    if (pointingClusterI.GetCluster() == pointingClusterJ.GetCluster())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    for (unsigned int useInnerI = 0; useInnerI < 2; ++useInnerI)
+    {
+        const LArPointingCluster::Vertex &vtxI(useInnerI == 1 ? pointingClusterI.GetInnerVertex() : pointingClusterI.GetOuterVertex());
+        const LArPointingCluster::Vertex &endI(useInnerI == 0 ? pointingClusterI.GetInnerVertex() : pointingClusterI.GetOuterVertex());
+
+        for (unsigned int useInnerJ = 0; useInnerJ < 2; ++useInnerJ)
+        {
+            const LArPointingCluster::Vertex &vtxJ(useInnerJ == 1 ? pointingClusterJ.GetInnerVertex() : pointingClusterJ.GetOuterVertex());
+            const LArPointingCluster::Vertex &endJ(useInnerJ == 0 ? pointingClusterJ.GetInnerVertex() : pointingClusterJ.GetOuterVertex());
+
+            const float vtxI_to_vtxJ((vtxI.GetPosition() - vtxJ.GetPosition()).GetMagnitudeSquared());
+            const float vtxI_to_endJ((vtxI.GetPosition() - endJ.GetPosition()).GetMagnitudeSquared());
+            const float endI_to_vtxJ((endI.GetPosition() - vtxJ.GetPosition()).GetMagnitudeSquared());
+            const float endI_to_endJ((endI.GetPosition() - endJ.GetPosition()).GetMagnitudeSquared());
+
+            if ((vtxI_to_vtxJ < std::min(vtxI_to_endJ, std::min(endI_to_vtxJ, endI_to_endJ))) &&
+                (endI_to_endJ > std::max(vtxI_to_endJ, std::max(endI_to_vtxJ, vtxI_to_vtxJ))))
+            {
+                closestVertexI = vtxI;
+                closestVertexJ = vtxJ;
+                return;
+            }
+        }
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetClosestVerticesInX(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+    LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    if (pointingClusterI.GetCluster() == pointingClusterJ.GetCluster())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    for (unsigned int useInnerI = 0; useInnerI < 2; ++useInnerI)
+    {
+        const LArPointingCluster::Vertex &vtxI(useInnerI == 1 ? pointingClusterI.GetInnerVertex() : pointingClusterI.GetOuterVertex());
+        const LArPointingCluster::Vertex &endI(useInnerI == 0 ? pointingClusterI.GetInnerVertex() : pointingClusterI.GetOuterVertex());
+
+        for (unsigned int useInnerJ = 0; useInnerJ < 2; ++useInnerJ)
+        {
+            const LArPointingCluster::Vertex &vtxJ(useInnerJ == 1 ? pointingClusterJ.GetInnerVertex() : pointingClusterJ.GetOuterVertex());
+            const LArPointingCluster::Vertex &endJ(useInnerJ == 0 ? pointingClusterJ.GetInnerVertex() : pointingClusterJ.GetOuterVertex());
+
+            const float vtxI_to_vtxJ(std::fabs(vtxI.GetPosition().GetX() - vtxJ.GetPosition().GetX()));
+            const float vtxI_to_endJ(std::fabs(vtxI.GetPosition().GetX() - endJ.GetPosition().GetX()));
+            const float endI_to_vtxJ(std::fabs(endI.GetPosition().GetX() - vtxJ.GetPosition().GetX()));
+            const float endI_to_endJ(std::fabs(endI.GetPosition().GetX() - endJ.GetPosition().GetX()));
+
+            if ((vtxI_to_vtxJ < std::min(vtxI_to_endJ, std::min(endI_to_vtxJ, endI_to_endJ))) &&
+                (endI_to_endJ > std::max(vtxI_to_endJ, std::max(endI_to_vtxJ, vtxI_to_vtxJ))))
+            {
+                closestVertexI = vtxI;
+                closestVertexJ = vtxJ;
+                return;
+            }
+        }
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Vertex &pointingVertex, 
+    const LArPointingCluster::Vertex &targetVertex, float &longitudinal, float &transverse)
+{
+    return LArPointingClusterHelper::GetImpactParameters(pointingVertex, targetVertex.GetPosition(), longitudinal, transverse);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Vertex &pointingVertex, const CartesianVector &targetPosition, 
+    float &longitudinal, float &transverse)
 {
     return LArPointingClusterHelper::GetImpactParameters(pointingVertex.GetPosition(), pointingVertex.GetDirection(),
         targetPosition, longitudinal, transverse);
@@ -123,7 +219,8 @@ void LArPointingClusterHelper::GetImpactParameters(const LArPointingCluster::Ver
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetImpactParameters(const CartesianVector &initialPosition, const CartesianVector &initialDirection, const CartesianVector &targetPosition, float &longitudinal, float &transverse)
+void LArPointingClusterHelper::GetImpactParameters(const CartesianVector &initialPosition, const CartesianVector &initialDirection, 
+    const CartesianVector &targetPosition, float &longitudinal, float &transverse)
 {
     // sign convention for longitudinal distance:
     // -positive value means initial position is downstream of target position
@@ -133,8 +230,8 @@ void LArPointingClusterHelper::GetImpactParameters(const CartesianVector &initia
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPointingClusterHelper::GetAverageDirection(const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
-    CartesianVector &averageDirection)
+void LArPointingClusterHelper::GetAverageDirection(const LArPointingCluster::Vertex &firstVertex, 
+    const LArPointingCluster::Vertex &secondVertex, CartesianVector &averageDirection)
 {
     const Cluster *pFirstCluster(firstVertex.GetCluster());
     const Cluster *pSecondCluster(secondVertex.GetCluster());
@@ -210,7 +307,7 @@ void LArPointingClusterHelper::GetIntersection(const LArPointingCluster::Vertex 
         {
             const CartesianVector &hitPosition = (*iter2)->GetPositionVector();
 
-            LArVertexHelper::GetImpactParameters(vertexCluster.GetPosition(), vertexCluster.GetDirection(), hitPosition, rL, rT);
+            LArPointingClusterHelper::GetImpactParameters(vertexCluster.GetPosition(), vertexCluster.GetDirection(), hitPosition, rL, rT);
 
             if (rT < figureOfMerit)
             {

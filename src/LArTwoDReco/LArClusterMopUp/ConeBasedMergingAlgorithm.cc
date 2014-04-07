@@ -8,8 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArVertexHelper.h"
-
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 
 using namespace pandora;
@@ -143,8 +141,8 @@ ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster) :
     if (!clusterFitResult.IsFitSuccessful())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const bool isForwardInZ(LArVertexHelper::IsForwardInZ(pCluster));
-    const bool isbackwardInZ(LArVertexHelper::IsBackwardInZ(pCluster));
+    const bool isForwardInZ(false); //TODO
+    const bool isbackwardInZ(false);//TODO
 
     if (isForwardInZ == isbackwardInZ)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

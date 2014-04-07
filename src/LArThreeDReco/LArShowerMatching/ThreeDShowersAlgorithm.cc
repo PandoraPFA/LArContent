@@ -23,11 +23,11 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
     static const unsigned int m_layerFitHalfWindow = 100;
 
     // U
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultU;
+    TwoDSlidingFitResult slidingFitResultU;
     LArClusterHelper::LArTwoDSlidingFit(pClusterU, m_layerFitHalfWindow, slidingFitResultU);
-    LArClusterHelper::TwoDSlidingFitResult positiveShowerEdgeFitU;
+    TwoDSlidingFitResult positiveShowerEdgeFitU;
     LArClusterHelper::LArTwoDShowerEdgeFit(pClusterU, m_layerFitHalfWindow, slidingFitResultU.GetAxisIntercept(), slidingFitResultU.GetAxisDirection(), POSITIVE_SHOWER_EDGE, positiveShowerEdgeFitU);
-    LArClusterHelper::TwoDSlidingFitResult negativeShowerEdgeFitU;
+    TwoDSlidingFitResult negativeShowerEdgeFitU;
     LArClusterHelper::LArTwoDShowerEdgeFit(pClusterU, m_layerFitHalfWindow, slidingFitResultU.GetAxisIntercept(), slidingFitResultU.GetAxisDirection(), NEGATIVE_SHOWER_EDGE, negativeShowerEdgeFitU);
 
     const float innerXU(slidingFitResultU.GetGlobalMinLayerPosition().GetX());
@@ -37,11 +37,11 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
     const float xSpanU(maxXU - minXU);
 
     // V
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultV;
+    TwoDSlidingFitResult slidingFitResultV;
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, m_layerFitHalfWindow, slidingFitResultV);
-    LArClusterHelper::TwoDSlidingFitResult positiveShowerEdgeFitV;
+    TwoDSlidingFitResult positiveShowerEdgeFitV;
     LArClusterHelper::LArTwoDShowerEdgeFit(pClusterV, m_layerFitHalfWindow, slidingFitResultV.GetAxisIntercept(), slidingFitResultV.GetAxisDirection(), POSITIVE_SHOWER_EDGE, positiveShowerEdgeFitV);
-    LArClusterHelper::TwoDSlidingFitResult negativeShowerEdgeFitV;
+    TwoDSlidingFitResult negativeShowerEdgeFitV;
     LArClusterHelper::LArTwoDShowerEdgeFit(pClusterV, m_layerFitHalfWindow, slidingFitResultV.GetAxisIntercept(), slidingFitResultV.GetAxisDirection(), NEGATIVE_SHOWER_EDGE, negativeShowerEdgeFitV);
 
     const float innerXV(slidingFitResultV.GetGlobalMinLayerPosition().GetX());
@@ -51,11 +51,11 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
     const float xSpanV(maxXV - minXV);
 
     // W
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResultW;
+    TwoDSlidingFitResult slidingFitResultW;
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, m_layerFitHalfWindow, slidingFitResultW);
-    LArClusterHelper::TwoDSlidingFitResult positiveShowerEdgeFitW;
+    TwoDSlidingFitResult positiveShowerEdgeFitW;
     LArClusterHelper::LArTwoDShowerEdgeFit(pClusterW, m_layerFitHalfWindow, slidingFitResultW.GetAxisIntercept(), slidingFitResultW.GetAxisDirection(), POSITIVE_SHOWER_EDGE, positiveShowerEdgeFitW);
-    LArClusterHelper::TwoDSlidingFitResult negativeShowerEdgeFitW;
+    TwoDSlidingFitResult negativeShowerEdgeFitW;
     LArClusterHelper::LArTwoDShowerEdgeFit(pClusterW, m_layerFitHalfWindow, slidingFitResultW.GetAxisIntercept(), slidingFitResultW.GetAxisDirection(), NEGATIVE_SHOWER_EDGE, negativeShowerEdgeFitW);
 
     const float innerXW(slidingFitResultW.GetGlobalMinLayerPosition().GetX());
@@ -86,22 +86,22 @@ std::cout << "Fail overlap criteria, xOverlap " << xOverlap << " xSpanU " << (xO
 // DEBUG
 //------------------------------------------------------------------------------------------------------------------------------------------
 std::cout << " ClusterU and sliding shower fits " << std::endl;
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapU1(slidingFitResultU.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapU1.begin(); iter != layerFitResultMapU1.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapU1(slidingFitResultU.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapU1.begin(); iter != layerFitResultMapU1.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);slidingFitResultU.GetGlobalCoordinates(rL, rT, position);
 PandoraMonitoringApi::AddMarkerToVisualization(&position, "posU", CYAN, 1.);
 }
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapU2(positiveShowerEdgeFitU.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapU2.begin(); iter != layerFitResultMapU2.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapU2(positiveShowerEdgeFitU.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapU2.begin(); iter != layerFitResultMapU2.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);positiveShowerEdgeFitU.GetGlobalCoordinates(rL, rT, position);
 PandoraMonitoringApi::AddMarkerToVisualization(&position, "posU", GRAY, 1.);
 }
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapU3(negativeShowerEdgeFitU.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapU3.begin(); iter != layerFitResultMapU3.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapU3(negativeShowerEdgeFitU.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapU3.begin(); iter != layerFitResultMapU3.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);negativeShowerEdgeFitU.GetGlobalCoordinates(rL, rT, position);
@@ -113,22 +113,22 @@ PandoraMonitoringApi::VisualizeClusters(&clusterListU1, "ClusterListU", RED);
 PandoraMonitoringApi::ViewEvent();
 //------------------------------------------------------------------------------------------------------------------------------------------
 std::cout << " ClusterV and sliding shower fits " << std::endl;
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapV1(slidingFitResultV.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapV1.begin(); iter != layerFitResultMapV1.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapV1(slidingFitResultV.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapV1.begin(); iter != layerFitResultMapV1.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);slidingFitResultV.GetGlobalCoordinates(rL, rT, position);
 PandoraMonitoringApi::AddMarkerToVisualization(&position, "posV", CYAN, 1.);
 }
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapV2(positiveShowerEdgeFitV.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapV2.begin(); iter != layerFitResultMapV2.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapV2(positiveShowerEdgeFitV.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapV2.begin(); iter != layerFitResultMapV2.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);positiveShowerEdgeFitV.GetGlobalCoordinates(rL, rT, position);
 PandoraMonitoringApi::AddMarkerToVisualization(&position, "posV", GRAY, 1.);
 }
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapV3(negativeShowerEdgeFitV.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapV3.begin(); iter != layerFitResultMapV3.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapV3(negativeShowerEdgeFitV.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapV3.begin(); iter != layerFitResultMapV3.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);negativeShowerEdgeFitV.GetGlobalCoordinates(rL, rT, position);
@@ -140,22 +140,22 @@ PandoraMonitoringApi::VisualizeClusters(&clusterListV1, "ClusterListV", RED);
 PandoraMonitoringApi::ViewEvent();
 //------------------------------------------------------------------------------------------------------------------------------------------
 std::cout << " ClusterW and sliding shower fits " << std::endl;
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapW1(slidingFitResultW.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapW1.begin(); iter != layerFitResultMapW1.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapW1(slidingFitResultW.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapW1.begin(); iter != layerFitResultMapW1.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);slidingFitResultW.GetGlobalCoordinates(rL, rT, position);
 PandoraMonitoringApi::AddMarkerToVisualization(&position, "posW", CYAN, 1.);
 }
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapW2(positiveShowerEdgeFitW.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapW2.begin(); iter != layerFitResultMapW2.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapW2(positiveShowerEdgeFitW.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapW2.begin(); iter != layerFitResultMapW2.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);positiveShowerEdgeFitW.GetGlobalCoordinates(rL, rT, position);
 PandoraMonitoringApi::AddMarkerToVisualization(&position, "posW", GRAY, 1.);
 }
-const LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapW3(negativeShowerEdgeFitW.GetLayerFitResultMap());
-for (LArClusterHelper::TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapW3.begin(); iter != layerFitResultMapW3.end(); ++iter)
+const TwoDSlidingFitResult::LayerFitResultMap layerFitResultMapW3(negativeShowerEdgeFitW.GetLayerFitResultMap());
+for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMapW3.begin(); iter != layerFitResultMapW3.end(); ++iter)
 {
 const int layer(iter->first);const float rL(iter->second.GetL());const float rT(iter->second.GetFitT());
 CartesianVector position(0.f, 0.f, 0.f);negativeShowerEdgeFitW.GetGlobalCoordinates(rL, rT, position);
@@ -188,9 +188,9 @@ PandoraMonitoringApi::ViewEvent();
             slidingFitResultW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
 
             const unsigned int xBin((x - minX) / xPitch);
             uMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
@@ -210,9 +210,9 @@ PandoraMonitoringApi::ViewEvent();
             positiveShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
 
             const unsigned int xBin((x - minX) / xPitch);
             uPosMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
@@ -232,9 +232,9 @@ PandoraMonitoringApi::ViewEvent();
             negativeShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
 
             const unsigned int xBin((x - minX) / xPitch);
             uNegMap.insert(ShowerEdgeMap::value_type(xBin, CartesianVector(x, 0., vw2u)));

@@ -8,9 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
@@ -18,6 +16,57 @@ using namespace pandora;
 
 namespace lar
 {
+
+bool ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs)
+{
+    if (lhs.GetOverlapResult().GetNMatchedSamplingPoints() != rhs.GetOverlapResult().GetNMatchedSamplingPoints())
+        return (lhs.GetOverlapResult().GetNMatchedSamplingPoints() > rhs.GetOverlapResult().GetNMatchedSamplingPoints());
+
+    if (lhs.GetOverlapResult().GetNSamplingPoints() != rhs.GetOverlapResult().GetNSamplingPoints())
+        return (lhs.GetOverlapResult().GetNSamplingPoints() < rhs.GetOverlapResult().GetNSamplingPoints());
+
+    return (lhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan() < rhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const TwoDSlidingFitResult &ThreeDTransverseTracksAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
+{
+    TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
+
+    if (m_slidingFitResultMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTransverseTracksAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
+{
+    TwoDSlidingFitResult slidingFitResult;
+    LArClusterHelper::LArTwoDSlidingFit(pNewCluster, m_slidingFitWindow, slidingFitResult);
+
+    if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pNewCluster, slidingFitResult)).second)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    ThreeDBaseAlgorithm::UpdateForNewCluster(pNewCluster);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTransverseTracksAlgorithm::UpdateUponDeletion(Cluster *const pDeletedCluster)
+{
+    TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pDeletedCluster);
+
+    if (m_slidingFitResultMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    m_slidingFitResultMap.erase(iter);
+    ThreeDBaseAlgorithm::UpdateUponDeletion(pDeletedCluster);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDTransverseTracksAlgorithm::PreparationStep()
 {
@@ -28,10 +77,10 @@ void ThreeDTransverseTracksAlgorithm::PreparationStep()
 
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {
-        LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(*iter, 20, slidingFitResult);
+        TwoDSlidingFitResult slidingFitResult;
+        LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
 
-        if (!m_slidingFitResultMap.insert(SlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+        if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
             throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 }
@@ -40,16 +89,16 @@ void ThreeDTransverseTracksAlgorithm::PreparationStep()
 
 void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    SlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
-    SlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
-    SlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
+    TwoDSlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
+    TwoDSlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
+    TwoDSlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
 
     if ((m_slidingFitResultMap.end() == iterU) || (m_slidingFitResultMap.end() == iterV) || (m_slidingFitResultMap.end() == iterW))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultU(iterU->second);
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultV(iterV->second);
-    const LArClusterHelper::TwoDSlidingFitResult &slidingFitResultW(iterW->second);
+    const TwoDSlidingFitResult &slidingFitResultU(iterU->second);
+    const TwoDSlidingFitResult &slidingFitResultV(iterV->second);
+    const TwoDSlidingFitResult &slidingFitResultW(iterW->second);
 
     FitSegmentTensor fitSegmentTensor;
     this->GetFitSegmentTensor(slidingFitResultU, slidingFitResultV, slidingFitResultW, fitSegmentTensor);
@@ -121,7 +170,7 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitRe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
+void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
 {
     unsigned int nSustainedSteps(0);
     CartesianVector previousPosition(0.f, 0.f, 0.f);
@@ -207,9 +256,9 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
             slidingFitResultW.GetGlobalFitDirection(x, true, fitWDirection);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
 
             ++nSamplingPoints;
             const float deltaU((vw2u - u) * fitUDirection.GetX());
@@ -230,8 +279,10 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
     if (0 == nSamplingPoints)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum,
-        TransverseOverlapResult::XOverlap(xSpanU, xSpanV, xSpanW, xOverlap));
+    const TransverseOverlapResult::XOverlap xOverlapObject(fitSegmentU.GetMinX(), fitSegmentU.GetMaxX(), fitSegmentV.GetMinX(),
+        fitSegmentV.GetMaxX(), fitSegmentW.GetMinX(), fitSegmentW.GetMaxX(), xOverlap);
+
+    return TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,6 +298,7 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(Fi
         return TransverseOverlapResult();
 
     FitSegmentTensor fitSegmentSumTensor;
+
     for (unsigned int indexU = 0; indexU < maxIndexU; ++indexU)
     {
         for (unsigned int indexV = 0; indexV < maxIndexV; ++indexV)
@@ -254,15 +306,21 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(Fi
             for (unsigned int indexW = 0; indexW < maxIndexW; ++indexW)
             {
                 TransverseOverlapResultVector transverseOverlapResultVector;
-                this->GetPreviousOverlapResults(indexU, indexV, indexW, maxIndexU, maxIndexV, maxIndexW, fitSegmentSumTensor, transverseOverlapResultVector);
+                this->GetPreviousOverlapResults(indexU, indexV, indexW, fitSegmentSumTensor, transverseOverlapResultVector);
+
                 TransverseOverlapResultVector::const_iterator maxElement = std::max_element(transverseOverlapResultVector.begin(), transverseOverlapResultVector.end());
                 TransverseOverlapResult maxTransverseOverlapResult((transverseOverlapResultVector.end() != maxElement) ? *maxElement : TransverseOverlapResult());
+
+                if (!fitSegmentTensor[indexU][indexV][indexW].IsInitialized() && !maxTransverseOverlapResult.IsInitialized())
+                    continue;
+
                 fitSegmentSumTensor[indexU][indexV][indexW] = maxTransverseOverlapResult + fitSegmentTensor[indexU][indexV][indexW];
             }
         }
     }
 
     TransverseOverlapResult bestTransverseOverlapResult;
+
     for (unsigned int indexU = 0; indexU < maxIndexU; ++indexU)
     {
         for (unsigned int indexV = 0; indexV < maxIndexV; ++indexV)
@@ -270,6 +328,9 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(Fi
             for (unsigned int indexW = 0; indexW < maxIndexW; ++indexW)
             {
                 const TransverseOverlapResult &transverseOverlapResult(fitSegmentSumTensor[indexU][indexV][indexW]);
+
+                if (!transverseOverlapResult.IsInitialized())
+                    continue;
 
                 if (transverseOverlapResult > bestTransverseOverlapResult)
                     bestTransverseOverlapResult = transverseOverlapResult;
@@ -283,8 +344,7 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(Fi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
-    const unsigned int maxIndexU, const unsigned int maxIndexV, const unsigned int maxIndexW, FitSegmentTensor &fitSegmentSumTensor,
-    TransverseOverlapResultVector &transverseOverlapResultVector) const
+    FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const
 {
     for (unsigned int iPermutation = 1; iPermutation < 8; ++iPermutation)
     {
@@ -309,9 +369,16 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
-    for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, (*iter)->Run(this, m_overlapTensor));
+        if ((*iter)->Run(this, m_overlapTensor))
+        {
+            iter = m_algorithmToolList.begin();
+        }
+        else
+        {
+            ++iter;
+        }
     }
 }
 
@@ -326,7 +393,7 @@ void ThreeDTransverseTracksAlgorithm::TidyUp()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const LArClusterHelper::TwoDSlidingFitResult &twoDSlidingFitResult,
+ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const TwoDSlidingFitResult &twoDSlidingFitResult,
         LayerFitResultMap::const_iterator startLayerIter, LayerFitResultMap::const_iterator endLayerIter) :
     m_startLayer(startLayerIter->first),
     m_endLayer(endLayerIter->first)
@@ -362,6 +429,10 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
         m_algorithmToolList.push_back(pTensorManipulationTool);
     }
+
+    m_slidingFitWindow = 20;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitWindow", m_slidingFitWindow));
 
     m_pseudoChi2Cut = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

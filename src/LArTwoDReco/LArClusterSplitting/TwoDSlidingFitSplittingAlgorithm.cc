@@ -20,7 +20,7 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
     if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
         return STATUS_CODE_NOT_FOUND;
 
-    LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+    TwoDSlidingFitResult slidingFitResult;
     LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitHalfWindow, slidingFitResult);
 
     CartesianVector splitPosition(0.f, 0.f, 0.f);
@@ -33,8 +33,8 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-    const CartesianVector &splitPosition, CaloHitList &firstCaloHitList, CaloHitList &secondCaloHitList) const
+StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const TwoDSlidingFitResult &slidingFitResult, const CartesianVector &splitPosition, 
+    CaloHitList &firstCaloHitList, CaloHitList &secondCaloHitList) const
 {
     float rL(0.f), rT(0.f);
     slidingFitResult.GetLocalPosition(splitPosition, rL, rT);

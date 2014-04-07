@@ -148,7 +148,6 @@ namespace lar
                 if(neutrinoPfo && !foundNeutrinoCluster)badMatch=true;
                 if(!neutrinoPfo && foundNeutrinoCluster)badMatch=true;
                 if(m_visualiseAllMatches||(m_visualiseBadMatches&& badMatch)){
-                    PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
                     if(foundMCParticle){
                         if(neutrinoPfo)PANDORA_MONITORING_API(VisualizeClusters(&pfoClusterList, "PfoCluster", BLACK));
                         if(!neutrinoPfo)PANDORA_MONITORING_API(VisualizeClusters(&pfoClusterList, "PfoCluster", GREEN));
@@ -371,9 +370,9 @@ namespace lar
         float u = this->GetCoordinateAtX(pClusterU,x,xmin,xmax,span);
         float v = this->GetCoordinateAtX(pClusterV,x,xmin,xmax,span);
         float w = this->GetCoordinateAtX(pClusterW,x,xmin,xmax,span);
-        const float uv2w(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_V, u, v));
-        const float uw2v(LArGeometryHelper::MergeTwoPositions(VIEW_U, VIEW_W, u, w));
-        const float vw2u(LArGeometryHelper::MergeTwoPositions(VIEW_V, VIEW_W, v, w));
+        const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+        const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
+        const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
         pseudoChi2 = ((u-vw2u)*(u-vw2u)+(v-uw2v)*(v-uw2v)+(w-uv2w)*(w-uv2w))/3.f;
     
         return STATUS_CODE_SUCCESS;
@@ -401,14 +400,14 @@ namespace lar
             {
                 const Cluster *const pPfoCluster = *cIter;
                 const HitType hitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
-                if ((VIEW_U != hitType) && (VIEW_V != hitType) && (VIEW_W != hitType))
+                if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
                 {
                     std::cout << "CosmicRayShowerMatchingAlgorithm: Encountered unexpected hit type " << std::endl;
                     return STATUS_CODE_INVALID_PARAMETER;
                 }
-                if(hitType==VIEW_U)dU = std::min( dU, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterU));
-                if(hitType==VIEW_V)dV = std::min( dV, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterV));
-                if(hitType==VIEW_W)dW = std::min( dW, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterW));
+                if(hitType==TPC_VIEW_U)dU = std::min( dU, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterU));
+                if(hitType==TPC_VIEW_V)dV = std::min( dV, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterV));
+                if(hitType==TPC_VIEW_W)dW = std::min( dW, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterW));
             }
             const float distanceToPFO = sqrt(dU*dU + dV*dV + dW*dW);
 
@@ -448,7 +447,7 @@ namespace lar
                 const Cluster *const pPfoCluster = *cIter;
                 const HitType hitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
                 
-                if ((VIEW_U != hitType) && (VIEW_V != hitType) && (VIEW_W != hitType))
+                if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
                 {
                     std::cout << "CosmicRayShowerMatchingAlgorithm: Encountered unexpected hit type " << std::endl;
                     return STATUS_CODE_INVALID_PARAMETER;
@@ -491,7 +490,7 @@ namespace lar
                 const Cluster *const pPfoCluster = *cIter;
                 const HitType hitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
                 
-                if ((VIEW_U != hitType) && (VIEW_V != hitType) && (VIEW_W != hitType))
+                if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
                 {
                     std::cout << "CosmicRayShowerMatchingAlgorithm: Encountered unexpected hit type " << std::endl;
                     return STATUS_CODE_INVALID_PARAMETER;
@@ -521,7 +520,7 @@ namespace lar
         const bool useX(true);
     
         // first try sliding fits
-        LArClusterHelper::TwoDSlidingFitResult slidingFitResult;
+        TwoDSlidingFitResult slidingFitResult;
         try {
             LArClusterHelper::LArTwoDSlidingFit(pCluster, span, slidingFitResult);
             slidingFitResult.GetGlobalFitPosition(x, useX, fitVector);

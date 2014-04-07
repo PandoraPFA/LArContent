@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 

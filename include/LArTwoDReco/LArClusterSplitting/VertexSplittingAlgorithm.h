@@ -32,8 +32,7 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    pandora::StatusCode FindBestSplitPosition(const LArClusterHelper::TwoDSlidingFitResult &slidingFitResult,
-        pandora::CartesianVector &splitPosition) const;
+    pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, pandora::CartesianVector &splitPosition) const;
 
     float           m_splitDisplacement;            ///< Maximum displacement of vertex from cluster
     float           m_splitDisplacementSquared;     ///< Maximum displacement squared

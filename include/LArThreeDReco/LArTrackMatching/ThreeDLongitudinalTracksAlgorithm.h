@@ -38,7 +38,6 @@ public:
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
-    typedef LArClusterHelper::TwoDSlidingFitResult TwoDSlidingFitResult;
     typedef TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
 
     /**

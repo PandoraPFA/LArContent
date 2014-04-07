@@ -46,6 +46,15 @@ public:
      */
     static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
 
+     /**
+     *  @brief  Get primary neutrino or antineutrino
+     * 
+     *  @param  pMCParticle
+     * 
+     *  @return address of primary neutrino mc particle
+     */
+    static const pandora::MCParticle *GetParentNeutrino(const pandora::MCParticle *const pMCParticle);
+
     /**
      *  @brief  Get primary neutrino or antineutrino
      * 

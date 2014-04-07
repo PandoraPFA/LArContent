@@ -8,6 +8,8 @@
 #ifndef LAR_POINTING_CLUSTER_H
 #define LAR_POINTING_CLUSTER_H 1
 
+#include "Pandora/StatusCodes.h"
+
 namespace pandora {class Cluster;}
 
 namespace lar
@@ -26,12 +28,34 @@ public:
     {
     public:
         /**
+         *  @brief  Default constructor
+         */
+        Vertex();
+
+        /**
          *  @brief  Constructor
          * 
          *  @param  pCluster address of the cluster
-         *  @param  useInnerVertex whether to use cluster inner or outer vertex
+         *  @param  position the vertex position
+         *  @param  direction the vertex direction
+         *  @param  rms the rms from vertex fit
+         *  @param  isInner whether this is a cluster inner or outer vertex
          */
-        Vertex(pandora::Cluster *const pCluster, const bool useInnerVertex);
+        Vertex(pandora::Cluster *const pCluster, const pandora::CartesianVector &position, const pandora::CartesianVector &direction,
+            const float rms, const bool isInner);
+
+        /**
+         *  @brief  Copy constructor
+         * 
+         *  @param  rhs the vertex instance to copy
+         */
+        Vertex(const Vertex &rhs);
+
+        /**
+         *  @brief  Destructor
+         * 
+         */
+        ~Vertex();
 
         /**
          *  @brief  Get the address of the cluster
@@ -68,12 +92,27 @@ public:
          */
         bool IsInnerVertex() const;
 
+        /**
+         *  @brief  Whether the vertex has been initialized
+         * 
+         *  @return boolean
+         */
+        bool IsInitialized() const;
+
+        /**
+         *  @brief  Vertex assigment operator
+         * 
+         *  @param  rhs the vertex to assign
+         */
+        Vertex &operator=(const Vertex &rhs);
+
     private:
         pandora::Cluster           *m_pCluster;             ///< The address of the cluster
         pandora::CartesianVector    m_position;             ///< The vertex position
         pandora::CartesianVector    m_direction;            ///< The vertex direction
-        float                       m_rms;                  ///< rms from vertex fit
-        bool                        m_isInner;              ///< The inner vertex
+        float                       m_rms;                  ///< Rms from vertex fit
+        bool                        m_isInner;              ///< Whether this is the inner vertex
+        bool                        m_isInitialized;        ///< Whether the vertex has been initialized
     };
 
     /**
@@ -130,15 +169,6 @@ typedef std::map<const pandora::Cluster*, LArPointingCluster> LArPointingCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArPointingCluster::LArPointingCluster(pandora::Cluster *const pCluster) :
-    m_pCluster(pCluster),
-    m_innerVertex(pCluster, true),
-    m_outerVertex(pCluster, false)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 inline pandora::Cluster *LArPointingCluster::GetCluster() const
 {
     return m_pCluster;
@@ -177,6 +207,9 @@ inline float LArPointingCluster::GetLength() const
 
 inline pandora::Cluster *LArPointingCluster::Vertex::GetCluster() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_pCluster;
 }
 
@@ -184,6 +217,9 @@ inline pandora::Cluster *LArPointingCluster::Vertex::GetCluster() const
 
 inline const pandora::CartesianVector &LArPointingCluster::Vertex::GetPosition() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_position;
 }
 
@@ -191,6 +227,9 @@ inline const pandora::CartesianVector &LArPointingCluster::Vertex::GetPosition()
 
 inline const pandora::CartesianVector &LArPointingCluster::Vertex::GetDirection() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_direction;
 }
 
@@ -198,6 +237,9 @@ inline const pandora::CartesianVector &LArPointingCluster::Vertex::GetDirection(
 
 inline float LArPointingCluster::Vertex::GetRms() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_rms;
 }
 
@@ -205,7 +247,17 @@ inline float LArPointingCluster::Vertex::GetRms() const
 
 inline bool LArPointingCluster::Vertex::IsInnerVertex() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_isInner;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArPointingCluster::Vertex::IsInitialized() const
+{
+    return m_isInitialized;
 }
 
 } // namespace lar
