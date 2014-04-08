@@ -62,7 +62,7 @@ void OvershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlg
 
                 const bool isA1LowestInX(this->IsALowestInX(pointingClusterA1, pointingClusterB1));
                 const bool isA2LowestInX(this->IsALowestInX(pointingClusterA2, pointingClusterB2));
-                const bool isThreeDKink(this->IsThreeDKink(pAlgorithm, particle, isA1LowestInX, isA2LowestInX));
+                const bool isThreeDKink(m_majorityRulesMode ? true : this->IsThreeDKink(pAlgorithm, particle, isA1LowestInX, isA2LowestInX));
 
                 if (isThreeDKink != m_splitMode)
                     continue;
@@ -159,43 +159,26 @@ bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgorit
 {
     try
     {
-        // Common cluster
-        float rL3(0.f), rT3(0.f);
+        const TwoDSlidingFitResult &lowXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1));
+        const TwoDSlidingFitResult &highXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1));
+        const TwoDSlidingFitResult &lowXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
+        const TwoDSlidingFitResult &highXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2));
         const TwoDSlidingFitResult &fitResultCommon3(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster));
-        fitResultCommon3.GetLocalPosition(particle.m_splitPosition, rL3, rT3);
-        const int splitLayer3(fitResultCommon3.GetLayer(rL3));
 
-        CartesianVector minus3(0.f, 0.f, 0.f), split3(particle.m_splitPosition), plus3(0.f, 0.f, 0.f);
-        fitResultCommon3.GetGlobalFitPosition(fitResultCommon3.GetL(splitLayer3 - m_nLayersForKinkSearch), minus3);
-        fitResultCommon3.GetGlobalFitPosition(fitResultCommon3.GetL(splitLayer3 + m_nLayersForKinkSearch), plus3);
-
-        // TODO Improve this
-        if (minus3.GetX() > plus3.GetX()) 
-        {
-            CartesianVector tmp1(minus3);
-            minus3 = plus3;
-            plus3 = tmp1;
-        }
-
-        // Broken cluster 1
-        const TwoDSlidingFitResult &lowXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1) :
-            pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1));
-        const TwoDSlidingFitResult &highXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1) :
-            pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1));
+        const float minusX(this->GetXSamplingPoint(particle.m_splitPosition, false, fitResultCommon3, lowXFitResult1, lowXFitResult2));
+        const float plusX(this->GetXSamplingPoint(particle.m_splitPosition, true, fitResultCommon3, highXFitResult1, highXFitResult2));
 
         CartesianVector minus1(0.f, 0.f, 0.f), split1(particle.m_splitPosition1), plus1(0.f, 0.f, 0.f);
-        lowXFitResult1.GetGlobalFitPosition(minus3.GetX(), true, minus1);
-        highXFitResult1.GetGlobalFitPosition(plus3.GetX(), true, plus1);
-
-        // Broken cluster 2
-        const TwoDSlidingFitResult &lowXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2) :
-            pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
-        const TwoDSlidingFitResult &highXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2) :
-            pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2));
+        lowXFitResult1.GetGlobalFitPosition(minusX, true, minus1);
+        highXFitResult1.GetGlobalFitPosition(plusX, true, plus1);
 
         CartesianVector minus2(0.f, 0.f, 0.f), split2(particle.m_splitPosition2), plus2(0.f, 0.f, 0.f);
-        lowXFitResult2.GetGlobalFitPosition(minus3.GetX(), true, minus2);
-        highXFitResult2.GetGlobalFitPosition(plus3.GetX(), true, plus2);
+        lowXFitResult2.GetGlobalFitPosition(minusX, true, minus2);
+        highXFitResult2.GetGlobalFitPosition(plusX, true, plus2);
+
+        CartesianVector minus3(0.f, 0.f, 0.f), split3(particle.m_splitPosition), plus3(0.f, 0.f, 0.f);
+        fitResultCommon3.GetGlobalFitPosition(minusX, true, minus3);
+        fitResultCommon3.GetGlobalFitPosition(plusX, true, plus3);
 
         // Extract results
         const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pClusterA1));
@@ -260,10 +243,6 @@ StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_maxVertexXSeparation = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexXSeparation", m_maxVertexXSeparation));
-
-    m_nLayersForKinkSearch = 10;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NLayersForKinkSearch", m_nLayersForKinkSearch));
 
     m_cosThetaCutForKinkSearch = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

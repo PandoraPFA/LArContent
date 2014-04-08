@@ -74,7 +74,6 @@ private:
     float           m_minLongitudinalImpactParameter;   ///< The minimum longitudinal impact parameter for connecting broken clusters
     float           m_maxTransverseImpactParameter;     ///< The maximum transverse impact parameter for connecting broken clusters
     float           m_minImpactParameterCosTheta;       ///< The minimum cos theta (angle between vertex directions) for connecting broken clusters
-    unsigned int    m_nLayersForKinkSearch;             ///< The number of sliding fit layers to step in the kink search
     float           m_cosThetaCutForKinkSearch;         ///< The cos theta cut used for the kink search in three dimensions
 };
 

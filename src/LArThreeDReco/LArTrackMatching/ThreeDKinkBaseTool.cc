@@ -44,6 +44,54 @@ bool ThreeDKinkBaseTool::PassesElementCuts(TensorType::ElementList::const_iterat
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float ThreeDKinkBaseTool::GetXSamplingPoint(const CartesianVector &splitPosition1, const bool isForwardInX, const TwoDSlidingFitResult &fitResult1,
+    const TwoDSlidingFitResult &fitResult2, const TwoDSlidingFitResult &fitResult3) const
+{
+    // Nearest common x position
+    float xMin1(std::numeric_limits<float>::max()), xMax1(-std::numeric_limits<float>::max());
+    float xMin2(std::numeric_limits<float>::max()), xMax2(-std::numeric_limits<float>::max());
+    float xMin3(std::numeric_limits<float>::max()), xMax3(-std::numeric_limits<float>::max());
+    fitResult1.GetMinAndMaxX(xMin1, xMax1);
+    fitResult2.GetMinAndMaxX(xMin2, xMax2);
+    fitResult3.GetMinAndMaxX(xMin3, xMax3);
+
+    const float commonX(isForwardInX ? std::max(xMin1, std::max(xMin2, xMin3)) : std::min(xMax1, std::min(xMax2, xMax3)));
+
+    if (isForwardInX && ((commonX > xMax1) || (commonX > xMax2) || (commonX > xMax3)))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    if (!isForwardInX && ((commonX < xMin1) || (commonX < xMin2) || (commonX < xMin3)))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // Layer step x position
+    float rL1(0.f), rT1(0.f);
+    fitResult1.GetLocalPosition(splitPosition1, rL1, rT1);
+    const int splitLayer(fitResult1.GetLayer(rL1));
+
+    const int lowLayer(std::max(fitResult1.GetMinLayer(), std::min(fitResult1.GetMaxLayer(), splitLayer - m_nLayersForKinkSearch)));
+    const int highLayer(std::max(fitResult1.GetMinLayer(), std::min(fitResult1.GetMaxLayer(), splitLayer + m_nLayersForKinkSearch)));
+
+    CartesianVector minus(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
+    fitResult1.GetGlobalFitPosition(fitResult1.GetL(lowLayer), minus);
+    fitResult1.GetGlobalFitPosition(fitResult1.GetL(highLayer), plus);
+
+    if (minus.GetX() > plus.GetX()) 
+    {
+        CartesianVector temporary(minus);
+        minus = plus;
+        plus = temporary;
+    }
+
+    const float layerStepX(isForwardInX ? plus.GetX() : minus.GetX());
+
+    // Final x position selection
+    const float chosenX(isForwardInX ? std::max(layerStepX, commonX) : std::min(layerStepX, commonX));
+    const float finalX(isForwardInX ? chosenX + m_additionalXStepForKinkSearch : chosenX - m_additionalXStepForKinkSearch);
+    return finalX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ThreeDKinkBaseTool::IsALowestInX(const LArPointingCluster &pointingClusterA, const LArPointingCluster &pointingClusterB)
 {
     if ((pointingClusterA.GetInnerVertex().GetPosition().GetX() < pointingClusterB.GetInnerVertex().GetPosition().GetX()) &&
@@ -326,6 +374,10 @@ bool ThreeDKinkBaseTool::SortSplitPositions(const pandora::CartesianVector &lhs,
 
 StatusCode ThreeDKinkBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_majorityRulesMode = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MajorityRulesMode", m_majorityRulesMode));
+
     m_minMatchedFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
@@ -337,6 +389,14 @@ StatusCode ThreeDKinkBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_minLongitudinalImpactParameter = -1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinLongitudinalImpactParameter", m_minLongitudinalImpactParameter));
+
+    m_nLayersForKinkSearch = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NLayersForKinkSearch", m_nLayersForKinkSearch));
+
+    m_additionalXStepForKinkSearch = 0.01f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "AdditionalXStepForKinkSearch", m_additionalXStepForKinkSearch));
 
     return STATUS_CODE_SUCCESS;
 }
