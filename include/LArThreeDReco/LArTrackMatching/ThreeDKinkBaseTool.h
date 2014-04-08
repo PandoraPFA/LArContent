@@ -64,6 +64,20 @@ protected:
         ModificationList &modificationList) const = 0;
 
     /**
+     *  @brief  Get a sampling point in x that is common to sliding linear fit objects in three views
+     * 
+     *  @param  splitPosition1 the split position in view 1
+     *  @param  isForwardInX whether to work forwards (or backwards) in x
+     *  @param  fitResult1 the sliding fit result in view 1
+     *  @param  fitResult2 the sliding fit result in view 2
+     *  @param  fitResult3 the sliding fit result in view 3
+     * 
+     *  @return the sampling point
+     */
+    float GetXSamplingPoint(const pandora::CartesianVector &splitPosition1, const bool isForwardInX, const TwoDSlidingFitResult &fitResult1,
+        const TwoDSlidingFitResult &fitResult2, const TwoDSlidingFitResult &fitResult3) const;
+
+    /**
      *  @brief  Whether pointing cluster labelled A extends to lowest x positions (as opposed to that labelled B)
      * 
      *  @param  pointingClusterA pointing cluster A
@@ -73,10 +87,13 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    bool            m_majorityRulesMode;                ///< Whether to run in majority rules mode (always split overshoots, always merge undershoots)
     unsigned int    m_nCommonClusters;                  ///< The number of common clusters
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
     float           m_minLongitudinalImpactParameter;   ///< The min longitudinal impact parameter for connecting accompanying clusters
+    int             m_nLayersForKinkSearch;             ///< The number of sliding fit layers to step in the kink search
+    float           m_additionalXStepForKinkSearch;     ///< An additional (safety) step to tack-on when choosing x sampling points
 
 private:
     bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);

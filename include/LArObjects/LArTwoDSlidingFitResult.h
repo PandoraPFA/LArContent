@@ -199,6 +199,14 @@ public:
     int GetMaxLayer() const;
 
     /**
+     *  @brief  Get the minimum and maximum x coordinates associated with the sliding fit
+     * 
+     *  @param  to receive the min x value
+     *  @param  to receive the max x value
+     */
+    void GetMinAndMaxX(float &maxX, float &minX) const;
+
+    /**
      *  @brief  Get layer number for given sliding linear fit longitudinal coordinate
      * 
      *  @param  rL the longitudinal coordinate
@@ -354,7 +362,6 @@ public:
     const LayerFitContributionMap &GetLayerFitContributionMap() const;
 
 private:
-
     /**
      *  @brief  Interpolate a position between two layers
      *
