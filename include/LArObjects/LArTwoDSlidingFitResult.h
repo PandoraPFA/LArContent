@@ -204,7 +204,7 @@ public:
      *  @param  to receive the min x value
      *  @param  to receive the max x value
      */
-    void GetMinAndMaxX(float &maxX, float &minX) const;
+    void GetMinAndMaxX(float &minX, float &maxX) const;
 
     /**
      *  @brief  Get layer number for given sliding linear fit longitudinal coordinate

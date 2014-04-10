@@ -57,8 +57,17 @@ public:
      */
     const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
 
+    /**
+     *  @brief  Get the layer window for the sliding linear fits
+     * 
+     *  @return the layer window for the sliding linear fits
+     */
+    unsigned int GetSlidingFitWindow() const;
+
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
+
+    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;  ///< The iterator list typedef
 
 private:
     /**
@@ -255,6 +264,14 @@ public:
 inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgorithm() const
 {
     return new ThreeDTransverseTracksAlgorithm();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int ThreeDTransverseTracksAlgorithm::GetSlidingFitWindow() const
+{
+    return m_slidingFitWindow;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -49,7 +49,6 @@ public:
      */
     virtual ~ThreeDBaseAlgorithm();
 
-public:
     /**
      *  @brief  Create particles using findings from recent algorithm processing
      * 
@@ -93,6 +92,36 @@ public:
      *  @brief  Update tensor to remove all elements that have been added to pfos and so are unavailable
      */
     virtual void RemoveUnavailableTensorElements();
+
+    /**
+     *  @brief  Get the input u cluster list
+     */
+    const pandora::ClusterList &GetInputClusterListU() const;
+
+    /**
+     *  @brief  Get the input v cluster list
+     */
+    const pandora::ClusterList &GetInputClusterListV() const;
+
+    /**
+     *  @brief  Get the input w cluster list
+     */
+    const pandora::ClusterList &GetInputClusterListW() const;
+
+    /**
+     *  @brief  Get the selected u cluster list
+     */
+    const pandora::ClusterList &GetSelectedClusterListU() const;
+
+    /**
+     *  @brief  Get the selected v cluster list
+     */
+    const pandora::ClusterList &GetSelectedClusterListV() const;
+
+    /**
+     *  @brief  Get the selected w cluster list
+     */
+    const pandora::ClusterList &GetSelectedClusterListW() const;
 
     /**
      *  @brief  Get the name of the u cluster list
@@ -170,6 +199,63 @@ private:
     unsigned int                m_minClusterLayers;             ///< The min number of layers in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetInputClusterListU() const
+{
+    if (NULL == m_pInputClusterListU)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return (*m_pInputClusterListU);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetInputClusterListV() const
+{
+    if (NULL == m_pInputClusterListV)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return (*m_pInputClusterListV);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetInputClusterListW() const
+{
+    if (NULL == m_pInputClusterListW)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return (*m_pInputClusterListW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetSelectedClusterListU() const
+{
+    return m_clusterListU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetSelectedClusterListV() const
+{
+    return m_clusterListV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetSelectedClusterListW() const
+{
+    return m_clusterListW;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
