@@ -9,7 +9,10 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
 #include "LArHelpers/LArThreeDHelper.h"
+
+#include "LArObjects/LArPointingCluster.h"
 
 #include "LArThreeDReco/LArTrackMatching/LongTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/MissingTrackSegmentTool.h"
@@ -274,6 +277,9 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const Slid
         if ((static_cast<float>(segmentOverlap.m_nMatchedSamplingPoints) / static_cast<float>(segmentOverlap.m_nSamplingPoints)) < m_makePfoMinMatchedFraction)
             continue;
 
+        if (!this->AreDirectionsConsistent(particle.m_pShortCluster, pCluster))
+            continue;
+
         shouldMakeParticle = true;
         usedClusters.insert(pCluster);
 
@@ -295,6 +301,28 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const Slid
     }
 
     return shouldMakeParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool MissingTrackSegmentTool::AreDirectionsConsistent(Cluster *const pClusterA, Cluster *const pClusterB) const
+{
+    const LArPointingCluster pointingClusterA(pClusterA);
+    const LArPointingCluster pointingClusterB(pClusterB);
+
+    LArPointingCluster::Vertex vertexA, vertexB;
+    LArPointingClusterHelper::GetClosestVertices(pointingClusterA, pointingClusterB, vertexA, vertexB);
+
+    float transverseAB(std::numeric_limits<float>::max()), transverseBA(std::numeric_limits<float>::max());
+    float longitudinalAB(-std::numeric_limits<float>::max()), longitudinalBA(-std::numeric_limits<float>::max());
+
+    LArPointingClusterHelper::GetImpactParameters(vertexA, vertexB, longitudinalAB, transverseAB);
+    LArPointingClusterHelper::GetImpactParameters(vertexB, vertexA, longitudinalBA, transverseBA);
+
+    if (std::min(transverseAB, transverseBA) > m_makePfoMaxImpactParameter)
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -389,6 +417,10 @@ StatusCode MissingTrackSegmentTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_makePfoMinMatchedFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MakePfoMinMatchedFraction", m_makePfoMinMatchedFraction));
+
+    m_makePfoMaxImpactParameter = 3.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MakePfoMaxImpactParameter", m_makePfoMaxImpactParameter));
 
     m_mergeMaxChi2PerSamplingPoint = 0.25f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

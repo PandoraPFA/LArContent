@@ -159,6 +159,17 @@ private:
         pandora::ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const;
 
     /**
+     *  @brief  Whether the pointing information is consistent for the short cluster in the tensor and the new cluster, picked-up
+     *          via sampling of the two long clusters in the tensor
+     * 
+     *  @param  pClusterA the address of cluster A
+     *  @param  pClusterB the address of cluster B
+     * 
+     *  @return whether the directions are consistent
+     */
+    bool AreDirectionsConsistent(pandora::Cluster *const pClusterA, pandora::Cluster *const pClusterB) const;
+
+    /**
      *  @brief  Perform cluster merges described in a provided cluster merge map
      * 
      *  @param  pAlgorithm address of the calling algorithm
@@ -178,6 +189,7 @@ private:
     unsigned int    m_makePfoMinSamplingPoints;         ///< The min number of sampling points in order to be able to make pfo
     unsigned int    m_makePfoMinMatchedSamplingPoints;  ///< The min number of matched sampling points in order to be able to make pfo
     float           m_makePfoMinMatchedFraction;        ///< The min matched sampling point fraction in order to be able to make pfo
+    float           m_makePfoMaxImpactParameter;        ///< The max transverse impact parameter in order to be able to make pfo
 
     float           m_mergeMaxChi2PerSamplingPoint;     ///< The max value of chi2 per sampling point in order to merge cluster with parent
     float           m_mergeXContainmentTolerance;       ///< The tolerance in determining whether candidate cluster is contained in x window
