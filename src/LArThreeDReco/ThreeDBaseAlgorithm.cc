@@ -131,18 +131,22 @@ void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
 template <typename T>
 void ThreeDBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedCluster)
 {
-    const HitType hitType(LArThreeDHelper::GetClusterHitType(pDeletedCluster));
+    ClusterList::iterator iterU = m_clusterListU.find(pDeletedCluster);
+    ClusterList::iterator iterV = m_clusterListV.find(pDeletedCluster);
+    ClusterList::iterator iterW = m_clusterListW.find(pDeletedCluster);
 
-    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
-    ClusterList::iterator iter = clusterList.find(pDeletedCluster);
-
-    if (clusterList.end() == iter)
+    if ((m_clusterListU.end() == iterU) && (m_clusterListV.end() == iterV) && (m_clusterListW.end() == iterW))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    clusterList.erase(iter);
+    if (m_clusterListU.end() != iterU)
+        m_clusterListU.erase(iterU);
+
+    if (m_clusterListV.end() != iterV)
+        m_clusterListV.erase(iterV);
+
+    if (m_clusterListW.end() != iterW)
+        m_clusterListW.erase(iterW);
+
     m_overlapTensor.RemoveCluster(pDeletedCluster);
 }
 

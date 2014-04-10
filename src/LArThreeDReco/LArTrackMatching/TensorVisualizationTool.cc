@@ -87,7 +87,7 @@ bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
 
 StatusCode TensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterConnections = 2;
+    m_minClusterConnections = 1;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterConnections", m_minClusterConnections));
 
