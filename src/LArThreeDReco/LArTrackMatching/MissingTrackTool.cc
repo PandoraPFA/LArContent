@@ -1,20 +1,20 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTrackMatching/MissingTracksTool.cc
+ *  @file   LArContent/src/LArThreeDReco/LArTrackMatching/MissingTrackTool.cc
  * 
- *  @brief  Implementation of the missing tracks tool class.
+ *  @brief  Implementation of the missing track tool class.
  * 
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "LArThreeDReco/LArTrackMatching/MissingTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/MissingTrackTool.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-bool MissingTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -24,7 +24,7 @@ bool MissingTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MissingTracksTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode MissingTrackTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }

@@ -28,6 +28,12 @@ ThreeDKinkBaseTool::ThreeDKinkBaseTool(const unsigned int nCommonClusters) :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+ThreeDKinkBaseTool::~ThreeDKinkBaseTool()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ThreeDKinkBaseTool::PassesElementCuts(TensorType::ElementList::const_iterator eIter, const ClusterList &usedClusters) const
 {
     if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))

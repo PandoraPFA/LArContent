@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTrackMatching/MissingTracksTool.h
+ *  @file   LArContent/include/LArThreeDReco/LArTrackMatching/MissingTrackTool.h
  * 
- *  @brief  Header file for the missing tracks tool class.
+ *  @brief  Header file for the missing track tool class.
  * 
  *  $Log: $
  */
-#ifndef MISSING_TRACKS_TOOL_H
-#define MISSING_TRACKS_TOOL_H 1
+#ifndef MISSING_TRACK_TOOL_H
+#define MISSING_TRACK_TOOL_H 1
 
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  MissingTracksTool class
+ *  @brief  MissingTrackTool class
  */
-class MissingTracksTool : public TensorManipulationTool
+class MissingTrackTool : public TensorManipulationTool
 {
 public:
     /**
@@ -35,11 +35,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::AlgorithmTool *MissingTracksTool::Factory::CreateAlgorithmTool() const
+inline pandora::AlgorithmTool *MissingTrackTool::Factory::CreateAlgorithmTool() const
 {
-    return new MissingTracksTool();
+    return new MissingTrackTool();
 }
 
 } // namespace lar
 
-#endif // #ifndef MISSING_TRACKS_TOOL_H
+#endif // #ifndef MISSING_TRACK_TOOL_H

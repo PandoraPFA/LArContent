@@ -26,10 +26,15 @@ public:
      */
     ThreeDKinkBaseTool(const unsigned int nCommonClusters);
 
+    /**
+     *  @brief  Destructor
+     */
+    virtual ~ThreeDKinkBaseTool();
+
 protected:
     typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
     typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
-    
+
     /**
      *  @brief  Modification class
      */
@@ -51,7 +56,7 @@ protected:
      */
     virtual bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
 
-    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
+    typedef ThreeDTransverseTracksAlgorithm::IteratorList IteratorList;
 
     /**
      *  @brief  Get modification objects for a specific elements of the tensor, identifying required splits and merges for clusters
