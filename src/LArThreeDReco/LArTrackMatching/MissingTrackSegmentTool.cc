@@ -55,6 +55,9 @@ void MissingTrackSegmentTool::FindTracks(ThreeDTransverseTracksAlgorithm *pAlgor
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
 
+        if (nU * nV * nW < 1)
+            continue;
+
         IteratorList iteratorList;
         this->SelectElements(elementList, usedClusters, iteratorList);
 
@@ -122,9 +125,6 @@ bool MissingTrackSegmentTool::PassesParticleChecks(ThreeDTransverseTracksAlgorit
     const TensorType &overlapTensor, ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
     const Particle particle(element);
-
-    if ((particle.m_shortMinX - particle.m_longMinX < m_minParticleXEndSeparation) && (particle.m_longMaxX - particle.m_shortMaxX < m_minParticleXEndSeparation))
-        return false;
 
     ClusterList candidateClusters;
     this->GetCandidateClusters(pAlgorithm, particle, overlapTensor, usedClusters, candidateClusters);
@@ -382,7 +382,7 @@ StatusCode MissingTrackSegmentTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 20;
+    m_minMatchedSamplingPoints = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 

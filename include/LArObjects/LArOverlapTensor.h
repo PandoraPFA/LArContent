@@ -241,11 +241,23 @@ private:
      *  @brief  Get elements connected to a specified cluster
      * 
      *  @param  pCluster address of the cluster
+     *  @param  elementList the element list
      *  @param  clusterListU connected u clusters
      *  @param  clusterListV connected v clusters
      *  @param  clusterListW connected w clusters
      */
-    void GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterListU,
+    void GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
+        pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
+
+    /**
+     *  @brief  Explore connections associated with a given cluster
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  clusterListU connected u clusters
+     *  @param  clusterListV connected v clusters
+     *  @param  clusterListW connected w clusters
+     */
+    void ExploreConnections(pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterListU,
         pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
     TheTensor               m_overlapTensor;                ///< The overlap tensor
