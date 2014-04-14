@@ -84,9 +84,6 @@ void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoPartic
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
 
-        if (nU * nV * nW < 1)
-            continue;
-
         IteratorList iteratorList;
         this->SelectLongElements(elementList, usedClusters, iteratorList);
 

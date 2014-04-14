@@ -244,7 +244,7 @@ StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexXSeparation", m_maxVertexXSeparation));
 
-    m_cosThetaCutForKinkSearch = 0.75f;
+    m_cosThetaCutForKinkSearch = 0.94f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
 

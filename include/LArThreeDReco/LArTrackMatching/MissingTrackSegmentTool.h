@@ -104,24 +104,22 @@ private:
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
-     *  @param  overlapTensor the overlap tensor
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    bool PassesParticleChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, const TensorType &overlapTensor,
-        pandora::ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const;
+    bool PassesParticleChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, pandora::ClusterList &usedClusters,
+        ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Get a list of candidate clusters, which may represent missing track segments for a provided particle
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  particle the particle
-     *  @param  overlapTensor the overlap tensor
      *  @param  usedClusters the list of used clusters
      *  @param  candidateClusters to receive the list of candidate clusters
      */
-    void GetCandidateClusters(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, const TensorType &overlapTensor,
-        const pandora::ClusterList &usedClusters, pandora::ClusterList &candidateClusters) const;
+    void GetCandidateClusters(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, const pandora::ClusterList &usedClusters,
+        pandora::ClusterList &candidateClusters) const;
 
     /**
      *  @brief  Get a sliding fit result map for the list of candidate clusters
@@ -182,7 +180,6 @@ private:
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (between long clusters and short cluster vs. shared overlap)
     unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
 
-    float           m_minParticleXEndSeparation;        ///< Distance used to ensure that undershoot (due to missing segment) is at one end of x span
     unsigned int    m_minCaloHitsInCandidateCluster;    ///< The min no. of calo hits in a candidate cluster, for matching with long clusters
     float           m_pseudoChi2Cut;                    ///< The pseudo chi2 cut to determine whether a sampling point is matched
 
