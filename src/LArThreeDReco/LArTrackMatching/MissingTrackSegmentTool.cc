@@ -304,22 +304,29 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const Slid
 
 bool MissingTrackSegmentTool::AreDirectionsConsistent(Cluster *const pClusterA, Cluster *const pClusterB) const
 {
-    const LArPointingCluster pointingClusterA(pClusterA);
-    const LArPointingCluster pointingClusterB(pClusterB);
+    try
+    {
+        const LArPointingCluster pointingClusterA(pClusterA);
+        const LArPointingCluster pointingClusterB(pClusterB);
 
-    LArPointingCluster::Vertex vertexA, vertexB;
-    LArPointingClusterHelper::GetClosestVertices(pointingClusterA, pointingClusterB, vertexA, vertexB);
+        LArPointingCluster::Vertex vertexA, vertexB;
+        LArPointingClusterHelper::GetClosestVertices(pointingClusterA, pointingClusterB, vertexA, vertexB);
 
-    float transverseAB(std::numeric_limits<float>::max()), transverseBA(std::numeric_limits<float>::max());
-    float longitudinalAB(-std::numeric_limits<float>::max()), longitudinalBA(-std::numeric_limits<float>::max());
+        float transverseAB(std::numeric_limits<float>::max()), transverseBA(std::numeric_limits<float>::max());
+        float longitudinalAB(-std::numeric_limits<float>::max()), longitudinalBA(-std::numeric_limits<float>::max());
 
-    LArPointingClusterHelper::GetImpactParameters(vertexA, vertexB, longitudinalAB, transverseAB);
-    LArPointingClusterHelper::GetImpactParameters(vertexB, vertexA, longitudinalBA, transverseBA);
+        LArPointingClusterHelper::GetImpactParameters(vertexA, vertexB, longitudinalAB, transverseAB);
+        LArPointingClusterHelper::GetImpactParameters(vertexB, vertexA, longitudinalBA, transverseBA);
 
-    if (std::min(transverseAB, transverseBA) > m_makePfoMaxImpactParameter)
+        if (std::min(transverseAB, transverseBA) > m_makePfoMaxImpactParameter)
+            return false;
+
+        return true;
+    }
+    catch (StatusCodeException &)
+    {
         return false;
-
-    return true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -337,6 +344,7 @@ void MissingTrackSegmentTool::PerformClusterMerges(ThreeDTransverseTracksAlgorit
         for (ClusterList::const_iterator dIter = pIter->second.begin(), dIterEnd = pIter->second.end(); dIter != dIterEnd; ++dIter)
         {
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pIter->first, *dIter, clusterListName, clusterListName));
+            pAlgorithm->UpdateUponDeletion(*dIter);
         }
 
         pAlgorithm->UpdateUponDeletion(pIter->first);
