@@ -195,10 +195,6 @@ StatusCode UndershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SplitMode", m_splitMode));
 
-    m_minLongitudinalImpactParameter = -1.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinLongitudinalImpactParameter", m_minLongitudinalImpactParameter));
-
     m_maxTransverseImpactParameter = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseImpactParameter", m_maxTransverseImpactParameter));

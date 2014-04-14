@@ -84,7 +84,7 @@ void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoPartic
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
 
-        if (nU * nV * nW < 2)
+        if (nU * nV * nW < 1)
             continue;
 
         IteratorList iteratorList;
@@ -143,7 +143,7 @@ void LongTracksTool::SelectLongElements(const TensorType::ElementList &elementLi
 
 StatusCode LongTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.75f;
+    m_minMatchedFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
@@ -151,7 +151,7 @@ StatusCode LongTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minXOverlapFraction = 0.75f;
+    m_minXOverlapFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
