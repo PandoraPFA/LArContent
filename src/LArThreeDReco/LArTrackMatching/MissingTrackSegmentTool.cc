@@ -30,11 +30,8 @@ bool MissingTrackSegmentTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
     ProtoParticleVector protoParticleVector; ClusterMergeMap clusterMergeMap;
     this->FindTracks(pAlgorithm, overlapTensor, protoParticleVector, clusterMergeMap);
 
-    pAlgorithm->CreateThreeDParticles(protoParticleVector);
-    const bool particlesMade(!protoParticleVector.empty());
-
-    this->PerformClusterMerges(pAlgorithm, clusterMergeMap);
-    const bool mergesMade(!clusterMergeMap.empty());
+    const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
+    const bool mergesMade(pAlgorithm->MakeClusterMerges(clusterMergeMap));
 
     return (particlesMade || mergesMade);
 }
@@ -326,29 +323,6 @@ bool MissingTrackSegmentTool::AreDirectionsConsistent(Cluster *const pClusterA, 
     catch (StatusCodeException &)
     {
         return false;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MissingTrackSegmentTool::PerformClusterMerges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const
-{
-    for (ClusterMergeMap::const_iterator pIter = clusterMergeMap.begin(), pIterEnd = clusterMergeMap.end(); pIter != pIterEnd; ++pIter)
-    {
-        if (pIter->second.empty())
-            continue;
-
-        const HitType parentHitType(LArThreeDHelper::GetClusterHitType(pIter->first));
-        const std::string clusterListName((TPC_VIEW_U == parentHitType) ? pAlgorithm->GetClusterListNameU() : (TPC_VIEW_V == parentHitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
-
-        for (ClusterList::const_iterator dIter = pIter->second.begin(), dIterEnd = pIter->second.end(); dIter != dIterEnd; ++dIter)
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pIter->first, *dIter, clusterListName, clusterListName));
-            pAlgorithm->UpdateUponDeletion(*dIter);
-        }
-
-        pAlgorithm->UpdateUponDeletion(pIter->first);
-        pAlgorithm->UpdateForNewCluster(pIter->first);
     }
 }
 

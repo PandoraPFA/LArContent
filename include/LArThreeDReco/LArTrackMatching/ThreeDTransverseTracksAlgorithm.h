@@ -67,8 +67,6 @@ public:
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
-    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;  ///< The iterator list typedef
-
 private:
     /**
      *  @brief  SlidingFitDirection enum
@@ -246,6 +244,7 @@ class TensorManipulationTool : public pandora::AlgorithmTool
 {
 public:
     typedef ThreeDTransverseTracksAlgorithm::TensorType TensorType;
+    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
      *  @brief  Run the algorithm tool

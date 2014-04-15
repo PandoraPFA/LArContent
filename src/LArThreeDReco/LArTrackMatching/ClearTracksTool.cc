@@ -74,10 +74,7 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAl
         protoParticleVector.push_back(protoParticle);
     }
 
-    pAlgorithm->CreateThreeDParticles(protoParticleVector);
-
-    if (!protoParticleVector.empty())
-        particlesMade = true;
+    particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

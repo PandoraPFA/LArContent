@@ -28,8 +28,6 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    typedef ThreeDTransverseTracksAlgorithm::IteratorList IteratorList;
-
     /**
      *  @brief  Whether a long element shares clusters with any other long elements
      * 

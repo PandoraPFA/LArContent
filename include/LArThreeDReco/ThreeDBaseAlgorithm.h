@@ -27,6 +27,8 @@ public:
 };
 
 typedef std::vector<ProtoParticle> ProtoParticleVector;
+typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -53,8 +55,47 @@ public:
      *  @brief  Create particles using findings from recent algorithm processing
      * 
      *  @param  protoParticleVector the proto particle vector
+     * 
+     *  @param  whether particles were created
      */
-    virtual void CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
+    virtual bool CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
+
+    /**
+     *  @brief  Merge clusters together
+     * 
+     *  @param  clusterMergeMap the cluster merge map
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
+
+    /**
+     *  @brief  Make cluster splits
+     * 
+     *  @param  splitPositionMap the split position map
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    virtual bool MakeClusterSplits(const SplitPositionMap &splitPositionMap);
+
+    /**
+     *  @brief  Make a cluster split
+     * 
+     *  @param  splitPosition the split position
+     *  @param  pCurrentCluster the cluster to split
+     *  @param  pLowXCluster to receive the low x cluster
+     *  @param  pHighXCluster to receive the high x cluster
+     */
+    virtual void MakeClusterSplit(const pandora::CartesianVector &splitPosition, pandora::Cluster *&pCurrentCluster,
+        pandora::Cluster *&pLowXCluster, pandora::Cluster *&pHighXCluster) const;
+
+    /**
+     *  @brief  Sort split position cartesian vectors by increasing x coordinate
+     * 
+     *  @param  lhs the first cartesian vector
+     *  @param  rhs the second cartesian vector
+     */
+    static bool SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
 
     /**
      *  @brief  Update to reflect a cluster merge

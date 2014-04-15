@@ -32,9 +32,6 @@ public:
     virtual ~ThreeDKinkBaseTool();
 
 protected:
-    typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
-    typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
-
     /**
      *  @brief  Modification class
      */
@@ -55,8 +52,6 @@ protected:
      *  @param  usedClusters the list of used clusters
      */
     virtual bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
-
-    typedef ThreeDTransverseTracksAlgorithm::IteratorList IteratorList;
 
     /**
      *  @brief  Get modification objects for a specific elements of the tensor, identifying required splits and merges for clusters
@@ -132,46 +127,6 @@ private:
      *  @return whether changes to the tensor have been made
      */
     bool ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ModificationList &modificationList) const;
-
-    /**
-     *  @brief  Merge clusters together
-     * 
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  clusterMergeMap the cluster merge map
-     * 
-     *  @return whether changes to the tensor have been made
-     */
-    bool MakeClusterMerges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const;
-
-    /**
-     *  @brief  Make cluster splits
-     * 
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  splitPositionMap the split position map
-     * 
-     *  @return whether changes to the tensor have been made
-     */
-    bool MakeClusterSplits(ThreeDTransverseTracksAlgorithm *pAlgorithm, const SplitPositionMap &splitPositionMap) const;
-
-    /**
-     *  @brief  Make a cluster split
-     * 
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  splitPosition the split position
-     *  @param  pCurrentCluster the cluster to split
-     *  @param  pLowXCluster to receive the low x cluster
-     *  @param  pHighXCluster to receive the high x cluster
-     */
-    void MakeClusterSplit(ThreeDTransverseTracksAlgorithm *pAlgorithm, const pandora::CartesianVector &splitPosition,
-        pandora::Cluster *&pCurrentCluster, pandora::Cluster *&pLowXCluster, pandora::Cluster *&pHighXCluster) const;
-
-    /**
-     *  @brief  Sort split position cartesian vectors by increasing x coordinate
-     * 
-     *  @param  lhs the first cartesian vector
-     *  @param  rhs the second cartesian vector
-     */
-    static bool SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
 };
 
 } // namespace lar

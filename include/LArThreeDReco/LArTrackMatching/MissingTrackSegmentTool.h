@@ -88,8 +88,6 @@ private:
     void FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
         ClusterMergeMap &clusterMergeMap) const;
 
-    typedef ThreeDTransverseTracksAlgorithm::IteratorList IteratorList;
-
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
      * 
@@ -166,14 +164,6 @@ private:
      *  @return whether the directions are consistent
      */
     bool AreDirectionsConsistent(pandora::Cluster *const pClusterA, pandora::Cluster *const pClusterB) const;
-
-    /**
-     *  @brief  Perform cluster merges described in a provided cluster merge map
-     * 
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  clusterMergeMap the cluster merge map
-     */
-    void PerformClusterMerges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
