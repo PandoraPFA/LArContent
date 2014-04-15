@@ -24,9 +24,7 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
     SplitPositionMap splitPositionMap;
     this->FindTracks(pAlgorithm, overlapTensor, splitPositionMap);
 
-    //this->PerformClusterSplits(pAlgorithm, splitPositionMap); TODO
-    const bool splitsMade(!splitPositionMap.empty());
-
+    const bool splitsMade(pAlgorithm->MakeClusterSplits(splitPositionMap));
     return splitsMade;
 }
 

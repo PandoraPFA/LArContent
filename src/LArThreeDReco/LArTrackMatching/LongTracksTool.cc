@@ -63,9 +63,8 @@ bool LongTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType
 
     ProtoParticleVector protoParticleVector;
     this->FindLongTracks(overlapTensor, protoParticleVector);
-    pAlgorithm->CreateThreeDParticles(protoParticleVector);
-    const bool particlesMade(!protoParticleVector.empty());
 
+    const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
     return particlesMade;
 }
 

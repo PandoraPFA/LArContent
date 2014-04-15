@@ -43,8 +43,6 @@ private:
      */
     void FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
 
-    typedef ThreeDTransverseTracksAlgorithm::IteratorList IteratorList;
-
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
      * 
