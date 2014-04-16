@@ -266,9 +266,6 @@ void ThreeDBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedCluster)
     ClusterList::iterator iterV = m_clusterListV.find(pDeletedCluster);
     ClusterList::iterator iterW = m_clusterListW.find(pDeletedCluster);
 
-    if ((m_clusterListU.end() == iterU) && (m_clusterListV.end() == iterV) && (m_clusterListW.end() == iterW))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
     if (m_clusterListU.end() != iterU)
         m_clusterListU.erase(iterU);
 

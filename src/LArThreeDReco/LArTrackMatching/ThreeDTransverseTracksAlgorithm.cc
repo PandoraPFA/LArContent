@@ -59,10 +59,9 @@ void ThreeDTransverseTracksAlgorithm::UpdateUponDeletion(Cluster *const pDeleted
 {
     TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pDeletedCluster);
 
-    if (m_slidingFitResultMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    if (m_slidingFitResultMap.end() != iter)
+        m_slidingFitResultMap.erase(iter);
 
-    m_slidingFitResultMap.erase(iter);
     ThreeDBaseAlgorithm::UpdateUponDeletion(pDeletedCluster);
 }
 
@@ -190,7 +189,9 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const TwoDSlidingFitResu
 
         if (previousDirection == currentDirection)
         {
-            if (++nSustainedSteps > 10)
+            ++nSustainedSteps;
+
+            if (2 * nSustainedSteps > m_slidingFitWindow)
             {
                 sustainedDirection = currentDirection;
                 sustainedDirectionEndIter = iter;
@@ -287,23 +288,31 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const
+TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor) const
 {
-    // TODO - try to work with tensor that a) is const and b) contains only the non-zero entries
-    const unsigned int maxIndexU(fitSegmentTensor.size());
-    const unsigned int maxIndexV(fitSegmentTensor[0].size());
-    const unsigned int maxIndexW(fitSegmentTensor[0][0].size());
-
-    if ((0 == maxIndexU) || (0 == maxIndexV) || (0 == maxIndexW))
+    if (fitSegmentTensor.empty())
         return TransverseOverlapResult();
 
-    FitSegmentTensor fitSegmentSumTensor;
-
-    for (unsigned int indexU = 0; indexU < maxIndexU; ++indexU)
+    unsigned int maxIndexU(0), maxIndexV(0), maxIndexW(0);
+    for (FitSegmentTensor::const_iterator tIter = fitSegmentTensor.begin(), tIterEnd = fitSegmentTensor.end(); tIter != tIterEnd; ++tIter)
     {
-        for (unsigned int indexV = 0; indexV < maxIndexV; ++indexV)
+        maxIndexU = std::max(tIter->first, maxIndexU);
+
+        for (FitSegmentMatrix::const_iterator mIter = tIter->second.begin(), mIterEnd = tIter->second.end(); mIter != mIterEnd; ++mIter)
         {
-            for (unsigned int indexW = 0; indexW < maxIndexW; ++indexW)
+            maxIndexV = std::max(mIter->first, maxIndexV);
+
+            for (FitSegmentToOverlapResultMap::const_iterator rIter = mIter->second.begin(), rIterEnd = mIter->second.end(); rIter != rIterEnd; ++rIter)
+                maxIndexW = std::max(rIter->first, maxIndexW);
+        }
+    }
+
+    FitSegmentTensor fitSegmentSumTensor;
+    for (unsigned int indexU = 0; indexU <= maxIndexU; ++indexU)
+    {
+        for (unsigned int indexV = 0; indexV <= maxIndexV; ++indexV)
+        {
+            for (unsigned int indexW = 0; indexW <= maxIndexW; ++indexW)
             {
                 TransverseOverlapResultVector transverseOverlapResultVector;
                 this->GetPreviousOverlapResults(indexU, indexV, indexW, fitSegmentSumTensor, transverseOverlapResultVector);
@@ -311,21 +320,24 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(Fi
                 TransverseOverlapResultVector::const_iterator maxElement = std::max_element(transverseOverlapResultVector.begin(), transverseOverlapResultVector.end());
                 TransverseOverlapResult maxTransverseOverlapResult((transverseOverlapResultVector.end() != maxElement) ? *maxElement : TransverseOverlapResult());
 
-                if (!fitSegmentTensor[indexU][indexV][indexW].IsInitialized() && !maxTransverseOverlapResult.IsInitialized())
+                TransverseOverlapResult thisOverlapResult;
+                if (fitSegmentTensor.count(indexU) && (fitSegmentTensor.find(indexU))->second.count(indexV) && ((fitSegmentTensor.find(indexU))->second.find(indexV))->second.count(indexW))
+                    thisOverlapResult = (((fitSegmentTensor.find(indexU))->second.find(indexV))->second.find(indexW))->second;
+
+                if (!thisOverlapResult.IsInitialized() && !maxTransverseOverlapResult.IsInitialized())
                     continue;
 
-                fitSegmentSumTensor[indexU][indexV][indexW] = maxTransverseOverlapResult + fitSegmentTensor[indexU][indexV][indexW];
+                fitSegmentSumTensor[indexU][indexV][indexW] = thisOverlapResult + maxTransverseOverlapResult;
             }
         }
     }
 
     TransverseOverlapResult bestTransverseOverlapResult;
-
-    for (unsigned int indexU = 0; indexU < maxIndexU; ++indexU)
+    for (unsigned int indexU = 0; indexU <= maxIndexU; ++indexU)
     {
-        for (unsigned int indexV = 0; indexV < maxIndexV; ++indexV)
+        for (unsigned int indexV = 0; indexV <= maxIndexV; ++indexV)
         {
-            for (unsigned int indexW = 0; indexW < maxIndexW; ++indexW)
+            for (unsigned int indexW = 0; indexW <= maxIndexW; ++indexW)
             {
                 const TransverseOverlapResult &transverseOverlapResult(fitSegmentSumTensor[indexU][indexV][indexW]);
 
@@ -358,7 +370,11 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
         const unsigned int newIndexU(decrementU ? indexU - 1 : indexU);
         const unsigned int newIndexV(decrementV ? indexV - 1 : indexV);
         const unsigned int newIndexW(decrementW ? indexW - 1 : indexW);
-        transverseOverlapResultVector.push_back(fitSegmentSumTensor[newIndexU][newIndexV][newIndexW]);
+
+        const TransverseOverlapResult &transverseOverlapResult(fitSegmentSumTensor[newIndexU][newIndexV][newIndexW]);
+
+        if (transverseOverlapResult.IsInitialized())
+            transverseOverlapResultVector.push_back(transverseOverlapResult);
     }
 
     if (transverseOverlapResultVector.empty())
