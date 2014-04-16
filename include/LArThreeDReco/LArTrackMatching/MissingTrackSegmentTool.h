@@ -164,17 +164,6 @@ private:
     bool PassesSamplingCuts(const SegmentOverlap &segmentOverlap) const;
 
     /**
-     *  @brief  Whether the pointing information is consistent for the short cluster in the tensor and the new cluster, picked-up
-     *          via sampling of the two long clusters in the tensor
-     * 
-     *  @param  pClusterA the address of cluster A
-     *  @param  pClusterB the address of cluster B
-     * 
-     *  @return whether the directions are consistent
-     */
-    bool AreDirectionsConsistent(pandora::Cluster *const pClusterA, pandora::Cluster *const pClusterB) const;
-
-    /**
      *  @brief  Whether the cluster could be merged with the candidate particle
      * 
      *  @param  pCluster address of the cluster
@@ -189,9 +178,10 @@ private:
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
-    float           m_minXOverlapFraction;              ///< The min x overlap fraction (between long clusters and short cluster vs. shared overlap)
     unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
-    float           m_maxLongClusterEndXSeparation;     ///< The max x separation between ends of the pair of long clusters
+
+    float           m_minInitialXOverlapFraction;       ///< The min x overlap fraction (between long clusters and short cluster vs. shared overlap)
+    float           m_minFinalXOverlapFraction;         ///< The min x overlap fraction between extended short cluster and the long clusters
 
     unsigned int    m_minCaloHitsInCandidateCluster;    ///< The min no. of calo hits in a candidate cluster, for matching with long clusters
     float           m_pseudoChi2Cut;                    ///< The pseudo chi2 cut to determine whether a sampling point is matched
