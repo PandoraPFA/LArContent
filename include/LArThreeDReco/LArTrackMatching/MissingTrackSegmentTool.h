@@ -68,6 +68,8 @@ private:
         unsigned int        m_nSamplingPoints;          ///< The number of sampling points
         unsigned int        m_nMatchedSamplingPoints;   ///< The number of matched sampling points
         float               m_pseudoChi2Sum;            ///< The pseudo chi2 sum
+        float               m_matchedSamplingMinX;      ///< The min matched sampling point x coordinate
+        float               m_matchedSamplingMaxX;      ///< The max matched sampling point x coordinate
     };
 
     bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
@@ -113,11 +115,9 @@ private:
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  particle the particle
-     *  @param  usedClusters the list of used clusters
      *  @param  candidateClusters to receive the list of candidate clusters
      */
-    void GetCandidateClusters(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, const pandora::ClusterList &usedClusters,
-        pandora::ClusterList &candidateClusters) const;
+    void GetCandidateClusters(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, pandora::ClusterList &candidateClusters) const;
 
     /**
      *  @brief  Get a sliding fit result map for the list of candidate clusters
@@ -155,6 +155,15 @@ private:
         pandora::ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const;
 
     /**
+     *  @brief  Whether the segment overlap object passes cuts on matched sampling points, etc.
+     * 
+     *  @param  segmentOverlap the segment overlap
+     * 
+     *  @return boolean
+     */
+    bool PassesSamplingCuts(const SegmentOverlap &segmentOverlap) const;
+
+    /**
      *  @brief  Whether the pointing information is consistent for the short cluster in the tensor and the new cluster, picked-up
      *          via sampling of the two long clusters in the tensor
      * 
@@ -165,10 +174,24 @@ private:
      */
     bool AreDirectionsConsistent(pandora::Cluster *const pClusterA, pandora::Cluster *const pClusterB) const;
 
+    /**
+     *  @brief  Whether the cluster could be merged with the candidate particle
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  particle the particle
+     *  @param  segmentOverlap the segment overlap
+     *  @param  slidingFitResultMap the sliding fit result map
+     * 
+     *  @return boolean
+     */
+    bool IsPossibleMerge(pandora::Cluster *const pCluster, const Particle &particle, const SegmentOverlap &segmentOverlap,
+        const SlidingFitResultMap &slidingFitResultMap) const;
+
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (between long clusters and short cluster vs. shared overlap)
     unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
+    float           m_maxLongClusterEndXSeparation;     ///< The max x separation between ends of the pair of long clusters
 
     unsigned int    m_minCaloHitsInCandidateCluster;    ///< The min no. of calo hits in a candidate cluster, for matching with long clusters
     float           m_pseudoChi2Cut;                    ///< The pseudo chi2 cut to determine whether a sampling point is matched
@@ -196,7 +219,9 @@ inline pandora::AlgorithmTool *MissingTrackSegmentTool::Factory::CreateAlgorithm
 inline MissingTrackSegmentTool::SegmentOverlap::SegmentOverlap() :
     m_nSamplingPoints(0),
     m_nMatchedSamplingPoints(0),
-    m_pseudoChi2Sum(0.f)
+    m_pseudoChi2Sum(0.f),
+    m_matchedSamplingMinX(std::numeric_limits<float>::max()),
+    m_matchedSamplingMaxX(-std::numeric_limits<float>::max())
 {
 }
 

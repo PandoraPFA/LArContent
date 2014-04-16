@@ -205,7 +205,7 @@ private:
      * 
      *  @return the best overlap result
      */
-    TransverseOverlapResult GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const;
+    TransverseOverlapResult GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor) const;
 
     /**
      *  @brief  Get track overlap results for possible connected segments

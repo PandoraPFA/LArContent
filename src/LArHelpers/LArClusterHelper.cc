@@ -25,16 +25,11 @@ namespace lar
 
 void LArClusterHelper::LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
-    // TODO: This breaks when the cluster trajectory lies on a single layer
+    // TODO: Look into more sophisticated treatment for sliding linear fit; lose layer structure and slide over pathlength-ordered hits
+    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, innerCoordinate, outerCoordinate);
 
-    ClusterHelper::ClusterFitResult clusterFitResult;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitFullCluster(pCluster, clusterFitResult));
-
-    const CartesianVector axisDirection(clusterFitResult.GetDirection());
-    const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
-    const CartesianVector axisIntercept(clusterFitResult.GetIntercept() + axisDirection * (axisDirection.GetDotProduct(innerCentroid - clusterFitResult.GetIntercept())));
-
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, layerFitHalfWindow, axisIntercept, axisDirection, twoDSlidingFitResult);
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, layerFitHalfWindow, innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector(), twoDSlidingFitResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
