@@ -42,11 +42,11 @@ StatusCode ClusterSplittingAlgorithm::Run()
 StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, ClusterSplittingList &clusterSplittingList) const
 {
     // Split cluster into two CaloHit lists
-    CaloHitList firstCaloHitList, secondCaloHitList;
-    if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, firstCaloHitList, secondCaloHitList))
+    PandoraContentApi::Cluster::Parameters firstParameters, secondParameters;
+    if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, firstParameters.m_caloHitList, secondParameters.m_caloHitList))
         return STATUS_CODE_NOT_FOUND;
 
-    if (firstCaloHitList.empty() || secondCaloHitList.empty())
+    if (firstParameters.m_caloHitList.empty() || secondParameters.m_caloHitList.empty())
         return STATUS_CODE_NOT_ALLOWED;
 
     // Begin cluster fragmentation operations
@@ -59,9 +59,8 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, Clus
 
     // Create new clusters
     Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &firstCaloHitList, pFirstCluster));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &secondCaloHitList, pSecondCluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, firstParameters, pFirstCluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, secondParameters, pSecondCluster));
 
     clusterSplittingList.push_back(pFirstCluster);
     clusterSplittingList.push_back(pSecondCluster);
