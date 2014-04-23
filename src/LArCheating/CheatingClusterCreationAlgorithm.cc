@@ -77,13 +77,15 @@ void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListM
          iter != iterEnd; ++iter)
     {
         const MCParticle *pMCParticle = iter->first;
-        CaloHitList caloHitListCopy = iter->second;
+        const CaloHitList &caloHitList = iter->second;
 
-        if (caloHitListCopy.empty())
+        if (caloHitList.empty())
             continue;
 
         Cluster *pCluster = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &caloHitListCopy, pCluster));
+        PandoraContentApi::Cluster::Parameters parameters;
+        parameters.m_caloHitList = caloHitList;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
 
         switch (pMCParticle->GetParticleId())
         {

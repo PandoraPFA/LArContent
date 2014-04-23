@@ -28,6 +28,7 @@
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
+#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
@@ -87,6 +88,7 @@ public:
         d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
         d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
+        d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \

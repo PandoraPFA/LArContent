@@ -243,7 +243,9 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::BuildNewClusters(const CaloHitL
         this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
 
         Cluster *pCluster = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pSeedCaloHit, pCluster));
+        PandoraContentApi::Cluster::Parameters parameters;
+        parameters.m_caloHitList.insert(pSeedCaloHit);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
         vetoList.insert(pSeedCaloHit);
 
         for (CaloHitList::const_iterator iterJ = mergeList.begin(), iterEndJ = mergeList.end(); iterJ != iterEndJ; ++iterJ)

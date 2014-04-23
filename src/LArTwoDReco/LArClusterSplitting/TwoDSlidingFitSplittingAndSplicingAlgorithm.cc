@@ -387,16 +387,16 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(Cluster *c
         clusterListToSaveName));
 
     // Entire replacement cluster goes into new principal cluster
-    CaloHitList principalCaloHitList;
-    pReplacementCluster->GetOrderedCaloHitList().GetCaloHitList(principalCaloHitList);
+    PandoraContentApi::Cluster::Parameters principalParameters;
+    pReplacementCluster->GetOrderedCaloHitList().GetCaloHitList(principalParameters.m_caloHitList);
 
     // Distribute hits in branch cluster between new principal and residual clusters
-    CaloHitList residualCaloHitList;
-    this->SplitBranchCluster(pBranchCluster, branchSplitPosition, branchSplitDirection, principalCaloHitList, residualCaloHitList);
+    PandoraContentApi::Cluster::Parameters residualParameters;
+    this->SplitBranchCluster(pBranchCluster, branchSplitPosition, branchSplitDirection, principalParameters.m_caloHitList, residualParameters.m_caloHitList);
 
     Cluster *pPrincipalCluster(NULL), *pResidualCluster(NULL);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &principalCaloHitList, pPrincipalCluster));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, &residualCaloHitList, pResidualCluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, principalParameters, pPrincipalCluster));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, residualParameters, pResidualCluster));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
 
     return STATUS_CODE_SUCCESS;
