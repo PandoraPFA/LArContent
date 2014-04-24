@@ -55,6 +55,18 @@ private:
         pandora::CaloHitList &newThreeDHits, pandora::CaloHitList &omittedTwoDHits) const;
 
     /**
+     *  @brief  Get the three dimensional position using a provided calo hit and sliding linear fits in the other two views
+     * 
+     *  @param  pCaloHit address of the calo hit
+     *  @param  fitResult1 the first sliding fit result
+     *  @param  fitResult2 the second sliding fit result
+     *  @param  position3D to receive the three dimensional position
+     *  @param  chiSquared to receive the chi squared value
+     */
+    void GetPosition3D(const pandora::CaloHit *const pCaloHit, const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+        pandora::CartesianVector &position3D, float &chiSquared) const;
+
+    /**
      *  @brief  Create a new three dimensional cluster, using a list of provided three dimensional hits
      * 
      *  @param  caloHitList the list of three dimensional hits
@@ -76,6 +88,8 @@ private:
     std::string     m_outputClusterListName;    ///< The name of the output cluster list
 
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
+    bool            m_useAveragePositions;      ///< Whether to use average positions when calculating the three dimensional position
+    float           m_chiSquaredCut;            ///< The chi squared cut (accept only values below the cut value)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
