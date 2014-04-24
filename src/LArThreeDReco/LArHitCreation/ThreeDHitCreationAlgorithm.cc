@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArCalculators/LArTransformationCalculator.h"
+
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArThreeDHelper.h"
@@ -106,18 +108,13 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHits(const CaloHitList &inputTwoDHi
         try
         {
             CaloHit *pCaloHit(*iter);
-            const float x(pCaloHit->GetPositionVector().GetX());
 
-            CartesianVector fitVector1(0.f, 0.f, 0.f), fitVector2(0.f, 0.f, 0.f);
-            fitResult1.GetGlobalFitPosition(x, true, fitVector1);
-            fitResult2.GetGlobalFitPosition(x, true, fitVector2);
-
-            const HitType hitType1(LArThreeDHelper::GetClusterHitType(fitResult1.GetCluster()));
-            const HitType hitType2(LArThreeDHelper::GetClusterHitType(fitResult2.GetCluster()));
-
-            float chi2(std::numeric_limits<float>::max());
             CartesianVector position3D(0.f, 0.f, 0.f);
-            LArGeometryHelper::MergeThreePositions3D(pCaloHit->GetHitType(), hitType1, hitType2, pCaloHit->GetPositionVector(), fitVector1, fitVector2, position3D, chi2);
+            float chiSquared(std::numeric_limits<float>::max());
+            this->GetPosition3D(pCaloHit, fitResult1, fitResult2, position3D, chiSquared);
+
+            if (chiSquared > m_chiSquaredCut)
+                throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
             CaloHit *pCaloHit3D(NULL);
             PandoraContentApi::CaloHit::Parameters parameters;
@@ -125,7 +122,7 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHits(const CaloHitList &inputTwoDHi
             parameters.m_hitType = TPC_3D;
             parameters.m_pParentAddress = static_cast<void*>(pCaloHit);
 
-            // TODO Check these parameters, especially new cell dimensions; check chi2?
+            // TODO Check these parameters, especially new cell dimensions
             parameters.m_cellThickness = pCaloHit->GetCellThickness();
             parameters.m_cellSizeU = pCaloHit->GetCellLengthScale();
             parameters.m_cellSizeV = pCaloHit->GetCellLengthScale();
@@ -155,6 +152,37 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHits(const CaloHitList &inputTwoDHi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDHitCreationAlgorithm::GetPosition3D(const CaloHit *const pCaloHit, const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+    CartesianVector &position3D, float &chiSquared) const
+{
+    const CartesianVector &position(pCaloHit->GetPositionVector());
+    CartesianVector fitPosition1(0.f, 0.f, 0.f), fitPosition2(0.f, 0.f, 0.f);
+    fitResult1.GetGlobalFitPosition(position.GetX(), true, fitPosition1);
+    fitResult2.GetGlobalFitPosition(position.GetX(), true, fitPosition2);
+
+    const HitType hitType(pCaloHit->GetHitType());
+    const HitType hitType1(LArThreeDHelper::GetClusterHitType(fitResult1.GetCluster()));
+    const HitType hitType2(LArThreeDHelper::GetClusterHitType(fitResult2.GetCluster()));
+
+    CartesianVector averagePositionU(0.f, 0.f, 0.f), averagePositionV(0.f, 0.f, 0.f), averagePositionW(0.f, 0.f, 0.f);
+    LArGeometryHelper::MergeThreePositions(hitType, hitType1, hitType2, position, fitPosition1, fitPosition2, averagePositionU, averagePositionV, averagePositionW, chiSquared);
+
+    if (m_useAveragePositions)
+    {
+        const float u(averagePositionU.GetZ());
+        const float v(averagePositionV.GetZ());
+        position3D.SetValues(averagePositionW.GetX(), LArGeometryHelper::GetLArTransformationCalculator()->UVtoY(u, v), LArGeometryHelper::GetLArTransformationCalculator()->UVtoZ(u ,v));
+    }
+    else
+    {
+        const float u((TPC_VIEW_U == hitType) ? position.GetZ() : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+        const float v((TPC_VIEW_V == hitType) ? position.GetZ() : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+        position3D.SetValues(position.GetX(), LArGeometryHelper::GetLArTransformationCalculator()->UVtoY(u, v), LArGeometryHelper::GetLArTransformationCalculator()->UVtoZ(u ,v));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitList &caloHitList, Cluster *&pCluster) const
 {
     if (caloHitList.empty())
@@ -175,7 +203,7 @@ void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitList &caloHitL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::CreateExtrapolatedHits(const CaloHitList &ommittedHits, Cluster *pCluster, CaloHitList &extrapolatedHits) const
+void ThreeDHitCreationAlgorithm::CreateExtrapolatedHits(const CaloHitList &omittedHits, Cluster *pCluster, CaloHitList &extrapolatedHits) const
 {
     // TODO
 }
@@ -191,6 +219,14 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
+
+    m_useAveragePositions = true;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseAveragePositions", m_useAveragePositions));
+
+    m_chiSquaredCut = 5.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ChiSquaredCut", m_chiSquaredCut));
 
     return STATUS_CODE_SUCCESS;
 }
