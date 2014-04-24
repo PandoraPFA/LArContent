@@ -100,16 +100,23 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const IdToClusterListMap &idToClus
 
         MCParticle *pMCParticle = mcIter->second;
 
-        PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-        pfoParameters.m_particleId = pMCParticle->GetParticleId();
-        pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-        pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-        pfoParameters.m_energy = pMCParticle->GetEnergy();
-        pfoParameters.m_momentum = pMCParticle->GetMomentum();
-        pfoParameters.m_clusterList.insert(clusterList.begin(), clusterList.end());
+        try
+        {
+            PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
+            pfoParameters.m_particleId = pMCParticle->GetParticleId();
+            pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+            pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
+            pfoParameters.m_energy = pMCParticle->GetEnergy();
+            pfoParameters.m_momentum = pMCParticle->GetMomentum();
+            pfoParameters.m_clusterList.insert(clusterList.begin(), clusterList.end());
 
-        ParticleFlowObject *pPfo(NULL);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
+            ParticleFlowObject *pPfo(NULL);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
+        }
+        catch (StatusCodeException &)
+        {
+            std::cout << "CheatingPfoCreationAlgorithm: Could not create PFO for MCParticle with pdg code " << pMCParticle->GetParticleId() << std::endl;
+        }
     }
 
     if (!pPfoList->empty())

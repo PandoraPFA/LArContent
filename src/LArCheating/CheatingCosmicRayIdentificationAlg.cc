@@ -49,6 +49,7 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
             catch (StatusCodeException &)
             {
                 isCosmicRay = false;
+                break;
             }
         }
 
