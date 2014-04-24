@@ -39,6 +39,9 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
 
             if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             {
+                if (TPC_3D == hitType)
+                    continue;
+
                 std::cout << "CheatingCosmicRayShowerMatchingAlg: Encountered unexpected hit type " << std::endl;
                 return STATUS_CODE_INVALID_PARAMETER;
             }

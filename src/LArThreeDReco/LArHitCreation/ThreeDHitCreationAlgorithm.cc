@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
@@ -55,10 +56,14 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
             CaloHitList extrapolatedHits;
             this->CreateExtrapolatedHits(ommittedTwoDHits, pCluster3D, extrapolatedHits);
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster3D, &extrapolatedHits));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster3D, &extrapolatedHits));
+
+            newThreeDHits.insert(extrapolatedHits.begin(), extrapolatedHits.end());
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, newThreeDHits, m_outputCaloHitListName));
         }
-        catch (StatusCodeException &)
+        catch (StatusCodeException &statusCodeException)
         {
+            std::cout << "ThreeDHitCreationAlgorithm: Unable to create 3D hits for a given cluster " << std::endl;
         }
     }
 
@@ -80,7 +85,7 @@ void ThreeDHitCreationAlgorithm::GetClusters(const ParticleFlowObject *const pPf
         Cluster *pCluster(*iter);
         const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
 
-        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V == hitType) && (TPC_VIEW_W != hitType))
+        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         Cluster *&pTargetCluster((TPC_VIEW_U == hitType) ? pClusterU : (TPC_VIEW_V == hitType) ? pClusterV : pClusterW);
@@ -96,21 +101,83 @@ void ThreeDHitCreationAlgorithm::GetClusters(const ParticleFlowObject *const pPf
 void ThreeDHitCreationAlgorithm::CreateThreeDHits(const CaloHitList &inputTwoDHits, const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     CaloHitList &newThreeDHits, CaloHitList &ommittedTwoDHits) const
 {
-    
+    for (CaloHitList::const_iterator iter = inputTwoDHits.begin(), iterEnd = inputTwoDHits.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            CaloHit *pCaloHit(*iter);
+            const float x(pCaloHit->GetPositionVector().GetX());
+
+            CartesianVector fitVector1(0.f, 0.f, 0.f), fitVector2(0.f, 0.f, 0.f);
+            fitResult1.GetGlobalFitPosition(x, true, fitVector1);
+            fitResult2.GetGlobalFitPosition(x, true, fitVector2);
+
+            const HitType hitType1(LArThreeDHelper::GetClusterHitType(fitResult1.GetCluster()));
+            const HitType hitType2(LArThreeDHelper::GetClusterHitType(fitResult2.GetCluster()));
+
+            float chi2(std::numeric_limits<float>::max());
+            CartesianVector position3D(0.f, 0.f, 0.f);
+            LArGeometryHelper::MergeThreePositions3D(pCaloHit->GetHitType(), hitType1, hitType2, pCaloHit->GetPositionVector(), fitVector1, fitVector2, position3D, chi2);
+
+            CaloHit *pCaloHit3D(NULL);
+            PandoraContentApi::CaloHit::Parameters parameters;
+            parameters.m_positionVector = position3D;
+            parameters.m_hitType = TPC_3D;
+            parameters.m_pParentAddress = static_cast<void*>(pCaloHit);
+
+            // TODO Check these parameters, especially new cell dimensions; check chi2?
+            parameters.m_cellThickness = pCaloHit->GetCellThickness();
+            parameters.m_cellSizeU = pCaloHit->GetCellLengthScale();
+            parameters.m_cellSizeV = pCaloHit->GetCellLengthScale();
+            parameters.m_cellNormalVector = pCaloHit->GetCellNormalVector();
+            parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
+            parameters.m_nCellRadiationLengths = pCaloHit->GetNCellRadiationLengths();
+            parameters.m_nCellInteractionLengths = pCaloHit->GetNCellInteractionLengths();
+            parameters.m_time = pCaloHit->GetTime();
+            parameters.m_inputEnergy = pCaloHit->GetInputEnergy();
+            parameters.m_mipEquivalentEnergy = pCaloHit->GetMipEquivalentEnergy();
+            parameters.m_electromagneticEnergy = pCaloHit->GetElectromagneticEnergy();
+            parameters.m_hadronicEnergy = pCaloHit->GetHadronicEnergy();
+            parameters.m_isDigital = pCaloHit->IsDigital();
+            parameters.m_detectorRegion = pCaloHit->GetDetectorRegion();
+            parameters.m_layer = pCaloHit->GetLayer();
+            parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pCaloHit3D));
+            newThreeDHits.insert(pCaloHit3D);
+        }
+        catch (StatusCodeException &)
+        {
+            ommittedTwoDHits.insert(*iter);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitList &caloHitList, Cluster *&pCluster) const
 {
-    
+    if (caloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    const ClusterList *pClusterList = NULL; std::string clusterListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, clusterListName));
+
+    PandoraContentApi::Cluster::Parameters parameters;
+    parameters.m_caloHitList = caloHitList;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
+
+    if (!pClusterList->empty())
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_outputClusterListName));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDHitCreationAlgorithm::CreateExtrapolatedHits(const CaloHitList &ommittedHits, Cluster *pCluster, CaloHitList &extrapolatedHits) const
 {
-    
+    // TODO
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
