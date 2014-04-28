@@ -88,7 +88,8 @@ private:
     std::string     m_outputClusterListName;    ///< The name of the output cluster list
 
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    bool            m_useAveragePositions;      ///< Whether to use average positions when calculating the three dimensional position
+    bool            m_useChiSquaredApproach;    ///< Whether to obtain y, z positions via chi2 approach, or projected position approach
+    float           m_sigmaFitMultiplier;       ///< The multiplier from sigma hit (i.e. sigma uvw from transformation calculator) to sigma fit
     float           m_chiSquaredCut;            ///< The chi squared cut (accept only values below the cut value)
 };
 
