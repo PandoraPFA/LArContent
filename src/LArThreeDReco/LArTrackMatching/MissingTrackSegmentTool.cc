@@ -345,12 +345,12 @@ MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     m_pShortCluster = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterU() : (TPC_VIEW_V == m_shortHitType) ? element.GetClusterV() : element.GetClusterW();
-    m_pCluster1 = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterV() : (TPC_VIEW_V == m_shortHitType) ? element.GetClusterU() : element.GetClusterU();
-    m_pCluster2 = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterW() : (TPC_VIEW_V == m_shortHitType) ? element.GetClusterW() : element.GetClusterV();
+    m_pCluster1 = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterV() : element.GetClusterU();
+    m_pCluster2 = (TPC_VIEW_W == m_shortHitType) ? element.GetClusterV() : element.GetClusterW();
     m_shortMinX = (TPC_VIEW_U == m_shortHitType) ? xOverlap.GetUMinX() : (TPC_VIEW_V == m_shortHitType) ? xOverlap.GetVMinX() : xOverlap.GetWMinX();
     m_shortMaxX = (TPC_VIEW_U == m_shortHitType) ? xOverlap.GetUMaxX() : (TPC_VIEW_V == m_shortHitType) ? xOverlap.GetVMaxX() : xOverlap.GetWMaxX();
-    m_longMinX = (TPC_VIEW_U == m_shortHitType) ? std::min(xOverlap.GetVMinX(), xOverlap.GetWMinX()) : (TPC_VIEW_V == m_shortHitType) ? std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX()) : std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX());
-    m_longMaxX = (TPC_VIEW_U == m_shortHitType) ? std::max(xOverlap.GetVMaxX(), xOverlap.GetWMaxX()) : (TPC_VIEW_V == m_shortHitType) ? std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX()) : std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX());
+    m_longMinX = (TPC_VIEW_U == m_shortHitType) ? std::min(xOverlap.GetVMinX(), xOverlap.GetWMinX()) : (TPC_VIEW_V == m_shortHitType) ? std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX()) : std::min(xOverlap.GetUMinX(), xOverlap.GetVMinX());
+    m_longMaxX = (TPC_VIEW_U == m_shortHitType) ? std::max(xOverlap.GetVMaxX(), xOverlap.GetWMaxX()) : (TPC_VIEW_V == m_shortHitType) ? std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX()) : std::max(xOverlap.GetUMaxX(), xOverlap.GetVMaxX());
 
     m_hitType1 = LArThreeDHelper::GetClusterHitType(m_pCluster1);
     m_hitType2 = LArThreeDHelper::GetClusterHitType(m_pCluster2);

@@ -91,10 +91,10 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
         if ((shortSpan1 / xOverlap.GetXOverlapSpan()) < m_minXOverlapFraction)
             continue;
 
-        if ((shortSpan2 / shortSpan1) < m_minXOverlapFraction)
+        if ((shortSpan1 / shortSpan2) < m_minXOverlapFraction)
             continue;
 
-        if ((shortSpan1 / longSpan) > 0.9f) // TODO
+        if ((shortSpan1 / longSpan) > m_minXOverlapFraction)
             continue;
 
         iteratorList.push_back(eIter);
@@ -106,11 +106,70 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
 bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element,
     ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
 {
-    // TODO Get split positions by looking for close end positions of short clusters and deciding they are suitably far away from ends of long cluster
+    const Particle particle(element);
+    const TwoDSlidingFitResult &longFitResult(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
+    const float longXSpan(particle.m_longMaxX - particle.m_longMinX);
 
-    return false;
+    if (longXSpan < std::numeric_limits<float>::epsilon())
+        return false;
+
+    bool passesChecks(false);
+
+    const float splitMinX(0.5f * (particle.m_short1MinX + particle.m_short2MinX));
+    const float shortDeltaMinX(std::fabs(particle.m_short1MinX - particle.m_short2MinX));
+    const float longDeltaMinX(splitMinX - particle.m_longMinX);
+
+    if (((shortDeltaMinX / longXSpan) < m_maxShortDeltaXFraction) && (shortDeltaMinX < m_maxAbsoluteShortDeltaX) &&
+        ((longDeltaMinX / longXSpan) > m_minLongDeltaXFraction) && (longDeltaMinX > m_minAbsoluteLongDeltaX))
+    {
+        CartesianVector splitPosition(0.f, 0.f, 0.f);
+        longFitResult.GetGlobalFitPosition(splitMinX, true, splitPosition);
+        splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
+        passesChecks = true;
+    }
+
+    const float splitMaxX(0.5f * (particle.m_short1MaxX + particle.m_short2MaxX));
+    const float shortDeltaMaxX(std::fabs(particle.m_short1MaxX - particle.m_short2MaxX));
+    const float longDeltaMaxX(particle.m_longMaxX - splitMaxX);
+
+    if (((shortDeltaMaxX / longXSpan) < m_maxShortDeltaXFraction) && (shortDeltaMaxX < m_maxAbsoluteShortDeltaX) &&
+        ((longDeltaMaxX / longXSpan) > m_minLongDeltaXFraction) && (longDeltaMaxX > m_minAbsoluteLongDeltaX))
+    {
+        CartesianVector splitPosition(0.f, 0.f, 0.f);
+        longFitResult.GetGlobalFitPosition(splitMaxX, true, splitPosition);
+        splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
+        passesChecks = true;
+    }
+
+    return passesChecks;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackSplittingTool::Particle::Particle(const TensorType::Element &element)
+{
+    const TransverseOverlapResult::XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
+
+    const HitType longHitType = ((xOverlap.GetXSpanU() > xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() > xOverlap.GetXSpanW())) ? TPC_VIEW_U :
+        ((xOverlap.GetXSpanV() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() > xOverlap.GetXSpanW())) ? TPC_VIEW_V :
+        ((xOverlap.GetXSpanW() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() > xOverlap.GetXSpanV())) ? TPC_VIEW_W : CUSTOM;
+
+    if (CUSTOM == longHitType)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    m_pLongCluster = (TPC_VIEW_U == longHitType) ? element.GetClusterU() : (TPC_VIEW_V == longHitType) ? element.GetClusterV() : element.GetClusterW();
+    m_pCluster1 = (TPC_VIEW_U == longHitType) ? element.GetClusterV() : element.GetClusterU();
+    m_pCluster2 = (TPC_VIEW_W == longHitType) ? element.GetClusterV() : element.GetClusterW();
+    m_longMinX = (TPC_VIEW_U == longHitType) ? xOverlap.GetUMinX() : (TPC_VIEW_V == longHitType) ? xOverlap.GetVMinX() : xOverlap.GetWMinX();
+    m_longMaxX = (TPC_VIEW_U == longHitType) ? xOverlap.GetUMaxX() : (TPC_VIEW_V == longHitType) ? xOverlap.GetVMaxX() : xOverlap.GetWMaxX();
+    m_short1MinX = (TPC_VIEW_U == longHitType) ? xOverlap.GetVMinX() : xOverlap.GetUMinX();
+    m_short1MaxX = (TPC_VIEW_U == longHitType) ? xOverlap.GetVMaxX() : xOverlap.GetUMaxX();
+    m_short2MinX = (TPC_VIEW_W == longHitType) ? xOverlap.GetVMinX() : xOverlap.GetWMinX();
+    m_short2MaxX = (TPC_VIEW_W == longHitType) ? xOverlap.GetVMaxX() : xOverlap.GetWMaxX();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
@@ -123,13 +182,29 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minXOverlapFraction = 0.75f;
+    m_minXOverlapFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
     m_minMatchedSamplingPointRatio = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
+
+    m_maxShortDeltaXFraction = 0.1f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxShortDeltaXFraction", m_maxShortDeltaXFraction));
+
+    m_maxAbsoluteShortDeltaX = 5.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxAbsoluteShortDeltaX", m_maxAbsoluteShortDeltaX));
+
+    m_minLongDeltaXFraction = 0.2f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinLongDeltaXFraction", m_minLongDeltaXFraction));
+
+    m_minAbsoluteLongDeltaX = 1.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinAbsoluteLongDeltaX", m_minAbsoluteLongDeltaX));
 
     return STATUS_CODE_SUCCESS;
 }
