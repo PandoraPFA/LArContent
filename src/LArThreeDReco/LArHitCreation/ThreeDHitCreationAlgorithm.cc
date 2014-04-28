@@ -164,20 +164,32 @@ void ThreeDHitCreationAlgorithm::GetPosition3D(const CaloHit *const pCaloHit, co
     const HitType hitType1(LArThreeDHelper::GetClusterHitType(fitResult1.GetCluster()));
     const HitType hitType2(LArThreeDHelper::GetClusterHitType(fitResult2.GetCluster()));
 
-    CartesianVector averagePositionU(0.f, 0.f, 0.f), averagePositionV(0.f, 0.f, 0.f), averagePositionW(0.f, 0.f, 0.f);
-    LArGeometryHelper::MergeThreePositions(hitType, hitType1, hitType2, position, fitPosition1, fitPosition2, averagePositionU, averagePositionV, averagePositionW, chiSquared);
+    const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
+    const float sigmaFit(m_sigmaFitMultiplier * sigmaHit);
 
-    if (m_useAveragePositions)
-    {
-        const float u(averagePositionU.GetZ());
-        const float v(averagePositionV.GetZ());
-        position3D.SetValues(averagePositionW.GetX(), LArGeometryHelper::GetLArTransformationCalculator()->UVtoY(u, v), LArGeometryHelper::GetLArTransformationCalculator()->UVtoZ(u ,v));
-    }
-    else
+    if (m_useChiSquaredApproach)
     {
         const float u((TPC_VIEW_U == hitType) ? position.GetZ() : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
         const float v((TPC_VIEW_V == hitType) ? position.GetZ() : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-        position3D.SetValues(position.GetX(), LArGeometryHelper::GetLArTransformationCalculator()->UVtoY(u, v), LArGeometryHelper::GetLArTransformationCalculator()->UVtoZ(u ,v));
+        const float w((TPC_VIEW_W == hitType) ? position.GetZ() : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+
+        const float sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
+        const float sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);
+        const float sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
+
+        float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
+        LArGeometryHelper::GetLArTransformationCalculator()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chiSquared);
+        position3D.SetValues(position.GetX(), bestY, bestZ);
+    }
+    else
+    {
+        const LArTransformationCalculator::PositionAndType hitPositionAndType(position.GetZ(), hitType);
+        const LArTransformationCalculator::PositionAndType fitPositionAndType1(fitPosition1.GetZ(), hitType1);
+        const LArTransformationCalculator::PositionAndType fitPositionAndType2(fitPosition2.GetZ(), hitType2);
+
+        float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
+        LArGeometryHelper::GetLArTransformationCalculator()->GetProjectedYZ(hitPositionAndType, fitPositionAndType1, fitPositionAndType2, sigmaHit, sigmaFit, bestY, bestZ, chiSquared);
+        position3D.SetValues(position.GetX(), bestY, bestZ);
     }
 }
 
@@ -220,9 +232,13 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 
-    m_useAveragePositions = true;
+    m_useChiSquaredApproach = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseAveragePositions", m_useAveragePositions));
+        "UseChiSquaredApproach", m_useChiSquaredApproach));
+
+    m_sigmaFitMultiplier = 1.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SigmaFitMultiplier", m_sigmaFitMultiplier));
 
     m_chiSquaredCut = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
