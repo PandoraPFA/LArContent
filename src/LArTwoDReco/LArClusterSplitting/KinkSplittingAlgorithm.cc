@@ -52,8 +52,8 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitRes
             slidingFitResult.GetGlobalFitDirection(rL2, secondDirection);
 
             const float cosTheta(firstDirection.GetDotProduct(secondDirection));
-            const float rms1(slidingFitResult.GetGlobalFitRms(rL1));
-            const float rms2(slidingFitResult.GetGlobalFitRms(rL2));
+            const float rms1(slidingFitResult.GetFitRms(rL1));
+            const float rms2(slidingFitResult.GetFitRms(rL2));
             const float rms(std::max(rms1, rms2));
 
             float rmsCut(m_maxScatterRms);

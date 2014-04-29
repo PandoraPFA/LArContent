@@ -68,7 +68,7 @@ public:
          */
         double GetRms() const;
 
-        private:
+    private:
         double                  m_l;                            ///< The l coordinate
         double                  m_fitT;                         ///< The fitted t coordinate
         double                  m_gradient;                     ///< The fitted gradient dt/dl
@@ -287,14 +287,14 @@ public:
      * 
      *  @return the rms
      */
-    float GetGlobalMinLayerRms() const;
+    float GetMinLayerRms() const;
 
     /**
      *  @brief  Get rms at maximum layer
      * 
      *  @return the rms
      */
-    float GetGlobalMaxLayerRms() const;
+    float GetMaxLayerRms() const;
 
     /**
      *  @brief  Get global fit position for a given longitudinal coordinate
@@ -313,13 +313,13 @@ public:
     void GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
 
     /**
-     *  @brief  Get global fit rms for a given longitudinal coordinate
+     *  @brief  Get fit rms for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
      *  
-     *  @return the global fit rms
+     *  @return the fit rms
      */ 
-    float GetGlobalFitRms(const float rL) const;
+    float GetFitRms(const float rL) const;
 
     /**
      *  @brief  Get global fit position for a given x or z coordinate
@@ -395,7 +395,7 @@ private:
      *  @param  firstWeight the weight assigned to the layer above the input coordinate
      *  @param  rms the interpolated rms
      */
-    void GetGlobalFitInterpolatedRms(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter,
+    void GetFitInterpolatedRms(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter,
         const float &firstWeight, const float &secondWeight, float &rms) const;
 
     /**
