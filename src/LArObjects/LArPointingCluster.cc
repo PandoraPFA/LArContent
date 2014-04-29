@@ -40,23 +40,23 @@ LArPointingCluster::LArPointingCluster(pandora::Cluster *const pCluster) :
     if (innerLayer == minLayer)
     {
         m_innerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
-            slidingFitResult.GetGlobalMinLayerRms(), true);
+            slidingFitResult.GetMinLayerRms(), true);
     }
     else
     {
         m_innerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
-            slidingFitResult.GetGlobalMaxLayerRms(), true);
+            slidingFitResult.GetMaxLayerRms(), true);
     }
 
     if (outerLayer == minLayer)
     {
         m_outerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
-            slidingFitResult.GetGlobalMinLayerRms(), false);
+            slidingFitResult.GetMinLayerRms(), false);
     }
     else
     {
         m_outerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
-            slidingFitResult.GetGlobalMaxLayerRms(), false);
+            slidingFitResult.GetMaxLayerRms(), false);
     }
 }
 

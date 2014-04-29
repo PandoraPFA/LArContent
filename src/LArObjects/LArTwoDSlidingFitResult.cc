@@ -166,7 +166,7 @@ CartesianVector TwoDSlidingFitResult::GetGlobalMaxLayerDirection() const
  
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TwoDSlidingFitResult::GetGlobalMinLayerRms() const
+float TwoDSlidingFitResult::GetMinLayerRms() const
 {
     if (m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -177,7 +177,7 @@ float TwoDSlidingFitResult::GetGlobalMinLayerRms() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TwoDSlidingFitResult::GetGlobalMaxLayerRms() const
+float TwoDSlidingFitResult::GetMaxLayerRms() const
 {
     if (m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -210,14 +210,14 @@ void TwoDSlidingFitResult::GetGlobalFitDirection(const float rL, CartesianVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TwoDSlidingFitResult::GetGlobalFitRms(const float rL) const
+float TwoDSlidingFitResult::GetFitRms(const float rL) const
 {
     float rms(std::numeric_limits<float>::max());
     float firstWeight(0.f), secondWeight(0.f);
     LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
     this->GetSurroundingLayerIterators(rL, firstLayerIter, secondLayerIter);
     this->GetLayerInterpolationWeights(rL, firstLayerIter, secondLayerIter, firstWeight, secondWeight);
-    this->GetGlobalFitInterpolatedRms(firstLayerIter, secondLayerIter, firstWeight, secondWeight, rms);
+    this->GetFitInterpolatedRms(firstLayerIter, secondLayerIter, firstWeight, secondWeight, rms);
     return rms;
 }
 
@@ -308,7 +308,7 @@ void TwoDSlidingFitResult::GetGlobalFitInterpolatedDirection(const LayerFitResul
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::GetGlobalFitInterpolatedRms(const LayerFitResultMap::const_iterator &firstLayerIter,
+void TwoDSlidingFitResult::GetFitInterpolatedRms(const LayerFitResultMap::const_iterator &firstLayerIter,
     const LayerFitResultMap::const_iterator &secondLayerIter, const float &firstWeight, const float &secondWeight, float &rms) const
 {   
     if (m_layerFitResultMap.end() == firstLayerIter || m_layerFitResultMap.end() == secondLayerIter)
@@ -344,7 +344,7 @@ void TwoDSlidingFitResult::GetSurroundingLayerIterators(const float rL, LayerFit
 
     // Bail out if the layer is out of range
     if ((startLayer < minLayer) || (startLayer >= maxLayer))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);  
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     // First layer iterator
     firstLayerIter = m_layerFitResultMap.end();
@@ -458,7 +458,7 @@ void TwoDSlidingFitResult::GetLayerInterpolationWeights(const float rL, const La
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     
     const float deltaL(rL - firstLayerIter->second.GetL());
-    const float deltaLLayers(secondLayerIter->second.GetL() - firstLayerIter->second.GetL());    
+    const float deltaLLayers(secondLayerIter->second.GetL() - firstLayerIter->second.GetL());
 
     if (std::fabs(deltaLLayers) > std::numeric_limits<float>::epsilon())
     {
