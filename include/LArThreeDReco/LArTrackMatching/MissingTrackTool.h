@@ -31,6 +31,15 @@ public:
 private:
     bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    /**
+     *  @brief  Find missing tracks, due to merging of multiple particle deposits into single hits during hit creation
+     * 
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  overlapTensor the overlap tensor
+     *  @param  protoParticleVector to receive the list of proto particles
+     */
+    void FindMissingTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

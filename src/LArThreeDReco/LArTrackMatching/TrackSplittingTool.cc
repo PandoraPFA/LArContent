@@ -8,6 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
+
+#include "LArObjects/LArPointingCluster.h"
+
 #include "LArThreeDReco/LArTrackMatching/LongTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/TrackSplittingTool.h"
 
@@ -113,17 +118,28 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
     if (longXSpan < std::numeric_limits<float>::epsilon())
         return false;
 
+    // TODO some tidying, maybe storing variables in particle object
     bool passesChecks(false);
 
     const float splitMinX(0.5f * (particle.m_short1MinX + particle.m_short2MinX));
     const float shortDeltaMinX(std::fabs(particle.m_short1MinX - particle.m_short2MinX));
     const float longDeltaMinX(splitMinX - particle.m_longMinX);
 
+    const LArPointingCluster pointingCluster1(particle.m_pCluster1);
+    const LArPointingCluster pointingCluster2(particle.m_pCluster2);
+    const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pCluster1));
+    const HitType hitType2(LArThreeDHelper::GetClusterHitType(particle.m_pCluster2));
+
     if (((shortDeltaMinX / longXSpan) < m_maxShortDeltaXFraction) && (shortDeltaMinX < m_maxAbsoluteShortDeltaX) &&
         ((longDeltaMinX / longXSpan) > m_minLongDeltaXFraction) && (longDeltaMinX > m_minAbsoluteLongDeltaX))
     {
+        const CartesianVector &minPosition1(pointingCluster1.GetInnerVertex().GetPosition().GetX() < pointingCluster1.GetOuterVertex().GetPosition().GetX() ? pointingCluster1.GetInnerVertex().GetPosition() : pointingCluster1.GetOuterVertex().GetPosition());
+        const CartesianVector &minPosition2(pointingCluster2.GetInnerVertex().GetPosition().GetX() < pointingCluster2.GetOuterVertex().GetPosition().GetX() ? pointingCluster2.GetInnerVertex().GetPosition() : pointingCluster2.GetOuterVertex().GetPosition());
+
         CartesianVector splitPosition(0.f, 0.f, 0.f);
-        longFitResult.GetGlobalFitPosition(splitMinX, true, splitPosition);
+        float chiSquared(std::numeric_limits<float>::max());
+        LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
+
         splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
         passesChecks = true;
     }
@@ -135,8 +151,13 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
     if (((shortDeltaMaxX / longXSpan) < m_maxShortDeltaXFraction) && (shortDeltaMaxX < m_maxAbsoluteShortDeltaX) &&
         ((longDeltaMaxX / longXSpan) > m_minLongDeltaXFraction) && (longDeltaMaxX > m_minAbsoluteLongDeltaX))
     {
+        const CartesianVector &maxPosition1(pointingCluster1.GetInnerVertex().GetPosition().GetX() > pointingCluster1.GetOuterVertex().GetPosition().GetX() ? pointingCluster1.GetInnerVertex().GetPosition() : pointingCluster1.GetOuterVertex().GetPosition());
+        const CartesianVector &maxPosition2(pointingCluster2.GetInnerVertex().GetPosition().GetX() > pointingCluster2.GetOuterVertex().GetPosition().GetX() ? pointingCluster2.GetInnerVertex().GetPosition() : pointingCluster2.GetOuterVertex().GetPosition());
+
         CartesianVector splitPosition(0.f, 0.f, 0.f);
-        longFitResult.GetGlobalFitPosition(splitMaxX, true, splitPosition);
+        float chiSquared(std::numeric_limits<float>::max());
+        LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
+
         splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
         passesChecks = true;
     }
@@ -182,7 +203,7 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minXOverlapFraction = 0.9f;
+    m_minXOverlapFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
@@ -190,7 +211,7 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
-    m_maxShortDeltaXFraction = 0.1f;
+    m_maxShortDeltaXFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxShortDeltaXFraction", m_maxShortDeltaXFraction));
 
