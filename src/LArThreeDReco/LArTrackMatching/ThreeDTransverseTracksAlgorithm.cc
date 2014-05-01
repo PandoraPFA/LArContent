@@ -385,11 +385,16 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
+    unsigned int repeatCounter(0);
+
     for (TensorManipulationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
             iter = m_algorithmToolList.begin();
+
+            if (++repeatCounter > m_nMaxTensorToolRepeats)
+                break;
         }
         else
         {
@@ -445,6 +450,10 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
         m_algorithmToolList.push_back(pTensorManipulationTool);
     }
+
+    m_nMaxTensorToolRepeats = 5000;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
     m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
