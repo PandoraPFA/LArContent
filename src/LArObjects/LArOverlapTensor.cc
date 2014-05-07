@@ -30,9 +30,9 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Ambi
 {
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
-        ElementList elementList;
+        ElementList tempElementList;
         ClusterList clusterListU, clusterListV, clusterListW;
-        this->GetConnectedElements(iterU->first, ignoreUnavailable, elementList, clusterListU, clusterListV, clusterListW);
+        this->GetConnectedElements(iterU->first, ignoreUnavailable, tempElementList, clusterListU, clusterListV, clusterListW);
 
         Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
         if (!(*pAmbiguityFunction)(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
