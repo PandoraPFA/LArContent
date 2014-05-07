@@ -256,5 +256,6 @@ void OverlapTensor<T>::ExploreConnections(Cluster *const pCluster, const bool ig
 template class OverlapTensor<float>;
 template class OverlapTensor<TrackOverlapResult>;
 template class OverlapTensor<TransverseOverlapResult>;
+template class OverlapTensor<LongitudinalOverlapResult>;
 
 } // namespace lar

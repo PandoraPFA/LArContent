@@ -441,5 +441,6 @@ StatusCode ThreeDBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 template class ThreeDBaseAlgorithm<float>;
 template class ThreeDBaseAlgorithm<TrackOverlapResult>;
 template class ThreeDBaseAlgorithm<TransverseOverlapResult>;
+template class ThreeDBaseAlgorithm<LongitudinalOverlapResult>;
 
 } // namespace lar
