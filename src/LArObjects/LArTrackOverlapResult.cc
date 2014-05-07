@@ -178,4 +178,81 @@ TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const Tran
         lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(), lhs.GetChi2() + rhs.GetChi2(), xOverlapSum);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LongitudinalOverlapResult::LongitudinalOverlapResult() :
+    TrackOverlapResult(),
+    m_innerChi2(0.f), m_outerChi2(0.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LongitudinalOverlapResult::LongitudinalOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+    const float chi2, const float innerChi2, const float outerChi2) :
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
+    m_innerChi2(innerChi2), m_outerChi2(outerChi2)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LongitudinalOverlapResult::LongitudinalOverlapResult(const LongitudinalOverlapResult &rhs) :
+    TrackOverlapResult(rhs),
+    m_innerChi2(rhs.IsInitialized() ? rhs.GetInnerChi2() : 0.f),
+    m_outerChi2(rhs.IsInitialized() ? rhs.GetOuterChi2() : 0.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LongitudinalOverlapResult::~LongitudinalOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LongitudinalOverlapResult::operator<(const LongitudinalOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.IsInitialized())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.IsInitialized())
+        return false;
+
+    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
+        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+
+    return (m_reducedChi2 > rhs.m_reducedChi2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LongitudinalOverlapResult::operator>(const LongitudinalOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    return !(*this < rhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LongitudinalOverlapResult &LongitudinalOverlapResult::operator=(const LongitudinalOverlapResult &rhs)
+{
+    this->TrackOverlapResult::operator=(rhs);
+
+    m_innerChi2 = rhs.GetInnerChi2();
+    m_outerChi2 = rhs.GetOuterChi2();
+
+    return *this;
+}
+
 } // namespace lar
