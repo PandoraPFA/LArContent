@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the three dimensional longitudinal tracks algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -25,7 +25,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
     LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
     LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
 
-    TrackOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut);
+    LongitudinalOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
 
     for (unsigned int iPermutation = 0; iPermutation < 8; ++iPermutation)
     {
@@ -113,7 +113,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
                     continue;
                 }
 
-                TrackOverlapResult thisOverlapResult(0, 1, m_reducedChi2Cut);
+                LongitudinalOverlapResult thisOverlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
                 this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, thisOverlapResult);
 
                 if (thisOverlapResult.GetNMatchedSamplingPoints() > 0 && thisOverlapResult.GetReducedChi2() < bestOverlapResult.GetReducedChi2())
@@ -129,7 +129,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
-    const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, TrackOverlapResult &overlapResult) const
+    const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, LongitudinalOverlapResult &overlapResult) const
 {
     // Calculate start and end positions of linear trajectory
     const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_U));
@@ -137,7 +137,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     const CartesianVector vtxMergedW(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_W));
 
     const CartesianVector endMergedU(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_U));
-    const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_V)); 
+    const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_V));
     const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(endMerged3D, TPC_VIEW_W));
 
     const unsigned int nTotalSamplingPoints = static_cast<unsigned int>((endMerged3D - vtxMerged3D).GetMagnitude()/ m_samplingPitch);
@@ -145,8 +145,9 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     if (0 == nTotalSamplingPoints)
         return;
 
-    float deltaChi2(0.f), totalChi2(0.f);
+    float deltaChi2(0.f), innerChi2(0.f), outerChi2(0.f), totalChi2(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+    bool foundChi2(false);
 
     for (unsigned int n = 0; n < nTotalSamplingPoints; ++n)
     {
@@ -169,6 +170,13 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
                 ++nMatchedSamplingPoints;
 
             ++nSamplingPoints;
+
+            if (!foundChi2)
+                innerChi2 = deltaChi2;
+
+            outerChi2 = deltaChi2;
+            foundChi2 = true;
+
             totalChi2 += deltaChi2;
         }
         catch (StatusCodeException &)
@@ -178,13 +186,13 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
 
     if (nSamplingPoints > 0)
     {
-        overlapResult = TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2);
+        overlapResult = LongitudinalOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2, innerChi2, outerChi2);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
+void ThreeDLongitudinalTracksAlgorithm::ExamineTensorOld()
 {
     while (true)
     {
@@ -197,7 +205,7 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
             {
                 for (TensorType::OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
                 {
-                    const TrackOverlapResult &overlapResult(iterW->second);
+                    const LongitudinalOverlapResult &overlapResult(iterW->second);
 
                     if (overlapResult.GetReducedChi2() < bestReducedChi2)
                     {
@@ -227,10 +235,50 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
+{
+    unsigned int repeatCounter(0);
+
+    for (LongitudinalTensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    {
+        if ((*iter)->Run(this, m_overlapTensor))
+        {
+            iter = m_algorithmToolList.begin();
+
+            if (++repeatCounter > m_nMaxTensorToolRepeats)
+                break;
+        }
+        else
+        {
+            ++iter;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{ 
+{
+    AlgorithmToolList algorithmToolList;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
+        "TrackTools", algorithmToolList));
+
+    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    {
+        LongitudinalTensorTool *pTensorManipulationTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
+
+        if (NULL == pTensorManipulationTool)
+            return STATUS_CODE_INVALID_PARAMETER;
+
+        m_algorithmToolList.push_back(pTensorManipulationTool);
+    }
+
+    m_nMaxTensorToolRepeats = 5000;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
+
     m_vertexChi2Cut = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexChi2Cut", m_vertexChi2Cut));
@@ -250,7 +298,7 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
     if(m_samplingPitch < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_INVALID_PARAMETER;
 
-    return ThreeDBaseAlgorithm<TrackOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeDBaseAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar
