@@ -43,8 +43,6 @@ public:
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
-    typedef TwoDSlidingFitResult::LayerFitResultMap LayerFitResultMap;
-
     /**
      *  @brief  Calculate the overlap result for given 3D vertex and end positions
      *
@@ -60,7 +58,6 @@ private:
         LongitudinalOverlapResult &overlapResult) const;
 
     void ExamineTensor();
-    void ExamineTensorOld();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
@@ -88,7 +85,7 @@ public:
      *  @brief  Run the algorithm tool
      *
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  protoParticleVector the proto particle vector
+     *  @param  overlapTensor the overlap tensor
      *
      *  @return whether changes have been made by the tool
      */

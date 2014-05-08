@@ -28,6 +28,8 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+
 private:
     /**
      *  @brief  Particle class
@@ -72,7 +74,6 @@ private:
         float               m_matchedSamplingMaxX;      ///< The max matched sampling point x coordinate
     };
 
-    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::map<pandora::Cluster*, TwoDSlidingFitResult> SlidingFitResultMap;

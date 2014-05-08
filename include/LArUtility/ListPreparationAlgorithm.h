@@ -35,12 +35,12 @@ private:
     /**
      *  @brief Build separate CaloHitLists for each view
      */
-    pandora::StatusCode ProcessCaloHits();
+    void ProcessCaloHits();
 
     /**
      *  @brief Build separate MCParticleLists for each view
      */
-    pandora::StatusCode ProcessMCParticles();
+    void ProcessMCParticles();
 
     float           m_mipEquivalentCut;                 ///< Minimum mip equivalent energy for calo hit
     bool            m_onlyAvailableCaloHits;            ///< Whether to only include available calo hits

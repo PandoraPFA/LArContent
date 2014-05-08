@@ -62,6 +62,38 @@ TrackOverlapResult::~TrackOverlapResult()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool TrackOverlapResult::operator<(const TrackOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.IsInitialized())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.IsInitialized())
+        return false;
+
+    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
+        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+
+    return (m_reducedChi2 > rhs.m_reducedChi2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackOverlapResult::operator>(const TrackOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    return !(*this < rhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResult &rhs)
 {
     if (this == &rhs)
@@ -111,38 +143,6 @@ TransverseOverlapResult::~TransverseOverlapResult()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseOverlapResult::operator<(const TransverseOverlapResult &rhs) const
-{
-    if (this == &rhs)
-        return false;
-
-    if (!m_isInitialized && !rhs.IsInitialized())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    if (!m_isInitialized)
-        return true;
-
-    if (!rhs.IsInitialized())
-        return false;
-
-    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
-        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
-
-    return (m_reducedChi2 > rhs.m_reducedChi2);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool TransverseOverlapResult::operator>(const TransverseOverlapResult &rhs) const
-{
-    if (this == &rhs)
-        return false;
-
-    return !(*this < rhs);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 TransverseOverlapResult &TransverseOverlapResult::operator=(const TransverseOverlapResult &rhs)
 {
     this->TrackOverlapResult::operator=(rhs);
@@ -183,16 +183,18 @@ TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const Tran
 
 LongitudinalOverlapResult::LongitudinalOverlapResult() :
     TrackOverlapResult(),
-    m_innerChi2(0.f), m_outerChi2(0.f)
+    m_innerChi2(0.f),
+    m_outerChi2(0.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LongitudinalOverlapResult::LongitudinalOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
-    const float chi2, const float innerChi2, const float outerChi2) :
+        const float chi2, const float innerChi2, const float outerChi2) :
     TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
-    m_innerChi2(innerChi2), m_outerChi2(outerChi2)
+    m_innerChi2(innerChi2),
+    m_outerChi2(outerChi2)
 {
 }
 
@@ -213,42 +215,9 @@ LongitudinalOverlapResult::~LongitudinalOverlapResult()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LongitudinalOverlapResult::operator<(const LongitudinalOverlapResult &rhs) const
-{
-    if (this == &rhs)
-        return false;
-
-    if (!m_isInitialized && !rhs.IsInitialized())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    if (!m_isInitialized)
-        return true;
-
-    if (!rhs.IsInitialized())
-        return false;
-
-    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
-        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
-
-    return (m_reducedChi2 > rhs.m_reducedChi2);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LongitudinalOverlapResult::operator>(const LongitudinalOverlapResult &rhs) const
-{
-    if (this == &rhs)
-        return false;
-
-    return !(*this < rhs);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 LongitudinalOverlapResult &LongitudinalOverlapResult::operator=(const LongitudinalOverlapResult &rhs)
 {
     this->TrackOverlapResult::operator=(rhs);
-
     m_innerChi2 = rhs.GetInnerChi2();
     m_outerChi2 = rhs.GetOuterChi2();
 

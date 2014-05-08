@@ -251,7 +251,7 @@ public:
      *  @brief  Run the algorithm tool
      * 
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  protoParticleVector the proto particle vector
+     *  @param  overlapTensor the overlap tensor
      * 
      *  @return whether changes have been made by the tool
      */

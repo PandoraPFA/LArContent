@@ -28,8 +28,9 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-private:
     bool Run(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+
+private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -40,8 +41,6 @@ private:
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
     void CreateThreeDParticles(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
-
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

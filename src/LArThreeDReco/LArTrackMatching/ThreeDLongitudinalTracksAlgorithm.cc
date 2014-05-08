@@ -192,50 +192,6 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::ExamineTensorOld()
-{
-    while (true)
-    {
-        float bestReducedChi2(m_reducedChi2Cut);
-        Cluster *pBestClusterU(NULL), *pBestClusterV(NULL), *pBestClusterW(NULL);
-
-        for (TensorType::const_iterator iterU = m_overlapTensor.begin(), iterUEnd = m_overlapTensor.end(); iterU != iterUEnd; ++iterU)
-        {
-            for (TensorType::OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
-            {
-                for (TensorType::OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
-                {
-                    const LongitudinalOverlapResult &overlapResult(iterW->second);
-
-                    if (overlapResult.GetReducedChi2() < bestReducedChi2)
-                    {
-                        bestReducedChi2 = overlapResult.GetReducedChi2();
-                        pBestClusterU = iterU->first;
-                        pBestClusterV = iterV->first;
-                        pBestClusterW = iterW->first;
-                    }
-                }
-            }
-        }
-
-        if (!pBestClusterU || !pBestClusterV || !pBestClusterW)
-            break;
-
-        ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.insert(pBestClusterU);
-        protoParticle.m_clusterListV.insert(pBestClusterV);
-        protoParticle.m_clusterListW.insert(pBestClusterW);
-
-        ProtoParticleVector protoParticleVector;
-        protoParticleVector.push_back(protoParticle);
-
-        this->CreateThreeDParticles(protoParticleVector);
-        this->RemoveUnavailableTensorElements();
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
@@ -256,7 +212,6 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)

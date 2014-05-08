@@ -28,6 +28,8 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+
 private:
     /**
      *  @brief  Particle class
@@ -53,7 +55,6 @@ private:
         float               m_short2MaxX;               ///< The max x coordinate of short cluster 2
     };
 
-    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
