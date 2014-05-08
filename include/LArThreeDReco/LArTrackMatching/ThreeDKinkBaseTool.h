@@ -31,6 +31,8 @@ public:
      */
     virtual ~ThreeDKinkBaseTool();
 
+    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+
 protected:
     /**
      *  @brief  Modification class
@@ -96,8 +98,6 @@ protected:
     float           m_additionalXStepForKinkSearch;     ///< An additional (safety) step to tack-on when choosing x sampling points
 
 private:
-    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
-
     /**
      *  @brief  Get modification objects, identifying required splits and merges for clusters
      * 

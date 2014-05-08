@@ -28,8 +28,9 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-private:
     bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+
+private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**

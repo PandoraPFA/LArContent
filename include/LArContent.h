@@ -29,8 +29,10 @@
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDRemnantTracksAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ClearEndPointsTool.h"
 #include "LArThreeDReco/LArTrackMatching/ClearTracksTool.h"
@@ -92,6 +94,7 @@ public:
         d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
+        d("LArThreeDRemnantTracks",                 lar::ThreeDRemnantTracksAlgorithm::Factory)                                 \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
@@ -124,6 +127,7 @@ public:
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
         d("LArClearEndPoints",                      lar::ClearEndPointsTool::Factory)                                           \
         d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
         d("LArLongTracks",                          lar::LongTracksTool::Factory)                                               \

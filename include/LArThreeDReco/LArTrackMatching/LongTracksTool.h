@@ -49,8 +49,9 @@ public:
     static bool IsLongerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
         const unsigned int minMatchedSamplingPointRatio, const pandora::ClusterList &usedClusters);
 
-private:
     bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+
+private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**

@@ -118,17 +118,16 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
     if (longXSpan < std::numeric_limits<float>::epsilon())
         return false;
 
-    // TODO some tidying, maybe storing variables in particle object
+    const LArPointingCluster pointingCluster1(particle.m_pCluster1);
+    const LArPointingCluster pointingCluster2(particle.m_pCluster2);
+    const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pCluster1));
+    const HitType hitType2(LArThreeDHelper::GetClusterHitType(particle.m_pCluster2));
+
     bool passesChecks(false);
 
     const float splitMinX(0.5f * (particle.m_short1MinX + particle.m_short2MinX));
     const float shortDeltaMinX(std::fabs(particle.m_short1MinX - particle.m_short2MinX));
     const float longDeltaMinX(splitMinX - particle.m_longMinX);
-
-    const LArPointingCluster pointingCluster1(particle.m_pCluster1);
-    const LArPointingCluster pointingCluster2(particle.m_pCluster2);
-    const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pCluster1));
-    const HitType hitType2(LArThreeDHelper::GetClusterHitType(particle.m_pCluster2));
 
     if (((shortDeltaMinX / longXSpan) < m_maxShortDeltaXFraction) && (shortDeltaMinX < m_maxAbsoluteShortDeltaX) &&
         ((longDeltaMinX / longXSpan) > m_minLongDeltaXFraction) && (longDeltaMinX > m_minAbsoluteLongDeltaX))

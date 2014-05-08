@@ -91,6 +91,20 @@ public:
     float GetReducedChi2() const;
 
     /**
+     *  @brief  Track overlap result less than operator
+     * 
+     *  @param  rhs the track overlap result for comparison
+     */
+    bool operator<(const TrackOverlapResult &rhs) const;
+
+    /**
+     *  @brief  Track overlap result greater than operator
+     * 
+     *  @param  rhs the track overlap result for comparison
+     */
+    bool operator>(const TrackOverlapResult &rhs) const;
+
+    /**
      *  @brief  Track overlap result assigment operator
      * 
      *  @param  rhs the track overlap result to assign
@@ -249,20 +263,6 @@ public:
     const XOverlap &GetXOverlap() const;
 
     /**
-     *  @brief  Track overlap result less than operator
-     * 
-     *  @param  rhs the track overlap result for comparison
-     */
-    bool operator<(const TransverseOverlapResult &rhs) const;
-
-    /**
-     *  @brief  Track overlap result greater than operator
-     * 
-     *  @param  rhs the track overlap result for comparison
-     */
-    bool operator>(const TransverseOverlapResult &rhs) const;
-
-    /**
      *  @brief  Track overlap result assigment operator
      * 
      *  @param  rhs the track overlap result to assign
@@ -356,8 +356,8 @@ public:
     LongitudinalOverlapResult &operator=(const LongitudinalOverlapResult &rhs);
 
 private:
-    float  m_innerChi2;                        
-    float  m_outerChi2;
+    float  m_innerChi2;                        ///< The inner chi squared
+    float  m_outerChi2;                        ///< The outer chi squared
 };
 
 typedef std::vector<LongitudinalOverlapResult> LongitudinalOverlapResultVector;
