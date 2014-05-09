@@ -60,7 +60,8 @@ void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(ParticleFlowObject *const pP
         if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
             throw statusCodeException;
 
-        this->CreateThreeDCluster(pPfo, caloHitList, pCluster3D);
+        this->CreateThreeDCluster(caloHitList, pCluster3D);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster3D));
     }
 }
 
@@ -153,7 +154,7 @@ Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::CreateThreeDCluster(ParticleFlowObject *const pPfo, const CaloHitList &caloHitList, Cluster *&pCluster) const
+void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitList &caloHitList, Cluster *&pCluster) const
 {
     if (caloHitList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -169,7 +170,6 @@ void ThreeDHitCreationAlgorithm::CreateThreeDCluster(ParticleFlowObject *const p
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_outputClusterListName));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
