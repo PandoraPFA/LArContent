@@ -25,13 +25,42 @@ namespace lar
 
 void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList) const
 {
-    // TODO Full search to find omitted two dimensional hits
-    const ClusterList &clusterList(pPfo->GetClusterList());
+    ClusterList threeDClusterList;
+    const ClusterList &pfoClusterList(pPfo->GetClusterList());
 
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        const HitType hitType(LArThreeDHelper::GetClusterHitType(*iter));
+
+        if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
+        {
+            (*iter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        }
+        else if (TPC_3D == hitType)
+        {
+            threeDClusterList.insert(*iter);
+        }
+        else
+        {
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
+    }
+
+    for (ClusterList::const_iterator iter = threeDClusterList.begin(), iterEnd = threeDClusterList.end(); iter != iterEnd; ++iter)
+    {
+        CaloHitList localCaloHitList;
+        (*iter)->GetOrderedCaloHitList().GetCaloHitList(localCaloHitList);
+
+        for (CaloHitList::const_iterator hIter = localCaloHitList.begin(), hIterEnd = localCaloHitList.end(); hIter != hIterEnd; ++hIter)
+        {
+            CaloHit *pTargetCaloHit = static_cast<CaloHit*>(const_cast<void*>((*hIter)->GetParentCaloHitAddress()));
+            CaloHitList::iterator eraseIter = caloHitList.find(pTargetCaloHit);
+
+            if (caloHitList.end() == eraseIter)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            caloHitList.erase(eraseIter);
+        }
     }
 }
 
