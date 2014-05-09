@@ -113,10 +113,13 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
             CaloHitList newThreeDHits, omittedTwoDHits;
             (*tIter)->Run(this, pPfo, inputTwoDHits, newThreeDHits, omittedTwoDHits);
 
-            Cluster *pCluster3D(NULL);
-            this->AddThreeDHitsToPfo(pPfo, newThreeDHits, pCluster3D);
-            inputTwoDHits = omittedTwoDHits;
-            allNewThreeDHits.insert(newThreeDHits.begin(), newThreeDHits.end());
+            if (!newThreeDHits.empty())
+            {
+                Cluster *pCluster3D(NULL);
+                this->AddThreeDHitsToPfo(pPfo, newThreeDHits, pCluster3D);
+                inputTwoDHits = omittedTwoDHits;
+                allNewThreeDHits.insert(newThreeDHits.begin(), newThreeDHits.end());
+            }
         }
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, allNewThreeDHits, m_outputCaloHitListName));

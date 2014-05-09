@@ -21,12 +21,11 @@ namespace lar
 StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCosmicRayPfoListName, pPfoList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
     std::sort(pfoVector.begin(), pfoVector.end(), CheatingCosmicRayShowerMatchingAlg::SortPfosByNHits);
 
-    // TODO Dissolution of small daughter pfos.
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
         ParticleFlowObject *pPfo = *iter;
@@ -83,7 +82,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const Str
                     const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
                     const MCParticle *pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
 
-                    if (pPfoParentMCParticle == pParentMCParticle)
+                    if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle) && (pPfoParentMCParticle == pParentMCParticle))
                     {
                         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster));
                     }
@@ -120,9 +119,6 @@ bool CheatingCosmicRayShowerMatchingAlg::SortPfosByNHits(const ParticleFlowObjec
 
 StatusCode CheatingCosmicRayShowerMatchingAlg::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputCosmicRayPfoListName", m_inputCosmicRayPfoListName));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "InputPfoListName", m_inputPfoListName));
 
