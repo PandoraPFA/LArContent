@@ -335,20 +335,6 @@ public:
     float GetOuterChi2() const;
 
     /**
-     *  @brief  Track overlap result less than operator
-     * 
-     *  @param  rhs the track overlap result for comparison
-     */
-    bool operator<(const LongitudinalOverlapResult &rhs) const;
-
-    /**
-     *  @brief  Track overlap result greater than operator
-     * 
-     *  @param  rhs the track overlap result for comparison
-     */
-    bool operator>(const LongitudinalOverlapResult &rhs) const;
-
-    /**
      *  @brief  Track overlap result assigment operator
      * 
      *  @param  rhs the track overlap result to assign

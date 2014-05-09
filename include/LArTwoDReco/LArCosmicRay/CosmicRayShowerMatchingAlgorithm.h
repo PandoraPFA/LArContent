@@ -114,13 +114,6 @@ private:
     pandora::StatusCode VisualiseMatches(ctopmap_t &clusterToPfoMap, ptocmultimap_t &pfoAssociatedClusterMap) const;
 
     /**
-     *  @brief  Get a list of all PFOs - cosmic ray and other
-     *
-     *  @param  pfolist of all PFOs
-     */
-    pandora::StatusCode GetAllPfos(pandora::PfoList &pfoList) const;
-
-    /**
      *  @brief  Make association of cluster to pfo in internal maps
      *
      *  @param  map of clusters to be associated to pfos
@@ -163,6 +156,15 @@ private:
      *  @param  span in number of hits
      */
     float GetCoordinateAtX(const pandora::Cluster *const pCluster, const float x, const float xmin, const float xmax, const int span)const;
+
+    /**
+     *  @brief  Whether a cluster is associated with a MC neutrino
+     *
+     *  @param  pCluster address of the cluster
+     * 
+     *  @return boolean
+     */
+    bool IsNeutrinoCluster(const pandora::Cluster *const pCluster) const;
 
     std::string             m_inputPfoListName;           ///< The input pfo list name (all PFOs)
     std::string             m_inputCosmicRayPfoListName;  ///< The input pfo list name (identified cosmics)

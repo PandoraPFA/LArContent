@@ -84,11 +84,10 @@ private:
     /**
      *  @brief  Create a new three dimensional cluster, using a list of provided three dimensional hits, and add it to a specified pfo
      * 
-     *  @param  pPfo the address of the pfo to which the cluster will be added
      *  @param  caloHitList the list of three dimensional hits
      *  @param  pCluster to receive the address of the new cluster
      */
-    void CreateThreeDCluster(pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &caloHitList, pandora::Cluster *&pCluster) const;
+    void CreateThreeDCluster(const pandora::CaloHitList &caloHitList, pandora::Cluster *&pCluster) const;
 
     std::string             m_inputPfoListName;         ///< The name of the input pfo list
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
