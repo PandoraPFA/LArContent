@@ -43,51 +43,86 @@ void MissingTrackTool::FindMissingTracks(ThreeDTransverseTracksAlgorithm *pAlgor
         {
             unsigned int nAvailable(0);
 
-            if (eIter->GetClusterU()->IsAvailable())
+            if (eIter->GetClusterU()->IsAvailable() && !usedClusters.count(eIter->GetClusterU()))
                 ++nAvailable;
 
-            if (eIter->GetClusterV()->IsAvailable())
+            if (eIter->GetClusterV()->IsAvailable() && !usedClusters.count(eIter->GetClusterV()))
                 ++nAvailable;
 
-            if (eIter->GetClusterW()->IsAvailable())
+            if (eIter->GetClusterW()->IsAvailable() && !usedClusters.count(eIter->GetClusterW()))
                 ++nAvailable;
 
             if (2 != nAvailable)
                 continue;
 
-            // TODO
+            const TransverseOverlapResult &overlapResult(eIter->GetOverlapResult());
 
-//std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
-//<< ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints()
-//<< ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
-//<< ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
-//<< ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
-//<< ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
-//<< " AU " << eIter->GetClusterU()->IsAvailable()
-//<< " AV " << eIter->GetClusterV()->IsAvailable()
-//<< " AW " << eIter->GetClusterW()->IsAvailable() << std::endl;
-//
-//ClusterList clusterListU, clusterListV, clusterListW;
-//clusterListU.insert(eIter->GetClusterU());
-//clusterListV.insert(eIter->GetClusterV());
-//clusterListW.insert(eIter->GetClusterW());
-//
-//PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "UCluster", RED));
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "VCluster", GREEN));
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "WCluster", BLUE));
-//PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListU()), "InputClusterListU", GRAY));
-//PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListV()), "InputClusterListV", GRAY));
-//PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListW()), "InputClusterListW", GRAY));
-//PANDORA_MONITORING_API(ViewEvent());
+            if (overlapResult.GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
+                continue;
+
+            if (overlapResult.GetMatchedFraction() < m_minMatchedFraction)
+                continue;
+
+            if (overlapResult.GetReducedChi2() > m_maxReducedChiSquared)
+                continue;
+
+            if ((overlapResult.GetXOverlap().GetXSpanU() < std::numeric_limits<float>::epsilon()) ||
+                (overlapResult.GetXOverlap().GetXSpanV() < std::numeric_limits<float>::epsilon()) ||
+                (overlapResult.GetXOverlap().GetXSpanW() < std::numeric_limits<float>::epsilon()))
+            {
+                continue;
+            }
+
+            const float xOverlapSpan(overlapResult.GetXOverlap().GetXOverlapSpan());
+
+            if (eIter->GetClusterU()->IsAvailable() && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanU() < m_minXOverlapFraction))
+                continue;
+
+            if (eIter->GetClusterV()->IsAvailable() && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanV() < m_minXOverlapFraction))
+                continue;
+
+            if (eIter->GetClusterW()->IsAvailable() && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanW() < m_minXOverlapFraction))
+                continue;
+
+            ProtoParticle protoParticle;
+
+            if (eIter->GetClusterU()->IsAvailable())
+                protoParticle.m_clusterListU.insert(eIter->GetClusterU());
+
+            if (eIter->GetClusterV()->IsAvailable())
+                protoParticle.m_clusterListV.insert(eIter->GetClusterV());
+
+            if (eIter->GetClusterW()->IsAvailable())
+                protoParticle.m_clusterListW.insert(eIter->GetClusterW());
+
+            protoParticleVector.push_back(protoParticle);
+            usedClusters.insert(eIter->GetClusterU());
+            usedClusters.insert(eIter->GetClusterV());
+            usedClusters.insert(eIter->GetClusterW());
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MissingTrackTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode MissingTrackTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_minMatchedSamplingPoints = 15;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+
+    m_minMatchedFraction = 0.95f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedFraction", m_minMatchedFraction));
+
+    m_maxReducedChiSquared = 0.707f; // Based upon an agressive sigmaUVW of 0.5cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxReducedChiSquared", m_maxReducedChiSquared));
+
+    m_minXOverlapFraction = 0.75f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinXOverlapFraction", m_minXOverlapFraction));
+
     return STATUS_CODE_SUCCESS;
 }
 
