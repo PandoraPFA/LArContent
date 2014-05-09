@@ -29,22 +29,29 @@ void TransverseTrackHitCreationTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm,
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
-    Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
-    this->GetClusters(pPfo, pClusterU, pClusterV, pClusterW);
+    try
+    {
+        Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
+        this->GetClusters(pPfo, pClusterU, pClusterV, pClusterW);
 
-    TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
-    LArClusterHelper::LArTwoDSlidingFit(pClusterU, m_slidingFitWindow, slidingFitResultU);
-    LArClusterHelper::LArTwoDSlidingFit(pClusterV, m_slidingFitWindow, slidingFitResultV);
-    LArClusterHelper::LArTwoDSlidingFit(pClusterW, m_slidingFitWindow, slidingFitResultW);
+        TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
+        LArClusterHelper::LArTwoDSlidingFit(pClusterU, m_slidingFitWindow, slidingFitResultU);
+        LArClusterHelper::LArTwoDSlidingFit(pClusterV, m_slidingFitWindow, slidingFitResultV);
+        LArClusterHelper::LArTwoDSlidingFit(pClusterW, m_slidingFitWindow, slidingFitResultW);
 
-    CaloHitList caloHitListU, caloHitListV, caloHitListW;
-    pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_U, caloHitListU);
-    pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_V, caloHitListV);
-    pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_W, caloHitListW);
+        CaloHitList caloHitListU, caloHitListV, caloHitListW;
+        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_U, caloHitListU);
+        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_V, caloHitListV);
+        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_W, caloHitListW);
 
-    this->CreateThreeDHits(pAlgorithm, caloHitListU, slidingFitResultV, slidingFitResultW, newThreeDHits, omittedTwoDHits);
-    this->CreateThreeDHits(pAlgorithm, caloHitListV, slidingFitResultU, slidingFitResultW, newThreeDHits, omittedTwoDHits);
-    this->CreateThreeDHits(pAlgorithm, caloHitListW, slidingFitResultU, slidingFitResultV, newThreeDHits, omittedTwoDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitListU, slidingFitResultV, slidingFitResultW, newThreeDHits, omittedTwoDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitListV, slidingFitResultU, slidingFitResultW, newThreeDHits, omittedTwoDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitListW, slidingFitResultU, slidingFitResultV, newThreeDHits, omittedTwoDHits);
+    }
+    catch (StatusCodeException &)
+    {
+        std::cout << "TransverseTrackHitCreationTool: Unable to create 3D hits for provided cluster " << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

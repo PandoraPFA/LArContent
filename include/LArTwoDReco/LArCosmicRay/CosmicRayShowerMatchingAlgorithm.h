@@ -167,7 +167,6 @@ private:
     bool IsNeutrinoCluster(const pandora::Cluster *const pCluster) const;
 
     std::string             m_inputPfoListName;           ///< The input pfo list name (all PFOs)
-    std::string             m_inputCosmicRayPfoListName;  ///< The input pfo list name (identified cosmics)
     pandora::StringVector   m_inputClusterListNamesU;     ///< The input cluster list names for the u view
     pandora::StringVector   m_inputClusterListNamesV;     ///< The input cluster list names for the v view
     pandora::StringVector   m_inputClusterListNamesW;     ///< The input cluster list names for the w view
