@@ -63,7 +63,6 @@ private:
     unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     float           m_vertexChi2Cut;                    ///<
     float           m_reducedChi2Cut;                   ///<
-    float           m_cosOpeningAngleCut;               ///<
     float           m_samplingPitch;                    ///<
 
     typedef std::vector<LongitudinalTensorTool*> LongitudinalTensorToolList;
