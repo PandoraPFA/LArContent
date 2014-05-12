@@ -37,9 +37,7 @@ void ClearLongitudinalTracksTool::CreateThreeDParticles(ThreeDLongitudinalTracks
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-      const float m_reducedChi2Cut = 5.f;  // TODO: Move this to settings
-
-        if (iter->GetOverlapResult().GetReducedChi2() > m_reducedChi2Cut)
+        if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
             continue;
 
         ProtoParticle protoParticle;
@@ -56,7 +54,9 @@ void ClearLongitudinalTracksTool::CreateThreeDParticles(ThreeDLongitudinalTracks
 
 StatusCode ClearLongitudinalTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    // TODO: Fill in settings
+    m_minMatchedFraction = 0.8f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedFraction", m_minMatchedFraction));
 
     return STATUS_CODE_SUCCESS;
 }
