@@ -37,6 +37,7 @@
 #include "LArThreeDReco/LArTrackMatching/ClearLongitudinalTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/ClearTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/LongTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/MatchedEndPointsTool.h"
 #include "LArThreeDReco/LArTrackMatching/MissingTrackTool.h"
 #include "LArThreeDReco/LArTrackMatching/MissingTrackSegmentTool.h"
 #include "LArThreeDReco/LArTrackMatching/OvershootTracksTool.h"
@@ -131,6 +132,7 @@ public:
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
         d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
         d("LArLongTracks",                          lar::LongTracksTool::Factory)                                               \
+        d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
         d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \
         d("LArMissingTrackSegment",                 lar::MissingTrackSegmentTool::Factory)                                      \
         d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \

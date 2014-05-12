@@ -41,6 +41,8 @@ private:
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
     void CreateThreeDParticles(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+
+    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
