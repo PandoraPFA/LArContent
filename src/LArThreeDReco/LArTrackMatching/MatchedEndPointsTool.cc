@@ -48,8 +48,12 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
         // --- EVENT DISPLAY [BEGIN] ---
         ClusterList clusterListU, clusterListV, clusterListW;
 
+        std::cout << " nU=" << nU << " nV=" << nV << " nW=" << nW << " Nelements=" << elementList.size() << std::endl;
+
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
+            std::cout << " Element: MatchedPoints=" << eIter->GetOverlapResult().GetNMatchedSamplingPoints() << " MatchedFraction=" << eIter->GetOverlapResult().GetMatchedFraction() << " InnerChi2=" << eIter->GetOverlapResult().GetInnerChi2() << " OuterChi2=" << eIter->GetOverlapResult().GetOuterChi2() << std::endl;
+
             clusterListU.insert(eIter->GetClusterU());
             clusterListV.insert(eIter->GetClusterV());
             clusterListW.insert(eIter->GetClusterW());
@@ -61,7 +65,6 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
         PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "VCluster", GREEN));
         PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "WCluster", BLUE));
         PANDORA_MONITORING_API(ViewEvent());
-
         // --- EVENT DISPLAY [END] ---
     }
 }
