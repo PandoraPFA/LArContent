@@ -336,6 +336,9 @@ void ThreeDBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInput
         if (!pCluster->IsAvailable())
             continue;
 
+        if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+            continue;
+
         if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
             continue;
 
@@ -425,6 +428,10 @@ StatusCode ThreeDBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
+
+    m_minClusterCaloHits = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterCaloHits", m_minClusterCaloHits));
 
     m_minClusterLayers = 1;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

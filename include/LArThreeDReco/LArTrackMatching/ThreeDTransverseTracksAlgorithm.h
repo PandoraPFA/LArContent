@@ -165,6 +165,17 @@ private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
     /**
+     *  @brief  Calculate the overlap result for given group of clusters
+     *
+     *  @param  pClusterU the cluster from the U view
+     *  @param  pClusterV the cluster from the V view
+     *  @param  pClusterW the cluster from the W view
+     *  @param  overlapResult to receive the overlap result
+     */
+    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW,
+        TransverseOverlapResult &overlapResult);
+
+    /**
      *  @brief  Get the fit segment list for a given sliding fit result
      * 
      *  @param  slidingFitResult the sliding fit result

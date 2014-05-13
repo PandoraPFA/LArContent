@@ -237,6 +237,7 @@ private:
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
     std::string                 m_outputPfoListName;            ///< The output pfo list name
 
+    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     unsigned int                m_minClusterLayers;             ///< The min number of layers in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 };

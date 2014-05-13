@@ -53,9 +53,11 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 {
     try
     {
-        LongitudinalOverlapResult overlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
+        LongitudinalOverlapResult overlapResult;
         this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
-        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+
+        if (overlapResult.IsInitialized())
+            m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
     }
     catch (StatusCodeException &)
     {
@@ -161,10 +163,11 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         {
             const CartesianVector &endMerged3D(*iterJ);
 
-            LongitudinalOverlapResult thisOverlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
+            LongitudinalOverlapResult thisOverlapResult;
             this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, thisOverlapResult);
 
-            if (thisOverlapResult.GetNMatchedSamplingPoints() > 0 && thisOverlapResult.GetReducedChi2() < bestOverlapResult.GetReducedChi2())
+            if (thisOverlapResult.IsInitialized() && thisOverlapResult.GetNMatchedSamplingPoints() > 0 && 
+                thisOverlapResult.GetReducedChi2() < bestOverlapResult.GetReducedChi2())
                 bestOverlapResult = thisOverlapResult;
         }
     }

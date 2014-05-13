@@ -88,12 +88,30 @@ void ThreeDTransverseTracksAlgorithm::PreparationStep()
 
 void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
+    try
+    {
+        TransverseOverlapResult overlapResult;
+        this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+
+        if (overlapResult.IsInitialized())
+            m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+    }
+    catch (StatusCodeException &)
+    {
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW,
+    TransverseOverlapResult &overlapResult)
+{
     TwoDSlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
     TwoDSlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
     TwoDSlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
 
     if ((m_slidingFitResultMap.end() == iterU) || (m_slidingFitResultMap.end() == iterV) || (m_slidingFitResultMap.end() == iterW))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const TwoDSlidingFitResult &slidingFitResultU(iterU->second);
     const TwoDSlidingFitResult &slidingFitResultV(iterV->second);
@@ -104,10 +122,10 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
     const TransverseOverlapResult transverseOverlapResult(this->GetBestOverlapResult(fitSegmentTensor));
 
     if (!transverseOverlapResult.IsInitialized())
-        return;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     if ((transverseOverlapResult.GetMatchedFraction() < m_minOverallMatchedFraction) || (transverseOverlapResult.GetNMatchedSamplingPoints() < m_minOverallMatchedPoints))
-        return;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const int nLayersSpannedU(slidingFitResultU.GetMaxLayer() - slidingFitResultU.GetMinLayer());
     const int nLayersSpannedV(slidingFitResultV.GetMaxLayer() - slidingFitResultV.GetMinLayer());
@@ -120,9 +138,9 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
     const float nSamplingPointsPerLayer(static_cast<float>(transverseOverlapResult.GetNSamplingPoints()) / static_cast<float>(meanLayersSpanned));
 
     if (nSamplingPointsPerLayer < m_minSamplingPointsPerLayer)
-        return;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-     m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, transverseOverlapResult);
+    overlapResult = transverseOverlapResult;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
