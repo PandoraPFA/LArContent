@@ -40,8 +40,17 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-private:
+private: 
+   
+    void PreparationStep();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
+
+    /**
+     *  @brief  Get a sliding fit result from the algorithm cache
+     * 
+     *  @param  pCluster address of the relevant cluster
+     */
+    const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Calculate the overlap result for given 3D vertex and end positions
@@ -58,12 +67,17 @@ private:
         LongitudinalOverlapResult &overlapResult) const;
 
     void ExamineTensor();
+    void TidyUp();
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    unsigned int    m_slidingFitWindow;                 ///< The layer window for the sliding linear fits
     unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
-    float           m_vertexChi2Cut;                    ///<
-    float           m_reducedChi2Cut;                   ///<
-    float           m_samplingPitch;                    ///<
+    float           m_vertexChi2Cut;                    ///< The maximum allowed chi2 for associating end points from three views
+    float           m_reducedChi2Cut;                   ///< The maximum allowed chi2 for associating hit positions from three views
+    float           m_samplingPitch;                    ///< Pitch used to generate sampling points along tracks
+
+    TwoDSlidingFitResultMap     m_slidingFitResultMap;  ///< The sliding fit result map
 
     typedef std::vector<LongitudinalTensorTool*> LongitudinalTensorToolList;
     LongitudinalTensorToolList  m_algorithmToolList;    ///< The algorithm tool list
