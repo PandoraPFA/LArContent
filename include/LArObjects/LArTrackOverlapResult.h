@@ -299,6 +299,15 @@ public:
     /**
      *  @brief  Constructor
      * 
+     *  @param  trackOverlapResult
+     *  @param  innerChi2
+     *  @param  outerChi2
+     */
+    LongitudinalOverlapResult(const TrackOverlapResult trackOverlapResult, const float innerChi2, const float outerChi2);
+
+    /**
+     *  @brief  Constructor
+     * 
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
      *  @param  chi2
