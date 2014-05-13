@@ -40,14 +40,14 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-private: 
-   
+private:
+
     void PreparationStep();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
     /**
      *  @brief  Get a sliding fit result from the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
