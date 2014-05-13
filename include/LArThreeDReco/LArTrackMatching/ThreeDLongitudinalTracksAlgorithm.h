@@ -53,6 +53,17 @@ private:
     const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
 
     /**
+     *  @brief  Calculate the overlap result for given group of clusters
+     *
+     *  @param  pClusterU the cluster from the U view
+     *  @param  pClusterV the cluster from the V view
+     *  @param  pClusterW the cluster from the W view
+     *  @param  overlapResult to receive the overlap result
+     */
+    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW,
+        LongitudinalOverlapResult &overlapResult);
+
+    /**
      *  @brief  Calculate the overlap result for given 3D vertex and end positions
      *
      *  @param  slidingFitResultU the sliding fit result u

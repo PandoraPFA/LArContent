@@ -41,7 +41,7 @@ void ThreeDLongitudinalTracksAlgorithm::PreparationStep()
     {
         TwoDSlidingFitResult slidingFitResult;
         LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
-
+        
         if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
             throw StatusCodeException(STATUS_CODE_FAILURE);
     }
@@ -50,6 +50,22 @@ void ThreeDLongitudinalTracksAlgorithm::PreparationStep()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+{
+    try
+    {
+        LongitudinalOverlapResult overlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
+        this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+    }
+    catch (StatusCodeException &)
+    {
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW,
+    LongitudinalOverlapResult &finalOverlapResult)
 {
     TwoDSlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
     TwoDSlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
@@ -153,8 +169,11 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         }
     }
 
-    if (bestOverlapResult.GetNMatchedSamplingPoints() > 0)
-        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, bestOverlapResult);
+    // Check that result is meaningful
+    if (bestOverlapResult.GetNMatchedSamplingPoints() == 0)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+   
+    finalOverlapResult = bestOverlapResult;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,9 +195,11 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     if(0 == nSamplingPoints)
         return;
 
-    float deltaChi2(0.f), innerChi2(0.f), outerChi2(0.f), totalChi2(0.f);
-    unsigned int nMatchedSamplingPoints(0);
+    float deltaChi2(0.f), totalChi2(0.f);
+    float innerChi2(std::numeric_limits<float>::max()), outerChi2(std::numeric_limits<float>::max());
     bool foundChi2(false);
+
+    unsigned int nMatchedSamplingPoints(0);
 
     for (unsigned int n = 0; n < nSamplingPoints; ++n)
     {
