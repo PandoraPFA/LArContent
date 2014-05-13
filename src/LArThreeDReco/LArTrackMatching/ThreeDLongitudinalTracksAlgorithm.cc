@@ -18,12 +18,49 @@ using namespace pandora;
 namespace lar
 {
 
+const TwoDSlidingFitResult &ThreeDLongitudinalTracksAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
+{
+    TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
+
+    if (m_slidingFitResultMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDLongitudinalTracksAlgorithm::PreparationStep()
+{
+    ClusterList allClustersList;
+    allClustersList.insert(m_clusterListU.begin(), m_clusterListU.end());
+    allClustersList.insert(m_clusterListV.begin(), m_clusterListV.end());
+    allClustersList.insert(m_clusterListW.begin(), m_clusterListW.end());
+
+    for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
+    {
+        TwoDSlidingFitResult slidingFitResult;
+        LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
+
+        if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
-    TwoDSlidingFitResult slidingFitResultU, slidingFitResultV, slidingFitResultW;
-    LArClusterHelper::LArTwoDSlidingFit(pClusterU, 20, slidingFitResultU);
-    LArClusterHelper::LArTwoDSlidingFit(pClusterV, 20, slidingFitResultV);
-    LArClusterHelper::LArTwoDSlidingFit(pClusterW, 20, slidingFitResultW);
+    TwoDSlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
+    TwoDSlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
+    TwoDSlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
+
+    if ((m_slidingFitResultMap.end() == iterU) || (m_slidingFitResultMap.end() == iterV) || (m_slidingFitResultMap.end() == iterW))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const TwoDSlidingFitResult &slidingFitResultU(iterU->second);
+    const TwoDSlidingFitResult &slidingFitResultV(iterV->second);
+    const TwoDSlidingFitResult &slidingFitResultW(iterW->second);
 
     CartesianVector position3D(0.f,0.f,0.f);
     CartesianPointList vtxList3D, endList3D;
@@ -95,9 +132,8 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 
         LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_W, TPC_VIEW_U, endW, endU, position3D, chi2);
         endList3D.push_back(position3D); 
-    }       
-        
-       
+    }
+  
     // Find best matched 3D trajactory
     LongitudinalOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
 
@@ -205,6 +241,14 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDLongitudinalTracksAlgorithm::TidyUp()
+{
+    m_slidingFitResultMap.clear();
+    return ThreeDBaseAlgorithm<LongitudinalOverlapResult>::TidyUp();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolList algorithmToolList;
@@ -220,6 +264,10 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
 
         m_algorithmToolList.push_back(pTensorManipulationTool);
     }
+
+    m_slidingFitWindow = 20;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitWindow", m_slidingFitWindow));
 
     m_nMaxTensorToolRepeats = 5000;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
