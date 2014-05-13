@@ -67,7 +67,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW,
-    LongitudinalOverlapResult &finalOverlapResult)
+    LongitudinalOverlapResult &longitudinalOverlapResult)
 {
     TwoDSlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
     TwoDSlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
@@ -80,8 +80,9 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
     const TwoDSlidingFitResult &slidingFitResultV(iterV->second);
     const TwoDSlidingFitResult &slidingFitResultW(iterW->second);
 
-    CartesianVector position3D(0.f,0.f,0.f);
-    CartesianPointList vtxList3D, endList3D;
+
+    // Loop over possible permutations of cluster direction
+    TrackOverlapResult bestOverlapResult;
 
     for (unsigned int iPermutation = 0; iPermutation < 4; ++iPermutation)
     {
@@ -99,19 +100,21 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         const CartesianVector vtxW((isForwardW)  ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
         const CartesianVector endW((!isForwardW) ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
 
+        // Merge start and end positions (three views)
         const float halfLengthSquaredU(0.25*(vtxU - endU).GetMagnitudeSquared());
         const float halfLengthSquaredV(0.25*(vtxV - endV).GetMagnitudeSquared());
         const float halfLengthSquaredW(0.25*(vtxW - endW).GetMagnitudeSquared());
 
-        float chi2(0.f);
         CartesianVector vtxMergedU(0.f,0.f,0.f), vtxMergedV(0.f,0.f,0.f), vtxMergedW(0.f,0.f,0.f);
         CartesianVector endMergedU(0.f,0.f,0.f), endMergedV(0.f,0.f,0.f), endMergedW(0.f,0.f,0.f);
 
-        // Merge start positions (three views)
-        LArGeometryHelper::MergeThreePositions(TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W,
-                                               vtxU, vtxV, vtxW, vtxMergedU, vtxMergedV, vtxMergedW, chi2);
+        float vtxChi2(std::numeric_limits<float>::max());
+        float endChi2(std::numeric_limits<float>::max());
 
-        if (chi2 > m_vertexChi2Cut)
+        LArGeometryHelper::MergeThreePositions(TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W,
+                                               vtxU, vtxV, vtxW, vtxMergedU, vtxMergedV, vtxMergedW, vtxChi2);
+
+        if (vtxChi2 > m_vertexChi2Cut)
             continue;
 
         if (((vtxMergedU - vtxU).GetMagnitudeSquared() > std::min(halfLengthSquaredU, (vtxMergedU - endU).GetMagnitudeSquared())) ||
@@ -119,11 +122,11 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
             ((vtxMergedW - vtxW).GetMagnitudeSquared() > std::min(halfLengthSquaredW, (vtxMergedW - endW).GetMagnitudeSquared())))
             continue;
 
-        // Merge end positions (three views)
+        
         LArGeometryHelper::MergeThreePositions(TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W,
-                                               endU, endV, endW, endMergedU, endMergedV, endMergedW, chi2);
+                                               endU, endV, endW, endMergedU, endMergedV, endMergedW, endChi2);
 
-        if (chi2 > m_vertexChi2Cut)
+        if (endChi2 > m_vertexChi2Cut)
             continue;
 
         if (((endMergedU - endU).GetMagnitudeSquared() > std::min(halfLengthSquaredU, (endMergedU - vtxU).GetMagnitudeSquared())) ||
@@ -131,7 +134,11 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
             ((endMergedW - endW).GetMagnitudeSquared() > std::min(halfLengthSquaredW, (endMergedW - vtxW).GetMagnitudeSquared())))
             continue;
 
-        // Merge start positions (two views)
+        // Merge start and end positions (two views)
+        float chi2(0.f);
+        CartesianVector position3D(0.f,0.f,0.f);
+        CartesianPointList vtxList3D, endList3D;
+
         LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_U, TPC_VIEW_V, vtxU, vtxV, position3D, chi2);
         vtxList3D.push_back(position3D);
 
@@ -141,7 +148,6 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_W, TPC_VIEW_U, vtxW, vtxU, position3D, chi2);
         vtxList3D.push_back(position3D);
 
-        // Merge end positions (two views)
         LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_U, TPC_VIEW_V, endU, endV, position3D, chi2);
         endList3D.push_back(position3D);
 
@@ -150,39 +156,35 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 
         LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_W, TPC_VIEW_U, endW, endU, position3D, chi2);
         endList3D.push_back(position3D);
-    }
+    
 
-    // Find best matched 3D trajactory
-    LongitudinalOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
-
-    for (CartesianPointList::const_iterator iterI = vtxList3D.begin(), iterEndI = vtxList3D.end(); iterI != iterEndI; ++iterI)
-    {
-        const CartesianVector &vtxMerged3D(*iterI);
-
-        for (CartesianPointList::const_iterator iterJ = endList3D.begin(), iterEndJ = endList3D.end(); iterJ != iterEndJ; ++iterJ)
+        // Find best matched 3D trajactory
+        for (CartesianPointList::const_iterator iterI = vtxList3D.begin(), iterEndI = vtxList3D.end(); iterI != iterEndI; ++iterI)
         {
-            const CartesianVector &endMerged3D(*iterJ);
+            const CartesianVector &vtxMerged3D(*iterI);
 
-            LongitudinalOverlapResult thisOverlapResult;
-            this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, thisOverlapResult);
+            for (CartesianPointList::const_iterator iterJ = endList3D.begin(), iterEndJ = endList3D.end(); iterJ != iterEndJ; ++iterJ)
+            {
+                const CartesianVector &endMerged3D(*iterJ);
 
-            if (thisOverlapResult.IsInitialized() && thisOverlapResult.GetNMatchedSamplingPoints() > 0 && 
-                thisOverlapResult.GetReducedChi2() < bestOverlapResult.GetReducedChi2())
-                bestOverlapResult = thisOverlapResult;
+                TrackOverlapResult overlapResult;
+                this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, 
+                    vtxMerged3D, endMerged3D, overlapResult);
+
+                if (overlapResult.GetNMatchedSamplingPoints() > 0 && overlapResult > bestOverlapResult)
+                {
+                    bestOverlapResult = overlapResult;
+                    longitudinalOverlapResult = LongitudinalOverlapResult(overlapResult, vtxChi2, endChi2);
+                }
+            }
         }
     }
-
-    // Check that result is meaningful
-    if (bestOverlapResult.GetNMatchedSamplingPoints() == 0)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    finalOverlapResult = bestOverlapResult;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
-    const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, LongitudinalOverlapResult &overlapResult) const
+    const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, TrackOverlapResult &overlapResult) const
 {
     // Calculate start and end positions of linear trajectory
     const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(vtxMerged3D, TPC_VIEW_U));
@@ -198,10 +200,8 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     if(0 == nSamplingPoints)
         return;
 
+    // Loop over sampling points and calculate track overlap result
     float deltaChi2(0.f), totalChi2(0.f);
-    float innerChi2(std::numeric_limits<float>::max()), outerChi2(std::numeric_limits<float>::max());
-    bool foundChi2(false);
-
     unsigned int nMatchedSamplingPoints(0);
 
     for (unsigned int n = 0; n < nSamplingPoints; ++n)
@@ -224,12 +224,6 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
             if (deltaChi2 < m_reducedChi2Cut)
                 ++nMatchedSamplingPoints;
 
-            if (!foundChi2)
-                innerChi2 = deltaChi2;
-
-            outerChi2 = deltaChi2;
-            foundChi2 = true;
-
             totalChi2 += deltaChi2;
         }
         catch (StatusCodeException &)
@@ -238,7 +232,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
     }
 
     if (nMatchedSamplingPoints > 0)
-        overlapResult = LongitudinalOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2, innerChi2, outerChi2);
+        overlapResult = TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, totalChi2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

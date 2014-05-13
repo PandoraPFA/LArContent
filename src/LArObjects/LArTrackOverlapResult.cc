@@ -187,6 +187,15 @@ LongitudinalOverlapResult::LongitudinalOverlapResult() :
     m_outerChi2(0.f)
 {
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LongitudinalOverlapResult::LongitudinalOverlapResult(const TrackOverlapResult trackOverlapResult, const float innerChi2, const float outerChi2) :
+    TrackOverlapResult(trackOverlapResult),
+    m_innerChi2(innerChi2),
+    m_outerChi2(outerChi2)
+{
+
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

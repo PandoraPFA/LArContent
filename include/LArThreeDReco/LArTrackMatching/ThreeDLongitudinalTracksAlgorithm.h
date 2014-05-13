@@ -75,7 +75,7 @@ private:
      */
     void CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
         const TwoDSlidingFitResult &slidingFitResultW, const pandora::CartesianVector &vtxMerged3D, const pandora::CartesianVector &endMerged3D,
-        LongitudinalOverlapResult &overlapResult) const;
+        TrackOverlapResult &overlapResult) const;
 
     void ExamineTensor();
     void TidyUp();
