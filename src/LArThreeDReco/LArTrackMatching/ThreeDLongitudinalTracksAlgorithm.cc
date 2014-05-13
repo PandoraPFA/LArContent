@@ -41,7 +41,7 @@ void ThreeDLongitudinalTracksAlgorithm::PreparationStep()
     {
         TwoDSlidingFitResult slidingFitResult;
         LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
-        
+
         if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
             throw StatusCodeException(STATUS_CODE_FAILURE);
     }
@@ -147,9 +147,9 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
         endList3D.push_back(position3D);
 
         LArGeometryHelper::MergeTwoPositions3D(TPC_VIEW_W, TPC_VIEW_U, endW, endU, position3D, chi2);
-        endList3D.push_back(position3D); 
+        endList3D.push_back(position3D);
     }
-  
+
     // Find best matched 3D trajactory
     LongitudinalOverlapResult bestOverlapResult(0, 1, m_reducedChi2Cut, 0.f, 0.f);
 
@@ -172,7 +172,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
     // Check that result is meaningful
     if (bestOverlapResult.GetNMatchedSamplingPoints() == 0)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-   
+
     finalOverlapResult = bestOverlapResult;
 }
 
