@@ -254,6 +254,21 @@ void TwoDSlidingFitResult::GetGlobalFitProjection(const CartesianVector &inputPo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float TwoDSlidingFitResult::GetCosScatteringAngle(const float rL) const
+{
+    const float halfWindowLength(this->GetLayerFitHalfWindowLength());
+
+    CartesianVector firstDirection(0.f,0.f,0.f);
+    CartesianVector secondDirection(0.f,0.f,0.f);
+
+    this->GetGlobalFitDirection(rL - halfWindowLength, firstDirection);
+    this->GetGlobalFitDirection(rL + halfWindowLength, secondDirection);
+
+    return firstDirection.GetDotProduct(secondDirection);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TwoDSlidingFitResult::GetGlobalFitInterpolatedPosition(const LayerFitResultMap::const_iterator &firstLayerIter,
     const LayerFitResultMap::const_iterator &secondLayerIter, const float &firstWeight, const float &secondWeight,
     CartesianVector &position) const
