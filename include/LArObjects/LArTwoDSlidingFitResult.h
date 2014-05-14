@@ -348,6 +348,13 @@ public:
     void GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
 
     /**
+     *  @brief  Get scattering angle for a given longitudinal coordinate
+     * 
+     *  @param  rL the longitudinal coordinate
+     */
+    float GetCosScatteringAngle(const float rL) const;
+
+    /**
      *  @brief  Get the layer fit result map
      * 
      *  @return the layer fit result map
