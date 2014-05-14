@@ -29,7 +29,7 @@ bool MatchedEndPointsTool::Run(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, Te
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
-{
+{ 
     ClusterList usedClusters;
 
     for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
@@ -40,32 +40,45 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
-
+        
         if (nU * nV * nW == 0)
             continue;
 
+        std::sort(elementList.begin(), elementList.end(), ThreeDLongitudinalTracksAlgorithm::SortByChiSquared);
 
-        // --- EVENT DISPLAY [BEGIN] ---
-        ClusterList clusterListU, clusterListV, clusterListW;
-
-        std::cout << " nU=" << nU << " nV=" << nV << " nW=" << nW << " Nelements=" << elementList.size() << std::endl;
-
-        for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
+        for (TensorType::ElementList::const_iterator iter = elementList.begin(); iter != elementList.end(); ++iter)
         {
-            std::cout << " Element: MatchedPoints=" << eIter->GetOverlapResult().GetNMatchedSamplingPoints() << " MatchedFraction=" << eIter->GetOverlapResult().GetMatchedFraction() << " InnerChi2=" << eIter->GetOverlapResult().GetInnerChi2() << " OuterChi2=" << eIter->GetOverlapResult().GetOuterChi2() << std::endl;
+            if (usedClusters.count(iter->GetClusterU()) || usedClusters.count(iter->GetClusterV()) || usedClusters.count(iter->GetClusterW()))
+                continue;
 
-            clusterListU.insert(eIter->GetClusterU());
-            clusterListV.insert(eIter->GetClusterV());
-            clusterListW.insert(eIter->GetClusterW());
+            if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
+                continue;
+
+            if (std::max(iter->GetOverlapResult().GetInnerChi2(),iter->GetOverlapResult().GetOuterChi2()) > m_maxEndPointChi2)
+                continue;
+
+// --- EVENT DISPLAY [BEGIN] ---
+// ClusterList clusterListU, clusterListV, clusterListW;
+// clusterListU.insert(iter->GetClusterU());
+// clusterListV.insert(iter->GetClusterV());
+// clusterListW.insert(iter->GetClusterW());
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
+// PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "ClusterU", RED));
+// PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "ClusterV", GREEN));
+// PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "ClusterW", BLUE));
+// PANDORA_MONITORING_API(ViewEvent());
+// --- EVENT DISPLAY [END] ---
+
+            ProtoParticle protoParticle;
+            protoParticle.m_clusterListU.insert(iter->GetClusterU());
+            protoParticle.m_clusterListV.insert(iter->GetClusterV());
+            protoParticle.m_clusterListW.insert(iter->GetClusterW());
+            protoParticleVector.push_back(protoParticle);
+
+            usedClusters.insert(iter->GetClusterU());
+            usedClusters.insert(iter->GetClusterV());
+            usedClusters.insert(iter->GetClusterW());
         }
-
-
-        PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-        PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "UCluster", RED));
-        PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "VCluster", GREEN));
-        PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "WCluster", BLUE));
-        PANDORA_MONITORING_API(ViewEvent());
-        // --- EVENT DISPLAY [END] ---
     }
 }
 
@@ -76,6 +89,10 @@ StatusCode MatchedEndPointsTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_minMatchedFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
+
+    m_maxEndPointChi2 = 3.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxEndPointChi2", m_maxEndPointChi2));
 
     return STATUS_CODE_SUCCESS;
 }
