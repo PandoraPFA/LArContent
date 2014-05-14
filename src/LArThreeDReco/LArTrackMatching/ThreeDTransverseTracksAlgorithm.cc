@@ -96,8 +96,11 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
         if (overlapResult.IsInitialized())
             m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
     }
-    catch (StatusCodeException &)
+    catch (StatusCodeException &statusCodeException)
     {
+        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || 
+              STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
+            throw statusCodeException;
     }
 }
 
@@ -111,7 +114,7 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
     TwoDSlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
 
     if ((m_slidingFitResultMap.end() == iterU) || (m_slidingFitResultMap.end() == iterV) || (m_slidingFitResultMap.end() == iterW))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const TwoDSlidingFitResult &slidingFitResultU(iterU->second);
     const TwoDSlidingFitResult &slidingFitResultV(iterV->second);
