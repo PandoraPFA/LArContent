@@ -40,6 +40,16 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Sort tensor elements by chi-squared
+     * 
+     *  @param  lhs the first tensor element
+     *  @param  rhs the second tensor element
+     * 
+     *  @return boolean
+     */
+    static bool SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs);
+
 private:
 
     void PreparationStep();

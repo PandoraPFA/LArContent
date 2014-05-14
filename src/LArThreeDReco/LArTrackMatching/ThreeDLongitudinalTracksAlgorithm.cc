@@ -18,6 +18,14 @@ using namespace pandora;
 namespace lar
 {
 
+bool ThreeDLongitudinalTracksAlgorithm::SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs)
+{
+    return (lhs.GetOverlapResult().GetInnerChi2() + lhs.GetOverlapResult().GetOuterChi2() < 
+        rhs.GetOverlapResult().GetInnerChi2() + rhs.GetOverlapResult().GetOuterChi2());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const TwoDSlidingFitResult &ThreeDLongitudinalTracksAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
 {
     TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);

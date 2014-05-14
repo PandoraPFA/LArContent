@@ -42,6 +42,7 @@ private:
     void FindMatchedTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
+    float           m_maxEndPointChi2;                    ///< The max chi2 of matched vertex and end points for particle creation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
