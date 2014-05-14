@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArObjects/LArTwoDSlidingFitResult.h"
+
 namespace lar
 {
 
@@ -31,6 +33,16 @@ public:
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+
+    pandora::StatusCode SplitCrossedClusters(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2, 
+        pandora::CartesianVector &splitPosition) const;
+
+
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+
+    float          m_clusterMinLength;           ///<
+    unsigned int   m_halfWindowLayers;           ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
