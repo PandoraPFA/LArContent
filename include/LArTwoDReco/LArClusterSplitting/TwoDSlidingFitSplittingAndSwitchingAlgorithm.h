@@ -25,8 +25,15 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-
-
+    /**
+     *  @brief Find the best split position and direction for a pair of clusters
+     *
+     *  @param slidingFit1 the sliding linear fit to the first cluster
+     *  @param slidingFit2 the sliding linear fit to the second cluster
+     *  @param splitPosition the output split position
+     *  @param direction1 the output direction of the first new cluster
+     *  @param direction2 the output direction of the second new cluster
+     */
     virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFit1, const TwoDSlidingFitResult &slidingFit2,
         pandora::CartesianVector &splitPosition, pandora::CartesianVector &direction1, pandora::CartesianVector &direction2) const = 0;
 
@@ -48,17 +55,12 @@ private:
      */
     void BuildSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const;
 
-
-
-    ////////////////
-
-
     /**
-     *  @brief  TODO
+     *  @brief  Split cluster at a given position and direction
      *
-     *  @param  pCluster
-     *  @param  splitPosition
-     *  @param  splitDirection
+     *  @param  pCluster the cluster
+     *  @param  splitPosition the position at which to split the cluster
+     *  @param  splitDirection the direction of the un-crossed cluster
      *  @param  firstCaloHitList the hits to be added to the first new cluster
      *  @param  secondCaloHitList the hits to be added to the second new cluster
      */
@@ -66,30 +68,21 @@ private:
         const pandora::CartesianVector &splitPosition, const pandora::CartesianVector &splitDirection,
         pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
-
-
-
-
     /**
-     *  @brief  TODO
+     *  @brief  Replace crossed clusters with un-crossed clusters
      *
-     *  @param  pCluster1
-     *  @param  pCluster2
-     *  @param  splitPosition
-     *  @param  firstDirection
-     *  @param  secondDirection
+     *  @param  pCluster1 the first cluster to be deleted
+     *  @param  pCluster2 the second cluster to be deleted
+     *  @param  splitPosition the split position
+     *  @param  firstDirection the direction of the first new cluster
+     *  @param  secondDirection the direction of the second new cluster
      */
     pandora::StatusCode ReplaceClusters(pandora::Cluster *const pCluster1, pandora::Cluster *const pCluster2,
         const pandora::CartesianVector &splitPosition, const pandora::CartesianVector &firstDirection,
         const pandora::CartesianVector &secondDirection) const;
 
-
-
-    unsigned int  m_halfWindowLayers;               ///<
-
-
-    float         m_minClusterLength;               ///<
-
+    unsigned int  m_halfWindowLayers;     ///< half window layers for sliding linear fot
+    float         m_minClusterLength;     ///< minimum length of clusters
 };
 
 } // namespace lar
