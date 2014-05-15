@@ -67,16 +67,6 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
             Cluster* pCluster1 = const_cast<Cluster*>(slidingFitResult1.GetCluster());
             Cluster* pCluster2 = const_cast<Cluster*>(slidingFitResult2.GetCluster());
 
-// --- EVENT DISPLAY [BEGIN] ---
-ClusterList tempList1, tempList2;
-tempList1.insert(pCluster1);
-tempList2.insert(pCluster2);
-PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
-PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
-PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition,"SplitPosition",BLACK,2.5);
-PandoraMonitoringApi::ViewEvent();
-// --- EVENT DISPLAY [END] ---
-
             if (STATUS_CODE_SUCCESS != this->ReplaceClusters(pCluster1, pCluster2,
                 splitPosition, firstDirection, secondDirection))
                 continue;

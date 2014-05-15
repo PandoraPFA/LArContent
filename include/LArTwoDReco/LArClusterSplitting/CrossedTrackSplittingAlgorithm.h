@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArCosmicRay/CrossedTrackSplittingAlgorithm.h
  *
- *  @brief  Header file for the cosmic ray splitting algorithm class.
+ *  @brief  Header file for the crossed track splitting algorithm class.
  *
  *  $Log: $
  */
@@ -31,14 +31,23 @@ public:
     };
 
 private:
-
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFit1, const TwoDSlidingFitResult &slidingFit2,
         pandora::CartesianVector &splitPosition, pandora::CartesianVector &direction1, pandora::CartesianVector &direction2) const;
 
+    /**
+     *  @brief Find average positions of pairs of hits within a maximum separation
+     *
+     *  @param pCluster1 the first cluster
+     *  @param pCluster2 the second cluster
+     *  @param candidateList the output list to receive the average positions
+     */
+    void FindCandidateSplitPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        pandora::CartesianPointList &candidateList) const;
 
-
-
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    float m_maxClusterSeparation;            ///< maximum separation of two clusters
+    float m_maxClusterSeparationSquared;     ///< maximum separation of two clusters (squared)
+    float m_minCosRelativeAngle;             ///< maximum relative angle between tracks after un-crossing
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
