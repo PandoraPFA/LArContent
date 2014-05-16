@@ -38,8 +38,23 @@ private:
 
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
-    float          m_clusterMinLength;           ///<
+
+
+    pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, pandora::CartesianVector &splitPosition,
+        pandora::CartesianVector &splitDirection1, pandora::CartesianVector &splitDirection2) const; 
+
+
+
+
+    pandora::StatusCode ConfirmSplitPosition(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector &splitPosition,
+        const pandora::CartesianVector &splitDirection1, const pandora::CartesianVector &splitDirection2) const; 
+
+
     unsigned int   m_halfWindowLayers;           ///<
+    float          m_samplingPitch;              ///< 
+    float          m_clusterMinLength;           ///<
+    float          m_maxSplitCosTheta;           ///<
+    float          m_minMergeCosTheta;           ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
