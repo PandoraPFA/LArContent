@@ -34,27 +34,40 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    /**
-     *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
-     *
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
-     */
-    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
-    /**
-     *  @brief  Build the map of sliding fit results
-     *
-     *  @param  clusterVector the input cluster vector
-     *  @param  slidingFitResultMap the output sliding fit result map
-     */
-    void BuildSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const;
 
-  
-    unsigned int   m_halfWindowLayers;                     ///< number of layers to use for half-window of sliding fit
-   
-    float          m_clusterMinLength;                     ///< minimum length of clusters for this algorithm
-  
+
+    pandora::StatusCode GetAvailableClusters(const pandora::StringVector inputClusterListNames, pandora::ClusterVector &clusterVector) const;
+
+
+    void SelectCleanClusters(const pandora::ClusterVector &inputVector, pandora::ClusterVector &outputVector) const;
+
+
+
+    void AddToSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const;
+
+
+
+    void SelectMatchedTracks(const TwoDSlidingFitResultMap &slidingFitResultMap, const pandora::ClusterVector &clusterVector1,
+        const pandora::ClusterVector &clusterVector2, const pandora::ClusterVector &clusterVector3);
+
+
+
+    void SelectMatchedTracks(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
+        const pandora::ClusterVector &availableClusters3);
+
+
+
+    pandora::StringVector   m_inputClusterListNamesU;     ///< The input cluster list names for the U view
+    pandora::StringVector   m_inputClusterListNamesV;     ///< The input cluster list names for the V view
+    pandora::StringVector   m_inputClusterListNamesW;     ///< The input cluster list names for the W view
+
+
+    unsigned int   m_halfWindowLayers;                    ///< number of layers to use for half-window of sliding fit
+    float          m_clusterMinLength;                    ///< minimum length of clusters for this algorithm
+    float          m_minXOverlap;                         ///< requirement on minimum X overlap for associated clusters
+    float          m_minXOverlapFraction;                 ///< requirement on minimum X overlap fraction for associated clusters
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
