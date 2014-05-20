@@ -47,6 +47,9 @@ void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
     pClusterV->GetOrderedCaloHitList().GetCaloHitList(clusterHitsV);
     pClusterW->GetOrderedCaloHitList().GetCaloHitList(clusterHitsW);
 
+    if (clusterHitsU.empty() || clusterHitsV.empty() || clusterHitsW.empty())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
     typedef std::map<pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
     HitToHitMap hitToHitMapUV, hitToHitMapVW, hitToHitMapWU;
 
@@ -98,7 +101,7 @@ void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
         }
     }
 
-    // U-V-W associations in 3D coordinates
+    // U-V-W associations in 3D coordinates (TODO: Speed up this calculation...)
     for (HitToHitMap::const_iterator hIterUV = hitToHitMapUV.begin(), hIterEndUV = hitToHitMapUV.end(); hIterUV != hIterEndUV; ++hIterUV)
     {
         CaloHit *pCaloHitU = hIterUV->first;
@@ -144,7 +147,7 @@ void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
         }
     }
 
-    // Calculate matching fractions
+    // Calculate matched fractions in each view (use average matched fraction as the overlap result...)
     const float matchedFractionU(static_cast<float>(matchedHitsU.size()) / static_cast<float>(clusterHitsU.size()));
     const float matchedFractionV(static_cast<float>(matchedHitsV.size()) / static_cast<float>(clusterHitsV.size()));
     const float matchedFractionW(static_cast<float>(matchedHitsW.size()) / static_cast<float>(clusterHitsW.size()));
@@ -154,7 +157,7 @@ void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
     if (matchedFraction < m_minMatchedFraction)
         return;
 
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, m_minMatchedFraction);
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, matchedFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -217,7 +220,7 @@ StatusCode ThreeDRemnantTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxMatchedChi2", m_maxMatchedChi2));
 
-    m_minMatchedFraction = 0.75f;
+    m_minMatchedFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
