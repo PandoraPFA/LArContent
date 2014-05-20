@@ -32,42 +32,89 @@ public:
 
 private:
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    typedef std::set<unsigned int>                                  IntList;
+    typedef std::map<const pandora::CaloHit*, pandora::ClusterList> HitToClusterMap;
+    typedef std::map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitMap;
+    typedef std::map<const pandora::CaloHit*, IntList>              HitAssociationMap;
+    typedef std::map<const unsigned int, pandora::CaloHitList>      ClusterAssociationMap;
 
+    /**
+     *  @brief Get a vector of available clusters
+     *
+     *  @param inputClusterListName the input name of the cluster list
+     *  @param clusterVector the output vector of available clusters
+     */
+    pandora::StatusCode GetAvailableClusters(const std::string inputClusterListName, pandora::ClusterVector &clusterVector) const;
 
-
-    pandora::StatusCode GetAvailableClusters(const pandora::StringVector inputClusterListNames, pandora::ClusterVector &clusterVector) const;
-
-
+    /**
+     *  @brief Select a set of clusters judged to be clean
+     *
+     *  @param inputVector the input vector of all available clusters
+     *  @param outputVector the output vector of clean clusters
+     */
     void SelectCleanClusters(const pandora::ClusterVector &inputVector, pandora::ClusterVector &outputVector) const;
 
-
-
+    /**
+     *  @brief Generate a map of sliding linear fit results from a vector of clusters
+     *
+     *  @param clusterVector the input vector of clusters
+     *  @param slidingFitResultMap the output map of sliding linear fit results
+     */
     void AddToSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const;
 
-
-
+    /**
+     *  @brief Match clusters bewteen views
+     *
+     *  @param slidingFitResultMap the input map of sliding linear fit results
+     *  @param clusterVector1 the input vector of clusters for the first view
+     *  @param clusterVector2 the input vector of clusters for the second view
+     *  @param clusterVector3 the input vector of clusters for the third view
+     *  @param hitAssociationMap the output map from associated hits to new clusters
+     *  @param clusterAssociationMap the output map from new cluster to associated hits
+     */
     void SelectMatchedTracks(const TwoDSlidingFitResultMap &slidingFitResultMap, const pandora::ClusterVector &clusterVector1,
-        const pandora::ClusterVector &clusterVector2, const pandora::ClusterVector &clusterVector3);
+        const pandora::ClusterVector &clusterVector2, const pandora::ClusterVector &clusterVector3,
+        HitAssociationMap &hitAssociationMap, ClusterAssociationMap &clusterAssociationMap) const;
 
+    /**
+     *  @brief Match clusters between views
+     *
+     *  @param clusterID the unique ID number for this match
+     *  @param slidingFitResult1 the input sliding linear fit for the first view
+     *  @param slidingFitResult2 the input sliding linear fit for the second view
+     *  @param availableClusters3 the input vector of available clusters for the third view
+     *  @param hitAssociationMap the output map from associated hits to new clusters
+     *  @param clusterAssociationMap the output map from new cluster to associated hits
+     */
+    void SelectMatchedTracks(const unsigned int clusterID, const TwoDSlidingFitResult &slidingFitResult1,
+        const TwoDSlidingFitResult &slidingFitResult2, const pandora::ClusterVector &availableClusters3,
+        HitAssociationMap &hitAssociationMap, ClusterAssociationMap &clusterAssociationMap) const;
 
+    /**
+     *  @brief Modify existing clusters and create new clusters
+     *
+     *  @param inputClusterListName the cluster list name for this view
+     *  @param hitAssociationMap the mapping from hits to new clusters
+     *  @param clusterAssociationMap the mapping from new clusters to hits
+     */
+    pandora::StatusCode ModifyClusters(const std::string inputClusterListName, HitAssociationMap &hitAssociationMap,
+        ClusterAssociationMap &clusterAssociationMap) const;
 
-    void SelectMatchedTracks(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
-        const pandora::ClusterVector &availableClusters3);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    std::string    m_inputClusterListNameU;        ///< The name of the view U cluster list
+    std::string    m_inputClusterListNameV;        ///< The name of the view V cluster list
+    std::string    m_inputClusterListNameW;        ///< The name of the view W cluster list
 
-
-    pandora::StringVector   m_inputClusterListNamesU;     ///< The input cluster list names for the U view
-    pandora::StringVector   m_inputClusterListNamesV;     ///< The input cluster list names for the V view
-    pandora::StringVector   m_inputClusterListNamesW;     ///< The input cluster list names for the W view
-
-
-    unsigned int   m_halfWindowLayers;                    ///< number of layers to use for half-window of sliding fit
-    float          m_clusterMinLength;                    ///< minimum length of clusters for this algorithm
-    float          m_minXOverlap;                         ///< requirement on minimum X overlap for associated clusters
-    float          m_minXOverlapFraction;                 ///< requirement on minimum X overlap fraction for associated clusters
-
+    unsigned int   m_halfWindowLayers;             ///< number of layers to use for half-window of sliding fit
+    float          m_clusterMinLength;             ///< minimum length of clusters for this algorithm
+    float          m_minXOverlap;                  ///< requirement on minimum X overlap for associated clusters
+    float          m_minXOverlapFraction;          ///< requirement on minimum X overlap fraction for associated clusters
+    float          m_maxPointDisplacement;         ///< maximum distance between projected track and associated hits
+    float          m_maxHitDisplacement;           ///< maximum distance between associated hits
+    float          m_minMatchedPointFraction;      ///< minimum fraction of matched points
+    unsigned int   m_minMatchedHits;               ///< minimum number of matched hits
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
