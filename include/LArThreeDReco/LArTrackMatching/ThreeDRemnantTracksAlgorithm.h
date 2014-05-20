@@ -11,10 +11,7 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-
 #include "LArObjects/LArOverlapTensor.h"
-#include "LArObjects/LArTrackOverlapResult.h"
 
 #include "LArThreeDReco/ThreeDBaseAlgorithm.h"
 
@@ -43,9 +40,16 @@ public:
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
     void ExamineTensor();
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+
     unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
+    float           m_minXOverlap;                      ///< The minimum X overlap required for clusters
+    float           m_minXOverlapFraction;              ///< The minimum X overlap fraction required for clusters
+    float           m_maxXDisplacement;                 ///< The maximum X extent for a group of associated hits
+    float           m_maxMatchedChi2;                   ///< The maximum chi2 for a group of associated hits
+    float           m_minMatchedFraction;               ///< The minimum fraction of matched hits required for a good match
 
     typedef std::vector<RemnantTensorTool*> RemnantTensorToolList;
     RemnantTensorToolList  m_algorithmToolList;         ///< The algorithm tool list
