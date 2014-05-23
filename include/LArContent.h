@@ -11,9 +11,11 @@
 #include "LArCalculators/LArTransformationCalculator.h"
 #include "LArCalculators/LArPseudoLayerCalculator.h"
 
+#include "LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "LArCheating/CheatingClusterCharacterisationAlg.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
+#include "LArCheating/CheatingPfoCreationAlgorithm.h"
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
@@ -26,14 +28,22 @@
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
+#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ThreeDRemnantTracksAlgorithm.h"
 #include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "LArThreeDReco/LArTrackMatching/ClearLongitudinalTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/ClearRemnantTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/ClearTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/LongTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/MissingTracksTool.h"
+#include "LArThreeDReco/LArTrackMatching/MatchedEndPointsTool.h"
+#include "LArThreeDReco/LArTrackMatching/MissingTrackTool.h"
+#include "LArThreeDReco/LArTrackMatching/MissingTrackSegmentTool.h"
 #include "LArThreeDReco/LArTrackMatching/OvershootTracksTool.h"
 #include "LArThreeDReco/LArTrackMatching/TensorVisualizationTool.h"
+#include "LArThreeDReco/LArTrackMatching/TrackSplittingTool.h"
 #include "LArThreeDReco/LArTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
@@ -49,8 +59,11 @@
 #include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
@@ -78,11 +91,15 @@ public:
         d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArParticleMonitoring",                  lar::ParticleMonitoringAlgorithm::Factory)                                  \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
+        d("LArCheatingClusterCreation",             lar::CheatingClusterCreationAlgorithm::Factory)                             \
         d("LArCheatingClusterCharacterisation",     lar::CheatingClusterCharacterisationAlg::Factory)                           \
         d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
         d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
+        d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
+        d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
+        d("LArThreeDRemnantTracks",                 lar::ThreeDRemnantTracksAlgorithm::Factory)                                 \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
@@ -97,8 +114,11 @@ public:
         d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMerging",              lar::CosmicRayShowerMergingAlgorithm::Factory)                              \
+        d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
+        d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
+        d("LArCrossedTrackSplitting",               lar::CrossedTrackSplittingAlgorithm::Factory)                               \
         d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLayerSplitting",                      lar::LayerSplittingAlgorithm::Factory)                                      \
@@ -115,11 +135,17 @@ public:
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
+        d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
+        d("LArClearRemnantTracks",                  lar::ClearRemnantTracksTool::Factory)                                       \
         d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
         d("LArLongTracks",                          lar::LongTracksTool::Factory)                                               \
-        d("LArMissingTracks",                       lar::MissingTracksTool::Factory)                                            \
+        d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
+        d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \
+        d("LArMissingTrackSegment",                 lar::MissingTrackSegmentTool::Factory)                                      \
         d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
         d("LArTensorVisualization",                 lar::TensorVisualizationTool::Factory)                                      \
+        d("LArTrackSplitting",                      lar::TrackSplittingTool::Factory)                                           \
         d("LArUndershootTracks",                    lar::UndershootTracksTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \

@@ -262,7 +262,9 @@ void ClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedC
 
             if (hitToClusterMap.end() == mapIter)
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pCaloHit, pCluster));
+                PandoraContentApi::Cluster::Parameters parameters;
+                parameters.m_caloHitList.insert(pCaloHit);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
                 hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
             }
             else

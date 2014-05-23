@@ -28,8 +28,30 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-private:
+    /**
+     *  @brief  Whether a long element shares clusters with any other long elements
+     * 
+     *  @param  iIter specifies the long element under consideration
+     *  @param  iteratorList list of iterators to other long elements
+     * 
+     *  @return boolean
+     */
+    static bool HasLongDirectConnections(IteratorList::const_iterator iIter, const IteratorList &iteratorList);
+
+    /**
+     *  @brief  Whether a long element is significantly longer that other elements with which it shares a cluster
+     * 
+     *  @param  iIter specifies the long element under consideration
+     *  @param  elementList the full list of connected tensor elements
+     *  @param  minMatchedSamplingPointRatio the min ratio between 1st and 2nd highest msps for simple ambiguity resolution
+     *  @param  usedClusters the list of clusters already marked as to be added to a pfo
+     */
+    static bool IsLongerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
+        const unsigned int minMatchedSamplingPointRatio, const pandora::ClusterList &usedClusters);
+
     bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+
+private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -40,8 +62,6 @@ private:
      */
     void FindLongTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
-    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
-
     /**
      *  @brief  Select a list of long track-like elements from a set of connected tensor elements
      * 
@@ -51,26 +71,6 @@ private:
      */
     void SelectLongElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters,
         IteratorList &iteratorList) const;
-
-    /**
-     *  @brief  Whether a long element shares clusters with any other long elements
-     * 
-     *  @param  iIter specifies the long element under consideration
-     *  @param  iteratorList list of iterators to other long elements
-     * 
-     *  @return boolean
-     */
-    bool HasLongDirectConnections(IteratorList::const_iterator iIter, const IteratorList &iteratorList) const;
-
-    /**
-     *  @brief  Whether a long element is significantly longer that other elements with which it shares a cluster
-     * 
-     *  @param  iIter specifies the long element under consideration
-     *  @param  elementList the full list of connected tensor elements
-     *  @param  usedClusters the list of clusters already marked as to be added to a pfo
-     */
-    bool IsLongerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
-        const pandora::ClusterList &usedClusters) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation

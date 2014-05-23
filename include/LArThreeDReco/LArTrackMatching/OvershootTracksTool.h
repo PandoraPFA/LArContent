@@ -96,7 +96,6 @@ private:
 
     bool            m_splitMode;                        ///< Whether to run in cluster splitting mode, as opposed to cluster merging mode
     float           m_maxVertexXSeparation;             ///< The max separation between accompanying clusters vertex x positions to make split
-    unsigned int    m_nLayersForKinkSearch;             ///< The number of sliding fit layers to step in the kink search
     float           m_cosThetaCutForKinkSearch;         ///< The cos theta cut used for the kink search in three dimensions
 };
 

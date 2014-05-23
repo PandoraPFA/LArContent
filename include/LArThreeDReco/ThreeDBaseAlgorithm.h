@@ -27,6 +27,8 @@ public:
 };
 
 typedef std::vector<ProtoParticle> ProtoParticleVector;
+typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -49,13 +51,51 @@ public:
      */
     virtual ~ThreeDBaseAlgorithm();
 
-public:
     /**
      *  @brief  Create particles using findings from recent algorithm processing
      * 
      *  @param  protoParticleVector the proto particle vector
+     * 
+     *  @param  whether particles were created
      */
-    virtual void CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
+    virtual bool CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
+
+    /**
+     *  @brief  Merge clusters together
+     * 
+     *  @param  clusterMergeMap the cluster merge map
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
+
+    /**
+     *  @brief  Make cluster splits
+     * 
+     *  @param  splitPositionMap the split position map
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    virtual bool MakeClusterSplits(const SplitPositionMap &splitPositionMap);
+
+    /**
+     *  @brief  Make a cluster split
+     * 
+     *  @param  splitPosition the split position
+     *  @param  pCurrentCluster the cluster to split
+     *  @param  pLowXCluster to receive the low x cluster
+     *  @param  pHighXCluster to receive the high x cluster
+     */
+    virtual void MakeClusterSplit(const pandora::CartesianVector &splitPosition, pandora::Cluster *&pCurrentCluster,
+        pandora::Cluster *&pLowXCluster, pandora::Cluster *&pHighXCluster) const;
+
+    /**
+     *  @brief  Sort split position cartesian vectors by increasing x coordinate
+     * 
+     *  @param  lhs the first cartesian vector
+     *  @param  rhs the second cartesian vector
+     */
+    static bool SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
 
     /**
      *  @brief  Update to reflect a cluster merge
@@ -93,6 +133,36 @@ public:
      *  @brief  Update tensor to remove all elements that have been added to pfos and so are unavailable
      */
     virtual void RemoveUnavailableTensorElements();
+
+    /**
+     *  @brief  Get the input u cluster list
+     */
+    const pandora::ClusterList &GetInputClusterListU() const;
+
+    /**
+     *  @brief  Get the input v cluster list
+     */
+    const pandora::ClusterList &GetInputClusterListV() const;
+
+    /**
+     *  @brief  Get the input w cluster list
+     */
+    const pandora::ClusterList &GetInputClusterListW() const;
+
+    /**
+     *  @brief  Get the selected u cluster list
+     */
+    const pandora::ClusterList &GetSelectedClusterListU() const;
+
+    /**
+     *  @brief  Get the selected v cluster list
+     */
+    const pandora::ClusterList &GetSelectedClusterListV() const;
+
+    /**
+     *  @brief  Get the selected w cluster list
+     */
+    const pandora::ClusterList &GetSelectedClusterListW() const;
 
     /**
      *  @brief  Get the name of the u cluster list
@@ -167,9 +237,67 @@ private:
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
     std::string                 m_outputPfoListName;            ///< The output pfo list name
 
+    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     unsigned int                m_minClusterLayers;             ///< The min number of layers in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetInputClusterListU() const
+{
+    if (NULL == m_pInputClusterListU)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return (*m_pInputClusterListU);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetInputClusterListV() const
+{
+    if (NULL == m_pInputClusterListV)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return (*m_pInputClusterListV);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetInputClusterListW() const
+{
+    if (NULL == m_pInputClusterListW)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return (*m_pInputClusterListW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetSelectedClusterListU() const
+{
+    return m_clusterListU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetSelectedClusterListV() const
+{
+    return m_clusterListV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+inline const pandora::ClusterList &ThreeDBaseAlgorithm<T>::GetSelectedClusterListW() const
+{
+    return m_clusterListW;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

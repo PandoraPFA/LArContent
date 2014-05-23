@@ -77,6 +77,14 @@ bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
         PANDORA_MONITORING_API(VisualizeClusters(&allClusterListU, "AllUClusters", RED));
         PANDORA_MONITORING_API(VisualizeClusters(&allClusterListV, "AllVClusters", GREEN));
         PANDORA_MONITORING_API(VisualizeClusters(&allClusterListW, "AllWClusters", BLUE));
+
+        if (m_showContext)
+        {
+            PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListU()), "InputClusterListU", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListV()), "InputClusterListV", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListW()), "InputClusterListW", GRAY));
+        }
+
         PANDORA_MONITORING_API(ViewEvent());
     }
 
@@ -87,7 +95,7 @@ bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
 
 StatusCode TensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterConnections = 2;
+    m_minClusterConnections = 1;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterConnections", m_minClusterConnections));
 
@@ -98,6 +106,10 @@ StatusCode TensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_showEachIndividualElement = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowEachIndividualElement", m_showEachIndividualElement));
+
+    m_showContext = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowContext", m_showContext));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -25,18 +25,11 @@ namespace lar
 
 void LArClusterHelper::LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
-    // TODO: This breaks when the cluster trajectory lies on a single layer
+    // TODO: Look into more sophisticated treatment for sliding linear fit; lose layer structure and slide over pathlength-ordered hits
+    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, innerCoordinate, outerCoordinate);
 
-    // TODO: Return pandora::StatusCode rather than void?
-
-    ClusterHelper::ClusterFitResult clusterFitResult;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitFullCluster(pCluster, clusterFitResult));
-
-    const CartesianVector axisDirection(clusterFitResult.GetDirection());
-    const CartesianVector innerCentroid(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()));
-    const CartesianVector axisIntercept(clusterFitResult.GetIntercept() + axisDirection * (axisDirection.GetDotProduct(innerCentroid - clusterFitResult.GetIntercept())));
-
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, layerFitHalfWindow, axisIntercept, axisDirection, twoDSlidingFitResult);
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, layerFitHalfWindow, innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector(), twoDSlidingFitResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -353,34 +346,31 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
         }
     }
 
-    if(pClosestCaloHit)
+    if (pClosestCaloHit)
         return pClosestCaloHit->GetPositionVector();
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
-    
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 void LArClusterHelper::GetClusterSpanXZ(const Cluster *const pCluster, CartesianVector &minimumCoordinate, CartesianVector &maximumCoordinate)
 {
-  
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    
+
     float xmin(std::numeric_limits<float>::max());
     float ymin(std::numeric_limits<float>::max());
     float zmin(std::numeric_limits<float>::max());
-    float xmax(std::numeric_limits<float>::min());
-    float ymax(std::numeric_limits<float>::min());
-    float zmax(std::numeric_limits<float>::min());
-        
+    float xmax(-std::numeric_limits<float>::max());
+    float ymax(-std::numeric_limits<float>::max());
+    float zmax(-std::numeric_limits<float>::max());
+
     for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
     {
         for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
         {
             const CaloHit *pCaloHit = *hIter;
-            const CartesianVector hit(pCaloHit->GetPositionVector());
-            
+            const CartesianVector &hit(pCaloHit->GetPositionVector());
             xmin = std::min(hit.GetX(), xmin);
             xmax = std::max(hit.GetX(), xmax);
             ymin = std::min(hit.GetY(), ymin);
@@ -389,69 +379,63 @@ void LArClusterHelper::GetClusterSpanXZ(const Cluster *const pCluster, Cartesian
             zmax = std::max(hit.GetZ(), zmax);
         }
     }
-    
-    minimumCoordinate.SetValues(xmin,ymin,zmin);
-    maximumCoordinate.SetValues(xmax,ymax,zmax);
-    
+
+    minimumCoordinate.SetValues(xmin, ymin, zmin);
+    maximumCoordinate.SetValues(xmax, ymax, zmax);
 }
 
-    //------------------------------------------------------------------------------------------------------------------------------------------
-
-    void LArClusterHelper::GetClusterSpanX(const Cluster *const pCluster, float &xmin, float &xmax)
-    {
-        
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        
-        xmin = std::numeric_limits<float>::max();
-        xmax = std::numeric_limits<float>::min();
-        
-        for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
-        {
-            for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
-            {
-                const CaloHit *pCaloHit = *hIter;
-                const CartesianVector hit(pCaloHit->GetPositionVector());
-                
-                xmin = std::min(hit.GetX(), xmin);
-                xmax = std::max(hit.GetX(), xmax);
-            }
-        }
-    }
-    
-    
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
-float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+
+void LArClusterHelper::GetClusterSpanX(const Cluster *const pCluster, float &xmin, float &xmax)
 {
-        
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    float zsum(0.f);
-    int count(0);
-    float zsumall(0.f);
-    int countall(0);
-    
+    xmin = std::numeric_limits<float>::max();
+    xmax = -std::numeric_limits<float>::max();
+
     for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
     {
         for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
         {
             const CaloHit *pCaloHit = *hIter;
-            const CartesianVector hit(pCaloHit->GetPositionVector());
+            const CartesianVector &hit(pCaloHit->GetPositionVector());
+            xmin = std::min(hit.GetX(), xmin);
+            xmax = std::max(hit.GetX(), xmax);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+{
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    float zsum(0.f);
+    int count(0);
+    float zsumall(0.f);
+    int countall(0);
+
+    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
+    {
+        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            const CaloHit *pCaloHit = *hIter;
+            const CartesianVector &hit(pCaloHit->GetPositionVector());
             zsumall+= hit.GetZ();
             countall++;
-            if(hit.GetX()>=xmin && hit.GetX()<=xmax){
-                count++;
+
+            if (hit.GetX()>=xmin && hit.GetX()<=xmax)
+            {
+                ++count;
                 zsum += hit.GetZ();
             }
         }
     }
-    if(count==0)return zsumall/static_cast<float>(countall);
 
-        
+    if (count == 0)
+        return zsumall/static_cast<float>(countall);
+
     return zsum/static_cast<float>(count);
-    
 }
-
-    
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -499,11 +483,11 @@ void LArClusterHelper::GetExtremalCoordinatesXZ(const Cluster *const pCluster, C
 
     for (CaloHitList::const_iterator iterI = candidateList.begin(), iterEndI = candidateList.end(); iterI != iterEndI; ++iterI )
     {
-        CaloHit* pCaloHitI = *iterI;
+        CaloHit *pCaloHitI = *iterI;
 
         for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = candidateList.end(); iterJ != iterEndJ; ++iterJ )
         {
-            CaloHit* pCaloHitJ = *iterJ;
+            CaloHit *pCaloHitJ = *iterJ;
 
             const float distanceSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
 
@@ -520,7 +504,7 @@ void LArClusterHelper::GetExtremalCoordinatesXZ(const Cluster *const pCluster, C
     const float deltaZ(pSecondCaloHit->GetPositionVector().GetZ() - pFirstCaloHit->GetPositionVector().GetZ());
     const float deltaX(pSecondCaloHit->GetPositionVector().GetX() - pFirstCaloHit->GetPositionVector().GetX());
 
-    if (deltaZ > 0.f || (0.f == deltaZ && deltaX >0.f))
+    if ((deltaZ > 0.f) || ((std::fabs(deltaZ) < std::numeric_limits<float>::epsilon()) && (deltaX > 0.f)))
     {
         innerCoordinate = pFirstCaloHit->GetPositionVector();
         outerCoordinate = pSecondCaloHit->GetPositionVector();
@@ -673,7 +657,11 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
 
         const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
         (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
-    }
+    }  
+
+    // TODO: Bail out if there are no results. This will break everything!
+    // if (layerFitResultMap.empty())
+    //     throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

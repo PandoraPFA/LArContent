@@ -5,6 +5,9 @@
  * 
  *  $Log: $
  */
+#include "PandoraMonitoringApi.h"
+#include "Pandora/PandoraInputTypes.h"
+#include "Pandora/PandoraSettings.h"
 
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/PandoraInputTypes.h"
@@ -27,8 +30,9 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Ambi
 {
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
+        ElementList tempElementList;
         ClusterList clusterListU, clusterListV, clusterListW;
-        this->GetConnectedElements(iterU->first, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
+        this->GetConnectedElements(iterU->first, ignoreUnavailable, tempElementList, clusterListU, clusterListV, clusterListW);
 
         Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
         if (!(*pAmbiguityFunction)(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
@@ -77,26 +81,8 @@ void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, co
     unsigned int &nU, unsigned int &nV, unsigned int &nW) const
 {
     ClusterList clusterListU, clusterListV, clusterListW;
-    this->GetConnectedElements(pCluster, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
+    this->GetConnectedElements(pCluster, ignoreUnavailable, elementList, clusterListU, clusterListV, clusterListW);
     nU = clusterListU.size(); nV = clusterListV.size(); nW = clusterListW.size();
-
-    for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
-    {
-        if (0 == clusterListU.count(iterU->first))
-            continue;
-
-        for (typename OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
-        {
-            for (typename OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
-            {
-                if (ignoreUnavailable && (!iterU->first->IsAvailable() || !iterV->first->IsAvailable() || !iterW->first->IsAvailable()))
-                    continue;
-
-                Element element(iterU->first, iterV->first, iterW->first, iterW->second);
-                elementList.push_back(element);
-            }
-        }
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,7 +190,42 @@ void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterListU,
+void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
+    ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+{
+    ClusterList localClusterListU, localClusterListV, localClusterListW;
+    this->ExploreConnections(pCluster, ignoreUnavailable, localClusterListU, localClusterListV, localClusterListW);
+
+    // ATTN Now need to check that all clusters received are from fully available tensor elements
+    elementList.clear(); clusterListU.clear(); clusterListV.clear(); clusterListW.clear();
+
+    for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
+    {
+        if (0 == localClusterListU.count(iterU->first))
+            continue;
+
+        for (typename OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
+        {
+            for (typename OverlapList::const_iterator iterW = iterV->second.begin(), iterWEnd = iterV->second.end(); iterW != iterWEnd; ++iterW)
+            {
+                if (ignoreUnavailable && (!iterU->first->IsAvailable() || !iterV->first->IsAvailable() || !iterW->first->IsAvailable()))
+                    continue;
+
+                Element element(iterU->first, iterV->first, iterW->first, iterW->second);
+                elementList.push_back(element);
+
+                clusterListU.insert(iterU->first);
+                clusterListV.insert(iterV->first);
+                clusterListW.insert(iterW->first);
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void OverlapTensor<T>::ExploreConnections(Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterListU,
     ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     if (ignoreUnavailable && !pCluster->IsAvailable())
@@ -227,7 +248,7 @@ void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool 
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     for (ClusterList::const_iterator cIter = iter->second.begin(), cIterEnd = iter->second.end(); cIter != cIterEnd; ++cIter)
-        this->GetConnectedElements(*cIter, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
+        this->ExploreConnections(*cIter, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -235,5 +256,6 @@ void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool 
 template class OverlapTensor<float>;
 template class OverlapTensor<TrackOverlapResult>;
 template class OverlapTensor<TransverseOverlapResult>;
+template class OverlapTensor<LongitudinalOverlapResult>;
 
 } // namespace lar

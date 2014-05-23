@@ -209,7 +209,7 @@ void VisualMonitoringAlgorithm::VisualizeTrackList(const std::string &listName) 
     {
         Track *pTrack = *iter;
 
-        if (!m_showOnlyAvailable || !pTrack->HasAssociatedCluster())
+        if (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pTrack))
         {
             trackList.insert(pTrack);
         }
@@ -241,7 +241,20 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeClusters(pClusterList, listName.empty() ? "currentClusters" : listName.c_str(),
+    // Filter cluster list
+    ClusterList clusterList;
+
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pCluster))
+        {
+            clusterList.insert(pCluster);
+        }
+    }
+
+    PANDORA_MONITORING_API(VisualizeClusters(&clusterList, listName.empty() ? "currentClusters" : listName.c_str(),
         (m_hitColors.find("particleid") != std::string::npos) ? AUTOID :
         (m_hitColors.find("iterate") != std::string::npos ? AUTOITER :
         (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY :

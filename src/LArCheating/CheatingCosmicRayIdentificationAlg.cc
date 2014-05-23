@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArMCParticleHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 
@@ -28,23 +29,27 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
     {
         ParticleFlowObject *pPfo = *iter;
 
-        bool isCosmicRay(true);
+        bool isCosmicRay(false);
         const ClusterList &clusterList(pPfo->GetClusterList());
 
         for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
         {
             Cluster *pCluster = *cIter;
 
+            if (TPC_3D == LArThreeDHelper::GetClusterHitType(pCluster))
+                continue;
+
             try
             {
                 const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
-                if (LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle))
-                    isCosmicRay = false;
+                if (!LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle))
+                    isCosmicRay = true;
             }
             catch (StatusCodeException &)
             {
                 isCosmicRay = false;
+                break;
             }
         }
 

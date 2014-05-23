@@ -28,6 +28,12 @@ ThreeDKinkBaseTool::ThreeDKinkBaseTool(const unsigned int nCommonClusters) :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+ThreeDKinkBaseTool::~ThreeDKinkBaseTool()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ThreeDKinkBaseTool::PassesElementCuts(TensorType::ElementList::const_iterator eIter, const ClusterList &usedClusters) const
 {
     if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))
@@ -40,6 +46,54 @@ bool ThreeDKinkBaseTool::PassesElementCuts(TensorType::ElementList::const_iterat
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ThreeDKinkBaseTool::GetXSamplingPoint(const CartesianVector &splitPosition1, const bool isForwardInX, const TwoDSlidingFitResult &fitResult1,
+    const TwoDSlidingFitResult &fitResult2, const TwoDSlidingFitResult &fitResult3) const
+{
+    // Nearest common x position
+    float xMin1(std::numeric_limits<float>::max()), xMax1(-std::numeric_limits<float>::max());
+    float xMin2(std::numeric_limits<float>::max()), xMax2(-std::numeric_limits<float>::max());
+    float xMin3(std::numeric_limits<float>::max()), xMax3(-std::numeric_limits<float>::max());
+    fitResult1.GetMinAndMaxX(xMin1, xMax1);
+    fitResult2.GetMinAndMaxX(xMin2, xMax2);
+    fitResult3.GetMinAndMaxX(xMin3, xMax3);
+
+    const float commonX(isForwardInX ? std::max(xMin1, std::max(xMin2, xMin3)) : std::min(xMax1, std::min(xMax2, xMax3)));
+
+    if (isForwardInX && ((commonX > xMax1) || (commonX > xMax2) || (commonX > xMax3)))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    if (!isForwardInX && ((commonX < xMin1) || (commonX < xMin2) || (commonX < xMin3)))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // Layer step x position
+    float rL1(0.f), rT1(0.f);
+    fitResult1.GetLocalPosition(splitPosition1, rL1, rT1);
+    const int splitLayer(fitResult1.GetLayer(rL1));
+
+    const int lowLayer(std::max(fitResult1.GetMinLayer(), std::min(fitResult1.GetMaxLayer(), splitLayer - m_nLayersForKinkSearch)));
+    const int highLayer(std::max(fitResult1.GetMinLayer(), std::min(fitResult1.GetMaxLayer(), splitLayer + m_nLayersForKinkSearch)));
+
+    CartesianVector minus(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
+    fitResult1.GetGlobalFitPosition(fitResult1.GetL(lowLayer), minus);
+    fitResult1.GetGlobalFitPosition(fitResult1.GetL(highLayer), plus);
+
+    if (minus.GetX() > plus.GetX()) 
+    {
+        CartesianVector temporary(minus);
+        minus = plus;
+        plus = temporary;
+    }
+
+    const float layerStepX(isForwardInX ? plus.GetX() : minus.GetX());
+
+    // Final x position selection
+    const float chosenX(isForwardInX ? std::max(layerStepX, commonX) : std::min(layerStepX, commonX));
+    const float finalX(isForwardInX ? chosenX + m_additionalXStepForKinkSearch : chosenX - m_additionalXStepForKinkSearch);
+    return finalX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,8 +207,8 @@ bool ThreeDKinkBaseTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorith
     }
 
     bool changesMade(false);
-    changesMade |= this->MakeClusterMerges(pAlgorithm, consolidatedMergeMap);
-    changesMade |= this->MakeClusterSplits(pAlgorithm, consolidatedSplitMap);
+    changesMade |= pAlgorithm->MakeClusterMerges(consolidatedMergeMap);
+    changesMade |= pAlgorithm->MakeClusterSplits(consolidatedSplitMap);
 
     return changesMade;
 }
@@ -201,131 +255,12 @@ void ThreeDKinkBaseTool::SelectTensorElements(TensorType::ElementList::const_ite
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDKinkBaseTool::MakeClusterMerges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const
-{
-    ClusterList deletedClusters;
-
-    for (ClusterMergeMap::const_iterator iter = clusterMergeMap.begin(), iterEnd = clusterMergeMap.end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pParentCluster = iter->first;
-
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pParentCluster));
-        const std::string clusterListName((TPC_VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
-
-        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        for (ClusterList::const_iterator dIter = iter->second.begin(), dIterEnd = iter->second.end(); dIter != dIterEnd; ++dIter)
-        {
-            Cluster *pDaughterCluster = *dIter;
-
-            if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
-            pAlgorithm->UpdateUponMerge(pParentCluster, pDaughterCluster);
-            deletedClusters.insert(pDaughterCluster);
-        }
-    }
-
-    return !(deletedClusters.empty());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ThreeDKinkBaseTool::MakeClusterSplits(ThreeDTransverseTracksAlgorithm *pAlgorithm, const SplitPositionMap &splitPositionMap) const
-{
-    bool changesMade(false);
-
-    for (SplitPositionMap::const_iterator iter = splitPositionMap.begin(), iterEnd = splitPositionMap.end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCurrentCluster = iter->first;
-        CartesianPointList splitPositions(iter->second);
-        std::sort(splitPositions.begin(), splitPositions.end(), ThreeDKinkBaseTool::SortSplitPositions);
-
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCurrentCluster));
-        const std::string clusterListName((TPC_VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
-
-        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, clusterListName));
-
-        for (CartesianPointList::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
-        {
-            const CartesianVector &splitPosition(*sIter);
-
-            Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
-            this->MakeClusterSplit(pAlgorithm, *sIter, pCurrentCluster, pLowXCluster, pHighXCluster);
-
-            pAlgorithm->UpdateUponSplit(pLowXCluster, pHighXCluster, pCurrentCluster);
-            changesMade = true;
-            pCurrentCluster = pHighXCluster;
-        }
-    }
-
-    return changesMade;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDKinkBaseTool::MakeClusterSplit(ThreeDTransverseTracksAlgorithm *pAlgorithm, const CartesianVector &splitPosition,
-    Cluster *&pCurrentCluster, Cluster *&pLowXCluster, Cluster *&pHighXCluster) const
-{
-    pLowXCluster = NULL;
-    pHighXCluster = NULL;
-
-    std::string originalListName, fragmentListName;
-    ClusterList clusterList; clusterList.insert(pCurrentCluster);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*pAlgorithm, clusterList, originalListName, fragmentListName));
-
-    CaloHitList caloHitList;
-    pCurrentCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-
-    LArPointingCluster pointingCluster(pCurrentCluster);
-    const bool innerIsLowX(pointingCluster.GetInnerVertex().GetPosition().GetX() < pointingCluster.GetOuterVertex().GetPosition().GetX());
-    const CartesianVector &lowXEnd(innerIsLowX ? pointingCluster.GetInnerVertex().GetPosition() : pointingCluster.GetOuterVertex().GetPosition());
-    const CartesianVector &highXEnd(innerIsLowX ? pointingCluster.GetOuterVertex().GetPosition() : pointingCluster.GetInnerVertex().GetPosition());
-
-    const CartesianVector lowXUnitVector((lowXEnd -splitPosition).GetUnitVector());
-    const CartesianVector highXUnitVector((highXEnd -splitPosition).GetUnitVector());
-
-    for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
-    {
-        CaloHit *pCaloHit = *hIter;
-        const CartesianVector unitVector((pCaloHit->GetPositionVector() - splitPosition).GetUnitVector());
-
-        const float dotProductLowX(unitVector.GetDotProduct(lowXUnitVector));
-        const float dotProductHighX(unitVector.GetDotProduct(highXUnitVector));
-        Cluster *&pClusterToModify((dotProductLowX > dotProductHighX) ? pLowXCluster : pHighXCluster);
-
-        if (NULL == pClusterToModify)
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, pCaloHit, pClusterToModify));
-        }
-        else
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*pAlgorithm, pClusterToModify, pCaloHit));
-        }
-    }
-
-    if ((NULL == pLowXCluster) || (NULL == pHighXCluster))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ThreeDKinkBaseTool::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
-{
-    return (lhs.GetX() < rhs.GetX());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ThreeDKinkBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_majorityRulesMode = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MajorityRulesMode", m_majorityRulesMode));
+
     m_minMatchedFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
@@ -337,6 +272,14 @@ StatusCode ThreeDKinkBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_minLongitudinalImpactParameter = -1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinLongitudinalImpactParameter", m_minLongitudinalImpactParameter));
+
+    m_nLayersForKinkSearch = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NLayersForKinkSearch", m_nLayersForKinkSearch));
+
+    m_additionalXStepForKinkSearch = 0.01f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "AdditionalXStepForKinkSearch", m_additionalXStepForKinkSearch));
 
     return STATUS_CODE_SUCCESS;
 }

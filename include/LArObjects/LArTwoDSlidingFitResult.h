@@ -68,7 +68,7 @@ public:
          */
         double GetRms() const;
 
-        private:
+    private:
         double                  m_l;                            ///< The l coordinate
         double                  m_fitT;                         ///< The fitted t coordinate
         double                  m_gradient;                     ///< The fitted gradient dt/dl
@@ -199,6 +199,14 @@ public:
     int GetMaxLayer() const;
 
     /**
+     *  @brief  Get the minimum and maximum x coordinates associated with the sliding fit
+     * 
+     *  @param  to receive the min x value
+     *  @param  to receive the max x value
+     */
+    void GetMinAndMaxX(float &minX, float &maxX) const;
+
+    /**
      *  @brief  Get layer number for given sliding linear fit longitudinal coordinate
      * 
      *  @param  rL the longitudinal coordinate
@@ -279,14 +287,14 @@ public:
      * 
      *  @return the rms
      */
-    float GetGlobalMinLayerRms() const;
+    float GetMinLayerRms() const;
 
     /**
      *  @brief  Get rms at maximum layer
      * 
      *  @return the rms
      */
-    float GetGlobalMaxLayerRms() const;
+    float GetMaxLayerRms() const;
 
     /**
      *  @brief  Get global fit position for a given longitudinal coordinate
@@ -305,13 +313,13 @@ public:
     void GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
 
     /**
-     *  @brief  Get global fit rms for a given longitudinal coordinate
+     *  @brief  Get fit rms for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
      *  
-     *  @return the global fit rms
+     *  @return the fit rms
      */ 
-    float GetGlobalFitRms(const float rL) const;
+    float GetFitRms(const float rL) const;
 
     /**
      *  @brief  Get global fit position for a given x or z coordinate
@@ -340,6 +348,13 @@ public:
     void GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
 
     /**
+     *  @brief  Get scattering angle for a given longitudinal coordinate
+     * 
+     *  @param  rL the longitudinal coordinate
+     */
+    float GetCosScatteringAngle(const float rL) const;
+
+    /**
      *  @brief  Get the layer fit result map
      * 
      *  @return the layer fit result map
@@ -354,7 +369,6 @@ public:
     const LayerFitContributionMap &GetLayerFitContributionMap() const;
 
 private:
-
     /**
      *  @brief  Interpolate a position between two layers
      *
@@ -388,7 +402,7 @@ private:
      *  @param  firstWeight the weight assigned to the layer above the input coordinate
      *  @param  rms the interpolated rms
      */
-    void GetGlobalFitInterpolatedRms(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter,
+    void GetFitInterpolatedRms(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter,
         const float &firstWeight, const float &secondWeight, float &rms) const;
 
     /**

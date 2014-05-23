@@ -91,6 +91,20 @@ public:
     float GetReducedChi2() const;
 
     /**
+     *  @brief  Track overlap result less than operator
+     * 
+     *  @param  rhs the track overlap result for comparison
+     */
+    bool operator<(const TrackOverlapResult &rhs) const;
+
+    /**
+     *  @brief  Track overlap result greater than operator
+     * 
+     *  @param  rhs the track overlap result for comparison
+     */
+    bool operator>(const TrackOverlapResult &rhs) const;
+
+    /**
      *  @brief  Track overlap result assigment operator
      * 
      *  @param  rhs the track overlap result to assign
@@ -249,20 +263,6 @@ public:
     const XOverlap &GetXOverlap() const;
 
     /**
-     *  @brief  Track overlap result less than operator
-     * 
-     *  @param  rhs the track overlap result for comparison
-     */
-    bool operator<(const TransverseOverlapResult &rhs) const;
-
-    /**
-     *  @brief  Track overlap result greater than operator
-     * 
-     *  @param  rhs the track overlap result for comparison
-     */
-    bool operator>(const TransverseOverlapResult &rhs) const;
-
-    /**
      *  @brief  Track overlap result assigment operator
      * 
      *  @param  rhs the track overlap result to assign
@@ -282,6 +282,80 @@ typedef std::vector<TransverseOverlapResult> TransverseOverlapResultVector;
  *  @param  rhs the second transverse overlap result to add
  */
 TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const TransverseOverlapResult &rhs);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  LongitudinalOverlapResult class
+ */
+class LongitudinalOverlapResult : public TrackOverlapResult
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    LongitudinalOverlapResult();
+
+    /**
+     *  @brief  Constructor
+     * 
+     *  @param  trackOverlapResult
+     *  @param  innerChi2
+     *  @param  outerChi2
+     */
+    LongitudinalOverlapResult(const TrackOverlapResult trackOverlapResult, const float innerChi2, const float outerChi2);
+
+    /**
+     *  @brief  Constructor
+     * 
+     *  @param  nMatchedSamplingPoints
+     *  @param  nSamplingPoints
+     *  @param  chi2
+     *  @param  innerChi2
+     *  @param  outerChi2
+     */
+    LongitudinalOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
+        const float innerChi2, const float outerChi2);
+
+    /**
+     *  @brief  Copy constructor
+     * 
+     *  @param  rhs
+     */
+    LongitudinalOverlapResult(const LongitudinalOverlapResult &rhs);
+
+    /**
+     *  @brief  Destructor
+     */
+    ~LongitudinalOverlapResult();
+
+    /**
+     *  @brief  
+     * 
+     *  @return 
+     */
+    float GetInnerChi2() const;
+
+    /**
+     *  @brief  
+     * 
+     *  @return 
+     */
+    float GetOuterChi2() const;
+
+    /**
+     *  @brief  Track overlap result assigment operator
+     * 
+     *  @param  rhs the track overlap result to assign
+     */
+    LongitudinalOverlapResult &operator=(const LongitudinalOverlapResult &rhs);
+
+private:
+    float  m_innerChi2;                        ///< The inner chi squared
+    float  m_outerChi2;                        ///< The outer chi squared
+};
+
+typedef std::vector<LongitudinalOverlapResult> LongitudinalOverlapResultVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -435,6 +509,21 @@ inline float TransverseOverlapResult::XOverlap::GetXSpanW() const
 inline float TransverseOverlapResult::XOverlap::GetXOverlapSpan() const
 {
     return m_xOverlapSpan;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LongitudinalOverlapResult::GetInnerChi2() const
+{
+    return m_innerChi2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LongitudinalOverlapResult::GetOuterChi2() const
+{
+    return m_outerChi2;
 }
 
 } // namespace lar

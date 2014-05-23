@@ -57,6 +57,13 @@ public:
      */
     const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
 
+    /**
+     *  @brief  Get the layer window for the sliding linear fits
+     * 
+     *  @return the layer window for the sliding linear fits
+     */
+    unsigned int GetSlidingFitWindow() const;
+
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
@@ -158,6 +165,17 @@ private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
     /**
+     *  @brief  Calculate the overlap result for given group of clusters
+     *
+     *  @param  pClusterU the cluster from the U view
+     *  @param  pClusterV the cluster from the V view
+     *  @param  pClusterW the cluster from the W view
+     *  @param  overlapResult to receive the overlap result
+     */
+    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW,
+        TransverseOverlapResult &overlapResult);
+
+    /**
      *  @brief  Get the fit segment list for a given sliding fit result
      * 
      *  @param  slidingFitResult the sliding fit result
@@ -198,7 +216,7 @@ private:
      * 
      *  @return the best overlap result
      */
-    TransverseOverlapResult GetBestOverlapResult(FitSegmentTensor &fitSegmentTensor) const;
+    TransverseOverlapResult GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor) const;
 
     /**
      *  @brief  Get track overlap results for possible connected segments
@@ -215,6 +233,7 @@ private:
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
     unsigned int                m_slidingFitWindow;         ///< The layer window for the sliding linear fits
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
@@ -237,12 +256,13 @@ class TensorManipulationTool : public pandora::AlgorithmTool
 {
 public:
     typedef ThreeDTransverseTracksAlgorithm::TensorType TensorType;
+    typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
      *  @brief  Run the algorithm tool
      * 
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  protoParticleVector the proto particle vector
+     *  @param  overlapTensor the overlap tensor
      * 
      *  @return whether changes have been made by the tool
      */
@@ -255,6 +275,14 @@ public:
 inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgorithm() const
 {
     return new ThreeDTransverseTracksAlgorithm();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int ThreeDTransverseTracksAlgorithm::GetSlidingFitWindow() const
+{
+    return m_slidingFitWindow;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
