@@ -120,6 +120,7 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
 
     const LArPointingCluster pointingCluster1(particle.m_pCluster1);
     const LArPointingCluster pointingCluster2(particle.m_pCluster2);
+    const LArPointingCluster longPointingCluster(particle.m_pLongCluster);
     const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pCluster1));
     const HitType hitType2(LArThreeDHelper::GetClusterHitType(particle.m_pCluster2));
 
@@ -139,8 +140,16 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
         float chiSquared(std::numeric_limits<float>::max());
         LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
 
-        splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
-        passesChecks = true;
+        const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
+        const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
+        const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
+
+        if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
+            (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
+        {
+            splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
+            passesChecks = true;
+        }
     }
 
     const float splitMaxX(0.5f * (particle.m_short1MaxX + particle.m_short2MaxX));
@@ -157,8 +166,16 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
         float chiSquared(std::numeric_limits<float>::max());
         LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
 
-        splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
-        passesChecks = true;
+        const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
+        const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
+        const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
+
+        if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
+            (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
+        {
+            splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
+            passesChecks = true;
+        }
     }
 
     return passesChecks;
@@ -225,6 +242,10 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_minAbsoluteLongDeltaX = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinAbsoluteLongDeltaX", m_minAbsoluteLongDeltaX));
+
+    m_minSplitToVertexProjection = 1.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinSplitToVertexProjection", m_minSplitToVertexProjection));
 
     return STATUS_CODE_SUCCESS;
 }

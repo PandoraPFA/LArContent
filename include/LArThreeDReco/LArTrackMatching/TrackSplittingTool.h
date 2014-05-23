@@ -95,6 +95,7 @@ private:
     float           m_maxAbsoluteShortDeltaX;           ///< Max x distance between ends of two short clusters (measured as an absolute distance)
     float           m_minLongDeltaXFraction;            ///< Min x distance between ends of short and long clusters (measured as fraction of long cluster x length)
     float           m_minAbsoluteLongDeltaX;            ///< Min x distance between ends of short and long clusters (measured as an absolute distance)
+    float           m_minSplitToVertexProjection;       ///< Min projected distance between split position and either inner or outer vertex of long cluster
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
