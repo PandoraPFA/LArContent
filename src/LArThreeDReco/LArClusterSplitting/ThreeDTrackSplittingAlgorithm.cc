@@ -66,26 +66,26 @@ this->CollectMarkers(pointingVertexListU, tempMarkerListU);
 this->CollectMarkers(pointingVertexListV, tempMarkerListV);
 this->CollectMarkers(pointingVertexListW, tempMarkerListW);
 
-PandoraMonitoringApi::VisualizeClusters(&tempClusterListU, "Clusters (U)", GREEN);
-PandoraMonitoringApi::VisualizeClusters(&tempClusterListV, "Clusters (V)", BLUE);
-PandoraMonitoringApi::VisualizeClusters(&tempClusterListW, "Clusters (W)", RED);
+PANDORA_MONITORING_API(VisualizeClusters(&tempClusterListU, "Clusters (U)", GREEN));
+PANDORA_MONITORING_API(VisualizeClusters(&tempClusterListV, "Clusters (V)", BLUE));
+PANDORA_MONITORING_API(VisualizeClusters(&tempClusterListW, "Clusters (W)", RED));
 
 for(CartesianPointList::const_iterator iterU = tempMarkerListU.begin(), iterEndU = tempMarkerListU.end(); iterU != iterEndU; ++iterU){
 const CartesianVector& positionU = *iterU;
-PandoraMonitoringApi::AddMarkerToVisualization(&positionU, "vertex (U)", GREEN, 1.75);
+PANDORA_MONITORING_API(AddMarkerToVisualization(&positionU, "vertex (U)", GREEN, 1.75));
 }
 
 for(CartesianPointList::const_iterator iterV = tempMarkerListV.begin(), iterEndV = tempMarkerListV.end(); iterV != iterEndV; ++iterV){
 const CartesianVector& positionV = *iterV;
-PandoraMonitoringApi::AddMarkerToVisualization(&positionV, "vertex (V)", BLUE, 1.75);
+PANDORA_MONITORING_API(AddMarkerToVisualization(&positionV, "vertex (V)", BLUE, 1.75));
 }
 
 for(CartesianPointList::const_iterator iterW = tempMarkerListW.begin(), iterEndW = tempMarkerListW.end(); iterW != iterEndW; ++iterW){
 const CartesianVector& positionW = *iterW;
-PandoraMonitoringApi::AddMarkerToVisualization(&positionW, "vertex (W)", RED, 1.75);
+PANDORA_MONITORING_API(AddMarkerToVisualization(&positionW, "vertex (W)", RED, 1.75));
 }
 
-PandoraMonitoringApi::ViewEvent();
+PANDORA_MONITORING_API(ViewEvent());
 // --- END EVENT DISPLAY ---
 
 
