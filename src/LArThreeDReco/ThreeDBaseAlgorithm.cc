@@ -129,8 +129,6 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPosi
 
         for (CartesianPointList::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
         {
-            const CartesianVector &splitPosition(*sIter);
-
             Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
             this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster);
 

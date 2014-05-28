@@ -114,6 +114,8 @@ LArPointingCluster::Vertex &LArPointingCluster::Vertex::operator=(const Vertex &
     m_rms = rhs.m_rms;
     m_isInner = rhs.m_isInner;
     m_isInitialized = rhs.m_isInitialized;
+
+    return *this;
 }
 
 } // namespace lar
