@@ -87,11 +87,11 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
             // Try swapping B1 with B2 to see if this gives intersecting straight lines:
             //
             //   F1   F2     a2   b1
-            //    \   |       \   |
-            //     \  |        \  |
+            //    |   |       |   |
+            //     |  |        |  |
             //     R1 R2       R1 R2
-            //      | \         |  \
-            //      |  \        |   \
+            //      | |         |  |
+            //      |  |        |   |
             //     B1   B2     a1    b2
 
             // First straight line is a1->R1->b1

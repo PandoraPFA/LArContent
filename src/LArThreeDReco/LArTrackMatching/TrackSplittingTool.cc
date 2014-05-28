@@ -112,7 +112,7 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
     ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
 {
     const Particle particle(element);
-    const TwoDSlidingFitResult &longFitResult(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
+    //const TwoDSlidingFitResult &longFitResult(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
     const float longXSpan(particle.m_longMaxX - particle.m_longMinX);
 
     if (longXSpan < std::numeric_limits<float>::epsilon())

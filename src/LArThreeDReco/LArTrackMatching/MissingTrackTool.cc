@@ -38,7 +38,6 @@ void MissingTrackTool::FindMissingTracks(ThreeDTransverseTracksAlgorithm *pAlgor
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(iterU->first, false, elementList, nU, nV, nW);
 
-        unsigned int counter(0);
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
             unsigned int nAvailable(0);
