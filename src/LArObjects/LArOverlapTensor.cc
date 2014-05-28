@@ -5,7 +5,7 @@
  * 
  *  $Log: $
  */
-#include "PandoraMonitoringApi.h"
+
 #include "Pandora/PandoraInputTypes.h"
 #include "Pandora/PandoraSettings.h"
 
