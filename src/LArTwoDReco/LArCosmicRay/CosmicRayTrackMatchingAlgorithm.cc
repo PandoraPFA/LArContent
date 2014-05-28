@@ -27,6 +27,9 @@ StatusCode CosmicRayTrackMatchingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetAvailableClusters(m_inputClusterListNameV, availableClustersV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetAvailableClusters(m_inputClusterListNameW, availableClustersW));
 
+    if (availableClustersU.empty() || availableClustersV.empty() || availableClustersW.empty())
+        return STATUS_CODE_SUCCESS;
+
     // Select clean clusters in each view
     ClusterVector cleanClustersU, cleanClustersV, cleanClustersW;
     this->SelectCleanClusters(availableClustersU, cleanClustersU);
@@ -59,7 +62,14 @@ StatusCode CosmicRayTrackMatchingAlgorithm::Run()
 StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::string inputClusterListNames, ClusterVector &clusterVector) const
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, inputClusterListNames, pClusterList))
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, 
+        inputClusterListNames, pClusterList))
+
+    if (NULL == pClusterList)
+    {
+        std::cout << "CosmicRayTrackMatchingAlgorithm: could not find cluster list " << inputClusterListNames << std::endl;  
+        return STATUS_CODE_SUCCESS;
+    }
 
     for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
     {
@@ -69,9 +79,6 @@ StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::stri
 
         clusterVector.push_back(pCluster);
     }
-
-    if (clusterVector.empty())
-        return STATUS_CODE_NOT_FOUND;
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
@@ -163,7 +170,7 @@ void CosmicRayTrackMatchingAlgorithm::SelectMatchedTracks(const unsigned int clu
     const TwoDSlidingFitResult &slidingFitResult2, const ClusterVector &availableClusters, HitAssociationMap &hitAssociationMap,
     ClusterAssociationMap &clusterAssociationMap) const
 {
-    // Require a good X overlap between clusters
+    // Require a good X overlap between clusters in the first and second views
     const Cluster* pCluster1(slidingFitResult1.GetCluster());
     const Cluster* pCluster2(slidingFitResult2.GetCluster());
 
@@ -177,22 +184,119 @@ void CosmicRayTrackMatchingAlgorithm::SelectMatchedTracks(const unsigned int clu
     if (xOverlap < m_minXOverlap || xOverlap/xSpan < m_minXOverlapFraction)
         return;
 
-
-    // Sampling in x
+    // Identify a set of projected positions in the third view
     CartesianPointList projectedPositions;
+
+    if (m_useTransverseMode)
+        this->SelectTransverseMatchedPoints(slidingFitResult1, slidingFitResult2, projectedPositions);
+
+    if (m_useLongitudinalMode)
+        this->SelectLongitudinalMatchedPoints(slidingFitResult1, slidingFitResult2, projectedPositions);
+
+    if (projectedPositions.empty())
+        return;
+
+    // Identify a set of matched hits, clusters and positions in the third view
+    CaloHitList matchedHits;
+    ClusterList matchedClusters;
+    CartesianPointList matchedPositions;
+
+    this->SelectMatchedHits(availableClusters, projectedPositions, matchedHits, matchedClusters, matchedPositions);
+
+    if (matchedHits.size() < m_minMatchedHits)
+        return;  
+
+    if (static_cast<float>(matchedPositions.size()) / static_cast<float>(projectedPositions.size()) < m_minMatchedPointFraction)
+        return;
+
+    // Requirements on clusters ----> TODO: Tidy this up!
+    bool goodClusters(true);
+
+    for (ClusterList::const_iterator cIter = matchedClusters.begin(), cIterEnd = matchedClusters.end(); cIter != cIterEnd; ++cIter)
+    {
+        Cluster* pCluster = *cIter;
+
+        float xMin(0.f), xMax(0.f);
+        LArClusterHelper::GetClusterSpanX(pCluster, xMin, xMax);
+
+        if ((xMax - xMin) > std::min((xMax1 - xMin1), (xMax2 - xMin2)))
+        {
+            goodClusters = false;
+            break;
+        }
+    }
+
+    if (!goodClusters)
+        return;
+
+    // Store the associations
+    for (CaloHitList::const_iterator hIter = matchedHits.begin(), hIterEnd = matchedHits.end(); hIter != hIterEnd; ++hIter)
+    {
+        CaloHit *pCaloHit = *hIter;
+
+        hitAssociationMap[pCaloHit].insert(clusterID);
+        clusterAssociationMap[clusterID].insert(pCaloHit);
+    }
+
+// --- BEGIN EVENT DISPLAY ---
+// ClusterList tempList1, tempList2, tempList3, tempList4;
+// tempList1.insert((Cluster*)pCluster1);
+// tempList2.insert((Cluster*)pCluster2);
+// tempList3.insert(availableClusters.begin(), availableClusters.end());
+// tempList4.insert(matchedClusters.begin(), matchedClusters.end());
+
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&tempList3, "Cluster3", BLACK);
+// PandoraMonitoringApi::ViewEvent();
+
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&tempList3, "Cluster3", BLACK);
+// for (CartesianPointList::const_iterator tIter = projectedPositions.begin(), tIterEnd = projectedPositions.end(); tIter != tIterEnd; ++tIter)
+// {
+// CartesianVector tempPosition(*tIter);
+// PandoraMonitoringApi::AddMarkerToVisualization(&tempPosition, "Projection", RED, 1.5f);
+// }
+// PandoraMonitoringApi::ViewEvent();
+
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&tempList4, "Cluster3", BLACK);
+// PandoraMonitoringApi::ViewEvent();
+
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
+
+// PandoraMonitoringApi::VisualizeCaloHits(&matchedHits, "Cluster3", BLACK);
+// PandoraMonitoringApi::ViewEvent();
+// --- END EVENT DISPLAY ---
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+ 
+void CosmicRayTrackMatchingAlgorithm::SelectTransverseMatchedPoints(const TwoDSlidingFitResult &slidingFitResult1, 
+    const TwoDSlidingFitResult &slidingFitResult2, CartesianPointList &projectedPositions) const
+{
+    const Cluster* pCluster1(slidingFitResult1.GetCluster());
+    const Cluster* pCluster2(slidingFitResult2.GetCluster());
 
     const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
     const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
 
-    const float xMinSampling(std::max(xMin1,xMin2));
-    const float xMaxSampling(std::min(xMax1,xMax2));
+    float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
+    LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
+    LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
 
-    const unsigned int nSamplingPoints(100); // <---- TODO: ADD TO CONFIGURATION
+    const float xMin(std::max(xMin1,xMin2));
+    const float xMax(std::min(xMax1,xMax2));
 
-    for (unsigned int n = 0; n < nSamplingPoints; ++n)
+    for (unsigned int n = 0; n < m_numSamplingPoints; ++n)
     {
-        const float alpha((0.5f + static_cast<float>(n)) / static_cast<float>(nSamplingPoints));
-        const float x(xMinSampling + alpha * (xMaxSampling - xMinSampling));
+        const float alpha((0.5f + static_cast<float>(n)) / static_cast<float>(m_numSamplingPoints));
+        const float x(xMin + alpha * (xMax - xMin));
 
         try
         {
@@ -208,20 +312,89 @@ void CosmicRayTrackMatchingAlgorithm::SelectMatchedTracks(const unsigned int clu
         {
         }
     }
+}
 
-    if (projectedPositions.empty())
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayTrackMatchingAlgorithm::SelectLongitudinalMatchedPoints(const TwoDSlidingFitResult &slidingFitResult1, 
+    const TwoDSlidingFitResult &slidingFitResult2, CartesianPointList &projectedPositions) const
+{
+    const Cluster* pCluster1(slidingFitResult1.GetCluster());
+    const Cluster* pCluster2(slidingFitResult2.GetCluster());
+
+    const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
+    const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
+
+    const CartesianVector minPosition1(slidingFitResult1.GetGlobalMinLayerPosition());
+    const CartesianVector maxPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
+
+    const CartesianVector minPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
+    const CartesianVector maxPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
+
+    const float dx_A(std::fabs(minPosition2.GetX() - minPosition1.GetX()));
+    const float dx_B(std::fabs(maxPosition2.GetX() - maxPosition1.GetX()));
+    const float dx_C(std::fabs(maxPosition2.GetX() - minPosition1.GetX()));
+    const float dx_D(std::fabs(minPosition2.GetX() - maxPosition1.GetX()));
+
+    if (std::min(dx_C,dx_D) > std::max(dx_A,dx_B) && std::min(dx_A,dx_B) > std::max(dx_C,dx_D))
         return;
 
+    const CartesianVector vtxPosition1(minPosition1);
+    const CartesianVector endPosition1(maxPosition1);
 
-    // Find associated hits and clusters
-    CaloHitList associatedHits;
-    ClusterList associatedClusters;
+    const CartesianVector vtxPosition2(dx_A < dx_C ? minPosition2 : maxPosition2);
+    const CartesianVector endPosition2(dx_A < dx_C ? maxPosition2 : minPosition2);
+
+    float chi2(0.f);
+    CartesianVector vtxPosition3D(0.f,0.f,0.f);
+    CartesianVector endPosition3D(0.f,0.f,0.f);
+
+    LArGeometryHelper::MergeTwoPositions3D(hitType1, hitType2, vtxPosition1, vtxPosition2, vtxPosition3D, chi2);
+    LArGeometryHelper::MergeTwoPositions3D(hitType1, hitType2, endPosition1, endPosition2, endPosition3D, chi2);
+
+    const CartesianVector vtxProjection1(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType1));
+    const CartesianVector vtxProjection2(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType2));
+
+    const CartesianVector endProjection1(LArGeometryHelper::ProjectPosition(endPosition3D, hitType1));
+    const CartesianVector endProjection2(LArGeometryHelper::ProjectPosition(endPosition3D, hitType2));
+
+    CartesianPointList projectedPositions1, projectedPositions2;
+
+    for (unsigned int n = 0; n < m_numSamplingPoints; ++n)
+    {
+        const float alpha((0.5f + static_cast<float>(n)) / static_cast<float>(m_numSamplingPoints));
+
+        const CartesianVector linearPosition3D(vtxPosition3D + (endPosition3D - vtxPosition3D) * alpha); 
+        const CartesianVector linearPosition1(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType1));
+        const CartesianVector linearPosition2(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType2));
+
+        try
+        {
+            CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);
+           
+            slidingFitResult1.GetGlobalFitProjection(linearPosition1, position1);
+            slidingFitResult2.GetGlobalFitProjection(linearPosition2, position2); 
+            LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, position1, position2, position3, chi2);
+            projectedPositions.push_back(position3); 
+        }
+        catch (StatusCodeException &)
+        {
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+  
+void CosmicRayTrackMatchingAlgorithm::SelectMatchedHits(const ClusterVector &availableClusters, const CartesianPointList &projectedPositions, 
+    CaloHitList &matchedHits, ClusterList &matchedClusters, CartesianPointList &matchedPositions) const
+{
+    // Identify associated hits and clusters
+    CaloHitList associatedHits; 
+    HitToClusterMap associatedClusters;
 
     for(ClusterVector::const_iterator cIter = availableClusters.begin(), cIterEnd = availableClusters.end(); cIter != cIterEnd; ++cIter)
     {
         Cluster* pCluster = *cIter;
-
-        bool isAssociatedCluster(false);
 
         CaloHitList availableCaloHits;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(availableCaloHits);
@@ -240,44 +413,19 @@ void CosmicRayTrackMatchingAlgorithm::SelectMatchedTracks(const unsigned int clu
                 if ((pCaloHit->GetPositionVector() - projectedPosition).GetMagnitudeSquared() < m_maxPointDisplacement * m_maxPointDisplacement)
                 {
                     isAssociatedHit = true;
-                    isAssociatedCluster = true;
                     break;
                 }
             }
 
             if (isAssociatedHit)
+            {
                 associatedHits.insert(pCaloHit);
+                associatedClusters.insert(HitToClusterMap::value_type(pCaloHit,pCluster));
+            }
         }
-
-        if (isAssociatedCluster)
-            associatedClusters.insert(pCluster);
-    }
-
-
-    // Requirements on clusters
-    bool goodClusters(true);
-
-    for (ClusterList::const_iterator cIter = associatedClusters.begin(), cIterEnd = associatedClusters.end(); cIter != cIterEnd; ++cIter)
-    {
-        Cluster* pCluster = *cIter;
-
-        float xMin(0.f), xMax(0.f);
-        LArClusterHelper::GetClusterSpanX(pCluster, xMin, xMax);
-
-        if ((xMax - xMin) > std::min((xMax1 - xMin1), (xMax2 - xMin2)))
-        {
-            goodClusters = false;
-            break;
-        }
-    }
-
-    if (!goodClusters)
-        return;
-
+    }  
 
     // Requirements on hits
-    CaloHitList matchedHits;
-
     for (CaloHitList::const_iterator hIter1 = associatedHits.begin(), hIterEnd1 = associatedHits.end(); hIter1 != hIterEnd1; ++hIter1)
     {
         CaloHit* pCaloHit1 = *hIter1;
@@ -299,17 +447,20 @@ void CosmicRayTrackMatchingAlgorithm::SelectMatchedTracks(const unsigned int clu
         }
 
         if (isGoodHit)
+        {
             matchedHits.insert(pCaloHit1);
+
+            HitToClusterMap::const_iterator kIter = associatedClusters.find(pCaloHit1);
+            if (associatedClusters.end() == kIter)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            Cluster* pCluster = kIter->second;
+
+            matchedClusters.insert(pCluster);
+        }
     }
 
-
-    if (matchedHits.size() < m_minMatchedHits)
-        return;
-
-
     // Requirements on points
-    unsigned int nMatchedPoints(0);
-
     for (CartesianPointList::const_iterator pIter = projectedPositions.begin(), pIterEnd = projectedPositions.end(); pIter != pIterEnd; ++pIter)
     {
         const CartesianVector projectedPosition = *pIter;
@@ -328,44 +479,8 @@ void CosmicRayTrackMatchingAlgorithm::SelectMatchedTracks(const unsigned int clu
         }
 
         if (isAssociatedPoint)
-            ++nMatchedPoints;
+            matchedPositions.push_back(projectedPosition);
     }
-
-    if (static_cast<float>(nMatchedPoints) / static_cast<float>(projectedPositions.size()) < m_minMatchedPointFraction)
-        return;
-
-
-    // Store the associations
-    for (CaloHitList::const_iterator hIter = matchedHits.begin(), hIterEnd = matchedHits.end(); hIter != hIterEnd; ++hIter)
-    {
-        CaloHit *pCaloHit = *hIter;
-
-        hitAssociationMap[pCaloHit].insert(clusterID);
-        clusterAssociationMap[clusterID].insert(pCaloHit);
-    }
-
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempList1, tempList2, tempList3;
-// tempList1.insert((Cluster*)pCluster1);
-// tempList2.insert((Cluster*)pCluster2);
-// tempList3.insert(availableClusters.begin(), availableClusters.end());
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList3, "Cluster3", GREEN);
-// for (CartesianPointList::const_iterator tIter = projectedPositions.begin(), tIterEnd = projectedPositions.end(); tIter != tIterEnd; ++tIter)
-// {
-// CartesianVector tempPosition(*tIter);
-// PandoraMonitoringApi::AddMarkerToVisualization(&tempPosition, "Projection", GREEN, 2.f);
-// }
-// PandoraMonitoringApi::ViewEvent();
-
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
-// PandoraMonitoringApi::VisualizeCaloHits(&matchedHits, "AssociatedHits", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -394,8 +509,8 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ModifyClusters(const std::string inp
         for (CaloHitList::const_iterator hIter = availableCaloHits.begin(), hIterEnd = availableCaloHits.end(); hIter != hIterEnd; ++hIter)
         {
             CaloHit *pCaloHit = *hIter;
-            hitsToClusters[pCaloHit].insert(pCluster);
             clustersToHits[pCluster].insert(pCaloHit);
+            hitsToClusters.insert(HitToClusterMap::value_type(pCaloHit,pCluster));
         }
     }
 
@@ -418,14 +533,11 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ModifyClusters(const std::string inp
             if (hitAssociationMap[pCaloHit].size() > 1)
                 continue;
 
-            if (hitsToClusters[pCaloHit].size() > 1)
+            HitToClusterMap::const_iterator kIter = hitsToClusters.find(pCaloHit);
+            if (hitsToClusters.end() == kIter)
                 return STATUS_CODE_FAILURE;
 
-            ClusterList::const_iterator kIter = hitsToClusters[pCaloHit].begin();
-            if (hitsToClusters[pCaloHit].end() == kIter)
-                return STATUS_CODE_FAILURE;
-
-            Cluster* pCluster = *kIter;
+            Cluster* pCluster = kIter->second;
 
             clustersToModify[pCluster].insert(pCaloHit);
             clustersToCreate[clusterID].insert(pCaloHit);
@@ -499,17 +611,6 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ModifyClusters(const std::string inp
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
 
-
-// --- BEGIN EVENT DISPLAY ---
-// ClusterVector newClusters;
-// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetAvailableClusters(inputClusterListName, newClusters));
-// ClusterList tempList;
-// tempList.insert(newClusters.begin(), newClusters.end());
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "NewClusters", BLACK);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -520,6 +621,12 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
+
+    m_useTransverseMode = false;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TransverseMode", m_useTransverseMode));
+
+    m_useLongitudinalMode = false;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "LongitudinalMode", m_useLongitudinalMode));
 
     m_clusterMinLength = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -536,6 +643,10 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     m_minXOverlapFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
+
+    m_numSamplingPoints = 100;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NumSamplingPoints", m_numSamplingPoints));
 
     m_maxPointDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

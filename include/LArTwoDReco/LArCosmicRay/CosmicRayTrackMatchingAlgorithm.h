@@ -34,7 +34,7 @@ private:
     pandora::StatusCode Run();
 
     typedef std::set<unsigned int>                                  IntList;
-    typedef std::map<const pandora::CaloHit*, pandora::ClusterList> HitToClusterMap;
+    typedef std::map<const pandora::CaloHit*, pandora::Cluster*>    HitToClusterMap;
     typedef std::map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitMap;
     typedef std::map<const pandora::CaloHit*, IntList>              HitAssociationMap;
     typedef std::map<const unsigned int, pandora::CaloHitList>      ClusterAssociationMap;
@@ -92,6 +92,38 @@ private:
         HitAssociationMap &hitAssociationMap, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
+     *  @brief Project clusters from two views into a third view using transverse matching
+     *
+     *  @param slidingFitResult1 the sliding fit result in the first view
+     *  @param slidingFitResult2 the sliding fit result in the second view 
+     *  @param positionList the projected points in the third view
+     */
+    void SelectTransverseMatchedPoints(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
+        pandora::CartesianPointList &positionList) const;
+
+    /**
+     *  @brief Project clusters from two views into a third view using longitudinal matching
+     *
+     *  @param slidingFitResult1 the sliding fit result in the first view
+     *  @param slidingFitResult2 the sliding fit result in the second view 
+     *  @param positionList the projected points in the third view
+     */
+    void SelectLongitudinalMatchedPoints(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
+        pandora::CartesianPointList &positionList) const;
+
+    /**
+     *  @brief Generate lists of matched hits and positions
+     *
+     *  @param availableClusters input vector of available clusters
+     *  @param projectedPositions input vector of projected points
+     *  @param matchedHits output list of matched hits
+     *  @param matchedClusters output list of matched clusters
+     *  @param matchedPositions output list of matched positions
+     */
+    void SelectMatchedHits(const pandora::ClusterVector &availableClusters, const pandora::CartesianPointList &projectedPositions, 
+        pandora::CaloHitList &matchedHits, pandora::ClusterList &matchedClusters, pandora::CartesianPointList &matchedPositions) const;
+
+    /**
      *  @brief Modify existing clusters and create new clusters
      *
      *  @param inputClusterListName the cluster list name for this view
@@ -107,13 +139,18 @@ private:
     std::string    m_inputClusterListNameV;        ///< The name of the view V cluster list
     std::string    m_inputClusterListNameW;        ///< The name of the view W cluster list
 
-    unsigned int   m_halfWindowLayers;             ///< number of layers to use for half-window of sliding fit
+    bool           m_useTransverseMode;            ///< Run transverse matching between views
+    bool           m_useLongitudinalMode;          ///< Run longitudinal matching between views
+
     float          m_clusterMinLength;             ///< minimum length of clusters for this algorithm
     float          m_minXOverlap;                  ///< requirement on minimum X overlap for associated clusters
     float          m_minXOverlapFraction;          ///< requirement on minimum X overlap fraction for associated clusters
     float          m_maxPointDisplacement;         ///< maximum distance between projected track and associated hits
     float          m_maxHitDisplacement;           ///< maximum distance between associated hits
     float          m_minMatchedPointFraction;      ///< minimum fraction of matched points
+
+    unsigned int   m_halfWindowLayers;             ///< number of layers to use for half-window of sliding fit 
+    unsigned int   m_numSamplingPoints;            ///< The number of matched points to be generated
     unsigned int   m_minMatchedHits;               ///< minimum number of matched hits
 };
 
