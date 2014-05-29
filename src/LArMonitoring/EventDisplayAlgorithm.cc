@@ -75,17 +75,17 @@ StatusCode EventDisplayAlgorithm::Run()
         {
             ParticleFlowObject *pPfo = *pIter;
 
-            ClusterList clusterList;
+            ClusterList particleClusterList;
 
             for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
             {
                 Cluster *pCluster = *cIter;
 
                 if ( pCluster->ContainsHitType(hitType) )
-                    clusterList.insert(pCluster);
+                    particleClusterList.insert(pCluster);
             }
 
-            PANDORA_MONITORING_API(VisualizeClusters(&clusterList, "Particles", GetColor(n++) ));
+            PANDORA_MONITORING_API(VisualizeClusters(&particleClusterList, "Particles", GetColor(n++) ));
         }
 
         PANDORA_MONITORING_API(VisualizeClusters(&clusterList, "Clusters", GRAY ));

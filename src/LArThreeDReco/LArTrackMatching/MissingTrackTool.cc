@@ -20,7 +20,7 @@ bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorTy
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
     ProtoParticleVector protoParticleVector;
-    this->FindMissingTracks(pAlgorithm, overlapTensor, protoParticleVector);
+    this->FindMissingTracks(overlapTensor, protoParticleVector);
 
     const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
     return particlesMade;
@@ -28,7 +28,7 @@ bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorTy
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackTool::FindMissingTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
+void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
     ClusterList usedClusters;
 

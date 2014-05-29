@@ -20,13 +20,13 @@ namespace lar
 StatusCode IsolatedHitMergingAlgorithm::Run()
 {
     const ClusterList *pNonSeedClusterList = NULL;
-    const StatusCode statusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode listStatusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
 
-    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
         return STATUS_CODE_SUCCESS;
 
-    if (STATUS_CODE_SUCCESS != statusCode)
-        return statusCode;
+    if (STATUS_CODE_SUCCESS != listStatusCode)
+        return listStatusCode;
 
     const ClusterList *pSeedClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList));

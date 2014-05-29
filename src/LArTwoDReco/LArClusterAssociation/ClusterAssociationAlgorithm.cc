@@ -114,9 +114,9 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(Cluster *pCluster, cons
 
 void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const
 {
-    ClusterAssociationMap::iterator iter = clusterAssociationMap.find(pCluster);
+    ClusterAssociationMap::iterator cIter = clusterAssociationMap.find(pCluster);
 
-    if (clusterAssociationMap.end() == iter)
+    if (clusterAssociationMap.end() == cIter)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     Cluster *pExtremalCluster = pCluster;
@@ -141,12 +141,12 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
 
     ClusterList daughterClusterList;
 
-    if ( pCluster==pExtremalCluster )
+    if (pCluster == pExtremalCluster)
     {
-        for (ClusterList::const_iterator iter = firstClusterList.begin(), iterEnd = firstClusterList.end(); iter != iterEnd; ++iter)
+        for (ClusterList::const_iterator fIter = firstClusterList.begin(), fIterEnd = firstClusterList.end(); fIter != fIterEnd; ++fIter)
         {
-            if ((secondClusterList.end() != secondClusterList.find(*iter)) && (pCluster != (*iter)))
-                daughterClusterList.insert(*iter);
+            if ((secondClusterList.end() != secondClusterList.find(*fIter)) && (pCluster != (*fIter)))
+                daughterClusterList.insert(*fIter);
         }
     }
 
@@ -159,10 +159,10 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
 // PANDORA_MONITORING_API(ViewEvent());
 // }
 
-    for (ClusterList::const_iterator iter = daughterClusterList.begin(), iterEnd = daughterClusterList.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator dIter = daughterClusterList.begin(), dIterEnd = daughterClusterList.end(); dIter != dIterEnd; ++dIter)
     {
-        this->UpdateForAmbiguousMerge(pCluster, *iter, isForward, clusterAssociationMap);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *iter));
+        this->UpdateForAmbiguousMerge(pCluster, *dIter, isForward, clusterAssociationMap);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *dIter));
         m_mergeMade = true;
     } 
 }

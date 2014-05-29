@@ -15,10 +15,11 @@ using namespace pandora;
 namespace lar
 {
 
-void TrackCleaningAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultList &slidingFitResultList,
-    const ClusterVector &showerClusters, ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const
+void TrackCleaningAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultList &/*slidingFitResultList*/,
+    const ClusterVector &/*showerClusters*/, ClusterToHitMap &/*caloHitsToAdd*/, ClusterToHitMap &/*caloHitsToRemove*/) const
 {
     // TODO: WRITE THIS METHOD!
+    throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

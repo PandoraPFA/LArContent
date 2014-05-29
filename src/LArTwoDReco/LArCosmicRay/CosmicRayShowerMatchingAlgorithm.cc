@@ -23,9 +23,9 @@ namespace lar
 StatusCode CosmicRayShowerMatchingAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
-    const StatusCode statusCode(PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+    const StatusCode listStatusCode(PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
-    if (STATUS_CODE_SUCCESS != statusCode)
+    if (STATUS_CODE_SUCCESS != listStatusCode)
     {
         std::cout << "CosmicRayShowerMatchingAlgorithm: Input pfo list unavailable " << std::endl;
         return STATUS_CODE_SUCCESS;
@@ -36,15 +36,15 @@ StatusCode CosmicRayShowerMatchingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CosmicRay3DShowerMatching(clusterToPfoMap, pfoAssociatedClusterMap));
 
     if (m_visualiseAllMatches || m_visualiseBadMatches)
-        this->VisualiseMatches(clusterToPfoMap, pfoAssociatedClusterMap);
+        this->VisualiseMatches(pfoAssociatedClusterMap);
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CosmicRayShowerMatching(clusterToPfoMap, pfoAssociatedClusterMap));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CosmicRayShowerMatching(pfoAssociatedClusterMap));
     return STATUS_CODE_SUCCESS;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayShowerMatchingAlgorithm::CosmicRayShowerMatching(ctopmap_t &clusterToPfoMap, ptocmultimap_t &pfoAssociatedClusterMap) const
+StatusCode CosmicRayShowerMatchingAlgorithm::CosmicRayShowerMatching(ptocmultimap_t &pfoAssociatedClusterMap) const
 {
     const PfoList *pPfoList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
@@ -95,7 +95,7 @@ StatusCode CosmicRayShowerMatchingAlgorithm::CosmicRayShowerMatching(ctopmap_t &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayShowerMatchingAlgorithm::VisualiseMatches(ctopmap_t &clusterToPfoMap, ptocmultimap_t &pfoAssociatedClusterMap) const
+StatusCode CosmicRayShowerMatchingAlgorithm::VisualiseMatches(ptocmultimap_t &pfoAssociatedClusterMap) const
 {
     const PfoList *pPfoList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));

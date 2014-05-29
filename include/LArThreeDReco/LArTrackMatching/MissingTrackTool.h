@@ -36,11 +36,10 @@ private:
     /**
      *  @brief  Find missing tracks, due to merging of multiple particle deposits into single hits during hit creation
      * 
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */
-    void FindMissingTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+    void FindMissingTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
     unsigned int    m_minMatchedSamplingPoints;     ///< The min number of matched sampling points for the unavailable tensor element
     float           m_minMatchedFraction;           ///< The min matched sampling point fraction for the unavailable tensor element

@@ -27,7 +27,7 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
     SplitPositionMap splitPositionMap;
-    this->FindTracks(pAlgorithm, overlapTensor, splitPositionMap);
+    this->FindTracks(overlapTensor, splitPositionMap);
 
     const bool splitsMade(pAlgorithm->MakeClusterSplits(splitPositionMap));
     return splitsMade;
@@ -35,7 +35,7 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
+void TrackSplittingTool::FindTracks(const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
 {
     ClusterList usedClusters;
 
@@ -59,7 +59,7 @@ void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm,
             if (!LongTracksTool::IsLongerThanDirectConnections(iIter, elementList, m_minMatchedSamplingPointRatio, usedClusters))
                 continue;
 
-            if (!this->PassesChecks(pAlgorithm, *(*iIter), usedClusters, splitPositionMap))
+            if (!this->PassesChecks(*(*iIter), usedClusters, splitPositionMap))
                 continue;
 
             usedClusters.insert((*iIter)->GetClusterU());
@@ -108,11 +108,13 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element,
-    ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
+bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
 {
     const Particle particle(element);
-    //const TwoDSlidingFitResult &longFitResult(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
+
+    if (usedClusters.count(particle.m_pLongCluster) || usedClusters.count(particle.m_pCluster1) || usedClusters.count(particle.m_pCluster2))
+        return false;
+
     const float longXSpan(particle.m_longMaxX - particle.m_longMinX);
 
     if (longXSpan < std::numeric_limits<float>::epsilon())
