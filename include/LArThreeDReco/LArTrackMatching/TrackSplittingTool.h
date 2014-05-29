@@ -60,11 +60,10 @@ private:
     /**
      *  @brief  Find remaining tracks, hidden by spurious track segments (and maybe other ambiguities) in the tensor
      * 
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  splitPositionMap to receive the split position map
      */
-    void FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
+    void FindTracks(const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
 
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
@@ -78,13 +77,11 @@ private:
     /**
      *  @brief  Whether a provided tensor element can be used to construct a pfo
      * 
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
      *  @param  usedClusters the list of used clusters
      *  @param  splitPositionMap to receive the split position map
      */
-    bool PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, pandora::ClusterList &usedClusters,
-        SplitPositionMap &splitPositionMap) const;
+    bool PassesChecks(const TensorType::Element &element, pandora::ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation

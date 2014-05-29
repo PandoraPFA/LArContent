@@ -18,21 +18,21 @@ namespace lar
 
 using namespace pandora;
 
-bool LArParticleIdHelper::LArEmShowerId(const Cluster *const pCluster)
+bool LArParticleIdHelper::LArEmShowerId(const Cluster *const /*pCluster*/)
 {
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArParticleIdHelper::LArPhotonId(const Cluster *const pCluster)
+bool LArParticleIdHelper::LArPhotonId(const Cluster *const /*pCluster*/)
 {
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArParticleIdHelper::LArElectronId(const Cluster *const pCluster)
+bool LArParticleIdHelper::LArElectronId(const Cluster *const /*pCluster*/)
 {
     return false;
 }

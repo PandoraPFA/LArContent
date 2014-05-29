@@ -96,8 +96,8 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             mcEndYPosVector.push_back(pMCParticle3D->GetEndpoint().GetY());
             mcEndZPosVector.push_back(pMCParticle3D->GetEndpoint().GetZ());
 
-            ContributionMap::const_iterator cIter = mcPfoContributionMap.find(uid);
-            const int nMatchedHits((mcPfoContributionMap.end() == cIter) ? 0 : cIter->second);
+            ContributionMap::const_iterator cIter1 = mcPfoContributionMap.find(uid);
+            const int nMatchedHits((mcPfoContributionMap.end() == cIter1) ? 0 : cIter1->second);
 
             UidToPfoMap::const_iterator pfoIter = uidToPfoMap.find(uid);
             const ParticleFlowObject *pPfo((uidToPfoMap.end() == pfoIter) ? NULL : pfoIter->second);
@@ -107,8 +107,8 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             {
                 const ClusterList &clusterList(pPfo->GetClusterList());
 
-                for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-                    nPfoHits += (*cIter)->GetNCaloHits() + (*cIter)->GetNIsolatedCaloHits();
+                for (ClusterList::const_iterator cIter2 = clusterList.begin(), cIter2End = clusterList.end(); cIter2 != cIter2End; ++cIter2)
+                    nPfoHits += (*cIter2)->GetNCaloHits() + (*cIter2)->GetNIsolatedCaloHits();
 
                 const CartesianVector vertex(this->GetSpacePoint(clusterList, pMCParticle3D->GetVertex(), true));
                 const CartesianVector endpoint(this->GetSpacePoint(clusterList, pMCParticle3D->GetEndpoint(), false));
@@ -307,7 +307,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToCaloHitMatches(const CaloHitLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector ParticleMonitoringAlgorithm::GetSpacePoint(const ClusterList &clusterList, const CartesianVector &referencePoint, const bool useInnerLayer) const
+CartesianVector ParticleMonitoringAlgorithm::GetSpacePoint(const ClusterList &clusterList, const CartesianVector &/*referencePoint*/, const bool /*useInnerLayer*/) const
 {
     CartesianVector spacePoint(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
 

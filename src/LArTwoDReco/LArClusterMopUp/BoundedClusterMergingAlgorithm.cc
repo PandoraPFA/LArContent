@@ -21,12 +21,12 @@ StatusCode BoundedClusterMergingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList));
 
     const ClusterList *pNonSeedClusterList = NULL;
-    const StatusCode statusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
+    const StatusCode listStatusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
 
-    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
-        return statusCode;
+    if ((STATUS_CODE_SUCCESS != listStatusCode) && (STATUS_CODE_NOT_INITIALIZED != listStatusCode))
+        return listStatusCode;
 
-    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
         return STATUS_CODE_SUCCESS;
 
     this->PrepareAssociations();
@@ -363,7 +363,8 @@ void BoundedCluster::BuildBoundingBox(const Cluster *pCluster)
       for( unsigned int nLayer=minLayer; nLayer<=maxLayer; ++nLayer ){
         unsigned int ilayer = nLayer-fMinLayer;
 
-        if( ilayer>=0 && ilayer<fNumLayers ){
+        if ((nLayer >= fMinLayer) && (ilayer < fNumLayers))
+        {
           if( fBoxFlag[ilayer] == false ){
             fBoxMinX[ilayer] = hitX;
             fBoxMaxX[ilayer] = hitX;

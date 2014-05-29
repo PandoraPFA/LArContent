@@ -32,7 +32,7 @@ void SeedBranchGrowingAlgorithm::GetCandidateClusters(const ClusterList *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-SeedBranchGrowingAlgorithm::AssociationType SeedBranchGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
+SeedBranchGrowingAlgorithm::AssociationType SeedBranchGrowingAlgorithm::AreClustersAssociated(const Cluster *const /*pClusterSeed*/, const Cluster *const /*pCluster*/) const
 {
 //    const bool currentVertexExists(LArVertexHelper::DoesCurrentVertexExist());
 //

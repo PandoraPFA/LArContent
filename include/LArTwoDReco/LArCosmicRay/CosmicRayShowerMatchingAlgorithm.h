@@ -42,18 +42,16 @@ private:
     /**
      *  @brief  Add associated clusters to the cosmic ray PFOs
      * 
-     *  @param  map of clusters to be associated to pfos
      *  @param  map of pfos pointing back to associated clusters
      */
-    pandora::StatusCode CosmicRayShowerMatching(ctopmap_t &clusterToPfoMap, ptocmultimap_t &pfoAssociatedClusterMap) const;
+    pandora::StatusCode CosmicRayShowerMatching(ptocmultimap_t &pfoAssociatedClusterMap) const;
 
     /**
-     *  @brief  Sort pfos by number of constituent hits
-     * 
-     *  @param  pLhs address of first pfo
-     *  @param  pRhs address of second pfo
+     *  @brief  Visulise the cluster matches
+     *
+     *  @param  map of pfos pointing back to associated clusters
      */
-     static bool SortPfosByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
+    pandora::StatusCode VisualiseMatches(ptocmultimap_t &pfoAssociatedClusterMap) const;
 
     /**
      *  @brief  Top level steering of the cluster to PFO assocation
@@ -106,12 +104,23 @@ private:
     pandora::StatusCode FindBestCosmicPFO(const pandora::Cluster *const pClusterView1, pandora::ParticleFlowObject* &pBestPFO, float &distanceToBestPFO) const;
 
     /**
-     *  @brief  Visulise the cluster matches
+     *  @brief  Return indicative coordinates of cluster at a position x using range indicated
      *
-     *  @param  map of clusters to be associated to pfos
-     *  @param  map of pfos pointing back to associated clusters
+     *  @param  pointer to cluster
+     *  @param  x (time) value at which coordinate is returned
+     *  @param  minimum x value used to evaluate coordinate
+     *  @param  maximum x value used to evaluate coordinate
+     *  @param  span in number of hits
      */
-    pandora::StatusCode VisualiseMatches(ctopmap_t &clusterToPfoMap, ptocmultimap_t &pfoAssociatedClusterMap) const;
+    float GetCoordinateAtX(const pandora::Cluster *const pCluster, const float x, const float xmin, const float xmax, const int span)const;
+
+    /**
+     *  @brief  Sort pfos by number of constituent hits
+     * 
+     *  @param  pLhs address of first pfo
+     *  @param  pRhs address of second pfo
+     */
+     static bool SortPfosByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
 
     /**
      *  @brief  Make association of cluster to pfo in internal maps
@@ -145,17 +154,6 @@ private:
      *  @param  pounter to pfo
      */
     pandora::StatusCode AssociateClusterWithPfo(ctopmap_t &clusterToPfoMap, ptocmultimap_t &pfoAssociatedClusterMap, const pandora::Cluster *const pC1, const pandora::Cluster *const pC2, const pandora::Cluster *const pC3, const pandora::ParticleFlowObject *const pPfo) const;
-
-    /**
-     *  @brief  Return indicative coordinates of cluster at a position x using range indicated
-     *
-     *  @param  pointer to cluster
-     *  @param  x (time) value at which coordinate is returned
-     *  @param  minimum x value used to evaluate coordinate
-     *  @param  maximum x value used to evaluate coordinate
-     *  @param  span in number of hits
-     */
-    float GetCoordinateAtX(const pandora::Cluster *const pCluster, const float x, const float xmin, const float xmax, const int span)const;
 
     /**
      *  @brief  Whether a cluster is associated with a MC neutrino
