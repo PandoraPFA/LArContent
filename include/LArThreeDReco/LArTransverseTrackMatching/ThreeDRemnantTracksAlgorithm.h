@@ -25,7 +25,7 @@ class RemnantTensorTool;
 /**
  *  @brief  ThreeDRemnantTracksAlgorithm class
  */
-class ThreeDRemnantTracksAlgorithm : public ThreeDBaseAlgorithm<float> // TODO
+class ThreeDRemnantTracksAlgorithm : public ThreeDBaseAlgorithm<float>
 {
 public:
     /**
@@ -42,7 +42,6 @@ private:
     void ExamineTensor();
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
 
     unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     float           m_minXOverlap;                      ///< The minimum X overlap required for clusters

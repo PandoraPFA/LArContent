@@ -26,37 +26,6 @@ bool ThreeDLongitudinalTracksAlgorithm::SortByChiSquared(const TensorType::Eleme
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const TwoDSlidingFitResult &ThreeDLongitudinalTracksAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
-{
-    TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
-
-    if (m_slidingFitResultMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    return iter->second;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDLongitudinalTracksAlgorithm::PreparationStep()
-{
-    ClusterList allClustersList;
-    allClustersList.insert(m_clusterListU.begin(), m_clusterListU.end());
-    allClustersList.insert(m_clusterListV.begin(), m_clusterListV.end());
-    allClustersList.insert(m_clusterListW.begin(), m_clusterListW.end());
-
-    for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
-    {
-        TwoDSlidingFitResult slidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
-
-        if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     try
@@ -252,7 +221,7 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
-    for (LongitudinalTensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    for (TensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
@@ -266,14 +235,6 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
             ++iter;
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDLongitudinalTracksAlgorithm::TidyUp()
-{
-    m_slidingFitResultMap.clear();
-    return ThreeDBaseAlgorithm<LongitudinalOverlapResult>::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -294,10 +255,6 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
         m_algorithmToolList.push_back(pTensorManipulationTool);
     }
 
-    m_slidingFitWindow = 20;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
-
     m_nMaxTensorToolRepeats = 5000;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
@@ -317,7 +274,7 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
     if(m_samplingPitch < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_INVALID_PARAMETER;
 
-    return ThreeDBaseAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

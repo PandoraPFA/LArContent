@@ -11,12 +11,9 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-
-#include "LArObjects/LArOverlapTensor.h"
 #include "LArObjects/LArTrackOverlapResult.h"
 
-#include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
 namespace lar
 {
@@ -28,7 +25,7 @@ class TensorManipulationTool;
 /**
  *  @brief  ThreeDTransverseTracksAlgorithm class
  */
-class ThreeDTransverseTracksAlgorithm : public ThreeDBaseAlgorithm<TransverseOverlapResult>
+class ThreeDTransverseTracksAlgorithm : public ThreeDTracksBaseAlgorithm<TransverseOverlapResult>
 {
 public:
     /**
@@ -49,23 +46,6 @@ public:
      *  @return boolean
      */
     static bool SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs);
-
-    /**
-     *  @brief  Get a sliding fit result from the algorithm cache
-     * 
-     *  @param  pCluster address of the relevant cluster
-     */
-    const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
-
-    /**
-     *  @brief  Get the layer window for the sliding linear fits
-     * 
-     *  @return the layer window for the sliding linear fits
-     */
-    unsigned int GetSlidingFitWindow() const;
-
-    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
-    virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
 private:
     /**
@@ -161,7 +141,6 @@ private:
     typedef std::map<unsigned int, FitSegmentToOverlapResultMap> FitSegmentMatrix;
     typedef std::map<unsigned int, FitSegmentMatrix> FitSegmentTensor;
 
-    void PreparationStep();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
     /**
@@ -230,21 +209,18 @@ private:
         FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const;
 
     void ExamineTensor();
-    void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
-    unsigned int                m_slidingFitWindow;         ///< The layer window for the sliding linear fits
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
     float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
     unsigned int                m_minOverallMatchedPoints;  ///< The minimum number of matched segment sampling points to allow particle creation
     float                       m_minSamplingPointsPerLayer;///< The minimum number of sampling points per layer to allow particle creation
-    TwoDSlidingFitResultMap     m_slidingFitResultMap;      ///< The sliding fit result map
 
-    typedef std::vector<TensorManipulationTool*> TensorManipulationToolList;
-    TensorManipulationToolList  m_algorithmToolList;        ///< The algorithm tool list
+    typedef std::vector<TensorManipulationTool*> TensorToolList;
+    TensorToolList              m_algorithmToolList;        ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -275,14 +251,6 @@ public:
 inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgorithm() const
 {
     return new ThreeDTransverseTracksAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline unsigned int ThreeDTransverseTracksAlgorithm::GetSlidingFitWindow() const
-{
-    return m_slidingFitWindow;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
