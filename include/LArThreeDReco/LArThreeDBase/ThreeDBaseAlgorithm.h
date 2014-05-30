@@ -180,7 +180,7 @@ public:
     const std::string &GetClusterListNameW() const;
 
 protected:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm

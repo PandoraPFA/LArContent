@@ -18,8 +18,6 @@ using namespace pandora;
 namespace lar
 {
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // Requirements on overall X overlap
