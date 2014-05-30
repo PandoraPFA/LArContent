@@ -28,23 +28,24 @@
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
+#include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
+#include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
+#include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ThreeDRemnantTracksAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ClearLongitudinalTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/ClearRemnantTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/ClearTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/LongTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/MatchedEndPointsTool.h"
-#include "LArThreeDReco/LArTrackMatching/MissingTrackTool.h"
-#include "LArThreeDReco/LArTrackMatching/MissingTrackSegmentTool.h"
-#include "LArThreeDReco/LArTrackMatching/OvershootTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/TensorVisualizationTool.h"
-#include "LArThreeDReco/LArTrackMatching/TrackSplittingTool.h"
-#include "LArThreeDReco/LArTrackMatching/UndershootTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDRemnantTracksAlgorithm.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/ClearRemnantTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
@@ -60,7 +61,6 @@
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
@@ -96,9 +96,10 @@ public:
         d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
         d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
+        d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
         d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
-        d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
+        d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDRemnantTracks",                 lar::ThreeDRemnantTracksAlgorithm::Factory)                                 \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
@@ -115,7 +116,6 @@ public:
         d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMerging",              lar::CosmicRayShowerMergingAlgorithm::Factory)                              \
         d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
-        d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArCrossedTrackSplitting",               lar::CrossedTrackSplittingAlgorithm::Factory)                               \
@@ -137,10 +137,10 @@ public:
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
         d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
+        d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
         d("LArClearRemnantTracks",                  lar::ClearRemnantTracksTool::Factory)                                       \
         d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
         d("LArLongTracks",                          lar::LongTracksTool::Factory)                                               \
-        d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
         d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \
         d("LArMissingTrackSegment",                 lar::MissingTrackSegmentTool::Factory)                                      \
         d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
