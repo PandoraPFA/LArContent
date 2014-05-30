@@ -12,7 +12,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "LArThreeDReco/ThreeDBaseAlgorithm.h"
+#include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
 namespace lar
 {
