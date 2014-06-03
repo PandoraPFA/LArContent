@@ -31,6 +31,35 @@ public:
     bool Run(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, TensorType &overlapTensor);
 
 private:
+    /**
+     *  @brief  
+     * 
+     *  @param  
+     *  @param  
+     *  @param  
+     */
+    void FindTrackFragments(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+
+    /**
+     *  @brief  
+     * 
+     *  @param  
+     *  @param  
+     *  @param  
+     * 
+     *  @return boolean
+     */
+    bool GetElementList(const TensorType &overlapTensor, pandora::Cluster *pCluster, TensorType::ElementList &elementList, pandora::HitType &fragmentHitType) const;
+
+    /**
+     *  @brief  
+     * 
+     *  @param  
+     * 
+     *  @return boolean
+     */
+    bool CheckForHitAmbiguities(const TensorType::ElementList &elementList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 

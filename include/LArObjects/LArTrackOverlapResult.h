@@ -8,6 +8,7 @@
 #ifndef LAR_TRACK_OVERLAP_RESULT_H
 #define LAR_TRACK_OVERLAP_RESULT_H 1
 
+#include "Pandora/PandoraInputTypes.h"
 #include "Pandora/StatusCodes.h"
 
 #include <cmath>
@@ -405,18 +406,25 @@ public:
     ~FragmentOverlapResult();
 
     /**
-     *  @brief  Get the list of associated hits
+     *  @brief  Get the list of fragment-associated hits
      * 
-     *  @return the list of associated hits
+     *  @return the list of fragment-associated hits
      */
-    const pandora::CaloHitList &GetCaloHitList() const;
+    const pandora::CaloHitList &GetFragmentCaloHitList() const;
 
     /**
-     *  @brief  Get the list of associated clusters
+     *  @brief  Get the list of fragment-associated clusters
      * 
-     *  @return the list of associated clusters
+     *  @return the list of fragment-associated clusters
      */
-    const pandora::ClusterList &GetClusterList() const;
+    const pandora::ClusterList &GetFragmentClusterList() const;
+
+    /**
+     *  @brief  Get the fragment hit type
+     * 
+     *  @return the fragment hit type
+     */
+    pandora::HitType GetFragmentHitType() const;
 
     /**
      *  @brief  Fragments overlap result assigment operator
@@ -426,8 +434,8 @@ public:
     FragmentOverlapResult &operator=(const FragmentOverlapResult &rhs);
 
 private:
-    pandora::CaloHitList    m_caloHitList;      ///< The list of associated hits
-    pandora::ClusterList    m_clusterList;      ///< The list of associated clusters
+    pandora::CaloHitList    m_caloHitList;      ///< The list of fragment-associated hits
+    pandora::ClusterList    m_clusterList;      ///< The list of fragment-associated clusters
 };
 
 typedef std::vector<FragmentOverlapResult> FragmentOverlapResultVector;
@@ -604,14 +612,14 @@ inline float LongitudinalOverlapResult::GetOuterChi2() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CaloHitList &FragmentOverlapResult::GetCaloHitList() const
+inline const pandora::CaloHitList &FragmentOverlapResult::GetFragmentCaloHitList() const
 {
     return m_caloHitList;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::ClusterList &FragmentOverlapResult::GetClusterList() const
+inline const pandora::ClusterList &FragmentOverlapResult::GetFragmentClusterList() const
 {
     return m_clusterList;
 }

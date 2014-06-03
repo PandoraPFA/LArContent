@@ -179,14 +179,6 @@ public:
      */
     const std::string &GetClusterListNameW() const;
 
-protected:
-    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Select a subset of input clusters for processing in this algorithm
-     */
-    virtual void SelectInputClusters();
-
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
      * 
@@ -194,6 +186,14 @@ protected:
      *  @param  selectedClusterList to receive the selected cluster list
      */
     virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+protected:
+    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    /**
+     *  @brief  Select a subset of input clusters for processing in this algorithm
+     */
+    virtual void SelectInputClusters();
 
     /**
      *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters

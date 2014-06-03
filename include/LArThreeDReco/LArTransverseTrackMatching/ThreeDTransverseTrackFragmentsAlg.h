@@ -37,6 +37,8 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
+
 private:
     void PerformMainLoop();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);

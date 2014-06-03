@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Objects/CaloHit.h"
+
 #include "Pandora/PandoraInternal.h"
 
 #include "LArObjects/LArTrackOverlapResult.h"
@@ -267,8 +269,8 @@ FragmentOverlapResult::FragmentOverlapResult(const unsigned int nMatchedSampling
 
 FragmentOverlapResult::FragmentOverlapResult(const FragmentOverlapResult &rhs) :
     TrackOverlapResult(rhs),
-    m_caloHitList(rhs.IsInitialized() ? rhs.GetCaloHitList() : CaloHitList()),
-    m_clusterList(rhs.IsInitialized() ? rhs.GetClusterList() : ClusterList())
+    m_caloHitList(rhs.IsInitialized() ? rhs.GetFragmentCaloHitList() : CaloHitList()),
+    m_clusterList(rhs.IsInitialized() ? rhs.GetFragmentClusterList() : ClusterList())
 {
 }
 
@@ -283,10 +285,20 @@ FragmentOverlapResult::~FragmentOverlapResult()
 FragmentOverlapResult &FragmentOverlapResult::operator=(const FragmentOverlapResult &rhs)
 {
     this->TrackOverlapResult::operator=(rhs);
-    m_caloHitList = rhs.GetCaloHitList();
-    m_clusterList = rhs.GetClusterList();
+    m_caloHitList = rhs.GetFragmentCaloHitList();
+    m_clusterList = rhs.GetFragmentClusterList();
 
     return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::HitType FragmentOverlapResult::GetFragmentHitType() const
+{
+    if (m_caloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    return (*(m_caloHitList.begin()))->GetHitType();
 }
 
 } // namespace lar
