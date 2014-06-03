@@ -19,6 +19,62 @@ using namespace pandora;
 namespace lar
 {
 
+void ThreeDTransverseTrackFragmentsAlg::UpdateForNewCluster(Cluster *const pNewCluster)
+{
+    TwoDSlidingFitResult slidingFitResult;
+    LArClusterHelper::LArTwoDSlidingFit(pNewCluster, m_slidingFitWindow, slidingFitResult);
+
+    if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pNewCluster, slidingFitResult)).second)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const HitType hitType(LArThreeDHelper::GetClusterHitType(pNewCluster));
+
+    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
+
+    if (!clusterList.insert(pNewCluster).second)
+        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+    const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
+    const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
+
+    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
+    {
+        if (TPC_VIEW_U == hitType)
+        {
+            this->CalculateOverlapResult(pNewCluster, *iter1, NULL);
+        }
+        else if (TPC_VIEW_V == hitType)
+        {
+            this->CalculateOverlapResult(*iter1, pNewCluster, NULL);
+        }
+        else
+        {
+            this->CalculateOverlapResult(*iter1, NULL, pNewCluster);
+        }
+    }
+
+    for (ClusterList::const_iterator iter2 = clusterList2.begin(), iter2End = clusterList2.end(); iter2 != iter2End; ++iter2)
+    {
+        if (TPC_VIEW_U == hitType)
+        {
+            this->CalculateOverlapResult(pNewCluster, NULL, *iter2);
+        }
+        else if (TPC_VIEW_V == hitType)
+        {
+            this->CalculateOverlapResult(NULL, pNewCluster, *iter2);
+        }
+        else
+        {
+            this->CalculateOverlapResult(NULL, *iter2, pNewCluster);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTransverseTrackFragmentsAlg::PerformMainLoop()
 {
     for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
@@ -310,7 +366,7 @@ bool ThreeDTransverseTrackFragmentsAlg::PassesChecks(const TwoDSlidingFitResult 
     if (fragmentOverlapResult.GetMatchedFraction() < m_minMatchedPointFraction)
         return false;
 
-    const ClusterList &matchedClusters(fragmentOverlapResult.GetClusterList());
+    const ClusterList &matchedClusters(fragmentOverlapResult.GetFragmentClusterList());
 
     if (matchedClusters.empty())
         return false;
