@@ -233,4 +233,60 @@ LongitudinalOverlapResult &LongitudinalOverlapResult::operator=(const Longitudin
     return *this;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult() :
+    TrackOverlapResult(),
+    m_caloHitList(),
+    m_clusterList()
+{
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult(const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList,
+        const pandora::ClusterList &clusterList) :
+    TrackOverlapResult(trackOverlapResult),
+    m_caloHitList(caloHitList),
+    m_clusterList(clusterList)
+{
+
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+        const float chi2, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList) :
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
+    m_caloHitList(caloHitList),
+    m_clusterList(clusterList)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult(const FragmentOverlapResult &rhs) :
+    TrackOverlapResult(rhs),
+    m_caloHitList(rhs.IsInitialized() ? rhs.GetCaloHitList() : CaloHitList()),
+    m_clusterList(rhs.IsInitialized() ? rhs.GetClusterList() : ClusterList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::~FragmentOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult &FragmentOverlapResult::operator=(const FragmentOverlapResult &rhs)
+{
+    this->TrackOverlapResult::operator=(rhs);
+    m_caloHitList = rhs.GetCaloHitList();
+    m_clusterList = rhs.GetClusterList();
+
+    return *this;
+}
+
 } // namespace lar

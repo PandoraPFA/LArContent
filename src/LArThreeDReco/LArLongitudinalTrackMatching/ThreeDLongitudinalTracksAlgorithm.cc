@@ -49,17 +49,9 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW,
     LongitudinalOverlapResult &longitudinalOverlapResult)
 {
-    TwoDSlidingFitResultMap::const_iterator iterU = m_slidingFitResultMap.find(pClusterU);
-    TwoDSlidingFitResultMap::const_iterator iterV = m_slidingFitResultMap.find(pClusterV);
-    TwoDSlidingFitResultMap::const_iterator iterW = m_slidingFitResultMap.find(pClusterW);
-
-    if ((m_slidingFitResultMap.end() == iterU) || (m_slidingFitResultMap.end() == iterV) || (m_slidingFitResultMap.end() == iterW))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    const TwoDSlidingFitResult &slidingFitResultU(iterU->second);
-    const TwoDSlidingFitResult &slidingFitResultV(iterV->second);
-    const TwoDSlidingFitResult &slidingFitResultW(iterW->second);
-
+    const TwoDSlidingFitResult &slidingFitResultU(this->GetCachedSlidingFitResult(pClusterU));
+    const TwoDSlidingFitResult &slidingFitResultV(this->GetCachedSlidingFitResult(pClusterV));
+    const TwoDSlidingFitResult &slidingFitResultW(this->GetCachedSlidingFitResult(pClusterW));
 
     // Loop over possible permutations of cluster direction
     TrackOverlapResult bestOverlapResult;
