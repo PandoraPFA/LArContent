@@ -99,8 +99,8 @@ StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandl
 }
 
 template class ThreeDTracksBaseAlgorithm<float>;
-template class ThreeDTracksBaseAlgorithm<TrackOverlapResult>;
 template class ThreeDTracksBaseAlgorithm<TransverseOverlapResult>;
 template class ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>;
+template class ThreeDTracksBaseAlgorithm<FragmentOverlapResult>;
 
 } // namespace lar

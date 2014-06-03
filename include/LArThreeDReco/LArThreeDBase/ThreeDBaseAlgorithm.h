@@ -201,6 +201,11 @@ protected:
     virtual void PreparationStep();
 
     /**
+     *  @brief  Main loop over cluster combinations in order to populate the tensor. Responsible for calling CalculateOverlapResult.
+     */
+    virtual void PerformMainLoop();
+
+    /**
      *  @brief  Calculate cluster overlap result and store in tensor
      * 
      *  @param  pClusterU address of U view cluster

@@ -392,17 +392,7 @@ StatusCode ThreeDBaseAlgorithm<T>::Run()
 
         this->SelectInputClusters();
         this->PreparationStep();
-
-        // Loop over selected modified input clusters and allow derived algorithm to populate tensor
-        for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
-        {
-            for (ClusterList::const_iterator iterV = m_clusterListV.begin(), iterVEnd = m_clusterListV.end(); iterV != iterVEnd; ++iterV)
-            {
-                for (ClusterList::const_iterator iterW = m_clusterListW.begin(), iterWEnd = m_clusterListW.end(); iterW != iterWEnd; ++iterW)
-                    this->CalculateOverlapResult(*iterU, *iterV, *iterW);
-            }
-        }
-
+        this->PerformMainLoop();
         this->ExamineTensor();
         this->TidyUp();
     }
@@ -415,6 +405,21 @@ StatusCode ThreeDBaseAlgorithm<T>::Run()
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::PerformMainLoop()
+{
+    for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
+    {
+        for (ClusterList::const_iterator iterV = m_clusterListV.begin(), iterVEnd = m_clusterListV.end(); iterV != iterVEnd; ++iterV)
+        {
+            for (ClusterList::const_iterator iterW = m_clusterListW.begin(), iterWEnd = m_clusterListW.end(); iterW != iterWEnd; ++iterW)
+                this->CalculateOverlapResult(*iterU, *iterV, *iterW);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -444,8 +449,8 @@ StatusCode ThreeDBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 }
 
 template class ThreeDBaseAlgorithm<float>;
-template class ThreeDBaseAlgorithm<TrackOverlapResult>;
 template class ThreeDBaseAlgorithm<TransverseOverlapResult>;
 template class ThreeDBaseAlgorithm<LongitudinalOverlapResult>;
+template class ThreeDBaseAlgorithm<FragmentOverlapResult>;
 
 } // namespace lar
