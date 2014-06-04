@@ -38,10 +38,25 @@ public:
 
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
+
+protected:
     virtual void PreparationStep();
     virtual void TidyUp();
 
-protected:
+    /**
+     *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
+     * 
+     *  @param  pCluster address of the relevant cluster
+     */
+    void AddToSlidingFitCache(pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Remova an existing sliding fit result, for the specified cluster, from the algorithm cache
+     * 
+     *  @param  pCluster address of the relevant cluster
+     */
+    void RemoveFromSlidingFitCache(pandora::Cluster *const pCluster);
+
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int                m_slidingFitWindow;         ///< The layer window for the sliding linear fits
