@@ -360,10 +360,13 @@ void ThreeDTransverseTrackFragmentsAlg::GetFragmentOverlapResult(const Cartesian
 bool ThreeDTransverseTrackFragmentsAlg::PassesChecks(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     FragmentOverlapResult &fragmentOverlapResult) const
 {
-    if (fragmentOverlapResult.GetNMatchedSamplingPoints() < m_minMatchedPoints)
+    if (fragmentOverlapResult.GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
         return false;
 
-    if (fragmentOverlapResult.GetMatchedFraction() < m_minMatchedPointFraction)
+    if (fragmentOverlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
+        return false;
+
+    if (fragmentOverlapResult.GetFragmentCaloHitList().size() < m_minMatchedHits)
         return false;
 
     const ClusterList &matchedClusters(fragmentOverlapResult.GetFragmentClusterList());
@@ -457,13 +460,17 @@ StatusCode ThreeDTransverseTrackFragmentsAlg::ReadSettings(const TiXmlHandle xml
         "MaxHitDisplacement", maxHitDisplacement));
     m_maxHitDisplacementSquared = maxHitDisplacement * maxHitDisplacement;
 
-    m_minMatchedPoints = 10;
+    m_minMatchedSamplingPoints = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedPoints", m_minMatchedPoints));
+        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minMatchedPointFraction = 0.6f;
+    m_minMatchedSamplingPointFraction = 0.6f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedPointFraction", m_minMatchedPointFraction));
+        "MinMatchedSamplingPointFraction", m_minMatchedSamplingPointFraction));
+
+    m_minMatchedHits = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedHits", m_minMatchedHits));
 
     return ThreeDTracksBaseAlgorithm<FragmentOverlapResult>::ReadSettings(xmlHandle);
 }
