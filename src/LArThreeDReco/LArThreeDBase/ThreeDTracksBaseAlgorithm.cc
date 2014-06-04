@@ -35,12 +35,7 @@ const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitRes
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
 {
-    TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pNewCluster, m_slidingFitWindow, slidingFitResult);
-
-    if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pNewCluster, slidingFitResult)).second)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
+    this->AddToSlidingFitCache(pNewCluster);
     ThreeDBaseAlgorithm<T>::UpdateForNewCluster(pNewCluster);
 }
 
@@ -49,11 +44,7 @@ void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluste
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedCluster)
 {
-    TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pDeletedCluster);
-
-    if (m_slidingFitResultMap.end() != iter)
-        m_slidingFitResultMap.erase(iter);
-
+    this->RemoveFromSlidingFitCache(pDeletedCluster);
     ThreeDBaseAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
 }
 
@@ -84,6 +75,29 @@ void ThreeDTracksBaseAlgorithm<T>::TidyUp()
 {
     m_slidingFitResultMap.clear();
     return ThreeDBaseAlgorithm<T>::TidyUp();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
+{
+    TwoDSlidingFitResult slidingFitResult;
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
+
+    if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(Cluster *const pCluster)
+{
+    TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pCluster);
+
+    if (m_slidingFitResultMap.end() != iter)
+        m_slidingFitResultMap.erase(iter);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -20,11 +20,7 @@ namespace lar
 
 void ThreeDFragmentsBaseAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
 {
-    TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pNewCluster, m_slidingFitWindow, slidingFitResult);
-
-    if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pNewCluster, slidingFitResult)).second)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    this->AddToSlidingFitCache(pNewCluster);
 
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pNewCluster));
 
