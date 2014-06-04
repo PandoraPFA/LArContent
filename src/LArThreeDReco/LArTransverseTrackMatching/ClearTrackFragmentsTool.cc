@@ -1,21 +1,21 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TransverseTrackFragmentsTool.cc
+ *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ClearTrackFragmentsTool.cc
  *
- *  @brief  Implementation of the transverse track fragments tool class.
+ *  @brief  Implementation of the clear track fragments tool class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/TransverseTrackFragmentsTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/ClearTrackFragmentsTool.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-bool TransverseTrackFragmentsTool::Run(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, TensorType &overlapTensor)
+bool ClearTrackFragmentsTool::Run(ThreeDFragmentsBaseAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -29,7 +29,7 @@ bool TransverseTrackFragmentsTool::Run(ThreeDTransverseTrackFragmentsAlg *pAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseTrackFragmentsTool::FindTrackFragments(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType &overlapTensor,
+void ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor,
     ProtoParticleVector &protoParticleVector) const
 {
     for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
@@ -77,7 +77,7 @@ void TransverseTrackFragmentsTool::FindTrackFragments(ThreeDTransverseTrackFragm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTensor, Cluster *pCluster, TensorType::ElementList &elementList) const
+bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTensor, Cluster *pCluster, TensorType::ElementList &elementList) const
 {
     unsigned int nU(0), nV(0), nW(0);
     overlapTensor.GetConnectedElements(pCluster, true, elementList, nU, nV, nW);
@@ -101,7 +101,7 @@ bool TransverseTrackFragmentsTool::GetAndCheckElementList(const TensorType &over
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::ElementList &elementList) const
+bool ClearTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::ElementList &elementList) const
 {
     CaloHitList allMatchedHits;
 
@@ -121,7 +121,7 @@ bool TransverseTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::Elem
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
+bool ClearTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
 {
     if (overlapResult.GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
         return false;
@@ -137,7 +137,7 @@ bool TransverseTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapR
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseTrackFragmentsTool::ProcessTensorElement(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType::OverlapResult &overlapResult,
+void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
     ClusterList &unavailableClusters, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
 {
     const CaloHitList &caloHitList(overlapResult.GetFragmentCaloHitList());
@@ -180,7 +180,7 @@ void TransverseTrackFragmentsTool::ProcessTensorElement(ThreeDTransverseTrackFra
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseTrackFragmentsTool::Recluster(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, Cluster *pCluster, const CaloHitList &daughterHits,
+void ClearTrackFragmentsTool::Recluster(ThreeDFragmentsBaseAlgorithm *pAlgorithm, Cluster *pCluster, const CaloHitList &daughterHits,
     const CaloHitList &separateHits, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
 {
     Cluster *pDaughterCluster(NULL);
@@ -224,7 +224,7 @@ void TransverseTrackFragmentsTool::Recluster(ThreeDTransverseTrackFragmentsAlg *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseTrackFragmentsTool::UpdateTensor(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType &overlapTensor,
+void ClearTrackFragmentsTool::UpdateTensor(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor,
     const ClusterList &unavailableClusters, const ClusterList &newlyAvailableClusters) const
 {
     for (ClusterList::const_iterator iter = unavailableClusters.begin(), iterEnd = unavailableClusters.end(); iter != iterEnd; ++iter)
@@ -248,7 +248,7 @@ void TransverseTrackFragmentsTool::UpdateTensor(ThreeDTransverseTrackFragmentsAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTensor, const ClusterList &unavailableClusters,
+void ClearTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTensor, const ClusterList &unavailableClusters,
     ClusterList &affectedKeyClusters) const
 {
     for (TensorType::const_iterator tIterU = overlapTensor.begin(), tIterUEnd = overlapTensor.end(); tIterU != tIterUEnd; ++tIterU)
@@ -284,7 +284,7 @@ void TransverseTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &over
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TransverseTrackFragmentsTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ClearTrackFragmentsTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_minMatchedSamplingPoints = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

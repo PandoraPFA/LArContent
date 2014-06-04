@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/TransverseTrackFragmentsTool.h
+ *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/ClearTrackFragmentsTool.h
  *
- *  @brief  Header file for the transverse track fragments tool class.
+ *  @brief  Header file for the clear track fragments tool class.
  *
  *  $Log: $
  */
-#ifndef TRANSVERSE_TRACK_FRAGMENTS_TOOL_H
-#define TRANSVERSE_TRACK_FRAGMENTS_TOOL_H 1
+#ifndef CLEAR_TRACK_FRAGMENTS_TOOL_H
+#define CLEAR_TRACK_FRAGMENTS_TOOL_H 1
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTrackFragmentsAlg.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  TransverseTrackFragmentsTool class
+ *  @brief  ClearTrackFragmentsTool class
  */
-class TransverseTrackFragmentsTool : public TransverseFragmentTensorTool
+class ClearTrackFragmentsTool : public FragmentTensorTool
 {
 public:
     /**
@@ -28,7 +28,7 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    bool Run(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDFragmentsBaseAlgorithm *pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -38,7 +38,7 @@ private:
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */
-    void FindTrackFragments(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+    void FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
     /**
      *  @brief  Get the list of elements connected to a given cluster and check its suitability (no ambiguities)
@@ -78,7 +78,7 @@ private:
      *  @param  newlyAvailableClusters to receive the list of clusters newly made available for future particle reconstruction
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void ProcessTensorElement(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType::OverlapResult &overlapResult,
+    void ProcessTensorElement(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
         pandora::ClusterList &unavailableClusters, pandora::ClusterList &newlyAvailableClusters, pandora::Cluster *&pFragmentCluster) const;
 
     /**
@@ -91,7 +91,7 @@ private:
      *  @param  newlyAvailableClusters to receive the list of clusters newly made available for future particle reconstruction
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void Recluster(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, pandora::Cluster *pCluster, const pandora::CaloHitList &daughterHits,
+    void Recluster(ThreeDFragmentsBaseAlgorithm *pAlgorithm, pandora::Cluster *pCluster, const pandora::CaloHitList &daughterHits,
         const pandora::CaloHitList &separateHits, pandora::ClusterList &newlyAvailableClusters, pandora::Cluster *&pFragmentCluster) const;
 
     /**
@@ -102,7 +102,7 @@ private:
      *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
      *  @param  newlyAvailableClusters the list of clusters newly made available for future particle reconstruction
      */
-    void UpdateTensor(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType &overlapTensor, const pandora::ClusterList &unavailableClusters,
+    void UpdateTensor(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor, const pandora::ClusterList &unavailableClusters,
         const pandora::ClusterList &newlyAvailableClusters) const;
 
     /**
@@ -123,11 +123,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::AlgorithmTool *TransverseTrackFragmentsTool::Factory::CreateAlgorithmTool() const
+inline pandora::AlgorithmTool *ClearTrackFragmentsTool::Factory::CreateAlgorithmTool() const
 {
-    return new TransverseTrackFragmentsTool();
+    return new ClearTrackFragmentsTool();
 }
 
 } // namespace lar
 
-#endif // #ifndef TRANSVERSE_TRACK_FRAGMENTS_TOOL_H
+#endif // #ifndef CLEAR_TRACK_FRAGMENTS_TOOL_H
