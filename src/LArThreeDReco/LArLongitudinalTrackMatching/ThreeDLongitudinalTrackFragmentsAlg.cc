@@ -8,6 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArThreeDHelper.h"
+
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTrackFragmentsAlg.h"
 
 using namespace pandora;
@@ -15,42 +19,67 @@ using namespace pandora;
 namespace lar
 {
 
-void ThreeDLongitudinalTrackFragmentsAlg::CalculateOverlapResult(Cluster */*pClusterU*/, Cluster */*pClusterV*/, Cluster */*pClusterW*/)
+void ThreeDLongitudinalTrackFragmentsAlg::GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+    CartesianPointList &projectedPositions) const
 {
-    try
-    {
-//        LongitudinalOverlapResult overlapResult;
-//        this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
-//
-//        if (overlapResult.IsInitialized())
-//            m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
-    }
-    catch (StatusCodeException &statusCodeException)
-    {
-        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || 
-              STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
-            throw statusCodeException;
-    }
-}
+    const Cluster *pCluster1(fitResult1.GetCluster());
+    const Cluster *pCluster2(fitResult2.GetCluster());
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
+    const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
 
-void ThreeDLongitudinalTrackFragmentsAlg::ExamineTensor()
-{
-    unsigned int repeatCounter(0);
+    const CartesianVector minPosition1(fitResult1.GetGlobalMinLayerPosition());
+    const CartesianVector maxPosition1(fitResult1.GetGlobalMaxLayerPosition());
+    const CartesianVector minPosition2(fitResult2.GetGlobalMinLayerPosition());
+    const CartesianVector maxPosition2(fitResult2.GetGlobalMaxLayerPosition());
 
-    for (TensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    const float dx_A(std::fabs(minPosition2.GetX() - minPosition1.GetX()));
+    const float dx_B(std::fabs(maxPosition2.GetX() - maxPosition1.GetX()));
+    const float dx_C(std::fabs(maxPosition2.GetX() - minPosition1.GetX()));
+    const float dx_D(std::fabs(minPosition2.GetX() - maxPosition1.GetX()));
+
+    if (std::min(dx_C,dx_D) > std::max(dx_A,dx_B) && std::min(dx_A,dx_B) > std::max(dx_C,dx_D))
+        return;
+
+    const CartesianVector &vtxPosition1(minPosition1);
+    const CartesianVector &endPosition1(maxPosition1);
+    const CartesianVector &vtxPosition2((dx_A < dx_C) ? minPosition2 : maxPosition2);
+    const CartesianVector &endPosition2((dx_A < dx_C) ? maxPosition2 : minPosition2);
+
+    float vtxChi2(0.f);
+    CartesianVector vtxPosition3D(0.f, 0.f, 0.f);
+    LArGeometryHelper::MergeTwoPositions3D(hitType1, hitType2, vtxPosition1, vtxPosition2, vtxPosition3D, vtxChi2);
+
+    float endChi2(0.f);
+    CartesianVector endPosition3D(0.f, 0.f, 0.f);
+    LArGeometryHelper::MergeTwoPositions3D(hitType1, hitType2, endPosition1, endPosition2, endPosition3D, endChi2);
+
+    const CartesianVector vtxProjection1(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType1));
+    const CartesianVector vtxProjection2(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType2));
+    const CartesianVector endProjection1(LArGeometryHelper::ProjectPosition(endPosition3D, hitType1));
+    const CartesianVector endProjection2(LArGeometryHelper::ProjectPosition(endPosition3D, hitType2));
+
+    CartesianPointList projectedPositions1, projectedPositions2;
+
+    for (unsigned int iSample = 0; iSample < m_nSamplingPoints; ++iSample)
     {
-        if ((*iter)->Run(this, m_overlapTensor))
+        const float alpha((0.5f + static_cast<float>(iSample)) / static_cast<float>(m_nSamplingPoints));
+
+        const CartesianVector linearPosition3D(vtxPosition3D + (endPosition3D - vtxPosition3D) * alpha);
+        const CartesianVector linearPosition1(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType1));
+        const CartesianVector linearPosition2(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType2));
+
+        try
         {
-            iter = m_algorithmToolList.begin();
-
-            if (++repeatCounter > m_nMaxTensorToolRepeats)
-                break;
+            float chi2(0.f);
+            CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);
+            fitResult1.GetGlobalFitProjection(linearPosition1, position1);
+            fitResult2.GetGlobalFitProjection(linearPosition2, position2); 
+            LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, position1, position2, position3, chi2);
+            projectedPositions.push_back(position3); 
         }
-        else
+        catch (StatusCodeException &)
         {
-            ++iter;
         }
     }
 }
@@ -59,25 +88,7 @@ void ThreeDLongitudinalTrackFragmentsAlg::ExamineTensor()
 
 StatusCode ThreeDLongitudinalTrackFragmentsAlg::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolList));
-
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
-    {
-        LongitudinalFragmentTensorTool *pTensorManipulationTool(dynamic_cast<LongitudinalFragmentTensorTool*>(*iter));
-
-        if (NULL == pTensorManipulationTool)
-            return STATUS_CODE_INVALID_PARAMETER;
-
-        m_algorithmToolList.push_back(pTensorManipulationTool);
-    }
-
-    m_nMaxTensorToolRepeats = 5000;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
-
-    return ThreeDTracksBaseAlgorithm<float>::ReadSettings(xmlHandle);
+    return ThreeDFragmentsBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/ClearTrackFragmentsTool.h
+ *  @file   LArContent/include/LArThreeDReco/LArGenericTrackMatching/ClearTrackFragmentsTool.h
  *
  *  @brief  Header file for the clear track fragments tool class.
  *
@@ -8,7 +8,7 @@
 #ifndef CLEAR_TRACK_FRAGMENTS_TOOL_H
 #define CLEAR_TRACK_FRAGMENTS_TOOL_H 1
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTrackFragmentsAlg.h"
+#include "LArThreeDReco/LArThreeDBase/ThreeDFragmentsBaseAlgorithm.h"
 
 namespace lar
 {
