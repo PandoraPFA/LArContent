@@ -37,179 +37,52 @@ void TransverseTrackFragmentsTool::FindTrackFragments(ThreeDTransverseTrackFragm
         if (!iterU->first->IsAvailable())
             continue;
 
-        HitType fragmentHitType(CUSTOM);
         TensorType::ElementList elementList;
 
-        if (!this->GetElementList(overlapTensor, iterU->first, elementList, fragmentHitType))
+        if (!this->GetAndCheckElementList(overlapTensor, iterU->first, elementList))
             continue;
 
         if (!this->CheckForHitAmbiguities(elementList))
             continue;
 
-        // Now reassign the hits as requested
-        const std::string currentListName((TPC_VIEW_U == fragmentHitType) ? pAlgorithm->GetClusterListNameU() :
-            (TPC_VIEW_V == fragmentHitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
-
         ClusterList unavailableClusters, newlyAvailableClusters;
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
-std::cout << " msp " << eIter->GetOverlapResult().GetNMatchedSamplingPoints() << " nsp " << eIter->GetOverlapResult().GetNSamplingPoints() << " chi2Sum " << eIter->GetOverlapResult().GetChi2() << std::endl;
-std::cout << " FragmentHitType " << eIter->GetOverlapResult().GetFragmentHitType() << std::endl;
-ClusterList tempList1, tempList2, tempList3;
-tempList1.insert(eIter->GetClusterU());
-tempList2.insert(eIter->GetClusterV());
-tempList3.insert(eIter->GetClusterW());
-PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "ClusterU", RED));
-PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "ClusterV", GREEN));
-PANDORA_MONITORING_API(VisualizeClusters(&tempList3, "ClusterW", BLUE));
-PANDORA_MONITORING_API(VisualizeClusters(&(eIter->GetOverlapResult().GetFragmentClusterList()), "matchedClusters", MAGENTA));
-PANDORA_MONITORING_API(VisualizeCaloHits(&(eIter->GetOverlapResult().GetFragmentCaloHitList()), "matchedCaloHits", LIGHTGREEN));
-PANDORA_MONITORING_API(ViewEvent());
+            const TensorType::OverlapResult &overlapResult(eIter->GetOverlapResult());
 
-            const CaloHitList &caloHitList(eIter->GetOverlapResult().GetFragmentCaloHitList());
-            const ClusterList &clusterList(eIter->GetOverlapResult().GetFragmentClusterList());
+            if (!this->CheckOverlapResult(overlapResult))
+                continue;
 
-            Cluster *pParentCluster(NULL);
+            Cluster *pFragmentCluster(NULL);
+            this->ProcessTensorElement(pAlgorithm,overlapResult, unavailableClusters, newlyAvailableClusters, pFragmentCluster);
 
-            for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-            {
-                Cluster *pCluster = *cIter;
-                CaloHitList clusterHitList;
-                pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHitList);
-
-                CaloHitList daughterHits, separateHits;
-                for (CaloHitList::const_iterator hIter = clusterHitList.begin(), hIterEnd = clusterHitList.end(); hIter != hIterEnd; ++hIter)
-                {
-                    CaloHit *pCaloHit = *hIter;
-                    caloHitList.count(pCaloHit) ? daughterHits.insert(pCaloHit) : separateHits.insert(pCaloHit);
-                }
-
-                if (daughterHits.empty())
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                if (separateHits.empty())
-                {
-                    unavailableClusters.insert(pCluster);
-
-                    if (NULL == pParentCluster)
-                    {
-                        pParentCluster = pCluster;
-                    }
-                    else
-                    {
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pParentCluster, pCluster));
-                    }
-                }
-                else
-                {
-                    ClusterList clusterToFragment;
-                    clusterToFragment.insert(pCluster);
-                    std::string originalListName, fragmentListName;
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*pAlgorithm, clusterToFragment, originalListName, fragmentListName));
-
-                    Cluster *pDaughterCluster(NULL);
-                    PandoraContentApi::Cluster::Parameters daughterParameters;
-                    daughterParameters.m_caloHitList = daughterHits;
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, daughterParameters, pDaughterCluster));
-
-                    Cluster *pSeparateCluster(NULL);
-                    PandoraContentApi::Cluster::Parameters separateParameters;
-                    separateParameters.m_caloHitList = separateHits;
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, separateParameters, pSeparateCluster));
-
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName));
-
-                    unavailableClusters.insert(pCluster);
-                    newlyAvailableClusters.insert(pSeparateCluster);
-
-                    if (NULL == pParentCluster)
-                    {
-                        pParentCluster = pDaughterCluster;
-                    }
-                    else
-                    {
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pParentCluster, pDaughterCluster));
-                    }
-                }
-            }
-
-            if (NULL == pParentCluster)
+            if (NULL == pFragmentCluster)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.insert((TPC_VIEW_U == fragmentHitType) ? pParentCluster : eIter->GetClusterU());
-            protoParticle.m_clusterListV.insert((TPC_VIEW_V == fragmentHitType) ? pParentCluster : eIter->GetClusterV());
-            protoParticle.m_clusterListW.insert((TPC_VIEW_W == fragmentHitType) ? pParentCluster : eIter->GetClusterW());
+            const HitType fragmentHitType(overlapResult.GetFragmentHitType());
+            protoParticle.m_clusterListU.insert((TPC_VIEW_U == fragmentHitType) ? pFragmentCluster : eIter->GetClusterU());
+            protoParticle.m_clusterListV.insert((TPC_VIEW_V == fragmentHitType) ? pFragmentCluster : eIter->GetClusterV());
+            protoParticle.m_clusterListW.insert((TPC_VIEW_W == fragmentHitType) ? pFragmentCluster : eIter->GetClusterW());
             protoParticleVector.push_back(protoParticle);
-std::cout << " Will make pfo " << std::endl;
-PANDORA_MONITORING_API(VisualizeClusters(&protoParticle.m_clusterListU, "ClusterU", RED));
-PANDORA_MONITORING_API(VisualizeClusters(&protoParticle.m_clusterListV, "ClusterV", GREEN));
-PANDORA_MONITORING_API(VisualizeClusters(&protoParticle.m_clusterListW, "ClusterW", BLUE));
-PANDORA_MONITORING_API(ViewEvent());
         }
 
-        for (ClusterList::const_iterator kIter = unavailableClusters.begin(), kIterEnd = unavailableClusters.end(); kIter != kIterEnd; ++kIter)
-            pAlgorithm->UpdateUponDeletion(*kIter);
+        this->UpdateTensor(pAlgorithm, overlapTensor, unavailableClusters, newlyAvailableClusters);
 
-        ClusterList newlyAvailableKeyClusters;
-        pAlgorithm->SelectInputClusters(&newlyAvailableClusters, newlyAvailableKeyClusters);
-
-        for (ClusterList::const_iterator kIter = newlyAvailableKeyClusters.begin(), kIterEnd = newlyAvailableKeyClusters.end(); kIter != kIterEnd; ++kIter)
-            pAlgorithm->UpdateForNewCluster(*kIter);
-
-        ClusterList keyClustersAffected;
-
-        for (TensorType::const_iterator tIterU = overlapTensor.begin(), tIterUEnd = overlapTensor.end(); tIterU != tIterUEnd; ++tIterU)
-        {
-            for (TensorType::OverlapMatrix::const_iterator tIterV = tIterU->second.begin(), tIterVEnd = tIterU->second.end(); tIterV != tIterVEnd; ++tIterV)
-            {
-                for (TensorType::OverlapList::const_iterator tIterW = tIterV->second.begin(), tIterWEnd = tIterV->second.end(); tIterW != tIterWEnd; ++tIterW)
-                {
-                    const TensorType::OverlapResult &overlapResult(tIterW->second);
-                    const ClusterList &fragmentClusters(overlapResult.GetFragmentClusterList());
-
-                    for (ClusterList::const_iterator fIter = fragmentClusters.begin(), fIterEnd = fragmentClusters.end(); fIter != fIterEnd; ++fIter)
-                    {
-                        if (unavailableClusters.count(*fIter))
-                        {
-                            if (TPC_VIEW_U != fragmentHitType)
-                                keyClustersAffected.insert(tIterU->first);
-
-                            if (TPC_VIEW_V != fragmentHitType)
-                                keyClustersAffected.insert(tIterV->first);
-
-                            if (TPC_VIEW_W != fragmentHitType)
-                                keyClustersAffected.insert(tIterW->first);
-
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        for (ClusterList::const_iterator kIter = keyClustersAffected.begin(), kIterEnd = keyClustersAffected.end(); kIter != kIterEnd; ++kIter)
-            pAlgorithm->UpdateUponDeletion(*kIter);
-
-        for (ClusterList::const_iterator kIter = keyClustersAffected.begin(), kIterEnd = keyClustersAffected.end(); kIter != kIterEnd; ++kIter)
-            pAlgorithm->UpdateForNewCluster(*kIter);
-
-        return;
+        if (!protoParticleVector.empty())
+            return;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseTrackFragmentsTool::GetElementList(const TensorType &overlapTensor, Cluster *pCluster, TensorType::ElementList &elementList,
-    HitType &fragmentHitType) const
+bool TransverseTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTensor, Cluster *pCluster, TensorType::ElementList &elementList) const
 {
     unsigned int nU(0), nV(0), nW(0);
     overlapTensor.GetConnectedElements(pCluster, true, elementList, nU, nV, nW);
 
-    fragmentHitType = ((nU * nV * nW == 1) ? (elementList.begin())->GetOverlapResult().GetFragmentHitType() :
+    const HitType fragmentHitType = ((nU * nV * nW == 1) ? (elementList.begin())->GetOverlapResult().GetFragmentHitType() :
         ((nV * nW == 1) && (nU > 1)) ? TPC_VIEW_U :
         ((nU * nW == 1) && (nV > 1)) ? TPC_VIEW_V :
         ((nU * nV == 1) && (nW > 1)) ? TPC_VIEW_W : CUSTOM);
@@ -248,8 +121,183 @@ bool TransverseTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::Elem
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TransverseTrackFragmentsTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+bool TransverseTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
 {
+    if (overlapResult.GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
+        return false;
+
+    if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
+        return false;
+
+    if (overlapResult.GetFragmentCaloHitList().size() < m_minMatchedHits)
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseTrackFragmentsTool::ProcessTensorElement(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType::OverlapResult &overlapResult,
+    ClusterList &unavailableClusters, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
+{
+    const CaloHitList &caloHitList(overlapResult.GetFragmentCaloHitList());
+    const ClusterList &clusterList(overlapResult.GetFragmentClusterList());
+    const HitType fragmentHitType(overlapResult.GetFragmentHitType());
+
+    const std::string currentListName((TPC_VIEW_U == fragmentHitType) ? pAlgorithm->GetClusterListNameU() :
+        (TPC_VIEW_V == fragmentHitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
+
+    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        Cluster *pCluster = *cIter;
+        CaloHitList clusterHitList;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHitList);
+
+        CaloHitList daughterHits, separateHits;
+        for (CaloHitList::const_iterator hIter = clusterHitList.begin(), hIterEnd = clusterHitList.end(); hIter != hIterEnd; ++hIter)
+        {
+            CaloHit *pCaloHit = *hIter;
+
+            if (caloHitList.count(pCaloHit))
+            {
+                daughterHits.insert(pCaloHit);
+            }
+            else
+            {
+                separateHits.insert(pCaloHit);
+            }
+        }
+
+        if (daughterHits.empty())
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        unavailableClusters.insert(pCluster);
+        this->Recluster(pAlgorithm, pCluster, daughterHits, separateHits, newlyAvailableClusters, pFragmentCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseTrackFragmentsTool::Recluster(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, Cluster *pCluster, const CaloHitList &daughterHits,
+    const CaloHitList &separateHits, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
+{
+    Cluster *pDaughterCluster(NULL);
+
+    if (separateHits.empty())
+    {
+        pDaughterCluster = pCluster;
+    }
+    else
+    {
+        ClusterList clusterToFragment;
+        clusterToFragment.insert(pCluster);
+        std::string originalListName, fragmentListName;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*pAlgorithm, clusterToFragment, originalListName, fragmentListName));
+
+        PandoraContentApi::Cluster::Parameters daughterParameters;
+        daughterParameters.m_caloHitList = daughterHits;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, daughterParameters, pDaughterCluster));
+
+        Cluster *pSeparateCluster(NULL);
+        PandoraContentApi::Cluster::Parameters separateParameters;
+        separateParameters.m_caloHitList = separateHits;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, separateParameters, pSeparateCluster));
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName));
+        newlyAvailableClusters.insert(pSeparateCluster);
+    }
+
+    if (NULL == pDaughterCluster)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    if (NULL == pFragmentCluster)
+    {
+        pFragmentCluster = pDaughterCluster;
+    }
+    else
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pFragmentCluster, pDaughterCluster));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseTrackFragmentsTool::UpdateTensor(ThreeDTransverseTrackFragmentsAlg *pAlgorithm, const TensorType &overlapTensor,
+    const ClusterList &unavailableClusters, const ClusterList &newlyAvailableClusters) const
+{
+    for (ClusterList::const_iterator iter = unavailableClusters.begin(), iterEnd = unavailableClusters.end(); iter != iterEnd; ++iter)
+        pAlgorithm->UpdateUponDeletion(*iter);
+
+    ClusterList newlyAvailableKeyClusters;
+    pAlgorithm->SelectInputClusters(&newlyAvailableClusters, newlyAvailableKeyClusters);
+
+    for (ClusterList::const_iterator iter = newlyAvailableKeyClusters.begin(), iterEnd = newlyAvailableKeyClusters.end(); iter != iterEnd; ++iter)
+        pAlgorithm->UpdateForNewCluster(*iter);
+
+    ClusterList affectedKeyClusters;
+    this->GetAffectedKeyClusters(overlapTensor, unavailableClusters, affectedKeyClusters);
+
+    for (ClusterList::const_iterator iter = affectedKeyClusters.begin(), iterEnd = affectedKeyClusters.end(); iter != iterEnd; ++iter)
+        pAlgorithm->UpdateUponDeletion(*iter);
+
+    for (ClusterList::const_iterator iter = affectedKeyClusters.begin(), iterEnd = affectedKeyClusters.end(); iter != iterEnd; ++iter)
+        pAlgorithm->UpdateForNewCluster(*iter);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTensor, const ClusterList &unavailableClusters,
+    ClusterList &affectedKeyClusters) const
+{
+    for (TensorType::const_iterator tIterU = overlapTensor.begin(), tIterUEnd = overlapTensor.end(); tIterU != tIterUEnd; ++tIterU)
+    {
+        for (TensorType::OverlapMatrix::const_iterator tIterV = tIterU->second.begin(), tIterVEnd = tIterU->second.end(); tIterV != tIterVEnd; ++tIterV)
+        {
+            for (TensorType::OverlapList::const_iterator tIterW = tIterV->second.begin(), tIterWEnd = tIterV->second.end(); tIterW != tIterWEnd; ++tIterW)
+            {
+                const TensorType::OverlapResult &overlapResult(tIterW->second);
+                const HitType fragmentHitType(overlapResult.GetFragmentHitType());
+                const ClusterList &fragmentClusters(overlapResult.GetFragmentClusterList());
+
+                for (ClusterList::const_iterator fIter = fragmentClusters.begin(), fIterEnd = fragmentClusters.end(); fIter != fIterEnd; ++fIter)
+                {
+                    if (!unavailableClusters.count(*fIter))
+                        continue;
+
+                    if (TPC_VIEW_U != fragmentHitType)
+                        affectedKeyClusters.insert(tIterU->first);
+
+                    if (TPC_VIEW_V != fragmentHitType)
+                        affectedKeyClusters.insert(tIterV->first);
+
+                    if (TPC_VIEW_W != fragmentHitType)
+                        affectedKeyClusters.insert(tIterW->first);
+
+                    break;
+                }
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TransverseTrackFragmentsTool::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    m_minMatchedSamplingPoints = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+
+    m_minMatchedSamplingPointFraction = 0.6f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedSamplingPointFraction", m_minMatchedSamplingPointFraction));
+
+    m_minMatchedHits = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchedHits", m_minMatchedHits));
+
     return STATUS_CODE_SUCCESS;
 }
 

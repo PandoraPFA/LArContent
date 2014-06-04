@@ -136,8 +136,9 @@ private:
     float               m_maxPointDisplacementSquared;      ///< The maximum allowed distance (squared) between projected points and associated hits
     float               m_maxHitDisplacementSquared;        ///< The maximum allowed distance (squared) between associated hits
 
-    unsigned int        m_minMatchedPoints;                 ///< The minimum number of matched points
-    float               m_minMatchedPointFraction;          ///< The minimum fraction of matched points
+    unsigned int        m_minMatchedSamplingPoints;         ///< The minimum number of matched sampling points
+    float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points
+    unsigned int        m_minMatchedHits;                   ///< The minimum number of matched calo hits
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
