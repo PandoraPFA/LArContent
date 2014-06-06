@@ -6,11 +6,6 @@
  *  $Log: $
  */
 
-#include "Helpers/ClusterHelper.h"
-
-#include "Objects/CartesianVector.h"
-#include "Objects/Cluster.h"
-
 #include "LArObjects/LArPointingCluster.h"
 #include "LArHelpers/LArClusterHelper.h"
 
@@ -19,11 +14,28 @@ using namespace pandora;
 namespace lar
 {
 
-LArPointingCluster::LArPointingCluster(pandora::Cluster *const pCluster) :
-    m_pCluster(pCluster)
+LArPointingCluster::LArPointingCluster(Cluster *const pCluster)
 {
+    const unsigned int halfWindowLayers(10); // TODO - add to settings, or add to constructor
+
     TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, 10, slidingFitResult);
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, halfWindowLayers, slidingFitResult);
+
+    this->BuildPointingCluster(slidingFitResult);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::LArPointingCluster(const TwoDSlidingFitResult &slidingFitResult)
+{
+    this->BuildPointingCluster(slidingFitResult);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingCluster::BuildPointingCluster(const TwoDSlidingFitResult &slidingFitResult)
+{
+    m_pCluster = const_cast<Cluster*>(slidingFitResult.GetCluster());
 
     const float minLayerZ(slidingFitResult.GetGlobalMinLayerPosition().GetZ());
     const float maxLayerZ(slidingFitResult.GetGlobalMaxLayerPosition().GetZ());
@@ -39,23 +51,23 @@ LArPointingCluster::LArPointingCluster(pandora::Cluster *const pCluster) :
 
     if (innerLayer == minLayer)
     {
-        m_innerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
+        m_innerVertex = Vertex(m_pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
             slidingFitResult.GetMinLayerRms(), true);
     }
     else
     {
-        m_innerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
+        m_innerVertex = Vertex(m_pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
             slidingFitResult.GetMaxLayerRms(), true);
     }
 
     if (outerLayer == minLayer)
     {
-        m_outerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
+        m_outerVertex = Vertex(m_pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
             slidingFitResult.GetMinLayerRms(), false);
     }
     else
     {
-        m_outerVertex = Vertex(pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
+        m_outerVertex = Vertex(m_pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
             slidingFitResult.GetMaxLayerRms(), false);
     }
 }
