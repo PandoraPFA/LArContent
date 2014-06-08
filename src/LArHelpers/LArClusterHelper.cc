@@ -657,11 +657,71 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
 
         const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
         (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
-    }  
+    }
 
-    // TODO: Bail out if there are no results. This will break everything!
+    // TODO: Bail out if there are no results? This will break everything!
     // if (layerFitResultMap.empty())
     //     throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    // Calculate sliding fit segments
+    // TODO: Only calculate this information when required
+    return LArClusterHelper::CalculateSlidingFitSegments(twoDSlidingFitResult);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSlidingFitResult)
+{
+    unsigned int nSustainedSteps(0);
+    float sustainedDirectionStartX(0.f), sustainedDirectionEndX(0.f);
+    CartesianVector previousPosition(0.f, 0.f, 0.f);
+    TransverseDirection previousDirection(UNKNOWN), sustainedDirection(UNKNOWN);
+    TwoDSlidingFitResult::LayerFitResultMap::const_iterator sustainedDirectionStartIter, sustainedDirectionEndIter;
+
+    const unsigned int slidingFitWindow(twoDSlidingFitResult.GetLayerFitHalfWindow());
+    const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.GetLayerFitResultMap());
+
+    TwoDSlidingFitResult::FitSegmentList &fitSegmentList(twoDSlidingFitResult.m_fitSegmentList);
+
+    for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+    {
+        CartesianVector position(0.f, 0.f, 0.f);
+        twoDSlidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
+
+        const CartesianVector delta(position - previousPosition);
+        const TransverseDirection currentDirection((std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * -1.f) ?
+            UNCHANGED_IN_X : (delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
+
+        if (previousDirection == currentDirection)
+        {
+            ++nSustainedSteps;
+
+            if (2 * nSustainedSteps > slidingFitWindow)
+            {
+                sustainedDirection = currentDirection;
+                sustainedDirectionEndIter = iter;
+                sustainedDirectionEndX = position.GetX();
+            }
+        }
+        else
+        {
+            if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
+                fitSegmentList.push_back(TwoDSlidingFitResult::FitSegment(sustainedDirectionStartIter->first, sustainedDirectionEndIter->first,
+                    sustainedDirectionStartX, sustainedDirectionEndX));
+
+            nSustainedSteps = 0;
+            sustainedDirection = UNKNOWN;
+            sustainedDirectionStartIter = iter;
+            sustainedDirectionStartX = position.GetX();
+        }
+
+        previousPosition = position;
+        previousDirection = currentDirection;
+    }
+
+    if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
+        fitSegmentList.push_back(TwoDSlidingFitResult::FitSegment(sustainedDirectionStartIter->first, sustainedDirectionEndIter->first,
+            sustainedDirectionStartX, sustainedDirectionEndX));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

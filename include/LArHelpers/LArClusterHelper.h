@@ -16,6 +16,19 @@ namespace lar
 {
 
 /**
+ *  @brief  TransverseDirection enum
+ */
+enum TransverseDirection
+{
+    POSITIVE_IN_X,
+    NEGATIVE_IN_X,
+    UNCHANGED_IN_X,
+    UNKNOWN
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
  *  @brief  ShowerEdge enum
  */
 enum ShowerEdge
@@ -194,7 +207,6 @@ public:
      */
     static void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, pandora::CartesianVector &outerCoordinate);
 
-    
     /**
      *  @brief  Get minimum and maximum X, Y and Z positions of the calo hits in a 2D cluster
      *
@@ -203,8 +215,7 @@ public:
      *  @param  the maximum positions (x,y,z)
      */
     static void GetClusterSpanXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, pandora::CartesianVector &maximumCoordinate);
-    
-    
+
     /**
      *  @brief  Get minimum and maximum x of the calo hits in a 2D cluster
      *
@@ -213,8 +224,7 @@ public:
      *  @param  the maximum position of x
      */
     static void GetClusterSpanX(const pandora::Cluster *const pCluster, float &xmin, float &xmax);
-    
-    
+
     /**
      *  @brief  Get average Z positions of the calo hits in a 2D cluster in range xmin to xmax
      *
@@ -223,10 +233,7 @@ public:
      *  @param  xmax for range in x
      */
     static float GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax);
-    
 
-    
-    
     /**
      *  @brief  Sort clusters by inner layer (then use SortByNOccupiedLayers method in event of a tie)
      *
@@ -265,6 +272,14 @@ private:
      *  @param  twoDSlidingFitResult to receive the fit result
      */
     static void StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingFitResult);
+
+    /**
+     *  @brief  Calculate a fit segment list for a given sliding fit result
+     *
+     *  @param  twoDSlidingFitResult the sliding fit result
+     *  @param  fitSegmentList to receive the fit segment list
+     */
+    static void CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSlidingFitResult);
 
     static unsigned int             m_layerFitHalfWindow;           ///< The layer fit half window for sliding 2d x-z fits
     static float                    m_multiValuedTanThetaCut;       ///< Tan theta cut for finding sliding fits multivalued in x
