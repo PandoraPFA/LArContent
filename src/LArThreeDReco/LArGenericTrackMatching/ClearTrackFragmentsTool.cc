@@ -68,6 +68,9 @@ void ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *p
             protoParticleVector.push_back(protoParticle);
         }
 
+
+        // TODO: Prevent protoParticle clusters (which are still 'available' at this point) becoming fragment clusters in updated tensor
+
         this->UpdateTensor(pAlgorithm, overlapTensor, unavailableClusters, newlyAvailableClusters);
 
         if (!protoParticleVector.empty())
@@ -151,7 +154,11 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDFragmentsBaseAlgorithm 
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        Cluster *pCluster = *cIter; 
+
+        if (!pCluster->IsAvailable()) 
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
         CaloHitList clusterHitList;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHitList);
 
