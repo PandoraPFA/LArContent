@@ -1,14 +1,15 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the three dimensional transverse tracks algorithm class.
- * 
+ *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
@@ -42,7 +43,7 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
     }
     catch (StatusCodeException &statusCodeException)
     {
-        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || 
+        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() ||
               STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
             throw statusCodeException;
     }
@@ -88,10 +89,9 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
 void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
     const TwoDSlidingFitResult &slidingFitResultW, FitSegmentTensor &fitSegmentTensor) const
 {
-    FitSegmentList fitSegmentListU, fitSegmentListV, fitSegmentListW;
-    this->GetFitSegmentList(slidingFitResultU, fitSegmentListU);
-    this->GetFitSegmentList(slidingFitResultV, fitSegmentListV);
-    this->GetFitSegmentList(slidingFitResultW, fitSegmentListW);
+    FitSegmentList fitSegmentListU(slidingFitResultU.GetFitSegmentList());
+    FitSegmentList fitSegmentListV(slidingFitResultV.GetFitSegmentList());
+    FitSegmentList fitSegmentListW(slidingFitResultW.GetFitSegmentList());
 
     for (unsigned int indexU = 0, indexUEnd = fitSegmentListU.size(); indexU < indexUEnd; ++indexU)
     {
@@ -123,54 +123,6 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitRe
             }
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDTransverseTracksAlgorithm::GetFitSegmentList(const TwoDSlidingFitResult &slidingFitResult, FitSegmentList &fitSegmentList) const
-{
-    unsigned int nSustainedSteps(0);
-    CartesianVector previousPosition(0.f, 0.f, 0.f);
-    SlidingFitDirection previousDirection(UNKNOWN), sustainedDirection(UNKNOWN);
-    LayerFitResultMap::const_iterator sustainedDirectionStartIter, sustainedDirectionEndIter;
-
-    const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
-
-    for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
-    {
-        CartesianVector position(0.f, 0.f, 0.f);
-        slidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
-
-        const CartesianVector delta(position - previousPosition);
-        const SlidingFitDirection currentDirection((std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * -1.f) ?
-            UNCHANGED_IN_X : (delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
-
-        if (previousDirection == currentDirection)
-        {
-            ++nSustainedSteps;
-
-            if (2 * nSustainedSteps > m_slidingFitWindow)
-            {
-                sustainedDirection = currentDirection;
-                sustainedDirectionEndIter = iter;
-            }
-        }
-        else
-        {
-            if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
-                fitSegmentList.push_back(FitSegment(slidingFitResult, sustainedDirectionStartIter, sustainedDirectionEndIter));
-
-            nSustainedSteps = 0;
-            sustainedDirection = UNKNOWN;
-            sustainedDirectionStartIter = iter;
-        }
-
-        previousPosition = position;
-        previousDirection = currentDirection;
-    }
-
-    if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
-        fitSegmentList.push_back(FitSegment(slidingFitResult, sustainedDirectionStartIter, sustainedDirectionEndIter));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -359,27 +311,6 @@ void ThreeDTransverseTracksAlgorithm::ExamineTensor()
             ++iter;
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-ThreeDTransverseTracksAlgorithm::FitSegment::FitSegment(const TwoDSlidingFitResult &twoDSlidingFitResult,
-        LayerFitResultMap::const_iterator startLayerIter, LayerFitResultMap::const_iterator endLayerIter) :
-    m_startLayer(startLayerIter->first),
-    m_endLayer(endLayerIter->first)
-{
-    CartesianVector startLayerPosition(0.f, 0.f, 0.f);
-    twoDSlidingFitResult.GetGlobalPosition(startLayerIter->second.GetL(), startLayerIter->second.GetFitT(), startLayerPosition);
-
-    CartesianVector endLayerPosition(0.f, 0.f, 0.f);
-    twoDSlidingFitResult.GetGlobalPosition(endLayerIter->second.GetL(), endLayerIter->second.GetFitT(), endLayerPosition);
-
-    m_minX = std::min(startLayerPosition.GetX(), endLayerPosition.GetX());
-    m_maxX = std::max(startLayerPosition.GetX(), endLayerPosition.GetX());
-    m_startValue = startLayerPosition.GetZ();
-    m_endValue = endLayerPosition.GetZ();
-    m_isIncreasingX = (endLayerPosition.GetX() > startLayerPosition.GetX());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
