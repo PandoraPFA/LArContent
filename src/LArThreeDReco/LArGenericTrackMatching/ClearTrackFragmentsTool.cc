@@ -20,17 +20,12 @@ bool ClearTrackFragmentsTool::Run(ThreeDFragmentsBaseAlgorithm *pAlgorithm, Tens
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
-    ProtoParticleVector protoParticleVector;
-    this->FindTrackFragments(pAlgorithm, overlapTensor, protoParticleVector);
-
-    const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
-    return particlesMade;
+    return this->FindTrackFragments(pAlgorithm, overlapTensor);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor,
-    ProtoParticleVector &protoParticleVector) const
+bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor) const
 {
     for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
@@ -45,6 +40,7 @@ void ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *p
         if (!this->CheckForHitAmbiguities(elementList))
             continue;
 
+        bool particlesMade(false);
         ClusterList unavailableClusters, newlyAvailableClusters;
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
@@ -65,17 +61,19 @@ void ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *p
             protoParticle.m_clusterListU.insert((TPC_VIEW_U == fragmentHitType) ? pFragmentCluster : eIter->GetClusterU());
             protoParticle.m_clusterListV.insert((TPC_VIEW_V == fragmentHitType) ? pFragmentCluster : eIter->GetClusterV());
             protoParticle.m_clusterListW.insert((TPC_VIEW_W == fragmentHitType) ? pFragmentCluster : eIter->GetClusterW());
+
+            ProtoParticleVector protoParticleVector;
             protoParticleVector.push_back(protoParticle);
+            particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
         }
-
-
-        // TODO: Prevent protoParticle clusters (which are still 'available' at this point) becoming fragment clusters in updated tensor
 
         this->UpdateTensor(pAlgorithm, overlapTensor, unavailableClusters, newlyAvailableClusters);
 
-        if (!protoParticleVector.empty())
-            return;
+        if (particlesMade)
+            return true;
     }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
