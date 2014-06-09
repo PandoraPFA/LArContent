@@ -32,13 +32,15 @@ public:
 
 private:
     /**
-     *  @brief  Find suitable matching track fragments in the overlap tensor to use for 3D particle creation
+     *  @brief  Find suitable matching track fragments in the overlap tensor to use for 3D particle creation,
+     *          return value indicates whether particles are made
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
-     *  @param  protoParticleVector to receive the list of proto particles
+     * 
+     *  @return boolean
      */
-    void FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+    bool FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor) const;
 
     /**
      *  @brief  Get the list of elements connected to a given cluster and check its suitability (no ambiguities)
