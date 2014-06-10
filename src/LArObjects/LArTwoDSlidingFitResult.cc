@@ -219,6 +219,25 @@ void TwoDSlidingFitResult::GetGlobalFitPositionAtX(const float x, CartesianVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, CartesianPointList &positionList) const
+{
+    LayerInterpolationList layerInterpolationList;
+    this->TransverseInterpolation(x, layerInterpolationList);
+
+    if (layerInterpolationList.size() < 1)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end();
+        iter != iterEnd; ++iter)
+    {
+        const LayerInterpolation& layerInterpolation = *iter;
+        positionList.push_back(this->GetGlobalFitPosition(layerInterpolation));
+    }
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TwoDSlidingFitResult::GetGlobalFitDirectionAtX(const float x, CartesianVector &direction) const
 {
     LayerInterpolationList layerInterpolationList;
@@ -256,21 +275,6 @@ void TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegme
     const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x, fitSegment));
     position = this->GetGlobalFitPosition(layerInterpolation);
     direction = this->GetGlobalFitDirection(layerInterpolation);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetTransverseProjection(const float x, CartesianPointList &positionList) const
-{
-    LayerInterpolationList layerInterpolationList;
-    this->TransverseInterpolation(x, layerInterpolationList);
-
-    for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end();
-        iter != iterEnd; ++iter)
-    {
-        const LayerInterpolation& layerInterpolation = *iter;
-        positionList.push_back(this->GetGlobalFitPosition(layerInterpolation));
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
