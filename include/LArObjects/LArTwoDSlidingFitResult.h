@@ -468,6 +468,14 @@ public:
     void GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
 
     /**
+     *  @brief Get a list of projected positions for a given input x coordinate
+     *
+     *  @param x the input x coordinate
+     *  @param positionList the output list of positions
+     */
+    void GetGlobalFitPositionListAtX(const float x, pandora::CartesianPointList &positionList) const;
+
+    /**
      *  @brief Get projected position for a given input x coordinate and fit segment
      *
      *  @param x the input x coordinate
@@ -486,14 +494,6 @@ public:
      */
     void GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position,
         pandora::CartesianVector &direction) const;
-
-    /**
-     *  @brief Get a list of projected positions for a given input x coordinate
-     *
-     *  @param x the input x coordinate
-     *  @param positionList the output list of positions
-     */
-    void GetTransverseProjection(const float x, pandora::CartesianPointList &positionList) const;
 
     /**
      *  @brief  Get the layer fit result map
