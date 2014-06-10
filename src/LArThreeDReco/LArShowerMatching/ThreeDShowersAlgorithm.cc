@@ -183,9 +183,9 @@ PandoraMonitoringApi::ViewEvent();
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            slidingFitResultU.GetGlobalFitPosition(x, true, fitUVector);
-            slidingFitResultV.GetGlobalFitPosition(x, true, fitVVector);
-            slidingFitResultW.GetGlobalFitPosition(x, true, fitWVector);
+            slidingFitResultU.GetGlobalFitPositionAtX(x, fitUVector);
+            slidingFitResultV.GetGlobalFitPositionAtX(x, fitVVector);
+            slidingFitResultW.GetGlobalFitPositionAtX(x, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
@@ -205,9 +205,9 @@ PandoraMonitoringApi::ViewEvent();
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            positiveShowerEdgeFitU.GetGlobalFitPosition(x, true, fitUVector);
-            positiveShowerEdgeFitV.GetGlobalFitPosition(x, true, fitVVector);
-            positiveShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
+            positiveShowerEdgeFitU.GetGlobalFitPositionAtX(x, fitUVector);
+            positiveShowerEdgeFitV.GetGlobalFitPositionAtX(x, fitVVector);
+            positiveShowerEdgeFitW.GetGlobalFitPositionAtX(x, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
@@ -227,9 +227,9 @@ PandoraMonitoringApi::ViewEvent();
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            negativeShowerEdgeFitU.GetGlobalFitPosition(x, true, fitUVector);
-            negativeShowerEdgeFitV.GetGlobalFitPosition(x, true, fitVVector);
-            negativeShowerEdgeFitW.GetGlobalFitPosition(x, true, fitWVector);
+            negativeShowerEdgeFitU.GetGlobalFitPositionAtX(x, fitUVector);
+            negativeShowerEdgeFitV.GetGlobalFitPositionAtX(x, fitVVector);
+            negativeShowerEdgeFitW.GetGlobalFitPositionAtX(x, fitWVector);
 
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));

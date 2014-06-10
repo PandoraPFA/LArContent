@@ -157,15 +157,11 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            slidingFitResultU.GetGlobalFitPosition(x, true, fitUVector);
-            slidingFitResultV.GetGlobalFitPosition(x, true, fitVVector);
-            slidingFitResultW.GetGlobalFitPosition(x, true, fitWVector);
-
             CartesianVector fitUDirection(0.f, 0.f, 0.f), fitVDirection(0.f, 0.f, 0.f), fitWDirection(0.f, 0.f, 0.f);
-            slidingFitResultU.GetGlobalFitDirection(x, true, fitUDirection);
-            slidingFitResultV.GetGlobalFitDirection(x, true, fitVDirection);
-            slidingFitResultW.GetGlobalFitDirection(x, true, fitWDirection);
-
+            slidingFitResultU.GetTransverseProjection(x, fitSegmentU, fitUVector, fitUDirection);
+            slidingFitResultV.GetTransverseProjection(x, fitSegmentV, fitVVector, fitVDirection);
+            slidingFitResultW.GetTransverseProjection(x, fitSegmentW, fitWVector, fitWDirection);
+          
             const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
             const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
             const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));

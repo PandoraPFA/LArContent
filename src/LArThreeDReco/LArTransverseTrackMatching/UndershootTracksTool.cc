@@ -82,11 +82,11 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
                 if (m_splitMode)
                 {
                     CartesianVector splitPosition1(0.f, 0.f, 0.f);
-                    pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster1).GetGlobalFitPosition(splitPosition.GetX(), true, splitPosition1);
+                    pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster1).GetGlobalFitPositionAtX(splitPosition.GetX(), splitPosition1);
                     modification.m_splitPositionMap[particle.m_pCommonCluster1].push_back(splitPosition1);
 
                     CartesianVector splitPosition2(0.f, 0.f, 0.f);
-                    pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster2).GetGlobalFitPosition(splitPosition.GetX(), true, splitPosition2);
+                    pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster2).GetGlobalFitPositionAtX(splitPosition.GetX(), splitPosition2);
                     modification.m_splitPositionMap[particle.m_pCommonCluster2].push_back(splitPosition2);
                 }
                 else
@@ -129,18 +129,18 @@ bool UndershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgori
         const float splitX(splitPosition.GetX());
 
         CartesianVector minus1(0.f, 0.f, 0.f), split1(0.f, 0.f, 0.f), plus1(0.f, 0.f, 0.f);
-        fitResultCommon1.GetGlobalFitPosition(minusX, true, minus1);
-        fitResultCommon1.GetGlobalFitPosition(splitX, true, split1);
-        fitResultCommon1.GetGlobalFitPosition(plusX, true, plus1);
+        fitResultCommon1.GetGlobalFitPositionAtX(minusX, minus1);
+        fitResultCommon1.GetGlobalFitPositionAtX(splitX, split1);
+        fitResultCommon1.GetGlobalFitPositionAtX(plusX, plus1);
 
         CartesianVector minus2(0.f, 0.f, 0.f), split2(0.f, 0.f, 0.f), plus2(0.f, 0.f, 0.f);
-        fitResultCommon2.GetGlobalFitPosition(minusX, true, minus2);
-        fitResultCommon2.GetGlobalFitPosition(splitX, true, split2);
-        fitResultCommon2.GetGlobalFitPosition(plusX, true, plus2);
+        fitResultCommon2.GetGlobalFitPositionAtX(minusX, minus2);
+        fitResultCommon2.GetGlobalFitPositionAtX(splitX, split2);
+        fitResultCommon2.GetGlobalFitPositionAtX(plusX, plus2);
 
         CartesianVector minus3(0.f, 0.f, 0.f), split3(splitPosition), plus3(0.f, 0.f, 0.f);
-        lowXFitResult.GetGlobalFitPosition(minusX, true, minus3);
-        highXFitResult.GetGlobalFitPosition(plusX, true, plus3);
+        lowXFitResult.GetGlobalFitPositionAtX(minusX, minus3);
+        highXFitResult.GetGlobalFitPositionAtX(plusX, plus3);
 
         // Extract results
         const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pCommonCluster1));
