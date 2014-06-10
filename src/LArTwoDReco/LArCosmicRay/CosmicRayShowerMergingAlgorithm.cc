@@ -174,7 +174,7 @@ void CosmicRayShowerMergingAlgorithm::FillClusterMergeMap(const ClusterVector &s
 
 // ClusterList tempList;
 // tempList.insert(pClusterI);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
 // PandoraMonitoringApi::VisualizeClusters(&tempList, "SeedCluster", RED);
 // PandoraMonitoringApi::VisualizeClusters(&associatedList, "AssociatedClusters", BLUE);
 // PandoraMonitoringApi::ViewEvent();
