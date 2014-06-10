@@ -44,8 +44,8 @@ void ThreeDTransverseTrackFragmentsAlg::GetProjectedPositions(const TwoDSlidingF
         {
             float chi2(0.f);
             CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);
-            fitResult1.GetGlobalFitPosition(x, true, position1);
-            fitResult2.GetGlobalFitPosition(x, true, position2);
+            fitResult1.GetGlobalFitPositionAtX(x, position1);
+            fitResult2.GetGlobalFitPositionAtX(x, position2);
             LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, position1, position2, position3, chi2);
             projectedPositions.push_back(position3);
         }

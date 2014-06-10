@@ -444,22 +444,20 @@ public:
     void GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
 
     /**
-     *  @brief  Get global fit position for a given input coordinate
+     *  @brief  Get global fit position for a given input x coordinate
      *
-     *  @param  p the input coordinate
-     *  @param  useX whether projection is transverse or longitudinal
+     *  @param  x the input coordinate
      *  @param  position the fitted position at these coordinates
      */
-    void GetGlobalFitPosition(const float p, const bool useX, pandora::CartesianVector &position) const;
+    void GetGlobalFitPositionAtX(const float x, pandora::CartesianVector &position) const;
 
     /**
-     *  @brief  Get global fit direction for a given input coordinate
+     *  @brief  Get global fit direction for a given input x coordinate
      *
-     *  @param  p the input coordinate
-     *  @param  useX whether projection is transverse or longitudinal
+     *  @param  x the input coordinate
      *  @param  direction the fitted direction at these coordinates
      */
-    void GetGlobalFitDirection(const float p, const bool useX, pandora::CartesianVector &direction) const;
+    void GetGlobalFitDirectionAtX(const float x, pandora::CartesianVector &direction) const;
 
     /**
      *  @brief  Get projected position on global fit for a given position vector
@@ -479,29 +477,23 @@ public:
     void GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position) const;
 
     /**
+     *  @brief Get projected position and direction for a given input x coordinate and fit segment
+     *
+     *  @param x the input x coordinate
+     *  @param fitSegment the portion of sliding linear fit
+     *  @param position the output position
+     *  @param position the output direction
+     */
+    void GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position,
+        pandora::CartesianVector &direction) const;
+
+    /**
      *  @brief Get a list of projected positions for a given input x coordinate
      *
      *  @param x the input x coordinate
      *  @param positionList the output list of positions
      */
     void GetTransverseProjection(const float x, pandora::CartesianPointList &positionList) const;
-
-    /**
-     *  @brief Get projected position and direction for a given input x coordinate and fit segment
-     *
-     *  @param x the input x coordinate
-     *  @param fitSegment the portion of sliding linear fit
-     *  @param trackState the output position and direction
-     */
-    void GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::TrackState &trackState) const;
-
-    /**
-     *  @brief Get a list of projected positions and directions for a given input x coordinate
-     *
-     *  @param x the input x coordinate
-     *  @param trackStateList the output list of positions and directions
-     */
-    void GetTransverseProjection(const float x, std::vector<pandora::TrackState> &trackStateList) const;
 
     /**
      *  @brief  Get the layer fit result map
@@ -561,15 +553,6 @@ private:
      *  @return Layer interpolation object
      */
     LayerInterpolation LongitudinalInterpolation(const float rL) const;
-
-    /**
-     *  @brief  Get the pair of layers surrounding a specified transverse position
-     *
-     *  @param  x the input coordinate
-     *
-     *  @return Layer interpolation object
-     */
-    LayerInterpolation TransverseInterpolation(const float x) const;
 
     /**
      *  @brief  Get the surrounding pair of layers for a specified transverse position and fit segment

@@ -116,8 +116,8 @@ void TransverseTrackHitCreationTool::GetPosition3D(const CaloHit *const pCaloHit
 {
     const CartesianVector &position(pCaloHit2D->GetPositionVector());
     CartesianVector fitPosition1(0.f, 0.f, 0.f), fitPosition2(0.f, 0.f, 0.f);
-    fitResult1.GetGlobalFitPosition(position.GetX(), true, fitPosition1);
-    fitResult2.GetGlobalFitPosition(position.GetX(), true, fitPosition2);
+    fitResult1.GetGlobalFitPositionAtX(position.GetX(), fitPosition1);
+    fitResult2.GetGlobalFitPositionAtX(position.GetX(), fitPosition2);
 
     const HitType hitType(pCaloHit2D->GetHitType());
     const HitType hitType1(LArThreeDHelper::GetClusterHitType(fitResult1.GetCluster()));

@@ -212,8 +212,8 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
         try
         {
             CartesianVector fitVector1(0.f, 0.f, 0.f), fitVector2(0.f, 0.f, 0.f);
-            fitResult1.GetGlobalFitPosition(x, true, fitVector1);
-            fitResult2.GetGlobalFitPosition(x, true, fitVector2);
+            fitResult1.GetGlobalFitPositionAtX(x, fitVector1);
+            fitResult2.GetGlobalFitPositionAtX(x, fitVector2);
             const float prediction(LArGeometryHelper::MergeTwoPositions(particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
 
             for (SlidingFitResultMap::const_iterator iter = slidingFitResultMap.begin(), iterEnd = slidingFitResultMap.end(); iter != iterEnd; ++iter)
@@ -221,8 +221,8 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
                 try
                 {
                     CartesianVector fitVector(0.f, 0.f, 0.f), fitDirection(0.f, 0.f, 0.f);
-                    iter->second.GetGlobalFitPosition(x, true, fitVector);
-                    iter->second.GetGlobalFitDirection(x, true, fitDirection);
+                    iter->second.GetGlobalFitPositionAtX(x, fitVector);
+                    iter->second.GetGlobalFitDirectionAtX(x, fitDirection);
 
                     const float delta((prediction - fitVector.GetZ()) * fitDirection.GetX());
                     const float pseudoChi2(delta * delta);

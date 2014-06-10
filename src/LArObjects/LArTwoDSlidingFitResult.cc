@@ -205,25 +205,56 @@ void TwoDSlidingFitResult::GetGlobalFitDirection(const float rL, CartesianVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::GetGlobalFitPosition(const float x, const bool useX, CartesianVector &position) const
+void TwoDSlidingFitResult::GetGlobalFitPositionAtX(const float x, CartesianVector &position) const
 {
-    // TODO: Switch to 'TransverseProjection' methods
-    if (!useX)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    LayerInterpolationList layerInterpolationList;
+    this->TransverseInterpolation(x, layerInterpolationList);  
 
-    const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x));
+    if (layerInterpolationList.size() != 1)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const LayerInterpolation& layerInterpolation = *(layerInterpolationList.begin());
     position = this->GetGlobalFitPosition(layerInterpolation);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::GetGlobalFitDirection(const float x, const bool useX, CartesianVector &direction) const
+void TwoDSlidingFitResult::GetGlobalFitDirectionAtX(const float x, CartesianVector &direction) const
 {
-    // TODO: Switch to 'TransverseProjection' methods
-    if (!useX)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    LayerInterpolationList layerInterpolationList;
+    this->TransverseInterpolation(x, layerInterpolationList);
 
-    const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x));
+    if (layerInterpolationList.size() != 1)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const LayerInterpolation& layerInterpolation = *(layerInterpolationList.begin());
+    direction = this->GetGlobalFitDirection(layerInterpolation);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoDSlidingFitResult::GetGlobalFitProjection(const CartesianVector &inputPosition, CartesianVector &projectedPosition) const
+{
+    float rL(0.f), rT(0.f);
+    this->GetLocalPosition(inputPosition, rL, rT);
+    this->GetGlobalFitPosition(rL, projectedPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegment &fitSegment, CartesianVector &position) const
+{
+    const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x, fitSegment));
+    position = this->GetGlobalFitPosition(layerInterpolation);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegment &fitSegment, CartesianVector &position,
+    CartesianVector &direction) const
+{
+    const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x, fitSegment));
+    position = this->GetGlobalFitPosition(layerInterpolation);
     direction = this->GetGlobalFitDirection(layerInterpolation);
 }
 
@@ -240,50 +271,6 @@ void TwoDSlidingFitResult::GetTransverseProjection(const float x, CartesianPoint
         const LayerInterpolation& layerInterpolation = *iter;
         positionList.push_back(this->GetGlobalFitPosition(layerInterpolation));
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegment &fitSegment, CartesianVector &position) const
-{
-    const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x, fitSegment));
-    position = this->GetGlobalFitPosition(layerInterpolation);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetTransverseProjection(const float x, std::vector<TrackState> &trackStateList) const
-{
-    LayerInterpolationList layerInterpolationList;
-    this->TransverseInterpolation(x, layerInterpolationList);
-
-    for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end();
-        iter != iterEnd; ++iter)
-    {
-        const LayerInterpolation& layerInterpolation = *iter;
-        const CartesianVector position(this->GetGlobalFitPosition(layerInterpolation));
-        const CartesianVector direction(this->GetGlobalFitDirection(layerInterpolation));
-        trackStateList.push_back(TrackState(position, direction));
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegment &fitSegment, TrackState &trackState) const
-{
-    const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x, fitSegment));
-    const CartesianVector position(this->GetGlobalFitPosition(layerInterpolation));
-    const CartesianVector direction(this->GetGlobalFitDirection(layerInterpolation));
-    trackState = TrackState(position, direction);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetGlobalFitProjection(const CartesianVector &inputPosition, CartesianVector &projectedPosition) const
-{
-    float rL(0.f), rT(0.f);
-    this->GetLocalPosition(inputPosition, rL, rT);
-    this->GetGlobalFitPosition(rL, projectedPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -391,17 +378,6 @@ TwoDSlidingFitResult::LayerInterpolation TwoDSlidingFitResult::LongitudinalInter
     LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
     this->GetLongitudinalSurroundingLayers(rL, firstLayerIter, secondLayerIter);
     this->GetLongitudinalInterpolationWeights(rL, firstLayerIter, secondLayerIter, firstWeight, secondWeight);
-    return LayerInterpolation(firstLayerIter, secondLayerIter, firstWeight, secondWeight);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-TwoDSlidingFitResult::LayerInterpolation TwoDSlidingFitResult::TransverseInterpolation(const float x) const
-{
-    float firstWeight(0.f), secondWeight(0.f);
-    LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
-    this->GetTransverseSurroundingLayers(x, firstLayerIter, secondLayerIter);
-    this->GetTransverseInterpolationWeights(x, firstLayerIter, secondLayerIter, firstWeight, secondWeight);
     return LayerInterpolation(firstLayerIter, secondLayerIter, firstWeight, secondWeight);
 }
 

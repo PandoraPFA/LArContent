@@ -629,7 +629,7 @@ float CosmicRayShowerMatchingAlgorithm::GetCoordinateAtX(const Cluster *const pC
     try
     {
         LArClusterHelper::LArTwoDSlidingFit(pCluster, span, slidingFitResult);
-        slidingFitResult.GetGlobalFitPosition(x, true, fitVector);
+        slidingFitResult.GetGlobalFitPositionAtX(x, fitVector);
     }
     catch (StatusCodeException &)
     {
