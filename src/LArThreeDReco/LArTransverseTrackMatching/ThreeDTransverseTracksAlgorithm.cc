@@ -139,7 +139,7 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
     const float maxX(std::min(fitSegmentU.GetMaxX(), std::min(fitSegmentV.GetMaxX(), fitSegmentW.GetMaxX())));
     const float xOverlap(maxX - minX);
 
-    if (xOverlap < 0.f)
+    if (xOverlap < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     // Sampling in x
