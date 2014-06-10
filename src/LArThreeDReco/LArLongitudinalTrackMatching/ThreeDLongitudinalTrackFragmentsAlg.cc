@@ -27,9 +27,9 @@ void ThreeDLongitudinalTrackFragmentsAlg::GetProjectedPositions(const TwoDSlidin
 
     const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
     const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
-    const HitType hitType3((TPC_VIEW_U == hitType1 && TPC_VIEW_V == hitType2) ? TPC_VIEW_W :
-                           (TPC_VIEW_V == hitType1 && TPC_VIEW_W == hitType2) ? TPC_VIEW_U :
-                           (TPC_VIEW_W == hitType1 && TPC_VIEW_U == hitType2) ? TPC_VIEW_V : CUSTOM); 
+    const HitType hitType3((TPC_VIEW_U != hitType1 && TPC_VIEW_U != hitType2) ? TPC_VIEW_U :
+                           (TPC_VIEW_V != hitType1 && TPC_VIEW_V != hitType2) ? TPC_VIEW_V :
+                           (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : CUSTOM); 
 
     if (CUSTOM == hitType3)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -47,6 +47,7 @@ void ThreeDLongitudinalTrackFragmentsAlg::GetProjectedPositions(const TwoDSlidin
     if (std::min(dx_C,dx_D) > std::max(dx_A,dx_B) && std::min(dx_A,dx_B) > std::max(dx_C,dx_D))
         return;
 
+    // TODO: FixMe - Not sure this is always correct...
     const CartesianVector &vtxPosition1(minPosition1);
     const CartesianVector &endPosition1(maxPosition1);
     const CartesianVector &vtxPosition2((dx_A < dx_C) ? minPosition2 : maxPosition2);
