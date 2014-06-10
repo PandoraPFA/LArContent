@@ -122,8 +122,8 @@ protected:
 
     float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
     float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
-    unsigned int        m_nSamplingPoints;                  ///< The number of projected positions to be generated for matching purposes
 
+    float               m_maxPointDisplacement;             ///< The maximum allowed distance between projected points and associated hits
     float               m_maxPointDisplacementSquared;      ///< The maximum allowed distance (squared) between projected points and associated hits
     float               m_maxHitDisplacementSquared;        ///< The maximum allowed distance (squared) between associated hits
 

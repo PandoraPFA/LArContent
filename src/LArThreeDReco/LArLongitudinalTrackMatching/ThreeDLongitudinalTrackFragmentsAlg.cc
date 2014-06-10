@@ -27,6 +27,12 @@ void ThreeDLongitudinalTrackFragmentsAlg::GetProjectedPositions(const TwoDSlidin
 
     const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
     const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
+    const HitType hitType3((TPC_VIEW_U == hitType1 && TPC_VIEW_V == hitType2) ? TPC_VIEW_W :
+                           (TPC_VIEW_V == hitType1 && TPC_VIEW_W == hitType2) ? TPC_VIEW_U :
+                           (TPC_VIEW_W == hitType1 && TPC_VIEW_U == hitType2) ? TPC_VIEW_V : CUSTOM); 
+
+    if (CUSTOM == hitType3)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const CartesianVector minPosition1(fitResult1.GetGlobalMinLayerPosition());
     const CartesianVector maxPosition1(fitResult1.GetGlobalMaxLayerPosition());
@@ -56,16 +62,20 @@ void ThreeDLongitudinalTrackFragmentsAlg::GetProjectedPositions(const TwoDSlidin
 
     const CartesianVector vtxProjection1(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType1));
     const CartesianVector vtxProjection2(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType2));
+    const CartesianVector vtxProjection3(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType3));
+
     const CartesianVector endProjection1(LArGeometryHelper::ProjectPosition(endPosition3D, hitType1));
     const CartesianVector endProjection2(LArGeometryHelper::ProjectPosition(endPosition3D, hitType2));
+    const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(endPosition3D, hitType3));
+    
+    const float nSamplingPoints(3.f * (endProjection3 - vtxProjection3).GetMagnitude() / m_maxPointDisplacement);
 
-    CartesianPointList projectedPositions1, projectedPositions2;
+    if (nSamplingPoints < 1.f)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    for (unsigned int iSample = 0; iSample < m_nSamplingPoints; ++iSample)
+    for (float iSample = 0.f; iSample < nSamplingPoints; iSample += 1.f)
     {
-        const float alpha((0.5f + static_cast<float>(iSample)) / static_cast<float>(m_nSamplingPoints));
-
-        const CartesianVector linearPosition3D(vtxPosition3D + (endPosition3D - vtxPosition3D) * alpha);
+        const CartesianVector linearPosition3D(vtxPosition3D + (endPosition3D - vtxPosition3D) * ((0.5f + iSample) / nSamplingPoints));
         const CartesianVector linearPosition1(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType1));
         const CartesianVector linearPosition2(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType2));
 

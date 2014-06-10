@@ -309,7 +309,7 @@ void ThreeDFragmentsBaseAlgorithm::GetFragmentOverlapResult(const CartesianPoint
         }
     }
 
-    fragmentOverlapResult = FragmentOverlapResult(nMatchedSamplingPoints, m_nSamplingPoints, chi2Sum, matchedHits, matchedClusters);
+    fragmentOverlapResult = FragmentOverlapResult(nMatchedSamplingPoints, projectedPositions.size(), chi2Sum, matchedHits, matchedClusters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -403,14 +403,10 @@ StatusCode ThreeDFragmentsBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-    m_nSamplingPoints = 100;
+    m_maxPointDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NSamplingPoints", m_nSamplingPoints));
-
-    float maxPointDisplacement = 1.5f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPointDisplacement", maxPointDisplacement));
-    m_maxPointDisplacementSquared = maxPointDisplacement * maxPointDisplacement;
+        "MaxPointDisplacement", m_maxPointDisplacement));
+    m_maxPointDisplacementSquared = m_maxPointDisplacement * m_maxPointDisplacement;
 
     float maxHitDisplacement = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
