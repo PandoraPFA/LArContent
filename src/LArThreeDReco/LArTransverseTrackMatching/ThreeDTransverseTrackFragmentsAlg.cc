@@ -34,11 +34,14 @@ void ThreeDTransverseTrackFragmentsAlg::GetProjectedPositions(const TwoDSlidingF
 
     const float xMin(std::max(xMin1, xMin2));
     const float xMax(std::min(xMax1, xMax2));
+    const float nSamplingPoints(3.f * (xMax - xMin) / m_maxPointDisplacement);
 
-    for (unsigned int iSample = 0; iSample < m_nSamplingPoints; ++iSample)
+    if (nSamplingPoints < 1.f)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    for (float iSample = 0.f; iSample < nSamplingPoints; iSample += 1.f)
     {
-        const float alpha((0.5f + static_cast<float>(iSample)) / static_cast<float>(m_nSamplingPoints));
-        const float x(xMin + alpha * (xMax - xMin));
+        const float x(xMin + (xMax - xMin) * (0.5f + iSample) / nSamplingPoints);
 
         try
         {
