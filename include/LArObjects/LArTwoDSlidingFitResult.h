@@ -496,6 +496,13 @@ public:
         pandora::CartesianVector &direction) const;
 
     /**
+     *  @brief Get fit segment for a given longitudinal coordinate
+     *
+     *  @param  rL the longitudinal coordinate
+     */
+    FitSegment GetFitSegment(const float rL) const;
+
+    /**
      *  @brief  Get the layer fit result map
      *
      *  @return the layer fit result map
@@ -580,16 +587,6 @@ private:
      *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
      */
     void GetLongitudinalSurroundingLayers(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
-        LayerFitResultMap::const_iterator &secondLayerIter) const;
-
-    /**
-     *  @brief  Get iterators for layers surrounding a specified transverse position
-     *
-     *  @param  x the transverse coordinate
-     *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
-     *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
-     */
-    void GetTransverseSurroundingLayers(const float x, LayerFitResultMap::const_iterator &firstLayerIter,
         LayerFitResultMap::const_iterator &secondLayerIter) const;
 
     /**

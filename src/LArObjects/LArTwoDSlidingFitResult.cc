@@ -235,7 +235,6 @@ void TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, CartesianP
     }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoDSlidingFitResult::GetGlobalFitDirectionAtX(const float x, CartesianVector &direction) const
@@ -275,6 +274,23 @@ void TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegme
     const LayerInterpolation layerInterpolation(this->TransverseInterpolation(x, fitSegment));
     position = this->GetGlobalFitPosition(layerInterpolation);
     direction = this->GetGlobalFitDirection(layerInterpolation);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoDSlidingFitResult::FitSegment TwoDSlidingFitResult::GetFitSegment(const float rL) const
+{
+    int layer(this->GetLayer(rL));
+
+    for (FitSegmentList::const_iterator iter = m_fitSegmentList.begin(), iterEnd = m_fitSegmentList.end(); iter != iterEnd; ++iter)
+    {
+        const FitSegment &fitSegment = *iter;
+
+        if (layer >= fitSegment.GetStartLayer() && layer <= fitSegment.GetEndLayer())
+            return fitSegment;
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -459,14 +475,6 @@ void TwoDSlidingFitResult::GetLongitudinalSurroundingLayers(const float rL, Laye
 
     if (m_layerFitResultMap.end() == secondLayerIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitResult::GetTransverseSurroundingLayers(const float x, LayerFitResultMap::const_iterator &firstLayerIter,
-    LayerFitResultMap::const_iterator &secondLayerIter) const
-{
-    return this->GetTransverseSurroundingLayers(x, this->GetMinLayer(), this->GetMaxLayer(), firstLayerIter, secondLayerIter);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
