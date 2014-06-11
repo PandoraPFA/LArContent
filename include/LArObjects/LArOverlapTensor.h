@@ -225,6 +225,16 @@ public:
     void SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW, const OverlapResult &overlapResult);
 
     /**
+     *  @brief  SetReplace an existing overlap result
+     * 
+     *  @param  pClusterU address of cluster u
+     *  @param  pClusterV address of cluster v
+     *  @param  pClusterW address of cluster w
+     *  @param  overlapResult the overlap result
+     */
+    void ReplaceOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW, const OverlapResult &overlapResult);
+
+    /**
      *  @brief  Remove entries from tensor corresponding to specified cluster
      * 
      *  @param  pCluster address of the cluster

@@ -108,6 +108,30 @@ void OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
+void OverlapTensor<T>::ReplaceOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV,
+    pandora::Cluster *pClusterW, const OverlapResult &overlapResult)
+{
+    typename TheTensor::iterator iterU = m_overlapTensor.find(pClusterU);
+
+    if (m_overlapTensor.end() == iterU)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    typename OverlapMatrix::iterator iterV = iterU->second.find(pClusterV);
+
+    if (iterU->second.end() == iterV)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    typename OverlapList::iterator iterW = iterV->second.find(pClusterW);
+
+    if (iterV->second.end() == iterW)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    iterW->second = overlapResult;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
 void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
 {
     ClusterList additionalRemovals;
