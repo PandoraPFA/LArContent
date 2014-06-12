@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.cc
  * 
  *  @brief  Implementation of the cosmic ray shower matching algorithm class.
  * 
@@ -13,7 +13,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 
 using namespace pandora;
 
