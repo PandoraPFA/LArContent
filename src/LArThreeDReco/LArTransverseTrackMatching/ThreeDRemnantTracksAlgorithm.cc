@@ -27,13 +27,11 @@ void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
     LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
     LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
 
-    if (!(xMaxU > xMinV && xMaxV > xMinU) ||
-        !(xMaxV > xMinW && xMaxW > xMinV) ||
-        !(xMaxW > xMinU && xMaxU > xMinW))
-        return;
-
-    const float xSpan(std::max(xMaxU, std::max(xMaxV, xMaxW)) - std::min(xMinU, std::min(xMinV, xMinW)));
     const float xOverlap(std::min(xMaxU, std::min(xMaxV, xMaxW)) - std::max(xMinU, std::max(xMinV, xMinW)));
+    const float xSpan(std::max(xMaxU, std::max(xMaxV, xMaxW)) - std::min(xMinU, std::min(xMinV, xMinW)));
+
+    if (xOverlap < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     if (xOverlap < m_minXOverlap || xOverlap/xSpan < m_minXOverlapFraction)
         return;
@@ -151,6 +149,17 @@ void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
     const float matchedFractionW(static_cast<float>(matchedHitsW.size()) / static_cast<float>(clusterHitsW.size()));
 
     const float matchedFraction((matchedFractionU + matchedFractionV + matchedFractionW) / 3.f);
+
+
+//  std::cout << " matchedFractionU=" << matchedFractionU << " matchedFractionV=" << matchedFractionV << " matchedFractionW=" << matchedFractionW << std::endl;
+// ClusterList tempListU, tempListV, tempListW;
+// tempListU.insert(pClusterU);
+// tempListV.insert(pClusterV);
+// tempListW.insert(pClusterW);
+// PANDORA_MONITORING_API(VisualizeClusters(&tempListU, "Clusters (U)", GREEN));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempListV, "Clusters (V)", BLUE));
+// PANDORA_MONITORING_API(VisualizeClusters(&tempListW, "Clusters (W)", RED));
+// PANDORA_MONITORING_API(ViewEvent());
 
     if (matchedFraction < m_minMatchedFraction)
         return;
