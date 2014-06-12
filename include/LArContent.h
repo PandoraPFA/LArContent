@@ -28,6 +28,7 @@
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
+#include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
@@ -59,7 +60,6 @@
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
