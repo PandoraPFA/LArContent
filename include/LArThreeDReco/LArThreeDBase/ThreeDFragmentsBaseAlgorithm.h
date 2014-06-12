@@ -33,7 +33,7 @@ public:
 protected:
     /**
      *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results
-     * 
+     *
      *  @param  fitResult1 the first sliding fit result
      *  @param  fitResult2 the second sliding fit result
      *  @param  projectedPositions to receive the list of projected positions
@@ -46,7 +46,7 @@ protected:
 
     /**
      *  @brief  Calculate overlap result for track fragment candidate consisting of two sliding fit results and a list of available clusters
-     * 
+     *
      *  @param  fitResult1 the first sliding fit result
      *  @param  fitResult2 the second sliding fit result
      *  @param  inputClusterList the input cluster list
@@ -60,7 +60,7 @@ protected:
 
     /**
      *  @brief  Get the list of hits associated with the projected positions and a useful hit to cluster map
-     * 
+     *
      *  @param  inputClusterList the input cluster list
      *  @param  projectedPositions the list of projected positions
      *  @param  hitToClusterMap to receive the hit to cluster map
@@ -71,7 +71,7 @@ protected:
 
     /**
      *  @brief  Get the list of hits satisfactorily matched to the projected positions
-     * 
+     *
      *  @param  associatedHits the list of associated calo hits
      *  @param  matchedHits to receive the list of matched calo hits
      */
@@ -79,7 +79,7 @@ protected:
 
     /**
      *  @brief  Get the list of the relevant clusters and the address of the single best matched cluster
-     * 
+     *
      *  @param  matchedHits the list of matched calo hits
      *  @param  hitToClusterMap the hit to cluster map
      *  @param  matchedClusters to receive the list of matched clusters
@@ -90,7 +90,7 @@ protected:
 
     /**
      *  @brief  Get the populated fragment overlap result
-     * 
+     *
      *  @param  projectedPositions the list of projected positions
      *  @param  matchedHits the list of matched hits
      *  @param  matchedClusters the list of matched clusters
@@ -100,16 +100,23 @@ protected:
         const pandora::ClusterList &matchedClusters, FragmentOverlapResult &fragmentOverlapResult) const;
 
     /**
-     *  @brief  Whether the matched clusters and hits pass the algorithm quality cuts
-     * 
-     *  @param  fitResult1 the first sliding fit result
-     *  @param  fitResult2 the second sliding fit result
-     *  @param  fragmentOverlapResult the fragment overlap result
-     * 
+     *  @brief  Whether the matched clusters are consistent with the projected positions
+     *
+     *  @param  projectedPositions the list of projected positions
+     *  @param  matchedClusters the list of matched clusters
+     *
      *  @return boolean
      */
-    bool PassesChecks(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
-        FragmentOverlapResult &fragmentOverlapResult) const;
+    bool CheckMatchedClusters(const pandora::CartesianPointList &projectedPositions, const pandora::ClusterList &matchedClusters) const;
+
+    /**
+     *  @brief  Whether the matched clusters and hits pass the algorithm quality cuts
+     *
+     *  @param  fragmentOverlapResult the fragment overlap result
+     *
+     *  @return boolean
+     */
+    bool CheckOverlapResult(const FragmentOverlapResult &overlapResult) const;
 
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -119,9 +126,6 @@ protected:
 
     unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     TensorToolList      m_algorithmToolList;                ///< The algorithm tool list
-
-    float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
-    float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
 
     float               m_maxPointDisplacement;             ///< The maximum allowed distance between projected points and associated hits
     float               m_maxPointDisplacementSquared;      ///< The maximum allowed distance (squared) between projected points and associated hits

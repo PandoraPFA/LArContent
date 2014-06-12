@@ -37,32 +37,38 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *p
         if (!this->GetAndCheckElementList(overlapTensor, iterU->first, elementList))
             continue;
 
-        if (!this->CheckForHitAmbiguities(elementList))
-            continue;
+        IteratorList iteratorList;
+        this->SelectClearElements(elementList, iteratorList);
 
         bool particlesMade(false);
         ClusterList unavailableClusters, newlyAvailableClusters;
 
-        for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
+        for (IteratorList::const_iterator iIter = iteratorList.begin(), iIterEnd = iteratorList.end(); iIter != iIterEnd; ++iIter)
         {
-            const TensorType::OverlapResult &overlapResult(eIter->GetOverlapResult());
+            const TensorType::OverlapResult &overlapResult((*iIter)->GetOverlapResult());
 
             if (!this->CheckOverlapResult(overlapResult))
                 continue;
 
             Cluster *pFragmentCluster(NULL);
-            this->ProcessTensorElement(pAlgorithm,overlapResult, unavailableClusters, newlyAvailableClusters, pFragmentCluster);
+            this->ProcessTensorElement(pAlgorithm, overlapResult, unavailableClusters, newlyAvailableClusters, pFragmentCluster);
 
             if (NULL == pFragmentCluster)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            ProtoParticle protoParticle;
             const HitType fragmentHitType(overlapResult.GetFragmentHitType());
-            protoParticle.m_clusterListU.insert((TPC_VIEW_U == fragmentHitType) ? pFragmentCluster : eIter->GetClusterU());
-            protoParticle.m_clusterListV.insert((TPC_VIEW_V == fragmentHitType) ? pFragmentCluster : eIter->GetClusterV());
-            protoParticle.m_clusterListW.insert((TPC_VIEW_W == fragmentHitType) ? pFragmentCluster : eIter->GetClusterW());
+            Cluster* pClusterU((TPC_VIEW_U == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterU());
+            Cluster* pClusterV((TPC_VIEW_V == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterV());
+            Cluster* pClusterW((TPC_VIEW_W == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterW());
 
+            if (!(pClusterU->IsAvailable() && pClusterV->IsAvailable() && pClusterW->IsAvailable()))
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            ProtoParticle protoParticle;
             ProtoParticleVector protoParticleVector;
+            protoParticle.m_clusterListU.insert(pClusterU);
+            protoParticle.m_clusterListV.insert(pClusterV);
+            protoParticle.m_clusterListW.insert(pClusterW);
             protoParticleVector.push_back(protoParticle);
             particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
         }
@@ -80,21 +86,24 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *p
 
 bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTensor, Cluster *pCluster, TensorType::ElementList &elementList) const
 {
+    // Get list of connected elements from tensor
     unsigned int nU(0), nV(0), nW(0);
     overlapTensor.GetConnectedElements(pCluster, true, elementList, nU, nV, nW);
 
-    const HitType fragmentHitType = ((nU * nV * nW == 1) ? (elementList.begin())->GetOverlapResult().GetFragmentHitType() :
-        ((nV * nW == 1) && (nU > 1)) ? TPC_VIEW_U :
-        ((nU * nW == 1) && (nV > 1)) ? TPC_VIEW_V :
-        ((nU * nV == 1) && (nW > 1)) ? TPC_VIEW_W : CUSTOM);
-
-    if (!((TPC_VIEW_U == fragmentHitType) || (TPC_VIEW_V == fragmentHitType) || (TPC_VIEW_W == fragmentHitType)))
-        return false;
+    // Only allow one fragment hit type
+    HitType fragmentHitType(CUSTOM);
 
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
-        if (eIter->GetOverlapResult().GetFragmentHitType() != fragmentHitType)
+        const HitType thisHitType(eIter->GetOverlapResult().GetFragmentHitType());
+
+        if (!((TPC_VIEW_U == thisHitType) || (TPC_VIEW_V == thisHitType) || (TPC_VIEW_W == thisHitType)))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        if (thisHitType != fragmentHitType && CUSTOM != fragmentHitType)
             return false;
+
+        fragmentHitType = thisHitType;
     }
 
     return true;
@@ -124,8 +133,7 @@ bool ClearTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::ElementLi
 
 bool ClearTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
 {
-    if (overlapResult.GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
-        return false;
+    // ATTN: This method is currently mirrored in ThreeDFragmentsBaseAlgorithm algorithm
 
     if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
         return false;
@@ -134,6 +142,60 @@ bool ClearTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList &elementList, IteratorList &iteratorList) const
+{
+    for (TensorType::ElementList::const_iterator eIter1 = elementList.begin(), eIterEnd1 = elementList.end(); eIter1 != eIterEnd1; ++eIter1)
+    {
+        const CaloHitList &fragmentHits1(eIter1->GetOverlapResult().GetFragmentCaloHitList());
+        const float nCaloHits1(static_cast<float>(eIter1->GetClusterU()->GetNCaloHits() + eIter1->GetClusterV()->GetNCaloHits() +
+            eIter1->GetClusterW()->GetNCaloHits()));
+
+        bool isClearElement(true);
+
+        for (TensorType::ElementList::const_iterator eIter2 = elementList.begin(), eIterEnd2 = elementList.end(); eIter2 != eIterEnd2; ++eIter2)
+        {
+            const CaloHitList &fragmentHits2(eIter2->GetOverlapResult().GetFragmentCaloHitList());
+            const float nCaloHits2(static_cast<float>(eIter2->GetClusterU()->GetNCaloHits() + eIter2->GetClusterV()->GetNCaloHits() +
+                    eIter2->GetClusterW()->GetNCaloHits()));
+
+            const bool commonClusterU(eIter1->GetClusterU() == eIter2->GetClusterU());
+            const bool commonClusterV(eIter1->GetClusterV() == eIter2->GetClusterV());
+            const bool commonClusterW(eIter1->GetClusterW() == eIter2->GetClusterW());
+
+            if (commonClusterU && commonClusterV && commonClusterW)
+                continue;
+
+            if (eIter1->GetOverlapResult().GetFragmentHitType() != eIter2->GetOverlapResult().GetFragmentHitType())
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            bool isAmbiguousElement(commonClusterU || commonClusterV || commonClusterW);
+
+            if (!isAmbiguousElement)
+            {
+                for (CaloHitList::const_iterator hIter2 = fragmentHits2.begin(), hIterEnd2 = fragmentHits2.end(); hIter2 != hIterEnd2; ++hIter2)
+                {
+                    if (fragmentHits1.count(*hIter2))
+                    {
+                        isAmbiguousElement = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isAmbiguousElement && nCaloHits2 > 0.25f * nCaloHits1)
+            {
+                isClearElement = false;
+                break;
+            }
+        }
+
+        if (isClearElement)
+            iteratorList.push_back(eIter1);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -152,9 +214,9 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDFragmentsBaseAlgorithm 
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter; 
+        Cluster *pCluster = *cIter;
 
-        if (!pCluster->IsAvailable()) 
+        if (!pCluster->IsAvailable())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         CaloHitList clusterHitList;
@@ -291,11 +353,7 @@ void ClearTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTe
 
 StatusCode ClearTrackFragmentsTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedSamplingPoints = 10;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
-
-    m_minMatchedSamplingPointFraction = 0.6f;
+    m_minMatchedSamplingPointFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointFraction", m_minMatchedSamplingPointFraction));
 
