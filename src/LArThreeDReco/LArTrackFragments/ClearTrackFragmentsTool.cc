@@ -15,7 +15,7 @@ using namespace pandora;
 namespace lar
 {
 
-bool ClearTrackFragmentsTool::Run(ThreeDFragmentsBaseAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -25,7 +25,7 @@ bool ClearTrackFragmentsTool::Run(ThreeDFragmentsBaseAlgorithm *pAlgorithm, Tens
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor) const
+bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor) const
 {
     for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
@@ -133,7 +133,7 @@ bool ClearTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::ElementLi
 
 bool ClearTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
 {
-    // ATTN: This method is currently mirrored in ThreeDFragmentsBaseAlgorithm algorithm
+    // ATTN: This method is currently mirrored in ThreeDTrackFragmentsAlgorithm algorithm
 
     if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
         return false;
@@ -200,7 +200,7 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
+void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
     ClusterList &unavailableClusters, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
 {
     const CaloHitList &caloHitList(overlapResult.GetFragmentCaloHitList());
@@ -247,7 +247,7 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDFragmentsBaseAlgorithm 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::Recluster(ThreeDFragmentsBaseAlgorithm *pAlgorithm, Cluster *pCluster, const CaloHitList &daughterHits,
+void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorithm, Cluster *pCluster, const CaloHitList &daughterHits,
     const CaloHitList &separateHits, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
 {
     Cluster *pDaughterCluster(NULL);
@@ -291,7 +291,7 @@ void ClearTrackFragmentsTool::Recluster(ThreeDFragmentsBaseAlgorithm *pAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::UpdateTensor(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor,
+void ClearTrackFragmentsTool::UpdateTensor(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor,
     const ClusterList &unavailableClusters, const ClusterList &newlyAvailableClusters) const
 {
     for (ClusterList::const_iterator iter = unavailableClusters.begin(), iterEnd = unavailableClusters.end(); iter != iterEnd; ++iter)

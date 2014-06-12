@@ -8,7 +8,7 @@
 #ifndef CLEAR_TRACK_FRAGMENTS_TOOL_H
 #define CLEAR_TRACK_FRAGMENTS_TOOL_H 1
 
-#include "LArThreeDReco/LArTrackFragments/ThreeDFragmentsBaseAlgorithm.h"
+#include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 
 namespace lar
 {
@@ -28,7 +28,7 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    bool Run(ThreeDFragmentsBaseAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -40,7 +40,7 @@ private:
      *
      *  @return boolean
      */
-    bool FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor) const;
+    bool FindTrackFragments(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor) const;
 
     /**
      *  @brief  Get the list of elements connected to a given cluster and check its suitability (no ambiguities)
@@ -88,7 +88,7 @@ private:
      *  @param  newlyAvailableClusters to receive the list of clusters newly made available for future particle reconstruction
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void ProcessTensorElement(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
+    void ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
         pandora::ClusterList &unavailableClusters, pandora::ClusterList &newlyAvailableClusters, pandora::Cluster *&pFragmentCluster) const;
 
     /**
@@ -101,7 +101,7 @@ private:
      *  @param  newlyAvailableClusters to receive the list of clusters newly made available for future particle reconstruction
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void Recluster(ThreeDFragmentsBaseAlgorithm *pAlgorithm, pandora::Cluster *pCluster, const pandora::CaloHitList &daughterHits,
+    void Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorithm, pandora::Cluster *pCluster, const pandora::CaloHitList &daughterHits,
         const pandora::CaloHitList &separateHits, pandora::ClusterList &newlyAvailableClusters, pandora::Cluster *&pFragmentCluster) const;
 
     /**
@@ -112,7 +112,7 @@ private:
      *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
      *  @param  newlyAvailableClusters the list of clusters newly made available for future particle reconstruction
      */
-    void UpdateTensor(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor, const pandora::ClusterList &unavailableClusters,
+    void UpdateTensor(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor, const pandora::ClusterList &unavailableClusters,
         const pandora::ClusterList &newlyAvailableClusters) const;
 
     /**
