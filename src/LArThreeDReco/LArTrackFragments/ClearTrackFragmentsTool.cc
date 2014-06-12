@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArGenericTrackMatching/ClearTrackFragmentsTool.cc
+ *  @file   LArContent/src/LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.cc
  *
  *  @brief  Implementation of the clear track fragments tool class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArGenericTrackMatching/ClearTrackFragmentsTool.h"
+#include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 
 using namespace pandora;
 
