@@ -35,7 +35,7 @@
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
-#include "LArThreeDReco/LArTrackFragments/ThreeDTransverseTrackFragmentsAlg.h"
+#include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDRemnantTracksAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ClearRemnantTracksTool.h"
@@ -101,7 +101,7 @@ public:
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDRemnantTracks",                 lar::ThreeDRemnantTracksAlgorithm::Factory)                                 \
-        d("LArThreeDTransverseTrackFragments",      lar::ThreeDTransverseTrackFragmentsAlg::Factory)                            \
+        d("LArThreeDTrackFragments",                lar::ThreeDTrackFragmentsAlgorithm::Factory)                                \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \

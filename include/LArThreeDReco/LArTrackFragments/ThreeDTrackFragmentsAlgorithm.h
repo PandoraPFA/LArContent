@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTrackFragments/ThreeDFragmentsBaseAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h
  *
  *  @brief  Header file for the three dimensional fragments algorithm base class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_FRAGMENTS_BASE_ALGORITHM_H
-#define LAR_THREE_D_FRAGMENTS_BASE_ALGORITHM_H 1
+#ifndef LAR_THREE_D_TRACK_FRAGMENTS_ALGORITHM_H
+#define LAR_THREE_D_TRACK_FRAGMENTS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
@@ -23,24 +23,23 @@ class FragmentTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDFragmentsBaseAlgorithm class
+ *  @brief  ThreeDTrackFragmentsAlgorithm class
  */
-class ThreeDFragmentsBaseAlgorithm : public ThreeDTracksBaseAlgorithm<FragmentOverlapResult>
+class ThreeDTrackFragmentsAlgorithm : public ThreeDTracksBaseAlgorithm<FragmentOverlapResult>
 {
-public:
+public:  
+    /**
+     *  @brief  Factory class for instantiating algorithm
+     */
+    class Factory : public pandora::AlgorithmFactory
+    {
+    public:
+        pandora::Algorithm *CreateAlgorithm() const;
+    };
+
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
 
 protected:
-    /**
-     *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results
-     *
-     *  @param  fitResult1 the first sliding fit result
-     *  @param  fitResult2 the second sliding fit result
-     *  @param  projectedPositions to receive the list of projected positions
-     */
-    virtual void GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
-        pandora::CartesianPointList &projectedPositions) const = 0;
-
     void PerformMainLoop();
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
 
@@ -57,6 +56,16 @@ protected:
         const pandora::ClusterList &inputClusterList, pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
 
     typedef std::map<const pandora::CaloHit*, pandora::Cluster*> HitToClusterMap;
+
+    /**
+     *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results
+     *
+     *  @param  fitResult1 the first sliding fit result
+     *  @param  fitResult2 the second sliding fit result
+     *  @param  projectedPositions to receive the list of projected positions
+     */
+    void GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+        pandora::CartesianPointList &projectedPositions) const;
 
     /**
      *  @brief  Get the list of hits associated with the projected positions and a useful hit to cluster map
@@ -127,10 +136,11 @@ protected:
     unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     TensorToolList      m_algorithmToolList;                ///< The algorithm tool list
 
+    float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
+    float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
     float               m_maxPointDisplacement;             ///< The maximum allowed distance between projected points and associated hits
     float               m_maxPointDisplacementSquared;      ///< The maximum allowed distance (squared) between projected points and associated hits
     float               m_maxHitDisplacementSquared;        ///< The maximum allowed distance (squared) between associated hits
-
     unsigned int        m_minMatchedSamplingPoints;         ///< The minimum number of matched sampling points
     float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points
     unsigned int        m_minMatchedHits;                   ///< The minimum number of matched calo hits
@@ -144,7 +154,7 @@ protected:
 class FragmentTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDFragmentsBaseAlgorithm::TensorType TensorType;
+    typedef ThreeDTrackFragmentsAlgorithm::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -155,9 +165,16 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDFragmentsBaseAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Algorithm *ThreeDTrackFragmentsAlgorithm::Factory::CreateAlgorithm() const
+{
+    return new ThreeDTrackFragmentsAlgorithm();
+}
 
 } // namespace lar
 
-#endif // #ifndef LAR_THREE_D_FRAGMENTS_BASE_ALGORITHM_H
+#endif // #ifndef LAR_THREE_D_TRACK_FRAGMENTS_ALGORITHM_H
