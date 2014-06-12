@@ -112,23 +112,41 @@ void ThreeDFragmentsBaseAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
     const ClusterList &inputClusterList((TPC_VIEW_U == missingHitType) ? this->GetInputClusterListU() :
         (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
 
+
+    // Calculate new overlap result and replace old overlap result where necessary
+    FragmentOverlapResult oldOverlapResult, newOverlapResult;
+    Cluster *pMatchedClusterU(NULL), *pMatchedClusterV(NULL), *pMatchedClusterW(NULL);
+
     try
     {
         Cluster *pBestMatchedCluster(NULL);
-        FragmentOverlapResult fragmentOverlapResult;
-        this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, fragmentOverlapResult);
+        this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult);
 
-        if (fragmentOverlapResult.IsInitialized())
-        {
-            m_overlapTensor.SetOverlapResult((NULL != pClusterU) ? pClusterU : pBestMatchedCluster,
-                (NULL != pClusterV) ? pClusterV : pBestMatchedCluster,
-                (NULL != pClusterW) ? pClusterW : pBestMatchedCluster, fragmentOverlapResult);
-        }
+        pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
+        pMatchedClusterV = ((NULL != pClusterV) ? pClusterV : pBestMatchedCluster);
+        pMatchedClusterW = ((NULL != pClusterW) ? pClusterW : pBestMatchedCluster);
+
+        oldOverlapResult = m_overlapTensor.GetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW);
     }
     catch (StatusCodeException &statusCodeException)
     {
         if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
             throw statusCodeException;
+    }
+
+    if (!newOverlapResult.IsInitialized())
+        return;
+
+    if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    if (!oldOverlapResult.IsInitialized())
+    {
+        m_overlapTensor.SetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
+    }
+    else if(newOverlapResult.GetFragmentCaloHitList().size() > oldOverlapResult.GetFragmentCaloHitList().size())
+    {
+        m_overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
 }
 
@@ -145,10 +163,9 @@ void ThreeDFragmentsBaseAlgorithm::CalculateOverlapResult(const TwoDSlidingFitRe
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
 
     const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
-    const float xSpan(std::max(xMax1, xMax2) - std::min(xMin1, xMin2));
 
-    if ((xOverlap < m_minXOverlap) || (xSpan < std::numeric_limits<float>::epsilon()) || ((xOverlap / xSpan) < m_minXOverlapFraction))
-        return;
+    if (xOverlap < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     CartesianPointList projectedPositions;
     this->GetProjectedPositions(fitResult1, fitResult2, projectedPositions);
@@ -163,10 +180,16 @@ void ThreeDFragmentsBaseAlgorithm::CalculateOverlapResult(const TwoDSlidingFitRe
     ClusterList matchedClusters;
     this->GetMatchedClusters(matchedHits, hitToClusterMap, matchedClusters, pBestMatchedCluster);
 
-    this->GetFragmentOverlapResult(projectedPositions, matchedHits, matchedClusters, fragmentOverlapResult);
-
-    if (!this->PassesChecks(fitResult1, fitResult2, fragmentOverlapResult))
+    if (!this->CheckMatchedClusters(projectedPositions, matchedClusters))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    FragmentOverlapResult overlapResult;
+    this->GetFragmentOverlapResult(projectedPositions, matchedHits, matchedClusters, overlapResult);
+
+    if (!this->CheckOverlapResult(overlapResult))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    fragmentOverlapResult = overlapResult;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -212,6 +235,9 @@ void ThreeDFragmentsBaseAlgorithm::GetAssociatedHits(const ClusterList &inputClu
         if ((closestDistanceSquared < m_maxPointDisplacementSquared) && (NULL != pClosestCaloHit))
             associatedHits.insert(pClosestCaloHit);
     }
+
+    if (associatedHits.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -310,43 +336,91 @@ void ThreeDFragmentsBaseAlgorithm::GetFragmentOverlapResult(const CartesianPoint
     }
 
     fragmentOverlapResult = FragmentOverlapResult(nMatchedSamplingPoints, projectedPositions.size(), chi2Sum, matchedHits, matchedClusters);
+
+// --- BEGIN EVENT DISPLAY ---
+// std::cout << " MatchedSamplingPoints=" << fragmentOverlapResult.GetNMatchedSamplingPoints() << " MatchedFraction=" << fragmentOverlapResult.GetMatchedFraction() << " MatchedCaloHits=" << fragmentOverlapResult.GetFragmentCaloHitList().size() << std::endl;
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeCaloHits(&matchedHits, "MatchedHits", BLUE);
+// for (unsigned int p=0; p < projectedPositions.size(); ++p)
+// {
+// CartesianVector projectedPosition = projectedPositions.at(p);
+// PANDORA_MONITORING_API(AddMarkerToVisualization(&projectedPosition, "FitPosition", GREEN, 2.5));
+// }
+// PandoraMonitoringApi::ViewEvent();
+// --- END EVENT DISPLAY
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDFragmentsBaseAlgorithm::PassesChecks(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
-    FragmentOverlapResult &fragmentOverlapResult) const
+bool ThreeDFragmentsBaseAlgorithm::CheckMatchedClusters(const CartesianPointList &projectedPositions, const ClusterList &matchedClusters) const
 {
-    if (fragmentOverlapResult.GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
+    if (projectedPositions.empty() || matchedClusters.empty())
         return false;
 
-    if (fragmentOverlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
-        return false;
+    // Calculate X and Z span of projected positions
+    float minXproj(+std::numeric_limits<float>::max());
+    float maxXproj(-std::numeric_limits<float>::max());
+    float minZproj(+std::numeric_limits<float>::max());
+    float maxZproj(-std::numeric_limits<float>::max());
 
-    if (fragmentOverlapResult.GetFragmentCaloHitList().size() < m_minMatchedHits)
-        return false;
-
-    const ClusterList &matchedClusters(fragmentOverlapResult.GetFragmentClusterList());
-
-    if (matchedClusters.empty())
-        return false;
-
-    const Cluster *pCluster1(fitResult1.GetCluster());
-    const Cluster *pCluster2(fitResult2.GetCluster());
-    float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
-    LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
-    LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
-
-    for (ClusterList::const_iterator cIter = matchedClusters.begin(), cIterEnd = matchedClusters.end(); cIter != cIterEnd; ++cIter)
+    for (CartesianPointList::const_iterator iter = projectedPositions.begin(), iterEnd = projectedPositions.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *cIter;
+        const CartesianVector &projectedPosition = *iter;
 
-        float xMin(0.f), xMax(0.f);
-        LArClusterHelper::GetClusterSpanX(pCluster, xMin, xMax);
-
-        if ((xMax - xMin) > std::min((xMax1 - xMin1), (xMax2 - xMin2)))
-            return false;
+        minXproj = std::min(minXproj, projectedPosition.GetX());
+        maxXproj = std::max(maxXproj, projectedPosition.GetX());
+        minZproj = std::min(minZproj, projectedPosition.GetZ());
+        maxZproj = std::max(maxZproj, projectedPosition.GetZ());
     }
+
+    const float dXproj(maxXproj - minXproj);
+    const float dZproj(maxZproj - minZproj);
+    const float projectedLengthSquared(dXproj * dXproj + dZproj * dZproj);
+
+    // Calculate X and Z span of matched clusters
+    float minXcluster(+std::numeric_limits<float>::max());
+    float maxXcluster(-std::numeric_limits<float>::max());
+    float minZcluster(+std::numeric_limits<float>::max());
+    float maxZcluster(-std::numeric_limits<float>::max());
+
+    for(ClusterList::const_iterator iter = matchedClusters.begin(), iterEnd = matchedClusters.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        CartesianVector minPosition(0.f,0.f,0.f);
+        CartesianVector maxPosition(0.f,0.f,0.f);
+
+        LArClusterHelper::GetClusterSpanXZ(pCluster, minPosition, maxPosition);
+
+        minXcluster = std::min(minXcluster, minPosition.GetX());
+        maxXcluster = std::max(maxXcluster, maxPosition.GetX());
+        minZcluster = std::min(minZcluster, minPosition.GetZ());
+        maxZcluster = std::max(maxZcluster, maxPosition.GetZ());
+    }
+
+    const float dXcluster(maxXcluster - minXcluster);
+    const float dZcluster(maxZcluster - minZcluster);
+    const float clusterLengthSquared(dXcluster * dXcluster + dZcluster * dZcluster);
+
+    // Require that the span of the matched clusters is no larger than twice the span of the projected positions
+    if (clusterLengthSquared > 4.f * projectedLengthSquared)
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ThreeDFragmentsBaseAlgorithm::CheckOverlapResult(const FragmentOverlapResult &overlapResult) const
+{
+    // ATTN: This method is currently mirrored in ClearTrackFragments tool
+
+    if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
+        return false;
+
+    if (overlapResult.GetFragmentCaloHitList().size() < m_minMatchedHits)
+        return false;
 
     return true;
 }
@@ -395,14 +469,6 @@ StatusCode ThreeDFragmentsBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    m_minXOverlap = 3.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlap", m_minXOverlap));
-
-    m_minXOverlapFraction = 0.8f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
-
     m_maxPointDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxPointDisplacement", m_maxPointDisplacement));
@@ -413,11 +479,7 @@ StatusCode ThreeDFragmentsBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         "MaxHitDisplacement", maxHitDisplacement));
     m_maxHitDisplacementSquared = maxHitDisplacement * maxHitDisplacement;
 
-    m_minMatchedSamplingPoints = 10;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
-
-    m_minMatchedSamplingPointFraction = 0.6f;
+    m_minMatchedSamplingPointFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointFraction", m_minMatchedSamplingPointFraction));
 

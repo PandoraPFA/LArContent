@@ -34,46 +34,54 @@ private:
     /**
      *  @brief  Find suitable matching track fragments in the overlap tensor to use for 3D particle creation,
      *          return value indicates whether particles are made
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
-     * 
+     *
      *  @return boolean
      */
     bool FindTrackFragments(ThreeDFragmentsBaseAlgorithm *pAlgorithm, const TensorType &overlapTensor) const;
 
     /**
      *  @brief  Get the list of elements connected to a given cluster and check its suitability (no ambiguities)
-     * 
+     *
      *  @param  overlapTensor the overlap tensor
      *  @param  pCluster address of the key cluster
      *  @param  elementList to receive the element list
-     * 
+     *
      *  @return boolean
      */
     bool GetAndCheckElementList(const TensorType &overlapTensor, pandora::Cluster *pCluster, TensorType::ElementList &elementList) const;
 
     /**
      *  @brief  Check the list of hits, stored in tensor elements, for ambiguities
-     * 
+     *
      *  @param  elementList the element list
-     * 
+     *
      *  @return boolean
      */
     bool CheckForHitAmbiguities(const TensorType::ElementList &elementList) const;
 
     /**
      *  @brief  Check whether the overlap result passes matched sampling point and number of matched hit checks
-     * 
+     *
      *  @param  overlapResult the overlap result
-     * 
+     *
      *  @return boolean
      */
     bool CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const;
 
     /**
+     *  @brief  Select a list of clear track-like elements from a set of connected tensor elements
+     *
+     *  @param  elementList the full list of connected tensor elements
+     *  @param  iteratorList to receive a list of iterators to long track-like elements
+     */
+    void SelectClearElements(const TensorType::ElementList &elementList, IteratorList &iteratorList) const;
+
+    /**
      *  @brief  Process a tensor element, reclustering the fragments as required
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapResult the overlap result
      *  @param  unavailableClusters to receive the list of clusters now unavailable for future particle reconstruction
@@ -85,7 +93,7 @@ private:
 
     /**
      *  @brief  Rearrange the hits in a cluster from the fragment list, using the Pandora fragmentation mechanism
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pCluster address of the input cluster
      *  @param  daughterHits the full list of hits to place in the new fragment cluster
@@ -98,7 +106,7 @@ private:
 
     /**
      *  @brief  Update the tensor following the fragmentation operations performed by this tool
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
@@ -109,7 +117,7 @@ private:
 
     /**
      *  @brief  Get a list of the tensor key clusters for which tensor elements have been impacted by fragmentation operations
-     * 
+     *
      *  @param  overlapTensor the overlap tensor
      *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
      *  @param  affectedKeyClusters to receive the list of tensor key clusters that have been affected by fragmentation operations
@@ -118,7 +126,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int        m_minMatchedSamplingPoints;         ///< The minimum number of matched sampling points
     float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points
     unsigned int        m_minMatchedHits;                   ///< The minimum number of matched calo hits
 };

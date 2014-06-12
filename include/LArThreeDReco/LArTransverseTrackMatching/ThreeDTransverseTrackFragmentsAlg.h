@@ -35,7 +35,10 @@ private:
     void GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
         pandora::CartesianPointList &projectedPositions) const;
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);  
+
+    float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
+    float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
