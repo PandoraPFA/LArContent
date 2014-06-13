@@ -37,6 +37,8 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
     void ExamineTensor();

@@ -315,31 +315,6 @@ void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
-{
-    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (!pCluster->IsAvailable())
-            continue;
-
-        if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
-            continue;
-
-        if (LArClusterHelper::GetLayerSpan(pCluster) < m_minClusterLayers)
-            continue;
-
-        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
-            continue;
-
-        selectedClusterList.insert(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
 void ThreeDBaseAlgorithm<T>::SelectInputClusters()
 {
     this->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
@@ -431,19 +406,6 @@ StatusCode ThreeDBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
-
-    m_minClusterCaloHits = 5;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));
-
-    m_minClusterLayers = 1;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLayers", m_minClusterLayers));
-
-    float minClusterLength = 3.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", minClusterLength));
-    m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
     return STATUS_CODE_SUCCESS;
 }

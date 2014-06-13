@@ -18,6 +18,23 @@ using namespace pandora;
 namespace lar
 {
 
+void ThreeDRemnantTracksAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+{
+    std::cout << " --- ThreeDRemnantTracksAlgorithm::SelectInputClusters(...) --- " << std::endl;
+
+    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (!pCluster->IsAvailable())
+            continue;
+
+        selectedClusterList.insert(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // Requirements on overall X overlap

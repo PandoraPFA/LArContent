@@ -39,6 +39,8 @@ public:
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
 
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
 protected:
     virtual void PreparationStep();
     virtual void TidyUp();
@@ -60,7 +62,10 @@ protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int                m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    TwoDSlidingFitResultMap     m_slidingFitResultMap;      ///< The sliding fit result map
+    TwoDSlidingFitResultMap     m_slidingFitResultMap;      ///< The sliding fit result map    
+
+    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
+    float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
