@@ -61,7 +61,7 @@ void ListPreparationAlgorithm::ProcessCaloHits()
     if (pCaloHitList->empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW;
+    CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW;
 
     for (CaloHitList::const_iterator hitIter = pCaloHitList->begin(), hitIterEnd = pCaloHitList->end(); hitIter != hitIterEnd; ++hitIter)
     {
@@ -75,20 +75,26 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
         if (TPC_VIEW_U == (*hitIter)->GetHitType())
         {
-            if (!filteredCaloHitListU.insert(*hitIter).second)
+            if (!selectedCaloHitListU.insert(*hitIter).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
         else if (TPC_VIEW_V == (*hitIter)->GetHitType())
         {
-            if (!filteredCaloHitListV.insert(*hitIter).second)
+            if (!selectedCaloHitListV.insert(*hitIter).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
         else if (TPC_VIEW_W == (*hitIter)->GetHitType())
         {
-            if (!filteredCaloHitListW.insert(*hitIter).second)
+            if (!selectedCaloHitListW.insert(*hitIter).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
     }
+
+    // Filter the selected hits
+    CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW;
+    this->GetFilteredCaloHitList(selectedCaloHitListU, filteredCaloHitListU);
+    this->GetFilteredCaloHitList(selectedCaloHitListV, filteredCaloHitListV);
+    this->GetFilteredCaloHitList(selectedCaloHitListW, filteredCaloHitListW);
 
     // Group together views into overall lists
     CaloHitList filteredInputList;
@@ -108,6 +114,47 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
     if (!filteredCaloHitListW.empty() && !m_outputCaloHitListNameW.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListW, m_outputCaloHitListNameW));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputList, CaloHitList &outputList)
+{
+    // Remove hits that are in the same physical location!
+    for (CaloHitList::const_iterator hIter1 = inputList.begin(), hIterEnd1 = inputList.end(); hIter1 != hIterEnd1; ++hIter1)
+    {
+        CaloHit *pCaloHit1 = *hIter1;
+
+        bool isUnique(true);
+
+        for (CaloHitList::const_iterator hIter2 = inputList.begin(), hIterEnd2 = inputList.end(); hIter2 != hIterEnd2; ++hIter2)
+        {
+            CaloHit *pCaloHit2 = *hIter2;
+
+            if (pCaloHit1 == pCaloHit2)
+                continue;
+
+            if ((pCaloHit2->GetPositionVector() - pCaloHit1->GetPositionVector()).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon() &&
+                pCaloHit2->GetMipEquivalentEnergy() > pCaloHit1->GetMipEquivalentEnergy())
+            {
+                isUnique = false;
+                break;
+            }
+        }
+
+        if (isUnique)
+        {
+            outputList.insert(pCaloHit1);
+        }
+        else
+        {   
+            std::cout << "ListPreparationAlgorithm: Found two hits in the same location, will remove the lowest pulse height" << std::endl;
+        }
+    }
+
+    // TODO: Could merge these hits instead
+
+    // TODO: Could also chop up long hits around this point
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
