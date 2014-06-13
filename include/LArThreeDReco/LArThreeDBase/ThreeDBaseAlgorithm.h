@@ -185,7 +185,7 @@ public:
      *  @param  pInputClusterList address of an input cluster list
      *  @param  selectedClusterList to receive the selected cluster list
      */
-    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const = 0;
 
 protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -241,10 +241,6 @@ private:
     std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
     std::string                 m_outputPfoListName;            ///< The output pfo list name
-
-    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
-    unsigned int                m_minClusterLayers;             ///< The min number of layers in base cluster selection method
-    float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

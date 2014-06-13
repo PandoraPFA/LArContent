@@ -50,6 +50,28 @@ void ThreeDTracksBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <typename T>
+void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+{
+    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (!pCluster->IsAvailable())
+            continue;
+
+        if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+            continue;
+
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+            continue;
+
+        selectedClusterList.insert(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
 {
@@ -108,6 +130,15 @@ StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandl
     m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
+
+    m_minClusterCaloHits = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterCaloHits", m_minClusterCaloHits));
+
+    float minClusterLength = 3.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterLength", minClusterLength));
+    m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
     return ThreeDBaseAlgorithm<T>::ReadSettings(xmlHandle);
 }

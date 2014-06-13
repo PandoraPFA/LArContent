@@ -18,6 +18,21 @@ using namespace pandora;
 namespace lar
 {
 
+void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+{
+    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCluster = *iter;
+
+        if (!pCluster->IsAvailable())
+            continue;
+
+        selectedClusterList.insert(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     static const unsigned int m_layerFitHalfWindow = 100;
