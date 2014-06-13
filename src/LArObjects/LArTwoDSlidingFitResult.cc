@@ -498,7 +498,8 @@ void TwoDSlidingFitResult::GetTransverseSurroundingLayers(const float x, const i
     this->GetGlobalPosition(maxLayerIter->second.GetL(), maxLayerIter->second.GetFitT(), maxPosition);
 
     if ((std::fabs(maxPosition.GetX() - minPosition.GetX()) < std::numeric_limits<float>::epsilon()))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    
 
     // Find start layer
     const float minL(minLayerIter->second.GetL());
