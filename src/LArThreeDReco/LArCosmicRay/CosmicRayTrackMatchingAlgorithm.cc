@@ -69,15 +69,15 @@ StatusCode CosmicRayTrackMatchingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::string inputClusterListNames, ClusterVector &clusterVector) const
+StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::string inputClusterListName, ClusterVector &clusterVector) const
 {
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputClusterListNames, pClusterList))
+        inputClusterListName, pClusterList))
 
     if (NULL == pClusterList)
     {
-        std::cout << "CosmicRayTrackMatchingAlgorithm: could not find cluster list " << inputClusterListNames << std::endl;
+        std::cout << "CosmicRayTrackMatchingAlgorithm: could not find cluster list " << inputClusterListName << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 

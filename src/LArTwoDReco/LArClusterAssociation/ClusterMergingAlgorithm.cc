@@ -27,7 +27,13 @@ StatusCode ClusterMergingAlgorithm::Run()
     }
     else
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
+    }
+
+    if (NULL == pClusterList)
+    {
+        std::cout << "ClusterMergingAlgorithm: could not find cluster list " << m_inputClusterListName << std::endl;
+        return STATUS_CODE_SUCCESS;
     }
 
     bool carryOn(true);
