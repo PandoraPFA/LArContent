@@ -1,21 +1,21 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ClearRemnantTracksTool.cc
+ *  @file   LArContent/src/LArThreeDReco/ShowerFragments/ClearRemnantsTool.cc
  *
- *  @brief  Implementation of the clear tracks tool class.
+ *  @brief  Implementation of the clear remnants tool class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ClearRemnantTracksTool.h"
+#include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-bool ClearRemnantTracksTool::Run(ThreeDRemnantTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ClearRemnantsTool::Run(ThreeDRemnantsAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -31,7 +31,7 @@ bool ClearRemnantTracksTool::Run(ThreeDRemnantTracksAlgorithm *pAlgorithm, Tenso
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearRemnantTracksTool::CreateThreeDParticles(ThreeDRemnantTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList,
+void ClearRemnantsTool::CreateThreeDParticles(ThreeDRemnantsAlgorithm *pAlgorithm, const TensorType::ElementList &elementList,
     bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
@@ -53,7 +53,7 @@ void ClearRemnantTracksTool::CreateThreeDParticles(ThreeDRemnantTracksAlgorithm 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClearRemnantTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ClearRemnantsTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_minMatchedFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

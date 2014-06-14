@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.cc
  * 
- *  @brief  Implementation of the cosmic ray shower matching algorithm class.
+ *  @brief  Implementation of the delta ray shower matching algorithm class.
  * 
  *  $Log: $
  */
@@ -13,21 +13,21 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
+#include "LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode CosmicRayShowerMatchingAlgorithm::Run()
+StatusCode DeltaRayMatchingAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
     const StatusCode listStatusCode(PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     if (STATUS_CODE_SUCCESS != listStatusCode)
     {
-        std::cout << "CosmicRayShowerMatchingAlgorithm: Input pfo list unavailable " << std::endl;
+        std::cout << "DeltaRayMatchingAlgorithm: Input pfo list unavailable " << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -53,7 +53,7 @@ StatusCode CosmicRayShowerMatchingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clustersU, const ClusterVector &clustersV, const ClusterVector &clustersW) const
+void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clustersU, const ClusterVector &clustersV, const ClusterVector &clustersW) const
 {
     for (ClusterVector::const_iterator cIterW = clustersW.begin(), cIterWEnd = clustersW.end(); cIterW != cIterWEnd; ++cIterW)
     {
@@ -107,7 +107,7 @@ void CosmicRayShowerMatchingAlgorithm::ThreeViewMatching(const ClusterVector &cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2) const
+void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2) const
 {
     for (ClusterVector::const_iterator cIter1 = clusters1.begin(), cIter1End = clusters1.end(); cIter1 != cIter1End; ++cIter1)
     {
@@ -151,7 +151,7 @@ void CosmicRayShowerMatchingAlgorithm::TwoViewMatching(const ClusterVector &clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters) const
+void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters) const
 {
     for (ClusterVector::const_iterator cIter = clusters.begin(), cIterEnd = clusters.end(); cIter != cIterEnd; ++cIter)
     {
@@ -180,7 +180,7 @@ void CosmicRayShowerMatchingAlgorithm::OneViewMatching(const ClusterVector &clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::GetInputClusters(const pandora::StringVector &clusterListNames, pandora::ClusterVector &clusterVector)
+void DeltaRayMatchingAlgorithm::GetInputClusters(const pandora::StringVector &clusterListNames, pandora::ClusterVector &clusterVector)
 {
     for (StringVector::const_iterator iter = clusterListNames.begin(), iterEnd = clusterListNames.end(); iter != iterEnd; ++iter)
     {
@@ -204,7 +204,7 @@ void CosmicRayShowerMatchingAlgorithm::GetInputClusters(const pandora::StringVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float CosmicRayShowerMatchingAlgorithm::CompareClusterTriplet(Cluster *const pClusterU, Cluster *const pClusterV, Cluster *const pClusterW) const
+float DeltaRayMatchingAlgorithm::CompareClusterTriplet(Cluster *const pClusterU, Cluster *const pClusterV, Cluster *const pClusterW) const
 {
     CartesianVector minimumCoordinatesU(0.f, 0.f, 0.f), maximumCoordinatesU(0.f, 0.f, 0.f);
     LArClusterHelper::GetClusterSpanXZ(pClusterU, minimumCoordinatesU, maximumCoordinatesU);
@@ -238,7 +238,7 @@ float CosmicRayShowerMatchingAlgorithm::CompareClusterTriplet(Cluster *const pCl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float CosmicRayShowerMatchingAlgorithm::GetCoordinateAtX(Cluster *const pCluster, const float x, const float xmin, const float xmax) const
+float DeltaRayMatchingAlgorithm::GetCoordinateAtX(Cluster *const pCluster, const float x, const float xmin, const float xmax) const
 {
     CartesianVector fitVector(0.f, 0.f, 0.f);
 
@@ -257,7 +257,7 @@ float CosmicRayShowerMatchingAlgorithm::GetCoordinateAtX(Cluster *const pCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::FindBestCosmicPFO(Cluster *const pClusterU, Cluster *const pClusterV,
+void DeltaRayMatchingAlgorithm::FindBestCosmicPFO(Cluster *const pClusterU, Cluster *const pClusterV,
    Cluster *const pClusterW, ParticleFlowObject* &pBestPFO, float &distanceToBestPFO) const
 {
     if ((NULL == pClusterU) && (NULL == pClusterV) && (NULL == pClusterW))
@@ -290,7 +290,7 @@ void CosmicRayShowerMatchingAlgorithm::FindBestCosmicPFO(Cluster *const pCluster
                 if (TPC_3D == pfoClusterHitType)
                     continue;
 
-                std::cout << "CosmicRayShowerMatchingAlgorithm: Encountered unexpected hit type " << std::endl;
+                std::cout << "DeltaRayMatchingAlgorithm: Encountered unexpected hit type " << std::endl;
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
             }
 
@@ -359,14 +359,14 @@ void CosmicRayShowerMatchingAlgorithm::FindBestCosmicPFO(Cluster *const pCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayShowerMatchingAlgorithm::IsSubCluster(const Cluster *const pPFOCluster, const Cluster *const pSubCluster) const
+bool DeltaRayMatchingAlgorithm::IsSubCluster(const Cluster *const pPFOCluster, const Cluster *const pSubCluster) const
 {
     return (LArClusterHelper::GetLengthSquared(pPFOCluster) > 2.f * LArClusterHelper::GetLengthSquared(pSubCluster));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList, ParticleFlowObject *const pParentPfo) const
+void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList, ParticleFlowObject *const pParentPfo) const
 {
     const PfoList *pPfoList = NULL; std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
@@ -392,7 +392,7 @@ void CosmicRayShowerMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const TwoDSlidingFitResult &CosmicRayShowerMatchingAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
+const TwoDSlidingFitResult &DeltaRayMatchingAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
 {
     TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -404,7 +404,7 @@ const TwoDSlidingFitResult &CosmicRayShowerMatchingAlgorithm::GetCachedSlidingFi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
+void DeltaRayMatchingAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
 {
     TwoDSlidingFitResult slidingFitResult;
     LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
@@ -415,7 +415,7 @@ void CosmicRayShowerMatchingAlgorithm::AddToSlidingFitCache(Cluster *const pClus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayShowerMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode DeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "InputPfoListName", m_inputPfoListName));

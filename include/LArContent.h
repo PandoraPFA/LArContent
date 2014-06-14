@@ -35,12 +35,13 @@
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
+#include "LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.h"
+#include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDRemnantTracksAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
-#include "LArThreeDReco/LArTransverseTrackMatching/ClearRemnantTracksTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
@@ -99,10 +100,11 @@ public:
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
         d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
         d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
+        d("LArDeltaRayMatching",                    lar::DeltaRayMatchingAlgorithm::Factory)                                    \
         d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
+        d("LArThreeDRemnants",                      lar::ThreeDRemnantsAlgorithm::Factory)                                      \
         d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
-        d("LArThreeDRemnantTracks",                 lar::ThreeDRemnantTracksAlgorithm::Factory)                                 \
         d("LArThreeDTrackFragments",                lar::ThreeDTrackFragmentsAlgorithm::Factory)                                \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
@@ -140,7 +142,7 @@ public:
         d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
         d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
-        d("LArClearRemnantTracks",                  lar::ClearRemnantTracksTool::Factory)                                       \
+        d("LArClearRemnants",                       lar::ClearRemnantsTool::Factory)                                            \
         d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
         d("LArLongTracks",                          lar::LongTracksTool::Factory)                                               \
         d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \

@@ -1,14 +1,14 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ThreeDRemnantTracksAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional longitudinal tracks algorithm class.
+ *  @brief  Implementation of the three dimensional remnants algorithm class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDRemnantTracksAlgorithm.h"
+#include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
@@ -18,9 +18,9 @@ using namespace pandora;
 namespace lar
 {
 
-void ThreeDRemnantTracksAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
-    std::cout << " --- ThreeDRemnantTracksAlgorithm::SelectInputClusters(...) --- " << std::endl;
+    std::cout << " --- ThreeDRemnantsAlgorithm::SelectInputClusters(...) --- " << std::endl;
 
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -35,7 +35,7 @@ void ThreeDRemnantTracksAlgorithm::SelectInputClusters(const ClusterList *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // Requirements on overall X overlap
     float xMinU(0.f), xMinV(0.f), xMinW(0.f);
@@ -186,7 +186,7 @@ void ThreeDRemnantTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantTracksAlgorithm::ExamineTensor()
+void ThreeDRemnantsAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
@@ -208,7 +208,7 @@ void ThreeDRemnantTracksAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDRemnantTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolList algorithmToolList;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
