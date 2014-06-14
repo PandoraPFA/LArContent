@@ -1,22 +1,22 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/ClearRemnantTracksTool.h
+ *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h
  *
- *  @brief  Header file for the clear tracks tool class.
+ *  @brief  Header file for the clear remnants tool class.
  *
  *  $Log: $
  */
-#ifndef CLEAR_REMNANT_TRACKS_TOOL_H
-#define CLEAR_REMNANT_TRACKS_TOOL_H 1
+#ifndef CLEAR_REMNANTS_TOOL_H
+#define CLEAR_REMNANTS_TOOL_H 1
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDRemnantTracksAlgorithm.h"
+#include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
 namespace lar
 {
 
 /**
- *  @brief  ClearRemnantTracksTool class
+ *  @brief  ClearRemnantsTool class
  */
-class ClearRemnantTracksTool : public RemnantTensorTool
+class ClearRemnantsTool : public RemnantTensorTool
 {
 public:
     /**
@@ -28,7 +28,7 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    bool Run(ThreeDRemnantTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDRemnantsAlgorithm *pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -40,18 +40,18 @@ private:
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(ThreeDRemnantTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+    void CreateThreeDParticles(ThreeDRemnantsAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::AlgorithmTool *ClearRemnantTracksTool::Factory::CreateAlgorithmTool() const
+inline pandora::AlgorithmTool *ClearRemnantsTool::Factory::CreateAlgorithmTool() const
 {
-    return new ClearRemnantTracksTool();
+    return new ClearRemnantsTool();
 }
 
 } // namespace lar
 
-#endif // #ifndef CLEAR_REMNANT_TRACKS_TOOL_H
+#endif // #ifndef CLEAR_REMNANTS_TOOL_H

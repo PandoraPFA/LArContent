@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/ThreeDRemnantTracksAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h
  *
- *  @brief  Header file for the three dimensional remnant tracks algorithm class.
+ *  @brief  Header file for the three dimensional remnants algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_REMNANT_TRACKS_ALGORITHM_H
-#define LAR_THREE_D_REMNANT_TRACKS_ALGORITHM_H 1
+#ifndef LAR_THREE_D_REMNANTS_ALGORITHM_H
+#define LAR_THREE_D_REMNANTS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
@@ -23,9 +23,9 @@ class RemnantTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDRemnantTracksAlgorithm class
+ *  @brief  ThreeDRemnantsAlgorithm class
  */
-class ThreeDRemnantTracksAlgorithm : public ThreeDBaseAlgorithm<float>
+class ThreeDRemnantsAlgorithm : public ThreeDBaseAlgorithm<float>
 {
 public:
     /**
@@ -64,7 +64,7 @@ private:
 class RemnantTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDRemnantTracksAlgorithm::TensorType TensorType;
+    typedef ThreeDRemnantsAlgorithm::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -75,17 +75,17 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDRemnantTracksAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDRemnantsAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ThreeDRemnantTracksAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ThreeDRemnantsAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ThreeDRemnantTracksAlgorithm();
+    return new ThreeDRemnantsAlgorithm();
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_THREE_D_REMNANT_TRACKS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_D_REMNANTS_ALGORITHM_H

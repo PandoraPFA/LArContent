@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.h
  * 
- *  @brief  Header file for the cosmic ray shower matching algorithm class.
+ *  @brief  Header file for the delta ray matching algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_COSMIC_RAY_SHOWER_MATCHING_ALGORITHM_H
-#define LAR_COSMIC_RAY_SHOWER_MATCHING_ALGORITHM_H 1
+#ifndef LAR_DELTA_RAY_MATCHING_ALGORITHM_H
+#define LAR_DELTA_RAY_MATCHING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -16,9 +16,9 @@ namespace lar
 {
 
 /**
- *  @brief  CosmicRayShowerMatchingAlgorithm class
+ *  @brief  DeltaRayMatchingAlgorithm class
  */
-class CosmicRayShowerMatchingAlgorithm : public pandora::Algorithm
+class DeltaRayMatchingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -152,11 +152,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *CosmicRayShowerMatchingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *DeltaRayMatchingAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new CosmicRayShowerMatchingAlgorithm();
+    return new DeltaRayMatchingAlgorithm();
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_COSMIC_RAY_SHOWER_MATCHING_ALGORITHM_H
+#endif // #ifndef LAR_DELTA_RAY_MATCHING_ALGORITHM_H
