@@ -21,8 +21,6 @@ namespace lar
 
 StatusCode CosmicRayTrackMatchingAlgorithm::Run()
 {
-    std::cout << " --- CosmicRayTrackMatchingAlgorithm::Run() --- " << std::endl;
-
     // Get the available clusters for each view
     ClusterVector availableClustersU, availableClustersV, availableClustersW;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetAvailableClusters(m_inputClusterListNameU, availableClustersU));
@@ -35,47 +33,36 @@ StatusCode CosmicRayTrackMatchingAlgorithm::Run()
     this->SelectCleanClusters(availableClustersV, cleanClustersV);
     this->SelectCleanClusters(availableClustersW, cleanClustersW);
 
-    // Build a map of sliding linear fit results
-    TwoDSlidingFitResultMap slidingFitCache;
-    this->AddToSlidingFitCache(cleanClustersU, slidingFitCache);
-    this->AddToSlidingFitCache(cleanClustersV, slidingFitCache);
-    this->AddToSlidingFitCache(cleanClustersW, slidingFitCache);
-
     // Build associations between pairs of views
     ClusterAssociationMap matchedClusterUV, matchedClusterVW, matchedClusterWU;
-    this->MatchTracks(slidingFitCache, cleanClustersU, cleanClustersV, matchedClusterUV);
-    this->MatchTracks(slidingFitCache, cleanClustersV, cleanClustersW, matchedClusterVW);
-    this->MatchTracks(slidingFitCache, cleanClustersW, cleanClustersU, matchedClusterWU);
+    this->MatchClusters(cleanClustersU, cleanClustersV, matchedClusterUV);
+    this->MatchClusters(cleanClustersV, cleanClustersW, matchedClusterVW);
+    this->MatchClusters(cleanClustersW, cleanClustersU, matchedClusterWU);
 
-
+    // Build particles from associations
     ParticleList particleList;
     this->MatchThreeViews(matchedClusterUV, matchedClusterVW, matchedClusterWU, particleList);
     this->MatchTwoViews(matchedClusterUV, matchedClusterVW, matchedClusterWU, particleList);
     this->BuildParticles(particleList);
 
-
- 
+// --- BEGIN EVENT DISPLAY ---
+// ClusterList tempListU, tempListV, tempListW;
+// for (ParticleList::const_iterator iter = particleList.begin(), iterEnd = particleList.end(); iter != iterEnd; ++iter)
+// {
+// const Particle &particle = *iter;
+// Cluster* pClusterU = const_cast<Cluster*>(particle.m_pClusterU);
+// Cluster* pClusterV = const_cast<Cluster*>(particle.m_pClusterV);
+// Cluster* pClusterW = const_cast<Cluster*>(particle.m_pClusterW);
+// if(pClusterU) tempListU.insert(pClusterU);
+// if(pClusterV) tempListV.insert(pClusterV);
+// if(pClusterW) tempListW.insert(pClusterW);
+// }
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&tempListU, "MatchedClusterU", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempListV, "MatchedClusterV", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&tempListW, "MatchedClusterW", GREEN);
+// PandoraMonitoringApi::ViewEvent();
 // --- END EVENT DISPLAY ---
-ClusterList tempListU, tempListV, tempListW;
-for (ParticleList::const_iterator iter = particleList.begin(), iterEnd = particleList.end(); iter != iterEnd; ++iter)
-{
-const Particle &particle = *iter;
-Cluster* pClusterU = const_cast<Cluster*>(particle.m_pClusterU);
-Cluster* pClusterV = const_cast<Cluster*>(particle.m_pClusterV);
-Cluster* pClusterW = const_cast<Cluster*>(particle.m_pClusterW);
-std::cout << " pU=" << pClusterU << " pV=" << pClusterV << " pW=" << pClusterW << std::endl;
-if(pClusterU) tempListU.insert(pClusterU);
-if(pClusterV) tempListV.insert(pClusterV);
-if(pClusterW) tempListW.insert(pClusterW);
-}
-PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-PandoraMonitoringApi::VisualizeClusters(&tempListU, "MatchedClusterU", RED);
-PandoraMonitoringApi::VisualizeClusters(&tempListV, "MatchedClusterV", BLUE);
-PandoraMonitoringApi::VisualizeClusters(&tempListW, "MatchedClusterW", GREEN);
-PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
-
 
     return STATUS_CODE_SUCCESS;
 }
@@ -85,12 +72,12 @@ PandoraMonitoringApi::ViewEvent();
 StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::string inputClusterListNames, ClusterVector &clusterVector) const
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
         inputClusterListNames, pClusterList))
 
     if (NULL == pClusterList)
     {
-        std::cout << "CosmicRayTrackMatchingAlgorithm: could not find cluster list " << inputClusterListNames << std::endl;  
+        std::cout << "CosmicRayTrackMatchingAlgorithm: could not find cluster list " << inputClusterListNames << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -112,6 +99,9 @@ StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::stri
 
 void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &inputVector, ClusterVector &outputVector) const
 {
+    ClusterVector clusterVector;
+
+    // Select long clusters
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
@@ -119,31 +109,44 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_clusterMinLength * m_clusterMinLength)
             continue;
 
-        outputVector.push_back(pCluster);
+        clusterVector.push_back(pCluster);
     }
-}
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CosmicRayTrackMatchingAlgorithm::AddToSlidingFitCache(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitCache) const
-{
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    // Remove long delta rays
+    for (ClusterVector::const_iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
     {
-        if (slidingFitCache.end() == slidingFitCache.find(*iter))
-        {
-            TwoDSlidingFitResult slidingFitResult;
-            LArClusterHelper::LArTwoDSlidingFit(*iter, m_halfWindowLayers, slidingFitResult);
+        Cluster *pCluster = *iter1;
+        const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
+        CartesianVector innerVertex(0.f,0.f,0.f), outerVertex(0.f,0.f,0.f);
+        LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, innerVertex, outerVertex);
 
-            if (!slidingFitCache.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+        bool isDeltaRay(false);
+
+        for (ClusterVector::const_iterator iter2 = clusterVector.begin(), iterEnd2 = clusterVector.end(); iter2 != iterEnd2; ++iter2)
+        {
+            Cluster *pClusterCheck = *iter2;
+
+            if (pCluster == pClusterCheck)
+                continue;
+
+            if ((LArClusterHelper::GetLengthSquared(pClusterCheck) > 10.f * lengthSquared) &&
+                (LArClusterHelper::GetClosestDistance(innerVertex, pClusterCheck) < m_vtxXOverlap ||
+                 LArClusterHelper::GetClosestDistance(outerVertex, pClusterCheck) < m_vtxXOverlap))
+            {
+                isDeltaRay = true;
+                break;
+            }
         }
+
+        if (!isDeltaRay)
+            outputVector.push_back(pCluster);
     }
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackMatchingAlgorithm::MatchTracks(const TwoDSlidingFitResultMap &slidingFitCache, const ClusterVector &clusterVector1,
-    const ClusterVector &clusterVector2, ClusterAssociationMap &matchedClusters12) const
+void CosmicRayTrackMatchingAlgorithm::MatchClusters(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2,
+    ClusterAssociationMap &matchedClusters12) const
 {
     // Check that there are input clusters from both views
     if (clusterVector1.empty() || clusterVector2.empty())
@@ -159,36 +162,41 @@ void CosmicRayTrackMatchingAlgorithm::MatchTracks(const TwoDSlidingFitResultMap 
     {
         Cluster* pCluster1 = *iter1;
 
-        TwoDSlidingFitResultMap::const_iterator sIter1 = slidingFitCache.find(pCluster1);
-        if (slidingFitCache.end() == sIter1)
-            continue;
-
-        const TwoDSlidingFitResult &slidingFitResult1(sIter1->second);
-
         for (ClusterVector::const_iterator iter2 = clusterVector2.begin(), iterEnd2 = clusterVector2.end(); iter2 != iterEnd2; ++iter2)
         {
             Cluster* pCluster2 = *iter2;
 
-            TwoDSlidingFitResultMap::const_iterator sIter2 = slidingFitCache.find(pCluster2);
-            if (slidingFitCache.end() == sIter2)
-                continue;
-
-            const TwoDSlidingFitResult &slidingFitResult2(sIter2->second);
-
-            if (this->MatchTracks(slidingFitResult1, slidingFitResult2))
+            if (this->MatchClusters(pCluster1, pCluster2))
+            {
                 matchedClusters12[pCluster1].insert(pCluster2);
+            }
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayTrackMatchingAlgorithm::MatchTracks(const TwoDSlidingFitResult &slidingFit1, const TwoDSlidingFitResult &slidingFit2) const
+bool CosmicRayTrackMatchingAlgorithm::MatchClusters(const Cluster *const pCluster1, const Cluster *const pCluster2) const
 {
-    // Require a good X overlap between clusters in the first and second views
-    const Cluster* pCluster1(slidingFit1.GetCluster());
-    const Cluster* pCluster2(slidingFit2.GetCluster());
+    // Use start and end points
+    CartesianVector innerVertex1(0.f,0.f,0.f), outerVertex1(0.f,0.f,0.f);
+    CartesianVector innerVertex2(0.f,0.f,0.f), outerVertex2(0.f,0.f,0.f);
 
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster1, innerVertex1, outerVertex1);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster2, innerVertex2, outerVertex2);
+
+    const float dxA(std::fabs(innerVertex2.GetX() - innerVertex1.GetX())); // inner1 <-> inner2
+    const float dxB(std::fabs(outerVertex2.GetX() - outerVertex1.GetX())); // outer1 <-> outer2
+
+    const float dxC(std::fabs(outerVertex2.GetX() - innerVertex1.GetX())); // inner1 <-> outer2
+    const float dxD(std::fabs(innerVertex2.GetX() - outerVertex1.GetX())); // inner2 <-> outer1
+
+    const float xVertex(std::min(std::max(dxA, dxB), std::max(dxC, dxD)));
+
+    if (xVertex < m_vtxXOverlap)
+        return true;
+
+    // use X overlap
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
@@ -196,25 +204,15 @@ bool CosmicRayTrackMatchingAlgorithm::MatchTracks(const TwoDSlidingFitResult &sl
     const float xOverlap(std::min(xMax1,xMax2) - std::max(xMin1,xMin2));
     const float xSpan(std::max(xMax1,xMax2) - std::min(xMin1,xMin2));
 
-    if (xOverlap < m_minXOverlap || xOverlap/xSpan < m_minXOverlapFraction)
-        return false;
+    if (xOverlap > m_minXOverlap && xOverlap/xSpan > m_minXOverlapFraction)
+        return true;
 
-// --- BEGIN EVENT DISPLAY ---
-ClusterList tempList1, tempList2;
-tempList1.insert((Cluster*)pCluster1);
-tempList2.insert((Cluster*)pCluster2);
-PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
-PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
-PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
-    return true;
+    return false;
 }
-  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap &matchedClusters12, 
+void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap &matchedClusters12,
     const ClusterAssociationMap &matchedClusters23,  const ClusterAssociationMap &matchedClusters31, ParticleList &matchedParticles) const
 {
     if (matchedClusters12.empty() || matchedClusters23.empty() || matchedClusters31.empty())
@@ -222,7 +220,7 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
 
     ParticleList candidateParticles;
 
-    for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12; 
+    for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12;
         ++iter12)
     {
         const Cluster* pCluster1 = iter12->first;
@@ -230,23 +228,23 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
 
         for(ClusterList::const_iterator iter2 = clusterList2.begin(), iterEnd2 = clusterList2.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pCluster2 = *iter2;  
+            const Cluster* pCluster2 = *iter2;
 
             ClusterAssociationMap::const_iterator iter23 = matchedClusters23.find(pCluster2);
             if (matchedClusters23.end() == iter23)
-                continue; 
- 
+                continue;
+
             const ClusterList &clusterList3 = iter23->second;
 
             for(ClusterList::const_iterator iter3 = clusterList3.begin(), iterEnd3 = clusterList3.end(); iter3 != iterEnd3; ++iter3)
             {
-                const Cluster* pCluster3 = *iter3;  
- 
+                const Cluster* pCluster3 = *iter3;
+
                 ClusterAssociationMap::const_iterator iter31 = matchedClusters31.find(pCluster3);
                 if (matchedClusters31.end() == iter31)
-                    continue; 
+                    continue;
 
-                const ClusterList &clusterList1 = iter31->second; 
+                const ClusterList &clusterList1 = iter31->second;
                 Cluster* pCluster1check = const_cast<Cluster*>(pCluster1);
                 ClusterList::const_iterator iter1 = clusterList1.find(pCluster1check);
 
@@ -257,11 +255,14 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
                 const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
                 const HitType hitType3(LArThreeDHelper::GetClusterHitType(pCluster3));
 
-                const Cluster* pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : 
+                if (!this->CheckMatchedClusters3D(pCluster1, pCluster2, pCluster3))
+                    continue;
+
+                const Cluster* pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 :
                                          (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
-                const Cluster* pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : 
+                const Cluster* pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 :
                                          (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
-                const Cluster* pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : 
+                const Cluster* pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 :
                                          (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
 
                 candidateParticles.push_back(Particle(pClusterU, pClusterV, pClusterW));
@@ -274,12 +275,12 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap &matchedClusters12, 
+void CosmicRayTrackMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap &matchedClusters12,
     const ClusterAssociationMap &matchedClusters23, const ClusterAssociationMap &matchedClusters31, ParticleList &matchedParticles) const
 {
     ParticleList candidateParticles;
     this->MatchTwoViews(matchedClusters12, candidateParticles);
-    this->MatchTwoViews(matchedClusters23, candidateParticles); 
+    this->MatchTwoViews(matchedClusters23, candidateParticles);
     this->MatchTwoViews(matchedClusters31, candidateParticles);
 
     return this->ResolveAmbiguities(candidateParticles, matchedParticles);
@@ -288,23 +289,23 @@ void CosmicRayTrackMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTrackMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap &matchedClusters12, ParticleList &matchedParticles) const
-{ 
+{
     if (matchedClusters12.empty())
         return;
-    
-    for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12; 
+
+    for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12;
         ++iter12)
     {
         const Cluster* pCluster1 = iter12->first;
-        const ClusterList &clusterList2 = iter12->second;      
+        const ClusterList &clusterList2 = iter12->second;
 
         for (ClusterList::const_iterator iter2 = clusterList2.begin(), iterEnd2 = clusterList2.end() ; iter2 != iterEnd2; ++iter2)
         {
             const Cluster* pCluster2 = *iter2;
-            
+
             const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
             const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
-                
+
             const Cluster* pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : NULL);
             const Cluster* pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
             const Cluster* pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
@@ -313,7 +314,7 @@ void CosmicRayTrackMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap 
         }
     }
 }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTrackMatchingAlgorithm::ResolveAmbiguities(const ParticleList &candidateParticles, ParticleList &matchedParticles) const
@@ -327,7 +328,7 @@ void CosmicRayTrackMatchingAlgorithm::ResolveAmbiguities(const ParticleList &can
         for (ParticleList::const_iterator iter2 = candidateParticles.begin(), iterEnd2 = candidateParticles.end(); iter2 != iterEnd2; ++iter2)
         {
             const Particle &particle2 = *iter2;
- 
+
             const bool commonU(particle1.m_pClusterU == particle2.m_pClusterU);
             const bool commonV(particle1.m_pClusterV == particle2.m_pClusterV);
             const bool commonW(particle1.m_pClusterW == particle2.m_pClusterW);
@@ -335,14 +336,14 @@ void CosmicRayTrackMatchingAlgorithm::ResolveAmbiguities(const ParticleList &can
             const bool ambiguousU(commonU && NULL != particle1.m_pClusterU);
             const bool ambiguousV(commonV && NULL != particle1.m_pClusterV);
             const bool ambiguousW(commonW && NULL != particle1.m_pClusterW);
- 
+
             if (commonU && commonV && commonW)
                 continue;
 
             if (ambiguousU || ambiguousV || ambiguousW)
             {
                 isGoodMatch = false;
-                break;   
+                break;
             }
         }
 
@@ -350,7 +351,80 @@ void CosmicRayTrackMatchingAlgorithm::ResolveAmbiguities(const ParticleList &can
             matchedParticles.push_back(particle1);
     }
 }
-  
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *const pCluster1, const Cluster *const pCluster2,
+    const Cluster *const pCluster3) const
+{
+    // Check that three clusters have a consistent 3D position
+    const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
+    const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
+    const HitType hitType3(LArThreeDHelper::GetClusterHitType(pCluster3));
+
+    if (hitType1 == hitType2 || hitType2 == hitType3 || hitType3 == hitType1)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    CartesianVector innerVertex1(0.f,0.f,0.f), outerVertex1(0.f,0.f,0.f);
+    CartesianVector innerVertex2(0.f,0.f,0.f), outerVertex2(0.f,0.f,0.f);
+    CartesianVector innerVertex3(0.f,0.f,0.f), outerVertex3(0.f,0.f,0.f);
+
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster1, innerVertex1, outerVertex1);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster2, innerVertex2, outerVertex2);
+    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster3, innerVertex3, outerVertex3);
+
+    for (unsigned int n=0; n<4; ++n)
+    {
+        CartesianVector vtx1(1 == n ? outerVertex1 : innerVertex1);
+        CartesianVector end1(1 == n ? innerVertex1 : outerVertex1);
+
+        CartesianVector vtx2(2 == n ? outerVertex2 : innerVertex2);
+        CartesianVector end2(2 == n ? innerVertex2 : outerVertex2);
+
+        CartesianVector vtx3(3 == n ? outerVertex3 : innerVertex3);
+        CartesianVector end3(3 == n ? innerVertex3 : outerVertex3);
+
+        if (std::fabs(vtx1.GetX() - vtx2.GetX()) < std::max(m_vtxXOverlap, std::fabs(vtx1.GetX() - end2.GetX())) &&
+            std::fabs(end1.GetX() - end2.GetX()) < std::max(m_vtxXOverlap, std::fabs(end1.GetX() - vtx2.GetX())) &&
+            std::fabs(vtx2.GetX() - vtx3.GetX()) < std::max(m_vtxXOverlap, std::fabs(vtx2.GetX() - end3.GetX())) &&
+            std::fabs(end2.GetX() - end3.GetX()) < std::max(m_vtxXOverlap, std::fabs(end2.GetX() - vtx3.GetX())) &&
+            std::fabs(vtx3.GetX() - vtx1.GetX()) < std::max(m_vtxXOverlap, std::fabs(vtx3.GetX() - end1.GetX())) &&
+            std::fabs(end3.GetX() - end1.GetX()) < std::max(m_vtxXOverlap, std::fabs(end3.GetX() - vtx1.GetX())))
+        {
+            float chi2(0.f);
+            CartesianVector projVtx1(0.f,0.f,0.f), projEnd1(0.f,0.f,0.f);
+            CartesianVector projVtx2(0.f,0.f,0.f), projEnd2(0.f,0.f,0.f);
+            CartesianVector projVtx3(0.f,0.f,0.f), projEnd3(0.f,0.f,0.f);
+
+            LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, vtx1, vtx2, projVtx3, chi2);
+            LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, end1, end2, projEnd3, chi2);
+            LArGeometryHelper::MergeTwoPositions(hitType2, hitType3, vtx2, vtx3, projVtx1, chi2);
+            LArGeometryHelper::MergeTwoPositions(hitType2, hitType3, end2, end3, projEnd1, chi2);
+            LArGeometryHelper::MergeTwoPositions(hitType3, hitType1, vtx3, vtx1, projVtx2, chi2);
+            LArGeometryHelper::MergeTwoPositions(hitType3, hitType1, end3, end1, projEnd2, chi2);
+
+            const bool matchedVtx1(LArClusterHelper::GetClosestDistance(projVtx1, pCluster1) < m_maxDisplacement);
+            const bool matchedVtx2(LArClusterHelper::GetClosestDistance(projVtx2, pCluster2) < m_maxDisplacement);
+            const bool matchedVtx3(LArClusterHelper::GetClosestDistance(projVtx3, pCluster3) < m_maxDisplacement);
+
+            const bool matchedEnd1(LArClusterHelper::GetClosestDistance(projEnd1, pCluster1) < m_maxDisplacement);
+            const bool matchedEnd2(LArClusterHelper::GetClosestDistance(projEnd2, pCluster2) < m_maxDisplacement);
+            const bool matchedEnd3(LArClusterHelper::GetClosestDistance(projEnd3, pCluster3) < m_maxDisplacement);
+
+            const bool matchedCluster1(matchedVtx1 || matchedEnd1);
+            const bool matchedCluster2(matchedVtx2 || matchedEnd2);
+            const bool matchedCluster3(matchedVtx3 || matchedEnd3);
+            const bool matchedVtx(matchedVtx1 || matchedVtx2 || matchedVtx3);
+            const bool matchedEnd(matchedEnd1 || matchedEnd2 || matchedEnd3);
+
+            if (matchedCluster1 && matchedCluster2 && matchedCluster3 && matchedVtx && matchedEnd)
+                return true;
+        }
+    }
+
+    return false;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particleList)
@@ -364,7 +438,7 @@ void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particl
     for (ParticleList::const_iterator iter = particleList.begin(), iterEnd = particleList.end(); iter != iterEnd; ++iter)
     {
         const Particle &particle = *iter;
-        
+
         ClusterList clusterList;
         Cluster *pClusterU = const_cast<Cluster*>(particle.m_pClusterU);
         Cluster *pClusterV = const_cast<Cluster*>(particle.m_pClusterV);
@@ -380,7 +454,7 @@ void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particl
         if (pClusterU) clusterList.insert(pClusterU);
         if (pClusterV) clusterList.insert(pClusterV);
         if (pClusterW) clusterList.insert(pClusterW);
-       
+
         // TODO - correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
         pfoParameters.m_particleId = 22;
@@ -399,7 +473,7 @@ void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particl
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-  
+
 CosmicRayTrackMatchingAlgorithm::Particle::Particle(const Cluster *pClusterU, const Cluster *pClusterV, const Cluster *pClusterW) :
     m_pClusterU(pClusterU),
     m_pClusterV(pClusterV),
@@ -408,9 +482,9 @@ CosmicRayTrackMatchingAlgorithm::Particle::Particle(const Cluster *pClusterU, co
     if (NULL == m_pClusterU && NULL == m_pClusterV && NULL == m_pClusterW)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const HitType hitTypeU(NULL == m_pClusterU ? TPC_VIEW_U : LArThreeDHelper::GetClusterHitType(m_pClusterU));   
+    const HitType hitTypeU(NULL == m_pClusterU ? TPC_VIEW_U : LArThreeDHelper::GetClusterHitType(m_pClusterU));
     const HitType hitTypeV(NULL == m_pClusterV ? TPC_VIEW_V : LArThreeDHelper::GetClusterHitType(m_pClusterV));
-    const HitType hitTypeW(NULL == m_pClusterW ? TPC_VIEW_W : LArThreeDHelper::GetClusterHitType(m_pClusterW));      
+    const HitType hitTypeW(NULL == m_pClusterW ? TPC_VIEW_W : LArThreeDHelper::GetClusterHitType(m_pClusterW));
 
     if (!(TPC_VIEW_U == hitTypeU && TPC_VIEW_V == hitTypeV && TPC_VIEW_W == hitTypeW))
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -425,15 +499,13 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
 
- 
-
     m_clusterMinLength = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterMinLength", m_clusterMinLength));
 
-    m_halfWindowLayers = 15;
+    m_vtxXOverlap = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_halfWindowLayers));
+        "VtxXOverlap", m_vtxXOverlap));
 
     m_minXOverlap = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -443,7 +515,9 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-  
+    m_maxDisplacement = 10.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxDisplacement", m_maxDisplacement));
 
     return STATUS_CODE_SUCCESS;
 }
