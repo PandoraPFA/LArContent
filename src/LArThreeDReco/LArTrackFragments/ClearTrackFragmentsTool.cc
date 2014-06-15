@@ -10,6 +10,8 @@
 
 #include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 
+#include "LArHelpers/LArThreeDHelper.h"
+
 using namespace pandora;
 
 namespace lar
@@ -41,7 +43,7 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
         this->SelectClearElements(elementList, iteratorList);
 
         bool particlesMade(false);
-        ClusterList unavailableClusters, newlyAvailableClusters;
+        ClusterList modifiedClusters, deletedClusters, newlyAvailableClusters;
 
         for (IteratorList::const_iterator iIter = iteratorList.begin(), iIterEnd = iteratorList.end(); iIter != iIterEnd; ++iIter)
         {
@@ -51,7 +53,7 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
                 continue;
 
             Cluster *pFragmentCluster(NULL);
-            this->ProcessTensorElement(pAlgorithm, overlapResult, unavailableClusters, newlyAvailableClusters, pFragmentCluster);
+            this->ProcessTensorElement(pAlgorithm, overlapResult, modifiedClusters, deletedClusters, pFragmentCluster);
 
             if (NULL == pFragmentCluster)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -73,7 +75,8 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
             particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
         }
 
-        this->UpdateTensor(pAlgorithm, overlapTensor, unavailableClusters, newlyAvailableClusters);
+        this->RebuildClusters(pAlgorithm, modifiedClusters, deletedClusters, newlyAvailableClusters);
+        this->UpdateTensor(pAlgorithm, overlapTensor, modifiedClusters, newlyAvailableClusters);
 
         if (particlesMade)
             return true;
@@ -201,7 +204,7 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
-    ClusterList &unavailableClusters, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
+    ClusterList &modifiedClusters, ClusterList &deletedClusters, Cluster *&pFragmentCluster) const
 {
     const CaloHitList &caloHitList(overlapResult.GetFragmentCaloHitList());
     const ClusterList &clusterList(overlapResult.GetFragmentClusterList());
@@ -240,15 +243,15 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
         if (daughterHits.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        unavailableClusters.insert(pCluster);
-        this->Recluster(pAlgorithm, pCluster, daughterHits, separateHits, newlyAvailableClusters, pFragmentCluster);
+        modifiedClusters.insert(pCluster);
+        this->Recluster(pAlgorithm, pCluster, daughterHits, separateHits, deletedClusters, pFragmentCluster);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorithm, Cluster *pCluster, const CaloHitList &daughterHits,
-    const CaloHitList &separateHits, ClusterList &newlyAvailableClusters, Cluster *&pFragmentCluster) const
+    const CaloHitList &separateHits, ClusterList &deletedClusters, Cluster *&pFragmentCluster) const
 {
     Cluster *pDaughterCluster(NULL);
 
@@ -258,22 +261,24 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorith
     }
     else
     {
-        ClusterList clusterToFragment;
-        clusterToFragment.insert(pCluster);
-        std::string originalListName, fragmentListName;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*pAlgorithm, clusterToFragment, originalListName, fragmentListName));
+        // ATTN: Can't delete these clusters yet
+        for (CaloHitList::const_iterator hIter = daughterHits.begin(), hIterEnd = daughterHits.end(); hIter != hIterEnd; ++hIter)
+        {
+            CaloHit *pCaloHit = *hIter;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*pAlgorithm, pCluster, pCaloHit));
+        }
 
-        PandoraContentApi::Cluster::Parameters daughterParameters;
-        daughterParameters.m_caloHitList = daughterHits;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, daughterParameters, pDaughterCluster));
+        const ClusterList *pTemporaryList = NULL;
+        std::string temporaryListName, currentListName;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*pAlgorithm, currentListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*pAlgorithm,
+            pTemporaryList, temporaryListName));
 
-        Cluster *pSeparateCluster(NULL);
-        PandoraContentApi::Cluster::Parameters separateParameters;
-        separateParameters.m_caloHitList = separateHits;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, separateParameters, pSeparateCluster));
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName));
-        newlyAvailableClusters.insert(pSeparateCluster);
+        PandoraContentApi::Cluster::Parameters hitParameters;
+        hitParameters.m_caloHitList = daughterHits;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, hitParameters, pDaughterCluster));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*pAlgorithm, temporaryListName, currentListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
     }
 
     if (NULL == pDaughterCluster)
@@ -286,6 +291,36 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorith
     else
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pFragmentCluster, pDaughterCluster));
+        deletedClusters.insert(pDaughterCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const ClusterList &modifiedClusters,
+    const ClusterList &deletedClusters, ClusterList &newClusters) const
+{
+    for (ClusterList::const_iterator cIter = modifiedClusters.begin(), cIterEnd = modifiedClusters.end(); cIter != cIterEnd; ++cIter)
+    {
+        Cluster *pCluster = *cIter;
+
+        if (deletedClusters.count(pCluster))
+            continue;
+
+        if (!pCluster->IsAvailable())
+            continue;
+
+        CaloHitList caloHitList;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+
+        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
+        std::string currentListName((TPC_VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() :
+                                    (TPC_VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*pAlgorithm, pCluster));
+
+        pAlgorithm->RebuildClusters(caloHitList, newClusters);
     }
 }
 
