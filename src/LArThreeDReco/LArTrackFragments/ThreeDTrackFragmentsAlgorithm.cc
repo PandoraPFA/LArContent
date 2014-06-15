@@ -71,6 +71,23 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDTrackFragmentsAlgorithm::RebuildClusters(const CaloHitList &caloHitList, ClusterList &newClusters) const
+{
+    const ClusterList *pTemporaryList = NULL;
+    std::string currentListName, temporaryListName;
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*this,
+        pTemporaryList, temporaryListName));
+
+    this->BuildNewClusters(caloHitList, newClusters);
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, temporaryListName, currentListName))
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentListName));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTrackFragmentsAlgorithm::PerformMainLoop()
 {
     for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
@@ -206,7 +223,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
     const HitType hitType3((TPC_VIEW_U != hitType1 && TPC_VIEW_U != hitType2) ? TPC_VIEW_U :
                            (TPC_VIEW_V != hitType1 && TPC_VIEW_V != hitType2) ? TPC_VIEW_V :
-                           (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : CUSTOM); 
+                           (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : CUSTOM);
 
     if (CUSTOM == hitType3)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -215,13 +232,13 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
- 
+
     const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
     const float xSpan(std::max(xMax1, xMax2) - std::min(xMin1, xMin2));
 
     if ((xOverlap < m_minXOverlap) || (xSpan < std::numeric_limits<float>::epsilon()) || ((xOverlap / xSpan) < m_minXOverlapFraction))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
- 
+
     // Identify vertex and end positions (2D)
     const CartesianVector minPosition1(fitResult1.GetGlobalMinLayerPosition());
     const CartesianVector maxPosition1(fitResult1.GetGlobalMaxLayerPosition());
@@ -257,7 +274,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const CartesianVector endProjection1(LArGeometryHelper::ProjectPosition(endPosition3D, hitType1));
     const CartesianVector endProjection2(LArGeometryHelper::ProjectPosition(endPosition3D, hitType2));
     const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(endPosition3D, hitType3));
-    
+
     const float nSamplingPoints(3.f * (endProjection3 - vtxProjection3).GetMagnitude() / m_maxPointDisplacement);
 
     if (nSamplingPoints < 1.f)
@@ -275,7 +292,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
             float chi2(0.f);
             CartesianVector fitPosition1(0.f, 0.f, 0.f), fitPosition2(0.f, 0.f, 0.f);
             fitResult1.GetGlobalFitProjection(linearPosition1, fitPosition1);
-            fitResult2.GetGlobalFitProjection(linearPosition2, fitPosition2); 
+            fitResult2.GetGlobalFitProjection(linearPosition2, fitPosition2);
 
             float rL1(0.f), rL2(0.f), rT1(0.f), rT2(0.f);
             fitResult1.GetLocalPosition(fitPosition1, rL1, rT1);
@@ -536,6 +553,94 @@ bool ThreeDTrackFragmentsAlgorithm::CheckOverlapResult(const FragmentOverlapResu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDTrackFragmentsAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList, ClusterList &newClusters) const
+{
+    // TODO: This code is cribbed from TwoDSlidingFitConsolidationAlgorithm, so create a common algorithm
+    if (inputCaloHitList.empty())
+        return;
+
+    // Form simple associations between residual hits from deleted cluster
+    HitToHitMap hitAssociationMap;
+
+    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
+    {
+        CaloHit* pCaloHitI = *iterI;
+
+        for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = iterEndI; iterJ != iterEndJ; ++iterJ)
+        {
+            CaloHit* pCaloHitJ = *iterJ;
+
+            if (pCaloHitI == pCaloHitJ)
+                continue;
+
+            if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_reclusteringWindow * m_reclusteringWindow)
+            {
+                hitAssociationMap[pCaloHitI].insert(pCaloHitJ);
+                hitAssociationMap[pCaloHitJ].insert(pCaloHitI);
+            }
+        }
+    }
+
+    // Collect up associations and build new clusters
+    CaloHitList vetoList;
+
+    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
+    {
+        CaloHit* pSeedCaloHit = *iterI;
+
+        if (vetoList.count(pSeedCaloHit))
+            continue;
+
+        CaloHitList mergeList;
+        this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
+
+        Cluster *pCluster = NULL;
+        PandoraContentApi::Cluster::Parameters parameters;
+        parameters.m_caloHitList.insert(pSeedCaloHit);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
+        newClusters.insert(pCluster);
+        vetoList.insert(pSeedCaloHit);
+
+        for (CaloHitList::const_iterator iterJ = mergeList.begin(), iterEndJ = mergeList.end(); iterJ != iterEndJ; ++iterJ)
+        {
+            CaloHit* pAssociatedCaloHit = *iterJ;
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pAssociatedCaloHit));
+            vetoList.insert(pAssociatedCaloHit);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDTrackFragmentsAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit, CaloHit *pCurrentCaloHit,
+    const HitToHitMap &hitAssociationMap, const CaloHitList &vetoList, CaloHitList &mergeList) const
+{
+    if (vetoList.count(pCurrentCaloHit))
+        return;
+
+    HitToHitMap::const_iterator iter1 = hitAssociationMap.find(pCurrentCaloHit);
+    if (iter1 == hitAssociationMap.end())
+        return;
+
+    for (CaloHitList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
+    {
+        CaloHit* pAssociatedCaloHit = *iter2;
+
+        if (pAssociatedCaloHit == pSeedCaloHit)
+            continue;
+
+        if (!mergeList.insert(pAssociatedCaloHit).second)
+            continue;
+
+        this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, vetoList, mergeList);
+    }
+
+    return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTrackFragmentsAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
@@ -603,6 +708,10 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     m_minMatchedHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedHits", m_minMatchedHits));
+
+    m_reclusteringWindow = 2.5f; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ReclusteringWindow", m_reclusteringWindow));
 
     return ThreeDTracksBaseAlgorithm<FragmentOverlapResult>::ReadSettings(xmlHandle);
 }

@@ -27,7 +27,7 @@ class FragmentTensorTool;
  */
 class ThreeDTrackFragmentsAlgorithm : public ThreeDTracksBaseAlgorithm<FragmentOverlapResult>
 {
-public:  
+public:
     /**
      *  @brief  Factory class for instantiating algorithm
      */
@@ -37,7 +37,15 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
+    void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
+
+    /**
+     *  @brief  Rebuild clusters after fragmentation
+     *
+     *  @param inputCaloHitList the input list of hits
+     *  @param newClusters the output list of clusters
+     */
+    void RebuildClusters(const pandora::CaloHitList &inputCaloHitList, pandora::ClusterList &newClusters) const;
 
 protected:
     void PerformMainLoop();
@@ -56,6 +64,7 @@ protected:
         const pandora::ClusterList &inputClusterList, pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
 
     typedef std::map<const pandora::CaloHit*, pandora::Cluster*> HitToClusterMap;
+    typedef std::map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
      *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results
@@ -127,6 +136,27 @@ protected:
      */
     bool CheckOverlapResult(const FragmentOverlapResult &overlapResult) const;
 
+    /**
+     *  @brief Re-clustering algorithm used to re-build clusters
+     *
+     *  @param inputCaloHitList  the input list of available hits
+     *  @param newClusters  the output list of new clusters
+     */
+
+    void BuildNewClusters(const pandora::CaloHitList &inputCaloHitList, pandora::ClusterList &newClusters) const;
+
+   /**
+     *  @brief Re-clustering algorithm used to re-build clusters
+     *
+     *  @param pSeedCaloHit  the seed hit
+     *  @param pCurrentCaloHit  a candidate hit
+     *  @param hitAssociationMap  the map of associations between all hits
+     *  @param vetoList  the list of used hits
+     *  @param mergeList  the list of hits associated with the seed hit
+     */
+    void CollectAssociatedHits(pandora::CaloHit *pSeedCaloHit, pandora::CaloHit *pCurrentCaloHit,
+        const HitToHitMap &hitAssociationMap, const pandora::CaloHitList &vetoList, pandora::CaloHitList &mergeList) const;
+
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -144,6 +174,7 @@ protected:
     unsigned int        m_minMatchedSamplingPoints;         ///< The minimum number of matched sampling points
     float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points
     unsigned int        m_minMatchedHits;                   ///< The minimum number of matched calo hits
+    float               m_reclusteringWindow;               ///< The clustering window for rebuilding cluster fragments
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
