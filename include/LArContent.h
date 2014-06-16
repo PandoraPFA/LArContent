@@ -55,7 +55,7 @@
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
-#include "LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.h"
+#include "LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 #include "LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
@@ -111,7 +111,7 @@ public:
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArTransverseExtension",                 lar::TransverseExtensionAlgorithm::Factory)                                 \
-        d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
+        d("LArTrackClusterCreation",                lar::TrackClusterCreationAlgorithm::Factory)                                \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \

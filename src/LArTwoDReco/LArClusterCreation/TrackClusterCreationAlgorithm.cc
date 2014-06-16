@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.cc
  *
  *  @brief  Implementation of the cluster creation algorithm class.
  *
@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.h"
+#include "LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode ClusterCreationAlgorithm::Run()
+StatusCode TrackClusterCreationAlgorithm::Run()
 {
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
@@ -42,7 +42,7 @@ StatusCode ClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitList, OrderedCaloHitList &selectedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
+StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitList, OrderedCaloHitList &selectedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
 {
     CaloHitList availableHitList;
 
@@ -91,7 +91,7 @@ StatusCode ClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &selectedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const
+StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &selectedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = rejectedCaloHitList.begin(), iterEnd = rejectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -167,7 +167,7 @@ StatusCode ClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHitList &orderedCaloHitList, HitAssociationMap &forwardHitAssociationMap,
+void TrackClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHitList &orderedCaloHitList, HitAssociationMap &forwardHitAssociationMap,
     HitAssociationMap &backwardHitAssociationMap) const
 {
     for (OrderedCaloHitList::const_iterator iterI = orderedCaloHitList.begin(), iterIEnd = orderedCaloHitList.end(); iterI != iterIEnd; ++iterI)
@@ -190,7 +190,7 @@ void ClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHitList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloHitList &orderedCaloHitList, HitAssociationMap &forwardHitAssociationMap,
+void TrackClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloHitList &orderedCaloHitList, HitAssociationMap &forwardHitAssociationMap,
     HitAssociationMap &backwardHitAssociationMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
@@ -222,7 +222,7 @@ void ClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloHitLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orderedCaloHitList, const HitAssociationMap &forwardHitAssociationMap,
+void TrackClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orderedCaloHitList, const HitAssociationMap &forwardHitAssociationMap,
     const HitAssociationMap &backwardHitAssociationMap, HitJoinMap &hitJoinMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
@@ -249,7 +249,7 @@ void ClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orderedCa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap, HitToClusterMap& hitToClusterMap) const
+void TrackClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap, HitToClusterMap& hitToClusterMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -288,7 +288,7 @@ void ClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCreationAlgorithm::CreatePrimaryAssociation(CaloHit *pCaloHitI, CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
+void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(CaloHit *pCaloHitI, CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
     HitAssociationMap &backwardHitAssociationMap) const
 {
     const float distanceSquared((pCaloHitJ->GetPositionVector() - pCaloHitI->GetPositionVector()).GetMagnitudeSquared());
@@ -321,7 +321,7 @@ void ClusterCreationAlgorithm::CreatePrimaryAssociation(CaloHit *pCaloHitI, Calo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCreationAlgorithm::CreateSecondaryAssociation(CaloHit *pCaloHitI, CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
+void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(CaloHit *pCaloHitI, CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
     HitAssociationMap &backwardHitAssociationMap) const
 {
     HitAssociationMap::iterator forwardIter = forwardHitAssociationMap.find(pCaloHitI);
@@ -348,7 +348,7 @@ void ClusterCreationAlgorithm::CreateSecondaryAssociation(CaloHit *pCaloHitI, Ca
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CaloHit *ClusterCreationAlgorithm::GetJoinHit(CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI,
+CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI,
     const HitAssociationMap &hitAssociationMapJ) const
 {
     HitAssociationMap::const_iterator iterI = hitAssociationMapI.find(pCaloHit);
@@ -374,7 +374,7 @@ CaloHit *ClusterCreationAlgorithm::GetJoinHit(CaloHit *pCaloHit, const HitAssoci
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CaloHit *ClusterCreationAlgorithm::TraceHitAssociation(CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI,
+CaloHit *TrackClusterCreationAlgorithm::TraceHitAssociation(CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI,
     const HitAssociationMap &hitAssociationMapJ, unsigned int &nSteps) const
 {
     nSteps = 0;
@@ -405,10 +405,10 @@ CaloHit *ClusterCreationAlgorithm::TraceHitAssociation(CaloHit *pCaloHit, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ClusterCreationAlgorithm::HitAssociation::m_maxSeparationSquared = std::numeric_limits<float>::max();
-float ClusterCreationAlgorithm::HitAssociation::m_closeSeparationSquared = std::numeric_limits<float>::max();
+float TrackClusterCreationAlgorithm::HitAssociation::m_maxSeparationSquared = std::numeric_limits<float>::max();
+float TrackClusterCreationAlgorithm::HitAssociation::m_closeSeparationSquared = std::numeric_limits<float>::max();
 
-StatusCode ClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TrackClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_inputCaloHitListName = "";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
