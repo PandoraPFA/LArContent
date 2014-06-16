@@ -406,35 +406,70 @@ void LArClusterHelper::GetClusterSpanX(const Cluster *const pCluster, float &xmi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const float xmin, const float xmax, 
+    float &zmin, float &zmax)
 {
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    float zsum(0.f);
-    int count(0);
-    float zsumall(0.f);
-    int countall(0);
+    if (xmin > xmax)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    zmin = std::numeric_limits<float>::max();
+    zmax = -std::numeric_limits<float>::max();
+
+    bool foundHits(false);
+    
     for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
     {
         for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
         {
             const CaloHit *pCaloHit = *hIter;
             const CartesianVector &hit(pCaloHit->GetPositionVector());
-            zsumall+= hit.GetZ();
-            countall++;
 
-            if (hit.GetX()>=xmin && hit.GetX()<=xmax)
-            {
-                ++count;
-                zsum += hit.GetZ();
-            }
+            if (hit.GetX() < xmin || hit.GetX() > xmax)
+                continue;
+
+            zmin = std::min(hit.GetZ(), zmin);
+            zmax = std::max(hit.GetZ(), zmax);
+            foundHits = true;
+        }
+    }
+
+    if (!foundHits)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+{
+    if (xmin > xmax)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    float zsum(0.f);
+    int count(0);
+    
+    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
+    {
+        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            const CaloHit *pCaloHit = *hIter;
+            const CartesianVector &hit(pCaloHit->GetPositionVector());
+
+            if (hit.GetX() < xmin || hit.GetX() > xmax)
+                continue;
+
+            zsum += hit.GetZ();
+            ++count;
         }
     }
 
     if (count == 0)
-        return zsumall/static_cast<float>(countall);
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return zsum/static_cast<float>(count);
+    return zsum / static_cast<float>(count);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
