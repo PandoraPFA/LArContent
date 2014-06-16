@@ -39,9 +39,6 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultL
             this->GetReclusteredHits(slidingFitResultI, pClusterJ, caloHitsToAddI, caloHitsToRemoveJ);
         }
     }
-
-    // Finalize the re-clustering
-    this->FinalizeReclusteredHits(caloHitsToAddI, caloHitsToRemoveJ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,80 +123,6 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult&
             caloHitsToRemoveJ[pClusterJ].insert(pCaloHit);
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackConsolidationAlgorithm::FinalizeReclusteredHits(ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const
-{
-    for (ClusterToHitMap::const_iterator iter1 = caloHitsToRemove.begin(), iterEnd1 = caloHitsToRemove.end(); iter1 != iterEnd1; ++iter1)
-    {
-        const Cluster* pCluster = iter1->first;
-
-        if (caloHitsToAdd[pCluster].size() > 0)
-            continue;
-
-        CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        for (CaloHitList::const_iterator iter2 = caloHitList.begin(), iterEnd2 = caloHitList.end(); iter2 != iterEnd2; ++iter2)
-        {
-            CaloHit* pCaloHit = *iter2;
-
-            if (caloHitsToRemove[pCluster].count(pCaloHit) > 0)
-                continue;
-
-            caloHitsToRemove[pCluster].insert(pCaloHit);
-        }
-    }
-
-// --- EVENT DISPLAY [BEGIN] ---
-// CaloHitList tempCaloHitsToStart, tempCaloHitsToAdd, tempCaloHitsToRebuild;
-// ClusterList tempList;
-
-// for (ClusterToHitMap::const_iterator iterI = caloHitsToAdd.begin(), iterEndI = caloHitsToAdd.end(); iterI != iterEndI; ++iterI)
-// {
-// const CaloHitList &caloHitListI = iterI->second;
-// tempCaloHitsToAdd.insert(caloHitListI.begin(),caloHitListI.end());
-// }
-
-// for (ClusterToHitMap::const_iterator iterI = caloHitsToAdd.begin(), iterEndI = caloHitsToAdd.end(); iterI != iterEndI; ++iterI)
-// {
-// const Cluster* pClusterI = iterI->first;
-// const CaloHitList &caloHitListI = iterI->second;
-// if(caloHitListI.empty())
-// continue;
-
-// CaloHitList clusterHitsI;
-// pClusterI->GetOrderedCaloHitList().GetCaloHitList(clusterHitsI);
-// for (CaloHitList::const_iterator iterK = clusterHitsI.begin(), iterEndK = clusterHitsI.end(); iterK != iterEndK; ++iterK)
-// {
-// CaloHit* pCaloHit = *iterK;
-// if (0 == tempCaloHitsToAdd.count(pCaloHit))
-// tempCaloHitsToStart.insert((CaloHit*)pCaloHit);
-// }
-// }
-
-// for (ClusterToHitMap::const_iterator iterJ = caloHitsToRemove.begin(), iterEndJ = caloHitsToRemove.end(); iterJ != iterEndJ; ++iterJ)
-// {
-// const Cluster* pClusterJ = iterJ->first;
-// CaloHitList clusterHitsJ;
-// pClusterJ->GetOrderedCaloHitList().GetCaloHitList(clusterHitsJ);
-// for (CaloHitList::const_iterator iterK = clusterHitsJ.begin(), iterEndK = clusterHitsJ.end(); iterK != iterEndK; ++iterK)
-// {
-// CaloHit* pCaloHit = *iterK;
-// if (0 == tempCaloHitsToAdd.count(pCaloHit) && 0==tempCaloHitsToStart.count(pCaloHit))
-// tempCaloHitsToRebuild.insert((CaloHit*)pCaloHit);
-// }
-// }
-
-// if (!tempCaloHitsToAdd.empty())
-// {
-// PandoraMonitoringApi::VisualizeCaloHits(&tempCaloHitsToStart, "Initial Clusters", BLUE);
-// PandoraMonitoringApi::VisualizeCaloHits(&tempCaloHitsToAdd, "Hits To Add", RED);
-// PandoraMonitoringApi::VisualizeCaloHits(&tempCaloHitsToRebuild, "Hits To Rebuild", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// }
-// --- EVENT DISPLAY [END] ---
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
