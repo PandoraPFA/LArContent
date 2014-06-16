@@ -28,14 +28,16 @@
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
+#include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
-#include "LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
@@ -62,7 +64,6 @@
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
@@ -99,8 +100,10 @@ public:
         d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
         d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
+        d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
         d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
+        d("LArDeltaRayIdentification",              lar::DeltaRayIdentificationAlgorithm::Factory)                              \
         d("LArDeltaRayMatching",                    lar::DeltaRayMatchingAlgorithm::Factory)                                    \
         d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
@@ -119,7 +122,6 @@ public:
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
-        d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
         d("LArCosmicRayShowerMerging",              lar::CosmicRayShowerMergingAlgorithm::Factory)                              \
         d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
