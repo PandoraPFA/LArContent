@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the delta ray identification algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_DELTA_RAY_IDENTIFICATION_ALGORITHM_H
@@ -30,10 +30,52 @@ public:
 
 private:
     pandora::StatusCode Run();
+
+    typedef std::map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoAssociationMap;
+
+    /**
+     *  @brief Build parent/daughter associations between PFOs
+     *
+     *  @param pPfoList the input list of Pfos
+     *  @param pfoAssociationMap the output map of parent/daughter associations
+     */
+    void BuildAssociationMap(const pandora::PfoList *const pPfoList, PfoAssociationMap &pfoAssociationMap) const;
+
+    /**
+     *  @brief Determine if a given pair of Pfos have a parent/daughter association
+     *
+     *  @param pDaughterPfo the input daughter Pfo
+     *  @param pParentPfo the input parent Pfo
+     *  @param displacementSquared the average squared displacement between the parent and daughter
+     *
+     *  @return boolean
+     */
+    bool IsAssociated(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo,
+        float &displacementSquared) const;
+
+    /**
+     *  @brief Build the parent/daughter links from the map of parent/daughter associations
+     *
+     *  @param pfoAssociationMap the map of parent/daughter associations
+     *  @param outputPfoList the output list of daughter Pfos
+     */
+    void BuildParentDaughterLinks(const PfoAssociationMap &pfoAssociationMap, pandora::PfoList &outputPfoList) const;
+
+    /**
+     *  @brief For a given daughter, follow the parent/daughter links to find the overall parent
+     *
+     *  @param pfoAssociationMap the map of parent/daughter associations
+     *  @param pPfo the daughter Pfo
+     *
+     *  @return the parent Pfo
+     */
+    pandora::ParticleFlowObject *GetParent(const PfoAssociationMap &pfoAssociationMap, const pandora::ParticleFlowObject *const pPfo) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_inputPfoListName;             ///< The input pfo list name
     std::string     m_outputPfoListName;            ///< The output pfo list name
+    float           m_maxDisplacementSquared;       ///< Maximum allowed distance of delta ray from parent cosmic ray
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
