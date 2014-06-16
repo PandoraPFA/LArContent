@@ -37,7 +37,7 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+    void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
 
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
@@ -46,11 +46,10 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
-    float           m_minXOverlap;                      ///< The minimum X overlap required for clusters
-    float           m_minXOverlapFraction;              ///< The minimum X overlap fraction required for clusters
-    float           m_maxXDisplacement;                 ///< The maximum X extent for a group of associated hits
-    float           m_maxMatchedChi2;                   ///< The maximum chi2 for a group of associated hits
-    float           m_minMatchedFraction;               ///< The minimum fraction of matched hits required for a good match
+
+    unsigned int    m_minClusterCaloHits;               ///< The selection cut on the number of cluster calo hits
+    float           m_samplingPitch;                    ///< The sampling pitch in the x coordinate
+    float           m_pseudoChi2Cut;                    ///< The selection cut on the matched chi2
 
     typedef std::vector<RemnantTensorTool*> RemnantTensorToolList;
     RemnantTensorToolList  m_algorithmToolList;         ///< The algorithm tool list

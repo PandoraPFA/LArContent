@@ -38,9 +38,6 @@ void ClearRemnantsTool::CreateThreeDParticles(ThreeDRemnantsAlgorithm *pAlgorith
 
     for (TensorType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult() < m_minMatchedFraction)
-              continue;
-
         ProtoParticle protoParticle;
         protoParticle.m_clusterListU.insert(iter->GetClusterU());
         protoParticle.m_clusterListV.insert(iter->GetClusterV());
@@ -53,12 +50,8 @@ void ClearRemnantsTool::CreateThreeDParticles(ThreeDRemnantsAlgorithm *pAlgorith
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClearRemnantsTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ClearRemnantsTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    m_minMatchedFraction = 0.75f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
-
     return STATUS_CODE_SUCCESS;
 }
 
