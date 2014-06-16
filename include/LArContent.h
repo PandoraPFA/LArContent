@@ -55,6 +55,7 @@
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
+#include "LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
 #include "LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 #include "LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
