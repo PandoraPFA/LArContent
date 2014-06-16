@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h
  * 
- *  @brief  Header file for the cosmic ray identification algorithm class.
+ *  @brief  Header file for the delta ray identification algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_COSMIC_RAY_IDENTIFICATION_ALGORITHM_H
-#define LAR_COSMIC_RAY_IDENTIFICATION_ALGORITHM_H 1
+#ifndef LAR_DELTA_RAY_IDENTIFICATION_ALGORITHM_H
+#define LAR_DELTA_RAY_IDENTIFICATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  CosmicRayIdentificationAlgorithm class
+ *  @brief  DeltaRayIdentificationAlgorithm class
  */
-class CosmicRayIdentificationAlgorithm : public pandora::Algorithm
+class DeltaRayIdentificationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -38,11 +38,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *CosmicRayIdentificationAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *DeltaRayIdentificationAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new CosmicRayIdentificationAlgorithm();
+    return new DeltaRayIdentificationAlgorithm();
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_COSMIC_RAY_IDENTIFICATION_ALGORITHM_H
+#endif // #ifndef LAR_DELTA_RAY_IDENTIFICATION_ALGORITHM_H

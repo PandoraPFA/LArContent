@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.cc
  * 
- *  @brief  Implementation of the cosmic ray identification algorithm class.
+ *  @brief  Implementation of the delta ray identification algorithm class.
  * 
  *  $Log: $
  */
@@ -10,14 +10,14 @@
 
 #include "LArHelpers/LArMCParticleHelper.h"
 
-#include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-StatusCode CosmicRayIdentificationAlgorithm::Run()
+StatusCode DeltaRayIdentificationAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
@@ -28,27 +28,9 @@ StatusCode CosmicRayIdentificationAlgorithm::Run()
     {
         ParticleFlowObject *pPfo = *iter;
 
-        bool isCosmicRay(true);
-        const ClusterList &clusterList(pPfo->GetClusterList());
-
-        for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-        {
-            Cluster *pCluster = *cIter;
-
-            try
-            {
-                const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-
-                if (LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle))
-                    isCosmicRay = false;
-            }
-            catch (StatusCodeException &)
-            {
-                isCosmicRay = false;
-            }
-        }
-
-        if (isCosmicRay)
+        bool isDeltaRay(false);
+        
+        if (isDeltaRay)
         {
             outputPfoList.insert(pPfo);
         }
@@ -64,7 +46,7 @@ StatusCode CosmicRayIdentificationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayIdentificationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode DeltaRayIdentificationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
 

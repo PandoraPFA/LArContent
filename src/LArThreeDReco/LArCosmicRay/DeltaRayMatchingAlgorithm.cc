@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.cc
  * 
  *  @brief  Implementation of the delta ray shower matching algorithm class.
  * 
@@ -13,7 +13,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 
 using namespace pandora;
 
@@ -34,9 +34,9 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
     m_slidingFitResultMap.clear();
 
     ClusterVector clustersU, clustersV, clustersW;
-    this->GetInputClusters(m_inputClusterListNamesU, clustersU);
-    this->GetInputClusters(m_inputClusterListNamesV, clustersV);
-    this->GetInputClusters(m_inputClusterListNamesW, clustersW);
+    this->GetInputClusters(m_inputClusterListNameU, clustersU);
+    this->GetInputClusters(m_inputClusterListNameV, clustersV);
+    this->GetInputClusters(m_inputClusterListNameW, clustersW);
 
     this->ThreeViewMatching(clustersU, clustersV, clustersW);
 
@@ -180,23 +180,20 @@ void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters) c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::GetInputClusters(const pandora::StringVector &clusterListNames, pandora::ClusterVector &clusterVector)
+void DeltaRayMatchingAlgorithm::GetInputClusters(const std::string &inputClusterListName, pandora::ClusterVector &clusterVector)
 {
-    for (StringVector::const_iterator iter = clusterListNames.begin(), iterEnd = clusterListNames.end(); iter != iterEnd; ++iter)
+    const ClusterList *pClusterList = NULL;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, inputClusterListName, pClusterList));
+
+    for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
     {
-        const ClusterList *pClusterList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *iter, pClusterList));
+        Cluster *pCluster = *cIter;
 
-        for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
-        {
-            Cluster *pCluster = *cIter;
-
-            if (!pCluster->IsAvailable() || (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
+        if (!pCluster->IsAvailable() || (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
                 continue;
 
-            clusterVector.push_back(pCluster);
-            this->AddToSlidingFitCache(pCluster);
-        }
+        clusterVector.push_back(pCluster);
+        this->AddToSlidingFitCache(pCluster);
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
@@ -417,20 +414,11 @@ void DeltaRayMatchingAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
 
 StatusCode DeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputPfoListName", m_inputPfoListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputPfoListName", m_outputPfoListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesU", m_inputClusterListNamesU));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesV", m_inputClusterListNamesV));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesW", m_inputClusterListNamesW));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
 
     m_chi2For3ViewMatching = 100.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

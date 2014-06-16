@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/DeltaRayMatchingAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h
  * 
  *  @brief  Header file for the delta ray matching algorithm class.
  * 
@@ -65,7 +65,7 @@ private:
      *  @param  clusterListNames the vector of cluster list names
      *  @param  clusterVector to receive the populated cluster vector
      */
-    void GetInputClusters(const pandora::StringVector &clusterListNames, pandora::ClusterVector &clusterVector);
+    void GetInputClusters(const std::string &clusterListName, pandora::ClusterVector &clusterVector);
 
     /**
      *  @brief  Look at consistency of a UVW combination
@@ -135,9 +135,9 @@ private:
     std::string             m_inputPfoListName;           ///< The input pfo list name
     std::string             m_outputPfoListName;          ///< The output pfo list name for new daughter particles
 
-    pandora::StringVector   m_inputClusterListNamesU;     ///< The input cluster list names for the u view
-    pandora::StringVector   m_inputClusterListNamesV;     ///< The input cluster list names for the v view
-    pandora::StringVector   m_inputClusterListNamesW;     ///< The input cluster list names for the w view
+    std::string             m_inputClusterListNameU;     ///< The input cluster list name for the u view
+    std::string             m_inputClusterListNameV;     ///< The input cluster list name for the v view
+    std::string             m_inputClusterListNameW;     ///< The input cluster list name for the w view
 
     float                   m_distanceFor1ViewMatching;   ///< Distance cut for single view matching
     float                   m_distanceFor2ViewMatching;   ///< Distance cut for two view matching
