@@ -71,19 +71,28 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::RebuildClusters(const CaloHitList &caloHitList, ClusterList &newClusters) const
-{
-    const ClusterList *pTemporaryList = NULL;
-    std::string currentListName, temporaryListName;
+void ThreeDTrackFragmentsAlgorithm::RebuildClusters(Cluster* pClusterToDelete, ClusterList &newClusters) const
+{   
+    const HitType hitType(LArThreeDHelper::GetClusterHitType(pClusterToDelete));
 
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentListName));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*this,
-        pTemporaryList, temporaryListName));
+    std::string currentCaloHitListName((TPC_VIEW_U == hitType) ? m_inputCaloHitListNameU :
+                                       (TPC_VIEW_V == hitType) ? m_inputCaloHitListNameV : m_inputCaloHitListNameW);  
+    std::string currentClusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() :
+                                       (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());  
 
-    this->BuildNewClusters(caloHitList, newClusters);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, currentCaloHitListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pClusterToDelete));
 
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, temporaryListName, currentListName))
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentListName));
+    const ClusterList *pClusterList = NULL;
+    std::string newClusterListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_reclusteringAlgorithmName,
+        pClusterList, newClusterListName));
+
+    newClusters.insert(pClusterList->begin(), pClusterList->end());
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -553,94 +562,6 @@ bool ThreeDTrackFragmentsAlgorithm::CheckOverlapResult(const FragmentOverlapResu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList, ClusterList &newClusters) const
-{
-    // TODO: This code is cribbed from TwoDSlidingFitConsolidationAlgorithm, so create a common algorithm
-    if (inputCaloHitList.empty())
-        return;
-
-    // Form simple associations between residual hits from deleted cluster
-    HitToHitMap hitAssociationMap;
-
-    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
-    {
-        CaloHit* pCaloHitI = *iterI;
-
-        for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = iterEndI; iterJ != iterEndJ; ++iterJ)
-        {
-            CaloHit* pCaloHitJ = *iterJ;
-
-            if (pCaloHitI == pCaloHitJ)
-                continue;
-
-            if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_reclusteringWindow * m_reclusteringWindow)
-            {
-                hitAssociationMap[pCaloHitI].insert(pCaloHitJ);
-                hitAssociationMap[pCaloHitJ].insert(pCaloHitI);
-            }
-        }
-    }
-
-    // Collect up associations and build new clusters
-    CaloHitList vetoList;
-
-    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
-    {
-        CaloHit* pSeedCaloHit = *iterI;
-
-        if (vetoList.count(pSeedCaloHit))
-            continue;
-
-        CaloHitList mergeList;
-        this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
-
-        Cluster *pCluster = NULL;
-        PandoraContentApi::Cluster::Parameters parameters;
-        parameters.m_caloHitList.insert(pSeedCaloHit);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
-        newClusters.insert(pCluster);
-        vetoList.insert(pSeedCaloHit);
-
-        for (CaloHitList::const_iterator iterJ = mergeList.begin(), iterEndJ = mergeList.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            CaloHit* pAssociatedCaloHit = *iterJ;
-
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pAssociatedCaloHit));
-            vetoList.insert(pAssociatedCaloHit);
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDTrackFragmentsAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit, CaloHit *pCurrentCaloHit,
-    const HitToHitMap &hitAssociationMap, const CaloHitList &vetoList, CaloHitList &mergeList) const
-{
-    if (vetoList.count(pCurrentCaloHit))
-        return;
-
-    HitToHitMap::const_iterator iter1 = hitAssociationMap.find(pCurrentCaloHit);
-    if (iter1 == hitAssociationMap.end())
-        return;
-
-    for (CaloHitList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
-    {
-        CaloHit* pAssociatedCaloHit = *iter2;
-
-        if (pAssociatedCaloHit == pSeedCaloHit)
-            continue;
-
-        if (!mergeList.insert(pAssociatedCaloHit).second)
-            continue;
-
-        this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, vetoList, mergeList);
-    }
-
-    return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDTrackFragmentsAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
@@ -664,7 +585,14 @@ void ThreeDTrackFragmentsAlgorithm::ExamineTensor()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
+{ 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameU", m_inputCaloHitListNameU));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameV", m_inputCaloHitListNameV));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameW", m_inputCaloHitListNameW));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ClusterRebuilding", m_reclusteringAlgorithmName));
+
     AlgorithmToolList algorithmToolList;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "TrackTools", algorithmToolList));
@@ -708,10 +636,6 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     m_minMatchedHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedHits", m_minMatchedHits));
-
-    m_reclusteringWindow = 2.5f; // cm
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReclusteringWindow", m_reclusteringWindow));
 
     return ThreeDTracksBaseAlgorithm<FragmentOverlapResult>::ReadSettings(xmlHandle);
 }

@@ -42,10 +42,10 @@ public:
     /**
      *  @brief  Rebuild clusters after fragmentation
      *
-     *  @param inputCaloHitList the input list of hits
+     *  @param pCluster the cluster to be rebuilt
      *  @param newClusters the output list of clusters
      */
-    void RebuildClusters(const pandora::CaloHitList &inputCaloHitList, pandora::ClusterList &newClusters) const;
+    void RebuildClusters(pandora::Cluster *pCluster, pandora::ClusterList &newClusters) const;
 
 protected:
     void PerformMainLoop();
@@ -136,45 +136,29 @@ protected:
      */
     bool CheckOverlapResult(const FragmentOverlapResult &overlapResult) const;
 
-    /**
-     *  @brief Re-clustering algorithm used to re-build clusters
-     *
-     *  @param inputCaloHitList  the input list of available hits
-     *  @param newClusters  the output list of new clusters
-     */
-
-    void BuildNewClusters(const pandora::CaloHitList &inputCaloHitList, pandora::ClusterList &newClusters) const;
-
-   /**
-     *  @brief Re-clustering algorithm used to re-build clusters
-     *
-     *  @param pSeedCaloHit  the seed hit
-     *  @param pCurrentCaloHit  a candidate hit
-     *  @param hitAssociationMap  the map of associations between all hits
-     *  @param vetoList  the list of used hits
-     *  @param mergeList  the list of hits associated with the seed hit
-     */
-    void CollectAssociatedHits(pandora::CaloHit *pSeedCaloHit, pandora::CaloHit *pCurrentCaloHit,
-        const HitToHitMap &hitAssociationMap, const pandora::CaloHitList &vetoList, pandora::CaloHitList &mergeList) const;
-
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::map<pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
     typedef std::vector<FragmentTensorTool*> TensorToolList;
 
+    std::string         m_inputCaloHitListNameU;            ///< Name of the view U calo hit list
+    std::string         m_inputCaloHitListNameV;            ///< Name of the view V calo hit list
+    std::string         m_inputCaloHitListNameW;            ///< Name of the view W calo hit list
+    std::string         m_reclusteringAlgorithmName;        ///< Name of daughter algorithm to use for cluster re-building
+
     unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     TensorToolList      m_algorithmToolList;                ///< The algorithm tool list
-
+    
     float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
     float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
-    float               m_maxPointDisplacement;             ///< The maximum allowed distance between projected points and associated hits
-    float               m_maxPointDisplacementSquared;      ///< The maximum allowed distance (squared) between projected points and associated hits
-    float               m_maxHitDisplacementSquared;        ///< The maximum allowed distance (squared) between associated hits
-    unsigned int        m_minMatchedSamplingPoints;         ///< The minimum number of matched sampling points
-    float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points
-    unsigned int        m_minMatchedHits;                   ///< The minimum number of matched calo hits
-    float               m_reclusteringWindow;               ///< The clustering window for rebuilding cluster fragments
+    float               m_maxPointDisplacement;             ///< maximum allowed distance between projected points and associated hits
+    float               m_maxPointDisplacementSquared;      ///< maximum allowed distance (squared) between projected points and associated hits
+    float               m_maxHitDisplacementSquared;        ///< maximum allowed distance (squared) between associated hits
+    unsigned int        m_minMatchedSamplingPoints;         ///< minimum number of matched sampling points
+    float               m_minMatchedSamplingPointFraction;  ///< minimum fraction of matched sampling points
+    unsigned int        m_minMatchedHits;                   ///< minimum number of matched calo hits
+    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
