@@ -10,6 +10,8 @@
 
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
+#include "LArCalculators/LArPseudoLayerCalculator.h"
+
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 
@@ -20,13 +22,14 @@ namespace lar
 
 void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
-    std::cout << " --- ThreeDRemnantsAlgorithm::SelectInputClusters(...) --- " << std::endl;
-
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
 
         if (!pCluster->IsAvailable())
+            continue;
+
+        if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
             continue;
 
         selectedClusterList.insert(pCluster);
@@ -38,137 +41,65 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
 void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     // Requirements on overall X overlap
-    float xMinU(0.f), xMinV(0.f), xMinW(0.f);
-    float xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
+    float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
     LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
     LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
     LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
 
-    const float xOverlap(std::min(xMaxU, std::min(xMaxV, xMaxW)) - std::max(xMinU, std::max(xMinV, xMinW)));
-    const float xSpan(std::max(xMaxU, std::max(xMaxV, xMaxW)) - std::min(xMinU, std::min(xMinV, xMinW)));
+    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - m_samplingPitch);
+    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + m_samplingPitch);
+    const float xOverlap(xMax - xMin);
 
     if (xOverlap < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    if (xOverlap < m_minXOverlap || xOverlap/xSpan < m_minXOverlapFraction)
         return;
 
-    // Match hits with common X coordinates
-    CaloHitList clusterHitsU, clusterHitsV, clusterHitsW;
-    CaloHitList matchedHitsU, matchedHitsV, matchedHitsW;
-    pClusterU->GetOrderedCaloHitList().GetCaloHitList(clusterHitsU);
-    pClusterV->GetOrderedCaloHitList().GetCaloHitList(clusterHitsV);
-    pClusterW->GetOrderedCaloHitList().GetCaloHitList(clusterHitsW);
+    // Comparison of views
+    float figureOfMerit(0.f);
 
-    if (clusterHitsU.empty() || clusterHitsV.empty() || clusterHitsW.empty())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    const unsigned int nSamplingPoints(1 + static_cast<unsigned int>(xOverlap / m_samplingPitch));
 
-    typedef std::map<pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
-    HitToHitMap hitToHitMapUV, hitToHitMapVW, hitToHitMapWU;
-
-    // U-V associations in X coordinate
-    for (CaloHitList::const_iterator hIterU = clusterHitsU.begin(), hIterEndU = clusterHitsU.end(); hIterU != hIterEndU; ++hIterU)
+    for (unsigned int n = 0; n<nSamplingPoints; ++n)
     {
-        CaloHit *pCaloHitU = *hIterU;
+        const float x(xMin + (xMax - xMin) * (static_cast<float>(n) + 0.5f) / static_cast<float>(nSamplingPoints));
+        const float xmin(x - m_samplingPitch);
+        const float xmax(x + m_samplingPitch);
 
-        for (CaloHitList::const_iterator hIterV = clusterHitsV.begin(), hIterEndV = clusterHitsV.end(); hIterV != hIterEndV; ++hIterV)
+        try
         {
-            CaloHit *pCaloHitV = *hIterV;
+            float zMinU(0.f), zMinV(0.f), zMinW(0.f), zMaxU(0.f), zMaxV(0.f), zMaxW(0.f);
+            LArClusterHelper::GetClusterSpanZ(pClusterU, xmin, xmax, zMinU, zMaxU);
+            LArClusterHelper::GetClusterSpanZ(pClusterV, xmin, xmax, zMinV, zMaxV);
+            LArClusterHelper::GetClusterSpanZ(pClusterW, xmin, xmax, zMinW, zMaxW);
 
-            if (std::fabs(pCaloHitU->GetPositionVector().GetX() - pCaloHitV->GetPositionVector().GetX()) >  m_maxXDisplacement)
-                continue;
+            const float u(0.5f * (zMinU + zMaxU));
+            const float v(0.5f * (zMinV + zMaxV));
+            const float w(0.5f * (zMinW + zMaxW));
 
-            hitToHitMapUV[pCaloHitU].insert(pCaloHitV);
+            const float du(zMaxU - zMinU);
+            const float dv(zMaxV - zMinV);
+            const float dw(zMaxW - zMinW);
+            const float dz(LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
+
+            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
+            const float wu2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_W, TPC_VIEW_U, w, u));
+
+            const float deltaSquared(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
+            const float sigmaSquared(du * du + dv * dv + dw * dw + dz * dz);
+            const float pseudoChi2(deltaSquared / sigmaSquared);
+
+            if (pseudoChi2 < m_pseudoChi2Cut)
+                figureOfMerit += std::sqrt(sigmaSquared) / dz;
+        }
+        catch (StatusCodeException &)
+        {
         }
     }
 
-    // V-W associations in X coordinate
-    for (CaloHitList::const_iterator hIterV = clusterHitsV.begin(), hIterEndV = clusterHitsV.end(); hIterV != hIterEndV; ++hIterV)
-    {
-        CaloHit *pCaloHitV = *hIterV;
+    if (figureOfMerit < std::numeric_limits<float>::epsilon())
+        return;
 
-        for (CaloHitList::const_iterator hIterW = clusterHitsW.begin(), hIterEndW = clusterHitsW.end(); hIterW != hIterEndW; ++hIterW)
-        {
-            CaloHit *pCaloHitW = *hIterW;
-
-            if (std::fabs(pCaloHitV->GetPositionVector().GetX() - pCaloHitW->GetPositionVector().GetX()) >  m_maxXDisplacement)
-                continue;
-
-            hitToHitMapVW[pCaloHitV].insert(pCaloHitW);
-        }
-    }
-
-    // W-U associations in X coordinate
-    for (CaloHitList::const_iterator hIterW = clusterHitsW.begin(), hIterEndW = clusterHitsW.end(); hIterW != hIterEndW; ++hIterW)
-    {
-        CaloHit *pCaloHitW = *hIterW;
-
-        for (CaloHitList::const_iterator hIterU = clusterHitsU.begin(), hIterEndU = clusterHitsU.end(); hIterU != hIterEndU; ++hIterU)
-        {
-            CaloHit *pCaloHitU = *hIterU;
-
-            if (std::fabs(pCaloHitW->GetPositionVector().GetX() - pCaloHitU->GetPositionVector().GetX()) >  m_maxXDisplacement)
-                continue;
-
-            hitToHitMapWU[pCaloHitW].insert(pCaloHitU);
-        }
-    }
-
-    // U-V-W associations in 3D coordinates (TODO: Speed up this calculation...)
-    for (HitToHitMap::const_iterator hIterUV = hitToHitMapUV.begin(), hIterEndUV = hitToHitMapUV.end(); hIterUV != hIterEndUV; ++hIterUV)
-    {
-        CaloHit *pCaloHitU = hIterUV->first;
-        const CaloHitList &caloHitListV = hIterUV->second;
-
-        for (CaloHitList::const_iterator hIterV = caloHitListV.begin(), hIterEndV = caloHitListV.end(); hIterV != hIterEndV; ++hIterV)
-        {
-            CaloHit* pCaloHitV = *hIterV;
-            HitToHitMap::const_iterator hIterVW = hitToHitMapVW.find(pCaloHitV);
-            if (hitToHitMapVW.end() == hIterVW)
-                continue;
-
-            const CaloHitList &caloHitListW = hIterVW->second;
-
-            for (CaloHitList::const_iterator hIterW = caloHitListW.begin(), hIterEndW = caloHitListW.end(); hIterW != hIterEndW; ++hIterW)
-            {
-                CaloHit* pCaloHitW = *hIterW;
-                HitToHitMap::const_iterator hIterWU = hitToHitMapWU.find(pCaloHitW);
-                if (hitToHitMapWU.end() == hIterWU)
-                    continue;
-
-                const CaloHitList &caloHitListU = hIterWU->second;
-                if (!caloHitListU.count(pCaloHitU))
-                    continue;
-
-                if (matchedHitsU.count(pCaloHitU) && matchedHitsV.count(pCaloHitV) && matchedHitsW.count(pCaloHitW))
-                    continue;
-
-                float chi2(0.f);
-                CartesianVector mergedPosition3D(0.f,0.f,0.f);
-
-                LArGeometryHelper::MergeThreePositions3D(TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W,
-                    pCaloHitU->GetPositionVector(), pCaloHitV->GetPositionVector(), pCaloHitW->GetPositionVector(),
-                    mergedPosition3D, chi2);
-
-                if (chi2 > m_maxMatchedChi2)
-                    continue;
-
-                matchedHitsU.insert(pCaloHitU);
-                matchedHitsV.insert(pCaloHitV);
-                matchedHitsW.insert(pCaloHitW);
-            }
-        }
-    }
-
-    // Calculate matched fractions in each view (use average matched fraction as the overlap result...)
-    const float matchedFractionU(static_cast<float>(matchedHitsU.size()) / static_cast<float>(clusterHitsU.size()));
-    const float matchedFractionV(static_cast<float>(matchedHitsV.size()) / static_cast<float>(clusterHitsV.size()));
-    const float matchedFractionW(static_cast<float>(matchedHitsW.size()) / static_cast<float>(clusterHitsW.size()));
-
-    const float matchedFraction((matchedFractionU + matchedFractionV + matchedFractionW) / 3.f);
-
-
-//  std::cout << " matchedFractionU=" << matchedFractionU << " matchedFractionV=" << matchedFractionV << " matchedFractionW=" << matchedFractionW << std::endl;
+// std::cout << " FIGURE OF MERIT = " << figureOfMerit << std::endl;
 // ClusterList tempListU, tempListV, tempListW;
 // tempListU.insert(pClusterU);
 // tempListV.insert(pClusterV);
@@ -178,10 +109,7 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster
 // PANDORA_MONITORING_API(VisualizeClusters(&tempListW, "Clusters (W)", RED));
 // PANDORA_MONITORING_API(ViewEvent());
 
-    if (matchedFraction < m_minMatchedFraction)
-        return;
-
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, matchedFraction);
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, figureOfMerit);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,25 +156,17 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    m_minXOverlap = 1.5f;
+    m_minClusterCaloHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlap", m_minXOverlap));
+        "MinClusterCaloHits", m_minClusterCaloHits));
 
-    m_minXOverlapFraction = 0.5f;
+    m_samplingPitch = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
+        "SamplingPitch", m_samplingPitch));
 
-    m_maxXDisplacement = 1.f;
+    m_pseudoChi2Cut = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxXDisplacement", m_maxXDisplacement));
-
-    m_maxMatchedChi2 = 3.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxMatchedChi2", m_maxMatchedChi2));
-
-    m_minMatchedFraction = 0.5f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+        "PseudoChi2Cut", m_pseudoChi2Cut));
 
     return ThreeDBaseAlgorithm<float>::ReadSettings(xmlHandle);
 }
