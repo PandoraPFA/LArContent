@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.h
+ *  @file   LArContent/include/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h
  *
  *  @brief  Header file for the cluster creation algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_CLUSTER_CREATION_ALGORITHM_H
-#define LAR_CLUSTER_CREATION_ALGORITHM_H 1
+#ifndef LAR_TRACK_CLUSTER_CREATION_ALGORITHM_H
+#define LAR_TRACK_CLUSTER_CREATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  ClusterCreationAlgorithm class
+ *  @brief  TrackClusterCreationAlgorithm class
  */
-class ClusterCreationAlgorithm : public pandora::Algorithm
+class TrackClusterCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -210,15 +210,15 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ClusterCreationAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *TrackClusterCreationAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ClusterCreationAlgorithm();
+    return new TrackClusterCreationAlgorithm();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ClusterCreationAlgorithm::HitAssociation::HitAssociation(pandora::CaloHit *const pPrimaryTarget, const float primaryDistanceSquared) :
+inline TrackClusterCreationAlgorithm::HitAssociation::HitAssociation(pandora::CaloHit *const pPrimaryTarget, const float primaryDistanceSquared) :
     m_pPrimaryTarget(pPrimaryTarget),
     m_pSecondaryTarget(NULL),
     m_primaryDistanceSquared(primaryDistanceSquared),
@@ -228,7 +228,7 @@ inline ClusterCreationAlgorithm::HitAssociation::HitAssociation(pandora::CaloHit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void ClusterCreationAlgorithm::HitAssociation::SetSecondaryTarget(pandora::CaloHit *const pSecondaryTarget, const float secondaryDistanceSquared)
+inline void TrackClusterCreationAlgorithm::HitAssociation::SetSecondaryTarget(pandora::CaloHit *const pSecondaryTarget, const float secondaryDistanceSquared)
 {
     m_pSecondaryTarget = pSecondaryTarget;
     m_secondaryDistanceSquared = secondaryDistanceSquared;
@@ -236,32 +236,32 @@ inline void ClusterCreationAlgorithm::HitAssociation::SetSecondaryTarget(pandora
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CaloHit *ClusterCreationAlgorithm::HitAssociation::GetPrimaryTarget() const
+inline pandora::CaloHit *TrackClusterCreationAlgorithm::HitAssociation::GetPrimaryTarget() const
 {
     return m_pPrimaryTarget;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CaloHit *ClusterCreationAlgorithm::HitAssociation::GetSecondaryTarget() const
+inline pandora::CaloHit *TrackClusterCreationAlgorithm::HitAssociation::GetSecondaryTarget() const
 {
     return m_pSecondaryTarget;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ClusterCreationAlgorithm::HitAssociation::GetPrimaryDistanceSquared() const
+inline float TrackClusterCreationAlgorithm::HitAssociation::GetPrimaryDistanceSquared() const
 {
     return m_primaryDistanceSquared;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float ClusterCreationAlgorithm::HitAssociation::GetSecondaryDistanceSquared() const
+inline float TrackClusterCreationAlgorithm::HitAssociation::GetSecondaryDistanceSquared() const
 {
     return m_secondaryDistanceSquared;
 }
 
 } // namespace lar
 
-#endif // #ifndef LAR_CLUSTER_CREATION_ALGORITHM_H
+#endif // #ifndef LAR_TRACK_CLUSTER_CREATION_ALGORITHM_H
