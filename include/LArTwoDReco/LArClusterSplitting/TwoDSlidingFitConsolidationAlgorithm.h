@@ -59,64 +59,34 @@ private:
     void BuildSlidingLinearFits(const pandora::ClusterVector &trackClusters, TwoDSlidingFitResultList &slidingFitResultList) const;
 
     /**
-     *  @brief Get initial hit configuration
-     *
-     *  @param inputClusters  the input vector of clusters
-     *  @param caloHitsToStart  the output map of clusters to hits
-     */
-    void GetInitialHits(const pandora::ClusterVector &inputClusters, ClusterToHitMap &caloHitsAtStart) const;
-
-    /**
      *  @brief Remove hits from clusters
      *
      *  @param clustersToRebuild  the list of hits to be removed from clusters
+     *  @param unavailableClusters  the list of deleted clusters
      */
-    pandora::StatusCode RemoveHitsFromClusters(const ClusterToHitMap &clustersToRebuild) const;
+    pandora::StatusCode RemoveHitsFromClusters(const ClusterToHitMap &clustersToRebuild, pandora::ClusterList &unavailableClusters) const;
 
     /**
      *  @brief Add hits to clusters
      *
      *  @param clustersToRebuild  the list of hits to be added to clusters
+     *  @param unavailableClusters the list of modified clusters
      */
-    pandora::StatusCode AddHitsToClusters(const ClusterToHitMap &clustersToRebuild) const;
+    pandora::StatusCode AddHitsToClusters(const ClusterToHitMap &clustersToRebuild, pandora::ClusterList &unavailableClusters) const;
 
     /**
      *  @brief Re-build clusters
      *
      *  @param clustersAtStart  the initial mapping of clusters to hits
+     *  @param unavailableClusters  the list of unavailable clusters
      */
-    pandora::StatusCode RebuildClusters(const ClusterToHitMap &clustersAtStart) const;
+    pandora::StatusCode RebuildClusters(const ClusterToHitMap &clustersAtStart, const pandora::ClusterList &unavailableClusters) const;
 
-    /**
-     *  @brief Re-build shower clusters
-     *
-     *  @param clustersToRebuild  the mapping of initial clusters to their available hits
-     */
-    pandora::StatusCode BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const;
 
-    /**
-     *  @brief Re-build clusters
-     *
-     *  @param inputCaloHitList  the input list of available hits
-     */
-    pandora::StatusCode BuildNewClusters(const pandora::CaloHitList &inputCaloHitList) const;
-
-    /**
-     *  @brief Re-clustering algorithm used to re-build shower clusters
-     *
-     *  @param pSeedCaloHit  the seed hit
-     *  @param pCurrentCaloHit  a candidate hit
-     *  @param hitAssociationMap  the map of associations between all hits
-     *  @param vetoList  the list of used hits
-     *  @param mergeList  the list of hits associated with the seed hit
-     */
-    void CollectAssociatedHits(pandora::CaloHit *pSeedCaloHit, pandora::CaloHit *pCurrentCaloHit,
-        const HitToHitMap &hitAssociationMap, const pandora::CaloHitList &vetoList, pandora::CaloHitList &mergeList) const;
-
-    float        m_maxClusterLength;           ///<
-    float        m_minTrackLength;             ///<
-    float        m_reclusteringWindow;         ///<
-    unsigned int m_halfWindowLayers;           ///<
+    std::string  m_reclusteringAlgorithmName;  ///< Name of daughter algorithm to use for cluster re-building
+    float        m_maxClusterLength;           ///< Maximum length of shower clusters to use in re-building
+    float        m_minTrackLength;             ///< Minimum length of track clusters to consolidate
+    unsigned int m_halfWindowLayers;           ///< Size of layer window for sliding fit results
 };
 
 } // namespace lar

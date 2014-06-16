@@ -112,6 +112,7 @@ public:
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArTransverseExtension",                 lar::TransverseExtensionAlgorithm::Factory)                                 \
+        d("LArSimpleClusterCreation",               lar::SimpleClusterCreationAlgorithm::Factory)                               \
         d("LArTrackClusterCreation",                lar::TrackClusterCreationAlgorithm::Factory)                                \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \

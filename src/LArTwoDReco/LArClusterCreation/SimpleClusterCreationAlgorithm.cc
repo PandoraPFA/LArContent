@@ -20,19 +20,19 @@ StatusCode SimpleClusterCreationAlgorithm::Run()
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
-
+    // Select available calo hits for clustering
     CaloHitList caloHitList;
     this->SelectCaloHits(pCaloHitList, caloHitList);
 
     if (caloHitList.empty())
         return STATUS_CODE_SUCCESS;
 
+    // Build map of associations between selected calo hits
     HitAssociationMap hitAssociationMap;
     this->BuildAssociationMap(caloHitList, hitAssociationMap);
 
-
+    // Create new clusters
     this->CreateClusters(caloHitList, hitAssociationMap);
-
 
     return STATUS_CODE_SUCCESS;
 }
