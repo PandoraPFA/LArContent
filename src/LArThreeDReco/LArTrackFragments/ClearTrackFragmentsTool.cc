@@ -310,17 +310,7 @@ void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAl
         if (!pCluster->IsAvailable())
             continue;
 
-        CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
-        std::string currentListName((TPC_VIEW_U == hitType) ? pAlgorithm->GetClusterListNameU() :
-                                    (TPC_VIEW_V == hitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*pAlgorithm, pCluster));
-
-        pAlgorithm->RebuildClusters(caloHitList, newClusters);
+        pAlgorithm->RebuildClusters(pCluster, newClusters);
     }
 }
 
