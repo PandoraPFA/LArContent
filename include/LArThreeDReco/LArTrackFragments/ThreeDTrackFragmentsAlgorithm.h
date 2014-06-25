@@ -82,18 +82,10 @@ protected:
      *  @param  inputClusterList the input cluster list
      *  @param  projectedPositions the list of projected positions
      *  @param  hitToClusterMap to receive the hit to cluster map
-     *  @param  associatedCaloHits to receive the list of associated calo hits
+     *  @param  matchedCaloHits to receive the list of associated calo hits
      */
-    void GetAssociatedHits(const pandora::ClusterList &inputClusterList, const pandora::CartesianPointList &projectedPositions,
-        HitToClusterMap &hitToClusterMap, pandora::CaloHitList &associatedCaloHits) const;
-
-    /**
-     *  @brief  Get the list of hits satisfactorily matched to the projected positions
-     *
-     *  @param  associatedHits the list of associated calo hits
-     *  @param  matchedHits to receive the list of matched calo hits
-     */
-    void GetMatchedHits(const pandora::CaloHitList &associatedHits, pandora::CaloHitList &matchedHits) const;
+    void GetMatchedHits(const pandora::ClusterList &inputClusterList, const pandora::CartesianPointList &projectedPositions,
+        HitToClusterMap &hitToClusterMap, pandora::CaloHitList &matchedCaloHits) const;
 
     /**
      *  @brief  Get the list of the relevant clusters and the address of the single best matched cluster
@@ -149,16 +141,15 @@ protected:
 
     unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     TensorToolList      m_algorithmToolList;                ///< The algorithm tool list
-    
+
     float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
     float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
     float               m_maxPointDisplacement;             ///< maximum allowed distance between projected points and associated hits
     float               m_maxPointDisplacementSquared;      ///< maximum allowed distance (squared) between projected points and associated hits
-    float               m_maxHitDisplacementSquared;        ///< maximum allowed distance (squared) between associated hits
     unsigned int        m_minMatchedSamplingPoints;         ///< minimum number of matched sampling points
     float               m_minMatchedSamplingPointFraction;  ///< minimum fraction of matched sampling points
     unsigned int        m_minMatchedHits;                   ///< minimum number of matched calo hits
-    
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
