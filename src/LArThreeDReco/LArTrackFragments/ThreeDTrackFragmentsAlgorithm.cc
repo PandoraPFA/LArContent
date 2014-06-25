@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArCalculators/LArPseudoLayerCalculator.h"
+
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArThreeDHelper.h"
@@ -72,13 +74,13 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewClust
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDTrackFragmentsAlgorithm::RebuildClusters(Cluster* pClusterToDelete, ClusterList &newClusters) const
-{   
+{
     const HitType hitType(LArThreeDHelper::GetClusterHitType(pClusterToDelete));
 
     std::string currentCaloHitListName((TPC_VIEW_U == hitType) ? m_inputCaloHitListNameU :
-                                       (TPC_VIEW_V == hitType) ? m_inputCaloHitListNameV : m_inputCaloHitListNameW);  
+                                       (TPC_VIEW_V == hitType) ? m_inputCaloHitListNameV : m_inputCaloHitListNameW);
     std::string currentClusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() :
-                                       (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());  
+                                       (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, currentCaloHitListName));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
@@ -197,14 +199,10 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitR
     CartesianPointList projectedPositions;
     this->GetProjectedPositions(fitResult1, fitResult2, projectedPositions);
 
-    CaloHitList associatedHits;
-    HitToClusterMap hitToClusterMap;
-    this->GetAssociatedHits(inputClusterList, projectedPositions, hitToClusterMap, associatedHits);
-
     CaloHitList matchedHits;
-    this->GetMatchedHits(associatedHits, matchedHits);
-
     ClusterList matchedClusters;
+    HitToClusterMap hitToClusterMap;
+    this->GetMatchedHits(inputClusterList, projectedPositions, hitToClusterMap, matchedHits);
     this->GetMatchedClusters(matchedHits, hitToClusterMap, matchedClusters, pBestMatchedCluster);
 
     if (!this->CheckMatchedClusters(projectedPositions, matchedClusters))
@@ -284,15 +282,19 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const CartesianVector endProjection2(LArGeometryHelper::ProjectPosition(endPosition3D, hitType2));
     const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(endPosition3D, hitType3));
 
-    const float nSamplingPoints(3.f * (endProjection3 - vtxProjection3).GetMagnitude() / m_maxPointDisplacement);
+    const float samplingPitch(0.5f * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
+    const float nSamplingPoints((endProjection3 - vtxProjection3).GetMagnitude() / samplingPitch);
 
     if (nSamplingPoints < 1.f)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     // Loop over trajectory points
-    for (float iSample = 0.f; iSample < nSamplingPoints; iSample += 1.f)
+    bool foundLastPosition(false);
+    CartesianVector lastPosition(0.f,0.f,0.f);
+
+    for (float iSample = 0.5f; iSample < nSamplingPoints; iSample += 1.f)
     {
-        const CartesianVector linearPosition3D(vtxPosition3D + (endPosition3D - vtxPosition3D) * ((0.5f + iSample) / nSamplingPoints));
+        const CartesianVector linearPosition3D(vtxPosition3D + (endPosition3D - vtxPosition3D) * (iSample / nSamplingPoints));
         const CartesianVector linearPosition1(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType1));
         const CartesianVector linearPosition2(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType2));
 
@@ -315,7 +317,25 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
             fitResult1.GetTransverseProjection(x, fitSegment1, position1);
             fitResult2.GetTransverseProjection(x, fitSegment2, position2);
             LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, position1, position2, position3, chi2);
+
+            if (foundLastPosition)
+            {
+                const float thisDisplacement((lastPosition - position3).GetMagnitude());
+                if (thisDisplacement > 2.f * samplingPitch)
+                {
+                    const float nExtraPoints(thisDisplacement / samplingPitch);
+                    for (float iExtra = 0.5f; iExtra < nExtraPoints; iExtra += 1.f)
+                    {
+                        const CartesianVector extraPosition(position3 + (lastPosition - position3) * (iExtra / nExtraPoints));
+                        projectedPositions.push_back(extraPosition);
+                    }
+                }
+            }
+
             projectedPositions.push_back(position3);
+
+            lastPosition = position3;
+            foundLastPosition = true;
         }
         catch (StatusCodeException &)
         {
@@ -329,8 +349,8 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::GetAssociatedHits(const ClusterList &inputClusterList, const CartesianPointList &projectedPositions,
-    HitToClusterMap &hitToClusterMap, CaloHitList &associatedHits) const
+void ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointList &projectedPositions,
+    HitToClusterMap &hitToClusterMap, CaloHitList &matchedHits) const
 {
     CaloHitList availableCaloHits;
 
@@ -368,35 +388,7 @@ void ThreeDTrackFragmentsAlgorithm::GetAssociatedHits(const ClusterList &inputCl
         }
 
         if ((closestDistanceSquared < m_maxPointDisplacementSquared) && (NULL != pClosestCaloHit))
-            associatedHits.insert(pClosestCaloHit);
-    }
-
-    if (associatedHits.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const CaloHitList &associatedHits, CaloHitList &matchedHits) const
-{
-    for (CaloHitList::const_iterator hIter1 = associatedHits.begin(), hIterEnd1 = associatedHits.end(); hIter1 != hIterEnd1; ++hIter1)
-    {
-        CaloHit *pCaloHit1 = *hIter1;
-        bool isGoodHit(false);
-
-        for (CaloHitList::const_iterator hIter2 = associatedHits.begin(), hIterEnd2 = associatedHits.end(); hIter2 != hIterEnd2; ++hIter2)
-        {
-            CaloHit *pCaloHit2 = *hIter2;
-
-            if ((pCaloHit1 != pCaloHit2) && ((pCaloHit1->GetPositionVector() - pCaloHit2->GetPositionVector()).GetMagnitudeSquared() < m_maxHitDisplacementSquared))
-            {
-                isGoodHit = true;
-                break;
-            }
-        }
-
-        if (isGoodHit)
-            matchedHits.insert(pCaloHit1);
+            matchedHits.insert(pClosestCaloHit);
     }
 
     if (matchedHits.empty())
@@ -585,7 +577,7 @@ void ThreeDTrackFragmentsAlgorithm::ExamineTensor()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{ 
+{
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameU", m_inputCaloHitListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameV", m_inputCaloHitListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameW", m_inputCaloHitListNameW));
@@ -623,11 +615,6 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxPointDisplacement", m_maxPointDisplacement));
     m_maxPointDisplacementSquared = m_maxPointDisplacement * m_maxPointDisplacement;
-
-    float maxHitDisplacement = 5.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxHitDisplacement", maxHitDisplacement));
-    m_maxHitDisplacementSquared = maxHitDisplacement * maxHitDisplacement;
 
     m_minMatchedSamplingPointFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
