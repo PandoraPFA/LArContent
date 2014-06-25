@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the delta ray matching algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_DELTA_RAY_MATCHING_ALGORITHM_H
@@ -32,124 +32,230 @@ public:
 
 private:
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Cosmic ray to shower matching using shower information from all three views
-     * 
-     *  @param  clustersU the list of clusters in the u view
-     *  @param  clustersV the list of clusters in the v view
-     *  @param  clustersW the list of clusters in the w view
+     *  @brief  Particle class
      */
-    void ThreeViewMatching(const pandora::ClusterVector &clustersU, const pandora::ClusterVector &clustersV, const pandora::ClusterVector &clustersW) const;
+    class Particle
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  pCluster1 the first cluster
+         *  @param  pCluster2 the second cluster
+         *  @param  pCluster3 the third cluster
+         *  @param  pPfo the parent Pfo
+         */
+        Particle(pandora::Cluster *const pCluster1, pandora::Cluster *const pCluster2, pandora::Cluster *const pCluster3,
+            pandora::ParticleFlowObject *const pPfo);
+
+        /**
+         *  @brief  Get cluster in U view
+         */
+        pandora::Cluster *GetClusterU() const;
+
+        /**
+         *  @brief  Get cluster in V view
+         */
+        pandora::Cluster *GetClusterV() const;
+
+        /**
+         *  @brief  Get cluster in W view
+         */
+        pandora::Cluster *GetClusterW() const;
+
+        /**
+         *  @brief  Get parent Pfo
+         */
+        pandora::ParticleFlowObject *GetParentPfo() const;
+
+        /**
+         *  @brief  Get number of views
+         */
+        unsigned int GetNViews() const;
+
+        /**
+         *  @brief  Get number of calo hits
+         */
+        unsigned int GetNCaloHits() const;
+
+        /**
+         *  @brief  Get the total energy
+         */
+        float GetLengthSquared() const;
+
+    private:
+        pandora::Cluster            *m_pClusterU;    ///< Address of cluster in U view
+        pandora::Cluster            *m_pClusterV;    ///< Address of cluster in V view
+        pandora::Cluster            *m_pClusterW;    ///< Address of cluster in W view
+        pandora::ParticleFlowObject *m_pParentPfo;   ///< Address of parent Pfo
+    };
+
+    typedef std::vector<Particle> ParticleList;
 
     /**
-     *  @brief  Cosmic ray to shower matching using shower information from two views
-     * 
-     *  @param  clusters1 the list of clusters in the first view
-     *  @param  clusters2 the list of clusters in the second view
-     */
-    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2) const;
-
-    /**
-     *  @brief  Cosmic ray to shower matching using shower information from a single view
-     * 
-     *  @param  clustersU the list of clusters in the provided view
-     */
-    void OneViewMatching(const pandora::ClusterVector &clusters) const;
-
-    /**
-     *  @brief  Get a vector containing all available input clusters in the provided cluster lists, storing sliding
-     *          linear fits in the algorithm fit result cache.
+     *  @brief  Get a vector containing all available input clusters in the provided cluster list, storing sliding linear fits
+     *          in the algorithm cache.
      *
-     *  @param  clusterListNames the vector of cluster list names
+     *  @param  clusterListName the vector of cluster list names
      *  @param  clusterVector to receive the populated cluster vector
      */
-    void GetInputClusters(const std::string &clusterListName, pandora::ClusterVector &clusterVector);
+    void GetClusters(const std::string &clusterListName, pandora::ClusterVector &clusterVector);
 
     /**
-     *  @brief  Look at consistency of a UVW combination
+     *  @brief  Match clusters using all three views
+     *
+     *  @param  clusters1 the list of clusters in the first view
+     *  @param  clusters2 the list of clusters in the second view
+     *  @param  clusters3 the list of clusters in the third view
+     */
+    void ThreeViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
+        const pandora::ClusterVector &clusters3) const;
+
+    /**
+     *  @brief  Match clusters using pairs of views
+     *
+     *  @param  clusters1 the list of clusters in the first view
+     *  @param  clusters2 the list of clusters in the second view
+     *  @param  clusters3 the list of clusters in the third view
+     */
+    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
+        const pandora::ClusterVector &clusters3) const;
+
+    /**
+     *  @brief  Match clusters using single views
+     *
+     *  @param  clusters1 the list of clusters in the first view
+     *  @param  clusters2 the list of clusters in the second view
+     *  @param  clusters3 the list of clusters in the third view
+     */
+    void OneViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
+        const pandora::ClusterVector &clusters3) const;
+
+    /**
+     *  @brief  Match clusters using all three views
+     *
+     *  @param  clusters1 the list of clusters in the first view
+     *  @param  clusters2 the list of clusters in the second view
+     *  @param  clusters3 the list of clusters in the third view
+     *  @param  particleList the output list of particles
+     */
+    void ThreeViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
+        const pandora::ClusterVector &clusters3, ParticleList &particleList) const;
+
+    /**
+     *  @brief  Match clusters using a pair of views
+     *
+     *  @param  clusters1 the list of clusters in the first view
+     *  @param  clusters2 the list of clusters in the second view
+     *  @param  particleList the output list of particles
+     */
+    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
+        ParticleList &particleList) const;
+
+    /**
+     *  @brief  Match clusters using a single view
+     *
+     *  @param  clusters the list of clusters in the provided view
+     *  @param  particleList the output list of particles
+     */
+    void OneViewMatching(const pandora::ClusterVector &clusters, ParticleList &particleList) const;
+
+    /**
+     *  @brief Resolve any ambiguities between candidate particles
+     *
+     *  @param inputParticles the input list of candidate particles
+     *  @param outputParticles the output list of candidate particles
+     */
+    void SelectParticles(const ParticleList &inputParticles, ParticleList &outputParticles) const;
+
+    /**
+     *  @brief Build new particle flow objects
+     *
+     *  @param particleList the list of candidate particles
+     */
+    void CreateParticles(const ParticleList &particleList) const;
+
+    /**
+     *  @brief  Find best Pfo to associate a UVW triplet
      *
      *  @param  pointer to U view cluster
      *  @param  pointer to V view cluster
      *  @param  pointer to W view cluster
-     * 
-     *  @return pseudo chi2 of consistency
+     *  @param  pointer to best Pfo
      */
-    float CompareClusterTriplet(pandora::Cluster *const pClusterU, pandora::Cluster *const pClusterV, pandora::Cluster *const pClusterW) const;
+    void FindBestParentPfo(pandora::Cluster *const pClusterU, pandora::Cluster *const pClusterV, pandora::Cluster *const pClusterW,
+        pandora::ParticleFlowObject *&pBestPfo) const;
 
     /**
-     *  @brief  Return indicative coordinates of cluster at a position x using range indicated
+     *  @brief  Look at consistency of a combination of clusters
      *
-     *  @param  pointer to cluster
-     *  @param  x (time) value at which coordinate is returned
-     *  @param  minimum x value used to evaluate coordinate
-     *  @param  maximum x value used to evaluate coordinate
+     *  @param  pCluster1 pointer to first luster
+     *  @param  pCluster2 pointer to second cluster
+     *  @param  pCluster3 pointer to third cluster
      */
-    float GetCoordinateAtX(pandora::Cluster *const pCluster, const float x, const float xmin, const float xmax) const;
+    bool AreClustersMatched(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        const pandora::Cluster *const pCluster3) const;
 
     /**
-     *  @brief  Find best PFO to associate a UVW triplet
+     *  @brief Get displacementr between cluster and particle flow object
      *
-     *  @param  pointer to U view cluster
-     *  @param  pointer to V view cluster
-     *  @param  pointer to W view cluster
-     *  @param  pointer to best PFO
-     *  @param  distance measure to best PFO
+     *  @param pCluster pointer to cluster
+     *  @param pPfo pointer to particle flow object
      */
-    void FindBestCosmicPFO(pandora::Cluster *const pClusterU, pandora::Cluster *const pClusterV, pandora::Cluster *const pClusterW,
-        pandora::ParticleFlowObject *&pBestPFO, float &distanceToBestPFO) const;
-
-    /**
-     *  @brief  Check that matched cluster is a good sub-cluster of the PFO cluster
-     *
-     *  @param  pointer to PFO cluster
-     *  @param  pointer to matched cluster
-     *
-     *  @return boolean
-     */
-    bool IsSubCluster(const pandora::Cluster *const pPFOCluster, const pandora::Cluster *const pSubCluster) const;
+    float GetDistanceSquaredToPfo(const pandora::Cluster *const pCluster, const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Create a new pfo using a provided list of clusters and set it to be the daughter of a provided parent pfo
-     * 
+     *
      *  @param  clusterList the list of clusters
      *  @param  pParentPfo address of the parent pfo
      */
     void CreateDaughterPfo(const pandora::ClusterList &clusterList, pandora::ParticleFlowObject *const pParentPfo) const;
 
-    /**
-     *  @brief  Get a sliding fit result from the algorithm cache
-     * 
-     *  @param  pCluster address of the relevant cluster
-     */
-    const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    /**
-     *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
-     * 
-     *  @param  pCluster address of the relevant cluster
-     */
-    void AddToSlidingFitCache(pandora::Cluster *const pCluster);
-
-    std::string             m_inputPfoListName;           ///< The input pfo list name
-    std::string             m_outputPfoListName;          ///< The output pfo list name for new daughter particles
+    std::string             m_primaryPfoListName;        ///< The input pfo list name
+    std::string             m_secondaryPfoListName;      ///< The output pfo list name for new daughter particles
 
     std::string             m_inputClusterListNameU;     ///< The input cluster list name for the u view
     std::string             m_inputClusterListNameV;     ///< The input cluster list name for the v view
     std::string             m_inputClusterListNameW;     ///< The input cluster list name for the w view
 
-    float                   m_distanceFor1ViewMatching;   ///< Distance cut for single view matching
-    float                   m_distanceFor2ViewMatching;   ///< Distance cut for two view matching
-    float                   m_distanceFor3ViewMatching;   ///< Distance cut for three view matching
-    float                   m_chi2For3ViewMatching;       ///< Pseudo chi2 cut for three view matching
-
     unsigned int            m_minCaloHitsPerCluster;      ///< The min number of calo hits per candidate cluster
-
-    unsigned int            m_slidingFitWindow;           ///< The layer window for the sliding linear fits
-    TwoDSlidingFitResultMap m_slidingFitResultMap;        ///< The sliding fit result map
+    float                   m_xOverlapWindow;             ///< The maximum allowed displacement in x position
+    float                   m_distanceForMatching;        ///< The maximum allowed distance between tracks and delta rays
+    float                   m_pseudoChi2Cut;              ///< Pseudo chi2 cut for three view matching
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterU() const
+{
+    return m_pClusterU;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+inline pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterV() const
+{
+    return m_pClusterV;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+inline pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterW() const
+{
+    return m_pClusterW;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+inline pandora::ParticleFlowObject *DeltaRayMatchingAlgorithm::Particle::GetParentPfo() const
+{
+    return m_pParentPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline pandora::Algorithm *DeltaRayMatchingAlgorithm::Factory::CreateAlgorithm() const
