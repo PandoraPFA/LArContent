@@ -36,52 +36,60 @@ StatusCode ClusterMergingAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    bool carryOn(true);
-
-    while (carryOn)
+    while (1)
     {
-        carryOn = false;
-
-        ClusterVector clusterVector;
-        this->GetListOfCleanClusters(pClusterList, clusterVector);
-        std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
+        ClusterVector unsortedVector, clusterVector;
+        this->GetListOfCleanClusters(pClusterList, unsortedVector);
+        this->GetSortedListOfCleanClusters(unsortedVector, clusterVector);
 
         ClusterMergeMap clusterMergeMap;
         this->PopulateClusterMergeMap(clusterVector, clusterMergeMap);
 
-        ClusterVetoMap clusterVetoMap;
+        if (clusterMergeMap.empty())
+            break;
 
-        for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
-        {
-            Cluster *pSeedCluster = *iter1;
-
-            ClusterList mergeList;
-            this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
-
-            for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
-            {
-                Cluster *pAssociatedCluster = *iter2;
-
-                if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
-                    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-
-                if (m_inputClusterListName.empty())
-                {
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
-                }
-                else
-                {
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
-                        m_inputClusterListName, m_inputClusterListName));
-                }
-
-                (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
-                carryOn = true;
-            }
-        }
+        this->MergeClusters(clusterVector, clusterMergeMap);
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
+{
+    ClusterVetoMap clusterVetoMap;
+
+    for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
+    {
+        Cluster *pSeedCluster = *iter1;
+
+        ClusterList mergeList;
+        this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
+
+        for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
+        {
+            Cluster *pAssociatedCluster = *iter2;
+
+            if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            if (!pAssociatedCluster->IsAvailable())
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            if (m_inputClusterListName.empty())
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
+            }
+            else
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
+                    m_inputClusterListName, m_inputClusterListName));
+            }
+
+            (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,6 +130,33 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, C
     }
 
     return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterMergingAlgorithm::GetSortedListOfCleanClusters(const ClusterVector &inputClusters, ClusterVector &outputClusters) const
+{
+    ClusterVector pfoClusters, availableClusters;
+
+    for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
+    {
+        Cluster* pCluster = *iter;
+
+        if (!pCluster->IsAvailable())
+        {
+            pfoClusters.push_back(pCluster);
+        }
+        else
+        {
+            availableClusters.push_back(pCluster);
+        }
+    }
+
+    std::sort(pfoClusters.begin(), pfoClusters.end(), LArClusterHelper::SortByNHits);
+    std::sort(availableClusters.begin(), availableClusters.end(), LArClusterHelper::SortByNHits);
+
+    outputClusters.insert(outputClusters.end(), pfoClusters.begin(), pfoClusters.end());
+    outputClusters.insert(outputClusters.end(), availableClusters.begin(), availableClusters.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
