@@ -64,6 +64,7 @@
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerGrowingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
@@ -122,6 +123,7 @@ public:
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
+        d("LArCosmicRayShowerGrowing",              lar::CosmicRayShowerGrowingAlgorithm::Factory)                              \
         d("LArCosmicRayShowerMerging",              lar::CosmicRayShowerMergingAlgorithm::Factory)                              \
         d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
