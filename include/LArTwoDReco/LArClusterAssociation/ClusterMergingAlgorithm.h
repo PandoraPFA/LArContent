@@ -42,6 +42,14 @@ protected:
     virtual void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const = 0;
 
     /**
+     *  @brief  Merge associated clusters
+     *
+     *  @param  clusterVector the vector of clean clusters
+     *  @param  clusterMergeMap the matrix of cluster associations
+     */
+    void MergeClusters(pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const;
+
+    /**
      *  @brief  Collect up all clusters associations related to a given seed cluster
      *
      *  @param  pSeedCluster pointer to the initial cluster
@@ -61,6 +69,14 @@ protected:
      */
     void CollectAssociatedClusters(pandora::Cluster *pSeedCluster, pandora::Cluster *pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
         const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
+
+    /**
+     *  @brief  Sort the selected clusters, so that they have a well-defined ordering
+     *
+     *  @param  inputClusters the input vector of clusters
+     *  @param  outputClusters the output vector of clusters
+     */
+    void GetSortedListOfCleanClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &outputClusters) const;
 
     std::string     m_inputClusterListName;     ///< The name of the input cluster list. If not specified, will access current list.
 };
