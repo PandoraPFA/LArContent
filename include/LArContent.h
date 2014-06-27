@@ -55,6 +55,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
@@ -65,7 +66,6 @@
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerGrowingAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
@@ -114,6 +114,7 @@ public:
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
+        d("LArSimpleClusterMerging",                lar::SimpleClusterMergingAlgorithm::Factory)                                \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArTransverseExtension",                 lar::TransverseExtensionAlgorithm::Factory)                                 \
         d("LArSimpleClusterCreation",               lar::SimpleClusterCreationAlgorithm::Factory)                               \
@@ -124,7 +125,6 @@ public:
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
         d("LArCosmicRayShowerGrowing",              lar::CosmicRayShowerGrowingAlgorithm::Factory)                              \
-        d("LArCosmicRayShowerMerging",              lar::CosmicRayShowerMergingAlgorithm::Factory)                              \
         d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
