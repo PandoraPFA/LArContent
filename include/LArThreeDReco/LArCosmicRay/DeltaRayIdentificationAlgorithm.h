@@ -34,12 +34,22 @@ private:
     typedef std::map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoAssociationMap;
 
     /**
+     *  @brief Get the list of Pfos, given the input list name
+     *
+     *  @param inputPfoListName the input Pfo list name
+     *  @param pfoList the output list of Pfos
+     */
+    void GetPfos(const std::string inputPfoListName, pandora::PfoList &pfoList) const;
+
+    /**
      *  @brief Build parent/daughter associations between PFOs
      *
-     *  @param pPfoList the input list of Pfos
+     *  @param primaryPfos the input list of current parent Pfos
+     *  @param secondaryPfos the input list of current daughter Pfos
      *  @param pfoAssociationMap the output map of parent/daughter associations
      */
-    void BuildAssociationMap(const pandora::PfoList *const pPfoList, PfoAssociationMap &pfoAssociationMap) const;
+    void BuildAssociationMap(const pandora::PfoList &primaryPfos, const pandora::PfoList &secondaryPfos,
+        PfoAssociationMap &pfoAssociationMap) const;
 
     /**
      *  @brief Determine if a given pair of Pfos have a parent/daughter association
@@ -73,8 +83,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_inputPfoListName;             ///< The input pfo list name
-    std::string     m_outputPfoListName;            ///< The output pfo list name
+    std::string     m_primaryPfoListName;           ///< The parent pfo list name
+    std::string     m_secondaryPfoListName;         ///< The daughter pfo list name
     float           m_maxDisplacementSquared;       ///< Maximum allowed distance of delta ray from parent cosmic ray
 };
 
