@@ -36,7 +36,7 @@ void SimpleClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SimpleClusterMergingAlgorithm::PopulateClusterMergeMap(const ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
-{ 
+{
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterEndI = clusterVector.end(); iterI != iterEndI; ++iterI)
     {
         Cluster *pClusterI = *iterI;
@@ -57,20 +57,20 @@ void SimpleClusterMergingAlgorithm::PopulateClusterMergeMap(const ClusterVector 
     }
 
 // --- BEGIN EVENT DISPLAY ---
-for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
-{
-Cluster *pCluster = *iter;
-ClusterList associatedList;
-this->CollectAssociatedClusters(pCluster, clusterMergeMap, associatedList);
-if (associatedList.empty())
-continue;
-ClusterList tempList;
-tempList.insert(pCluster);
-PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-PandoraMonitoringApi::VisualizeClusters(&tempList, "SeedCluster", RED);
-PandoraMonitoringApi::VisualizeClusters(&associatedList, "AssociatedClusters", BLUE);
-PandoraMonitoringApi::ViewEvent();
-}
+// for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+// {
+// Cluster *pCluster = *iter;
+// ClusterList associatedList;
+// this->CollectAssociatedClusters(pCluster, clusterMergeMap, associatedList);
+// if (associatedList.empty())
+// continue;
+// ClusterList tempList;
+// tempList.insert(pCluster);
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&tempList, "SeedCluster", RED);
+// PandoraMonitoringApi::VisualizeClusters(&associatedList, "AssociatedClusters", BLUE);
+// PandoraMonitoringApi::ViewEvent();
+// }
 // --- END EVENT DISPLAY ---
 }
 
@@ -87,12 +87,12 @@ bool SimpleClusterMergingAlgorithm::IsAssociated(const Cluster* const pClusterI,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode SimpleClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{ 
-    m_minCaloHitsPerCluster = 5;
+{
+    m_minCaloHitsPerCluster = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    m_maxClusterSeparation = 2.f; // cm
+    m_maxClusterSeparation = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterSeparation", m_maxClusterSeparation));
 
