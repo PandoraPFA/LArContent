@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 
@@ -143,9 +143,9 @@ bool UndershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgori
         highXFitResult.GetGlobalFitPositionAtX(plusX, plus3);
 
         // Extract results
-        const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pCommonCluster1));
-        const HitType hitType2(LArThreeDHelper::GetClusterHitType(particle.m_pCommonCluster2));
-        const HitType hitType3(LArThreeDHelper::GetClusterHitType(particle.m_pClusterA));
+        const HitType hitType1(LArClusterHelper::GetClusterHitType(particle.m_pCommonCluster1));
+        const HitType hitType2(LArClusterHelper::GetClusterHitType(particle.m_pCommonCluster2));
+        const HitType hitType3(LArClusterHelper::GetClusterHitType(particle.m_pClusterA));
 
         CartesianVector minus(0.f, 0.f, 0.f), split(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
         float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()), chi2Plus(std::numeric_limits<float>::max());
