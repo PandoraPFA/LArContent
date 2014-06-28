@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 
-#include "LArHelpers/LArThreeDHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 

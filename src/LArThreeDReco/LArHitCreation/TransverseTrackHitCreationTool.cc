@@ -12,7 +12,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -67,7 +66,7 @@ void TransverseTrackHitCreationTool::GetClusters(const ParticleFlowObject *const
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster(*iter);
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -120,8 +119,8 @@ void TransverseTrackHitCreationTool::GetPosition3D(const CaloHit *const pCaloHit
     fitResult2.GetGlobalFitPositionAtX(position.GetX(), fitPosition2);
 
     const HitType hitType(pCaloHit2D->GetHitType());
-    const HitType hitType1(LArThreeDHelper::GetClusterHitType(fitResult1.GetCluster()));
-    const HitType hitType2(LArThreeDHelper::GetClusterHitType(fitResult2.GetCluster()));
+    const HitType hitType1(LArClusterHelper::GetClusterHitType(fitResult1.GetCluster()));
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(fitResult2.GetCluster()));
 
     const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
     const float sigmaFit(m_sigmaFitMultiplier * sigmaHit);

@@ -8,9 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
-
 #include "LArObjects/LArPointingCluster.h"
 
 #include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
@@ -123,8 +122,8 @@ bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, Cluste
     const LArPointingCluster pointingCluster1(particle.m_pCluster1);
     const LArPointingCluster pointingCluster2(particle.m_pCluster2);
     const LArPointingCluster longPointingCluster(particle.m_pLongCluster);
-    const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pCluster1));
-    const HitType hitType2(LArThreeDHelper::GetClusterHitType(particle.m_pCluster2));
+    const HitType hitType1(LArClusterHelper::GetClusterHitType(particle.m_pCluster1));
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(particle.m_pCluster2));
 
     bool passesChecks(false);
 

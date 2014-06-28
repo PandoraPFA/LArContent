@@ -15,7 +15,7 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArHelpers/LArThreeDHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
 
 #include "LArObjects/LArOverlapTensor.h"
 #include "LArObjects/LArTrackOverlapResult.h"
@@ -255,7 +255,7 @@ void OverlapTensor<T>::ExploreConnections(Cluster *const pCluster, const bool ig
     if (ignoreUnavailable && !pCluster->IsAvailable())
         return;
 
-    const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
     if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);

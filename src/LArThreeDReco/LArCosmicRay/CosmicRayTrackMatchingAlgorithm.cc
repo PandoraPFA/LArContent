@@ -12,7 +12,6 @@
 
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 using namespace pandora;
 
@@ -152,8 +151,8 @@ void CosmicRayTrackMatchingAlgorithm::MatchClusters(const ClusterVector &cluster
     if (clusterVector1.empty() || clusterVector2.empty())
         return;
 
-    const HitType hitType1(LArThreeDHelper::GetClusterHitType(*clusterVector1.begin()));
-    const HitType hitType2(LArThreeDHelper::GetClusterHitType(*clusterVector2.begin()));
+    const HitType hitType1(LArClusterHelper::GetClusterHitType(*clusterVector1.begin()));
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(*clusterVector2.begin()));
 
     if (hitType1 == hitType2)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -251,9 +250,9 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
                 if (clusterList1.end() == iter1)
                     continue;
 
-                const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
-                const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
-                const HitType hitType3(LArThreeDHelper::GetClusterHitType(pCluster3));
+                const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+                const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
+                const HitType hitType3(LArClusterHelper::GetClusterHitType(pCluster3));
 
                 if (!this->CheckMatchedClusters3D(pCluster1, pCluster2, pCluster3))
                     continue;
@@ -303,8 +302,8 @@ void CosmicRayTrackMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap 
         {
             const Cluster* pCluster2 = *iter2;
 
-            const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
-            const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
+            const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+            const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
 
             const Cluster* pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : NULL);
             const Cluster* pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
@@ -358,9 +357,9 @@ bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *cons
     const Cluster *const pCluster3) const
 {
     // Check that three clusters have a consistent 3D position
-    const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
-    const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
-    const HitType hitType3(LArThreeDHelper::GetClusterHitType(pCluster3));
+    const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
+    const HitType hitType3(LArClusterHelper::GetClusterHitType(pCluster3));
 
     if (hitType1 == hitType2 || hitType2 == hitType3 || hitType3 == hitType1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -482,9 +481,9 @@ CosmicRayTrackMatchingAlgorithm::Particle::Particle(const Cluster *pClusterU, co
     if (NULL == m_pClusterU && NULL == m_pClusterV && NULL == m_pClusterW)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const HitType hitTypeU(NULL == m_pClusterU ? TPC_VIEW_U : LArThreeDHelper::GetClusterHitType(m_pClusterU));
-    const HitType hitTypeV(NULL == m_pClusterV ? TPC_VIEW_V : LArThreeDHelper::GetClusterHitType(m_pClusterV));
-    const HitType hitTypeW(NULL == m_pClusterW ? TPC_VIEW_W : LArThreeDHelper::GetClusterHitType(m_pClusterW));
+    const HitType hitTypeU(NULL == m_pClusterU ? TPC_VIEW_U : LArClusterHelper::GetClusterHitType(m_pClusterU));
+    const HitType hitTypeV(NULL == m_pClusterV ? TPC_VIEW_V : LArClusterHelper::GetClusterHitType(m_pClusterV));
+    const HitType hitTypeW(NULL == m_pClusterW ? TPC_VIEW_W : LArClusterHelper::GetClusterHitType(m_pClusterW));
 
     if (!(TPC_VIEW_U == hitTypeU && TPC_VIEW_V == hitTypeV && TPC_VIEW_W == hitTypeW))
         throw StatusCodeException(STATUS_CODE_FAILURE);

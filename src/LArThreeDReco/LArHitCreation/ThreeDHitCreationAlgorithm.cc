@@ -12,7 +12,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -30,7 +29,7 @@ void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *con
 
     for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
     {
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(*iter));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
 
         if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
         {
@@ -167,7 +166,7 @@ Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(ParticleFlowObject *const 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if (TPC_3D != hitType)
             continue;

@@ -12,7 +12,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 
@@ -25,7 +24,7 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewClust
 {
     this->AddToSlidingFitCache(pNewCluster);
 
-    const HitType hitType(LArThreeDHelper::GetClusterHitType(pNewCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
 
     if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -75,7 +74,7 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewClust
 
 void ThreeDTrackFragmentsAlgorithm::RebuildClusters(Cluster* pClusterToDelete, ClusterList &newClusters) const
 {
-    const HitType hitType(LArThreeDHelper::GetClusterHitType(pClusterToDelete));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterToDelete));
 
     std::string currentCaloHitListName((TPC_VIEW_U == hitType) ? m_inputCaloHitListNameU :
                                        (TPC_VIEW_V == hitType) ? m_inputCaloHitListNameV : m_inputCaloHitListNameW);
@@ -226,8 +225,8 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const Cluster *pCluster2(fitResult2.GetCluster());
 
     // Check hit types
-    const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
-    const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
+    const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
     const HitType hitType3((TPC_VIEW_U != hitType1 && TPC_VIEW_U != hitType2) ? TPC_VIEW_U :
                            (TPC_VIEW_V != hitType1 && TPC_VIEW_V != hitType2) ? TPC_VIEW_V :
                            (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : CUSTOM);

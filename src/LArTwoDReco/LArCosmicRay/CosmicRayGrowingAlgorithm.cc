@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArTwoDReco/LArCosmicRay/CosmicRayGrowingAlgorithm.h"
 
@@ -66,7 +65,7 @@ void CosmicRayGrowingAlgorithm::GetPfoClusters(const ParticleFlowObject *pPfo, c
     {
         Cluster *pPfoCluster = *cIter;
 
-        if (hitType != LArThreeDHelper::GetClusterHitType(pPfoCluster))
+        if (hitType != LArClusterHelper::GetClusterHitType(pPfoCluster))
             continue;
 
         clusterList.insert(pPfoCluster);
