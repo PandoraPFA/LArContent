@@ -21,6 +21,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
@@ -169,7 +170,8 @@ public:
         d("LArClusterHelper",                       &lar::LArClusterHelper::ReadSettings)                                       \
         d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
         d("LArParticleIdHelper",                    &lar::LArParticleIdHelper::ReadSettings)                                    \
-        d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)
+        d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)                               \
+        d("LArPfoHelper",                           &lar::LArPfoHelper::ReadSettings)
 
     /**
      *  @brief  Register all the lar content algorithms and tools with pandora
@@ -231,10 +233,8 @@ inline pandora::StatusCode LArContent::RegisterHelperFunctions(pandora::Pandora 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &pandora)
+inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &/*pandora*/)
 {
-    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterResetFunction(pandora, &lar::LArThreeDHelper::Reset));
-
     return pandora::STATUS_CODE_SUCCESS;
 }
 
