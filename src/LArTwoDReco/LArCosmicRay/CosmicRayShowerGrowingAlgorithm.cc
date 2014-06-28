@@ -28,26 +28,17 @@ void CosmicRayShowerGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector 
     const Cluster* pFirstCluster = *(inputClusters.begin());
     const HitType clusterHitType(LArThreeDHelper::GetClusterHitType(pFirstCluster));
 
-    // Get primary and secondary pfos
+    // Select seed clusters for growing
     PfoVector primaryPfos, secondaryPfos;
     this->GetPfos(m_primaryPfoListName, primaryPfos);
     this->GetPfos(m_secondaryPfoListName, secondaryPfos);
-
-    // grow showers from primary and secondary Pfos
-    if (m_growPfos)
-    {
-        this->SelectPrimaryPfoSeeds(primaryPfos, clusterHitType, seedClusters);
-        this->SelectSecondaryPfoSeeds(secondaryPfos, clusterHitType, seedClusters);
-    }
-
-    // grow showers from available clusters
-    if (m_growClusters)
-        this->SelectClusterSeeds(inputClusters, primaryPfos, clusterHitType, seedClusters);
+    this->SelectPrimarySeeds(primaryPfos, clusterHitType, seedClusters);
+    this->SelectSecondarySeeds(secondaryPfos, clusterHitType, seedClusters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerGrowingAlgorithm::SelectPrimaryPfoSeeds(const PfoVector &primaryPfos, const HitType clusterHitType,
+void CosmicRayShowerGrowingAlgorithm::SelectPrimarySeeds(const PfoVector &primaryPfos, const HitType clusterHitType,
     ClusterVector &seedClusters) const
 {
     for (PfoVector::const_iterator pIter = primaryPfos.begin(), pIterEnd = primaryPfos.end(); pIter != pIterEnd; ++pIter)
@@ -64,7 +55,7 @@ void CosmicRayShowerGrowingAlgorithm::SelectPrimaryPfoSeeds(const PfoVector &pri
         {
             Cluster *pPfoCluster = *cIter;
 
-            if (LArClusterHelper::GetLengthSquared(pPfoCluster) > m_maxSeedClusterLength  * m_maxSeedClusterLength)
+            if (LArClusterHelper::GetLengthSquared(pPfoCluster) > m_maxPrimaryClusterLength  * m_maxPrimaryClusterLength)
                 continue;
 
             seedClusters.push_back(pPfoCluster);
@@ -74,7 +65,7 @@ void CosmicRayShowerGrowingAlgorithm::SelectPrimaryPfoSeeds(const PfoVector &pri
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerGrowingAlgorithm::SelectSecondaryPfoSeeds(const PfoVector &secondaryPfos, const HitType clusterHitType,
+void CosmicRayShowerGrowingAlgorithm::SelectSecondarySeeds(const PfoVector &secondaryPfos, const HitType clusterHitType,
     ClusterVector &seedClusters) const
 {
     ClusterList pfoClusterList;
@@ -86,51 +77,11 @@ void CosmicRayShowerGrowingAlgorithm::SelectSecondaryPfoSeeds(const PfoVector &s
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerGrowingAlgorithm::SelectClusterSeeds(const ClusterVector &inputClusters, const PfoVector &primaryPfos,
-    const HitType clusterHitType, ClusterVector &seedClusters) const
-{
-    ClusterList pfoClusterList;
-    this->GetPfoClusters(primaryPfos, clusterHitType, pfoClusterList);
-
-    for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (clusterHitType != LArThreeDHelper::GetClusterHitType(pCluster))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        bool isSeed(false);
-
-        for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
-        {
-            const Cluster *pPfoCluster = *cIter;
-
-            if (LArClusterHelper::GetClosestDistance(pCluster, pPfoCluster) < m_maxSeedClusterDisplacement)
-            {
-                isSeed = true;
-                break;
-            }
-        }
-
-        if (isSeed)
-            seedClusters.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode CosmicRayShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{    
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "GrowPfos", m_growPfos));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "GrowClusters", m_growClusters));
-
-    m_maxSeedClusterLength = 10.f; // cm
+{
+    m_maxPrimaryClusterLength = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxSeedClusterLength", m_maxSeedClusterLength));
-
-    m_maxSeedClusterDisplacement = 1.5f; // cm
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxSeedClusterDisplacement", m_maxSeedClusterDisplacement));
+        "MaxPrimaryClusterLength", m_maxPrimaryClusterLength));
 
     return CosmicRayGrowingAlgorithm::ReadSettings(xmlHandle);
 }

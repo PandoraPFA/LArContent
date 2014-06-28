@@ -68,6 +68,7 @@
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerGrowingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
@@ -127,6 +128,7 @@ public:
         d("LArCosmicRayShowerGrowing",              lar::CosmicRayShowerGrowingAlgorithm::Factory)                              \
         d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
+        d("LArDeltaRayGrowing",                     lar::DeltaRayGrowingAlgorithm::Factory)                                     \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArCrossedTrackSplitting",               lar::CrossedTrackSplittingAlgorithm::Factory)                               \
         d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
