@@ -40,7 +40,7 @@ private:
      *  @param  hitType the cluster hit type
      *  @param  seedClusters the output vector of seed clusters
      */
-    void SelectPrimaryPfoSeeds(const pandora::PfoVector &pfoVector, const pandora::HitType hitType,
+    void SelectPrimarySeeds(const pandora::PfoVector &pfoVector, const pandora::HitType hitType,
         pandora::ClusterVector &seedClusters) const;
 
     /**
@@ -50,26 +50,12 @@ private:
      *  @param  hitType the cluster hit type
      *  @param  seedClusters the output vector of seed clusters
      */
-    void SelectSecondaryPfoSeeds(const pandora::PfoVector &pfoVector, const pandora::HitType hitType,
+    void SelectSecondarySeeds(const pandora::PfoVector &pfoVector, const pandora::HitType hitType,
         pandora::ClusterVector &seedClusters) const;
-
-    /**
-     *  @brief  Use available clusters to select seed clusters
-     *
-     *  @param  clusterVector the input vector of clean clusters
-     *  @param  pfoVector the input vector of primary Pfos
-     *  @param  hitType the cluster hit type
-     *  @param  seedClusters the output vector of seed clusters
-     */
-    void SelectClusterSeeds(const pandora::ClusterVector &clusterVector, const pandora::PfoVector &pfoVector,
-        const pandora::HitType hitType, pandora::ClusterVector &seedClusters) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool         m_growPfos;                     ///< Grow pfo clusters
-    bool         m_growClusters;                 ///< Grow available clusters
-    float        m_maxSeedClusterLength;         ///< The maximum length of primary Pfo's that can be taken as seed clusters
-    float        m_maxSeedClusterDisplacement;   ///< The maximum displacement of a possible seed cluster from a primary Pfo
+    float        m_maxPrimaryClusterLength;         ///< The maximum length of primary Pfo's that can be taken as seed clusters
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
