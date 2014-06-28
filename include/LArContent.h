@@ -21,7 +21,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
@@ -170,8 +169,7 @@ public:
         d("LArClusterHelper",                       &lar::LArClusterHelper::ReadSettings)                                       \
         d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
         d("LArParticleIdHelper",                    &lar::LArParticleIdHelper::ReadSettings)                                    \
-        d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)                               \
-        d("LArThreeDHelper",                        &lar::LArThreeDHelper::ReadSettings)
+        d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)
 
     /**
      *  @brief  Register all the lar content algorithms and tools with pandora
