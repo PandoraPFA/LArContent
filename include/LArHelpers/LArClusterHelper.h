@@ -45,6 +45,14 @@ enum ShowerEdge
 class LArClusterHelper
 {
 public:
+    /**
+     *  @brief  Get the hit type associated with a two dimensional cluster
+     * 
+     *  @param  pCluster the address of the cluster
+     * 
+     *  @return the cluster hit type
+     */
+    static pandora::HitType GetClusterHitType(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Perform two dimensional sliding fit, using a three dimensional fit to the cluster to define primary axis

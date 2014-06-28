@@ -9,6 +9,8 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
+#include "Pandora/PandoraSettings.h"
+
 #include "LArCalculators/LArPseudoLayerCalculator.h"
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 #include "LArHelpers/LArClusterHelper.h"
@@ -22,6 +24,42 @@ using namespace pandora;
 
 namespace lar
 {
+
+HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
+{
+    if (0 == pCluster->GetNCaloHits())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (PandoraSettings::SingleHitTypeClusteringMode())
+        return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
+
+    HitType hitType(CUSTOM);
+
+    if (pCluster->ContainsHitType(TPC_VIEW_U))
+    {
+        if (CUSTOM == hitType) hitType = TPC_VIEW_U;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (pCluster->ContainsHitType(TPC_VIEW_V))
+    {
+        if (CUSTOM == hitType) hitType = TPC_VIEW_V;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (pCluster->ContainsHitType(TPC_VIEW_W))
+    {
+        if (CUSTOM == hitType) hitType = TPC_VIEW_W;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (CUSTOM == hitType)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    return hitType;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArClusterHelper::LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
