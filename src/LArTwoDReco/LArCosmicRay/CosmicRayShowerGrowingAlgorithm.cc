@@ -18,20 +18,6 @@ using namespace pandora;
 namespace lar
 {
 
-void CosmicRayShowerGrowingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
-{
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pCluster = *iter;
-
-        if (!pCluster->IsAvailable() || (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
-            continue;
-
-        clusterVector.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayShowerGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputClusters, ClusterVector &seedClusters) const
 {
@@ -57,48 +43,6 @@ void CosmicRayShowerGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector 
     // grow showers from available clusters
     if (m_growClusters)
         this->SelectClusterSeeds(inputClusters, primaryPfos, clusterHitType, seedClusters);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CosmicRayShowerGrowingAlgorithm::GetPfos(const std::string inputPfoListName, PfoVector &pfoVector) const
-{
-    const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputPfoListName, pPfoList));
-
-    if (NULL == pPfoList)
-        return;
-
-    for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
-        pfoVector.push_back(*pIter);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CosmicRayShowerGrowingAlgorithm::GetPfoClusters(const PfoVector &pfoVector, const HitType hitType, ClusterList &clusterList) const
-{
-    for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
-    {
-        const ParticleFlowObject *pPfo = *pIter;
-        this->GetPfoClusters(pPfo, hitType, clusterList);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CosmicRayShowerGrowingAlgorithm::GetPfoClusters(const ParticleFlowObject *pPfo, const HitType hitType, ClusterList &clusterList) const
-{
-    const ClusterList &pfoClusterList = pPfo->GetClusterList();
-    for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
-    {
-        Cluster *pPfoCluster = *cIter;
-
-        if (hitType != LArThreeDHelper::GetClusterHitType(pPfoCluster))
-            continue;
-
-        clusterList.insert(pPfoCluster);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,16 +120,9 @@ void CosmicRayShowerGrowingAlgorithm::SelectClusterSeeds(const ClusterVector &in
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode CosmicRayShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryPfoListName", m_primaryPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SecondaryPfoListName", m_secondaryPfoListName));
-
+{    
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "GrowPfos", m_growPfos));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "GrowClusters", m_growClusters));
-
-    m_minCaloHitsPerCluster = 2;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
     m_maxSeedClusterLength = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -195,7 +132,7 @@ StatusCode CosmicRayShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSeedClusterDisplacement", m_maxSeedClusterDisplacement));
 
-    return ClusterGrowingAlgorithm::ReadSettings(xmlHandle);
+    return CosmicRayGrowingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar
