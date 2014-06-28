@@ -345,6 +345,33 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const 
 
     return 0.f;
 }
+  
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetClosestDistance(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2)
+{
+    if (clusterVector1.empty() || clusterVector2.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    float closestDistance(std::numeric_limits<float>::max());
+
+    for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const Cluster *pCluster1 = *iter1;
+
+        for (ClusterVector::const_iterator iter2 = clusterVector2.begin(), iterEnd2 = clusterVector2.end(); iter2 != iterEnd2; ++iter2)
+        {
+          const Cluster *pCluster2 = *iter2;
+
+          const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster1, pCluster2));
+ 
+          if (thisDistance < closestDistance)
+              closestDistance = thisDistance; 
+        }
+    }
+
+    return closestDistance;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
