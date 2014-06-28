@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArOverlapTensor.h"
 #include "LArObjects/LArPointingCluster.h"
@@ -84,7 +83,7 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
     {
         Cluster *pParentCluster = iter->first;
 
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pParentCluster));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pParentCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
 
         if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
@@ -119,7 +118,7 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPosi
         CartesianPointList splitPositions(iter->second);
         std::sort(splitPositions.begin(), splitPositions.end(), ThreeDBaseAlgorithm::SortSplitPositions);
 
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCurrentCluster));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCurrentCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
 
         if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
@@ -224,7 +223,7 @@ void ThreeDBaseAlgorithm<T>::UpdateUponSplit(Cluster *const pSplitCluster1, Clus
 template <typename T>
 void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
 {
-    const HitType hitType(LArThreeDHelper::GetClusterHitType(pNewCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
 
     if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);

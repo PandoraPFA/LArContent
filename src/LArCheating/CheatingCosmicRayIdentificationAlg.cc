@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 
@@ -36,7 +36,7 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
         {
             Cluster *pCluster = *cIter;
 
-            if (TPC_3D == LArThreeDHelper::GetClusterHitType(pCluster))
+            if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
                 continue;
 
             try

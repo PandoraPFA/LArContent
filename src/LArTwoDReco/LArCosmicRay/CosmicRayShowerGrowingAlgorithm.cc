@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArTwoDReco/LArCosmicRay/CosmicRayShowerGrowingAlgorithm.h"
 
@@ -26,7 +25,7 @@ void CosmicRayShowerGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector 
 
     // Get hit type
     const Cluster* pFirstCluster = *(inputClusters.begin());
-    const HitType clusterHitType(LArThreeDHelper::GetClusterHitType(pFirstCluster));
+    const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pFirstCluster));
 
     // Select seed clusters for growing
     PfoVector primaryPfos, secondaryPfos;

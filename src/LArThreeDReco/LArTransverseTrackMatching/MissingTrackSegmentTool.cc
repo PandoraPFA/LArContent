@@ -11,7 +11,6 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 
@@ -353,8 +352,8 @@ MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
     m_longMinX = (TPC_VIEW_U == m_shortHitType) ? std::min(xOverlap.GetVMinX(), xOverlap.GetWMinX()) : (TPC_VIEW_V == m_shortHitType) ? std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX()) : std::min(xOverlap.GetUMinX(), xOverlap.GetVMinX());
     m_longMaxX = (TPC_VIEW_U == m_shortHitType) ? std::max(xOverlap.GetVMaxX(), xOverlap.GetWMaxX()) : (TPC_VIEW_V == m_shortHitType) ? std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX()) : std::max(xOverlap.GetUMaxX(), xOverlap.GetVMaxX());
 
-    m_hitType1 = LArThreeDHelper::GetClusterHitType(m_pCluster1);
-    m_hitType2 = LArThreeDHelper::GetClusterHitType(m_pCluster2);
+    m_hitType1 = LArClusterHelper::GetClusterHitType(m_pCluster1);
+    m_hitType2 = LArClusterHelper::GetClusterHitType(m_pCluster2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

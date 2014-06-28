@@ -8,11 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
-
-#include "LArObjects/LArPointingCluster.h"
 
 #include "LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
 
@@ -146,8 +144,8 @@ void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &ver
 
     CartesianVector splitPosition(0.f, 0.f, 0.f);
     float chiSquared(std::numeric_limits<float>::max());
-    LArGeometryHelper::MergeTwoPositions(LArThreeDHelper::GetClusterHitType(particle.m_pClusterA1),
-        LArThreeDHelper::GetClusterHitType(particle.m_pClusterA2), particle.m_splitPosition1, particle.m_splitPosition2, splitPosition, chiSquared);
+    LArGeometryHelper::MergeTwoPositions(LArClusterHelper::GetClusterHitType(particle.m_pClusterA1),
+        LArClusterHelper::GetClusterHitType(particle.m_pClusterA2), particle.m_splitPosition1, particle.m_splitPosition2, splitPosition, chiSquared);
 
     particle.m_splitPosition = splitPosition;
 }
@@ -181,9 +179,9 @@ bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgorit
         fitResultCommon3.GetGlobalFitPositionAtX(plusX, plus3);
 
         // Extract results
-        const HitType hitType1(LArThreeDHelper::GetClusterHitType(particle.m_pClusterA1));
-        const HitType hitType2(LArThreeDHelper::GetClusterHitType(particle.m_pClusterA2));
-        const HitType hitType3(LArThreeDHelper::GetClusterHitType(particle.m_pCommonCluster));
+        const HitType hitType1(LArClusterHelper::GetClusterHitType(particle.m_pClusterA1));
+        const HitType hitType2(LArClusterHelper::GetClusterHitType(particle.m_pClusterA2));
+        const HitType hitType3(LArClusterHelper::GetClusterHitType(particle.m_pCommonCluster));
 
         CartesianVector minus(0.f, 0.f, 0.f), split(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
         float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()), chi2Plus(std::numeric_limits<float>::max());

@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
 
@@ -34,7 +34,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
         for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
         {
             const Cluster *const pPfoCluster = *cIter;
-            const HitType hitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
 
             if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             {

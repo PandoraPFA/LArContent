@@ -8,7 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArThreeDHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
@@ -153,7 +152,7 @@ bool DeltaRayIdentificationAlgorithm::IsAssociated(const ParticleFlowObject *con
     {
         const Cluster *pDaughterCluster = *cIter1;
 
-        const HitType daughterHitType(LArThreeDHelper::GetClusterHitType(pDaughterCluster));
+        const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
         if (TPC_3D == daughterHitType)
             continue;
 
@@ -163,7 +162,7 @@ bool DeltaRayIdentificationAlgorithm::IsAssociated(const ParticleFlowObject *con
         {
             const Cluster *pParentCluster = *cIter2;
 
-            if (daughterHitType != LArThreeDHelper::GetClusterHitType(pParentCluster))
+            if (daughterHitType != LArClusterHelper::GetClusterHitType(pParentCluster))
                 continue;
 
             if (LArClusterHelper::GetLengthSquared(pDaughterCluster) > 0.5f * LArClusterHelper::GetLengthSquared(pParentCluster))

@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
 
@@ -26,7 +25,7 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
 
     // Get hit type
     const Cluster* pFirstCluster = *(inputClusters.begin());
-    const HitType clusterHitType(LArThreeDHelper::GetClusterHitType(pFirstCluster));
+    const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pFirstCluster));
 
     // Select seed clusters for growing
     PfoVector primaryPfos;
@@ -46,7 +45,7 @@ void DeltaRayGrowingAlgorithm::SelectClusterSeeds(const ClusterVector &inputClus
     {
         Cluster *pCluster = *iter;
 
-        if (clusterHitType != LArThreeDHelper::GetClusterHitType(pCluster))
+        if (clusterHitType != LArClusterHelper::GetClusterHitType(pCluster))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         bool isSeed(false);

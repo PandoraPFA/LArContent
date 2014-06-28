@@ -10,7 +10,6 @@
 
 #include "LArCalculators/LArPseudoLayerCalculator.h"
 
-#include "LArHelpers/LArThreeDHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
@@ -339,9 +338,9 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
         return true;
 
     // Second step: Check 3D matching
-    const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
-    const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
-    const HitType hitType3(LArThreeDHelper::GetClusterHitType(pCluster3));
+    const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
+    const HitType hitType3(LArClusterHelper::GetClusterHitType(pCluster3));
 
     if (hitType1 == hitType2 ||  hitType2 == hitType3 || hitType3 == hitType1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -455,9 +454,9 @@ float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pC
     for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pPfoCluster = *cIter;
-        const HitType pfoClusterHitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
+        const HitType pfoClusterHitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
 
-        if (pfoClusterHitType != LArThreeDHelper::GetClusterHitType(pCluster))
+        if (pfoClusterHitType != LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
         if (LArClusterHelper::GetLengthSquared(pPfoCluster) < 2.f * LArClusterHelper::GetLengthSquared(pCluster))
@@ -506,9 +505,9 @@ DeltaRayMatchingAlgorithm::Particle::Particle(Cluster *const pCluster1, Cluster 
     m_pClusterW(NULL),
     m_pParentPfo(NULL)
 {
-    const HitType hitType1(NULL != pCluster1 ? LArThreeDHelper::GetClusterHitType(pCluster1) : CUSTOM);
-    const HitType hitType2(NULL != pCluster2 ? LArThreeDHelper::GetClusterHitType(pCluster2) : CUSTOM);
-    const HitType hitType3(NULL != pCluster3 ? LArThreeDHelper::GetClusterHitType(pCluster3) : CUSTOM);
+    const HitType hitType1(NULL != pCluster1 ? LArClusterHelper::GetClusterHitType(pCluster1) : CUSTOM);
+    const HitType hitType2(NULL != pCluster2 ? LArClusterHelper::GetClusterHitType(pCluster2) : CUSTOM);
+    const HitType hitType3(NULL != pCluster3 ? LArClusterHelper::GetClusterHitType(pCluster3) : CUSTOM);
 
     m_pClusterU = ((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
     m_pClusterV = ((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
