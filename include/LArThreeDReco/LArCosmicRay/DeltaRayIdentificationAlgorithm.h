@@ -56,12 +56,12 @@ private:
      *
      *  @param pDaughterPfo the input daughter Pfo
      *  @param pParentPfo the input parent Pfo
-     *  @param displacementSquared the average squared displacement between the parent and daughter
+     *  @param displacement the average displacement between the parent and daughter
      *
      *  @return boolean
      */
     bool IsAssociated(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo,
-        float &displacementSquared) const;
+        float &displacement) const;
 
     /**
      *  @brief Build the parent/daughter links from the map of parent/daughter associations
@@ -83,9 +83,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_inputPfoListName;          ///< The parent pfo list name
-    std::string     m_outputPfoListName;         ///< The daughter pfo list name
-    float           m_maxDisplacementSquared;    ///< Maximum allowed distance of delta ray from parent cosmic ray
+    std::string     m_inputPfoListName;        ///< The parent pfo list name
+    std::string     m_outputPfoListName;       ///< The daughter pfo list name
+    float           m_distanceForMatching;     ///< Maximum allowed distance of delta ray from parent cosmic ray
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
