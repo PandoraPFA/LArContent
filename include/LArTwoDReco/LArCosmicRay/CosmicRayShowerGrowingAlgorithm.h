@@ -68,10 +68,10 @@ private:
 
     std::string     m_inputPfoListName;                ///< The primary Pfo list name
 
-    unsigned int    m_minCaloHitsPerCluster;           ///< The min number of calo hits per candidate cluster
-    unsigned int    m_minSeedClusterCaloHits;          ///< 
-    float           m_maxSeedClusterLength;            ///< 
-    float           m_maxSeedClusterDisplacement;      ///< 
+    unsigned int    m_minCaloHitsPerCluster;           ///< The overall minimum number of calo hits for cluster
+    unsigned int    m_minSeedClusterCaloHits;          ///< The minimum number of calo hits in seed clusters
+    float           m_maxSeedClusterLength;            ///< The maximum length of a unassociated shower clusters
+    float           m_maxSeedClusterDisplacement;      ///< The maximum displacement for associating shower clusters with tracks
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
