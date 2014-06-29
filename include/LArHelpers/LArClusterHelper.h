@@ -191,6 +191,16 @@ public:
     static float GetClosestDistance(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2);
 
     /**
+     *  @brief  Get closest distance between a specified cluster and vector of clusters
+     *
+     *  @param  pCluster address of the input cluster
+     *  @param  clusterVector vector of input clusters
+     *
+     *  @return the closest distance
+     */
+    static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::ClusterVector &clusterVector);
+
+    /**
      *  @brief  Get closest distance between a pair of clusters
      *
      *  @param  pCluster1 address of the first cluster

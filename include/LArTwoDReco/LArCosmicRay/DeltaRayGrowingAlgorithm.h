@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArCosmicRay/CosmicRayGrowingAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h"
 
 namespace lar
 {
@@ -18,7 +18,7 @@ namespace lar
 /**
  *  @brief  DeltaRayGrowingAlgorithm class
  */
-class DeltaRayGrowingAlgorithm : public CosmicRayGrowingAlgorithm
+class DeltaRayGrowingAlgorithm : public ClusterGrowingAlgorithm
 {
 public:
     /**
@@ -31,7 +31,16 @@ public:
     };
 
 private:
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &cleanClusters) const;
     void GetListOfSeedClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &seedClusters) const;
+
+    /**
+     *  @brief  Get a vector of Pfos from an input Pfo list name
+     *
+     *  @param  inputPfoListName the input Pfo list name
+     *  @param  pfoVector the output vector of Pfos
+     */
+    void GetPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
 
     /**
      *  @brief  Use available clusters to select seed clusters
@@ -41,12 +50,16 @@ private:
      *  @param  hitType the cluster hit type
      *  @param  seedClusters the output vector of seed clusters
      */
-    void SelectClusterSeeds(const pandora::ClusterVector &clusterVector, const pandora::PfoVector &pfoVector,
+    void SelectSeedClusters(const pandora::ClusterVector &clusterVector, const pandora::PfoVector &pfoVector,
         const pandora::HitType hitType, pandora::ClusterVector &seedClusters) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    
-    float        m_maxPrimaryClusterDisplacement;   ///< The maximum displacement of a possible seed cluster from a primary Pfo
+
+    std::string m_inputPfoListName;                 ///< The input Pfo list name
+
+    unsigned int m_minCaloHitsPerCluster;           ///< The min number of calo hits per candidate cluster
+    unsigned int m_minSeedClusterCaloHits;          ///< 
+    float        m_maxSeedClusterDisplacement;      ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

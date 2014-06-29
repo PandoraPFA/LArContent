@@ -24,7 +24,7 @@ namespace lar
 
 //------------------------------------------------------------------------------------------------------------------------------------------
  
-void LArPfoHelper::GetClusters(const PfoVector &pfoVector, const HitType hitType, ClusterVector &clusterVector)
+void LArPfoHelper::GetClusters(const PfoVector &pfoVector, const HitType &hitType, ClusterVector &clusterVector)
 {
     for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
     {
@@ -35,7 +35,7 @@ void LArPfoHelper::GetClusters(const PfoVector &pfoVector, const HitType hitType
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType hitType, ClusterVector &clusterVector)
+void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType &hitType, ClusterVector &clusterVector)
 {
     const ClusterList &pfoClusterList = pPfo->GetClusterList();
     for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
@@ -47,6 +47,46 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType hit
 
         clusterVector.push_back(pPfoCluster);
     }
+}
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
+{
+    float lengthSquared(0.f);
+
+    const ClusterList &pfoClusterList = pPfo->GetClusterList();
+    for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        const Cluster *pPfoCluster = *cIter;
+
+        if (TPC_3D == LArClusterHelper::GetClusterHitType(pPfoCluster))
+            continue;
+
+        lengthSquared += LArClusterHelper::GetLengthSquared(pPfoCluster);
+    }
+
+    return lengthSquared;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArPfoHelper::GetThreeDLengthSquared(const ParticleFlowObject *const pPfo)
+{
+    float lengthSquared(0.f);
+
+    const ClusterList &pfoClusterList = pPfo->GetClusterList();
+    for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        const Cluster *pPfoCluster = *cIter;
+
+        if (TPC_3D != LArClusterHelper::GetClusterHitType(pPfoCluster))
+            continue;
+
+        lengthSquared += LArClusterHelper::GetLengthSquared(pPfoCluster);
+    }
+
+    return lengthSquared;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,13 +179,30 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
 {
     unsigned int nHitsLhs(0);
     for (ClusterList::const_iterator iter = pLhs->GetClusterList().begin(), iterEnd = pLhs->GetClusterList().end(); iter != iterEnd; ++iter)
-        nHitsLhs += (*iter)->GetNCaloHits();
+    {
+        const Cluster *pClusterLhs = *iter;
+
+        if (TPC_3D != LArClusterHelper::GetClusterHitType(pClusterLhs))
+            continue;
+
+        nHitsLhs += pClusterLhs->GetNCaloHits();
+    }
 
     unsigned int nHitsRhs(0);
     for (ClusterList::const_iterator iter = pRhs->GetClusterList().begin(), iterEnd = pRhs->GetClusterList().end(); iter != iterEnd; ++iter)
-        nHitsRhs += (*iter)->GetNCaloHits();
+    {
+        const Cluster *pClusterRhs = *iter;
 
-    return (nHitsLhs > nHitsRhs);
+        if (TPC_3D != LArClusterHelper::GetClusterHitType(pClusterRhs))
+            continue;
+
+        nHitsRhs += pClusterRhs->GetNCaloHits();
+    }
+
+    if (nHitsLhs != nHitsRhs)
+        return (nHitsLhs > nHitsRhs);
+
+    return (LArPfoHelper::GetTwoDLengthSquared(pLhs) > LArPfoHelper::GetTwoDLengthSquared(pRhs));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
