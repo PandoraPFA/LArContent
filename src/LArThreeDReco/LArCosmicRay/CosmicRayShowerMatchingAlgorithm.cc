@@ -8,10 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
+#include "LArCalculators/LArPseudoLayerCalculator.h"
+
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 
@@ -22,394 +23,485 @@ namespace lar
 
 StatusCode CosmicRayShowerMatchingAlgorithm::Run()
 {
-    const PfoList *pPfoList = NULL;
-    const StatusCode listStatusCode(PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+    
 
-    if (STATUS_CODE_SUCCESS != listStatusCode)
-    {
-        std::cout << "CosmicRayShowerMatchingAlgorithm: Input pfo list unavailable " << std::endl;
-        return STATUS_CODE_SUCCESS;
-    }
+  
 
-    m_slidingFitResultMap.clear();
+    this->MergeClusters();
 
-    ClusterVector clustersU, clustersV, clustersW;
-    this->GetInputClusters(m_inputClusterListNamesU, clustersU);
-    this->GetInputClusters(m_inputClusterListNamesV, clustersV);
-    this->GetInputClusters(m_inputClusterListNamesW, clustersW);
+    this->MatchClusters();
 
-    this->ThreeViewMatching(clustersU, clustersV, clustersW);
+ 
+    
 
-    this->TwoViewMatching(clustersU, clustersV);
-    this->TwoViewMatching(clustersV, clustersW);
-    this->TwoViewMatching(clustersU, clustersW);
+   
 
-    this->OneViewMatching(clustersU);
-    this->OneViewMatching(clustersV);
-    this->OneViewMatching(clustersW);
+// --- BEGIN EVENT DISPLAY ---  
+// ClusterVector newClustersU, newClustersV, newClustersW;
+// this->GetClusters(m_inputClusterListNameU, newClustersU);
+// this->GetClusters(m_inputClusterListNameV, newClustersV);
+// this->GetClusters(m_inputClusterListNameW, newClustersW);
+// ClusterList newListU, newListV, newListW;
+// newListU.insert(newClustersU.begin(), newClustersU.end());
+// newListV.insert(newClustersV.begin(), newClustersV.end());
+// newListW.insert(newClustersW.begin(), newClustersW.end());
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&newListU, "ClustersU", RED);
+// PandoraMonitoringApi::VisualizeClusters(&newListV, "ClustersV", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&newListW, "ClustersW", GREEN);
+// PandoraMonitoringApi::ViewEvent();
+// --- END EVENT DISPLAY ---
+
+
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clustersU, const ClusterVector &clustersV, const ClusterVector &clustersW) const
+void CosmicRayShowerMatchingAlgorithm::MergeClusters()
 {
-    for (ClusterVector::const_iterator cIterW = clustersW.begin(), cIterWEnd = clustersW.end(); cIterW != cIterWEnd; ++cIterW)
-    {
-        Cluster *const pClusterW = *cIterW;
-        float xminW(std::numeric_limits<float>::max()), xmaxW(-std::numeric_limits<float>::max());
-        LArClusterHelper::GetClusterSpanX(pClusterW, xminW, xmaxW);
+    // Get current pfos and clusters
+    PfoVector inputPfos, seedPfos;
+    ClusterToPfoMap clusterToPfoMap;
+    this->GetPfos(m_inputPfoListName, inputPfos);
+    this->SelectPfos(inputPfos, seedPfos);
+    this->GetPfoClusterMap(seedPfos, clusterToPfoMap);
 
-        for (ClusterVector::const_iterator cIterU = clustersU.begin(), cIterUEnd = clustersU.end(); cIterU != cIterUEnd; ++cIterU)
-        {
-            Cluster *const pClusterU = *cIterU;
-            float xminU(std::numeric_limits<float>::max()), xmaxU(-std::numeric_limits<float>::max());
-            LArClusterHelper::GetClusterSpanX(pClusterU, xminU, xmaxU);
+    ClusterVector clustersU, clustersV, clustersW;
+    this->GetClusters(m_inputClusterListNameU, clustersU);
+    this->GetClusters(m_inputClusterListNameV, clustersV);
+    this->GetClusters(m_inputClusterListNameW, clustersW);
 
-            for (ClusterVector::const_iterator cIterV = clustersV.begin(), cIterVEnd = clustersV.end(); cIterV != cIterVEnd; ++cIterV)
-            {
-                Cluster *const pClusterV = *cIterV;
+    LArPfoHelper::GetClusters(seedPfos, TPC_VIEW_U, clustersU);
+    LArPfoHelper::GetClusters(seedPfos, TPC_VIEW_V, clustersV);
+    LArPfoHelper::GetClusters(seedPfos, TPC_VIEW_W, clustersW);
 
-                float xminV(std::numeric_limits<float>::max()), xmaxV(-std::numeric_limits<float>::max());
-                LArClusterHelper::GetClusterSpanX(pClusterV, xminV, xmaxV);
+    if (clustersU.empty() || clustersV.empty() || clustersW.empty())
+        return;
 
-                if (!pClusterW->IsAvailable() || !pClusterU->IsAvailable() || !pClusterV->IsAvailable())
-                    continue;
+    ParticleList particleList;
+    this->MatchViews(seedPfos, particleList);
+    this->MatchViews(clustersU, clustersV, clustersW, particleList);
 
-                const float xmin = std::max((std::max(xminU, xminV)), xminW);
-                const float xmax = std::min((std::min(xmaxU, xmaxV)), xmaxW);
-
-                if (xmax < xmin)
-                    continue;
-
-                const float pseudoChi2(this->CompareClusterTriplet(pClusterU, pClusterV, pClusterW));
-
-                if (pseudoChi2 > m_chi2For3ViewMatching)
-                    continue;
-
-                ParticleFlowObject *pBestPFO = NULL;
-                float distance(std::numeric_limits<float>::max());
-                this->FindBestCosmicPFO(pClusterU, pClusterV, pClusterW, pBestPFO, distance);
-
-                if ((distance > m_distanceFor3ViewMatching) || (NULL == pBestPFO))
-                    continue;
-
-                ClusterList clusterList;
-                clusterList.insert(pClusterU);
-                clusterList.insert(pClusterV);
-                clusterList.insert(pClusterW);
-                this->CreateDaughterPfo(clusterList, pBestPFO);
-            }
-        }
-    }
+    ClusterAssociationMap clusterAssociationMap;
+    this->BuildAssociationMap(particleList, clusterAssociationMap);
+    this->MergeClusters(clusterToPfoMap, clusterAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2) const
+void CosmicRayShowerMatchingAlgorithm::MatchClusters()
 {
-    for (ClusterVector::const_iterator cIter1 = clusters1.begin(), cIter1End = clusters1.end(); cIter1 != cIter1End; ++cIter1)
-    {
-        Cluster *const pCluster1 = *cIter1;
-        float xmin1(std::numeric_limits<float>::max()), xmax1(-std::numeric_limits<float>::max());
-        LArClusterHelper::GetClusterSpanX(pCluster1, xmin1, xmax1);
+    ClusterVector clustersU, clustersV, clustersW;
+    this->GetClusters(m_inputClusterListNameU, clustersU);
+    this->GetClusters(m_inputClusterListNameV, clustersV);
+    this->GetClusters(m_inputClusterListNameW, clustersW);    
 
-        for (ClusterVector::const_iterator cIter2 = clusters2.begin(), cIter2End = clusters2.end(); cIter2 != cIter2End; ++cIter2)
-        {
-            Cluster *const pCluster2 = *cIter2;
-            float xmin2(std::numeric_limits<float>::max()), xmax2(-std::numeric_limits<float>::max());
-            LArClusterHelper::GetClusterSpanX(pCluster2, xmin2, xmax2);
+    if (clustersU.empty() || clustersV.empty() || clustersW.empty())
+        return;
 
-            if (std::min(xmax1, xmax2) < std::max(xmin1, xmin2))
-                continue;
-
-            ParticleFlowObject *pBestPFO = NULL;
-            float distance(std::numeric_limits<float>::max());
-
-            if (!pCluster1->IsAvailable() || !pCluster2->IsAvailable())
-                continue;
-
-            const HitType hitType1(LArThreeDHelper::GetClusterHitType(pCluster1));
-            const HitType hitType2(LArThreeDHelper::GetClusterHitType(pCluster2));
-
-            Cluster *pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : NULL);
-            Cluster *pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
-            Cluster *pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
-            this->FindBestCosmicPFO(pClusterU, pClusterV, pClusterW, pBestPFO, distance);
-
-            if ((distance > m_distanceFor2ViewMatching) || (NULL == pBestPFO))
-                continue;
-
-            ClusterList clusterList;
-            clusterList.insert(pCluster1);
-            clusterList.insert(pCluster2);
-            this->CreateDaughterPfo(clusterList, pBestPFO);
-        }
-    }
+    ParticleList particleList;
+    this->MatchViews(clustersU, clustersV, clustersW, particleList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters) const
+void CosmicRayShowerMatchingAlgorithm::GetPfos(const std::string inputPfoListName, PfoVector &pfoVector) const
 {
-    for (ClusterVector::const_iterator cIter = clusters.begin(), cIterEnd = clusters.end(); cIter != cIterEnd; ++cIter)
+    const PfoList *pPfoList = NULL;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        inputPfoListName, pPfoList));
+
+    if (NULL == pPfoList)
+        return;
+
+    for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
+        pfoVector.push_back(*iter);
+
+    std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayShowerMatchingAlgorithm::GetClusters(const std::string inputClusterListName, ClusterVector &clusterVector) const
+{
+    const ClusterList *pClusterList = NULL;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        inputClusterListName, pClusterList))
+
+    if (NULL == pClusterList)
     {
-        Cluster *const pCluster = *cIter;
-        ParticleFlowObject *pBestPFO = NULL;
-        float distance(std::numeric_limits<float>::max());
+        std::cout << "CosmicRayShowerMatchingAlgorithm: could not find cluster list " << inputClusterListName << std::endl;
+        return;
+    }
+
+    for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
+    {
+        Cluster *pCluster = *cIter;
 
         if (!pCluster->IsAvailable())
             continue;
 
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
-
-        Cluster *pClusterU((TPC_VIEW_U == hitType) ? pCluster : NULL);
-        Cluster *pClusterV((TPC_VIEW_V == hitType) ? pCluster : NULL);
-        Cluster *pClusterW((TPC_VIEW_W == hitType) ? pCluster : NULL);
-        this->FindBestCosmicPFO(pClusterU, pClusterV, pClusterW, pBestPFO, distance);
-
-        if ((distance > m_distanceFor1ViewMatching) || (NULL == pBestPFO))
+        if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
             continue;
 
-        ClusterList clusterList;
-        clusterList.insert(pCluster);
-        this->CreateDaughterPfo(clusterList, pBestPFO);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CosmicRayShowerMatchingAlgorithm::GetInputClusters(const pandora::StringVector &clusterListNames, pandora::ClusterVector &clusterVector)
-{
-    for (StringVector::const_iterator iter = clusterListNames.begin(), iterEnd = clusterListNames.end(); iter != iterEnd; ++iter)
-    {
-        const ClusterList *pClusterList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *iter, pClusterList));
-
-        for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
-        {
-            Cluster *pCluster = *cIter;
-
-            if (!pCluster->IsAvailable() || (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
-                continue;
-
-            clusterVector.push_back(pCluster);
-            this->AddToSlidingFitCache(pCluster);
-        }
+        clusterVector.push_back(pCluster);
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
+ 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float CosmicRayShowerMatchingAlgorithm::CompareClusterTriplet(Cluster *const pClusterU, Cluster *const pClusterV, Cluster *const pClusterW) const
+void CosmicRayShowerMatchingAlgorithm::GetPfoClusterMap(const PfoVector &pfoVector, ClusterToPfoMap &clusterToPfoMap) const
 {
-    CartesianVector minimumCoordinatesU(0.f, 0.f, 0.f), maximumCoordinatesU(0.f, 0.f, 0.f);
-    LArClusterHelper::GetClusterSpanXZ(pClusterU, minimumCoordinatesU, maximumCoordinatesU);
-    const float xminU(minimumCoordinatesU.GetX()), xmaxU(maximumCoordinatesU.GetX());
-
-    CartesianVector minimumCoordinatesV(0.f, 0.f, 0.f), maximumCoordinatesV(0.f, 0.f, 0.f);
-    LArClusterHelper::GetClusterSpanXZ(pClusterV, minimumCoordinatesV, maximumCoordinatesV);
-    const float xminV(minimumCoordinatesV.GetX()), xmaxV(maximumCoordinatesV.GetX());
-
-    CartesianVector minimumCoordinatesW(0.f, 0.f, 0.f), maximumCoordinatesW(0.f, 0.f, 0.f);
-    LArClusterHelper::GetClusterSpanXZ(pClusterW, minimumCoordinatesW, maximumCoordinatesW);
-    const float xminW(minimumCoordinatesW.GetX()), xmaxW(maximumCoordinatesW.GetX());
-
-    const float xmin = std::max((std::max(xminU, xminV)), xminW);
-    const float xmax = std::min((std::min(xmaxU, xmaxV)), xmaxW);
-
-    if (xmin >= xmax)
-        return std::numeric_limits<float>::max();
-
-    const float x((xmin + xmax) / 2.f);
-    const float u(this->GetCoordinateAtX(pClusterU, x, xmin, xmax));
-    const float v(this->GetCoordinateAtX(pClusterV, x, xmin, xmax));
-    const float w(this->GetCoordinateAtX(pClusterW, x, xmin, xmax));
-    const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
-    const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
-    const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
-
-    const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - uw2v) * (v - uw2v) + (w - uv2w) * (w-uv2w)) / 3.f);
-    return pseudoChi2;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float CosmicRayShowerMatchingAlgorithm::GetCoordinateAtX(Cluster *const pCluster, const float x, const float xmin, const float xmax) const
-{
-    CartesianVector fitVector(0.f, 0.f, 0.f);
-
-    try
+    for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
     {
-        const TwoDSlidingFitResult &slidingFitResult(this->GetCachedSlidingFitResult(pCluster));
-        slidingFitResult.GetGlobalFitPositionAtX(x, fitVector);
-    }
-    catch (StatusCodeException &)
-    {
-        fitVector.SetValues(x, 0.f, LArClusterHelper::GetAverageZ(pCluster, xmin, xmax));
-    }
-
-    return fitVector.GetZ();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CosmicRayShowerMatchingAlgorithm::FindBestCosmicPFO(Cluster *const pClusterU, Cluster *const pClusterV,
-   Cluster *const pClusterW, ParticleFlowObject* &pBestPFO, float &distanceToBestPFO) const
-{
-    if ((NULL == pClusterU) && (NULL == pClusterV) && (NULL == pClusterW))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    distanceToBestPFO = std::numeric_limits<float>::max();
-
-    const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
-
-    for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
-    {
-        ParticleFlowObject *pPfo = *iter;
-
-        float dU(std::numeric_limits<float>::max());
-        float dV(std::numeric_limits<float>::max());
-        float dW(std::numeric_limits<float>::max());
-
-        bool isSubCluster(true);
-
-        const ClusterList &pfoClusterList(pPfo->GetClusterList());
+        const ParticleFlowObject *pPfo = *pIter;
+        const ClusterList &pfoClusterList = pPfo->GetClusterList();
         for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
         {
-            const Cluster *const pPfoCluster = *cIter;
+            Cluster *pPfoCluster = *cIter;
 
-            const HitType pfoClusterHitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
+            if (TPC_3D == LArClusterHelper::GetClusterHitType(pPfoCluster))
+                continue;  
 
-            if ((TPC_VIEW_U != pfoClusterHitType) && (TPC_VIEW_V != pfoClusterHitType) && (TPC_VIEW_W != pfoClusterHitType))
+            clusterToPfoMap.insert(ClusterToPfoMap::value_type(pPfoCluster, pPfo));
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayShowerMatchingAlgorithm::SelectPfos(const PfoVector &inputPfos, PfoVector &outputPfos) const
+{
+    for (PfoVector::const_iterator pIter1 = inputPfos.begin(), pIterEnd1 = inputPfos.end(); pIter1 != pIterEnd1; ++pIter1)
+    {
+        const ParticleFlowObject *pPfo1 = *pIter1;
+        const float lengthSquared1(LArPfoHelper::GetTwoDLengthSquared(pPfo1));
+
+        bool isSeed(false);
+
+        for (PfoVector::const_iterator pIter2 = inputPfos.begin(), pIterEnd2 = inputPfos.end(); pIter2 != pIterEnd2; ++pIter2)
+        {
+            const ParticleFlowObject *pPfo2 = *pIter2;
+            const float lengthSquared2(LArPfoHelper::GetTwoDLengthSquared(pPfo2));
+
+            if (pPfo1 == pPfo2)
+                continue;
+
+            if (lengthSquared2 < lengthSquared1)
+                continue;
+
+            if (LArPfoHelper::GetTwoDSeparation(pPfo1, pPfo2) < 5.f)
             {
-                if (TPC_3D == pfoClusterHitType)
-                    continue;
-
-                std::cout << "CosmicRayShowerMatchingAlgorithm: Encountered unexpected hit type " << std::endl;
-                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-            }
-
-            if ((pfoClusterHitType == TPC_VIEW_U) && (NULL != pClusterU))
-            {
-                dU = std::min(dU, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterU));
-                isSubCluster |= this->IsSubCluster(pPfoCluster, pClusterU);
-            }
-
-            if ((pfoClusterHitType == TPC_VIEW_V) && (NULL != pClusterV))
-            {
-                dV = std::min(dV, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterV));
-                isSubCluster |= this->IsSubCluster(pPfoCluster, pClusterV);
-            }
-
-            if ((pfoClusterHitType == TPC_VIEW_W) && (NULL != pClusterW))
-            {
-                dW = std::min(dW, ClusterHelper::GetDistanceToClosestHit(pPfoCluster, pClusterW));
-                isSubCluster |= this->IsSubCluster(pPfoCluster, pClusterW);
+                isSeed = true;
+                break;
             }
         }
 
-        if (!isSubCluster)
+        if (isSeed)
+            outputPfos.push_back(const_cast<ParticleFlowObject*>(pPfo1));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+ 
+void CosmicRayShowerMatchingAlgorithm::MatchViews(const PfoVector &pfoVector, ParticleList &particleList) const
+{
+    ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
+    
+    LArPfoHelper::GetClusters(pfoVector, TPC_VIEW_U, clusterVectorU);
+    LArPfoHelper::GetClusters(pfoVector, TPC_VIEW_V, clusterVectorV);
+    LArPfoHelper::GetClusters(pfoVector, TPC_VIEW_W, clusterVectorW); 
+
+    for (ClusterVector::const_iterator cIterU = clusterVectorU.begin(), cIterEndU = clusterVectorU.end(); cIterU != cIterEndU; ++cIterU)
+    {
+        const Cluster *pClusterU = *cIterU;
+
+        for (ClusterVector::const_iterator cIterV = clusterVectorV.begin(), cIterEndV = clusterVectorV.end(); cIterV != cIterEndV; ++cIterV)
+        {
+            const Cluster *pClusterV = *cIterV;
+
+            for (ClusterVector::const_iterator cIterW = clusterVectorW.begin(), cIterEndW = clusterVectorW.end(); cIterW != cIterEndW; ++cIterW)
+            {
+                const Cluster *pClusterW = *cIterW;
+
+                particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayShowerMatchingAlgorithm::MatchViews(const ClusterVector &clusterVectorU, const ClusterVector &clusterVectorV, 
+    const ClusterVector &clusterVectorW, ParticleList &particleList) const
+{
+    for (ClusterVector::const_iterator cIterU = clusterVectorU.begin(), cIterEndU = clusterVectorU.end(); cIterU != cIterEndU; ++cIterU)
+    {
+        const Cluster *pClusterU = *cIterU;
+
+        for (ClusterVector::const_iterator cIterV = clusterVectorV.begin(), cIterEndV = clusterVectorV.end(); cIterV != cIterEndV; ++cIterV)
+        {
+            const Cluster *pClusterV = *cIterV;
+
+            for (ClusterVector::const_iterator cIterW = clusterVectorW.begin(), cIterEndW = clusterVectorW.end(); cIterW != cIterEndW; ++cIterW)
+            {
+                const Cluster *pClusterW = *cIterW;
+
+                if (!this->MatchViews(pClusterU, pClusterV, pClusterW))
+                    continue;                
+
+                particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CosmicRayShowerMatchingAlgorithm::MatchViews(const Cluster *const pClusterU, const Cluster *const pClusterV, 
+    const Cluster *const pClusterW) const
+{
+    // Check X overlap
+    float xMinU(0.f), xMinV(0.f), xMinW(0.f);
+    float xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
+    LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
+    LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
+    LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
+
+    const float xPitch(0.5 * m_xOverlapWindow);
+    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - xPitch);
+    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + xPitch);
+    const float xOverlap(xMax - xMin);
+
+    if (xOverlap < std::numeric_limits<float>::epsilon())
+        return false;
+
+    // Match views
+    const unsigned int nSamplingPoints(1 + static_cast<unsigned int>(xOverlap / xPitch));
+
+    for (unsigned int n = 0; n<nSamplingPoints; ++n)
+    {
+        const float x(xMin + (xMax - xMin) * (static_cast<float>(n) + 0.5f) / static_cast<float>(nSamplingPoints));
+        const float xmin(x - xPitch);
+        const float xmax(x + xPitch);
+
+        try
+        {
+            float zMinU(0.f), zMinV(0.f), zMinW(0.f), zMaxU(0.f), zMaxV(0.f), zMaxW(0.f);
+            LArClusterHelper::GetClusterSpanZ(pClusterU, xmin, xmax, zMinU, zMaxU);
+            LArClusterHelper::GetClusterSpanZ(pClusterV, xmin, xmax, zMinV, zMaxV);
+            LArClusterHelper::GetClusterSpanZ(pClusterW, xmin, xmax, zMinW, zMaxW);
+
+            const float zU(0.5f * (zMinU + zMaxU));
+            const float zV(0.5f * (zMinV + zMaxV));
+            const float zW(0.5f * (zMinW + zMaxW));
+
+            const float dzU(zMaxU - zMinU);
+            const float dzV(zMaxV - zMinV);
+            const float dzW(zMaxW - zMinW);
+            const float dz(LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
+
+            const float zprojU(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, zV, zW));
+            const float zprojV(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_W, TPC_VIEW_U, zW, zU));
+            const float zprojW(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, zU, zV));
+
+            const float deltaSquared(((zU - zprojU) * (zU - zprojU) + (zV - zprojV) * (zV - zprojV) + (zW - zprojW) * (zW - zprojW)) / 3.f);
+            const float sigmaSquared(dzU * dzU + dzV * dzV + dzW * dzW + dz * dz);
+            const float pseudoChi2(deltaSquared / sigmaSquared);
+
+            if (pseudoChi2 < m_pseudoChi2Cut)
+                return true;
+        } 
+        catch(StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayShowerMatchingAlgorithm::BuildAssociationMap(const ParticleList &particleList, ClusterAssociationMap &clusterAssociationMap) const
+{
+    for (ParticleList::const_iterator iter1 = particleList.begin(), iterEnd1 = particleList.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const Particle &particle1 = *iter1;
+
+        for (ParticleList::const_iterator iter2 = iter1, iterEnd2 = particleList.end(); iter2 != iterEnd2; ++iter2)
+        {
+            const Particle &particle2 = *iter2;
+
+            const bool commonU(particle1.m_pClusterU == particle2.m_pClusterU);
+            const bool commonV(particle1.m_pClusterV == particle2.m_pClusterV);
+            const bool commonW(particle1.m_pClusterW == particle2.m_pClusterW);
+
+            if (commonU && commonV && commonW)
+                continue;
+ 
+            if (commonU && commonV && !commonW)
+                 this->BuildAssociationMap(particle1.m_pClusterW, particle2.m_pClusterW, clusterAssociationMap);
+
+            if (commonV && commonW && !commonU)
+                 this->BuildAssociationMap(particle1.m_pClusterU, particle2.m_pClusterU, clusterAssociationMap);
+
+            if (commonW && commonU && !commonV)
+                 this->BuildAssociationMap(particle1.m_pClusterV, particle2.m_pClusterV, clusterAssociationMap);
+        }
+    }
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayShowerMatchingAlgorithm::BuildAssociationMap(const Cluster *const pCluster1, const Cluster *const pCluster2, 
+    ClusterAssociationMap &clusterAssociationMap) const
+{
+    if (pCluster1 == pCluster2)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    if (LArClusterHelper::GetClusterHitType(pCluster1) != LArClusterHelper::GetClusterHitType(pCluster2))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    if (LArClusterHelper::GetClosestDistance(pCluster1, pCluster2) < 5.f)
+    {
+        clusterAssociationMap[pCluster1].insert(const_cast<Cluster*>(pCluster2));
+        clusterAssociationMap[pCluster2].insert(const_cast<Cluster*>(pCluster1));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+ 
+void CosmicRayShowerMatchingAlgorithm::MergeClusters(const ClusterToPfoMap &clusterToPfoMap, const ClusterAssociationMap &clusterAssociationMap) const
+{
+    ClusterAssociationMap clusterMergeMap;
+    this->CollectAssociatedClusters(clusterAssociationMap, clusterMergeMap);
+
+    ClusterVector clusterVector;
+    
+    for (ClusterAssociationMap::const_iterator iter = clusterMergeMap.begin(), iterEnd = clusterMergeMap.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pSeedCluster = const_cast<Cluster*>(iter->first);
+        const ClusterList &mergeList = iter->second;
+        clusterVector.push_back(pSeedCluster);
+        clusterVector.insert(clusterVector.end(), mergeList.begin(), mergeList.end());
+    }
+
+    PfoList pfoList;
+
+    for (ClusterVector::const_iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
+    {
+        ClusterToPfoMap::const_iterator iter2 = clusterToPfoMap.find(*iter1);
+        if (iter2 == clusterToPfoMap.end())
             continue;
 
+        ParticleFlowObject *pPfo = const_cast<ParticleFlowObject*>(iter2->second);
+        pfoList.insert(pPfo);
+    }
+    
+    for (PfoList::const_iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; ++iter)
+    {
+        ParticleFlowObject *pPfo = *iter;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, m_inputPfoListName));
+    }
 
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempList1, tempList2;
-// for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
-// {
-// const Cluster *pPfoCluster = *cIter;
-// tempList1.insert((Cluster*)pPfoCluster);
-// }
-// if (pClusterU) tempList2.insert((Cluster*)pClusterU);
-// if (pClusterV) tempList2.insert((Cluster*)pClusterV);
-// if (pClusterW) tempList2.insert((Cluster*)pClusterW);
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "PFO CLUSTER", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "SUB CLUSTER", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
+    for (ClusterAssociationMap::const_iterator iter1 = clusterMergeMap.begin(), iterEnd1 = clusterMergeMap.end(); iter1 != iterEnd1; ++iter1)
+    {
+        Cluster *pSeedCluster = const_cast<Cluster*>(iter1->first);
+        const ClusterList &mergeList = iter1->second;
 
-        float distanceSquaredSum(0.f);
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pSeedCluster));
+        const std::string clusterListName((TPC_VIEW_U == hitType) ? m_inputClusterListNameU :
+                                          (TPC_VIEW_V == hitType) ? m_inputClusterListNameV : m_inputClusterListNameW);
 
-        if (NULL != pClusterU)
-            distanceSquaredSum += dU * dU;
-
-        if (NULL != pClusterV)
-            distanceSquaredSum += dV * dV;
-
-        if (NULL != pClusterW)
-            distanceSquaredSum += dW * dW;
-
-        if (distanceSquaredSum < std::numeric_limits<float>::epsilon())
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        const float distanceToPFO = std::sqrt(distanceSquaredSum);
-
-        if (distanceToPFO < distanceToBestPFO)
+        for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
         {
-            distanceToBestPFO = distanceToPFO;
-            pBestPFO = pPfo;
+            Cluster *pAssociatedCluster = *iter2;
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
+                clusterListName, clusterListName));
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayShowerMatchingAlgorithm::IsSubCluster(const Cluster *const pPFOCluster, const Cluster *const pSubCluster) const
+void CosmicRayShowerMatchingAlgorithm::CollectAssociatedClusters(const ClusterAssociationMap &clusterAssociationMap, 
+    ClusterAssociationMap &clusterMergeMap) const
 {
-    return (LArClusterHelper::GetLengthSquared(pPFOCluster) > 2.f * LArClusterHelper::GetLengthSquared(pSubCluster));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CosmicRayShowerMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList, ParticleFlowObject *const pParentPfo) const
-{
-    const PfoList *pPfoList = NULL; std::string pfoListName;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
-
-    // TODO - correct these placeholder parameters
-    PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-    pfoParameters.m_particleId = 22;
-    pfoParameters.m_charge = 0;
-    pfoParameters.m_mass = 0.f;
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0., 0., 0.);
-    pfoParameters.m_clusterList = clusterList;
-
-    ParticleFlowObject *pDaughterPfo(NULL);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pDaughterPfo));
-
-    if (!pPfoList->empty())
+    ClusterList vetoList;
+    
+    for (ClusterAssociationMap::const_iterator iter1 = clusterAssociationMap.begin(), iterEnd1 = clusterAssociationMap.end(); 
+        iter1 != iterEnd1; ++iter1)
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
+        Cluster *pSeedCluster = const_cast<Cluster*>(iter1->first);
+
+        if (vetoList.count(pSeedCluster))
+            continue;
+
+        ClusterList mergeList;
+        this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterAssociationMap, vetoList, mergeList);
+
+        if (mergeList.empty())
+            continue;
+
+        clusterMergeMap[pSeedCluster].insert(mergeList.begin(), mergeList.end());
+
+        vetoList.insert(mergeList.begin(), mergeList.end());
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const TwoDSlidingFitResult &CosmicRayShowerMatchingAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
+void CosmicRayShowerMatchingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, Cluster *pCurrentCluster, 
+    const ClusterAssociationMap &clusterAssociationMap, const ClusterList &clusterVetoList, ClusterList &associatedClusterList) const
 {
-    TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
+    ClusterList::const_iterator iter0 = clusterVetoList.find(pCurrentCluster);
 
-    if (m_slidingFitResultMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    if (iter0 != clusterVetoList.end())
+        return;
 
-    return iter->second;
+    ClusterAssociationMap::const_iterator iter1 = clusterAssociationMap.find(pCurrentCluster);
+
+    if (iter1 == clusterAssociationMap.end())
+        return;
+
+    for (ClusterList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
+    {
+        Cluster *pAssociatedCluster = *iter2;
+
+        if (pAssociatedCluster == pSeedCluster)
+            continue;
+
+        if (!associatedClusterList.insert(pAssociatedCluster).second)
+            continue;
+
+        this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterAssociationMap, clusterVetoList, associatedClusterList);
+    }
+
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayShowerMatchingAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
+CosmicRayShowerMatchingAlgorithm::Particle::Particle(const Cluster *pClusterU, const Cluster *pClusterV, const Cluster *pClusterW) :
+    m_pClusterU(pClusterU),
+    m_pClusterV(pClusterV),
+    m_pClusterW(pClusterW)
 {
-    TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
+    if (NULL == m_pClusterU && NULL == m_pClusterV && NULL == m_pClusterW)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)
+    const HitType hitTypeU(NULL == m_pClusterU ? TPC_VIEW_U : LArClusterHelper::GetClusterHitType(m_pClusterU));
+    const HitType hitTypeV(NULL == m_pClusterV ? TPC_VIEW_V : LArClusterHelper::GetClusterHitType(m_pClusterV));
+    const HitType hitTypeW(NULL == m_pClusterW ? TPC_VIEW_W : LArClusterHelper::GetClusterHitType(m_pClusterW));
+
+    if (!(TPC_VIEW_U == hitTypeU && TPC_VIEW_V == hitTypeV && TPC_VIEW_W == hitTypeW))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
@@ -417,44 +509,26 @@ void CosmicRayShowerMatchingAlgorithm::AddToSlidingFitCache(Cluster *const pClus
 
 StatusCode CosmicRayShowerMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputPfoListName", m_outputPfoListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesU", m_inputClusterListNamesU));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesV", m_inputClusterListNamesV));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesW", m_inputClusterListNamesW));
-
-    m_chi2For3ViewMatching = 100.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "Chi2For3ViewMatching", m_chi2For3ViewMatching));
-
-    m_distanceFor3ViewMatching = 10.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceFor3ViewMatching", m_distanceFor3ViewMatching));
-
-    m_distanceFor2ViewMatching = 5.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceFor2ViewMatching", m_distanceFor2ViewMatching));
-
-    m_distanceFor1ViewMatching = 5.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceFor1ViewMatching", m_distanceFor1ViewMatching));
-
-    m_minCaloHitsPerCluster = 2;
+    m_minCaloHitsPerCluster = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
-
-    m_slidingFitWindow = 20;
+   
+    m_xOverlapWindow = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+        "OverlapWindow", m_xOverlapWindow));
+
+    m_distanceForMatching = 2.f; // cm
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DistanceForMatching", m_distanceForMatching));
+
+    m_pseudoChi2Cut = 3.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PseudoChi2Cut", m_pseudoChi2Cut));
 
     return STATUS_CODE_SUCCESS;
 }
