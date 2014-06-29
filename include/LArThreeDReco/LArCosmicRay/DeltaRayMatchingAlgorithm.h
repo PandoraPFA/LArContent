@@ -95,43 +95,36 @@ private:
     typedef std::vector<Particle> ParticleList;
 
     /**
+     *  @brief  Get a vector of Pfos in the provided input Pfo lists
+     *
+     *  @param  inputPfoListName the input Pfo list name
+     *  @param  pfoVector the output vector of Pfos
+     */
+    void GetPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
+
+    /**
      *  @brief  Get a vector containing all available input clusters in the provided cluster list, storing sliding linear fits
      *          in the algorithm cache.
      *
      *  @param  clusterListName the vector of cluster list names
      *  @param  clusterVector to receive the populated cluster vector
      */
-    void GetClusters(const std::string &clusterListName, pandora::ClusterVector &clusterVector);
+    void GetClusters(const std::string &clusterListName, pandora::ClusterVector &clusterVector) const;
 
     /**
      *  @brief  Match clusters using all three views
-     *
-     *  @param  clusters1 the list of clusters in the first view
-     *  @param  clusters2 the list of clusters in the second view
-     *  @param  clusters3 the list of clusters in the third view
      */
-    void ThreeViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
-        const pandora::ClusterVector &clusters3) const;
+    void ThreeViewMatching() const;
 
     /**
      *  @brief  Match clusters using pairs of views
-     *
-     *  @param  clusters1 the list of clusters in the first view
-     *  @param  clusters2 the list of clusters in the second view
-     *  @param  clusters3 the list of clusters in the third view
      */
-    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
-        const pandora::ClusterVector &clusters3) const;
+    void TwoViewMatching() const;
 
     /**
      *  @brief  Match clusters using single views
-     *
-     *  @param  clusters1 the list of clusters in the first view
-     *  @param  clusters2 the list of clusters in the second view
-     *  @param  clusters3 the list of clusters in the third view
      */
-    void OneViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
-        const pandora::ClusterVector &clusters3) const;
+    void OneViewMatching() const;
 
     /**
      *  @brief  Match clusters using all three views
@@ -207,12 +200,20 @@ private:
     float GetDistanceSquaredToPfo(const pandora::Cluster *const pCluster, const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Create a new pfo using a provided list of clusters and set it to be the daughter of a provided parent pfo
+     *  @brief  Create a new Pfo from an input cluster list and set up a parent/daughter relationship
      *
      *  @param  clusterList the list of clusters
      *  @param  pParentPfo address of the parent pfo
      */
     void CreateDaughterPfo(const pandora::ClusterList &clusterList, pandora::ParticleFlowObject *const pParentPfo) const;
+  
+    /**
+     *  @brief  Merge an input cluster list with an existing daughter Pfo
+     *
+     *  @param  clusterList the list of clusters
+     *  @param  pParentPfo address of the parent pfo
+     */
+    void AddToDaughterPfo(const pandora::ClusterList &clusterList, pandora::ParticleFlowObject *const pParentPfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
