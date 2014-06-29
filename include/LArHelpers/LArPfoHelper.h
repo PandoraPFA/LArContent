@@ -30,7 +30,7 @@ public:
      *  @param  hitType the cluster hit type
      *  @param  clusterVector the output vector of clusters
      */
-    static void GetClusters(const pandora::PfoVector &pfoVector, const pandora::HitType hitType, pandora::ClusterVector &clusterVector);
+    static void GetClusters(const pandora::PfoVector &pfoVector, const pandora::HitType &hitType, pandora::ClusterVector &clusterVector);
 
     /**
      *  @brief  Get a list of clusters of a particular hit type from a given pfo
@@ -39,7 +39,25 @@ public:
      *  @param  hitType the cluster hit type
      *  @param  clusterVector the output vector of clusters
      */
-    static void GetClusters(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType hitType, pandora::ClusterVector &clusterVector);
+    static void GetClusters(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::ClusterVector &clusterVector);
+
+    /**
+     *  @brief  Calculate length of Pfo using 2D clusters
+     *
+     *  @param  pPfo the input Pfo
+     *
+     *  @return  length variable
+     */
+    static float GetTwoDLengthSquared(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Calculate length of Pfo using 2D clusters
+     *
+     *  @param  pPfo the input Pfo
+     *
+     *  @return  length variable
+     */
+    static float GetThreeDLengthSquared(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Get closest distance between Pfo and cluster

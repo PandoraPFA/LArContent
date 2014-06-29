@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArCosmicRay/CosmicRayGrowingAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h"
 
 namespace lar
 {
@@ -18,7 +18,7 @@ namespace lar
 /**
  *  @brief  CosmicRayShowerGrowingAlgorithm class
  */
-class CosmicRayShowerGrowingAlgorithm : public CosmicRayGrowingAlgorithm
+class CosmicRayShowerGrowingAlgorithm : public ClusterGrowingAlgorithm
 {
 public:
     /**
@@ -31,31 +31,47 @@ public:
     };
 
 private:
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &cleanClusters) const;
     void GetListOfSeedClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &seedClusters) const;
 
     /**
-     *  @brief  Use primary Pfos to select seed clusters
+     *  @brief  Get a vector of Pfos from an input Pfo list name
      *
-     *  @param  pfoVector the input vector of primary Pfos
-     *  @param  hitType the cluster hit type
-     *  @param  seedClusters the output vector of seed clusters
+     *  @param  inputPfoListName the input Pfo list name
+     *  @param  pfoVector the output vector of Pfos
      */
-    void SelectPrimarySeeds(const pandora::PfoVector &pfoVector, const pandora::HitType hitType,
-        pandora::ClusterVector &seedClusters) const;
+    void GetPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
 
     /**
-     *  @brief  Use secondary Pfos to select seed clusters
+     *  @brief  Select seed cluster for growing
      *
-     *  @param  pfoVector the input vector of secondary Pfos
+     *  @param  clusterVector the input vector of clusters
+     *  @param  pfoVector the input vector of pPfos
      *  @param  hitType the cluster hit type
      *  @param  seedClusters the output vector of seed clusters
      */
-    void SelectSecondarySeeds(const pandora::PfoVector &pfoVector, const pandora::HitType hitType,
-        pandora::ClusterVector &seedClusters) const;
+    void SelectSeedClusters(const pandora::ClusterVector &inputClusters, const pandora::PfoVector &pfoVector, 
+        const pandora::HitType &hitType, pandora::ClusterVector &seedClusters) const;
+
+    /**
+     *  @brief  Determine whether a Pfo is a possible delta ray
+     *
+     *  @param  pPfo the input particle flow object
+     *  @param  pfoVector the input vector of particle flow vectors
+     *
+     *  @return boolean
+     */
+    bool IsPossibleDeltaRay(const pandora::ParticleFlowObject *const pPfo, const pandora::PfoVector &pfoVector) const;
+
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float        m_maxPrimaryClusterLength;         ///< The maximum length of primary Pfo's that can be taken as seed clusters
+    std::string     m_inputPfoListName;                ///< The primary Pfo list name
+
+    unsigned int    m_minCaloHitsPerCluster;           ///< The min number of calo hits per candidate cluster
+    unsigned int    m_minSeedClusterCaloHits;          ///< 
+    float           m_maxSeedClusterLength;            ///< 
+    float           m_maxSeedClusterDisplacement;      ///< 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
