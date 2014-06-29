@@ -12,6 +12,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 
@@ -24,11 +25,11 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        m_primaryPfoListName, pPfoList));
+        m_inputPfoListName, pPfoList));
 
     if (NULL == pPfoList)
     {
-        std::cout << "DeltaRayMatchingAlgorithm: could not find pfo list " << m_primaryPfoListName << std::endl;
+        std::cout << "DeltaRayMatchingAlgorithm: could not find pfo list " << m_inputPfoListName << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -397,27 +398,40 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Clus
     // TODO: Do this with 3D hits rather than 2D hits
 
     const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_primaryPfoListName, pPfoList));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     if (NULL == pPfoList)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     float numViews(0.f);
+    float lengthSquared(0.f);
 
     if (NULL != pCluster1)
+    {
+        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster1);
         numViews += 1.f;
+    }
 
     if (NULL != pCluster2)
+    {
+        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster2);
         numViews += 1.f;
+    }
 
     if (NULL != pCluster3)
+    {
+        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster3);
         numViews += 1.f;
+    }
 
     float bestDistanceSquared(numViews * m_distanceForMatching * m_distanceForMatching);
 
     for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
     {
         ParticleFlowObject *pPfo = *iter;
+
+        if (lengthSquared > LArPfoHelper::GetTwoDLengthSquared(pPfo))
+            continue;
 
         try
         {
@@ -450,23 +464,10 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Clus
 
 float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pCluster, const ParticleFlowObject *const pPfo) const
 {
-    const ClusterList &pfoClusterList(pPfo->GetClusterList());
-    for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
-    {
-        const Cluster *const pPfoCluster = *cIter;
-        const HitType pfoClusterHitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
+    ClusterVector pfoClusterVector;
+    LArPfoHelper::GetClusters(pPfo, LArClusterHelper::GetClusterHitType(pCluster), pfoClusterVector);
 
-        if (pfoClusterHitType != LArClusterHelper::GetClusterHitType(pCluster))
-            continue;
-
-        if (LArClusterHelper::GetLengthSquared(pPfoCluster) < 2.f * LArClusterHelper::GetLengthSquared(pCluster))
-            continue;
-
-        const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster, pPfoCluster));
-        return thisDistance * thisDistance;
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    return LArClusterHelper::GetClosestDistance(pCluster, pfoClusterVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -490,7 +491,7 @@ void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList
 
     if (!pPfoList->empty())
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_secondaryPfoListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
     }
 }
@@ -577,8 +578,8 @@ float DeltaRayMatchingAlgorithm::Particle::GetLengthSquared() const
 
 StatusCode DeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryPfoListName", m_primaryPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SecondaryPfoListName", m_secondaryPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
