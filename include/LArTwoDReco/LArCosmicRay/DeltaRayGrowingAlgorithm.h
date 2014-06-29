@@ -57,9 +57,9 @@ private:
 
     std::string m_inputPfoListName;                 ///< The input Pfo list name
 
-    unsigned int m_minCaloHitsPerCluster;           ///< The min number of calo hits per candidate cluster
-    unsigned int m_minSeedClusterCaloHits;          ///< 
-    float        m_maxSeedClusterDisplacement;      ///< 
+    unsigned int m_minCaloHitsPerCluster;           ///< The minimum number of calo hits per candidate cluster
+    unsigned int m_minSeedClusterCaloHits;          ///< The minimum number of calo hits for seed clusters
+    float        m_maxSeedClusterDisplacement;      ///< The maximum displacement of a seed cluster from a primary track
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -89,7 +89,13 @@ void DeltaRayGrowingAlgorithm::SelectSeedClusters(const ClusterVector &inputClus
         {
             const ParticleFlowObject *pPfo = *iter2;
 
-            if (LArPfoHelper::GetClosestDistance(pPfo, pCluster) < m_maxSeedClusterDisplacement)
+            ClusterVector pfoClusters;
+            LArPfoHelper::GetClusters(pPfo, clusterHitType, pfoClusters);
+
+            if (pfoClusters.empty())
+                continue;
+
+            if (LArClusterHelper::GetClosestDistance(pCluster, pfoClusters) < m_maxSeedClusterDisplacement)
             {
                 isSeed = true;
                 break;
