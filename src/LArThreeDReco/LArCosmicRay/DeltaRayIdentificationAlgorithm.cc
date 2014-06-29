@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 
@@ -19,19 +20,19 @@ namespace lar
 
 StatusCode DeltaRayIdentificationAlgorithm::Run()
 {
-    PfoList primaryPfos, secondaryPfos;
-    this->GetPfos(m_primaryPfoListName, primaryPfos);
-    this->GetPfos(m_secondaryPfoListName, secondaryPfos);
+    PfoList inputPfos, outputPfos;
+    this->GetPfos(m_inputPfoListName, inputPfos);
+    this->GetPfos(m_outputPfoListName, outputPfos);
 
-    if (primaryPfos.empty())
+    if (inputPfos.empty())
     {
-        std::cout << "DeltaRayIdentificationAlgorithm: could not find pfo list " << m_primaryPfoListName << std::endl;
+        std::cout << "DeltaRayIdentificationAlgorithm: could not find pfo list " << m_inputPfoListName << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
     // Build parent/daughter associations (currently using length and proximity)
     PfoAssociationMap pfoAssociationMap;
-    this->BuildAssociationMap(primaryPfos, secondaryPfos, pfoAssociationMap);
+    this->BuildAssociationMap(inputPfos, outputPfos, pfoAssociationMap);
 
     // Create the parent/daughter links
     PfoList daughterPfoList;
@@ -39,7 +40,7 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
 
     if (!daughterPfoList.empty())
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_primaryPfoListName, m_secondaryPfoListName,
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_inputPfoListName, m_outputPfoListName,
             daughterPfoList));
     }
 
@@ -62,15 +63,15 @@ void DeltaRayIdentificationAlgorithm::GetPfos(const std::string inputPfoListName
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &primaryPfos, const PfoList &secondaryPfos,
+void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &inputPfos, const PfoList &outputPfos,
     PfoAssociationMap &pfoAssociationMap) const
 {
     PfoList allPfos;
-    allPfos.insert(primaryPfos.begin(), primaryPfos.end());
-    allPfos.insert(secondaryPfos.begin(), secondaryPfos.end());
+    allPfos.insert(inputPfos.begin(), inputPfos.end());
+    allPfos.insert(outputPfos.begin(), outputPfos.end());
 
     // Loop over possible daughter Pfos in primary list
-    for (PfoList::const_iterator iter1 = primaryPfos.begin(), iterEnd1 = primaryPfos.end(); iter1 != iterEnd1; ++iter1)
+    for (PfoList::const_iterator iter1 = inputPfos.begin(), iterEnd1 = inputPfos.end(); iter1 != iterEnd1; ++iter1)
     {
         const ParticleFlowObject *pDaughterPfo = *iter1;
 
@@ -103,7 +104,7 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &primary
         if (pBestParentPfo->GetParentPfoList().empty())
         {
             // Check: parent shouldn't live in the secondary list
-            if (secondaryPfos.count(pBestParentPfo))
+            if (outputPfos.count(pBestParentPfo))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             pfoAssociationMap.insert(PfoAssociationMap::value_type(pDaughterPfo, pBestParentPfo));
@@ -113,7 +114,7 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &primary
         else
         {
             // Check: parent shouldn't live in the primary list
-            if (primaryPfos.count(pBestParentPfo))
+            if (inputPfos.count(pBestParentPfo))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             // Check: there should only be one parent
@@ -238,8 +239,8 @@ ParticleFlowObject *DeltaRayIdentificationAlgorithm::GetParent(const PfoAssociat
 
 StatusCode DeltaRayIdentificationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PrimaryPfoListName", m_primaryPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SecondaryPfoListName", m_secondaryPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
 
     float maxDisplacement = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

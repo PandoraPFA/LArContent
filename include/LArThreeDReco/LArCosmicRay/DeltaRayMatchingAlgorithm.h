@@ -216,8 +216,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_primaryPfoListName;        ///< The input pfo list name
-    std::string             m_secondaryPfoListName;      ///< The output pfo list name for new daughter particles
+    std::string             m_inputPfoListName;          ///< The input pfo list name
+    std::string             m_outputPfoListName;         ///< The output pfo list name for new daughter particles
 
     std::string             m_inputClusterListNameU;     ///< The input cluster list name for the u view
     std::string             m_inputClusterListNameV;     ///< The input cluster list name for the v view

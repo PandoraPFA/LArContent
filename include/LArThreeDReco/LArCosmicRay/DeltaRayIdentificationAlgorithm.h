@@ -44,11 +44,11 @@ private:
     /**
      *  @brief Build parent/daughter associations between PFOs
      *
-     *  @param primaryPfos the input list of current parent Pfos
-     *  @param secondaryPfos the input list of current daughter Pfos
+     *  @param inputPfos the input list of current parent Pfos
+     *  @param outputPfos the input list of current daughter Pfos
      *  @param pfoAssociationMap the output map of parent/daughter associations
      */
-    void BuildAssociationMap(const pandora::PfoList &primaryPfos, const pandora::PfoList &secondaryPfos,
+    void BuildAssociationMap(const pandora::PfoList &inputPfos, const pandora::PfoList &outputPfos,
         PfoAssociationMap &pfoAssociationMap) const;
 
     /**
@@ -83,9 +83,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_primaryPfoListName;           ///< The parent pfo list name
-    std::string     m_secondaryPfoListName;         ///< The daughter pfo list name
-    float           m_maxDisplacementSquared;       ///< Maximum allowed distance of delta ray from parent cosmic ray
+    std::string     m_inputPfoListName;          ///< The parent pfo list name
+    std::string     m_outputPfoListName;         ///< The daughter pfo list name
+    float           m_maxDisplacementSquared;    ///< Maximum allowed distance of delta ray from parent cosmic ray
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
