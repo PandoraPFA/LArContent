@@ -46,60 +46,29 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster
     LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
     LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
 
-    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - m_samplingPitch);
-    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + m_samplingPitch);
+    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - m_xOverlapWindow);
+    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + m_xOverlapWindow);
     const float xOverlap(xMax - xMin);
 
     if (xOverlap < std::numeric_limits<float>::epsilon())
         return;
 
-    // Comparison of views
-    float figureOfMerit(0.f);
+    // Requirements on 3D matching
+    const float u(LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax));
+    const float v(LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax));
+    const float w(LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax));
 
-    const unsigned int nSamplingPoints(1 + static_cast<unsigned int>(xOverlap / m_samplingPitch));
+    const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
+    const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
+    const float wu2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_W, TPC_VIEW_U, w, u));
 
-    for (unsigned int n = 0; n<nSamplingPoints; ++n)
-    {
-        const float x(xMin + (xMax - xMin) * (static_cast<float>(n) + 0.5f) / static_cast<float>(nSamplingPoints));
-        const float xmin(x - m_samplingPitch);
-        const float xmax(x + m_samplingPitch);
+    const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
 
-        try
-        {
-            float zMinU(0.f), zMinV(0.f), zMinW(0.f), zMaxU(0.f), zMaxV(0.f), zMaxW(0.f);
-            LArClusterHelper::GetClusterSpanZ(pClusterU, xmin, xmax, zMinU, zMaxU);
-            LArClusterHelper::GetClusterSpanZ(pClusterV, xmin, xmax, zMinV, zMaxV);
-            LArClusterHelper::GetClusterSpanZ(pClusterW, xmin, xmax, zMinW, zMaxW);
-
-            const float u(0.5f * (zMinU + zMaxU));
-            const float v(0.5f * (zMinV + zMaxV));
-            const float w(0.5f * (zMinW + zMaxW));
-
-            const float du(zMaxU - zMinU);
-            const float dv(zMaxV - zMinV);
-            const float dw(zMaxW - zMinW);
-            const float dz(LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
-
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
-            const float wu2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_W, TPC_VIEW_U, w, u));
-
-            const float deltaSquared(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
-            const float sigmaSquared(du * du + dv * dv + dw * dw + dz * dz);
-            const float pseudoChi2(deltaSquared / sigmaSquared);
-
-            if (pseudoChi2 < m_pseudoChi2Cut)
-                figureOfMerit += std::sqrt(sigmaSquared) / dz;
-        }
-        catch (StatusCodeException &)
-        {
-        }
-    }
-
-    if (figureOfMerit < std::numeric_limits<float>::epsilon())
+    if (pseudoChi2 > m_pseudoChi2Cut)
         return;
 
-// std::cout << " FIGURE OF MERIT = " << figureOfMerit << std::endl;
+// --- BEGIN EVENT DISPLAY ---
+// std::cout << " PseudoChi2 = " << pseudoChi2 << std::endl;
 // ClusterList tempListU, tempListV, tempListW;
 // tempListU.insert(pClusterU);
 // tempListV.insert(pClusterV);
@@ -108,8 +77,9 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster
 // PANDORA_MONITORING_API(VisualizeClusters(&tempListV, "Clusters (V)", BLUE));
 // PANDORA_MONITORING_API(VisualizeClusters(&tempListW, "Clusters (W)", RED));
 // PANDORA_MONITORING_API(ViewEvent());
+// --- END EVENT DISPLAY ---
 
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, figureOfMerit);
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, true);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,11 +130,11 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));
 
-    m_samplingPitch = 3.f;
+    m_xOverlapWindow = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SamplingPitch", m_samplingPitch));
+        "OverlapWindow", m_xOverlapWindow));
 
-    m_pseudoChi2Cut = 3.f;
+    m_pseudoChi2Cut = 20.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 
