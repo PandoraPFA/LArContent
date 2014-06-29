@@ -83,7 +83,7 @@ void DeltaRayMatchingAlgorithm::GetClusters(const std::string &inputClusterListN
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayMatchingAlgorithm::ThreeViewMatching() const
-{    
+{
     ClusterVector clustersU, clustersV, clustersW;
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
@@ -115,7 +115,7 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayMatchingAlgorithm::OneViewMatching() const
-{   
+{
     ClusterVector clustersU, clustersV, clustersW;
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
@@ -401,8 +401,10 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
             if (pseudoChi2 < m_pseudoChi2Cut)
                 return true;
         }
-        catch (StatusCodeException &)
+        catch(StatusCodeException &statusCodeException)
         {
+            if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
+                throw statusCodeException;
         }
     }
 
@@ -533,7 +535,7 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         Cluster* pParentCluster = *(pfoClusters.begin());
-    
+
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
             clusterListName, clusterListName));
     }
