@@ -89,7 +89,7 @@ void CosmicRayShowerGrowingAlgorithm::SelectSeedClusters(const ClusterVector &in
             LArPfoHelper::GetClusters(pPfo, clusterHitType, secondaryClusters);
         }
     }
-
+    
     // Select short primary clusters
     for (ClusterVector::const_iterator cIter = primaryClusters.begin(), cIterEnd = primaryClusters.end(); cIter != cIterEnd; ++cIter)
     {  
@@ -103,7 +103,9 @@ void CosmicRayShowerGrowingAlgorithm::SelectSeedClusters(const ClusterVector &in
 
     // Select all secondary clusters
     for (ClusterVector::const_iterator cIter = secondaryClusters.begin(), cIterEnd = secondaryClusters.end(); cIter != cIterEnd; ++cIter)
+    {
         seedClusters.push_back(*cIter);
+    }
 
     // Select other possible delta rays
     for (ClusterVector::const_iterator cIter = inputClusters.begin(), cIterEnd = inputClusters.end(); cIter != cIterEnd; ++cIter)
@@ -113,8 +115,10 @@ void CosmicRayShowerGrowingAlgorithm::SelectSeedClusters(const ClusterVector &in
         if (pCluster->GetNCaloHits() < m_minSeedClusterCaloHits)
             continue;
 
-        const float primaryDistance(LArClusterHelper::GetClosestDistance(pCluster, primaryClusters));
-        const float secondaryDistance(LArClusterHelper::GetClosestDistance(pCluster, secondaryClusters));
+        const float primaryDistance(primaryClusters.empty() ? std::numeric_limits<float>::max() : 
+            LArClusterHelper::GetClosestDistance(pCluster, primaryClusters));
+        const float secondaryDistance(secondaryClusters.empty() ? std::numeric_limits<float>::max() : 
+            LArClusterHelper::GetClosestDistance(pCluster, secondaryClusters));
 
         if (primaryDistance < m_maxSeedClusterDisplacement && secondaryDistance > m_maxSeedClusterDisplacement)
         {
