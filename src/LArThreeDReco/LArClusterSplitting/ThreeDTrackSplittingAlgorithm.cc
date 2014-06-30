@@ -72,17 +72,17 @@ PANDORA_MONITORING_API(VisualizeClusters(&tempClusterListW, "Clusters (W)", RED)
 
 for(CartesianPointList::const_iterator iterU = tempMarkerListU.begin(), iterEndU = tempMarkerListU.end(); iterU != iterEndU; ++iterU){
 const CartesianVector& positionU = *iterU;
-PANDORA_MONITORING_API(AddMarkerToVisualization(&positionU, "vertex (U)", GREEN, 1.75));
+PANDORA_MONITORING_API(AddMarkerToVisualization(&positionU, "vertex (U)", GREEN, 2));
 }
 
 for(CartesianPointList::const_iterator iterV = tempMarkerListV.begin(), iterEndV = tempMarkerListV.end(); iterV != iterEndV; ++iterV){
 const CartesianVector& positionV = *iterV;
-PANDORA_MONITORING_API(AddMarkerToVisualization(&positionV, "vertex (V)", BLUE, 1.75));
+PANDORA_MONITORING_API(AddMarkerToVisualization(&positionV, "vertex (V)", BLUE, 2));
 }
 
 for(CartesianPointList::const_iterator iterW = tempMarkerListW.begin(), iterEndW = tempMarkerListW.end(); iterW != iterEndW; ++iterW){
 const CartesianVector& positionW = *iterW;
-PANDORA_MONITORING_API(AddMarkerToVisualization(&positionW, "vertex (W)", RED, 1.75));
+PANDORA_MONITORING_API(AddMarkerToVisualization(&positionW, "vertex (W)", RED, 2));
 }
 
 PANDORA_MONITORING_API(ViewEvent());
