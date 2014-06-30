@@ -314,7 +314,7 @@ void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::SelectInputClusters()
+void ThreeDBaseAlgorithm<T>::SelectAllInputClusters()
 {
     this->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
     this->SelectInputClusters(m_pInputClusterListV, m_clusterListV);
@@ -364,7 +364,7 @@ StatusCode ThreeDBaseAlgorithm<T>::Run()
             throw StatusCodeException(STATUS_CODE_SUCCESS);
         }
 
-        this->SelectInputClusters();
+        this->SelectAllInputClusters();
         this->PreparationStep();
         this->PerformMainLoop();
         this->ExamineTensor();

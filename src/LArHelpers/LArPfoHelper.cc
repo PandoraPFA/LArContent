@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArClusterHelper.cc
+ *  @file   LArContent/src/LArHelpers/LArPfoHelper.cc
  *
- *  @brief  Implementation of the cluster helper class.
+ *  @brief  Implementation of the pfo helper class.
  *
  *  $Log: $
  */
@@ -22,8 +22,6 @@ using namespace pandora;
 namespace lar
 {
 
-//------------------------------------------------------------------------------------------------------------------------------------------
- 
 void LArPfoHelper::GetClusters(const PfoVector &pfoVector, const HitType &hitType, ClusterVector &clusterVector)
 {
     for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
@@ -48,7 +46,7 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType &hi
         clusterVector.push_back(pPfoCluster);
     }
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------ 
 
 float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
@@ -114,8 +112,7 @@ float LArPfoHelper::GetClosestDistance(const ParticleFlowObject *const pPfo, con
 
     return bestDistance;
 }
-  
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2)
@@ -125,7 +122,7 @@ float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, con
 
     LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_U, clusterVectorU1);
     LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_V, clusterVectorV1);
-    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_W, clusterVectorW1);    
+    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_W, clusterVectorW1);
 
     LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_U, clusterVectorU2);
     LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_V, clusterVectorV2);

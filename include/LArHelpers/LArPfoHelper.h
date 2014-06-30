@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArHelpers/LArPfoHelper.h
  *
- *  @brief  Header file for the cluster helper class.
+ *  @brief  Header file for the pfo helper class.
  *
  *  $Log: $
  */
@@ -20,9 +20,6 @@ namespace lar
 class LArPfoHelper
 {
 public:
-
-
-
     /**
      *  @brief  Get a list of clusters of a particular hit type from a vector of pfos
      *
@@ -73,7 +70,7 @@ public:
      *  @param  pPfo the address of the first Pfo
      *  @param  pPfo the address of the second Pfo
      */
-    static float GetTwoDSeparation(const pandora::ParticleFlowObject *const pPfo1,  const pandora::ParticleFlowObject *const pPfo2);
+    static float GetTwoDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
 
     /**
      *  @brief  Get distance between two Pfos using 3D clusters
@@ -81,7 +78,7 @@ public:
      *  @param  pPfo the address of the first Pfo
      *  @param  pPfo the address of the second Pfo
      */
-    static float GetThreeDSeparation(const pandora::ParticleFlowObject *const pPfo1,  const pandora::ParticleFlowObject *const pPfo2);
+    static float GetThreeDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
 
     /**
      *  @brief  Sort pfos by number of constituent hits
@@ -97,9 +94,6 @@ public:
      *  @param  xmlHandle the relevant xml handle
      */
     static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-private:
- 
 };
 
 } // namespace lar
