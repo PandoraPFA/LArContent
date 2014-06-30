@@ -273,12 +273,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     CartesianVector endPosition3D(0.f, 0.f, 0.f);
     LArGeometryHelper::MergeTwoPositions3D(hitType1, hitType2, endPosition1, endPosition2, endPosition3D, endChi2);
 
-    const CartesianVector vtxProjection1(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType1));
-    const CartesianVector vtxProjection2(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType2));
     const CartesianVector vtxProjection3(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType3));
-
-    const CartesianVector endProjection1(LArGeometryHelper::ProjectPosition(endPosition3D, hitType1));
-    const CartesianVector endProjection2(LArGeometryHelper::ProjectPosition(endPosition3D, hitType2));
     const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(endPosition3D, hitType3));
 
     const float samplingPitch(0.5f * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
