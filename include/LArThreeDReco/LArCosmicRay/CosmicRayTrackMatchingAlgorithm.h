@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h
  *
- *  @brief  Header file for the cosmic ray splitting algorithm class.
+ *  @brief  Header file for the cosmic ray track matching algorithm class.
  *
  *  $Log: $
  */

@@ -193,7 +193,7 @@ protected:
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
      */
-    virtual void SelectInputClusters();
+    virtual void SelectAllInputClusters();
 
     /**
      *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters
