@@ -41,19 +41,33 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
     try
     {
-        // Input lists
+        // Load List of MC particles
         const MCParticleList *pMCParticleList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+        (void) PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList);
 
+        if (NULL == pMCParticleList)
+        {
+            std::cout << "ParticleMonitoringAlgorithm: cannot find mc particle list " << m_mcParticleListName << std::endl;
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        }
+
+        // Load List of Calo Hits
         const CaloHitList *pCaloHitList = NULL;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+        (void) PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList);
 
+        if (NULL == pCaloHitList)
+        {
+            std::cout << "ParticleMonitoringAlgorithm: cannot find calo hit list " << m_caloHitListName << std::endl;
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        }
+
+        // Load List of Pfos
         const PfoList *pPfoList = NULL;
         (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
         const PfoList pfoList((NULL != pPfoList) ? PfoList(*pPfoList) : PfoList());
         nPfos = pfoList.size();
 
-        // Obtain required information
+        // Match Pfos and MC Particles
         MCRelationMap mcPrimaryMap;      // [particles -> primary particle]
         this->GetMCParticleMaps(pMCParticleList, mcPrimaryMap);
 
@@ -71,7 +85,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
         nMCParticles = trueHitMap.size();
 
-        // Populate tree elements
+        // Write out reco/true information
         for (MCContributionMap::const_iterator iter = trueHitMap.begin(), iterEnd = trueHitMap.end(); iter != iterEnd; ++iter)
         {
             const MCParticle *pMCParticle3D(iter->first);
@@ -142,7 +156,6 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     }
     catch (StatusCodeException &statusCodeException)
     {
-        std::cout << "ParticleMonitoringAlgorithm: exception on processing event" << std::endl;
         if ((STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode()) &&
             (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode()))
             throw statusCodeException;
