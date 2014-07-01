@@ -42,13 +42,51 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
     const Cluster* pFirstCluster = *(inputClusters.begin());
     const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pFirstCluster));
 
-    // Select seed clusters for growing
-    PfoVector inputPfos;
-    this->GetPfos(m_inputPfoListName, inputPfos);
-    if (inputPfos.empty())
-        return;
+    // Get parent and daughter Pfos
+    PfoVector parentPfos, daughterPfos;
+    this->GetPfos(m_parentPfoListName, parentPfos);
+    this->GetPfos(m_daughterPfoListName, daughterPfos);
+    
+    // Sort parent and daughter clusters
+    ClusterVector parentClusters, daughterClusters;
+    LArPfoHelper::GetClusters(parentPfos, clusterHitType, parentClusters);
+    LArPfoHelper::GetClusters(daughterPfos, clusterHitType, daughterClusters);
 
-    this->SelectSeedClusters(inputClusters, inputPfos, clusterHitType, seedClusters);
+     // Select short parent clusters
+    for (ClusterVector::const_iterator cIter = parentClusters.begin(), cIterEnd = parentClusters.end(); cIter != cIterEnd; ++cIter)
+    {  
+        Cluster* pCluster = *cIter;
+
+        if (LArClusterHelper::GetLengthSquared(pCluster) > m_maxSeedClusterLength  * m_maxSeedClusterLength)
+            continue;
+
+        seedClusters.push_back(pCluster);
+    }
+
+    // Select all secondary clusters
+    for (ClusterVector::const_iterator cIter = daughterClusters.begin(), cIterEnd = daughterClusters.end(); cIter != cIterEnd; ++cIter)
+    {
+        seedClusters.push_back(*cIter);
+    }
+
+    // Select other possible delta rays
+    for (ClusterVector::const_iterator cIter = inputClusters.begin(), cIterEnd = inputClusters.end(); cIter != cIterEnd; ++cIter)
+    {
+        Cluster* pCluster = *cIter;
+ 
+        if (pCluster->GetNCaloHits() < m_minSeedClusterCaloHits)
+            continue;
+
+        const float parentDistance(parentClusters.empty() ? std::numeric_limits<float>::max() : 
+            LArClusterHelper::GetClosestDistance(pCluster, parentClusters));
+        const float daughterDistance(daughterClusters.empty() ? std::numeric_limits<float>::max() : 
+            LArClusterHelper::GetClosestDistance(pCluster, daughterClusters));
+
+        if (parentDistance < m_maxSeedClusterDisplacement && daughterDistance > m_maxSeedClusterDisplacement)
+        {
+            seedClusters.push_back(pCluster);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -70,48 +108,10 @@ void DeltaRayGrowingAlgorithm::GetPfos(const std::string inputPfoListName, PfoVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayGrowingAlgorithm::SelectSeedClusters(const ClusterVector &inputClusters, const PfoVector &inputPfos,
-    const HitType clusterHitType, ClusterVector &seedClusters) const
-{
-    for (ClusterVector::const_iterator iter1 = inputClusters.begin(), iterEnd1 = inputClusters.end(); iter1 != iterEnd1; ++iter1)
-    {
-        Cluster *pCluster = *iter1;
-
-        if (clusterHitType != LArClusterHelper::GetClusterHitType(pCluster))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        if (pCluster->GetNCaloHits() < m_minSeedClusterCaloHits)
-            continue;
-
-        bool isSeed(false);
-
-        for (PfoVector::const_iterator iter2 = inputPfos.begin(), iterEnd2 = inputPfos.end(); iter2 != iterEnd2; ++iter2)
-        {
-            const ParticleFlowObject *pPfo = *iter2;
-
-            ClusterVector pfoClusters;
-            LArPfoHelper::GetClusters(pPfo, clusterHitType, pfoClusters);
-
-            if (pfoClusters.empty())
-                continue;
-
-            if (LArClusterHelper::GetClosestDistance(pCluster, pfoClusters) < m_maxSeedClusterDisplacement)
-            {
-                isSeed = true;
-                break;
-            }
-        }
-
-        if (isSeed)
-            seedClusters.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode DeltaRayGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {       
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentPfoListName", m_parentPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterPfoListName", m_daughterPfoListName));
 
     m_minCaloHitsPerCluster = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -120,6 +120,10 @@ StatusCode DeltaRayGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_minSeedClusterCaloHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSeedClusterCaloHits", m_minSeedClusterCaloHits));
+
+    m_maxSeedClusterLength = 10.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxSeedClusterLength", m_maxSeedClusterLength));
 
     m_maxSeedClusterDisplacement = 1.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

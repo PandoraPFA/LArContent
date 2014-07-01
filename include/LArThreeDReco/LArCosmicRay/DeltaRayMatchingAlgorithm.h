@@ -217,12 +217,12 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_inputPfoListName;          ///< The input pfo list name
-    std::string             m_outputPfoListName;         ///< The output pfo list name for new daughter particles
+    std::string             m_parentPfoListName;          ///< The parent pfo list name
+    std::string             m_daughterPfoListName;        ///< The daughter pfo list name for new daughter particles
 
-    std::string             m_inputClusterListNameU;     ///< The input cluster list name for the u view
-    std::string             m_inputClusterListNameV;     ///< The input cluster list name for the v view
-    std::string             m_inputClusterListNameW;     ///< The input cluster list name for the w view
+    std::string             m_inputClusterListNameU;      ///< The input cluster list name for the u view
+    std::string             m_inputClusterListNameV;      ///< The input cluster list name for the v view
+    std::string             m_inputClusterListNameW;      ///< The input cluster list name for the w view
 
     unsigned int            m_minCaloHitsPerCluster;      ///< The min number of calo hits per candidate cluster
     float                   m_xOverlapWindow;             ///< The maximum allowed displacement in x position

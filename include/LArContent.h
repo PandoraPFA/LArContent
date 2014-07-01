@@ -29,7 +29,6 @@
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
-#include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
@@ -65,7 +64,6 @@
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerGrowingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
@@ -103,7 +101,6 @@ public:
         d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
         d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
-        d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
         d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
         d("LArDeltaRayIdentification",              lar::DeltaRayIdentificationAlgorithm::Factory)                              \
         d("LArDeltaRayMatching",                    lar::DeltaRayMatchingAlgorithm::Factory)                                    \
@@ -125,7 +122,6 @@ public:
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
-        d("LArCosmicRayShowerGrowing",              lar::CosmicRayShowerGrowingAlgorithm::Factory)                              \
         d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
         d("LArDeltaRayGrowing",                     lar::DeltaRayGrowingAlgorithm::Factory)                                     \
