@@ -56,12 +56,12 @@ private:
      *
      *  @param pDaughterPfo the input daughter Pfo
      *  @param pParentPfo the input parent Pfo
-     *  @param displacementSquared the average displacement squared between parent and daughter
+     *  @param displacement the average displacement between parent and daughter
      *
      *  @return boolean
      */
     bool IsAssociated(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo,
-        float &displacementSquared) const;
+        float &displacement) const;
 
     /**
      *  @brief Calculate 2D separation between two Pfos
@@ -69,9 +69,9 @@ private:
      *  @param pDaughterPfo the input daughter Pfo
      *  @param pParentPfo the input parent Pfo
      *
-     *  @return average displacement squared between parent and daughter
+     *  @return average displacement between parent and daughter
      */
-    float GetDisplacementSquared(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo) const;
+    float GetTwoDSeparation(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo) const;
 
     /**
      *  @brief Calculate 2D separation between two Pfos
@@ -80,16 +80,16 @@ private:
      *  @param hitType the hit type
      *  @param vertexList the list of possible vertex positions
      */
-    void GetTwoDVertexList(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, 
+    void GetTwoDVertexList(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType,
         pandora::CartesianPointList &vertexList) const;
 
     /**
-     *  @brief Calculate 2D separation between two Pfos
+     *  @brief Calculate closest 2D separation between a set of vertices and a set of clusters
      *
      *  @param vertexList the list of possible vertex positions
      *  @param clustervector the vector of clusters
      */
-    float GetTwoDSeparation(const pandora::CartesianPointList &vertexList, const pandora::ClusterVector &clusterVector) const;
+    float GetClosestDistance(const pandora::CartesianPointList &vertexList, const pandora::ClusterVector &clusterVector) const;
 
     /**
      *  @brief Build the parent/daughter links from the map of parent/daughter associations
@@ -116,7 +116,7 @@ private:
 
     float        m_distanceForMatching;        ///< Maximum allowed distance of delta ray from parent cosmic ray
     float        m_minParentLengthSquared;     ///< Minimum allowed length of parent cosmic ray
-    float        m_maxDaughterLengthSquared;   ///< Maximum allowed length of daughter delta ray 
+    float        m_maxDaughterLengthSquared;   ///< Maximum allowed length of daughter delta ray
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
