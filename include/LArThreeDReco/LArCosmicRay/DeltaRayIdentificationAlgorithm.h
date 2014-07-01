@@ -56,12 +56,40 @@ private:
      *
      *  @param pDaughterPfo the input daughter Pfo
      *  @param pParentPfo the input parent Pfo
-     *  @param displacement the average displacement between the parent and daughter
+     *  @param displacementSquared the average displacement squared between parent and daughter
      *
      *  @return boolean
      */
     bool IsAssociated(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo,
-        float &displacement) const;
+        float &displacementSquared) const;
+
+    /**
+     *  @brief Calculate 2D separation between two Pfos
+     *
+     *  @param pDaughterPfo the input daughter Pfo
+     *  @param pParentPfo the input parent Pfo
+     *
+     *  @return average displacement squared between parent and daughter
+     */
+    float GetDisplacementSquared(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo) const;
+
+    /**
+     *  @brief Calculate 2D separation between two Pfos
+     *
+     *  @param pPfo the input daughter Pfo
+     *  @param hitType the hit type
+     *  @param vertexList the list of possible vertex positions
+     */
+    void GetTwoDVertexList(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, 
+        pandora::CartesianPointList &vertexList) const;
+
+    /**
+     *  @brief Calculate 2D separation between two Pfos
+     *
+     *  @param vertexList the list of possible vertex positions
+     *  @param clustervector the vector of clusters
+     */
+    float GetTwoDSeparation(const pandora::CartesianPointList &vertexList, const pandora::ClusterVector &clusterVector) const;
 
     /**
      *  @brief Build the parent/daughter links from the map of parent/daughter associations
@@ -83,9 +111,12 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_inputPfoListName;        ///< The parent pfo list name
-    std::string     m_outputPfoListName;       ///< The daughter pfo list name
-    float           m_distanceForMatching;     ///< Maximum allowed distance of delta ray from parent cosmic ray
+    std::string  m_parentPfoListName;          ///< The parent pfo list name
+    std::string  m_daughterPfoListName;        ///< The daughter pfo list name
+
+    float        m_distanceForMatching;        ///< Maximum allowed distance of delta ray from parent cosmic ray
+    float        m_minParentLengthSquared;     ///< Minimum allowed length of parent cosmic ray
+    float        m_maxDaughterLengthSquared;   ///< Maximum allowed length of daughter delta ray 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

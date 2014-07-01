@@ -24,11 +24,11 @@ namespace lar
 StatusCode DeltaRayMatchingAlgorithm::Run()
 {
     PfoVector pfoVector;
-    this->GetPfos(m_inputPfoListName, pfoVector);
+    this->GetPfos(m_parentPfoListName, pfoVector);
 
     if (pfoVector.empty())
     {
-        std::cout << "DeltaRayMatchingAlgorithm: could not find pfo list " << m_inputPfoListName << std::endl;
+        std::cout << "DeltaRayMatchingAlgorithm: could not find pfo list " << m_parentPfoListName << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -277,8 +277,8 @@ void DeltaRayMatchingAlgorithm::SelectParticles(const ParticleList &initialParti
 void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList) const
 {
     PfoVector parentVector, daughterVector;
-    this->GetPfos(m_inputPfoListName, parentVector);
-    this->GetPfos(m_outputPfoListName, daughterVector);
+    this->GetPfos(m_parentPfoListName, parentVector);
+    this->GetPfos(m_daughterPfoListName, daughterVector);
 
     PfoList parentList(parentVector.begin(), parentVector.end());
     PfoList daughterList(daughterVector.begin(), daughterVector.end());
@@ -418,8 +418,8 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Clus
 
 {
     PfoVector pfoVector;
-    this->GetPfos(m_inputPfoListName, pfoVector);
-    this->GetPfos(m_outputPfoListName, pfoVector);
+    this->GetPfos(m_parentPfoListName, pfoVector);
+    this->GetPfos(m_daughterPfoListName, pfoVector);
 
     if (pfoVector.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -512,7 +512,7 @@ void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList
 
     if (!pPfoList->empty())
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_daughterPfoListName));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
     }
 }
@@ -623,8 +623,8 @@ float DeltaRayMatchingAlgorithm::Particle::GetLengthSquared() const
 
 StatusCode DeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentPfoListName", m_parentPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterPfoListName", m_daughterPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
