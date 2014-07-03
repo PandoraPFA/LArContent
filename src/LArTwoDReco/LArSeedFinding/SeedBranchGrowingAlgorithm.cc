@@ -56,8 +56,8 @@ SeedBranchGrowingAlgorithm::AssociationType SeedBranchGrowingAlgorithm::AreClust
         return STANDARD;
 
     // Association check 3, look any distance below threshold
-    //if ((sOuter < 2.5) || (cOuter < 2.5) || (sInner < 2.5) || (cInner < 2.5))
-    //    return SINGLE_ORDER;
+    if ((sOuter < 2.5) || (cOuter < 2.5) || (sInner < 2.5) || (cInner < 2.5))
+        return SINGLE_ORDER;
 
     return NONE;
 }

@@ -69,7 +69,7 @@ bool ClusterCharacterisationAlgorithm::GetNextSeedCandidate(const ClusterList *c
         if (usedClusters.count(pCluster))
             continue;
 
-        if (pCluster->IsAvailable() && (pCluster->GetNCaloHits() < 5)) // TODO
+        if (pCluster->IsAvailable() && (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
             continue;
 
         pSeedCluster = pCluster;
@@ -91,7 +91,7 @@ void ClusterCharacterisationAlgorithm::GetSeedAssociationList(const ClusterVecto
     {
         Cluster *pCandidateCluster = *iter;
 
-        if (!pCandidateCluster->IsAvailable() || seedClusters.count(pCandidateCluster) || (pCandidateCluster->GetNCaloHits() < 5)) // TODO
+        if (!pCandidateCluster->IsAvailable() || seedClusters.count(pCandidateCluster) || (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
             continue;
 
         candidateClusters.push_back(pCandidateCluster);
@@ -205,6 +205,10 @@ bool ClusterCharacterisationAlgorithm::SortClusters(const Cluster *const pLhs, c
 StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
+
+    m_minCaloHitsPerCluster = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
     return STATUS_CODE_SUCCESS;
 }
