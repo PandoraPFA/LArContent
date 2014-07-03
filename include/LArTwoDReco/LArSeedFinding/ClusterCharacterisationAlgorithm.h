@@ -82,6 +82,7 @@ private:
     static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
     std::string     m_inputClusterListName;     ///< The name of the input cluster list
+    unsigned int    m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per (seed or branch) cluster
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
