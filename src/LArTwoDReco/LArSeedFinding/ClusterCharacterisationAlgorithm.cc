@@ -118,10 +118,12 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
 
     SeedAssociationList seedAssociationList;
     seedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
-    const float fom1(std::max(1.f, this->GetFigureOfMerit(seedAssociationList)));
+    const float originalFigureOfMerit(this->GetFigureOfMerit(seedAssociationList));
+    float bestFigureOfMerit(originalFigureOfMerit);
 
     Cluster *pTrialSeedCluster = NULL;
     bool betterConfigurationFound(false);
+    SeedAssociationList bestSeedAssociationList;
 
     while (this->GetNextSeedCandidate(&availableClusters, usedClusters, pTrialSeedCluster))
     {
@@ -133,23 +135,27 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
 
         SeedAssociationList trialSeedAssociationList;
         this->GetSeedAssociationList(trialParticleSeedVector, &availableClusters, trialSeedAssociationList);
+        const float trialFigureOfMerit(this->GetFigureOfMerit(trialSeedAssociationList));
 
-        const float fom2(this->GetFigureOfMerit(trialSeedAssociationList));
-
-        if (fom2 > fom1)
+        if (trialFigureOfMerit > bestFigureOfMerit)
         {
-            for (SeedAssociationList::const_iterator iter = trialSeedAssociationList.begin(), iterEnd = trialSeedAssociationList.end(); iter != iterEnd; ++iter)
-            {
-                this->CheckSeedAssociationList(iter, finalSeedAssociationList);
-            }
-
             betterConfigurationFound = true;
-            break;
+            bestFigureOfMerit = trialFigureOfMerit;
+            bestSeedAssociationList = trialSeedAssociationList;
         }
     }
 
-    if (!betterConfigurationFound)
+    if (betterConfigurationFound)
+    {
+        for (SeedAssociationList::const_iterator iter = bestSeedAssociationList.begin(), iterEnd = bestSeedAssociationList.end(); iter != iterEnd; ++iter)
+        {
+            this->CheckSeedAssociationList(iter, finalSeedAssociationList);
+        }
+    }
+    else
+    {
         finalSeedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,28 +167,40 @@ float ClusterCharacterisationAlgorithm::GetFigureOfMerit(const SeedAssociationLi
     if (!((nSeeds == 1) || (nSeeds == 2)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    typedef std::set<const MCParticle*> ConstMCParticleList;
-    ConstMCParticleList mcParticleList;
+    unsigned int nMatchedClusters(0), nClusters(0);
 
     for (SeedAssociationList::const_iterator iter1 = seedAssociationList.begin(), iter1End = seedAssociationList.end(); iter1 != iter1End; ++iter1)
     {
-        Cluster *pParent(iter1->first);
+        Cluster *pParentCluster(iter1->first);
+        ++nClusters;
 
-        try // TODO don't cheat this bit!
+        // TODO don't cheat this bit!
+        const MCParticle *pParentMCParticle(NULL);
+        try {pParentMCParticle = MCParticleHelper::GetMainMCParticle(pParentCluster);} catch (StatusCodeException &) {}
+
+        ++nMatchedClusters;
+        const ClusterVector &associatedClusters(iter1->second);
+
+        for (ClusterVector::const_iterator iter2 = associatedClusters.begin(), iter2End = associatedClusters.end(); iter2 != iter2End; ++iter2)
         {
-            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pParent));
-            mcParticleList.insert(pMCParticle);
-        }
-        catch (StatusCodeException &)
-        {
-            mcParticleList.insert(NULL);
+            Cluster *pBranchCluster = *iter2;
+            ++nClusters;
+
+            const MCParticle *pDaughterMCParticle(NULL);
+            try {pDaughterMCParticle = MCParticleHelper::GetMainMCParticle(pBranchCluster);} catch (StatusCodeException &) {}
+
+            if (pParentMCParticle == pDaughterMCParticle)
+            {
+                ++nMatchedClusters;
+            }
         }
     }
 
-    if (mcParticleList.size() == nSeeds)
-        return nSeeds;
+    if (0 == nClusters)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    return 0.f;
+    const float figureOfMerit(static_cast<float>(nMatchedClusters) / static_cast<float>(nClusters));
+    return figureOfMerit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
