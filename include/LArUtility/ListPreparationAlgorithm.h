@@ -38,6 +38,14 @@ private:
     void ProcessCaloHits();
 
     /**
+     *  @brief Clean up the input CaloHitList
+     *
+     *  @param inputList the input CaloHitList
+     *  @param outputList the output CaloHitList
+     */
+    void GetFilteredCaloHitList(const pandora::CaloHitList &inputList, pandora::CaloHitList &outputList);
+
+    /**
      *  @brief Build separate MCParticleLists for each view
      */
     void ProcessMCParticles();

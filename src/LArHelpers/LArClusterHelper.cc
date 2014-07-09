@@ -9,6 +9,8 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
+#include "Pandora/PandoraSettings.h"
+
 #include "LArCalculators/LArPseudoLayerCalculator.h"
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 #include "LArHelpers/LArClusterHelper.h"
@@ -22,6 +24,42 @@ using namespace pandora;
 
 namespace lar
 {
+
+HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
+{
+    if (0 == pCluster->GetNCaloHits())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (PandoraSettings::SingleHitTypeClusteringMode())
+        return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
+
+    HitType hitType(CUSTOM);
+
+    if (pCluster->ContainsHitType(TPC_VIEW_U))
+    {
+        if (CUSTOM == hitType) hitType = TPC_VIEW_U;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (pCluster->ContainsHitType(TPC_VIEW_V))
+    {
+        if (CUSTOM == hitType) hitType = TPC_VIEW_V;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (pCluster->ContainsHitType(TPC_VIEW_W))
+    {
+        if (CUSTOM == hitType) hitType = TPC_VIEW_W;
+        else throw StatusCodeException(STATUS_CODE_FAILURE);
+    }
+
+    if (CUSTOM == hitType)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    return hitType;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArClusterHelper::LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
@@ -307,6 +345,48 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const 
 
     return 0.f;
 }
+  
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetClosestDistance(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2)
+{
+    if (clusterVector1.empty() || clusterVector2.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    float closestDistance(std::numeric_limits<float>::max());
+
+    for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
+    {
+        const Cluster *pCluster1 = *iter1;
+        const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster1, clusterVector2));
+ 
+        if (thisDistance < closestDistance)
+            closestDistance = thisDistance; 
+    }
+
+    return closestDistance;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+ 
+float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const ClusterVector &clusterVector)
+{
+    if (clusterVector.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    float closestDistance(std::numeric_limits<float>::max());
+
+    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    {
+        const Cluster *pTestCluster = *iter;
+        const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster, pTestCluster));
+
+        if (thisDistance < closestDistance)
+            closestDistance = thisDistance; 
+    }
+
+    return closestDistance;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -406,35 +486,70 @@ void LArClusterHelper::GetClusterSpanX(const Cluster *const pCluster, float &xmi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const float xmin, const float xmax, 
+    float &zmin, float &zmax)
 {
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    float zsum(0.f);
-    int count(0);
-    float zsumall(0.f);
-    int countall(0);
+    if (xmin > xmax)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    zmin = std::numeric_limits<float>::max();
+    zmax = -std::numeric_limits<float>::max();
+
+    bool foundHits(false);
+    
     for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
     {
         for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
         {
             const CaloHit *pCaloHit = *hIter;
             const CartesianVector &hit(pCaloHit->GetPositionVector());
-            zsumall+= hit.GetZ();
-            countall++;
 
-            if (hit.GetX()>=xmin && hit.GetX()<=xmax)
-            {
-                ++count;
-                zsum += hit.GetZ();
-            }
+            if (hit.GetX() < xmin || hit.GetX() > xmax)
+                continue;
+
+            zmin = std::min(hit.GetZ(), zmin);
+            zmax = std::max(hit.GetZ(), zmax);
+            foundHits = true;
+        }
+    }
+
+    if (!foundHits)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+{
+    if (xmin > xmax)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    float zsum(0.f);
+    int count(0);
+    
+    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
+    {
+        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            const CaloHit *pCaloHit = *hIter;
+            const CartesianVector &hit(pCaloHit->GetPositionVector());
+
+            if (hit.GetX() < xmin || hit.GetX() > xmax)
+                continue;
+
+            zsum += hit.GetZ();
+            ++count;
         }
     }
 
     if (count == 0)
-        return zsumall/static_cast<float>(countall);
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return zsum/static_cast<float>(count);
+    return zsum / static_cast<float>(count);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -657,11 +772,71 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
 
         const TwoDSlidingFitResult::TwoDSlidingFitResult::LayerFitResult layerFitResult(l, fitT, gradient, rms);
         (void) layerFitResultMap.insert(TwoDSlidingFitResult::LayerFitResultMap::value_type(iLayer, layerFitResult));
-    }  
+    }
 
-    // TODO: Bail out if there are no results. This will break everything!
+    // TODO: Bail out if there are no results? This will break everything!
     // if (layerFitResultMap.empty())
     //     throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    // Calculate sliding fit segments
+    // TODO: Only calculate this information when required
+    return LArClusterHelper::CalculateSlidingFitSegments(twoDSlidingFitResult);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSlidingFitResult)
+{
+    unsigned int nSustainedSteps(0);
+    float sustainedDirectionStartX(0.f), sustainedDirectionEndX(0.f);
+    CartesianVector previousPosition(0.f, 0.f, 0.f);
+    TransverseDirection previousDirection(UNKNOWN), sustainedDirection(UNKNOWN);
+    TwoDSlidingFitResult::LayerFitResultMap::const_iterator sustainedDirectionStartIter, sustainedDirectionEndIter;
+
+    const unsigned int slidingFitWindow(twoDSlidingFitResult.GetLayerFitHalfWindow());
+    const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.GetLayerFitResultMap());
+
+    TwoDSlidingFitResult::FitSegmentList &fitSegmentList(twoDSlidingFitResult.m_fitSegmentList);
+
+    for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+    {
+        CartesianVector position(0.f, 0.f, 0.f);
+        twoDSlidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
+
+        const CartesianVector delta(position - previousPosition);
+        const TransverseDirection currentDirection((std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * -1.f) ?
+            UNCHANGED_IN_X : (delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
+
+        if (previousDirection == currentDirection)
+        {
+            ++nSustainedSteps;
+
+            if (2 * nSustainedSteps > slidingFitWindow)
+            {
+                sustainedDirection = currentDirection;
+                sustainedDirectionEndIter = iter;
+                sustainedDirectionEndX = position.GetX();
+            }
+        }
+        else
+        {
+            if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
+                fitSegmentList.push_back(TwoDSlidingFitResult::FitSegment(sustainedDirectionStartIter->first, sustainedDirectionEndIter->first,
+                    sustainedDirectionStartX, sustainedDirectionEndX));
+
+            nSustainedSteps = 0;
+            sustainedDirection = UNKNOWN;
+            sustainedDirectionStartIter = iter;
+            sustainedDirectionStartX = position.GetX();
+        }
+
+        previousPosition = position;
+        previousDirection = currentDirection;
+    }
+
+    if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
+        fitSegmentList.push_back(TwoDSlidingFitResult::FitSegment(sustainedDirectionStartIter->first, sustainedDirectionEndIter->first,
+            sustainedDirectionStartX, sustainedDirectionEndX));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

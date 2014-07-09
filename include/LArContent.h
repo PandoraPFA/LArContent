@@ -21,53 +21,57 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/NtupleWritingAlgorithm.h"
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
+#include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
+#include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
+#include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
+#include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ThreeDRemnantTracksAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ThreeDTransverseTracksAlgorithm.h"
-#include "LArThreeDReco/LArTrackMatching/ClearLongitudinalTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/ClearRemnantTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/ClearTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/LongTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/MatchedEndPointsTool.h"
-#include "LArThreeDReco/LArTrackMatching/MissingTrackTool.h"
-#include "LArThreeDReco/LArTrackMatching/MissingTrackSegmentTool.h"
-#include "LArThreeDReco/LArTrackMatching/OvershootTracksTool.h"
-#include "LArThreeDReco/LArTrackMatching/TensorVisualizationTool.h"
-#include "LArThreeDReco/LArTrackMatching/TrackSplittingTool.h"
-#include "LArThreeDReco/LArTrackMatching/UndershootTracksTool.h"
+#include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
+#include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
-#include "LArTwoDReco/LArClusterCreation/ClusterCreationAlgorithm.h"
+#include "LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
+#include "LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 #include "LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayShowerMergingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
-#include "LArTwoDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
+#include "LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
-#include "LArTwoDReco/LArClusterSplitting/TrackCleaningAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
@@ -96,33 +100,36 @@ public:
         d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
         d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
+        d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
+        d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
+        d("LArDeltaRayIdentification",              lar::DeltaRayIdentificationAlgorithm::Factory)                              \
+        d("LArDeltaRayMatching",                    lar::DeltaRayMatchingAlgorithm::Factory)                                    \
         d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
-        d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
         d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
-        d("LArThreeDRemnantTracks",                 lar::ThreeDRemnantTracksAlgorithm::Factory)                                 \
+        d("LArThreeDRemnants",                      lar::ThreeDRemnantsAlgorithm::Factory)                                      \
+        d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
+        d("LArThreeDTrackFragments",                lar::ThreeDTrackFragmentsAlgorithm::Factory)                                \
         d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
         d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
         d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
+        d("LArSimpleClusterMerging",                lar::SimpleClusterMergingAlgorithm::Factory)                                \
         d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
         d("LArTransverseExtension",                 lar::TransverseExtensionAlgorithm::Factory)                                 \
-        d("LArClusterCreation",                     lar::ClusterCreationAlgorithm::Factory)                                     \
+        d("LArSimpleClusterCreation",               lar::SimpleClusterCreationAlgorithm::Factory)                               \
+        d("LArTrackClusterCreation",                lar::TrackClusterCreationAlgorithm::Factory)                                \
         d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
         d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
         d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
         d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
         d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
-        d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
-        d("LArCosmicRayShowerMatching",             lar::CosmicRayShowerMatchingAlgorithm::Factory)                             \
-        d("LArCosmicRayShowerMerging",              lar::CosmicRayShowerMergingAlgorithm::Factory)                              \
         d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
-        d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
         d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
+        d("LArDeltaRayGrowing",                     lar::DeltaRayGrowingAlgorithm::Factory)                                     \
         d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
         d("LArCrossedTrackSplitting",               lar::CrossedTrackSplittingAlgorithm::Factory)                               \
         d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
         d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
         d("LArLayerSplitting",                      lar::LayerSplittingAlgorithm::Factory)                                      \
-        d("LArTrackCleaning",                       lar::TrackCleaningAlgorithm::Factory)                                       \
         d("LArTrackConsolidation",                  lar::TrackConsolidationAlgorithm::Factory)                                  \
         d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
         d("LArClusterCharacterisation",             lar::ClusterCharacterisationAlgorithm::Factory)                             \
@@ -135,12 +142,13 @@ public:
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
         d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
-        d("LArClearRemnantTracks",                  lar::ClearRemnantTracksTool::Factory)                                       \
+        d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
+        d("LArClearRemnants",                       lar::ClearRemnantsTool::Factory)                                            \
         d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
         d("LArLongTracks",                          lar::LongTracksTool::Factory)                                               \
-        d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
         d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \
         d("LArMissingTrackSegment",                 lar::MissingTrackSegmentTool::Factory)                                      \
         d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
@@ -159,7 +167,7 @@ public:
         d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
         d("LArParticleIdHelper",                    &lar::LArParticleIdHelper::ReadSettings)                                    \
         d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)                               \
-        d("LArThreeDHelper",                        &lar::LArThreeDHelper::ReadSettings)
+        d("LArPfoHelper",                           &lar::LArPfoHelper::ReadSettings)
 
     /**
      *  @brief  Register all the lar content algorithms and tools with pandora
@@ -221,10 +229,8 @@ inline pandora::StatusCode LArContent::RegisterHelperFunctions(pandora::Pandora 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &pandora)
+inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &/*pandora*/)
 {
-    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterResetFunction(pandora, &lar::LArThreeDHelper::Reset));
-
     return pandora::STATUS_CODE_SUCCESS;
 }
 

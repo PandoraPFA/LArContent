@@ -16,6 +16,19 @@ namespace lar
 {
 
 /**
+ *  @brief  TransverseDirection enum
+ */
+enum TransverseDirection
+{
+    POSITIVE_IN_X,
+    NEGATIVE_IN_X,
+    UNCHANGED_IN_X,
+    UNKNOWN
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
  *  @brief  ShowerEdge enum
  */
 enum ShowerEdge
@@ -32,6 +45,14 @@ enum ShowerEdge
 class LArClusterHelper
 {
 public:
+    /**
+     *  @brief  Get the hit type associated with a two dimensional cluster
+     * 
+     *  @param  pCluster the address of the cluster
+     * 
+     *  @return the cluster hit type
+     */
+    static pandora::HitType GetClusterHitType(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Perform two dimensional sliding fit, using a three dimensional fit to the cluster to define primary axis
@@ -40,7 +61,8 @@ public:
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult);
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+        TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Perform two dimensional sliding fit, using z axis as primary axis, fitting x coordinates
@@ -49,7 +71,8 @@ public:
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, TwoDSlidingFitResult &twoDSlidingFitResult);
+    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+        TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Perform two dimensional sliding fit, using the specified primary axis
@@ -60,8 +83,9 @@ public:
      *  @param  axisDirection the axis direction vector
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
-        const pandora::CartesianVector &axisDirection, TwoDSlidingFitResult &twoDSlidingFitResult);
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
+        TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
@@ -73,8 +97,9 @@ public:
      *  @param  showerEdge the shower edge
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDShowerEdgeFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
-        const pandora::CartesianVector &axisDirection, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult);
+    static void LArTwoDShowerEdgeFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
+        const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Whether fit results are multivalued in x
@@ -156,7 +181,27 @@ public:
     static float GetLayerOccupancy(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
 
     /**
-     *  @brief  Get closest distance between the layer centroids of a pair of clusters
+     *  @brief  Get closest distance between clusters in a pair of cluster vectors
+     *
+     *  @param  clusterVector1 the first cluster vector
+     *  @param  clusterVector2 the second cluster vector
+     *
+     *  @return the closest distance
+     */
+    static float GetClosestDistance(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2);
+
+    /**
+     *  @brief  Get closest distance between a specified cluster and vector of clusters
+     *
+     *  @param  pCluster address of the input cluster
+     *  @param  clusterVector vector of input clusters
+     *
+     *  @return the closest distance
+     */
+    static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::ClusterVector &clusterVector);
+
+    /**
+     *  @brief  Get closest distance between a pair of clusters
      *
      *  @param  pCluster1 address of the first cluster
      *  @param  pCluster2 address of the second cluster
@@ -192,9 +237,9 @@ public:
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
-    static void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, pandora::CartesianVector &outerCoordinate);
+    static void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, 
+        pandora::CartesianVector &outerCoordinate);
 
-    
     /**
      *  @brief  Get minimum and maximum X, Y and Z positions of the calo hits in a 2D cluster
      *
@@ -202,9 +247,9 @@ public:
      *  @param  the minimum positions (x,y,z)
      *  @param  the maximum positions (x,y,z)
      */
-    static void GetClusterSpanXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, pandora::CartesianVector &maximumCoordinate);
-    
-    
+    static void GetClusterSpanXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, 
+        pandora::CartesianVector &maximumCoordinate);
+
     /**
      *  @brief  Get minimum and maximum x of the calo hits in a 2D cluster
      *
@@ -213,8 +258,19 @@ public:
      *  @param  the maximum position of x
      */
     static void GetClusterSpanX(const pandora::Cluster *const pCluster, float &xmin, float &xmax);
-    
-    
+
+    /**
+     *  @brief  Get upper and lower Z positions of the calo hits in a 2D cluster in range xmin to xmax
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  xmin for range in x
+     *  @param  xmax for range in x
+     *  @param  zmin the lower z for this range of x
+     *  @param  zmax the upper z for this range in x
+     */
+
+    static void GetClusterSpanZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &zmin, float &zmax);
+
     /**
      *  @brief  Get average Z positions of the calo hits in a 2D cluster in range xmin to xmax
      *
@@ -223,10 +279,7 @@ public:
      *  @param  xmax for range in x
      */
     static float GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax);
-    
 
-    
-    
     /**
      *  @brief  Sort clusters by inner layer (then use SortByNOccupiedLayers method in event of a tie)
      *
@@ -265,6 +318,14 @@ private:
      *  @param  twoDSlidingFitResult to receive the fit result
      */
     static void StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingFitResult);
+
+    /**
+     *  @brief  Calculate a fit segment list for a given sliding fit result
+     *
+     *  @param  twoDSlidingFitResult the sliding fit result
+     *  @param  fitSegmentList to receive the fit segment list
+     */
+    static void CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSlidingFitResult);
 
     static unsigned int             m_layerFitHalfWindow;           ///< The layer fit half window for sliding 2d x-z fits
     static float                    m_multiValuedTanThetaCut;       ///< Tan theta cut for finding sliding fits multivalued in x

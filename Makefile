@@ -16,7 +16,7 @@ ifdef MONITORING
 endif
 
 CC = g++
-CFLAGS = -c -Wall -g -w -fPIC -O2
+CFLAGS = -c -g -fPIC -O2 -Wall -Wextra -pedantic -Wshadow -Werror -ansi
 ifdef BUILD_32BIT_COMPATIBLE
     CFLAGS += -m32
 endif
@@ -27,9 +27,15 @@ SOURCES += $(wildcard $(PROJECT_DIR)/src/LArHelpers/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArMonitoring/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArObjects/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArCosmicRay/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArClusterSplitting/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArHitCreation/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArLongitudinalTrackMatching/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArShowerFragments/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArShowerMatching/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArTrackMatching/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArTrackFragments/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArTransverseTrackMatching/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArThreeDBase/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArClusterAssociation/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArClusterCreation/*.cc)

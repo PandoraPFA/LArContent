@@ -288,7 +288,7 @@ void VisualMonitoringAlgorithm::VisualizeParticleFlowList(const std::string &lis
         (m_hitColors.find("particleid") != std::string::npos) ? AUTOID :
         (m_hitColors.find("iterate") != std::string::npos ? AUTOITER :
         (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY :
-        AUTO))));
+        AUTO)), m_showPfoVertices, m_showPfoHierarchy));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -399,6 +399,14 @@ StatusCode VisualMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "SuppressMCParticles", m_suppressMCParticles));
+
+    m_showPfoVertices = true;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowPfoVertices", m_showPfoVertices));
+
+    m_showPfoHierarchy = true;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowPfoHierarchy", m_showPfoHierarchy));
 
     for (StringVector::iterator iter = m_suppressMCParticles.begin(), iterEnd = m_suppressMCParticles.end(); iter != iterEnd; ++iter)
     {

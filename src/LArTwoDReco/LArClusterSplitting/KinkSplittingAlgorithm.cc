@@ -82,7 +82,7 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitRes
 // --- BEGIN DISPLAY ---
 // ClusterList tempList;
 // tempList.insert((Cluster*)slidingFitResult.GetCluster());
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
 // PANDORA_MONITORING_API(VisualizeClusters(&tempList, "Cluster", GREEN));
 // PANDORA_MONITORING_API(AddMarkerToVisualization(&splitPosition, "SplitPosition", RED, 2.75));
 // PANDORA_MONITORING_API(ViewEvent());

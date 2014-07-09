@@ -8,6 +8,7 @@
 #ifndef LAR_TRACK_OVERLAP_RESULT_H
 #define LAR_TRACK_OVERLAP_RESULT_H 1
 
+#include "Pandora/PandoraInputTypes.h"
 #include "Pandora/StatusCodes.h"
 
 #include <cmath>
@@ -351,11 +352,93 @@ public:
     LongitudinalOverlapResult &operator=(const LongitudinalOverlapResult &rhs);
 
 private:
-    float  m_innerChi2;                        ///< The inner chi squared
-    float  m_outerChi2;                        ///< The outer chi squared
+    float       m_innerChi2;                        ///< The inner chi squared
+    float       m_outerChi2;                        ///< The outer chi squared
 };
 
 typedef std::vector<LongitudinalOverlapResult> LongitudinalOverlapResultVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  FragmentOverlapResult class
+ */
+class FragmentOverlapResult : public TrackOverlapResult
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    FragmentOverlapResult();
+
+    /**
+     *  @brief  Constructor
+     * 
+     *  @param  trackOverlapResult
+     *  @param  caloHitList
+     *  @param  clusterList
+     */
+    FragmentOverlapResult(const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList,
+        const pandora::ClusterList &clusterList);
+
+    /**
+     *  @brief  Constructor
+     * 
+     *  @param  nMatchedSamplingPoints
+     *  @param  nSamplingPoints
+     *  @param  chi2
+     *  @param  caloHitList
+     *  @param  clusterList
+     */
+    FragmentOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
+        const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList);
+
+    /**
+     *  @brief  Copy constructor
+     * 
+     *  @param  rhs
+     */
+    FragmentOverlapResult(const FragmentOverlapResult &rhs);
+
+    /**
+     *  @brief  Destructor
+     */
+    ~FragmentOverlapResult();
+
+    /**
+     *  @brief  Get the list of fragment-associated hits
+     * 
+     *  @return the list of fragment-associated hits
+     */
+    const pandora::CaloHitList &GetFragmentCaloHitList() const;
+
+    /**
+     *  @brief  Get the list of fragment-associated clusters
+     * 
+     *  @return the list of fragment-associated clusters
+     */
+    const pandora::ClusterList &GetFragmentClusterList() const;
+
+    /**
+     *  @brief  Get the fragment hit type
+     * 
+     *  @return the fragment hit type
+     */
+    pandora::HitType GetFragmentHitType() const;
+
+    /**
+     *  @brief  Fragments overlap result assigment operator
+     * 
+     *  @param  rhs the track overlap result to assign
+     */
+    FragmentOverlapResult &operator=(const FragmentOverlapResult &rhs);
+
+private:
+    pandora::CaloHitList    m_caloHitList;      ///< The list of fragment-associated hits
+    pandora::ClusterList    m_clusterList;      ///< The list of fragment-associated clusters
+};
+
+typedef std::vector<FragmentOverlapResult> FragmentOverlapResultVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -524,6 +607,21 @@ inline float LongitudinalOverlapResult::GetInnerChi2() const
 inline float LongitudinalOverlapResult::GetOuterChi2() const
 {
     return m_outerChi2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &FragmentOverlapResult::GetFragmentCaloHitList() const
+{
+    return m_caloHitList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ClusterList &FragmentOverlapResult::GetFragmentClusterList() const
+{
+    return m_clusterList;
 }
 
 } // namespace lar

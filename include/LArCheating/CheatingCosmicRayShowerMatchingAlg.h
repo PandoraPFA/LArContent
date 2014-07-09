@@ -42,14 +42,6 @@ private:
     pandora::StatusCode CosmicRayShowerMatching(const pandora::StringVector &clusterListNames, const pandora::Cluster *const pPfoCluster,
         pandora::ParticleFlowObject *pPfo) const;
 
-    /**
-     *  @brief  Sort pfos by number of constituent hits
-     * 
-     *  @param  pLhs address of first pfo
-     *  @param  pRhs address of second pfo
-     */
-    static bool SortPfosByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
-
     std::string             m_inputPfoListName;           ///< The input pfo list name
 
     pandora::StringVector   m_inputClusterListNamesU;     ///< The input cluster list names for the u view

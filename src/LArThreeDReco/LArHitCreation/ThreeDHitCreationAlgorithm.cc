@@ -12,7 +12,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -30,7 +29,7 @@ void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *con
 
     for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
     {
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(*iter));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
 
         if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
         {
@@ -128,7 +127,10 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHit(CaloHit *pCaloHit2D, const Cart
 StatusCode ThreeDHitCreationAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+
+    if (NULL == pPfoList)
+        return STATUS_CODE_SUCCESS;
 
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {
@@ -167,7 +169,7 @@ Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(ParticleFlowObject *const 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
-        const HitType hitType(LArThreeDHelper::GetClusterHitType(pCluster));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if (TPC_3D != hitType)
             continue;

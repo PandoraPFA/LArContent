@@ -104,6 +104,9 @@ private:
     float                   m_transparencyThresholdE;   ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float                   m_energyScaleThresholdE;    ///< Cell energy for which color is at top end of continous color palette
 
+    bool                    m_showPfoVertices;          ///< Whether to display pfo vertices
+    bool                    m_showPfoHierarchy;         ///< Whether to display daughter pfos only under parent pfo elements
+
     pandora::StringVector   m_suppressMCParticles;      ///< List of PDG numbers and energies for MC particles to be suppressed (e.g. " 22:0.1 2112:1.0 ")
     PdgCodeToEnergyMap      m_particleSuppressionMap;   ///< Map from pdg-codes to energy for suppression of particles types below specific energies
 };

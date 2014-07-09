@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Objects/CaloHit.h"
+
 #include "Pandora/PandoraInternal.h"
 
 #include "LArObjects/LArTrackOverlapResult.h"
@@ -231,6 +233,72 @@ LongitudinalOverlapResult &LongitudinalOverlapResult::operator=(const Longitudin
     m_outerChi2 = rhs.GetOuterChi2();
 
     return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult() :
+    TrackOverlapResult(),
+    m_caloHitList(),
+    m_clusterList()
+{
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult(const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList,
+        const pandora::ClusterList &clusterList) :
+    TrackOverlapResult(trackOverlapResult),
+    m_caloHitList(caloHitList),
+    m_clusterList(clusterList)
+{
+
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+        const float chi2, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList) :
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
+    m_caloHitList(caloHitList),
+    m_clusterList(clusterList)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::FragmentOverlapResult(const FragmentOverlapResult &rhs) :
+    TrackOverlapResult(rhs),
+    m_caloHitList(rhs.IsInitialized() ? rhs.GetFragmentCaloHitList() : CaloHitList()),
+    m_clusterList(rhs.IsInitialized() ? rhs.GetFragmentClusterList() : ClusterList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult::~FragmentOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FragmentOverlapResult &FragmentOverlapResult::operator=(const FragmentOverlapResult &rhs)
+{
+    this->TrackOverlapResult::operator=(rhs);
+    m_caloHitList = rhs.GetFragmentCaloHitList();
+    m_clusterList = rhs.GetFragmentClusterList();
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::HitType FragmentOverlapResult::GetFragmentHitType() const
+{
+    if (m_caloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    return (*(m_caloHitList.begin()))->GetHitType();
 }
 
 } // namespace lar

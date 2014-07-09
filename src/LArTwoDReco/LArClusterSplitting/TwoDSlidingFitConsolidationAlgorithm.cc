@@ -28,20 +28,15 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
     TwoDSlidingFitResultList slidingFitResultList;
     this->BuildSlidingLinearFits(trackClusters, slidingFitResultList);
 
-    // Get Initial configuration of hits
-    ClusterToHitMap clustersAtStart;
-    this->GetInitialHits(trackClusters, clustersAtStart);
-    this->GetInitialHits(showerClusters, clustersAtStart);
-
     // Recluster the hits
     ClusterToHitMap clustersToExpand, clustersToContract;
     this->GetReclusteredHits(slidingFitResultList, showerClusters, clustersToExpand, clustersToContract);
 
     // Consolidate and re-build clusters
-    ClusterList modifiedShowers, modifiedTracks;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromClusters(clustersToContract));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToClusters(clustersToExpand));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(clustersAtStart));
+    ClusterList unavailableClusters;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromClusters(clustersToContract, unavailableClusters));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToClusters(clustersToExpand, unavailableClusters));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(clustersToContract, unavailableClusters));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -82,29 +77,16 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitConsolidationAlgorithm::GetInitialHits(const ClusterVector &inputClusters, ClusterToHitMap &caloHitsAtStart) const
-{
-    for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
-    {
-        const Cluster* pCluster = *iter;
-
-        if (caloHitsAtStart[pCluster].size() > 0)
-            continue;
-
-        CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        caloHitsAtStart[pCluster].insert(caloHitList.begin(), caloHitList.end());
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract,
+    ClusterList &unavailableClusters) const
 {
     for (ClusterToHitMap::const_iterator iterI = clustersToContract.begin(), iterEndI = clustersToContract.end(); iterI != iterEndI; ++iterI)
     {
         Cluster* pCluster = const_cast<Cluster*>(iterI->first);
         const CaloHitList &caloHitListToRemove = iterI->second;
+
+        if (caloHitListToRemove.empty())
+            continue;
 
         CaloHitList caloHitList, caloHitListToKeep;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
@@ -118,6 +100,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
         if (caloHitListToKeep.empty())
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pCluster));
+            unavailableClusters.insert(pCluster);
             continue;
         }
 
@@ -133,12 +116,18 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand,
+    ClusterList &unavailableClusters) const
 {
     for (ClusterToHitMap::const_iterator iterI = clustersToExpand.begin(), iterEndI = clustersToExpand.end(); iterI != iterEndI; ++iterI)
     {
         Cluster* pCluster = const_cast<Cluster*>(iterI->first);
         const CaloHitList &caloHitList = iterI->second;
+
+        if (caloHitList.empty())
+            continue;
+
+        unavailableClusters.insert(pCluster);
 
         for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
         {
@@ -152,146 +141,48 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersAtStart) const
-{
-    ClusterToHitMap clustersToRebuild;
-
-    for (ClusterToHitMap::const_iterator iterI = clustersAtStart.begin(), iterEndI = clustersAtStart.end(); iterI != iterEndI; ++iterI)
-    {
-        Cluster* pCluster = const_cast<Cluster*>(iterI->first);
-        const CaloHitList &caloHitList = iterI->second;
-
-        for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            CaloHit* pCaloHit = *iterJ;
-
-            if (PandoraContentApi::IsAvailable(*this, pCaloHit))
-                clustersToRebuild[pCluster].insert(pCaloHit);
-        }
-    }
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildNewClusters(clustersToRebuild));
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TwoDSlidingFitConsolidationAlgorithm::BuildNewClusters(const ClusterToHitMap &clustersToRebuild) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersToRebuild,
+    const ClusterList &unavailableClusters) const
 {
     if (clustersToRebuild.empty())
         return STATUS_CODE_SUCCESS;
 
-    const ClusterList *pClusterList = NULL;
-    std::string currentClusterListName, newClusterListName;
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*this, pClusterList, newClusterListName));
-
     for (ClusterToHitMap::const_iterator iter = clustersToRebuild.begin(), iterEnd = clustersToRebuild.end(); iter != iterEnd; ++iter)
     {
+        const Cluster* pCluster = iter->first;
         const CaloHitList &caloHitList = iter->second;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->BuildNewClusters(caloHitList));
-    }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
+        Cluster* pClusterToDelete = const_cast<Cluster*>(pCluster);
 
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TwoDSlidingFitConsolidationAlgorithm::BuildNewClusters(const CaloHitList &inputCaloHitList) const
-{
-    if (inputCaloHitList.empty())
-        return STATUS_CODE_SUCCESS;
-
-    // Form simple associations between residual hits from deleted cluster
-    HitToHitMap hitAssociationMap;
-
-    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
-    {
-        CaloHit* pCaloHitI = *iterI;
-
-        for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = iterEndI; iterJ != iterEndJ; ++iterJ)
-        {
-            CaloHit* pCaloHitJ = *iterJ;
-
-            if (pCaloHitI == pCaloHitJ)
-                continue;
-
-            if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_reclusteringWindow * m_reclusteringWindow)
-            {
-                hitAssociationMap[pCaloHitI].insert(pCaloHitJ);
-                hitAssociationMap[pCaloHitJ].insert(pCaloHitI);
-            }
-        }
-    }
-
-    // Collect up associations and build new clusters
-    CaloHitList vetoList;
-
-    for (CaloHitList::const_iterator iterI = inputCaloHitList.begin(), iterEndI = inputCaloHitList.end(); iterI != iterEndI; ++iterI)
-    {
-        CaloHit* pSeedCaloHit = *iterI;
-
-        if (vetoList.count(pSeedCaloHit))
+        if (unavailableClusters.count(pClusterToDelete))
             continue;
 
-        CaloHitList mergeList;
-        this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
+        if (caloHitList.empty())
+            continue;
 
-        Cluster *pCluster = NULL;
-        PandoraContentApi::Cluster::Parameters parameters;
-        parameters.m_caloHitList.insert(pSeedCaloHit);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
-        vetoList.insert(pSeedCaloHit);
+        std::string currentClusterListName;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentClusterListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pClusterToDelete));
 
-        for (CaloHitList::const_iterator iterJ = mergeList.begin(), iterEndJ = mergeList.end(); iterJ != iterEndJ; ++iterJ)
-        {
-            CaloHit* pAssociatedCaloHit = *iterJ;
+        const ClusterList *pClusterList = NULL;
+        std::string newClusterListName;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_reclusteringAlgorithmName,
+            pClusterList, newClusterListName));
 
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pAssociatedCaloHit));
-            vetoList.insert(pAssociatedCaloHit);
-        }
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
     }
 
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingFitConsolidationAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit, CaloHit *pCurrentCaloHit,
-    const HitToHitMap &hitAssociationMap, const CaloHitList &vetoList, CaloHitList &mergeList) const
-{
-    if (vetoList.count(pCurrentCaloHit))
-        return;
-
-    HitToHitMap::const_iterator iter1 = hitAssociationMap.find(pCurrentCaloHit);
-    if (iter1 == hitAssociationMap.end())
-        return;
-
-    for (CaloHitList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
-    {
-        CaloHit* pAssociatedCaloHit = *iter2;
-
-        if (pAssociatedCaloHit == pSeedCaloHit)
-            continue;
-
-        if (!mergeList.insert(pAssociatedCaloHit).second)
-            continue;
-
-        this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, vetoList, mergeList);
-    }
-
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TwoDSlidingFitConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ClusterRebuilding", m_reclusteringAlgorithmName));
+
     m_minTrackLength = 7.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinTrackLength", m_minTrackLength));
@@ -303,10 +194,6 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::ReadSettings(const TiXmlHandle 
     m_halfWindowLayers = 25;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
-
-    m_reclusteringWindow = 2.5f; // cm
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReclusteringWindow", m_reclusteringWindow));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -8,8 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArThreeDHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
 
@@ -24,7 +25,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
-    std::sort(pfoVector.begin(), pfoVector.end(), CheatingCosmicRayShowerMatchingAlg::SortPfosByNHits);
+    std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
 
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
@@ -34,7 +35,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
         for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
         {
             const Cluster *const pPfoCluster = *cIter;
-            const HitType hitType(LArThreeDHelper::GetClusterHitType(pPfoCluster));
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
 
             if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             {
@@ -98,21 +99,6 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const Str
     }
 
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CheatingCosmicRayShowerMatchingAlg::SortPfosByNHits(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
-{
-    unsigned int nHitsLhs(0);
-    for (ClusterList::const_iterator iter = pLhs->GetClusterList().begin(), iterEnd = pLhs->GetClusterList().end(); iter != iterEnd; ++iter)
-        nHitsLhs += (*iter)->GetNCaloHits();
-
-    unsigned int nHitsRhs(0);
-    for (ClusterList::const_iterator iter = pRhs->GetClusterList().begin(), iterEnd = pRhs->GetClusterList().end(); iter != iterEnd; ++iter)
-        nHitsRhs += (*iter)->GetNCaloHits();
-
-    return (nHitsLhs > nHitsRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

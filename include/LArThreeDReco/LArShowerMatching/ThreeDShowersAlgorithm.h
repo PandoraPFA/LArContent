@@ -12,7 +12,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "LArThreeDReco/ThreeDBaseAlgorithm.h"
+#include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
 namespace lar
 {
@@ -31,6 +31,8 @@ public:
     public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
+
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
 
 private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);

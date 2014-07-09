@@ -55,14 +55,6 @@ private:
     void GetReclusteredHits(const TwoDSlidingFitResult& slidingFitResult, const pandora::Cluster* pTargetCluster,
         ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const;
 
-    /**
-     *  @brief Finalize the list of hits to be added and removed from clusters
-     *
-     *  @param caloHitsToAdd  the map of hits to be added to clusters
-     *  @param caloHitsToRemove  the map of hits to be removed from clusters
-     */
-    void FinalizeReclusteredHits(ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const;
-
     float        m_maxTransverseDisplacement;  ///<
     float        m_minAssociatedSpan;          ///<
     float        m_minAssociatedFraction;      ///<

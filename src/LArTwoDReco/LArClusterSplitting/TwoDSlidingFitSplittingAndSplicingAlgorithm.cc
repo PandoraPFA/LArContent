@@ -206,9 +206,9 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
 void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(const ClusterExtensionList &inputList,
     const TwoDSlidingFitResultMap &branchMap, const TwoDSlidingFitResultMap &replacementMap, ClusterExtensionList &outputList) const
 {
-    for (ClusterExtensionList::const_iterator iter = inputList.begin(), iterEnd = inputList.end(); iter != iterEnd; ++iter)
+    for (ClusterExtensionList::const_iterator eIter = inputList.begin(), eIterEnd = inputList.end(); eIter != eIterEnd; ++eIter)
     {
-        const ClusterExtension &thisSplit = *iter;
+        const ClusterExtension &thisSplit = *eIter;
 
         Cluster* pBranchCluster = thisSplit.GetBranchCluster();
         Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
@@ -259,7 +259,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
         if (branchVeto || replacementVeto)
             continue;
 
-        outputList.push_back(*iter);
+        outputList.push_back(thisSplit);
     }
 }
 
