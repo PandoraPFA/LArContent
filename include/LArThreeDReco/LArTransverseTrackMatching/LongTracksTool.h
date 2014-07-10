@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  LongTracksTool class
  */
-class LongTracksTool : public TensorManipulationTool
+class LongTracksTool : public TransverseTensorTool
 {
 public:
     /**

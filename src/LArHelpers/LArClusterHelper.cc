@@ -113,16 +113,12 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::LArTwoDShowerEdgeFit(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const CartesianVector &axisIntercept,
-    const CartesianVector &axisDirection, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult)
+void LArClusterHelper::LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
-    if ((std::fabs(axisIntercept.GetY()) > std::numeric_limits<float>::epsilon()) || (std::fabs(axisDirection.GetY()) > std::numeric_limits<float>::epsilon()))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    twoDSlidingFitResult.m_pCluster = pCluster;
-    twoDSlidingFitResult.m_layerFitHalfWindow = layerFitHalfWindow;
-    twoDSlidingFitResult.m_axisIntercept = axisIntercept;
-    twoDSlidingFitResult.m_axisDirection = axisDirection;
+    twoDSlidingFitResult.m_pCluster = fullShowerFit.GetCluster();
+    twoDSlidingFitResult.m_layerFitHalfWindow = fullShowerFit.GetLayerFitHalfWindow();
+    twoDSlidingFitResult.m_axisIntercept = fullShowerFit.GetAxisIntercept();
+    twoDSlidingFitResult.m_axisDirection = fullShowerFit.GetAxisDirection();
     TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap(twoDSlidingFitResult.m_layerFitContributionMap);
 
     // Examine all possible fit contributions
@@ -131,7 +127,7 @@ void LArClusterHelper::LArTwoDShowerEdgeFit(const Cluster *const pCluster, const
     typedef std::map<int, FitCoordinateList> FitCoordinateMap;
 
     FitCoordinateMap fitCoordinateMap;
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    const OrderedCaloHitList &orderedCaloHitList(fullShowerFit.GetCluster()->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -140,8 +136,23 @@ void LArClusterHelper::LArTwoDShowerEdgeFit(const Cluster *const pCluster, const
             float rL(0.f), rT(0.f);
             twoDSlidingFitResult.GetLocalPosition((*hitIter)->GetPositionVector(), rL, rT);
 
-            if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rT < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rT > 0.f)))
+            try
+            {
+                CartesianVector fullShowerFitPosition(0.f, 0.f, 0.f);
+                fullShowerFit.GetGlobalFitPosition(rL, fullShowerFitPosition);
+
+                float rLFit(0.f), rTFit(0.f);
+                twoDSlidingFitResult.GetLocalPosition(fullShowerFitPosition, rLFit, rTFit);
+
+                const float rTDiff(rT - rTFit);
+
+                if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rTDiff < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rTDiff > 0.f)))
+                    rT = rTFit;
+            }
+            catch (StatusCodeException &)
+            {
                 continue;
+            }
 
             const int layer(twoDSlidingFitResult.GetLayer(rL));
             fitCoordinateMap[layer].push_back(FitCoordinate(rL, rT));

@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  TrackSplittingTool class
  */
-class TrackSplittingTool : public TensorManipulationTool
+class TrackSplittingTool : public TransverseTensorTool
 {
 public:
     /**

@@ -61,7 +61,7 @@ public:
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
         TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
@@ -71,7 +71,7 @@ public:
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
         TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
@@ -83,23 +83,19 @@ public:
      *  @param  axisDirection the axis direction vector
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection,
         TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
      *
-     *  @param  pCluster address of the cluster
-     *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  axisIntercept the axis intercept position
-     *  @param  axisDirection the axis direction vector
+     *  @param  fullShowerFit the result of fitting the full shower
      *  @param  showerEdge the shower edge
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDShowerEdgeFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
-        const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult);
+    static void LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
+        TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Whether fit results are multivalued in x

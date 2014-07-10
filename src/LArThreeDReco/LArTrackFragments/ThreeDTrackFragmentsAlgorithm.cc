@@ -604,12 +604,12 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        FragmentTensorTool *pTensorManipulationTool(dynamic_cast<FragmentTensorTool*>(*iter));
+        FragmentTensorTool *pFragmentTensorTool(dynamic_cast<FragmentTensorTool*>(*iter));
 
-        if (NULL == pTensorManipulationTool)
+        if (NULL == pFragmentTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pTensorManipulationTool);
+        m_algorithmToolList.push_back(pFragmentTensorTool);
     }
 
     m_nMaxTensorToolRepeats = 5000;

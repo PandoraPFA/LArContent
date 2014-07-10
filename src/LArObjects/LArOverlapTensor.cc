@@ -18,6 +18,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 
 #include "LArObjects/LArOverlapTensor.h"
+#include "LArObjects/LArShowerOverlapResult.h"
 #include "LArObjects/LArTrackOverlapResult.h"
 
 using namespace pandora;
@@ -277,10 +278,10 @@ void OverlapTensor<T>::ExploreConnections(Cluster *const pCluster, const bool ig
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template class OverlapTensor<bool>;
 template class OverlapTensor<float>;
 template class OverlapTensor<TransverseOverlapResult>;
 template class OverlapTensor<LongitudinalOverlapResult>;
 template class OverlapTensor<FragmentOverlapResult>;
+template class OverlapTensor<ShowerOverlapResult>;
 
 } // namespace lar

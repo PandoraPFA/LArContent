@@ -40,6 +40,7 @@
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
 #include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
@@ -48,8 +49,8 @@
 #include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
-#include "LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
@@ -142,6 +143,7 @@ public:
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArShowerTensorVisualization",           lar::ShowerTensorVisualizationTool::Factory)                                \
         d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
         d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
@@ -152,8 +154,8 @@ public:
         d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \
         d("LArMissingTrackSegment",                 lar::MissingTrackSegmentTool::Factory)                                      \
         d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
-        d("LArTensorVisualization",                 lar::TensorVisualizationTool::Factory)                                      \
         d("LArTrackSplitting",                      lar::TrackSplittingTool::Factory)                                           \
+        d("LArTransverseTensorVisualization",       lar::TransverseTensorVisualizationTool::Factory)                            \
         d("LArUndershootTracks",                    lar::UndershootTracksTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \

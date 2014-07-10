@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  ClearTracksTool class
  */
-class ClearTracksTool : public TensorManipulationTool
+class ClearTracksTool : public TransverseTensorTool
 {
 public:
     /**

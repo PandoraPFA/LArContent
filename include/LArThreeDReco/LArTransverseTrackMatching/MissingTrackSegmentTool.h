@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  MissingTrackSegmentTool class
  */
-class MissingTrackSegmentTool : public TensorManipulationTool
+class MissingTrackSegmentTool : public TransverseTensorTool
 {
 public:
     /**

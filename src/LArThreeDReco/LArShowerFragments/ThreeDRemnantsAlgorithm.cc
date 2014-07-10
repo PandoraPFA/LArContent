@@ -110,12 +110,12 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        RemnantTensorTool *pTensorManipulationTool(dynamic_cast<RemnantTensorTool*>(*iter));
+        RemnantTensorTool *pRemnantTensorTool(dynamic_cast<RemnantTensorTool*>(*iter));
 
-        if (NULL == pTensorManipulationTool)
+        if (NULL == pRemnantTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pTensorManipulationTool);
+        m_algorithmToolList.push_back(pRemnantTensorTool);
     }
 
     m_nMaxTensorToolRepeats = 5000;

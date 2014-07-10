@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  ThreeDKinkBaseTool class
  */
-class ThreeDKinkBaseTool : public TensorManipulationTool
+class ThreeDKinkBaseTool : public TransverseTensorTool
 {
 public:
     /**
