@@ -43,8 +43,7 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
     }
     catch (StatusCodeException &statusCodeException)
     {
-        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() ||
-              STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
+        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
             throw statusCodeException;
     }
 }
@@ -320,12 +319,12 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        TensorManipulationTool *pTensorManipulationTool(dynamic_cast<TensorManipulationTool*>(*iter));
+        TransverseTensorTool *pTransverseTensorTool(dynamic_cast<TransverseTensorTool*>(*iter));
 
-        if (NULL == pTensorManipulationTool)
+        if (NULL == pTransverseTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pTensorManipulationTool);
+        m_algorithmToolList.push_back(pTransverseTensorTool);
     }
 
     m_nMaxTensorToolRepeats = 5000;

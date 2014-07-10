@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.h
+ *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h
  * 
- *  @brief  Header file for the tensor visualization tool class.
+ *  @brief  Header file for the transverse tensor visualization tool class.
  * 
  *  $Log: $
  */
-#ifndef TENSOR_VISUALIZATION_TOOL_H
-#define TENSOR_VISUALIZATION_TOOL_H 1
+#ifndef TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H
+#define TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H 1
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  TensorVisualizationTool class
+ *  @brief  TransverseTensorVisualizationTool class
  */
-class TensorVisualizationTool : public TensorManipulationTool
+class TransverseTensorVisualizationTool : public TransverseTensorTool
 {
 public:
     /**
@@ -41,11 +41,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::AlgorithmTool *TensorVisualizationTool::Factory::CreateAlgorithmTool() const
+inline pandora::AlgorithmTool *TransverseTensorVisualizationTool::Factory::CreateAlgorithmTool() const
 {
-    return new TensorVisualizationTool();
+    return new TransverseTensorVisualizationTool();
 }
 
 } // namespace lar
 
-#endif // #ifndef TENSOR_VISUALIZATION_TOOL_H
+#endif // #ifndef TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H

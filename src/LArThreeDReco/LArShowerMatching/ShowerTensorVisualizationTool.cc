@@ -1,21 +1,21 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.cc
+ *  @file   LArContent/src/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.cc
  * 
- *  @brief  Implementation of the tensor visualization tool class.
+ *  @brief  Implementation of the shower tensor visualization tool class.
  * 
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.h"
+#include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -53,10 +53,11 @@ bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
                       << ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints()
-                      << ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
-                      << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
-                      << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
-                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+//                      << ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
+//                      << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
+//                      << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
+//                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
+                      << std::endl;
 
             if (m_showEachIndividualElement)
             {
@@ -94,7 +95,7 @@ bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ShowerTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_minClusterConnections = 1;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

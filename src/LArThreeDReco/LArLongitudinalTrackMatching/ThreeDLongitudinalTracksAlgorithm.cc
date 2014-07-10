@@ -239,12 +239,12 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        LongitudinalTensorTool *pTensorManipulationTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
+        LongitudinalTensorTool *pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
 
-        if (NULL == pTensorManipulationTool)
+        if (NULL == pLongitudinalTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pTensorManipulationTool);
+        m_algorithmToolList.push_back(pLongitudinalTensorTool);
     }
 
     m_nMaxTensorToolRepeats = 5000;
