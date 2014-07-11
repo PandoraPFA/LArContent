@@ -63,9 +63,9 @@ public:
 
 private:
     /**
-     *  @brief  XOverlap class
+     *  @brief  XSampling class
      */
-    class XOverlap
+    class XSampling
     {
     public:
         /**
@@ -75,11 +75,17 @@ private:
          *  @param  fitResultV the sliding fit result for the v view
          *  @param  fitResultW the sliding fit result for the w view
          */
-        XOverlap(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV, const TwoDSlidingFitResult &fitResultW);
+        XSampling(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV, const TwoDSlidingFitResult &fitResultW);
 
+        float      m_uMinX;         ///< The min x value in the u view
+        float      m_uMaxX;         ///< The max x value in the u view
+        float      m_vMinX;         ///< The min x value in the v view
+        float      m_vMaxX;         ///< The max x value in the v view
+        float      m_wMinX;         ///< The min x value in the w view
+        float      m_wMaxX;         ///< The max x value in the w view
         float      m_minX;          ///< The min x value of the common x-overlap range
         float      m_maxX;          ///< The max x value of the common x-overlap range
-        float      m_xOverlap;      ///< The x-overlap
+        float      m_xOverlapSpan;  ///< The x-overlap span
         float      m_xPitch;        ///< The x sampling pitch to be used
     };
 
@@ -121,25 +127,25 @@ private:
      *  @param  fitResultU the sliding fit result for the u view
      *  @param  fitResultV the sliding fit result for the v view
      *  @param  fitResultW the sliding fit result for the w view
-     *  @param  xOverlap the common x-overlap details
+     *  @param  xSampling the x sampling details
      *  @param  positionMapU to receive the shower position map for the u view
      *  @param  positionMapV to receive the shower position map for the v view
      *  @param  positionMapW to receive the shower position map for the w view
      */
     void GetShowerPositionMaps(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV, const TwoDSlidingFitResult &fitResultW,
-        const XOverlap &xOverlap, ShowerPositionMap &positionMapU, ShowerPositionMap &positionMapV, ShowerPositionMap &positionMapW) const;
+        const XSampling &xSampling, ShowerPositionMap &positionMapU, ShowerPositionMap &positionMapV, ShowerPositionMap &positionMapW) const;
 
     /**
      *  @brief  Get the fraction of hits, in the common x-overlap range, contained within the provided shower boundaries
      * 
      *  @param  pCluster the address of the candidate cluster
-     *  @param  xOverlap the common x-overlap details
+     *  @param  xSampling the x sampling details
      *  @param  positionMap1 the first shower edge position map
      *  @param  positionMap2 the second shower edge position map
      *  @param  nSampledHits to receive the number of hits in the common x-overlap range
      *  @param  nMatchedHits to receive the number of sampled hits contained within the shower edges
      */
-    void GetHitOverlapFraction(const pandora::Cluster *const pCluster, const XOverlap &xOverlap, const ShowerPositionMap &positionMap1,
+    void GetHitOverlapFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &positionMap1,
         const ShowerPositionMap &positionMap2, unsigned int &nSampledHits, unsigned int &nMatchedHits) const;
 
     void ExamineTensor();

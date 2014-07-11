@@ -94,7 +94,7 @@ void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elem
         if (eIter->GetOverlapResult().GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
             continue;
 
-        const TransverseOverlapResult::XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
+        const XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
         const float shortSpan(std::min(xOverlap.GetXSpanU(), std::min(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float longSpan1(std::max(xOverlap.GetXSpanU(), std::max(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float longSpan2(((xOverlap.GetXSpanU() > shortSpan) && (xOverlap.GetXSpanU() < longSpan1)) ? xOverlap.GetXSpanU() :
@@ -335,7 +335,7 @@ bool MissingTrackSegmentTool::IsPossibleMerge(Cluster *const pCluster, const Par
 
 MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
 {
-    const TransverseOverlapResult::XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
+    const XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
 
     m_shortHitType = ((xOverlap.GetXSpanU() < xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() < xOverlap.GetXSpanW())) ? TPC_VIEW_U :
         ((xOverlap.GetXSpanV() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() < xOverlap.GetXSpanW())) ? TPC_VIEW_V :

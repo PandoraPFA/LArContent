@@ -185,7 +185,7 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
     if (0 == nSamplingPoints)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const TransverseOverlapResult::XOverlap xOverlapObject(fitSegmentU.GetMinX(), fitSegmentU.GetMaxX(), fitSegmentV.GetMinX(),
+    const XOverlap xOverlapObject(fitSegmentU.GetMinX(), fitSegmentU.GetMaxX(), fitSegmentV.GetMinX(),
         fitSegmentV.GetMaxX(), fitSegmentW.GetMinX(), fitSegmentW.GetMaxX(), xOverlap);
 
     return TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject);

@@ -53,11 +53,10 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, Tens
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
                       << ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints()
-//                      << ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
-//                      << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
-//                      << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
-//                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
-                      << std::endl;
+                      << ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
+                      << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
+                      << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
+                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
 
             if (m_showEachIndividualElement)
             {

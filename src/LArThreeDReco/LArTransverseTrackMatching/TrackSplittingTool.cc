@@ -83,7 +83,7 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
         if (eIter->GetOverlapResult().GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
             continue;
 
-        const TransverseOverlapResult::XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
+        const XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
         const float longSpan(std::max(xOverlap.GetXSpanU(), std::max(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float shortSpan1(std::min(xOverlap.GetXSpanU(), std::min(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float shortSpan2(((xOverlap.GetXSpanU() > shortSpan1) && (xOverlap.GetXSpanU() < longSpan)) ? xOverlap.GetXSpanU() :
@@ -187,7 +187,7 @@ bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, Cluste
 
 TrackSplittingTool::Particle::Particle(const TensorType::Element &element)
 {
-    const TransverseOverlapResult::XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
+    const XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
 
     const HitType longHitType = ((xOverlap.GetXSpanU() > xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() > xOverlap.GetXSpanW())) ? TPC_VIEW_U :
         ((xOverlap.GetXSpanV() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() > xOverlap.GetXSpanW())) ? TPC_VIEW_V :
