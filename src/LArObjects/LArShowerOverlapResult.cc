@@ -99,6 +99,15 @@ ShowerOverlapResult &ShowerOverlapResult::operator=(const ShowerOverlapResult &r
     m_nSamplingPoints = rhs.m_nSamplingPoints;
     m_matchedFraction = rhs.m_matchedFraction;
 
+    if (rhs.IsInitialized())
+    {
+        m_xOverlap = rhs.GetXOverlap();
+    }
+    else
+    {
+        m_xOverlap = XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+    }
+
     return *this;
 }
 

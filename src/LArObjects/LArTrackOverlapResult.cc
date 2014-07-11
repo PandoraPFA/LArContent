@@ -148,7 +148,15 @@ TransverseOverlapResult::~TransverseOverlapResult()
 TransverseOverlapResult &TransverseOverlapResult::operator=(const TransverseOverlapResult &rhs)
 {
     this->TrackOverlapResult::operator=(rhs);
-    m_xOverlap = rhs.GetXOverlap();
+
+    if (rhs.IsInitialized())
+    {
+        m_xOverlap = rhs.GetXOverlap();
+    }
+    else
+    {
+        m_xOverlap = XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+    }
 
     return *this;
 }
