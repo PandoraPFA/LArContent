@@ -92,8 +92,8 @@ protected:
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int                m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    TwoDSlidingFitResultMap     m_slidingFitResultMap;      ///< The sliding fit result map    
+    unsigned int                m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    TwoDSlidingFitResultMap     m_slidingFitResultMap;          ///< The sliding fit result map
 
     unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method

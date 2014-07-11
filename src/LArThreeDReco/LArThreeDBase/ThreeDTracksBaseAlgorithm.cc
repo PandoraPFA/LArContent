@@ -176,11 +176,7 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
 
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {
-        TwoDSlidingFitResult slidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
-
-        if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+        this->AddToSlidingFitCache(*iter);
     }
 }
 
