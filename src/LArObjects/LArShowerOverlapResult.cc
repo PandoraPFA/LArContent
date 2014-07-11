@@ -21,17 +21,19 @@ ShowerOverlapResult::ShowerOverlapResult() :
     m_isInitialized(false),
     m_nMatchedSamplingPoints(0),
     m_nSamplingPoints(0),
-    m_matchedFraction(0.f)
+    m_matchedFraction(0.f),
+    m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ShowerOverlapResult::ShowerOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints) :
+ShowerOverlapResult::ShowerOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const XOverlap &xOverlap) :
     m_isInitialized(true),
     m_nMatchedSamplingPoints(nMatchedSamplingPoints),
     m_nSamplingPoints(nSamplingPoints),
-    m_matchedFraction(0.f)
+    m_matchedFraction(0.f),
+    m_xOverlap(xOverlap)
 {
     if ((0 == m_nSamplingPoints) || (m_nMatchedSamplingPoints > m_nSamplingPoints))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -45,7 +47,8 @@ ShowerOverlapResult::ShowerOverlapResult(const ShowerOverlapResult &rhs) :
     m_isInitialized(rhs.m_isInitialized),
     m_nMatchedSamplingPoints(rhs.m_nMatchedSamplingPoints),
     m_nSamplingPoints(rhs.m_nSamplingPoints),
-    m_matchedFraction(rhs.m_matchedFraction)
+    m_matchedFraction(rhs.m_matchedFraction),
+    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 

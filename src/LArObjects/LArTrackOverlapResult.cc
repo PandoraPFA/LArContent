@@ -167,10 +167,10 @@ TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const Tran
     if (!rhs.IsInitialized())
         return lhs;
 
-    const TransverseOverlapResult::XOverlap &xOverlapLhs(lhs.GetXOverlap());
-    const TransverseOverlapResult::XOverlap &xOverlapRhs(rhs.GetXOverlap());
+    const XOverlap &xOverlapLhs(lhs.GetXOverlap());
+    const XOverlap &xOverlapRhs(rhs.GetXOverlap());
 
-    const TransverseOverlapResult::XOverlap xOverlapSum(
+    const XOverlap xOverlapSum(
         std::min(xOverlapLhs.GetUMinX(), xOverlapRhs.GetUMinX()), std::max(xOverlapLhs.GetUMaxX(), xOverlapRhs.GetUMaxX()),
         std::min(xOverlapLhs.GetVMinX(), xOverlapRhs.GetVMinX()), std::max(xOverlapLhs.GetVMaxX(), xOverlapRhs.GetVMaxX()),
         std::min(xOverlapLhs.GetWMinX(), xOverlapRhs.GetWMinX()), std::max(xOverlapLhs.GetWMaxX(), xOverlapRhs.GetWMaxX()),

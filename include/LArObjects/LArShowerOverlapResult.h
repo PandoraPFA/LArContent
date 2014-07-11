@@ -11,6 +11,8 @@
 #include "Pandora/PandoraInputTypes.h"
 #include "Pandora/StatusCodes.h"
 
+#include "LArObjects/LArXOverlap.h"
+
 #include <cmath>
 #include <vector>
 
@@ -34,7 +36,7 @@ public:
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
      */
-    ShowerOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints);
+    ShowerOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const XOverlap &xOverlap);
 
     /**
      *  @brief  Copy constructor
@@ -77,6 +79,13 @@ public:
     float GetMatchedFraction() const;
 
     /**
+     *  @brief  Get the x overlap object
+     * 
+     *  @return the x overlap object
+     */
+    const XOverlap &GetXOverlap() const;
+
+    /**
      *  @brief  Track overlap result less than operator
      * 
      *  @param  rhs the track overlap result for comparison
@@ -102,6 +111,7 @@ protected:
     unsigned int    m_nMatchedSamplingPoints;       ///< The number of matched sampling points
     unsigned int    m_nSamplingPoints;              ///< The number of sampling points
     float           m_matchedFraction;              ///< The fraction of sampling points resulting in a match
+    XOverlap        m_xOverlap;                     ///< The x overlap object
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -137,6 +147,16 @@ inline float ShowerOverlapResult::GetMatchedFraction() const
 {
     if (m_isInitialized)
         return m_matchedFraction;
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const XOverlap &ShowerOverlapResult::GetXOverlap() const
+{
+    if (m_isInitialized)
+        return m_xOverlap;
 
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
