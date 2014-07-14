@@ -56,7 +56,9 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, Tens
                       << ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
                       << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
                       << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
-                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
+                      << ", Availability (" << eIter->GetClusterU()->IsAvailable() << eIter->GetClusterV()->IsAvailable() << eIter->GetClusterW()->IsAvailable() << ") "
+                      << std::endl;
 
             if (m_showEachIndividualElement)
             {
