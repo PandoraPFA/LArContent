@@ -89,7 +89,7 @@ void ClearShowersTool::FindClearShowers(const TensorType &overlapTensor, ProtoPa
 
         IteratorList iteratorList;
         this->SelectLargeShowerElements(elementList, usedClusters, iteratorList);
-ClusterList allClusterListU, allClusterListV, allClusterListW;
+
         // Check that elements are not directly connected and are significantly longer than any other directly connected elements
         for (IteratorList::const_iterator iIter = iteratorList.begin(), iIterEnd = iteratorList.end(); iIter != iIterEnd; ++iIter)
         {
@@ -98,17 +98,6 @@ ClusterList allClusterListU, allClusterListV, allClusterListW;
 
             if (!ClearShowersTool::IsLargerThanDirectConnections(iIter, elementList, m_minMatchedSamplingPointRatio, m_minXOverlapSpanRatio, usedClusters))
                 continue;
-allClusterListU.insert((*iIter)->GetClusterU());
-allClusterListV.insert((*iIter)->GetClusterV());
-allClusterListW.insert((*iIter)->GetClusterW());
-std::cout << " Selected Element: MatchedFraction " << (*iIter)->GetOverlapResult().GetMatchedFraction()
-<< ", MatchedSamplingPoints " << (*iIter)->GetOverlapResult().GetNMatchedSamplingPoints()
-<< ", xSpanU " << (*iIter)->GetOverlapResult().GetXOverlap().GetXSpanU()
-<< ", xSpanV " << (*iIter)->GetOverlapResult().GetXOverlap().GetXSpanV()
-<< ", xSpanW " << (*iIter)->GetOverlapResult().GetXOverlap().GetXSpanW()
-<< ", xOverlapSpan " << (*iIter)->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
-<< ", Availability (" << (*iIter)->GetClusterU()->IsAvailable() << (*iIter)->GetClusterV()->IsAvailable() << (*iIter)->GetClusterW()->IsAvailable() << ") "
-<< std::endl;
 
             ProtoParticle protoParticle;
             protoParticle.m_clusterListU.insert((*iIter)->GetClusterU());
@@ -120,15 +109,6 @@ std::cout << " Selected Element: MatchedFraction " << (*iIter)->GetOverlapResult
             usedClusters.insert((*iIter)->GetClusterV());
             usedClusters.insert((*iIter)->GetClusterW());
         }
-if (!allClusterListU.empty() || !allClusterListV.empty() || !allClusterListW.empty())
-{
-std::cout << " All Connected Clusters " << std::endl;
-PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-PANDORA_MONITORING_API(VisualizeClusters(&allClusterListU, "AllUClusters", RED));
-PANDORA_MONITORING_API(VisualizeClusters(&allClusterListV, "AllVClusters", GREEN));
-PANDORA_MONITORING_API(VisualizeClusters(&allClusterListW, "AllWClusters", BLUE));
-PANDORA_MONITORING_API(ViewEvent());
-}
     }
 }
 
