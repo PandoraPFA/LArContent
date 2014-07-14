@@ -20,16 +20,15 @@ bool SplitShowersTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overl
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
-    ProtoParticleVector protoParticleVector;
-    this->FindSplitShowers(overlapTensor, protoParticleVector);
+    ClusterMergeMap clusterMergeMap;
+    this->FindSplitShowers(pAlgorithm, overlapTensor, clusterMergeMap);
 
-    const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
-    return particlesMade;
+    return this->ApplyChanges(pAlgorithm, clusterMergeMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::FindSplitShowers(const TensorType &overlapTensor, ProtoParticleVector &/*protoParticleVector*/) const
+void SplitShowersTool::FindSplitShowers(ThreeDShowersAlgorithm *pAlgorithm, const TensorType &overlapTensor, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterList usedClusters;
 
@@ -46,7 +45,7 @@ void SplitShowersTool::FindSplitShowers(const TensorType &overlapTensor, ProtoPa
             continue;
 
         std::sort(elementList.begin(), elementList.end(), ThreeDShowersAlgorithm::SortByNMatchedSamplingPoints);
-ClusterList allClusterListU, allClusterListV, allClusterListW;
+
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
             if (!this->PassesElementCuts(eIter, usedClusters))
@@ -58,33 +57,14 @@ ClusterList allClusterListU, allClusterListV, allClusterListW;
             if (iteratorList.size() < 2)
                 continue;
 
-            for (IteratorList::const_iterator iIter = iteratorList.begin(), iIterEnd = iteratorList.end(); iIter != iIterEnd; ++iIter)
+            this->FindShowerMerges(pAlgorithm, iteratorList, clusterMergeMap);
+
+            for (ClusterMergeMap::const_iterator cIter = clusterMergeMap.begin(), cIterEnd = clusterMergeMap.end(); cIter != cIterEnd; ++cIter)
             {
-allClusterListU.insert((*iIter)->GetClusterU());
-allClusterListV.insert((*iIter)->GetClusterV());
-allClusterListW.insert((*iIter)->GetClusterW());
-std::cout << " Selected Element: MatchedFraction " << (*iIter)->GetOverlapResult().GetMatchedFraction()
-<< ", MatchedSamplingPoints " << (*iIter)->GetOverlapResult().GetNMatchedSamplingPoints()
-<< ", xSpanU " << (*iIter)->GetOverlapResult().GetXOverlap().GetXSpanU()
-<< ", xSpanV " << (*iIter)->GetOverlapResult().GetXOverlap().GetXSpanV()
-<< ", xSpanW " << (*iIter)->GetOverlapResult().GetXOverlap().GetXSpanW()
-<< ", xOverlapSpan " << (*iIter)->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
-<< ", Availability (" << (*iIter)->GetClusterU()->IsAvailable() << (*iIter)->GetClusterV()->IsAvailable() << (*iIter)->GetClusterW()->IsAvailable() << ") "
-<< std::endl;
-                usedClusters.insert((*iIter)->GetClusterU());
-                usedClusters.insert((*iIter)->GetClusterV());
-                usedClusters.insert((*iIter)->GetClusterW());
+                usedClusters.insert(cIter->first);
+                usedClusters.insert(cIter->second.begin(), cIter->second.end());
             }
         }
-if (!allClusterListU.empty() || !allClusterListV.empty() || !allClusterListW.empty())
-{
-std::cout << " All Connected Clusters " << std::endl;
-PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-PANDORA_MONITORING_API(VisualizeClusters(&allClusterListU, "AllUClusters", RED));
-PANDORA_MONITORING_API(VisualizeClusters(&allClusterListV, "AllVClusters", GREEN));
-PANDORA_MONITORING_API(VisualizeClusters(&allClusterListW, "AllWClusters", BLUE));
-PANDORA_MONITORING_API(ViewEvent());
-}
     }
 }
 
@@ -142,6 +122,81 @@ void SplitShowersTool::SelectTensorElements(TensorType::ElementList::const_itera
             }
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm */*pAlgorithm*/, const IteratorList &iteratorList, ClusterMergeMap &/*clusterMergeMap*/) const
+{
+    for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
+    {
+        for (IteratorList::const_iterator iIter2 = iIter1; iIter2 != iIter1End; ++iIter2)
+        {
+            if (iIter1 == iIter2)
+                continue;
+
+            try
+            {
+                
+
+//PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
+//ClusterList clusterListU1, clusterListV1, clusterListW1;
+//clusterListU1.insert((*iIter1)->GetClusterU());
+//clusterListV1.insert((*iIter1)->GetClusterV());
+//clusterListW1.insert((*iIter1)->GetClusterW());
+//std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter1)->GetOverlapResult().GetMatchedFraction()
+//<< ", MatchedSamplingPoints " << (*iIter1)->GetOverlapResult().GetNMatchedSamplingPoints()
+//<< ", xSpanU " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanU()
+//<< ", xSpanV " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanV()
+//<< ", xSpanW " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanW()
+//<< ", xOverlapSpan " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+//PANDORA_MONITORING_API(VisualizeClusters(&clusterListU1, "clusterListU1", RED));
+//PANDORA_MONITORING_API(VisualizeClusters(&clusterListV1, "clusterListV1", GREEN));
+//PANDORA_MONITORING_API(VisualizeClusters(&clusterListW1, "clusterListW1", BLUE));
+//ClusterList clusterListU2, clusterListV2, clusterListW2;
+//clusterListU2.insert((*iIter2)->GetClusterU());
+//clusterListV2.insert((*iIter2)->GetClusterV());
+//clusterListW2.insert((*iIter2)->GetClusterW());
+//std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter2)->GetOverlapResult().GetMatchedFraction()
+//<< ", MatchedSamplingPoints " << (*iIter2)->GetOverlapResult().GetNMatchedSamplingPoints()
+//<< ", xSpanU " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanU()
+//<< ", xSpanV " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanV()
+//<< ", xSpanW " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanW()
+//<< ", xOverlapSpan " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+//PANDORA_MONITORING_API(VisualizeClusters(&clusterListU2, "clusterListU2", RED));
+//PANDORA_MONITORING_API(VisualizeClusters(&clusterListV2, "clusterListV2", GREEN));
+//PANDORA_MONITORING_API(VisualizeClusters(&clusterListW2, "clusterListW2", BLUE));
+//PANDORA_MONITORING_API(ViewEvent());
+            }
+            catch (StatusCodeException &)
+            {
+                continue;
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SplitShowersTool::ApplyChanges(ThreeDShowersAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const
+{
+    ClusterMergeMap consolidatedMergeMap;
+
+    for (ClusterMergeMap::const_iterator cIter = clusterMergeMap.begin(), cIterEnd = clusterMergeMap.end(); cIter != cIterEnd; ++cIter)
+    {
+        const ClusterList &daughterClusters(cIter->second);
+
+        for (ClusterList::const_iterator dIter = daughterClusters.begin(), dIterEnd = daughterClusters.end(); dIter != dIterEnd; ++dIter)
+        {
+            if (consolidatedMergeMap.count(*dIter))
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+
+        ClusterList &targetClusterList(consolidatedMergeMap[cIter->first]);
+        targetClusterList.insert(daughterClusters.begin(), daughterClusters.end());
+    }
+
+    return pAlgorithm->MakeClusterMerges(consolidatedMergeMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

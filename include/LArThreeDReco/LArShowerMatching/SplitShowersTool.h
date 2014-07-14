@@ -32,12 +32,13 @@ public:
 
 private:
     /**
-     *  @brief  Find split showers matches, using information from the overlap tensor
+     *  @brief  Find split showers, using information from the overlap tensor
      * 
+     *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
-     *  @param  protoParticleVector to receive the list of proto particles
+     *  @param  clusterMergeMap to receive the list of cluster merges
      */
-    void FindSplitShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+    void FindSplitShowers(ThreeDShowersAlgorithm *pAlgorithm, const TensorType &overlapTensor, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for undershoots identification
@@ -57,6 +58,25 @@ private:
      */
     void SelectTensorElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
         const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
+
+    /**
+     *  @brief  Get cluster merges specific elements of the tensor
+     * 
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  iteratorList list of iterators to relevant tensor elements
+     *  @param  clusterMergeMap to be populated with cluster merges
+     */
+    void FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, const IteratorList &iteratorList, ClusterMergeMap &clusterMergeMap) const;
+
+    /**
+     *  @brief  Apply the changes cached in a cluster merge map and update the tensor accordingly
+     * 
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  clusterMergeMap the cluster merge map
+     * 
+     *  @return whether changes to the tensor have been made
+     */
+    bool ApplyChanges(ThreeDShowersAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
