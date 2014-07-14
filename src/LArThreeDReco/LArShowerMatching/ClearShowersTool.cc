@@ -98,7 +98,6 @@ ClusterList allClusterListU, allClusterListV, allClusterListW;
 
             if (!ClearShowersTool::IsLargerThanDirectConnections(iIter, elementList, m_minMatchedSamplingPointRatio, m_minXOverlapSpanRatio, usedClusters))
                 continue;
-
 allClusterListU.insert((*iIter)->GetClusterU());
 allClusterListV.insert((*iIter)->GetClusterV());
 allClusterListW.insert((*iIter)->GetClusterW());
@@ -111,18 +110,11 @@ std::cout << " Selected Element: MatchedFraction " << (*iIter)->GetOverlapResult
 << ", Availability (" << (*iIter)->GetClusterU()->IsAvailable() << (*iIter)->GetClusterV()->IsAvailable() << (*iIter)->GetClusterW()->IsAvailable() << ") "
 << std::endl;
 
-            if ((*iIter)->GetClusterU()->IsAvailable() && (*iIter)->GetClusterV()->IsAvailable() &&(*iIter)->GetClusterW()->IsAvailable())
-            {
-std::cout << "Will create shower " << std::endl;
-                ProtoParticle protoParticle;
-                protoParticle.m_clusterListU.insert((*iIter)->GetClusterU());
-                protoParticle.m_clusterListV.insert((*iIter)->GetClusterV());
-                protoParticle.m_clusterListW.insert((*iIter)->GetClusterW());
-                protoParticleVector.push_back(protoParticle);
-            }
-
-            if (((*iIter)->GetClusterU()->IsAvailable() != (*iIter)->GetClusterV()->IsAvailable()) || ((*iIter)->GetClusterU()->IsAvailable() != (*iIter)->GetClusterW()->IsAvailable()))
-                std::cout << "ClearShowersTool: Cluster track/shower usage issues detected... " << std::endl;
+            ProtoParticle protoParticle;
+            protoParticle.m_clusterListU.insert((*iIter)->GetClusterU());
+            protoParticle.m_clusterListV.insert((*iIter)->GetClusterV());
+            protoParticle.m_clusterListW.insert((*iIter)->GetClusterW());
+            protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
             usedClusters.insert((*iIter)->GetClusterV());
@@ -175,7 +167,7 @@ StatusCode ClearShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 20;
+    m_minMatchedSamplingPoints = 40;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 

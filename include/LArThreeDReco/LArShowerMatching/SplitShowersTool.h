@@ -28,33 +28,9 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    /**
-     *  @brief  Whether a large shower-like element shares clusters with any other long elements
-     * 
-     *  @param  iIter specifies the large element under consideration
-     *  @param  iteratorList list of iterators to other large elements
-     * 
-     *  @return boolean
-     */
-    static bool HasLargeDirectConnections(IteratorList::const_iterator iIter, const IteratorList &iteratorList);
-
-    /**
-     *  @brief  Whether a large shower-like element is significantly larger that other elements with which it shares a cluster
-     * 
-     *  @param  iIter specifies the large element under consideration
-     *  @param  elementList the full list of connected tensor elements
-     *  @param  minMatchedSamplingPointRatio the min ratio between 1st and 2nd highest msps for simple ambiguity resolution
-     *  @param  minMatchedSamplingPointRatio the min ratio between 1st and 2nd highest x-overlap spans for simple ambiguity resolution
-     *  @param  usedClusters the list of clusters already marked as to be added to a pfo
-     */
-    static bool IsLargerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
-        const unsigned int minMatchedSamplingPointRatio, const float minXOverlapSpanRatio, const pandora::ClusterList &usedClusters);
-
     bool Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor);
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
     /**
      *  @brief  Find split showers matches, using information from the overlap tensor
      * 
@@ -64,18 +40,29 @@ private:
     void FindSplitShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
     /**
-     *  @brief  Select a list of large shower-like elements from a set of connected tensor elements
+     *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for undershoots identification
      * 
-     *  @param  elementList the full list of connected tensor elements
-     *  @param  usedClusters the list of clusters already marked as to be added to a pfo
-     *  @param  iteratorList to receive a list of iterators to large shower-like elements
+     *  @param  eIter the iterator to the tensor element
+     *  @param  usedClusters the list of used clusters
      */
-    void SelectLargeShowerElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters,
-        IteratorList &iteratorList) const;
+    bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
 
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
-    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
-    float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
+    /**
+     *  @brief  Select elements representing possible components of interest due to undershoots in clustering
+     * 
+     *  @param  eIter iterator to a candidate element
+     *  @param  elementList the provided element list
+     *  @param  usedClusters the list of used clusters
+     *  @param  iteratorList to receive a list of iterators to relevant elements
+     */
+    void SelectTensorElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
+        const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    unsigned int    m_nCommonClusters;                  ///< The number of common clusters
+    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
+    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
