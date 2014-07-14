@@ -162,6 +162,7 @@ private:
     unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 
+    float                       m_hitOverlapTolerance;          ///< The tolerance used when deciding whether hits are enclosed by shower envelopes
     float                       m_minShowerMatchedFraction;     ///< The minimum shower matched sampling fraction to allow shower grouping
     unsigned int                m_minShowerMatchedPoints;       ///< The minimum number of matched shower sampling points to allow shower grouping
 };

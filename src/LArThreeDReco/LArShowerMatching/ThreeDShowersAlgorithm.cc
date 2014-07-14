@@ -238,7 +238,7 @@ void ThreeDShowersAlgorithm::GetHitOverlapFraction(const Cluster *const pCluster
             const float maxZ(std::max(edgeIter1->second.GetZ(), edgeIter2->second.GetZ()));
             const float minZ(std::min(edgeIter1->second.GetZ(), edgeIter2->second.GetZ()));
 
-            if ((z > minZ) && (z < maxZ))
+            if ((z > minZ - m_hitOverlapTolerance) && (z < maxZ + m_hitOverlapTolerance))
             {
                 ++nMatchedHits;
             }
@@ -333,6 +333,10 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
+
+    m_hitOverlapTolerance = 0.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "HitOverlapTolerance", m_hitOverlapTolerance));
 
     m_minShowerMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

@@ -40,9 +40,11 @@
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
 #include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
-#include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
+#include "LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
@@ -143,7 +145,9 @@ public:
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArClearShowers",                        lar::ClearShowersTool::Factory)                                             \
         d("LArShowerTensorVisualization",           lar::ShowerTensorVisualizationTool::Factory)                                \
+        d("LArSplitShowers",                        lar::SplitShowersTool::Factory)                                             \
         d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
         d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
