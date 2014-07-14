@@ -80,12 +80,12 @@ void ClearShowersTool::FindClearShowers(const TensorType &overlapTensor, ProtoPa
 
     for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
-//        if (!iterU->first->IsAvailable())
-//            continue;
+        if (!iterU->first->IsAvailable())
+            continue;
 
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(iterU->first, false, elementList, nU, nV, nW);
+        overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
 
         IteratorList iteratorList;
         this->SelectLargeShowerElements(elementList, usedClusters, iteratorList);

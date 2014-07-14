@@ -22,6 +22,10 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
 
+    PfoList pfoList;
+    this->GetInputPfoList(pfoList);
+    ClusterInfoMap nCaloHitsPerCluster, nBranchesPerCluster;
+
     ClusterList usedClusters;
     Cluster *pSeedCluster = NULL;
 
@@ -41,11 +45,19 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
             usedClusters.insert(iter->first);
             usedClusters.insert(iter->second.begin(), iter->second.end());
 
+            this->StoreNCaloHitsPerCluster(iter->first, nCaloHitsPerCluster);
+            this->StoreNBranchesPerCluster(iter->first, iter->second, nBranchesPerCluster);
+
             for (ClusterVector::const_iterator iter2 = iter->second.begin(), iter2End = iter->second.end(); iter2 != iter2End; ++iter2)
             {
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *iter2, m_inputClusterListName, m_inputClusterListName));
             }
         }
+    }
+
+    if (m_shouldRemoveShowerPfos)
+    {
+        this->RemoveShowerPfos(pClusterList, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -220,13 +232,142 @@ bool ClusterCharacterisationAlgorithm::SortClusters(const Cluster *const pLhs, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ClusterCharacterisationAlgorithm::GetInputPfoList(PfoList &pfoList) const
+{
+    for (StringVector::const_iterator iter = m_inputPfoListNames.begin(), iterEnd = m_inputPfoListNames.end(); iter != iterEnd; ++iter)
+    {
+        const PfoList *pPfoList = NULL;
+
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
+        {
+            std::cout << "ClusterCharacterisationAlgorithm : Could not find input pfo list with name " << *iter << std::endl;
+            continue;
+        }
+
+        pfoList.insert(pPfoList->begin(), pPfoList->end());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterCharacterisationAlgorithm::StoreNCaloHitsPerCluster(const Cluster *const pCluster, ClusterInfoMap &clusterInfoMap) const
+{
+    // ATTN: Stores only first value provided per cluster
+    if (clusterInfoMap.count(pCluster))
+        return;
+
+    if (!clusterInfoMap.insert(ClusterInfoMap::value_type(pCluster, pCluster->GetNCaloHits())).second)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterCharacterisationAlgorithm::StoreNBranchesPerCluster(const Cluster *const pCluster, const ClusterVector &branchList,
+    ClusterInfoMap &clusterInfoMap) const
+{
+    // ATTN: Stores total number of branches linked to eventual parent cluster
+    ClusterInfoMap::const_iterator iIter = clusterInfoMap.find(pCluster);
+    unsigned int nBranchesSum((clusterInfoMap.end() == iIter) ? 0 : iIter->second);
+
+    for (ClusterVector::const_iterator iter = branchList.begin(), iterEnd = branchList.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pBranchCluster = *iter;
+        ClusterInfoMap::const_iterator bIter = clusterInfoMap.find(pBranchCluster);
+        const unsigned int nBranches((clusterInfoMap.end() == bIter) ? 0 : bIter->second);
+        nBranchesSum += (1 + nBranches);
+    }
+
+    clusterInfoMap[pCluster] = nBranchesSum;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterCharacterisationAlgorithm::RemoveShowerPfos(const ClusterList *const pClusterList, PfoList &pfoList,
+    const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster) const
+{
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            Cluster *pCluster = *iter;
+
+            if (pCluster->IsAvailable())
+                continue;
+
+            ClusterInfoMap::const_iterator nCaloHitsIter = nCaloHitsPerCluster.find(pCluster);
+            ClusterInfoMap::const_iterator nBranchesIter = nBranchesPerCluster.find(pCluster);
+
+            if ((nCaloHitsPerCluster.end() == nCaloHitsIter) || (nBranchesPerCluster.end() == nBranchesIter))
+                continue;
+
+            if (0 == nCaloHitsIter->second)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            const float nCaloHitsRatio(static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(nCaloHitsIter->second));
+            const unsigned int nBranches(nBranchesIter->second);
+
+            if ((nBranches < m_showerLikeNBranches) && (nCaloHitsRatio < m_showerLikeCaloHitRatio))
+                continue;
+
+            Pfo *pTargetPfo = NULL;
+            this->FindTargetPfo(pCluster, pfoList, pTargetPfo);
+
+            pfoList.erase(pTargetPfo);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pTargetPfo));
+        }
+        catch (StatusCodeException &)
+        {
+            std::cout << "ClusterCharacterisationAlgorithm: Unable to remove shower-like particle flow object " << std::endl;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterCharacterisationAlgorithm::FindTargetPfo(Cluster *const pCluster, const PfoList &pfoList, Pfo *&pTargetPfo) const
+{
+    pTargetPfo = NULL;
+
+    for (PfoList::const_iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; ++iter)
+    {
+        Pfo *pPfo = *iter;
+
+        if (pPfo->GetClusterList().count(pCluster))
+        {
+            pTargetPfo = pPfo;
+            return;
+        }
+    }
+
+    if (NULL == pTargetPfo)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
 
+    m_inputPfoListNames.clear();
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputPfoListNames", m_inputPfoListNames));
+
     m_minCaloHitsPerCluster = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
+
+    m_shouldRemoveShowerPfos = true;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldRemoveShowerPfos", m_shouldRemoveShowerPfos));
+
+    m_showerLikeNBranches = 5;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowerLikeNBranches", m_showerLikeNBranches));
+
+    m_showerLikeCaloHitRatio = 2.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowerLikeCaloHitRatio", m_showerLikeCaloHitRatio));
 
     return STATUS_CODE_SUCCESS;
 }
