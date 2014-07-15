@@ -110,6 +110,14 @@ private:
     float       m_xOverlapSpan;                 ///< The x overlap span
 };
 
+/**
+ *  @brief  x overlap result + operator
+ * 
+ *  @param  lhs the first x overlap result to add
+ *  @param  rhs the second x overlap result to add
+ */
+XOverlap operator+(const XOverlap &lhs, const XOverlap &rhs);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline XOverlap::XOverlap(const float uMinX, const float uMaxX, const float vMinX, const float vMaxX,
@@ -192,6 +200,23 @@ inline float XOverlap::GetXSpanW() const
 inline float XOverlap::GetXOverlapSpan() const
 {
     return m_xOverlapSpan;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline XOverlap operator+(const XOverlap &lhs, const XOverlap &rhs)
+{
+    const float uMinX(std::min(lhs.GetUMinX(), rhs.GetUMinX()));
+    const float uMaxX(std::max(lhs.GetUMaxX(), rhs.GetUMaxX()));
+    const float vMinX(std::min(lhs.GetVMinX(), rhs.GetVMinX()));
+    const float vMaxX(std::max(lhs.GetVMaxX(), rhs.GetVMaxX()));
+    const float wMinX(std::min(lhs.GetWMinX(), rhs.GetWMinX()));
+    const float wMaxX(std::max(lhs.GetWMaxX(), rhs.GetWMaxX()));
+    const float minX(std::max(uMinX, std::max(vMinX, wMinX)));
+    const float maxX(std::min(uMaxX, std::min(vMaxX, wMaxX)));
+    const float xOverlapSpan(maxX - minX);
+
+    return XOverlap(uMinX, uMaxX, vMinX, vMaxX, wMinX, wMaxX, xOverlapSpan);
 }
 
 } // namespace lar
