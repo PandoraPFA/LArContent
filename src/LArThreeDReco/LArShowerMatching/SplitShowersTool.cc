@@ -57,13 +57,7 @@ void SplitShowersTool::FindSplitShowers(ThreeDShowersAlgorithm *pAlgorithm, cons
             if (iteratorList.size() < 2)
                 continue;
 
-            this->FindShowerMerges(pAlgorithm, iteratorList, clusterMergeMap);
-
-            for (ClusterMergeMap::const_iterator cIter = clusterMergeMap.begin(), cIterEnd = clusterMergeMap.end(); cIter != cIterEnd; ++cIter)
-            {
-                usedClusters.insert(cIter->first);
-                usedClusters.insert(cIter->second.begin(), cIter->second.end());
-            }
+            this->FindShowerMerges(pAlgorithm, iteratorList, usedClusters, clusterMergeMap);
         }
     }
 }
@@ -126,54 +120,165 @@ void SplitShowersTool::SelectTensorElements(TensorType::ElementList::const_itera
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm */*pAlgorithm*/, const IteratorList &iteratorList, ClusterMergeMap &/*clusterMergeMap*/) const
+void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, const IteratorList &iteratorList, ClusterList &usedClusters,
+    ClusterMergeMap &clusterMergeMap) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
         for (IteratorList::const_iterator iIter2 = iIter1; iIter2 != iIter1End; ++iIter2)
         {
-            if (iIter1 == iIter2)
-                continue;
-
             try
             {
-                
+                if (iIter1 == iIter2)
+                    continue;
 
-//PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-//ClusterList clusterListU1, clusterListV1, clusterListW1;
-//clusterListU1.insert((*iIter1)->GetClusterU());
-//clusterListV1.insert((*iIter1)->GetClusterV());
-//clusterListW1.insert((*iIter1)->GetClusterW());
-//std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter1)->GetOverlapResult().GetMatchedFraction()
-//<< ", MatchedSamplingPoints " << (*iIter1)->GetOverlapResult().GetNMatchedSamplingPoints()
-//<< ", xSpanU " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanU()
-//<< ", xSpanV " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanV()
-//<< ", xSpanW " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanW()
-//<< ", xOverlapSpan " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListU1, "clusterListU1", RED));
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListV1, "clusterListV1", GREEN));
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListW1, "clusterListW1", BLUE));
-//ClusterList clusterListU2, clusterListV2, clusterListW2;
-//clusterListU2.insert((*iIter2)->GetClusterU());
-//clusterListV2.insert((*iIter2)->GetClusterV());
-//clusterListW2.insert((*iIter2)->GetClusterW());
-//std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter2)->GetOverlapResult().GetMatchedFraction()
-//<< ", MatchedSamplingPoints " << (*iIter2)->GetOverlapResult().GetNMatchedSamplingPoints()
-//<< ", xSpanU " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanU()
-//<< ", xSpanV " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanV()
-//<< ", xSpanW " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanW()
-//<< ", xOverlapSpan " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListU2, "clusterListU2", RED));
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListV2, "clusterListV2", GREEN));
-//PANDORA_MONITORING_API(VisualizeClusters(&clusterListW2, "clusterListW2", BLUE));
-//PANDORA_MONITORING_API(ViewEvent());
+                const TensorType::Element &element1(*(*iIter1));
+                const TensorType::Element &element2(*(*iIter2));
+
+                ClusterList clusterListU, clusterListV, clusterListW;
+                clusterListU.insert(element1.GetClusterU()); clusterListU.insert(element2.GetClusterU());
+                clusterListV.insert(element1.GetClusterV()); clusterListV.insert(element2.GetClusterV());
+                clusterListW.insert(element1.GetClusterW()); clusterListW.insert(element2.GetClusterW());
+
+                const unsigned int nClustersU(clusterListU.size()), nClustersV(clusterListV.size()), nClustersW(clusterListW.size());
+                const unsigned int nClustersProduct(nClustersU * nClustersV * nClustersW);
+
+                if (((1 == m_nCommonClusters) && (4 != nClustersProduct)) || ((2 == m_nCommonClusters) && (2 != nClustersProduct)))
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                if ((1 == m_nCommonClusters) && !((2 == nClustersU) || (2 == nClustersV) || (2 == nClustersW)))
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                if (!this->CheckClusterConsistency(pAlgorithm, clusterListU) ||
+                    !this->CheckClusterConsistency(pAlgorithm, clusterListV) ||
+                    !this->CheckClusterConsistency(pAlgorithm, clusterListW) ||
+                    !this->CheckClusterConsistencies(pAlgorithm, clusterListU, clusterListV, clusterListW))
+                {
+                    continue;
+                }
+
+                this->SpecifyClusterMerges(pAlgorithm, clusterListU, clusterMergeMap);
+                this->SpecifyClusterMerges(pAlgorithm, clusterListV, clusterMergeMap);
+                this->SpecifyClusterMerges(pAlgorithm, clusterListW, clusterMergeMap);
+
+                usedClusters.insert(clusterListU.begin(), clusterListU.end());
+                usedClusters.insert(clusterListV.begin(), clusterListV.end());
+                usedClusters.insert(clusterListW.begin(), clusterListW.end());
+std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter1)->GetOverlapResult().GetMatchedFraction()
+<< ", MatchedSamplingPoints " << (*iIter1)->GetOverlapResult().GetNMatchedSamplingPoints()
+<< ", xSpanU " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanU()
+<< ", xSpanV " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanV()
+<< ", xSpanW " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanW()
+<< ", xOverlapSpan " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter2)->GetOverlapResult().GetMatchedFraction()
+<< ", MatchedSamplingPoints " << (*iIter2)->GetOverlapResult().GetNMatchedSamplingPoints()
+<< ", xSpanU " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanU()
+<< ", xSpanV " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanV()
+<< ", xSpanW " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanW()
+<< ", xOverlapSpan " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
+PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "clusterListU", RED));
+PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "clusterListV", GREEN));
+PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "clusterListW", BLUE));
+PANDORA_MONITORING_API(ViewEvent());
             }
             catch (StatusCodeException &)
             {
-                continue;
             }
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SplitShowersTool::CheckClusterConsistency(ThreeDShowersAlgorithm */*pAlgorithm*/, const ClusterList &clusterList) const
+{
+    if (1 == clusterList.size())
+        return true;
+
+    if (2 != clusterList.size())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+//    Cluster *pClusterA(*(clusterList.begin())), *pClusterB(*(clusterList.rbegin()));
+//    const ThreeDShowersAlgorithm::SlidingShowerFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA));
+//    const ThreeDShowersAlgorithm::SlidingShowerFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB));
+
+    // TODO
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SplitShowersTool::CheckClusterConsistencies(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterListU,
+    const ClusterList &clusterListV, const ClusterList &clusterListW) const
+{
+    const unsigned int nClustersU(clusterListU.size()), nClustersV(clusterListV.size()), nClustersW(clusterListW.size());
+    const unsigned int nClustersProduct(nClustersU * nClustersV * nClustersW);
+
+    if (2 == nClustersProduct)
+        return true;
+
+    const ClusterList &clusterList1((1 == nClustersU) ? clusterListV : (1 == nClustersV) ? clusterListU : clusterListU);
+    const ClusterList &clusterList2((1 == nClustersU) ? clusterListW : (1 == nClustersV) ? clusterListW : clusterListV);
+
+    if ((2 != clusterList1.size()) || (2 != clusterList2.size()))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const float splitPosition1(this->GetSplitXCoordinate(pAlgorithm, *(clusterList1.begin()), *(clusterList1.rbegin())));
+    const float splitPosition2(this->GetSplitXCoordinate(pAlgorithm, *(clusterList2.begin()), *(clusterList2.rbegin())));
+
+    if (std::fabs(splitPosition1 - splitPosition2) < m_minSplitXDifference)
+    {
+        std::cout << " Consider splitting common cluster, splitPosition1 " << splitPosition1 << ", splitPosition2 " << splitPosition2 << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float SplitShowersTool::GetSplitXCoordinate(ThreeDShowersAlgorithm *pAlgorithm, Cluster *const pClusterA, Cluster *const pClusterB) const
+{
+    const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).m_showerFitResult);
+    const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).m_showerFitResult);
+
+    FloatVector floatVector;
+    floatVector.push_back(fitResultA.GetGlobalMinLayerPosition().GetX());
+    floatVector.push_back(fitResultA.GetGlobalMaxLayerPosition().GetX());
+    floatVector.push_back(fitResultB.GetGlobalMinLayerPosition().GetX());
+    floatVector.push_back(fitResultB.GetGlobalMaxLayerPosition().GetX());
+
+    std::sort(floatVector.begin(), floatVector.end());
+
+    if (4 != floatVector.size())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const float splitXEstimate(0.5f * (floatVector.at(1) + floatVector.at(2)));
+    return splitXEstimate;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void SplitShowersTool::SpecifyClusterMerges(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterList, ClusterMergeMap &clusterMergeMap) const
+{
+    if (1 == clusterList.size())
+        return;
+
+    if (2 != clusterList.size())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    Cluster *pClusterA(*(clusterList.begin())), *pClusterB(*(clusterList.rbegin()));
+    const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).m_showerFitResult);
+    const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).m_showerFitResult);
+
+    const float minXA(std::min(fitResultA.GetGlobalMinLayerPosition().GetX(), fitResultA.GetGlobalMaxLayerPosition().GetX()));
+    const float minXB(std::min(fitResultB.GetGlobalMinLayerPosition().GetX(), fitResultB.GetGlobalMaxLayerPosition().GetX()));
+
+    Cluster *pLowXCluster((minXA < minXB) ? pClusterA : pClusterB);
+    Cluster *pHighXCluster((minXA < minXB) ? pClusterB : pClusterA);
+    clusterMergeMap[pLowXCluster].insert(pHighXCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,6 +312,12 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NCommonClusters", m_nCommonClusters));
 
+    if ((1 != m_nCommonClusters) && (2 != m_nCommonClusters))
+    {
+        std::cout << "SplitShowersTool: NCommonClusters must be set to either 1 or 2 (provided: " << m_nCommonClusters << ") " << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
     m_minMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
@@ -214,6 +325,10 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_minMatchedSamplingPoints = 40;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+
+    m_minSplitXDifference = 1.f; // TODO, tune this
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinSplitXDifference", m_minSplitXDifference));
 
     return STATUS_CODE_SUCCESS;
 }

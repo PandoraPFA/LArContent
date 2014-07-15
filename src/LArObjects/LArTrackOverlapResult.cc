@@ -175,17 +175,8 @@ TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const Tran
     if (!rhs.IsInitialized())
         return lhs;
 
-    const XOverlap &xOverlapLhs(lhs.GetXOverlap());
-    const XOverlap &xOverlapRhs(rhs.GetXOverlap());
-
-    const XOverlap xOverlapSum(
-        std::min(xOverlapLhs.GetUMinX(), xOverlapRhs.GetUMinX()), std::max(xOverlapLhs.GetUMaxX(), xOverlapRhs.GetUMaxX()),
-        std::min(xOverlapLhs.GetVMinX(), xOverlapRhs.GetVMinX()), std::max(xOverlapLhs.GetVMaxX(), xOverlapRhs.GetVMaxX()),
-        std::min(xOverlapLhs.GetWMinX(), xOverlapRhs.GetWMinX()), std::max(xOverlapLhs.GetWMaxX(), xOverlapRhs.GetWMaxX()),
-        xOverlapLhs.GetXOverlapSpan() + xOverlapRhs.GetXOverlapSpan());
-
     return TransverseOverlapResult(lhs.GetNMatchedSamplingPoints() + rhs.GetNMatchedSamplingPoints(),
-        lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(), lhs.GetChi2() + rhs.GetChi2(), xOverlapSum);
+        lhs.GetNSamplingPoints() + rhs.GetNSamplingPoints(), lhs.GetChi2() + rhs.GetChi2(), lhs.GetXOverlap() + rhs.GetXOverlap());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
