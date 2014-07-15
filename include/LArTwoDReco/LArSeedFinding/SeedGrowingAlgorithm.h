@@ -85,17 +85,6 @@ protected:
     typedef std::map<pandora::Cluster*, Association> ClusterAssociationMap;
     typedef std::map<pandora::Cluster*, ClusterAssociationMap> ClusterUsageMap;
 
-    virtual pandora::StatusCode Run();
-    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Populate cluster vector with clusters judged to be clean
-     * 
-     *  @param  pClusterList address of the cluster list
-     *  @param  clusterVector to receive the populated cluster vector
-     */
-    virtual void GetCandidateClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const = 0;
-
     /**
      *  @brief  Determine whether two clusters are associated
      * 
@@ -105,9 +94,6 @@ protected:
      *  @return the association type
      */
     virtual AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const = 0;
-
-    std::string         m_seedClusterListName;      ///< The seed cluster list name
-    std::string         m_nonSeedClusterListName;   ///< The non seed cluster list name
 
     /**
      *  @brief  Find clusters associated with a particle seed
@@ -132,13 +118,7 @@ protected:
     void IdentifyClusterMerges(const pandora::ClusterVector &particleSeedVector, const ClusterUsageMap &backwardUsageMap,
         SeedAssociationList &seedAssociationList) const;
 
-private:
-    /**
-     *  @brief  Make cluster merges
-     * 
-     *  @param  seedAssociationList the seed association list
-     */
-    void MakeClusterMerges(const SeedAssociationList &seedAssociationList) const;
+    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
