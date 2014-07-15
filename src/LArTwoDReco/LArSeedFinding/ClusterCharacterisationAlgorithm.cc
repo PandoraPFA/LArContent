@@ -122,6 +122,38 @@ void ClusterCharacterisationAlgorithm::GetSeedAssociationList(const ClusterVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
+{
+    // Calculate distances of association
+    const float sOuter(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetOuterPseudoLayer()), pCluster));
+    const float cOuter(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()), pClusterSeed));
+    const float sInner(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetInnerPseudoLayer()), pCluster));
+    const float cInner(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()), pClusterSeed));
+
+    // Association check 1(a), look for enclosed clusters
+    if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) && (sInner > m_nearbyClusterDistance) && (sOuter > m_nearbyClusterDistance))
+        return STRONG;
+
+    // Association check 1(b), look for overlapping clusters
+    if ((cInner < m_nearbyClusterDistance && sOuter < m_nearbyClusterDistance) && (sInner > m_nearbyClusterDistance) && (cOuter > m_nearbyClusterDistance))
+        return STRONG;
+
+    if ((cOuter < m_nearbyClusterDistance && sInner < m_nearbyClusterDistance) && (sOuter > m_nearbyClusterDistance) && (cInner > m_nearbyClusterDistance))
+        return STRONG;
+
+    // Association check 2, look for branching clusters
+    if ((sInner > m_remoteClusterDistance) && (sOuter > m_remoteClusterDistance) && ((cInner < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance)))
+        return STANDARD;
+
+    // Association check 3, look any distance below threshold
+    if ((sOuter < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance) || (sInner < m_nearbyClusterDistance) || (cInner < m_nearbyClusterDistance))
+        return SINGLE_ORDER;
+
+    return NONE;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationList::const_iterator seedIter, SeedAssociationList &finalSeedAssociationList) const
 {
     ClusterList usedClusters, availableClusters;
@@ -272,9 +304,13 @@ void ClusterCharacterisationAlgorithm::StoreNBranchesPerCluster(const Cluster *c
     for (ClusterVector::const_iterator iter = branchList.begin(), iterEnd = branchList.end(); iter != iterEnd; ++iter)
     {
         Cluster *pBranchCluster = *iter;
-        ClusterInfoMap::const_iterator bIter = clusterInfoMap.find(pBranchCluster);
+        ClusterInfoMap::iterator bIter = clusterInfoMap.find(pBranchCluster);
+
         const unsigned int nBranches((clusterInfoMap.end() == bIter) ? 0 : bIter->second);
         nBranchesSum += (1 + nBranches);
+
+        if (clusterInfoMap.end() != bIter)
+            clusterInfoMap.erase(bIter);
     }
 
     clusterInfoMap[pCluster] = nBranchesSum;
@@ -357,6 +393,14 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
+    m_nearbyClusterDistance = 2.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NearbyClusterDistance", m_nearbyClusterDistance));
+
+    m_remoteClusterDistance = 10.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RemoteClusterDistance", m_remoteClusterDistance));
+
     m_shouldRemoveShowerPfos = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldRemoveShowerPfos", m_shouldRemoveShowerPfos));
@@ -369,7 +413,7 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerLikeCaloHitRatio", m_showerLikeCaloHitRatio));
 
-    return STATUS_CODE_SUCCESS;
+    return SeedGrowingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

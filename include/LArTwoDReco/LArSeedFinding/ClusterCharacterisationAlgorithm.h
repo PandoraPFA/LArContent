@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.h"
+#include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 namespace lar
 {
@@ -18,7 +18,7 @@ namespace lar
 /**
  *  @brief  ClusterCharacterisationAlgorithm class
  */
-class ClusterCharacterisationAlgorithm : public SeedBranchGrowingAlgorithm
+class ClusterCharacterisationAlgorithm : public SeedGrowingAlgorithm
 {
 public:
     /**
@@ -32,7 +32,6 @@ public:
 
 private:
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
      *  @brief  Get the next seed candidate, using a list of available candidates and a list of those already used
@@ -55,6 +54,8 @@ private:
      */
     void GetSeedAssociationList(const pandora::ClusterVector &particleSeedVector, const pandora::ClusterList *const pClusterList,
         SeedAssociationList &seedAssociationList) const;
+
+    AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Check a provided seed association list for consistency, making changes as required
@@ -127,12 +128,16 @@ private:
      */
     void FindTargetPfo(pandora::Cluster *const pCluster, const pandora::PfoList &pfoList, pandora::Pfo *&pTargetPfo) const;
 
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
     std::string             m_inputClusterListName;     ///< The name of the input cluster list
     pandora::StringVector   m_inputPfoListNames;        ///< The names of the input pfo lists
 
     unsigned int            m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per (seed or branch) cluster
-    bool                    m_shouldRemoveShowerPfos;   ///< Whether to delete any existing pfos to which many shower branches have been added
+    float                   m_nearbyClusterDistance;    ///< The nearby cluster distance, used for determining cluster associations
+    float                   m_remoteClusterDistance;    ///< The remote cluster distance, used for determining cluster associations
 
+    bool                    m_shouldRemoveShowerPfos;   ///< Whether to delete any existing pfos to which many shower branches have been added
     unsigned int            m_showerLikeNBranches;      ///< The minimum number of branches before cluster is declared shower like
     float                   m_showerLikeCaloHitRatio;   ///< The minimum ratio of final to original calo hits before cluster is declared shower like
 };
