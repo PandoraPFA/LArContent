@@ -164,23 +164,6 @@ void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, cons
                 usedClusters.insert(clusterListU.begin(), clusterListU.end());
                 usedClusters.insert(clusterListV.begin(), clusterListV.end());
                 usedClusters.insert(clusterListW.begin(), clusterListW.end());
-std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter1)->GetOverlapResult().GetMatchedFraction()
-<< ", MatchedSamplingPoints " << (*iIter1)->GetOverlapResult().GetNMatchedSamplingPoints()
-<< ", xSpanU " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanU()
-<< ", xSpanV " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanV()
-<< ", xSpanW " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXSpanW()
-<< ", xOverlapSpan " << (*iIter1)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
-std::cout << "SPLITSHOWERSTOOL: CANDIDATE1 MatchedFraction " << (*iIter2)->GetOverlapResult().GetMatchedFraction()
-<< ", MatchedSamplingPoints " << (*iIter2)->GetOverlapResult().GetNMatchedSamplingPoints()
-<< ", xSpanU " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanU()
-<< ", xSpanV " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanV()
-<< ", xSpanW " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXSpanW()
-<< ", xOverlapSpan " << (*iIter2)->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
-PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "clusterListU", RED));
-PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "clusterListV", GREEN));
-PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "clusterListW", BLUE));
-PANDORA_MONITORING_API(ViewEvent());
             }
             catch (StatusCodeException &)
             {
@@ -199,12 +182,7 @@ bool SplitShowersTool::CheckClusterConsistency(ThreeDShowersAlgorithm */*pAlgori
     if (2 != clusterList.size())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-//    Cluster *pClusterA(*(clusterList.begin())), *pClusterB(*(clusterList.rbegin()));
-//    const ThreeDShowersAlgorithm::SlidingShowerFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA));
-//    const ThreeDShowersAlgorithm::SlidingShowerFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB));
-
-    // TODO
-
+    // TODO Want to merge clusters in most cases, but some sanity checks here required
     return true;
 }
 
@@ -326,7 +304,7 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minSplitXDifference = 1.f; // TODO, tune this
+    m_minSplitXDifference = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSplitXDifference", m_minSplitXDifference));
 
