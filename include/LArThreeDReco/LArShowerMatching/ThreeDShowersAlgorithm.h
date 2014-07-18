@@ -193,9 +193,9 @@ private:
      * 
      *  @param  x the x coordinate
      *  @param  fitResult the shower fit result
-     *  @param  floatVector to receive the list of intersections of the shower fit at the given x coordinate
+     *  @param  edgePositions to receive the list of intersections of the shower fit at the given x coordinate
      */
-    void GetShowerEdges(const float x, const SlidingShowerFitResult &fitResult, pandora::FloatVector &floatVector) const;
+    void GetShowerEdges(const float x, const SlidingShowerFitResult &fitResult, pandora::FloatVector &edgePositions) const;
 
     /**
      *  @brief  Get the best fraction of hits, in the common x-overlap range, contained within the provided pair of shower boundaries

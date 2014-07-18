@@ -31,20 +31,9 @@ TwoDSlidingFitResult::TwoDSlidingFitResult() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::GetMinAndMaxX(float &minX, float &maxX) const
+float TwoDSlidingFitResult::GetLayerFitHalfWindowLength() const
 {
-    const CartesianVector minLayerPosition(this->GetGlobalMinLayerPosition());
-    const CartesianVector maxLayerPosition(this->GetGlobalMaxLayerPosition());
-
-    minX = std::min(minLayerPosition.GetX(), maxLayerPosition.GetX());
-    maxX = std::max(minLayerPosition.GetX(), maxLayerPosition.GetX());
-
-    for (FitSegmentList::const_iterator iter = m_fitSegmentList.begin(), iterEnd = m_fitSegmentList.end(); iter != iterEnd; ++iter)
-    {
-        const FitSegment &fitSegment = *iter;
-        minX = std::min(minX, fitSegment.GetMinX());
-        maxX = std::max(maxX, fitSegment.GetMaxX());
-    }
+    return (static_cast<float>(m_layerFitHalfWindow)) * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,13 +48,6 @@ int TwoDSlidingFitResult::GetLayer(const float rL) const
 float TwoDSlidingFitResult::GetL(const int layer) const
 {
     return (static_cast<float>(layer) + 0.5f) * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float TwoDSlidingFitResult::GetLayerFitHalfWindowLength() const
-{
-    return (static_cast<float>(m_layerFitHalfWindow)) * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -196,6 +178,21 @@ float TwoDSlidingFitResult::GetFitRms(const float rL) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float TwoDSlidingFitResult::GetCosScatteringAngle(const float rL) const
+{
+    const float halfWindowLength(this->GetLayerFitHalfWindowLength());
+
+    CartesianVector firstDirection(0.f,0.f,0.f);
+    CartesianVector secondDirection(0.f,0.f,0.f);
+
+    this->GetGlobalFitDirection(rL - halfWindowLength, firstDirection);
+    this->GetGlobalFitDirection(rL + halfWindowLength, secondDirection);
+
+    return firstDirection.GetDotProduct(secondDirection);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TwoDSlidingFitResult::GetGlobalFitPosition(const float rL, CartesianVector &position) const
 {
     const LayerInterpolation layerInterpolation(this->LongitudinalInterpolation(rL));
@@ -226,21 +223,6 @@ void TwoDSlidingFitResult::GetGlobalFitPositionAtX(const float x, CartesianVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, CartesianPointList &positionList) const
-{
-    LayerInterpolationList layerInterpolationList;
-    this->TransverseInterpolation(x, layerInterpolationList);
-
-    for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end();
-        iter != iterEnd; ++iter)
-    {
-        const LayerInterpolation& layerInterpolation = *iter;
-        positionList.push_back(this->GetGlobalFitPosition(layerInterpolation));
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void TwoDSlidingFitResult::GetGlobalFitDirectionAtX(const float x, CartesianVector &direction) const
 {
     LayerInterpolationList layerInterpolationList;
@@ -260,6 +242,21 @@ void TwoDSlidingFitResult::GetGlobalFitProjection(const CartesianVector &inputPo
     float rL(0.f), rT(0.f);
     this->GetLocalPosition(inputPosition, rL, rT);
     this->GetGlobalFitPosition(rL, projectedPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, CartesianPointList &positionList) const
+{
+    LayerInterpolationList layerInterpolationList;
+    this->TransverseInterpolation(x, layerInterpolationList);
+
+    for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end();
+        iter != iterEnd; ++iter)
+    {
+        const LayerInterpolation& layerInterpolation = *iter;
+        positionList.push_back(this->GetGlobalFitPosition(layerInterpolation));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -299,22 +296,27 @@ TwoDSlidingFitResult::FitSegment TwoDSlidingFitResult::GetFitSegment(const float
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TwoDSlidingFitResult::GetCosScatteringAngle(const float rL) const
+void TwoDSlidingFitResult::GetMinAndMaxCoordinate(const bool isX, float &min, float &max) const
 {
-    const float halfWindowLength(this->GetLayerFitHalfWindowLength());
+    if (m_layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    CartesianVector firstDirection(0.f,0.f,0.f);
-    CartesianVector secondDirection(0.f,0.f,0.f);
+    min = std::numeric_limits<float>::max();
+    max = -std::numeric_limits<float>::max();
 
-    this->GetGlobalFitDirection(rL - halfWindowLength, firstDirection);
-    this->GetGlobalFitDirection(rL + halfWindowLength, secondDirection);
-
-    return firstDirection.GetDotProduct(secondDirection);
+    for (LayerFitResultMap::const_iterator iter = m_layerFitResultMap.begin(), iterEnd = m_layerFitResultMap.end(); iter != iterEnd; ++iter)
+    {
+        CartesianVector globalPosition(0.f, 0.f, 0.f);
+        this->GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), globalPosition);
+        const float coordinate(isX ? globalPosition.GetX() : globalPosition.GetZ());
+        min = std::min(min, coordinate);
+        max = std::max(max, coordinate);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector TwoDSlidingFitResult::GetGlobalFitPosition(LayerInterpolation layerInterpolation) const
+CartesianVector TwoDSlidingFitResult::GetGlobalFitPosition(const LayerInterpolation &layerInterpolation) const
 {
     const LayerFitResultMap::const_iterator firstLayerIter(layerInterpolation.GetStartLayerIter());
     const LayerFitResultMap::const_iterator secondLayerIter(layerInterpolation.GetEndLayerIter());
@@ -342,7 +344,7 @@ CartesianVector TwoDSlidingFitResult::GetGlobalFitPosition(LayerInterpolation la
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector TwoDSlidingFitResult::GetGlobalFitDirection(LayerInterpolation layerInterpolation) const
+CartesianVector TwoDSlidingFitResult::GetGlobalFitDirection(const LayerInterpolation &layerInterpolation) const
 {
     const LayerFitResultMap::const_iterator firstLayerIter(layerInterpolation.GetStartLayerIter());
     const LayerFitResultMap::const_iterator secondLayerIter(layerInterpolation.GetEndLayerIter());
@@ -370,7 +372,7 @@ CartesianVector TwoDSlidingFitResult::GetGlobalFitDirection(LayerInterpolation l
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TwoDSlidingFitResult::GetFitRms(LayerInterpolation layerInterpolation) const
+float TwoDSlidingFitResult::GetFitRms(const LayerInterpolation &layerInterpolation) const
 {
     const LayerFitResultMap::const_iterator firstLayerIter(layerInterpolation.GetStartLayerIter());
     const LayerFitResultMap::const_iterator secondLayerIter(layerInterpolation.GetEndLayerIter());

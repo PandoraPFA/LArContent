@@ -207,10 +207,7 @@ bool SplitShowersTool::CheckClusterConsistencies(ThreeDShowersAlgorithm *pAlgori
     const float splitPosition2(this->GetSplitXCoordinate(pAlgorithm, *(clusterList2.begin()), *(clusterList2.rbegin())));
 
     if (std::fabs(splitPosition1 - splitPosition2) < m_minSplitXDifference)
-    {
-        std::cout << " Consider splitting common cluster, splitPosition1 " << splitPosition1 << ", splitPosition2 " << splitPosition2 << std::endl;
         return false;
-    }
 
     return true;
 }

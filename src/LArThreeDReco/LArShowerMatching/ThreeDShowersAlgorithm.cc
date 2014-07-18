@@ -245,15 +245,43 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const SlidingShowerFitResult 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::GetShowerEdges(const float x, const SlidingShowerFitResult &fitResult, FloatVector &floatVector) const
+void ThreeDShowersAlgorithm::GetShowerEdges(const float x, const SlidingShowerFitResult &fitResult, FloatVector &edgePositions) const
 {
+    edgePositions.clear();
     CartesianPointList fitPositionList;
     try {fitResult.m_negativeEdgeFitResult.GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
     try {fitResult.m_positiveEdgeFitResult.GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
 
     for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
+        edgePositions.push_back(iter->GetZ());
+
+    if (edgePositions.size() < 2)
     {
-        floatVector.push_back(iter->GetZ());
+        float minXn(0.f), maxXn(0.f), minXp(0.f), maxXp(0.f);
+        fitResult.m_negativeEdgeFitResult.GetMinAndMaxX(minXn, maxXn);
+        fitResult.m_positiveEdgeFitResult.GetMinAndMaxX(minXp, maxXp);
+        const float minX(std::min(minXn, minXp)), maxX(std::max(maxXn, maxXp));
+
+        if ((x < minX) || (x > maxX))
+            return;
+
+        float minZn(0.f), maxZn(0.f), minZp(0.f), maxZp(0.f);
+        fitResult.m_negativeEdgeFitResult.GetMinAndMaxZ(minZn, maxZn);
+        fitResult.m_positiveEdgeFitResult.GetMinAndMaxZ(minZp, maxZp);
+        const float minZ(std::min(minZn, minZp)), maxZ(std::max(maxZn, maxZp));
+
+        if (edgePositions.empty())
+        {
+            edgePositions.push_back(minZ);
+            edgePositions.push_back(maxZ);
+        }
+        else if (1 == edgePositions.size())
+        {
+            // TODO More sophisticated choice of second bounding edge
+            const float existingEdge(edgePositions.at(0));
+            const float secondEdge((std::fabs(existingEdge - minZ) < std::fabs(existingEdge - maxZ)) ? minZ : maxZ);
+            edgePositions.push_back(secondEdge);
+        }
     }
 }
 
