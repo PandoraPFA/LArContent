@@ -698,8 +698,7 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
 
 void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingFitResult)
 {
-    TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.m_layerFitResultMap);
-    TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap(twoDSlidingFitResult.m_layerFitContributionMap);
+    const TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap(twoDSlidingFitResult.m_layerFitContributionMap);
 
     if (layerFitContributionMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -707,6 +706,11 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
     const int innerLayer(layerFitContributionMap.begin()->first);
     const int outerLayer(layerFitContributionMap.rbegin()->first);
     const int layerFitHalfWindow(twoDSlidingFitResult.m_layerFitHalfWindow);
+
+    TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.m_layerFitResultMap);
+
+    if (!layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     // Use sliding fit to fill occupied layers
     unsigned int slidingNPoints(0);
@@ -808,6 +812,9 @@ void LArClusterHelper::CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSli
     const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.GetLayerFitResultMap());
 
     TwoDSlidingFitResult::FitSegmentList &fitSegmentList(twoDSlidingFitResult.m_fitSegmentList);
+
+    if (!fitSegmentList.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
     {
