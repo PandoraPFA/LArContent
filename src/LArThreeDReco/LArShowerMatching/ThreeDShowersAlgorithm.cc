@@ -153,23 +153,17 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
 
     const XSampling xSampling(fitResultU.m_showerFitResult, fitResultV.m_showerFitResult, fitResultW.m_showerFitResult);
 
-    ShowerPositionMap uMap, vMap, wMap;
-    this->GetShowerPositionMaps(fitResultU.m_showerFitResult, fitResultV.m_showerFitResult, fitResultW.m_showerFitResult, xSampling, uMap, vMap, wMap);
-
-    ShowerPositionMap uPosMap, vPosMap, wPosMap;
-    this->GetShowerPositionMaps(fitResultU.m_positiveEdgeFitResult, fitResultV.m_positiveEdgeFitResult, fitResultW.m_positiveEdgeFitResult, xSampling, uPosMap, vPosMap, wPosMap);
-
-    ShowerPositionMap uNegMap, vNegMap, wNegMap;
-    this->GetShowerPositionMaps(fitResultU.m_negativeEdgeFitResult, fitResultV.m_negativeEdgeFitResult, fitResultW.m_negativeEdgeFitResult, xSampling, uNegMap, vNegMap, wNegMap);
+    ShowerPositionMapPair positionMapsU, positionMapsV, positionMapsW;
+    this->GetShowerPositionMaps(fitResultU, fitResultV, fitResultW, xSampling, positionMapsU, positionMapsV, positionMapsW);
 
     unsigned int nSampledHitsU(0), nMatchedHitsU(0);
-    this->GetHitOverlapFraction(pClusterU, xSampling, uPosMap, uNegMap, nSampledHitsU, nMatchedHitsU);
+    this->GetBestHitOverlapFraction(pClusterU, xSampling, positionMapsU, nSampledHitsU, nMatchedHitsU);
 
     unsigned int nSampledHitsV(0), nMatchedHitsV(0);
-    this->GetHitOverlapFraction(pClusterV, xSampling, vPosMap, vNegMap, nSampledHitsV, nMatchedHitsV);
+    this->GetBestHitOverlapFraction(pClusterV, xSampling, positionMapsV, nSampledHitsV, nMatchedHitsV);
 
     unsigned int nSampledHitsW(0), nMatchedHitsW(0);
-    this->GetHitOverlapFraction(pClusterW, xSampling, wPosMap, wNegMap, nSampledHitsW, nMatchedHitsW);
+    this->GetBestHitOverlapFraction(pClusterW, xSampling, positionMapsW, nSampledHitsW, nMatchedHitsW);
 
     const unsigned int nMatchedHits(nMatchedHitsU + nMatchedHitsV + nMatchedHitsW);
     const unsigned int nSampledHits(nSampledHitsU + nSampledHitsV + nSampledHitsW);
@@ -188,28 +182,60 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV,
-    const TwoDSlidingFitResult &fitResultW, const XSampling &xSampling, ShowerPositionMap &positionMapU, ShowerPositionMap &positionMapV,
-    ShowerPositionMap &positionMapW) const
+void ThreeDShowersAlgorithm::GetShowerPositionMaps(const SlidingShowerFitResult &fitResultU, const SlidingShowerFitResult &fitResultV,
+    const SlidingShowerFitResult &fitResultW, const XSampling &xSampling, ShowerPositionMapPair &positionMapsU, ShowerPositionMapPair &positionMapsV,
+    ShowerPositionMapPair &positionMapsW) const
 {
     for (float x = xSampling.m_minX; x < xSampling.m_maxX; x += xSampling.m_xPitch)
     {
         try
         {
-            CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);
-            fitResultU.GetGlobalFitPositionAtX(x, fitUVector);
-            fitResultV.GetGlobalFitPositionAtX(x, fitVVector);
-            fitResultW.GetGlobalFitPositionAtX(x, fitWVector);
+            FloatVector uValues, vValues, wValues;
+            this->GetShowerEdges(x, fitResultU, uValues);
+            this->GetShowerEdges(x, fitResultV, vValues);
+            this->GetShowerEdges(x, fitResultW, wValues);
 
-            const float u(fitUVector.GetZ()), v(fitVVector.GetZ()), w(fitWVector.GetZ());
-            const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
-            const float uw2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, u, w));
-            const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
+            std::sort(uValues.begin(), uValues.end());
+            std::sort(vValues.begin(), vValues.end());
+            std::sort(wValues.begin(), wValues.end());
 
             const unsigned int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
-            positionMapU.insert(ShowerPositionMap::value_type(xBin, CartesianVector(x, 0., vw2u)));
-            positionMapV.insert(ShowerPositionMap::value_type(xBin, CartesianVector(x, 0., uw2v)));
-            positionMapW.insert(ShowerPositionMap::value_type(xBin, CartesianVector(x, 0., uv2w)));
+
+            if ((uValues.size() > 1) && (vValues.size() > 1))
+            {
+                const float uMin(uValues.front()), uMax(uValues.back());
+                const float vMin(vValues.front()), vMax(vValues.back());
+                const float uv2wMinMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMin, vMin));
+                const float uv2wMaxMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMax, vMax));
+                const float uv2wMinMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMin, vMax));
+                const float uv2wMaxMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMax, vMin));
+                positionMapsW.first.insert(ShowerPositionMap::value_type(xBin, ShowerEdge(x, uv2wMinMin, uv2wMaxMax)));
+                positionMapsW.second.insert(ShowerPositionMap::value_type(xBin, ShowerEdge(x, uv2wMinMax, uv2wMaxMin)));
+            }
+
+            if ((uValues.size() > 1) && (wValues.size() > 1))
+            {
+                const float uMin(uValues.front()), uMax(uValues.back());
+                const float wMin(wValues.front()), wMax(wValues.back());
+                const float uw2vMinMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMin, wMin));
+                const float uw2vMaxMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMax, wMax));
+                const float uw2vMinMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMin, wMax));
+                const float uw2vMaxMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMax, wMin));
+                positionMapsV.first.insert(ShowerPositionMap::value_type(xBin, ShowerEdge(x, uw2vMinMin, uw2vMaxMax)));
+                positionMapsV.second.insert(ShowerPositionMap::value_type(xBin, ShowerEdge(x, uw2vMinMax, uw2vMaxMin)));
+            }
+
+            if ((vValues.size() > 1) && (wValues.size() > 1))
+            {
+                const float vMin(vValues.front()), vMax(vValues.back());
+                const float wMin(wValues.front()), wMax(wValues.back());
+                const float vw2uMinMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMin, wMin));
+                const float vw2uMaxMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMax, wMax));
+                const float vw2uMinMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMin, wMax));
+                const float vw2uMaxMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMax, wMin));
+                positionMapsU.first.insert(ShowerPositionMap::value_type(xBin, ShowerEdge(x, vw2uMinMin, vw2uMaxMax)));
+                positionMapsU.second.insert(ShowerPositionMap::value_type(xBin, ShowerEdge(x, vw2uMinMax, vw2uMaxMin)));
+            }
         }
         catch (StatusCodeException &)
         {
@@ -219,13 +245,28 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingFitResult &f
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::GetHitOverlapFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &edgeMap1,
-    const ShowerPositionMap &edgeMap2, unsigned int &nSampledHits, unsigned int &nMatchedHits) const
+void ThreeDShowersAlgorithm::GetShowerEdges(const float x, const SlidingShowerFitResult &fitResult, FloatVector &floatVector) const
+{
+    CartesianPointList fitPositionList;
+    try {fitResult.m_negativeEdgeFitResult.GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
+    try {fitResult.m_positiveEdgeFitResult.GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
+
+    for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
+    {
+        floatVector.push_back(iter->GetZ());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMapPair &positionMaps,
+    unsigned int &nSampledHits, unsigned int &nMatchedHits) const
 {
     if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (xSampling.m_xPitch < std::numeric_limits<float>::epsilon()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     nSampledHits = 0; nMatchedHits = 0;
+    unsigned int nMatchedHits1(0), nMatchedHits2(0);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
@@ -242,21 +283,18 @@ void ThreeDShowersAlgorithm::GetHitOverlapFraction(const Cluster *const pCluster
             ++nSampledHits;
             const unsigned int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
 
-            ShowerPositionMap::const_iterator edgeIter1 = edgeMap1.find(xBin);
-            ShowerPositionMap::const_iterator edgeIter2 = edgeMap2.find(xBin);
+            ShowerPositionMap::const_iterator positionIter1 = positionMaps.first.find(xBin);
+            ShowerPositionMap::const_iterator positionIter2 = positionMaps.second.find(xBin);
 
-            if ((edgeMap1.end() == edgeIter1) || (edgeMap2.end() == edgeIter2))
-                continue;
+            if ((positionMaps.first.end() != positionIter1) && (z > positionIter1->second.GetLowEdgeZ()) && (z < positionIter1->second.GetHighEdgeZ()))
+                ++nMatchedHits1;
 
-            const float maxZ(std::max(edgeIter1->second.GetZ(), edgeIter2->second.GetZ()));
-            const float minZ(std::min(edgeIter1->second.GetZ(), edgeIter2->second.GetZ()));
-
-            if ((z > minZ - m_hitOverlapTolerance) && (z < maxZ + m_hitOverlapTolerance))
-            {
-                ++nMatchedHits;
-            }
+            if ((positionMaps.second.end() != positionIter2) && (z > positionIter2->second.GetLowEdgeZ()) && (z < positionIter2->second.GetHighEdgeZ()))
+                ++nMatchedHits2;
         }
     }
+
+    nMatchedHits = std::max(nMatchedHits1, nMatchedHits2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,17 +323,15 @@ void ThreeDShowersAlgorithm::ExamineTensor()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDShowersAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV,
-        const TwoDSlidingFitResult &fitResultW) :
-    m_uMinX(std::min(fitResultU.GetGlobalMinLayerPosition().GetX(), fitResultU.GetGlobalMaxLayerPosition().GetX())),
-    m_uMaxX(std::max(fitResultU.GetGlobalMinLayerPosition().GetX(), fitResultU.GetGlobalMaxLayerPosition().GetX())),
-    m_vMinX(std::min(fitResultV.GetGlobalMinLayerPosition().GetX(), fitResultV.GetGlobalMaxLayerPosition().GetX())),
-    m_vMaxX(std::max(fitResultV.GetGlobalMinLayerPosition().GetX(), fitResultV.GetGlobalMaxLayerPosition().GetX())),
-    m_wMinX(std::min(fitResultW.GetGlobalMinLayerPosition().GetX(), fitResultW.GetGlobalMaxLayerPosition().GetX())),
-    m_wMaxX(std::max(fitResultW.GetGlobalMinLayerPosition().GetX(), fitResultW.GetGlobalMaxLayerPosition().GetX())),
-    m_minX(std::max(m_uMinX, std::max(m_vMinX, m_wMinX))),
-    m_maxX(std::min(m_uMaxX, std::min(m_vMaxX, m_wMaxX))),
-    m_xOverlapSpan(m_maxX - m_minX)
+    const TwoDSlidingFitResult &fitResultW)
 {
+    fitResultU.GetMinAndMaxX(m_uMinX, m_uMaxX);
+    fitResultV.GetMinAndMaxX(m_vMinX, m_vMaxX);
+    fitResultW.GetMinAndMaxX(m_wMinX, m_wMaxX);
+    m_minX = std::max(m_uMinX, std::max(m_vMinX, m_wMinX));
+    m_maxX = std::min(m_uMaxX, std::min(m_vMaxX, m_wMaxX));
+    m_xOverlapSpan = (m_maxX - m_minX);
+
     const float nPointsU(std::fabs((m_xOverlapSpan / (m_uMaxX - m_uMinX)) * static_cast<float>(fitResultU.GetMaxLayer() - fitResultU.GetMinLayer())));
     const float nPointsV(std::fabs((m_xOverlapSpan / (m_vMaxX - m_vMinX)) * static_cast<float>(fitResultV.GetMaxLayer() - fitResultV.GetMinLayer())));
     const float nPointsW(std::fabs((m_xOverlapSpan / (m_wMaxX - m_wMinX)) * static_cast<float>(fitResultW.GetMaxLayer() - fitResultW.GetMinLayer())));
@@ -346,10 +382,6 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
-
-    m_hitOverlapTolerance = 0.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HitOverlapTolerance", m_hitOverlapTolerance));
 
     m_minShowerMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

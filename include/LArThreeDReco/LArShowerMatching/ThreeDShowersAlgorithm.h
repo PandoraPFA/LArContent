@@ -87,17 +87,62 @@ private:
          */
         XSampling(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV, const TwoDSlidingFitResult &fitResultW);
 
-        float      m_uMinX;         ///< The min x value in the u view
-        float      m_uMaxX;         ///< The max x value in the u view
-        float      m_vMinX;         ///< The min x value in the v view
-        float      m_vMaxX;         ///< The max x value in the v view
-        float      m_wMinX;         ///< The min x value in the w view
-        float      m_wMaxX;         ///< The max x value in the w view
-        float      m_minX;          ///< The min x value of the common x-overlap range
-        float      m_maxX;          ///< The max x value of the common x-overlap range
-        float      m_xOverlapSpan;  ///< The x-overlap span
-        float      m_xPitch;        ///< The x sampling pitch to be used
+        float       m_uMinX;         ///< The min x value in the u view
+        float       m_uMaxX;         ///< The max x value in the u view
+        float       m_vMinX;         ///< The min x value in the v view
+        float       m_vMaxX;         ///< The max x value in the v view
+        float       m_wMinX;         ///< The min x value in the w view
+        float       m_wMaxX;         ///< The max x value in the w view
+        float       m_minX;          ///< The min x value of the common x-overlap range
+        float       m_maxX;          ///< The max x value of the common x-overlap range
+        float       m_xOverlapSpan;  ///< The x-overlap span
+        float       m_xPitch;        ///< The x sampling pitch to be used
     };
+
+    /**
+     *  @brief  ShowerEdge
+     */
+    class ShowerEdge
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  xCoordinate the x coordinate
+         *  @param  highEdgeZ the shower high edge z coordinate
+         *  @param  lowEdgeZ the shower low edge z coordinate
+         */
+        ShowerEdge(const float xxCoordinate, const float highEdgeZ, const float lowEdgeZ);
+
+        /**
+         *  @param  Get the x coordinate
+         * 
+         *  @return the x coordinate
+         */
+        float GetXCoordinate() const;
+
+        /**
+         *  @param  Get the shower high edge z coordinate
+         * 
+         *  @return the shower high edge z coordinate
+         */
+        float GetHighEdgeZ() const;
+
+        /**
+         *  @param  Get the shower low edge z coordinate
+         * 
+         *  @return the shower low edge z coordinate
+         */
+        float GetLowEdgeZ() const;
+
+    private:
+        float       m_xCoordinate;   ///< The x coordinate
+        float       m_highEdgeZ;     ///< The shower high edge z coordinate
+        float       m_lowEdgeZ;      ///< The shower low edge z coordinate
+    };
+
+    typedef std::map<unsigned int, ShowerEdge> ShowerPositionMap;
+    typedef std::pair<ShowerPositionMap, ShowerPositionMap> ShowerPositionMapPair;
 
     void PreparationStep();
     void TidyUp();
@@ -129,34 +174,40 @@ private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW,
         ShowerOverlapResult &overlapResult);
 
-    typedef std::map<unsigned int, pandora::CartesianVector> ShowerPositionMap;
-
     /**
      *  @brief  Get the shower position maps
      * 
-     *  @param  fitResultU the sliding fit result for the u view
-     *  @param  fitResultV the sliding fit result for the v view
-     *  @param  fitResultW the sliding fit result for the w view
+     *  @param  fitResultU the sliding shower fit result for the u view
+     *  @param  fitResultV the sliding shower fit result for the v view
+     *  @param  fitResultW the sliding shower fit result for the w view
      *  @param  xSampling the x sampling details
-     *  @param  positionMapU to receive the shower position map for the u view
-     *  @param  positionMapV to receive the shower position map for the v view
-     *  @param  positionMapW to receive the shower position map for the w view
+     *  @param  positionMapsU to receive the shower position maps for the u view
+     *  @param  positionMapsV to receive the shower position maps for the v view
+     *  @param  positionMapsW to receive the shower position maps for the w view
      */
-    void GetShowerPositionMaps(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV, const TwoDSlidingFitResult &fitResultW,
-        const XSampling &xSampling, ShowerPositionMap &positionMapU, ShowerPositionMap &positionMapV, ShowerPositionMap &positionMapW) const;
+    void GetShowerPositionMaps(const SlidingShowerFitResult &fitResultU, const SlidingShowerFitResult &fitResultV, const SlidingShowerFitResult &fitResultW,
+        const XSampling &xSampling, ShowerPositionMapPair &positionMapsU, ShowerPositionMapPair &positionMapsV, ShowerPositionMapPair &positionMapsW) const;
 
     /**
-     *  @brief  Get the fraction of hits, in the common x-overlap range, contained within the provided shower boundaries
+     *  @brief  Get the most appropriate shower edges at a given x coordinate
+     * 
+     *  @param  x the x coordinate
+     *  @param  fitResult the shower fit result
+     *  @param  floatVector to receive the list of intersections of the shower fit at the given x coordinate
+     */
+    void GetShowerEdges(const float x, const SlidingShowerFitResult &fitResult, pandora::FloatVector &floatVector) const;
+
+    /**
+     *  @brief  Get the best fraction of hits, in the common x-overlap range, contained within the provided pair of shower boundaries
      * 
      *  @param  pCluster the address of the candidate cluster
      *  @param  xSampling the x sampling details
-     *  @param  positionMap1 the first shower edge position map
-     *  @param  positionMap2 the second shower edge position map
+     *  @param  positionMaps the shower edge position maps
      *  @param  nSampledHits to receive the number of hits in the common x-overlap range
      *  @param  nMatchedHits to receive the number of sampled hits contained within the shower edges
      */
-    void GetHitOverlapFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &positionMap1,
-        const ShowerPositionMap &positionMap2, unsigned int &nSampledHits, unsigned int &nMatchedHits) const;
+    void GetBestHitOverlapFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMapPair &positionMaps,
+        unsigned int &nSampledHits, unsigned int &nMatchedHits) const;
 
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -172,7 +223,6 @@ private:
     unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 
-    float                       m_hitOverlapTolerance;          ///< The tolerance used when deciding whether hits are enclosed by shower envelopes
     float                       m_minShowerMatchedFraction;     ///< The minimum shower matched sampling fraction to allow shower grouping
     unsigned int                m_minShowerMatchedPoints;       ///< The minimum number of matched shower sampling points to allow shower grouping
 };
@@ -205,6 +255,37 @@ public:
 inline pandora::Algorithm *ThreeDShowersAlgorithm::Factory::CreateAlgorithm() const
 {
     return new ThreeDShowersAlgorithm();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ThreeDShowersAlgorithm::ShowerEdge::ShowerEdge(const float xCoordinate, const float edge1, const float edge2) :
+    m_xCoordinate(xCoordinate),
+    m_highEdgeZ(std::max(edge1, edge2)),
+    m_lowEdgeZ(std::min(edge1, edge2))
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float ThreeDShowersAlgorithm::ShowerEdge::GetXCoordinate() const
+{
+    return m_xCoordinate;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float ThreeDShowersAlgorithm::ShowerEdge::GetHighEdgeZ() const
+{
+    return m_highEdgeZ;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float ThreeDShowersAlgorithm::ShowerEdge::GetLowEdgeZ() const
+{
+    return m_lowEdgeZ;
 }
 
 } // namespace lar

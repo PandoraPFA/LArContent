@@ -38,6 +38,13 @@ void TwoDSlidingFitResult::GetMinAndMaxX(float &minX, float &maxX) const
 
     minX = std::min(minLayerPosition.GetX(), maxLayerPosition.GetX());
     maxX = std::max(minLayerPosition.GetX(), maxLayerPosition.GetX());
+
+    for (FitSegmentList::const_iterator iter = m_fitSegmentList.begin(), iterEnd = m_fitSegmentList.end(); iter != iterEnd; ++iter)
+    {
+        const FitSegment &fitSegment = *iter;
+        minX = std::min(minX, fitSegment.GetMinX());
+        maxX = std::max(maxX, fitSegment.GetMaxX());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -223,9 +230,6 @@ void TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, CartesianP
 {
     LayerInterpolationList layerInterpolationList;
     this->TransverseInterpolation(x, layerInterpolationList);
-
-    if (layerInterpolationList.size() < 1)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end();
         iter != iterEnd; ++iter)
