@@ -113,23 +113,55 @@ void TransverseTrackHitCreationTool::CreateThreeDHits(ThreeDHitCreationAlgorithm
 void TransverseTrackHitCreationTool::GetPosition3D(const CaloHit *const pCaloHit2D, const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     CartesianVector &position3D, float &chiSquared) const
 {
-    const CartesianVector &position(pCaloHit2D->GetPositionVector());
-    CartesianVector fitPosition1(0.f, 0.f, 0.f), fitPosition2(0.f, 0.f, 0.f);
-    fitResult1.GetGlobalFitPositionAtX(position.GetX(), fitPosition1);
-    fitResult2.GetGlobalFitPositionAtX(position.GetX(), fitPosition2);
+    CartesianPointList fitPositions1, fitPositions2;
+    fitResult1.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositions1);
+    fitResult2.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositions2);
 
-    const HitType hitType(pCaloHit2D->GetHitType());
     const HitType hitType1(LArClusterHelper::GetClusterHitType(fitResult1.GetCluster()));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(fitResult2.GetCluster()));
 
+    bool foundPosition(false);
+    CartesianVector bestPosition3D(0.f, 0.f, 0.f);
+    float bestChiSquared(std::numeric_limits<float>::max());
+
+    for (CartesianPointList::const_iterator iter1 = fitPositions1.begin(), iter1End = fitPositions1.end(); iter1 != iter1End; ++iter1)
+    {
+        for (CartesianPointList::const_iterator iter2 = fitPositions2.begin(), iter2End = fitPositions2.end(); iter2 != iter2End; ++iter2)
+        {
+            CartesianVector thisPosition3D(0.f, 0.f, 0.f);
+            float thisChiSquared(std::numeric_limits<float>::max());
+            this->GetPosition3D(pCaloHit2D, hitType1, hitType2, *iter1, *iter2, thisPosition3D, thisChiSquared);
+
+            if (thisChiSquared < bestChiSquared)
+            {
+                foundPosition = true;
+                bestPosition3D = thisPosition3D;
+                bestChiSquared = thisChiSquared;
+            }
+        }
+    }
+
+    if (!foundPosition)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    position3D = bestPosition3D;
+    chiSquared = bestChiSquared;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseTrackHitCreationTool::GetPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType1, const HitType hitType2,
+    const CartesianVector &fitPosition1, const CartesianVector &fitPosition2, CartesianVector &position3D, float &chiSquared) const
+{
     const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
     const float sigmaFit(m_sigmaFitMultiplier * sigmaHit);
+    const HitType hitType(pCaloHit2D->GetHitType());
 
     if (m_useChiSquaredApproach)
     {
-        const float u((TPC_VIEW_U == hitType) ? position.GetZ() : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-        const float v((TPC_VIEW_V == hitType) ? position.GetZ() : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-        const float w((TPC_VIEW_W == hitType) ? position.GetZ() : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+        const float u((TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+        const float v((TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+        const float w((TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
 
         const float sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
         const float sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);
@@ -137,17 +169,17 @@ void TransverseTrackHitCreationTool::GetPosition3D(const CaloHit *const pCaloHit
 
         float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
         LArGeometryHelper::GetLArTransformationCalculator()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chiSquared);
-        position3D.SetValues(position.GetX(), bestY, bestZ);
+        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), bestY, bestZ);
     }
     else
     {
-        const LArTransformationCalculator::PositionAndType hitPositionAndType(position.GetZ(), hitType);
+        const LArTransformationCalculator::PositionAndType hitPositionAndType(pCaloHit2D->GetPositionVector().GetZ(), hitType);
         const LArTransformationCalculator::PositionAndType fitPositionAndType1(fitPosition1.GetZ(), hitType1);
         const LArTransformationCalculator::PositionAndType fitPositionAndType2(fitPosition2.GetZ(), hitType2);
 
         float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
         LArGeometryHelper::GetLArTransformationCalculator()->GetProjectedYZ(hitPositionAndType, fitPositionAndType1, fitPositionAndType2, sigmaHit, sigmaFit, bestY, bestZ, chiSquared);
-        position3D.SetValues(position.GetX(), bestY, bestZ);
+        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), bestY, bestZ);
     }
 }
 
