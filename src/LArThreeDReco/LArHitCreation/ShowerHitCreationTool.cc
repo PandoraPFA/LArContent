@@ -42,7 +42,6 @@ void ShowerHitCreationTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Pa
     }
     catch (StatusCodeException &)
     {
-        std::cout << "ShowerHitCreationTool: Unable to create 3D hits for provided cluster " << std::endl;
     }
 }
 

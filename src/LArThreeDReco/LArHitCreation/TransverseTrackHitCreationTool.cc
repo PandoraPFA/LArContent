@@ -49,7 +49,6 @@ void TransverseTrackHitCreationTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm,
     }
     catch (StatusCodeException &)
     {
-        std::cout << "TransverseTrackHitCreationTool: Unable to create 3D hits for provided cluster " << std::endl;
     }
 }
 
