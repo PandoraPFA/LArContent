@@ -32,6 +32,7 @@
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/ShowerHitCreationTool.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
@@ -147,6 +148,7 @@ public:
         d("LArSimpleShowers",                       lar::SimpleShowersTool::Factory)                                            \
         d("LArSplitShowers",                        lar::SplitShowersTool::Factory)                                             \
         d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
+        d("LArShowerHitCreation",                   lar::ShowerHitCreationTool::Factory)                                        \
         d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
         d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
