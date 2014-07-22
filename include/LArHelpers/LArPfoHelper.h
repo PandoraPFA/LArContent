@@ -25,18 +25,18 @@ public:
      *
      *  @param  pfoVector the input vector of Pfos
      *  @param  hitType the cluster hit type
-     *  @param  clusterVector the output vector of clusters
+     *  @param  clusterList the output list of clusters
      */
-    static void GetClusters(const pandora::PfoVector &pfoVector, const pandora::HitType &hitType, pandora::ClusterVector &clusterVector);
+    static void GetClusters(const pandora::PfoVector &pfoVector, const pandora::HitType &hitType, pandora::ClusterList &clusterList);
 
     /**
      *  @brief  Get a list of clusters of a particular hit type from a given pfo
      *
      *  @param  pPfo the input Pfo
      *  @param  hitType the cluster hit type
-     *  @param  clusterVector the output vector of clusters
+     *  @param  clusterList the output list of clusters
      */
-    static void GetClusters(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::ClusterVector &clusterVector);
+    static void GetClusters(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::ClusterList &clusterList);
 
     /**
      *  @brief  Calculate length of Pfo using 2D clusters

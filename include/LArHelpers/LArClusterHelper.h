@@ -177,24 +177,24 @@ public:
     static float GetLayerOccupancy(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
 
     /**
-     *  @brief  Get closest distance between clusters in a pair of cluster vectors
+     *  @brief  Get closest distance between clusters in a pair of cluster lists
      *
-     *  @param  clusterVector1 the first cluster vector
-     *  @param  clusterVector2 the second cluster vector
+     *  @param  clusterList1 the first cluster list
+     *  @param  clusterList2 the second cluster list
      *
      *  @return the closest distance
      */
-    static float GetClosestDistance(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2);
+    static float GetClosestDistance(const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2);
 
     /**
-     *  @brief  Get closest distance between a specified cluster and vector of clusters
+     *  @brief  Get closest distance between a specified cluster and list of clusters
      *
      *  @param  pCluster address of the input cluster
-     *  @param  clusterVector vector of input clusters
+     *  @param  clusterList list of input clusters
      *
      *  @return the closest distance
      */
-    static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::ClusterVector &clusterVector);
+    static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::ClusterList &clusterList);
 
     /**
      *  @brief  Get closest distance between a pair of clusters

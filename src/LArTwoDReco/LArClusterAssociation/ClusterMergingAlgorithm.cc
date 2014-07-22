@@ -36,7 +36,7 @@ StatusCode ClusterMergingAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    while (1)
+    while (true)
     {
         ClusterVector unsortedVector, clusterVector;
         this->GetListOfCleanClusters(pClusterList, unsortedVector);
