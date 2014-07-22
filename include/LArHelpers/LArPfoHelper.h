@@ -21,13 +21,13 @@ class LArPfoHelper
 {
 public:
     /**
-     *  @brief  Get a list of clusters of a particular hit type from a vector of pfos
+     *  @brief  Get a list of clusters of a particular hit type from a list of pfos
      *
-     *  @param  pfoVector the input vector of Pfos
+     *  @param  pfoList the input list of Pfos
      *  @param  hitType the cluster hit type
      *  @param  clusterList the output list of clusters
      */
-    static void GetClusters(const pandora::PfoVector &pfoVector, const pandora::HitType &hitType, pandora::ClusterList &clusterList);
+    static void GetClusters(const pandora::PfoList &pfoList, const pandora::HitType &hitType, pandora::ClusterList &clusterList);
 
     /**
      *  @brief  Get a list of clusters of a particular hit type from a given pfo

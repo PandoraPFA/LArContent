@@ -46,13 +46,15 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
     PfoVector parentPfos, daughterPfos;
     this->GetPfos(m_parentPfoListName, parentPfos);
     this->GetPfos(m_daughterPfoListName, daughterPfos);
-    
-    // Sort parent and daughter clusters
-    ClusterList parentClusters, daughterClusters;
-    LArPfoHelper::GetClusters(parentPfos, clusterHitType, parentClusters);
-    LArPfoHelper::GetClusters(daughterPfos, clusterHitType, daughterClusters);
 
     // TODO Think about sorting of the seed cluster list; currently pfos with most hits contribute first, but their daughter clusters are unsorted
+    ClusterList parentClusters, daughterClusters;
+
+    for (PfoVector::const_iterator iter = parentPfos.begin(), iterEnd = parentPfos.end(); iter != iterEnd; ++iter)
+        LArPfoHelper::GetClusters(*iter, clusterHitType, parentClusters);
+
+    for (PfoVector::const_iterator iter = daughterPfos.begin(), iterEnd = daughterPfos.end(); iter != iterEnd; ++iter)
+        LArPfoHelper::GetClusters(*iter, clusterHitType, daughterClusters);
 
      // Select short parent clusters
     for (ClusterList::const_iterator cIter = parentClusters.begin(), cIterEnd = parentClusters.end(); cIter != cIterEnd; ++cIter)

@@ -112,7 +112,7 @@ private:
          *  @param  highEdgeZ the shower high edge z coordinate
          *  @param  lowEdgeZ the shower low edge z coordinate
          */
-        ShowerEdge(const float xxCoordinate, const float highEdgeZ, const float lowEdgeZ);
+        ShowerEdge(const float xCoordinate, const float highEdgeZ, const float lowEdgeZ);
 
         /**
          *  @param  Get the x coordinate
@@ -141,7 +141,7 @@ private:
         float       m_lowEdgeZ;      ///< The shower low edge z coordinate
     };
 
-    typedef std::map<unsigned int, ShowerEdge> ShowerPositionMap;
+    typedef std::map<int, ShowerEdge> ShowerPositionMap;
     typedef std::pair<ShowerPositionMap, ShowerPositionMap> ShowerPositionMapPair;
 
     void PreparationStep();

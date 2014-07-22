@@ -199,7 +199,7 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const SlidingShowerFitResult 
             std::sort(vValues.begin(), vValues.end());
             std::sort(wValues.begin(), wValues.end());
 
-            const unsigned int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
+            const int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
 
             if ((uValues.size() > 1) && (vValues.size() > 1))
             {
@@ -309,7 +309,7 @@ void ThreeDShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pClu
                 continue;
 
             ++nSampledHits;
-            const unsigned int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
+            const int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
 
             ShowerPositionMap::const_iterator positionIter1 = positionMaps.first.find(xBin);
             ShowerPositionMap::const_iterator positionIter2 = positionMaps.second.find(xBin);

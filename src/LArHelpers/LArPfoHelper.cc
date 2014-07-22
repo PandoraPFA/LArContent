@@ -22,12 +22,11 @@ using namespace pandora;
 namespace lar
 {
 
-void LArPfoHelper::GetClusters(const PfoVector &pfoVector, const HitType &hitType, ClusterList &clusterList)
+void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, ClusterList &clusterList)
 {
-    for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
+    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
-        const ParticleFlowObject *pPfo = *pIter;
-        LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
+        LArPfoHelper::GetClusters(*pIter, hitType, clusterList);
     }
 }
 
