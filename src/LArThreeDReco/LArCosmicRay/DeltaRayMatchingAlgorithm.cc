@@ -485,10 +485,10 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Clus
 
 float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pCluster, const ParticleFlowObject *const pPfo) const
 {
-    ClusterVector pfoClusterVector;
-    LArPfoHelper::GetClusters(pPfo, LArClusterHelper::GetClusterHitType(pCluster), pfoClusterVector);
+    ClusterList pfoClusterList;
+    LArPfoHelper::GetClusters(pPfo, LArClusterHelper::GetClusterHitType(pCluster), pfoClusterList);
 
-    return LArClusterHelper::GetClosestDistance(pCluster, pfoClusterVector);
+    return LArClusterHelper::GetClosestDistance(pCluster, pfoClusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -523,18 +523,18 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
 {
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster* pDaughterCluster = *cIter;
+        Cluster *pDaughterCluster = *cIter;
         const HitType hitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? m_inputClusterListNameU :
                                           (TPC_VIEW_V == hitType) ? m_inputClusterListNameV : m_inputClusterListNameW);
 
-        ClusterVector pfoClusters;
+        ClusterList pfoClusters;
         LArPfoHelper::GetClusters(pParentPfo, hitType, pfoClusters);
 
         if (pfoClusters.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        Cluster* pParentCluster = *(pfoClusters.begin());
+        Cluster *pParentCluster = *(pfoClusters.begin());
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
             clusterListName, clusterListName));

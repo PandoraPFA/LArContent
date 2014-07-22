@@ -356,20 +356,20 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const 
 
     return 0.f;
 }
-  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetClosestDistance(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2)
+float LArClusterHelper::GetClosestDistance(const ClusterList &clusterList1, const ClusterList &clusterList2)
 {
-    if (clusterVector1.empty() || clusterVector2.empty())
+    if (clusterList1.empty() || clusterList2.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float closestDistance(std::numeric_limits<float>::max());
 
-    for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
+    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iterEnd1 = clusterList1.end(); iter1 != iterEnd1; ++iter1)
     {
         const Cluster *pCluster1 = *iter1;
-        const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster1, clusterVector2));
+        const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster1, clusterList2));
  
         if (thisDistance < closestDistance)
             closestDistance = thisDistance; 
@@ -379,15 +379,15 @@ float LArClusterHelper::GetClosestDistance(const ClusterVector &clusterVector1, 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- 
-float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const ClusterVector &clusterVector)
+
+float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const ClusterList &clusterList)
 {
-    if (clusterVector.empty())
+    if (clusterList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float closestDistance(std::numeric_limits<float>::max());
 
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *pTestCluster = *iter;
         const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster, pTestCluster));
