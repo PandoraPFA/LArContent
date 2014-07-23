@@ -52,7 +52,7 @@ private:
         float       m_xPitch;        ///< The x sampling pitch to be used
     };
 
-    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, ClusterAssociationMap &clusterAssociationMap) const;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
 
     /**
      *  @brief  Get the shower position map containing high and low edge z positions in bins of x

@@ -18,8 +18,10 @@ namespace lar
 {
 
 void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
-    ClusterAssociationMap &clusterAssociationMap) const
+    const ClusterToListNameMap &clusterToListNameMap) const
 {
+    ClusterAssociationMap clusterAssociationMap;
+
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         Cluster *pPfoCluster(*pIter);
@@ -43,6 +45,8 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
     }
+
+    this->MakeClusterMerges(clusterAssociationMap, clusterToListNameMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

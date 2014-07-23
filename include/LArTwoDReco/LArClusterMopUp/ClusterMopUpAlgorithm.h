@@ -30,7 +30,7 @@ public:
     };
 
 protected:
-    pandora::StatusCode Run();
+    virtual pandora::StatusCode Run();
 
     /**
      *  @brief  Get the two dimensional clusters contained in the input pfo list, divided into three different views
@@ -71,17 +71,17 @@ protected:
      */
     virtual void GetClusterToListNameMap(ClusterToListNameMap &clusterToListNameMap) const;
 
-    typedef std::map<pandora::Cluster*, float> AssociationDetails;
-    typedef std::map<pandora::Cluster*, AssociationDetails> ClusterAssociationMap;
-
     /**
-     *  @brief  Cluster mop up for a single view
+     *  @brief  Cluster mop up for a single view. This function is responsible for instructing pandora to make cluster alterations
      * 
      *  @param  pfoClusters the list of pfo clusters
      *  @param  remnantClusters the list of remnant clusters
-     *  @param  clusterAssociationMap to receive the populated cluster association map
+     *  @param  clusterToListNameMap the cluster list name map
      */
-    virtual void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, ClusterAssociationMap &clusterAssociationMap) const = 0;
+    virtual void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const = 0;
+
+    typedef std::map<pandora::Cluster*, float> AssociationDetails;
+    typedef std::map<pandora::Cluster*, AssociationDetails> ClusterAssociationMap;
 
     /**
      *  @brief  Make the cluster merges specified in the cluster association map, using list name information in the cluster list name map
