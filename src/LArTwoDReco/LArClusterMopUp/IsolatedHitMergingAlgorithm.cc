@@ -17,99 +17,105 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode IsolatedHitMergingAlgorithm::Run()
+void IsolatedHitMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
+    const ClusterToListNameMap &clusterToListNameMap) const
 {
-    const ClusterList *pNonSeedClusterList = NULL;
-    const StatusCode listStatusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
-
-    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
-        return STATUS_CODE_SUCCESS;
-
-    if (STATUS_CODE_SUCCESS != listStatusCode)
-        return listStatusCode;
-
-    const ClusterList *pSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList));
-
-    // Delete small clusters from the current list of non-seeds to free the underlying hits
-    ClusterList clustersToDelete;
     CaloHitList caloHitList;
+    this->DissolveClustersToHits(remnantClusters, clusterToListNameMap, caloHitList);
 
-    for (ClusterList::const_iterator iter = pNonSeedClusterList->begin(), iterEnd = pNonSeedClusterList->end(); iter != iterEnd; ++iter)    
+    CaloHitToClusterMap caloHitToClusterMap;
+    this->GetCaloHitToClusterMap(caloHitList, pfoClusters, caloHitToClusterMap);
+
+    for (CaloHitToClusterMap::const_iterator iter = caloHitToClusterMap.begin(), iterEnd = caloHitToClusterMap.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, iter->second, iter->first));
+    }
+}
 
-        if (pCluster->GetNCaloHits() < 10)
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void IsolatedHitMergingAlgorithm::DissolveClustersToHits(const ClusterList &clusterList, const ClusterToListNameMap &clusterToListNameMap,
+    CaloHitList &caloHitList) const
+{
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pRemnantCluster(*iter);
+
+        if (pRemnantCluster->GetNCaloHits() < m_maxCaloHitsInCluster)
         {
-            clustersToDelete.insert(pCluster);
-            pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+            ClusterToListNameMap::const_iterator nameIter = clusterToListNameMap.find(pRemnantCluster);
+
+            if (clusterToListNameMap.end() == nameIter)
+                throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+            pRemnantCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pRemnantCluster, nameIter->second));
         }
     }
+}
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, &clustersToDelete, m_nonSeedClusterListName));
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    // Reassign available hits to be most appropriate seed clusters
-    ClusterVector clusterVector(pSeedClusterList->begin(), pSeedClusterList->end());
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
-
-    CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
-    std::sort(caloHitVector.begin(), caloHitVector.end(), IsolatedHitMergingAlgorithm::SortByLayer);
-
-    for (CaloHitVector::const_iterator iterI = caloHitVector.begin(), iterIEnd = caloHitVector.end(); iterI != iterIEnd; ++iterI)
+void IsolatedHitMergingAlgorithm::GetCaloHitToClusterMap(const CaloHitList &caloHitList, const ClusterList &clusterList, CaloHitToClusterMap &caloHitToClusterMap) const
+{
+    for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
     {
-        CaloHit *pCaloHit = *iterI;
+        CaloHit *pCaloHit(*hIter);
 
         if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
-            continue;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        Cluster *pBestHostCluster(NULL);
-        float bestHostClusterEnergy(0.), minDistance(m_maxHitClusterDistance);
+        float bestDistance(m_maxHitClusterDistance), tieBreakerBestEnergy(0.f);
 
-        for (ClusterVector::const_iterator iterJ = clusterVector.begin(), iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
+        for (ClusterList::const_iterator pIter = clusterList.begin(), pIterEnd = clusterList.end(); pIter != pIterEnd; ++pIter)
         {
-            Cluster *pCluster = *iterJ;
+            Cluster *pPfoCluster(*pIter);
+            const float clusterDistance(this->GetDistanceToHit(pPfoCluster, pCaloHit));
+            const float clusterEnergy(pPfoCluster->GetElectromagneticEnergy());
 
-            if (NULL == pCluster)
-                continue;
-
-            const float distance(this->GetDistanceToHit(pCluster, pCaloHit));
-            const float hostClusterEnergy(pCluster->GetHadronicEnergy());
-
-            if ((distance < minDistance) || ((distance == minDistance) && (hostClusterEnergy > bestHostClusterEnergy)))
+            if ((clusterDistance < bestDistance) || ((clusterDistance == bestDistance) && (clusterEnergy > tieBreakerBestEnergy)))
             {
-                minDistance = distance;
-                pBestHostCluster = pCluster;
-                bestHostClusterEnergy = hostClusterEnergy;
+                bestDistance = clusterDistance;
+                tieBreakerBestEnergy = clusterEnergy;
+                caloHitToClusterMap[pCaloHit] = pPfoCluster;
             }
         }
-
-        if (NULL != pBestHostCluster)
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pBestHostCluster, pCaloHit));
-        }
     }
-
-    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float IsolatedHitMergingAlgorithm::GetDistanceToHit(const Cluster *const pCluster, const CaloHit *const pCaloHit) const
 {
-    // Apply simple preselection using cosine of opening angle between the hit and cluster directions
-    if (pCaloHit->GetExpectedDirection().GetCosOpeningAngle(pCluster->GetInitialDirection()) < 0.f)
-        return std::numeric_limits<float>::max();
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    if (orderedCaloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    const int hitLayer(static_cast<int>(pCaloHit->GetPseudoLayer()));
+    const int clusterMinLayer(static_cast<int>(orderedCaloHitList.begin()->first));
+    const int clusterMaxLayer(static_cast<int>(orderedCaloHitList.rbegin()->first));
+
+    const int startLayer(std::max(clusterMinLayer, hitLayer - m_hitLayerSearchWindow));
+    const int endLayer(std::min(clusterMaxLayer, hitLayer + m_hitLayerSearchWindow));
 
     float minDistanceSquared(std::numeric_limits<float>::max());
     const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    for (int iLayer = startLayer; iLayer <= endLayer; ++iLayer)
     {
-        const float distanceSquared((pCluster->GetCentroid(iter->first) - hitPosition).GetMagnitudeSquared());
+        OrderedCaloHitList::const_iterator iter = orderedCaloHitList.find(iLayer);
 
-        if (distanceSquared < minDistanceSquared)
-            minDistanceSquared = distanceSquared;
+        if (orderedCaloHitList.end() == iter)
+            continue;
+
+        for (CaloHitList::const_iterator hIter = iter->second->begin(), hIterEnd = iter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            const float distanceSquared(((*hIter)->GetPositionVector() - hitPosition).GetMagnitudeSquared());
+
+            if (distanceSquared < minDistanceSquared)
+                minDistanceSquared = distanceSquared;
+        }
     }
 
     if (minDistanceSquared < std::numeric_limits<float>::max())
@@ -120,29 +126,21 @@ float IsolatedHitMergingAlgorithm::GetDistanceToHit(const Cluster *const pCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool IsolatedHitMergingAlgorithm::SortByLayer(const CaloHit *const pLhs, const CaloHit *const pRhs)
-{
-    const unsigned int layerLhs(pLhs->GetPseudoLayer());
-    const unsigned int layerRhs(pRhs->GetPseudoLayer());
-
-    if (layerLhs != layerRhs)
-        return (layerLhs < layerRhs);
-
-    return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode IsolatedHitMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
+    m_maxCaloHitsInCluster = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MaxCaloHitsInCluster", m_maxCaloHitsInCluster));
 
-    m_maxHitClusterDistance = 10.f;
+    m_hitLayerSearchWindow = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "HitLayerSearchWindow", m_hitLayerSearchWindow));
+
+    m_maxHitClusterDistance = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxHitClusterDistance", m_maxHitClusterDistance));
 
-    return STATUS_CODE_SUCCESS;
+    return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

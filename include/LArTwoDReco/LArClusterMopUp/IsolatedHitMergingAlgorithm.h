@@ -10,13 +10,15 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+
 namespace lar
 {
 
 /**
  *  @brief  IsolatedHitMergingAlgorithm class
  */
-class IsolatedHitMergingAlgorithm : public pandora::Algorithm
+class IsolatedHitMergingAlgorithm : public ClusterMopUpAlgorithm
 {
 public:
     /**
@@ -29,8 +31,27 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+
+    /**
+     *  @brief  Examine a list of clusters, identify and delete remnants; receive the list of newly available hits
+     * 
+     *  @param  clusterList the list of clusters to consider
+     *  @param  clusterToListNameMap the cluster to list name map
+     *  @param  caloHitList to receive the list of newly available hits
+     */
+    void DissolveClustersToHits(const pandora::ClusterList &clusterList, const ClusterToListNameMap &clusterToListNameMap, pandora::CaloHitList &caloHitList) const;
+
+    typedef std::map<pandora::CaloHit*, pandora::Cluster*> CaloHitToClusterMap;
+
+    /**
+     *  @brief  Look for isolated hit additions, considering a list of candidate hits and a list of host clusters
+     * 
+     *  @param  caloHitList the list of hits to consider
+     *  @param  clusterList the list of clusters to consider
+     *  @param  caloHitToClusterMap to receive the calo hit to cluster map
+     */
+    void GetCaloHitToClusterMap(const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList, CaloHitToClusterMap &caloHitToClusterMap) const;
 
     /**
      *  @brief  Get closest distance between a specified calo hit and a non-isolated hit in a specified cluster
@@ -42,17 +63,11 @@ private:
      */
     float GetDistanceToHit(const pandora::Cluster *const pCluster, const pandora::CaloHit *const pCaloHit) const;
 
-    /**
-     *  @brief  Sort calo hits by layer and by energy within layer
-     * 
-     *  @param  pLhs address of first calo hit
-     *  @param  pRhs address of second calo hit
-     */
-    static bool SortByLayer(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_seedClusterListName;      ///< The seed cluster list name
-    std::string     m_nonSeedClusterListName;   ///< The non seed cluster list name
-    float           m_maxHitClusterDistance;    ///< The maximum hit to cluster distance for hit merging
+    unsigned int    m_maxCaloHitsInCluster;     ///< The maximum number of hits in a cluster to be dissolved
+    int             m_hitLayerSearchWindow;     ///< The layer search window used (for speed) when calculating hit to cluster distances
+    float           m_maxHitClusterDistance;    ///< The maximum hit to cluster distance for isolated hit merging
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

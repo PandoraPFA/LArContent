@@ -28,12 +28,9 @@ StatusCode ClusterMopUpAlgorithm::Run()
     ClusterToListNameMap clusterToListNameMap;
     this->GetClusterToListNameMap(clusterToListNameMap);
 
-    ClusterAssociationMap clusterAssociationMap;
-    this->ClusterMopUp(pfoClusterListU, remnantClusterListU, clusterAssociationMap);
-    this->ClusterMopUp(pfoClusterListV, remnantClusterListV, clusterAssociationMap);
-    this->ClusterMopUp(pfoClusterListW, remnantClusterListW, clusterAssociationMap);
-
-    this->MakeClusterMerges(clusterAssociationMap, clusterToListNameMap);
+    this->ClusterMopUp(pfoClusterListU, remnantClusterListU, clusterToListNameMap);
+    this->ClusterMopUp(pfoClusterListV, remnantClusterListV, clusterToListNameMap);
+    this->ClusterMopUp(pfoClusterListW, remnantClusterListW, clusterToListNameMap);
 
     return STATUS_CODE_SUCCESS;
 }
