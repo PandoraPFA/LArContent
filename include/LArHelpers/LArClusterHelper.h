@@ -9,6 +9,7 @@
 #define LAR_CLUSTER_HELPER_H 1
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include "Objects/Cluster.h"
 
@@ -24,17 +25,6 @@ enum TransverseDirection
     NEGATIVE_IN_X,
     UNCHANGED_IN_X,
     UNKNOWN
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  ShowerEdge enum
- */
-enum ShowerEdge
-{
-    POSITIVE_SHOWER_EDGE,
-    NEGATIVE_SHOWER_EDGE
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

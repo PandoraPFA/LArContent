@@ -11,7 +11,7 @@
 #include "Pandora/Algorithm.h"
 
 #include "LArObjects/LArShowerOverlapResult.h"
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
@@ -38,19 +38,6 @@ public:
     };
 
     /**
-     *  @brief  SlidingShowerFitResult class
-     */
-    class SlidingShowerFitResult
-    {
-    public:
-        TwoDSlidingFitResult    m_showerFitResult;              ///< The sliding fit result for the full shower cluster
-        TwoDSlidingFitResult    m_negativeEdgeFitResult;        ///< The sliding fit result for the negative shower edge
-        TwoDSlidingFitResult    m_positiveEdgeFitResult;        ///< The sliding fit result for the positive shower edge
-    };
-
-    typedef std::map<pandora::Cluster*, SlidingShowerFitResult> SlidingShowerFitResultMap;
-
-    /**
      *  @brief  Sort tensor elements by number of matched sampling points, using matched fraction then xoverlap span to resolve ties
      *
      *  @param  lhs the first tensor element
@@ -65,7 +52,7 @@ public:
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    const SlidingShowerFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
+    const TwoDSlidingShowerFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
 
     void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
@@ -99,51 +86,6 @@ private:
         float       m_xPitch;        ///< The x sampling pitch to be used
     };
 
-    /**
-     *  @brief  ShowerEdge
-     */
-    class ShowerEdge
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         * 
-         *  @param  xCoordinate the x coordinate
-         *  @param  highEdgeZ the shower high edge z coordinate
-         *  @param  lowEdgeZ the shower low edge z coordinate
-         */
-        ShowerEdge(const float xCoordinate, const float highEdgeZ, const float lowEdgeZ);
-
-        /**
-         *  @param  Get the x coordinate
-         * 
-         *  @return the x coordinate
-         */
-        float GetXCoordinate() const;
-
-        /**
-         *  @param  Get the shower high edge z coordinate
-         * 
-         *  @return the shower high edge z coordinate
-         */
-        float GetHighEdgeZ() const;
-
-        /**
-         *  @param  Get the shower low edge z coordinate
-         * 
-         *  @return the shower low edge z coordinate
-         */
-        float GetLowEdgeZ() const;
-
-    private:
-        float       m_xCoordinate;   ///< The x coordinate
-        float       m_highEdgeZ;     ///< The shower high edge z coordinate
-        float       m_lowEdgeZ;      ///< The shower low edge z coordinate
-    };
-
-    typedef std::map<int, ShowerEdge> ShowerPositionMap;
-    typedef std::pair<ShowerPositionMap, ShowerPositionMap> ShowerPositionMapPair;
-
     void PreparationStep();
     void TidyUp();
 
@@ -174,6 +116,8 @@ private:
     void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW,
         ShowerOverlapResult &overlapResult);
 
+    typedef std::pair<ShowerPositionMap, ShowerPositionMap> ShowerPositionMapPair;
+
     /**
      *  @brief  Get the shower position maps
      * 
@@ -185,17 +129,8 @@ private:
      *  @param  positionMapsV to receive the shower position maps for the v view
      *  @param  positionMapsW to receive the shower position maps for the w view
      */
-    void GetShowerPositionMaps(const SlidingShowerFitResult &fitResultU, const SlidingShowerFitResult &fitResultV, const SlidingShowerFitResult &fitResultW,
+    void GetShowerPositionMaps(const TwoDSlidingShowerFitResult &fitResultU, const TwoDSlidingShowerFitResult &fitResultV, const TwoDSlidingShowerFitResult &fitResultW,
         const XSampling &xSampling, ShowerPositionMapPair &positionMapsU, ShowerPositionMapPair &positionMapsV, ShowerPositionMapPair &positionMapsW) const;
-
-    /**
-     *  @brief  Get the most appropriate shower edges at a given x coordinate
-     * 
-     *  @param  x the x coordinate
-     *  @param  fitResult the shower fit result
-     *  @param  edgePositions to receive the list of intersections of the shower fit at the given x coordinate
-     */
-    void GetShowerEdges(const float x, const SlidingShowerFitResult &fitResult, pandora::FloatVector &edgePositions) const;
 
     /**
      *  @brief  Get the best fraction of hits, in the common x-overlap range, contained within the provided pair of shower boundaries
@@ -213,18 +148,18 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<ShowerTensorTool*> TensorToolList;
-    TensorToolList              m_algorithmToolList;            ///< The algorithm tool list
-    unsigned int                m_nMaxTensorToolRepeats;        ///< The maximum number of repeat loops over tensor tools
+    TensorToolList                  m_algorithmToolList;            ///< The algorithm tool list
+    unsigned int                    m_nMaxTensorToolRepeats;        ///< The maximum number of repeat loops over tensor tools
 
-    unsigned int                m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    SlidingShowerFitResultMap   m_slidingFitResultMap;          ///< The sliding shower fit result map
+    unsigned int                    m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    TwoDSlidingShowerFitResultMap   m_slidingFitResultMap;          ///< The sliding shower fit result map
 
-    bool                        m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters
-    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
-    float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
+    bool                            m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters
+    unsigned int                    m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
+    float                           m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 
-    float                       m_minShowerMatchedFraction;     ///< The minimum shower matched sampling fraction to allow shower grouping
-    unsigned int                m_minShowerMatchedPoints;       ///< The minimum number of matched shower sampling points to allow shower grouping
+    float                           m_minShowerMatchedFraction;     ///< The minimum shower matched sampling fraction to allow shower grouping
+    unsigned int                    m_minShowerMatchedPoints;       ///< The minimum number of matched shower sampling points to allow shower grouping
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -255,37 +190,6 @@ public:
 inline pandora::Algorithm *ThreeDShowersAlgorithm::Factory::CreateAlgorithm() const
 {
     return new ThreeDShowersAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline ThreeDShowersAlgorithm::ShowerEdge::ShowerEdge(const float xCoordinate, const float edge1, const float edge2) :
-    m_xCoordinate(xCoordinate),
-    m_highEdgeZ(std::max(edge1, edge2)),
-    m_lowEdgeZ(std::min(edge1, edge2))
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ThreeDShowersAlgorithm::ShowerEdge::GetXCoordinate() const
-{
-    return m_xCoordinate;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ThreeDShowersAlgorithm::ShowerEdge::GetHighEdgeZ() const
-{
-    return m_highEdgeZ;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ThreeDShowersAlgorithm::ShowerEdge::GetLowEdgeZ() const
-{
-    return m_lowEdgeZ;
 }
 
 } // namespace lar

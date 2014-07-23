@@ -216,8 +216,8 @@ bool SplitShowersTool::CheckClusterConsistencies(ThreeDShowersAlgorithm *pAlgori
 
 float SplitShowersTool::GetSplitXCoordinate(ThreeDShowersAlgorithm *pAlgorithm, Cluster *const pClusterA, Cluster *const pClusterB) const
 {
-    const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).m_showerFitResult);
-    const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).m_showerFitResult);
+    const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).GetShowerFitResult());
+    const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).GetShowerFitResult());
 
     FloatVector floatVector;
     floatVector.push_back(fitResultA.GetGlobalMinLayerPosition().GetX());
@@ -245,8 +245,8 @@ void SplitShowersTool::SpecifyClusterMerges(ThreeDShowersAlgorithm *pAlgorithm, 
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     Cluster *pClusterA(*(clusterList.begin())), *pClusterB(*(clusterList.rbegin()));
-    const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).m_showerFitResult);
-    const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).m_showerFitResult);
+    const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).GetShowerFitResult());
+    const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).GetShowerFitResult());
 
     const float minXA(std::min(fitResultA.GetGlobalMinLayerPosition().GetX(), fitResultA.GetGlobalMaxLayerPosition().GetX()));
     const float minXB(std::min(fitResultB.GetGlobalMinLayerPosition().GetX(), fitResultB.GetGlobalMaxLayerPosition().GetX()));
