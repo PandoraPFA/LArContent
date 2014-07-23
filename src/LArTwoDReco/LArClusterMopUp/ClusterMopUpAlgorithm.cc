@@ -43,7 +43,11 @@ StatusCode ClusterMopUpAlgorithm::Run()
 void ClusterMopUpAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
+    if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_pfoListName, pPfoList))
+    {
+        std::cout << "Input PFO list not found: " << m_pfoListName << std::endl;
+        return;
+    }
 
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {

@@ -23,15 +23,11 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         Cluster *pPfoCluster(*pIter);
-
-        TwoDSlidingFitResult showerFitResult, negativeEdgeFitResult, positiveEdgeFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(pPfoCluster, m_slidingFitWindow, showerFitResult);
-        LArClusterHelper::LArTwoDShowerEdgeFit(showerFitResult, NEGATIVE_SHOWER_EDGE, negativeEdgeFitResult);
-        LArClusterHelper::LArTwoDShowerEdgeFit(showerFitResult, POSITIVE_SHOWER_EDGE, positiveEdgeFitResult);
+        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow);
 
         ShowerPositionMap showerPositionMap;
-        const XSampling xSampling(showerFitResult);
-        this->GetShowerPositionMap(negativeEdgeFitResult, positiveEdgeFitResult, xSampling, showerPositionMap);
+        const XSampling xSampling(fitResult.GetShowerFitResult());
+        this->GetShowerPositionMap(fitResult, xSampling, showerPositionMap);
 
         for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
         {
@@ -51,42 +47,20 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingFitResult &negativeEdgeFitResult, const TwoDSlidingFitResult &positiveEdgeFitResult,
-    const XSampling &xSampling, ShowerPositionMap &showerPositionMap) const
+void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowerFitResult &fitResult, const XSampling &xSampling,
+    ShowerPositionMap &showerPositionMap) const
 {
-    float minXn(0.f), maxXn(0.f), minXp(0.f), maxXp(0.f), minZn(0.f), maxZn(0.f), minZp(0.f), maxZp(0.f);
-    negativeEdgeFitResult.GetMinAndMaxX(minXn, maxXn);
-    positiveEdgeFitResult.GetMinAndMaxX(minXp, maxXp);
-    negativeEdgeFitResult.GetMinAndMaxZ(minZn, maxZn);
-    positiveEdgeFitResult.GetMinAndMaxZ(minZp, maxZp);
-
-    const float minX(std::min(minXn, minXp)), maxX(std::max(maxXn, maxXp));
-    const float minZ(std::min(minZn, minZp)), maxZ(std::max(maxZn, maxZp));
-
     for (float x = xSampling.m_minX; x < xSampling.m_maxX; x += xSampling.m_xPitch)
     {
-        CartesianPointList fitPositionList;
-        try {negativeEdgeFitResult.GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
-        try {positiveEdgeFitResult.GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
-
         FloatVector edgePositions;
-        for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
-        {
-            edgePositions.push_back(iter->GetZ());
-        }
-
-        if (edgePositions.empty() && (x >= minX) && (x <= maxX))
-        {
-            edgePositions.push_back(minZ);
-            edgePositions.push_back(maxZ);
-        }
+        fitResult.GetShowerEdges(x, edgePositions);
 
         if (edgePositions.size() < 2)
             continue;
 
         std::sort(edgePositions.begin(), edgePositions.end());
         const int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
-        showerPositionMap.insert(ShowerPositionMap::value_type(xBin, ShowerEdge(x, edgePositions.front(), edgePositions.back())));
+        showerPositionMap.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, edgePositions.front(), edgePositions.back())));
     }
 }
 
