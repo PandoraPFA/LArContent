@@ -75,6 +75,24 @@ private:
     float GetFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
 
     /**
+     *  @brief  Get a figure of merit using mc information to provide best values technically possible
+     * 
+     *  @param  seedAssociationList the seed association list
+     * 
+     *  @return the figure of merit
+     */
+    float GetMCFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
+
+    /**
+     *  @brief  Get a figure of merit using purely reconstructed quantities
+     * 
+     *  @param  seedAssociationList the seed association list
+     * 
+     *  @return the figure of merit
+     */
+    float GetRecoFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
+
+    /**
      *  @brief  Custom sorting for clusters to determine order in which seeds are considered
      *
      *  @param  pLhs address of first cluster
@@ -136,6 +154,9 @@ private:
     unsigned int            m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per (seed or branch) cluster
     float                   m_nearbyClusterDistance;    ///< The nearby cluster distance, used for determining cluster associations
     float                   m_remoteClusterDistance;    ///< The remote cluster distance, used for determining cluster associations
+
+    bool                    m_useMCFigureOfMerit;       ///< Whether to use a figure of merit based on mc particle information
+    bool                    m_useFirstImprovedSeed;     ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
 
     bool                    m_shouldRemoveShowerPfos;   ///< Whether to delete any existing pfos to which many shower branches have been added
     unsigned int            m_showerLikeNBranches;      ///< The minimum number of branches before cluster is declared shower like

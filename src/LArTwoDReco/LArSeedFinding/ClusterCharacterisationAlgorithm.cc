@@ -186,6 +186,9 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
             betterConfigurationFound = true;
             bestFigureOfMerit = trialFigureOfMerit;
             bestSeedAssociationList = trialSeedAssociationList;
+
+            if (m_useFirstImprovedSeed)
+                break;
         }
     }
 
@@ -206,6 +209,20 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
 
 float ClusterCharacterisationAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAssociationList) const
 {
+    if (m_useMCFigureOfMerit)
+    {
+        return this->GetMCFigureOfMerit(seedAssociationList);
+    }
+    else
+    {
+        return this->GetRecoFigureOfMerit(seedAssociationList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ClusterCharacterisationAlgorithm::GetMCFigureOfMerit(const SeedAssociationList &seedAssociationList) const
+{
     const unsigned int nSeeds(seedAssociationList.size());
 
     if (!((nSeeds == 1) || (nSeeds == 2)))
@@ -218,7 +235,6 @@ float ClusterCharacterisationAlgorithm::GetFigureOfMerit(const SeedAssociationLi
         Cluster *pParentCluster(iter1->first);
         ++nClusters;
 
-        // TODO don't cheat this bit!
         const MCParticle *pParentMCParticle(NULL);
         try {pParentMCParticle = MCParticleHelper::GetMainMCParticle(pParentCluster);} catch (StatusCodeException &) {}
 
@@ -245,6 +261,20 @@ float ClusterCharacterisationAlgorithm::GetFigureOfMerit(const SeedAssociationLi
 
     const float figureOfMerit(static_cast<float>(nMatchedClusters) / static_cast<float>(nClusters));
     return figureOfMerit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const SeedAssociationList &seedAssociationList) const
+{
+    const unsigned int nSeeds(seedAssociationList.size());
+
+    if (!((nSeeds == 1) || (nSeeds == 2)))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    // TODO
+    throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    return 0.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -400,6 +430,14 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     m_remoteClusterDistance = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "RemoteClusterDistance", m_remoteClusterDistance));
+
+    m_useMCFigureOfMerit = true;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseMCFigureOfMerit", m_useMCFigureOfMerit));
+
+    m_useFirstImprovedSeed = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseFirstImprovedSeed", m_useFirstImprovedSeed));
 
     m_shouldRemoveShowerPfos = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
