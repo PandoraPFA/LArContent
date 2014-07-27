@@ -282,7 +282,7 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const Slid
     if (std::fabs(particle.m_longMaxX - particle.m_longMinX) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    if (!matchesACluster)
+    if (!matchesACluster || possibleMerges.empty())
         return false;
 
     if (((shortMaxX - shortMinX) / (particle.m_longMaxX - particle.m_longMinX)) < m_minFinalXOverlapFraction)
@@ -324,7 +324,12 @@ bool MissingTrackSegmentTool::IsPossibleMerge(Cluster *const pCluster, const Par
     float mergeMinX(std::numeric_limits<float>::max()), mergeMaxX(-std::numeric_limits<float>::max());
     fitIter->second.GetMinAndMaxX(mergeMinX, mergeMaxX);
 
+    // cluster should not be wider than the longest span
     if ((mergeMinX < particle.m_longMinX - m_mergeXContainmentTolerance) || (mergeMaxX > particle.m_longMaxX + m_mergeXContainmentTolerance))
+        return false;
+
+    // cluster should not overlap with the shortest span
+    if ((mergeMinX < particle.m_shortMaxX - m_mergeXContainmentTolerance) && (mergeMaxX > particle.m_shortMinX + m_mergeXContainmentTolerance))
         return false;
 
     return true;
