@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArObjects/LArPointingCluster.h"
+
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 namespace lar
@@ -93,6 +95,26 @@ private:
     float GetRecoFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
 
     /**
+     *  @brief  Simple and fast vertex selection, choosing best vertex from a specified list to represent a set of pointing clusters
+     * 
+     *  @param  pSeedCluster address of the seed cluster
+     *  @param  pointingClusterList the list of relevant pointing clusters
+     * 
+     *  @return the best vertex estimate
+     */
+    LArPointingCluster::Vertex GetBestVertexEstimate(pandora::Cluster *pSeedCluster, const LArPointingClusterList &pointingClusterList) const;
+
+    /**
+     *  @brief  Get the number of clusters nodally associated with the best-guess vertex
+     * 
+     *  @param  vertex the vertex
+     *  @param  pointingClusterList the list of relevant pointing clusters
+     * 
+     *  @return the number of clusters nodally associated with the best-guess vertex
+     */
+    unsigned int GetNumberOfNodes(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &pointingClusterList) const;
+
+    /**
      *  @brief  Custom sorting for clusters to determine order in which seeds are considered
      *
      *  @param  pLhs address of first cluster
@@ -148,19 +170,22 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_inputClusterListName;     ///< The name of the input cluster list
-    pandora::StringVector   m_inputPfoListNames;        ///< The names of the input pfo lists
+    typedef std::map<pandora::Cluster*, LArPointingCluster::Vertex> ClusterToVertexMap;
+    mutable ClusterToVertexMap  m_clusterToVertexMap;       ///< The cluster to vertex map
 
-    unsigned int            m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per (seed or branch) cluster
-    float                   m_nearbyClusterDistance;    ///< The nearby cluster distance, used for determining cluster associations
-    float                   m_remoteClusterDistance;    ///< The remote cluster distance, used for determining cluster associations
+    std::string                 m_inputClusterListName;     ///< The name of the input cluster list
+    pandora::StringVector       m_inputPfoListNames;        ///< The names of the input pfo lists
 
-    bool                    m_useMCFigureOfMerit;       ///< Whether to use a figure of merit based on mc particle information
-    bool                    m_useFirstImprovedSeed;     ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
+    unsigned int                m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per (seed or branch) cluster
+    float                       m_nearbyClusterDistance;    ///< The nearby cluster distance, used for determining cluster associations
+    float                       m_remoteClusterDistance;    ///< The remote cluster distance, used for determining cluster associations
 
-    bool                    m_shouldRemoveShowerPfos;   ///< Whether to delete any existing pfos to which many shower branches have been added
-    unsigned int            m_showerLikeNBranches;      ///< The minimum number of branches before cluster is declared shower like
-    float                   m_showerLikeCaloHitRatio;   ///< The minimum ratio of final to original calo hits before cluster is declared shower like
+    bool                        m_useMCFigureOfMerit;       ///< Whether to use a figure of merit based on mc particle information
+    bool                        m_useFirstImprovedSeed;     ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
+
+    bool                        m_shouldRemoveShowerPfos;   ///< Whether to delete any existing pfos to which many shower branches have been added
+    unsigned int                m_showerLikeNBranches;      ///< The minimum number of branches before cluster is declared shower like
+    float                       m_showerLikeCaloHitRatio;   ///< The minimum ratio of final to original calo hits before cluster is declared shower like
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
