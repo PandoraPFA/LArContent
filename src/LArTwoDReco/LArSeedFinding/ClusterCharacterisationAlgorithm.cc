@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
 
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
 
@@ -37,6 +38,7 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
         if (seedAssociationList.size() != 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
+        m_clusterToVertexMap.clear();
         SeedAssociationList finalSeedAssociationList;
         this->CheckSeedAssociationList(seedAssociationList.begin(), finalSeedAssociationList);
 
@@ -272,9 +274,75 @@ float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const SeedAssociati
     if (!((nSeeds == 1) || (nSeeds == 2)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    // TODO
-    throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-    return 0.f;
+    unsigned int nTotalNodes(0);
+
+    for (SeedAssociationList::const_iterator iter = seedAssociationList.begin(), iterEnd = seedAssociationList.end(); iter != iterEnd; ++iter)
+    {
+        if (iter->second.empty())
+        {
+            ++nTotalNodes;
+            continue;
+        }
+
+        Cluster *pSeedCluster(iter->first);
+        const ClusterVector &associatedClusters(iter->second);
+
+        const LArPointingCluster pointingSeedCluster(pSeedCluster);
+        LArPointingClusterList pointingClusterList(1, pointingSeedCluster);
+
+        for (ClusterVector::const_iterator cIter = associatedClusters.begin(), cIterEnd = associatedClusters.end(); cIter != cIterEnd; ++cIter)
+            pointingClusterList.push_back(LArPointingCluster(*cIter));
+
+        ClusterToVertexMap::const_iterator mapIter = m_clusterToVertexMap.find(iter->first);
+        const LArPointingCluster::Vertex bestVertex((m_clusterToVertexMap.end() != mapIter) ? mapIter->second :
+            this->GetBestVertexEstimate(pSeedCluster, pointingClusterList));
+
+        if (m_clusterToVertexMap.end() == mapIter)
+            m_clusterToVertexMap.insert(ClusterToVertexMap::value_type(iter->first, bestVertex));
+
+        const unsigned int nNodes(this->GetNumberOfNodes(bestVertex, pointingClusterList));
+
+        if (0 == nNodes)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        nTotalNodes += nNodes;
+    }
+
+    const float figureOfMerit(static_cast<float>(nSeeds) - static_cast<float>(nTotalNodes));
+    return figureOfMerit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::Vertex ClusterCharacterisationAlgorithm::GetBestVertexEstimate(pandora::Cluster *pSeedCluster,
+    const LArPointingClusterList &pointingClusterList) const
+{
+    // TODO option to cheat the vertex position
+    const LArPointingCluster pointingSeedCluster(pSeedCluster);
+
+    LArPointingClusterVertexList vertexList;
+    vertexList.push_back(pointingSeedCluster.GetInnerVertex());
+    vertexList.push_back(pointingSeedCluster.GetOuterVertex());
+
+    return LArPointingClusterHelper::GetBestVertexEstimate(vertexList, pointingClusterList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int ClusterCharacterisationAlgorithm::GetNumberOfNodes(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &pointingClusterList) const
+{
+    unsigned int nNodes(0);
+
+    for (LArPointingClusterList::const_iterator cIter = pointingClusterList.begin(), cIterEnd = pointingClusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        if (LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetInnerVertex()) ||
+            LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetOuterVertex()))
+        {
+            ++nNodes;
+        }
+    }
+
+    return nNodes;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -431,7 +499,7 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "RemoteClusterDistance", m_remoteClusterDistance));
 
-    m_useMCFigureOfMerit = true;
+    m_useMCFigureOfMerit = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseMCFigureOfMerit", m_useMCFigureOfMerit));
 
