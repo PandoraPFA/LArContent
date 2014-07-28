@@ -181,6 +181,7 @@ private:
     float                       m_remoteClusterDistance;    ///< The remote cluster distance, used for determining cluster associations
 
     bool                        m_useMCFigureOfMerit;       ///< Whether to use a figure of merit based on mc particle information
+    bool                        m_useMCVertexSelection;     ///< Whether to select vertex based on mc particle information (reduced level of cheating)
     bool                        m_useFirstImprovedSeed;     ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
 
     bool                        m_shouldRemoveShowerPfos;   ///< Whether to delete any existing pfos to which many shower branches have been added
