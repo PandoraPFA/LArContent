@@ -317,14 +317,26 @@ float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const SeedAssociati
 LArPointingCluster::Vertex ClusterCharacterisationAlgorithm::GetBestVertexEstimate(pandora::Cluster *pSeedCluster,
     const LArPointingClusterList &pointingClusterList) const
 {
-    // TODO option to cheat the vertex position
     const LArPointingCluster pointingSeedCluster(pSeedCluster);
 
-    LArPointingClusterVertexList vertexList;
-    vertexList.push_back(pointingSeedCluster.GetInnerVertex());
-    vertexList.push_back(pointingSeedCluster.GetOuterVertex());
+    if (m_useMCVertexSelection)
+    {
+        const MCParticle *pSeedMCParticle = MCParticleHelper::GetMainMCParticle(pSeedCluster);
+        const CartesianVector mcVertex(pSeedMCParticle->GetVertex());
 
-    return LArPointingClusterHelper::GetBestVertexEstimate(vertexList, pointingClusterList);
+        const float innerDistanceSquared = (pointingSeedCluster.GetInnerVertex().GetPosition() - mcVertex).GetMagnitudeSquared();
+        const float outerDistanceSquared = (pointingSeedCluster.GetOuterVertex().GetPosition() - mcVertex).GetMagnitudeSquared();
+
+        return ((innerDistanceSquared < outerDistanceSquared) ? pointingSeedCluster.GetInnerVertex() : pointingSeedCluster.GetOuterVertex());
+    }
+    else
+    {
+        LArPointingClusterVertexList vertexList;
+        vertexList.push_back(pointingSeedCluster.GetInnerVertex());
+        vertexList.push_back(pointingSeedCluster.GetOuterVertex());
+
+        return LArPointingClusterHelper::GetBestVertexEstimate(vertexList, pointingClusterList);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -502,6 +514,10 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     m_useMCFigureOfMerit = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseMCFigureOfMerit", m_useMCFigureOfMerit));
+
+    m_useMCVertexSelection = false;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseMCVertexSelection", m_useMCVertexSelection));
 
     m_useFirstImprovedSeed = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
