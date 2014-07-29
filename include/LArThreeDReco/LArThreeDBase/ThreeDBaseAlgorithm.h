@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h
- * 
+ *
  *  @brief  Header file for the three dimension algorithm base class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_THREE_D_BASE_ALGORITHM_H
@@ -52,33 +52,33 @@ public:
 
     /**
      *  @brief  Create particles using findings from recent algorithm processing
-     * 
+     *
      *  @param  protoParticleVector the proto particle vector
-     * 
+     *
      *  @param  whether particles were created
      */
     virtual bool CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
 
     /**
      *  @brief  Calculate Pfo properties from proto particle
-     * 
+     *
      *  @param  protoParticle the input proto particle
      *  @param  pfoParameters the output pfo parameters
      */
-    virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
+    virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const = 0;
 
     /**
      *  @brief  Merge clusters together
-     * 
+     *
      *  @param  clusterMergeMap the cluster merge map
-     * 
+     *
      *  @return whether changes to the tensor have been made
      */
     virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
 
     /**
      *  @brief  Update to reflect a cluster merge
-     * 
+     *
      *  @param  pEnlargedCluster address of the enlarged cluster
      *  @param  pDeletedCluster address of the deleted cluster
      */
@@ -86,7 +86,7 @@ public:
 
     /**
      *  @brief  Update to reflect a cluster split
-     * 
+     *
      *  @param  pSplitCluster1 address of the first cluster fragment
      *  @param  pSplitCluster2 address of the second cluster fragment
      *  @param  pDeletedCluster address of the deleted cluster
@@ -96,14 +96,14 @@ public:
 
     /**
      *  @brief  Update to reflect addition of a new cluster to the problem space
-     * 
+     *
      *  @param  pNewCluster address of the new cluster
      */
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
 
     /**
      *  @brief  Update to reflect cluster deletion
-     * 
+     *
      *  @param  pDeletedCluster address of the deleted cluster
      */
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
@@ -160,7 +160,7 @@ public:
 
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
-     * 
+     *
      *  @param  pInputClusterList address of an input cluster list
      *  @param  selectedClusterList to receive the selected cluster list
      */
@@ -186,7 +186,7 @@ protected:
 
     /**
      *  @brief  Calculate cluster overlap result and store in tensor
-     * 
+     *
      *  @param  pClusterU address of U view cluster
      *  @param  pClusterV address of V view cluster
      *  @param  pClusterW address of W view cluster
