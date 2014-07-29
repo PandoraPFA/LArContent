@@ -46,7 +46,7 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType &hi
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
 {
@@ -153,7 +153,7 @@ float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, con
 
     return std::sqrt(distanceSquared / numViews);
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArPfoHelper::GetThreeDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2)
@@ -167,6 +167,26 @@ float LArPfoHelper::GetThreeDSeparation(const ParticleFlowObject *const pPfo1, c
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return LArClusterHelper::GetClosestDistance(clusterList1, clusterList2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::IsTrack(const ParticleFlowObject *const pPfo)
+{
+    const int pdg(pPfo->GetParticleId());
+
+    // muon, pion, proton, kaon
+    return ((13 == std::abs(pdg)) || (211 == std::abs(pdg)) || (2212 == std::abs(pdg)) || (321 == std::abs(pdg)));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::IsShower(const ParticleFlowObject *const pPfo)
+{
+    const int pdg(pPfo->GetParticleId());
+
+    // electron, photon
+    return ((11 == std::abs(pdg)) || (22 == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
