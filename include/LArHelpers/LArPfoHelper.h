@@ -81,6 +81,20 @@ public:
     static float GetThreeDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
 
     /**
+     *  @brief  Return track flag based on Pfo Particle ID
+     *
+     *  @param  pPfo the address of the Pfo
+     */
+    static bool IsTrack(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Return shower flag based on Pfo Particle ID
+     *
+     *  @param  pPfo the address of the Pfo
+     */
+    static bool IsShower(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief  Sort pfos by number of constituent hits
      * 
      *  @param  pLhs address of first pfo
