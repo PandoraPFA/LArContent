@@ -112,10 +112,9 @@ public:
      *  @param  pPfo the address of the pfo
      *  @param  inputTwoDHits the list of input two dimensional hits
      *  @param  newThreeDHits to receive the new three dimensional hits
-     *  @param  omittedTwoDHits to receive the two dimensional hits for which no three dimensional hits could be created
      */
     virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
-        pandora::CaloHitList &newThreeDHits, pandora::CaloHitList &omittedTwoDHits) = 0;
+        pandora::CaloHitList &newThreeDHits) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

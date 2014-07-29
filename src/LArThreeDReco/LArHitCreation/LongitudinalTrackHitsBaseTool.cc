@@ -14,7 +14,7 @@ namespace lar
 {
  
 void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm */*pAlgorithm*/, const CaloHitList &/*inputTwoDHits*/, 
-    const MatchedSlidingFitMap &/*matchedSlidingFitMap*/, CaloHitList &/*newThreeDHits*/, CaloHitList &/*omittedTwoDHits*/) const
+    const MatchedSlidingFitMap &/*matchedSlidingFitMap*/, CaloHitList &/*newThreeDHits*/) const
 {   
   
   // TODO --- 

@@ -28,11 +28,9 @@ protected:
      *  @param  inputTwoDHits the list of input two dimensional hits
      *  @param  matchedSlidingFitMap the sliding fit results for each view
      *  @param  newThreeDHits to receive the new three dimensional hits
-     *  @param  omittedTwoDHits to receive the two dimensional hits for which no three dimensional hits could be created
      */
     void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, 
-        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits, 
-        pandora::CaloHitList &omittedTwoDHits) const;
+        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits) const;
 
  
 

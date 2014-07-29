@@ -21,7 +21,7 @@ namespace lar
 {
 
 void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
-    CaloHitList &newThreeDHits, CaloHitList &omittedTwoDHits)
+    CaloHitList &newThreeDHits)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -34,7 +34,7 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Partic
         if (matchedSlidingFitMap.size() < 2)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        this->CreateThreeDHits(pAlgorithm, inputTwoDHits, matchedSlidingFitMap, newThreeDHits, omittedTwoDHits);
+        this->CreateThreeDHits(pAlgorithm, inputTwoDHits, matchedSlidingFitMap, newThreeDHits);
     }
     catch (StatusCodeException &)
     {

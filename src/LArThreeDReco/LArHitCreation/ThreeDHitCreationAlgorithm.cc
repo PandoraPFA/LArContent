@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the three dimensional hit creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -136,19 +136,22 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     {
         ParticleFlowObject *pPfo = *pIter;
 
-        CaloHitList allNewThreeDHits, inputTwoDHits;
-        this->GetUnusedTwoDHits(pPfo, inputTwoDHits);
+        CaloHitList allNewThreeDHits;
 
         for (HitCreationToolList::const_iterator tIter = m_algorithmToolList.begin(), tIterEnd = m_algorithmToolList.end(); tIter != tIterEnd; ++tIter)
         {
-            CaloHitList newThreeDHits, omittedTwoDHits;
-            (*tIter)->Run(this, pPfo, inputTwoDHits, newThreeDHits, omittedTwoDHits);
+            CaloHitList unusedTwoDHits, newThreeDHits;
+            this->GetUnusedTwoDHits(pPfo, unusedTwoDHits);
+
+            if (unusedTwoDHits.empty())
+                break;
+
+            (*tIter)->Run(this, pPfo, unusedTwoDHits, newThreeDHits);
 
             if (!newThreeDHits.empty())
             {
                 Cluster *pCluster3D(NULL);
                 this->AddThreeDHitsToPfo(pPfo, newThreeDHits, pCluster3D);
-                inputTwoDHits = omittedTwoDHits;
                 allNewThreeDHits.insert(newThreeDHits.begin(), newThreeDHits.end());
             }
         }

@@ -23,7 +23,7 @@ class TrackHitsBaseTool : public HitCreationTool
 public:
 
     void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
-        pandora::CaloHitList &newThreeDHits, pandora::CaloHitList &omittedTwoDHits);
+        pandora::CaloHitList &newThreeDHits);
 
 protected:
 
@@ -47,8 +47,7 @@ protected:
      *  @param  omittedTwoDHits  the output list of omitted 2D hits
      */
     virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits,
-        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits,
-        pandora::CaloHitList &omittedTwoDHits) const = 0;
+        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits) const = 0;
 
     /**
      *  @brief  Get the three dimensional position using a provided two dimensional calo hit and candidate fit positions from the other two views

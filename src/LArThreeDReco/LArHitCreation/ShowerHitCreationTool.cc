@@ -21,7 +21,7 @@ namespace lar
 {
 
 void ShowerHitCreationTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
-    CaloHitList &newThreeDHits, CaloHitList &omittedTwoDHits)
+    CaloHitList &newThreeDHits)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -36,9 +36,9 @@ void ShowerHitCreationTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Pa
         pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_V, caloHitListV);
         pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_W, caloHitListW);
 
-        this->CreateThreeDHits(pAlgorithm, caloHitListU, caloHitListV, caloHitListW, newThreeDHits, omittedTwoDHits);
-        this->CreateThreeDHits(pAlgorithm, caloHitListV, caloHitListU, caloHitListW, newThreeDHits, omittedTwoDHits);
-        this->CreateThreeDHits(pAlgorithm, caloHitListW, caloHitListU, caloHitListV, newThreeDHits, omittedTwoDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitListU, caloHitListV, caloHitListW, newThreeDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitListV, caloHitListU, caloHitListW, newThreeDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitListW, caloHitListU, caloHitListV, newThreeDHits);
     }
     catch (StatusCodeException &)
     {
@@ -74,7 +74,7 @@ void ShowerHitCreationTool::GetClusters(const ParticleFlowObject *const pPfo, Cl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ShowerHitCreationTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits,
-    const CaloHitList &caloHitList1, const CaloHitList &caloHitList2, CaloHitList &newThreeDHits, CaloHitList &omittedTwoDHits) const
+    const CaloHitList &caloHitList1, const CaloHitList &caloHitList2, CaloHitList &newThreeDHits) const
 {
     for (CaloHitList::const_iterator iter = inputTwoDHits.begin(), iterEnd = inputTwoDHits.end(); iter != iterEnd; ++iter)
     {
@@ -100,7 +100,6 @@ void ShowerHitCreationTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgori
         }
         catch (StatusCodeException &)
         {
-            omittedTwoDHits.insert(*iter);
         }
     }
 }
