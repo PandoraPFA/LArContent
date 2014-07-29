@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the three dimension algorithm base class.
- * 
+ *
  *  $Log: $
  */
 
@@ -63,22 +63,6 @@ bool ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
     }
 
     return particlesMade;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
-{
-    // TODO - correct these placeholder parameters
-    pfoParameters.m_particleId = 0;
-    pfoParameters.m_charge = 0;
-    pfoParameters.m_mass = 0.f;
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0., 0., 0.); 
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
