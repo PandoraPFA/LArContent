@@ -57,6 +57,7 @@ public:
     void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+    void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 private:
     /**

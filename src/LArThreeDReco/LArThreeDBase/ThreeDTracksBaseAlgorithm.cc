@@ -192,6 +192,22 @@ void ThreeDTracksBaseAlgorithm<T>::TidyUp()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
+void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+{
+    // TODO - correct these placeholder parameters
+    pfoParameters.m_particleId = 13; // Track
+    pfoParameters.m_charge = 0;
+    pfoParameters.m_mass = 0.f;
+    pfoParameters.m_energy = 0.f;
+    pfoParameters.m_momentum = CartesianVector(0., 0., 0.); 
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
 {
     TwoDSlidingFitResult slidingFitResult;

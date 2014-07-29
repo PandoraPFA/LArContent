@@ -500,7 +500,7 @@ void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList
 
     // TODO - correct these placeholder parameters
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-    pfoParameters.m_particleId = 22;
+    pfoParameters.m_particleId = 11; // SHOWER
     pfoParameters.m_charge = 0;
     pfoParameters.m_mass = 0.f;
     pfoParameters.m_energy = 0.f;
