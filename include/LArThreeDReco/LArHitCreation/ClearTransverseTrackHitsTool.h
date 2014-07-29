@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h
- * 
+ *
  *  @brief  Header file for the transverse track hit creation tool.
- * 
+ *
  *  $Log: $
  */
 #ifndef CLEAR_TRANSVERSE_TRACK_HITS_TOOL_H
@@ -33,8 +33,6 @@ private:
 
     void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
         pandora::CartesianVector &position3D, float &chiSquared) const;
-
-    void GetExtrapolatedPositionAtX(const TwoDSlidingFitResult &fitResult, const float x, pandora::CartesianVector &position2D) const;
 
 };
 

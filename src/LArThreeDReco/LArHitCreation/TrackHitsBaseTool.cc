@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.cc
- * 
+ *
  *  @brief  Implementation of the transverse track hit creation tool.
- * 
+ *
  *  $Log: $
  */
 
@@ -12,8 +12,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-
-
 
 #include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
@@ -31,7 +29,7 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Partic
     try
     {
         MatchedSlidingFitMap matchedSlidingFitMap;
-        this->BuildSlidingFitMap(pPfo, matchedSlidingFitMap); 
+        this->BuildSlidingFitMap(pPfo, matchedSlidingFitMap);
 
         if (matchedSlidingFitMap.size() < 2)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -42,7 +40,7 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Partic
     {
     }
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const
@@ -59,7 +57,7 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
         if (matchedSlidingFitMap.end() != matchedSlidingFitMap.find(hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
- 
+
         TwoDSlidingFitResult slidingFitResult;
         LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
 
@@ -74,7 +72,7 @@ void TrackHitsBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const Hit
     const CartesianVector &fitPosition1, const CartesianVector &fitPosition2, CartesianVector &position3D, float &chiSquared) const
 {
     const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
-    const float sigmaFit(m_sigmaFitMultiplier * sigmaHit);
+    const float sigmaFit(sigmaHit); // TODO: Input uncertainties into this method
     const HitType hitType(pCaloHit2D->GetHitType());
 
     if (m_useChiSquaredApproach)
@@ -105,6 +103,18 @@ void TrackHitsBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const Hit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TrackHitsBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType, const CartesianVector &fitPosition,
+    CartesianVector &position3D, float &chiSquared) const
+{
+    if (pCaloHit2D->GetHitType() == hitType)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    LArGeometryHelper::MergeTwoPositions3D(pCaloHit2D->GetHitType(), hitType, pCaloHit2D->GetPositionVector(), fitPosition,
+        position3D, chiSquared);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_slidingFitWindow = 20;
@@ -114,10 +124,6 @@ StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_useChiSquaredApproach = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseChiSquaredApproach", m_useChiSquaredApproach));
-
-    m_sigmaFitMultiplier = 1.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SigmaFitMultiplier", m_sigmaFitMultiplier));
 
     m_chiSquaredCut = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
