@@ -49,14 +49,7 @@ bool ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
     {
         // TODO - correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-        pfoParameters.m_particleId = 22;
-        pfoParameters.m_charge = 0;
-        pfoParameters.m_mass = 0.f;
-        pfoParameters.m_energy = 0.f;
-        pfoParameters.m_momentum = CartesianVector(0., 0., 0.);
-        pfoParameters.m_clusterList.insert(iter->m_clusterListU.begin(), iter->m_clusterListU.end());
-        pfoParameters.m_clusterList.insert(iter->m_clusterListV.begin(), iter->m_clusterListV.end());
-        pfoParameters.m_clusterList.insert(iter->m_clusterListW.begin(), iter->m_clusterListW.end());
+        this->SetPfoParameters(*iter, pfoParameters);
 
         ParticleFlowObject *pPfo(NULL);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
@@ -70,6 +63,22 @@ bool ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
     }
 
     return particlesMade;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+{
+    // TODO - correct these placeholder parameters
+    pfoParameters.m_particleId = 0;
+    pfoParameters.m_charge = 0;
+    pfoParameters.m_mass = 0.f;
+    pfoParameters.m_energy = 0.f;
+    pfoParameters.m_momentum = CartesianVector(0., 0., 0.); 
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

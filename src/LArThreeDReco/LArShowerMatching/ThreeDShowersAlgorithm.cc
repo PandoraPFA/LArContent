@@ -80,6 +80,21 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDShowersAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+{
+    // TODO - correct these placeholder parameters
+    pfoParameters.m_particleId = 11; // Shower
+    pfoParameters.m_charge = 0;
+    pfoParameters.m_mass = 0.f;
+    pfoParameters.m_energy = 0.f;
+    pfoParameters.m_momentum = CartesianVector(0., 0., 0.); 
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDShowersAlgorithm::PreparationStep()
 {
     ClusterList allClustersList;

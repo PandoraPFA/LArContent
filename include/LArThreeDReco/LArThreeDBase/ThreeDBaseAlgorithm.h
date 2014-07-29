@@ -60,6 +60,14 @@ public:
     virtual bool CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
 
     /**
+     *  @brief  Calculate Pfo properties from proto particle
+     * 
+     *  @param  protoParticle the input proto particle
+     *  @param  pfoParameters the output pfo parameters
+     */
+    virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
+
+    /**
      *  @brief  Merge clusters together
      * 
      *  @param  clusterMergeMap the cluster merge map

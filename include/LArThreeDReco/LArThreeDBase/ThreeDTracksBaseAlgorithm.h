@@ -71,11 +71,12 @@ public:
     virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
     virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+    virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 protected:
     virtual void PreparationStep();
     virtual void TidyUp();
-
+  
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
      * 
