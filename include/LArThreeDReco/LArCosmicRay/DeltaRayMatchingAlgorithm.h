@@ -95,12 +95,20 @@ private:
     typedef std::vector<Particle> ParticleList;
 
     /**
-     *  @brief  Get a vector of Pfos in the provided input Pfo lists
+     *  @brief  Get a vector of all Pfos in the provided input Pfo lists
      *
      *  @param  inputPfoListName the input Pfo list name
      *  @param  pfoVector the output vector of Pfos
      */
-    void GetPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
+    void GetAllPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
+
+    /**
+     *  @brief  Get a vector of track-like Pfos in the provided input Pfo lists
+     *
+     *  @param  inputPfoListName the input Pfo list name
+     *  @param  pfoVector the output vector of Pfos
+     */
+    void GetTrackPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
 
     /**
      *  @brief  Get a vector containing all available input clusters in the provided cluster list, storing sliding linear fits
