@@ -283,7 +283,11 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
         if (NULL == pParentPfo)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
+        if (!LArPfoHelper::IsTrack(pParentPfo))
+            continue;
+
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
+        pDaughterPfo->SetParticleId(11);
         daughterPfoList.insert(pDaughterPfo);
     }
 }
