@@ -14,7 +14,7 @@ namespace lar
 {
  
 void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits, 
-    const MatchedSlidingFitMap &matchedSlidingFitMap, CaloHitList &newThreeDHits, CaloHitList &omittedTwoDHits) const
+    const MatchedSlidingFitMap &matchedSlidingFitMap, CaloHitList &newThreeDHits) const
 {   
     for (CaloHitList::const_iterator iter = inputTwoDHits.begin(), iterEnd = inputTwoDHits.end(); iter != iterEnd; ++iter)
     {
@@ -35,7 +35,6 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *p
         }
         catch (StatusCodeException &)
         {
-            omittedTwoDHits.insert(*iter);
         }
     }
 }

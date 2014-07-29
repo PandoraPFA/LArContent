@@ -29,7 +29,7 @@ public:
     };
 
     void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
-        pandora::CaloHitList &newThreeDHits, pandora::CaloHitList &omittedTwoDHits);
+        pandora::CaloHitList &newThreeDHits);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -54,10 +54,9 @@ private:
      *  @param  caloHitList1 the first 
      *  @param  caloHitList2 the second 
      *  @param  newThreeDHits to receive the new three dimensional hits
-     *  @param  omittedTwoDHits to receive the two dimensional hits for which no three dimensional hits could be created
      */
     void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList1,
-        const pandora::CaloHitList &caloHitList2, pandora::CaloHitList &newThreeDHits, pandora::CaloHitList &omittedTwoDHits) const;
+        const pandora::CaloHitList &caloHitList2, pandora::CaloHitList &newThreeDHits) const;
 
     /**
      *  @brief  Filter a list of calo hits to find those within a specified tolerance of a give x position
