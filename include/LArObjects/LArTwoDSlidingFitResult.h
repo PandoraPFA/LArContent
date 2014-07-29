@@ -504,6 +504,14 @@ public:
         pandora::CartesianVector &direction) const;
 
     /**
+     *  @brief  Get extrapolated position (beyond span) for a given input x coordinate
+     *
+     *  @param  x the input coordinate
+     *  @param  position the extrapolated position at these coordinates
+     */
+    void GetExtrapolatedPositionAtX(const float x, pandora::CartesianVector &position) const;
+
+    /**
      *  @brief Get fit segment for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate

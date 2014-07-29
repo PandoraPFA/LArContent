@@ -279,6 +279,56 @@ void TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegme
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TwoDSlidingFitResult::GetExtrapolatedPositionAtX(const float x, CartesianVector &position) const
+{
+    try
+    {
+        return this->GetGlobalFitPositionAtX(x, position);
+    }
+    catch(StatusCodeException &statusCodeException)
+    {
+        if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
+            throw statusCodeException;
+    }
+
+    const float minLayerX(this->GetGlobalMinLayerPosition().GetX());
+    const float maxLayerX(this->GetGlobalMaxLayerPosition().GetX());
+
+    const int minLayer(this->GetMinLayer());
+    const int maxLayer(this->GetMaxLayer());
+
+    const int innerLayer((minLayerX < maxLayerX) ? minLayer : maxLayer);
+    const int outerLayer((minLayerX < maxLayerX) ? maxLayer : minLayer);
+
+    const CartesianVector innerVertex((innerLayer == minLayer) ? this->GetGlobalMinLayerPosition() : this->GetGlobalMaxLayerPosition());
+    const CartesianVector innerDirection((innerLayer == minLayer) ? this->GetGlobalMinLayerDirection() * -1.f : this->GetGlobalMaxLayerDirection());
+
+    const CartesianVector outerVertex((outerLayer == minLayer) ? this->GetGlobalMinLayerPosition() : this->GetGlobalMaxLayerPosition());
+    const CartesianVector outerDirection((outerLayer == minLayer) ? this->GetGlobalMinLayerDirection() * -1.f : this->GetGlobalMaxLayerDirection());
+
+    if (innerDirection.GetX() > -std::numeric_limits<float>::epsilon() || outerDirection.GetX() < +std::numeric_limits<float>::epsilon() ||
+        outerVertex.GetX() - innerVertex.GetX() < +std::numeric_limits<float>::epsilon())
+    {
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
+    else if (x >= outerVertex.GetX())
+    {
+        position = outerVertex + outerDirection * ((x - outerVertex.GetX()) / outerDirection.GetX());
+    }
+    else if (x <= innerVertex.GetX())
+    {
+        position = innerVertex + innerDirection * ((x - innerVertex.GetX()) / innerDirection.GetX());
+    }
+    else
+    {
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
+
+    // TODO: How to assign an uncertainty on the extrapolated position?
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TwoDSlidingFitResult::FitSegment TwoDSlidingFitResult::GetFitSegment(const float rL) const
 {
     int layer(this->GetLayer(rL));

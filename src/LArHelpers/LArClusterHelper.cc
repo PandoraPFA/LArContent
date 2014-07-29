@@ -808,7 +808,6 @@ void LArClusterHelper::CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSli
     TransverseDirection previousDirection(UNKNOWN), sustainedDirection(UNKNOWN);
     TwoDSlidingFitResult::LayerFitResultMap::const_iterator sustainedDirectionStartIter, sustainedDirectionEndIter;
 
-    const unsigned int slidingFitWindow(twoDSlidingFitResult.GetLayerFitHalfWindow());
     const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.GetLayerFitResultMap());
 
     TwoDSlidingFitResult::FitSegmentList &fitSegmentList(twoDSlidingFitResult.m_fitSegmentList);
@@ -822,14 +821,14 @@ void LArClusterHelper::CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSli
         twoDSlidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
 
         const CartesianVector delta(position - previousPosition);
-        const TransverseDirection currentDirection((std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * -1.f) ?
-            UNCHANGED_IN_X : (delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
+        const TransverseDirection currentDirection((delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
+        // TODO: currentDirection could also be UNCHANGED_IN_X
 
         if (previousDirection == currentDirection)
         {
             ++nSustainedSteps;
 
-            if (2 * nSustainedSteps > slidingFitWindow)
+            if (nSustainedSteps > 2)
             {
                 sustainedDirection = currentDirection;
                 sustainedDirectionEndIter = iter;
