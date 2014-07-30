@@ -42,7 +42,7 @@ void ClusterMopUpAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, Cluste
     const PfoList *pPfoList = NULL;
     if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_pfoListName, pPfoList))
     {
-        std::cout << "Input PFO list not found: " << m_pfoListName << std::endl;
+        std::cout << "ClusterMopUpAlgorithm: pfo list " << m_pfoListName << " unavailable." << std::endl;
         return;
     }
 
