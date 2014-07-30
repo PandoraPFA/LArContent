@@ -47,7 +47,6 @@ bool ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
 
     for (typename ProtoParticleVector::const_iterator iter = protoParticleVector.begin(), iterEnd = protoParticleVector.end(); iter != iterEnd; ++iter)
     {
-        // TODO - correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
         this->SetPfoParameters(*iter, pfoParameters);
 

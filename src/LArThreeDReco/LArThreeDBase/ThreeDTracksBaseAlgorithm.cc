@@ -196,8 +196,8 @@ void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoPa
 {
     // TODO - correct these placeholder parameters
     pfoParameters.m_particleId = MU_MINUS; // Track
-    pfoParameters.m_charge = 0;
-    pfoParameters.m_mass = 0.f;
+    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
     pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
