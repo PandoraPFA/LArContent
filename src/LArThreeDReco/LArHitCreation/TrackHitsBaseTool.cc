@@ -10,6 +10,7 @@
 
 #include "LArCalculators/LArTransformationCalculator.h"
 
+#include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
@@ -28,6 +29,9 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Partic
 
     try
     {
+        if (!LArPfoHelper::IsTrack(pPfo))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
         MatchedSlidingFitMap matchedSlidingFitMap;
         this->BuildSlidingFitMap(pPfo, matchedSlidingFitMap);
 
