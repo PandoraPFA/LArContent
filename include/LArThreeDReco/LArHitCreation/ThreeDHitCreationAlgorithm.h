@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the three dimensional hit creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_THREE_D_HIT_CREATION_ALGORITHM_H
@@ -34,16 +34,24 @@ public:
     };
 
     /**
+     *  @brief  Get the list of two dimensional calo hits (in a specified pfo) for which three dimensional hits have been created
+     *
+     *  @param  pPfo the address of the pfo
+     *  @param  caloHitList to receive the list of two dimensional calo hits for which three dimensional hits have been created
+     */
+    void GetUsedTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList) const;
+
+    /**
      *  @brief  Get the list of two dimensional calo hits (in a specified pfo) for which no three dimensional hits have been created
-     * 
+     *
      *  @param  pPfo the address of the pfo
      *  @param  caloHitList to receive the list of two dimensional calo hits for which no three dimensional hits have been created
      */
-    void GetUnusedTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList) const;
+    void GetRemainingTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList) const;
 
     /**
      *  @brief  Get the subset of a provided calo hit list corresponding to a specified hit type
-     * 
+     *
      *  @param  inputCaloHitList the input calo hit list
      *  @param  hitType the hit type to filter upon
      *  @param  outputCaloHitList to receive the output calo hit list
@@ -52,7 +60,7 @@ public:
 
     /**
      *  @brief  Add a specified list of three dimensional hits to a cluster in a pfo, creating the new cluster if required
-     * 
+     *
      *  @param  pPfo the address of the pfo
      *  @param  caloHitList the list of three dimensional hits
      *  @param  pCluster3D to receive the address of the (new) three dimensional cluster
@@ -61,7 +69,7 @@ public:
 
     /**
      *  @brief  Create a new three dimensional cluster, using a list of provided three dimensional hits
-     * 
+     *
      *  @param  pCaloHit2D the address of the two dimensional calo hit, for which a new three dimensional hit is to be created
      *  @param  position3D the position vector for the new three dimensional calo hit
      *  @param  pCaloHit3D to receive the address of the new three dimensional calo hit
@@ -74,20 +82,30 @@ private:
 
     /**
      *  @brief  Get the address of the three dimensional cluster in a specified pfo
-     * 
+     *
      *  @param  pPfo the address of the pfo
-     * 
+     *
      *  @return the address of the three dimensional cluster
      */
     pandora::Cluster *GetThreeDCluster(pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Create a new three dimensional cluster, using a list of provided three dimensional hits, and add it to a specified pfo
-     * 
+     *
      *  @param  caloHitList the list of three dimensional hits
      *  @param  pCluster to receive the address of the new cluster
      */
     void CreateThreeDCluster(const pandora::CaloHitList &caloHitList, pandora::Cluster *&pCluster) const;
+
+    /**
+     *  @brief  Get the list of 2D calo hits in a pfo for which 3D hits have and have not been created
+     *
+     *  @param  pPfo the address of the pfo
+     *  @param  usedHits to receive the list of two dimensional calo hits for which three dimensional hits have been created
+     *  @param  remainingHits to receive the list of two dimensional calo hits for which three dimensional hits have not been created
+     */
+    void SeparateTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &usedHits,
+        pandora::CaloHitList &remainingHits) const;
 
     std::string             m_inputPfoListName;         ///< The name of the input pfo list
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
