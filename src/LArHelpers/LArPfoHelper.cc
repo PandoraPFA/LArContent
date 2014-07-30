@@ -176,7 +176,7 @@ bool LArPfoHelper::IsTrack(const ParticleFlowObject *const pPfo)
     const int pdg(pPfo->GetParticleId());
 
     // muon, pion, proton, kaon
-    return ((13 == std::abs(pdg)) || (211 == std::abs(pdg)) || (2212 == std::abs(pdg)) || (321 == std::abs(pdg)));
+    return ((MU_MINUS == std::abs(pdg)) || (PI_PLUS == std::abs(pdg)) || (PROTON == std::abs(pdg)) || (K_PLUS == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -186,7 +186,7 @@ bool LArPfoHelper::IsShower(const ParticleFlowObject *const pPfo)
     const int pdg(pPfo->GetParticleId());
 
     // electron, photon
-    return ((11 == std::abs(pdg)) || (22 == std::abs(pdg)));
+    return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
