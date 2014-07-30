@@ -382,7 +382,7 @@ void ClusterCharacterisationAlgorithm::GetInputPfoList(PfoList &pfoList) const
 
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
         {
-            std::cout << "ClusterCharacterisationAlgorithm : Could not find input pfo list with name " << *iter << std::endl;
+            std::cout << "ClusterCharacterisationAlgorithm : pfo list " << *iter << " unavailable." << std::endl;
             continue;
         }
 
@@ -463,7 +463,7 @@ void ClusterCharacterisationAlgorithm::RemoveShowerPfos(const ClusterList *const
         }
         catch (StatusCodeException &)
         {
-            std::cout << "ClusterCharacterisationAlgorithm: Unable to remove shower-like particle flow object " << std::endl;
+            std::cout << "ClusterCharacterisationAlgorithm: Unable to remove shower-like pfo." << std::endl;
         }
     }
 }
