@@ -35,6 +35,7 @@
 #include "LArThreeDReco/LArEventBuilding/NeutrinoBuildingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ShowerHitCreationTool.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
@@ -154,6 +155,7 @@ public:
         d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
         d("LArClearLongitudinalTrackHits",          lar::ClearLongitudinalTrackHitsTool::Factory)                               \
         d("LArClearTransverseTrackHits",            lar::ClearTransverseTrackHitsTool::Factory)                                 \
+        d("LArMultiValuedLongitudinalTrackHits",    lar::MultiValuedLongitudinalTrackHitsTool::Factory)                         \
         d("LArMultiValuedTransverseTrackHits",      lar::MultiValuedTransverseTrackHitsTool::Factory)                           \
         d("LArShowerHitCreation",                   lar::ShowerHitCreationTool::Factory)                                        \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
