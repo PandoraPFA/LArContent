@@ -22,7 +22,23 @@ using namespace pandora;
 namespace lar
 {
 
-void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList) const
+void ThreeDHitCreationAlgorithm::GetRemainingTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &remainingHits) const
+{
+    CaloHitList usedHits;
+    this->SeparateTwoDHits(pPfo, usedHits, remainingHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::GetUsedTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &usedHits) const
+{
+    CaloHitList remainingHits;
+    this->SeparateTwoDHits(pPfo, usedHits, remainingHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &usedHits, CaloHitList &remainingHits) const
 {
     ClusterList threeDClusterList;
     const ClusterList &pfoClusterList(pPfo->GetClusterList());
@@ -33,7 +49,7 @@ void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *con
 
         if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
         {
-            (*iter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+            (*iter)->GetOrderedCaloHitList().GetCaloHitList(remainingHits);
         }
         else if (TPC_3D == hitType)
         {
@@ -53,12 +69,13 @@ void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *con
         for (CaloHitList::const_iterator hIter = localCaloHitList.begin(), hIterEnd = localCaloHitList.end(); hIter != hIterEnd; ++hIter)
         {
             CaloHit *pTargetCaloHit = static_cast<CaloHit*>(const_cast<void*>((*hIter)->GetParentCaloHitAddress()));
-            CaloHitList::iterator eraseIter = caloHitList.find(pTargetCaloHit);
+            CaloHitList::iterator eraseIter = remainingHits.find(pTargetCaloHit);
 
-            if (caloHitList.end() == eraseIter)
+            if (remainingHits.end() == eraseIter)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            caloHitList.erase(eraseIter);
+            usedHits.insert(pTargetCaloHit);
+            remainingHits.erase(eraseIter);
         }
     }
 }
@@ -140,13 +157,13 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
         for (HitCreationToolList::const_iterator tIter = m_algorithmToolList.begin(), tIterEnd = m_algorithmToolList.end(); tIter != tIterEnd; ++tIter)
         {
-            CaloHitList unusedTwoDHits, newThreeDHits;
-            this->GetUnusedTwoDHits(pPfo, unusedTwoDHits);
+            CaloHitList remainingTwoDHits, newThreeDHits;
+            this->GetRemainingTwoDHits(pPfo, remainingTwoDHits);
 
-            if (unusedTwoDHits.empty())
+            if (remainingTwoDHits.empty())
                 break;
 
-            (*tIter)->Run(this, pPfo, unusedTwoDHits, newThreeDHits);
+            (*tIter)->Run(this, pPfo, remainingTwoDHits, newThreeDHits);
 
             if (!newThreeDHits.empty())
             {
