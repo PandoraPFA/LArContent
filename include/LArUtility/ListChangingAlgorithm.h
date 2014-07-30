@@ -35,6 +35,7 @@ private:
     std::string     m_caloHitListName;  ///< The calo hit list name to set as the current calo hit list
     std::string     m_clusterListName;  ///< The cluster list name to set as the current cluster list
     std::string     m_vertexListName;   ///< The vertex list name to set as the current vertex list
+    std::string     m_pfoListName;      ///< The pfo list name to set as the current pfo list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
