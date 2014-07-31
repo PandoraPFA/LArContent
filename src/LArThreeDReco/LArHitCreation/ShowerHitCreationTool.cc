@@ -12,6 +12,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArHitCreation/ShowerHitCreationTool.h"
 
@@ -28,6 +29,9 @@ void ShowerHitCreationTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Pa
 
     try
     {
+        if (!LArPfoHelper::IsShower(pPfo))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
         Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
         this->GetClusters(pPfo, pClusterU, pClusterV, pClusterW);
 

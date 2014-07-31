@@ -1,12 +1,13 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.cc
  *
- *  @brief  Implementation of the longitudinal track hit creation tool.
+ *  @brief  Implementation of the clear longitudinal track hit creation tool.
  *
  *  $Log: $
  */
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
+
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
@@ -87,13 +88,6 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
     {
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode ClearLongitudinalTrackHitsTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-  return LongitudinalTrackHitsBaseTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

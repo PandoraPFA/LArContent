@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h
  *
- *  @brief  Header file for the longitudinal track hit creation tool.
+ *  @brief  Header file for the clear longitudinal track hit creation tool.
  *
  *  $Log: $
  */
@@ -29,11 +29,8 @@ public:
     };
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
     void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        const pandora::CartesianVector &vtx3D, const pandora::CartesianVector &end3D, pandora::CartesianVector &position3D,
-        float &chiSquared) const;
+        const pandora::CartesianVector &vtx3D, const pandora::CartesianVector &end3D, pandora::CartesianVector &position3D, float &chiSquared) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

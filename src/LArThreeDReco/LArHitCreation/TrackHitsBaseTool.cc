@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.cc
  *
- *  @brief  Implementation of the transverse track hit creation tool.
+ *  @brief  Implementation of the track hits base tool.
  *
  *  $Log: $
  */

@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h
  *
- *  @brief  Header file for the transverse track hit creation tool.
+ *  @brief  Header file for the track hits base tool.
  *
  *  $Log: $
  */
@@ -21,12 +21,10 @@ namespace lar
 class TrackHitsBaseTool : public HitCreationTool
 {
 public:
-
     void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 
 protected:
-
     typedef std::map<pandora::HitType, TwoDSlidingFitResult> MatchedSlidingFitMap;
 
     /**
