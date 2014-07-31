@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h
  * 
- *  @brief  Header file for the transverse track hit creation tool.
+ *  @brief  Header file for the transverse track hits base tool.
  * 
  *  $Log: $
  */
@@ -19,8 +19,6 @@ namespace lar
 class TransverseTrackHitsBaseTool : public TrackHitsBaseTool
 {
 protected:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
     /**
      *  @brief  Create three dimensional hits, using an input list of two dimensional hits and two associated sliding fit results
      * 
@@ -42,7 +40,6 @@ protected:
      */
     virtual void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
         pandora::CartesianVector &position3D, float &chiSquared) const = 0;
-
 };
 
 } // namespace lar

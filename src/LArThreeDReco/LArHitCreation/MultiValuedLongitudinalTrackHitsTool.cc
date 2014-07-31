@@ -1,12 +1,13 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.cc
  *
- *  @brief  Implementation of the longitudinal track hit creation tool.
+ *  @brief  Implementation of the multivalued longitudinal track hit creation tool.
  *
  *  $Log: $
  */
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
+
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.h"
@@ -83,13 +84,6 @@ void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *cons
     {
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode MultiValuedLongitudinalTrackHitsTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-  return LongitudinalTrackHitsBaseTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

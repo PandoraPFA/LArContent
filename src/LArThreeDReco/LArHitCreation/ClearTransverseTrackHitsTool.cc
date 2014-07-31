@@ -6,7 +6,7 @@
  *  $Log: $
  */
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
 
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
 
@@ -69,13 +69,6 @@ void ClearTransverseTrackHitsTool::GetThreeDPosition(const CaloHit *const pCaloH
     {
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode ClearTransverseTrackHitsTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    return TransverseTrackHitsBaseTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

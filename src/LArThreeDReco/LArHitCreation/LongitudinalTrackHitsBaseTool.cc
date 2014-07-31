@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.cc
  *
- *  @brief  Implementation of the longitudinal track hit creation tool.
+ *  @brief  Implementation of the longitudinal track hits base tool.
  *
  *  $Log: $
  */

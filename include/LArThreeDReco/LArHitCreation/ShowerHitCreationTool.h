@@ -32,8 +32,6 @@ public:
         pandora::CaloHitList &newThreeDHits);
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
     /**
      *  @brief  Get the primary u, v and w clusters in a provided pfo
      * 
@@ -93,6 +91,8 @@ private:
      */
     void GetPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2,
         pandora::CartesianVector &position3D, float &chiSquared) const;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float           m_xTolerance;               ///< The x tolerance to use when looking for associated calo hits between views
     bool            m_useDeltaXCorrection;      ///< Whether to add a term to chi squared accounting for hit combination delta x values

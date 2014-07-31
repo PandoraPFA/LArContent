@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.cc
  * 
- *  @brief  Implementation of the transverse track hit creation tool.
+ *  @brief  Implementation of the transverse track hits base tool.
  * 
  *  $Log: $
  */
@@ -37,13 +37,6 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *p
         {
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TransverseTrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    return TrackHitsBaseTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

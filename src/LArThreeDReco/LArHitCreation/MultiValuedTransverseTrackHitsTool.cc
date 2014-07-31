@@ -1,13 +1,12 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.cc
  * 
- *  @brief  Implementation of the transverse track hit creation tool.
+ *  @brief  Implementation of the multivalued transverse track hit creation tool.
  * 
  *  $Log: $
  */
 
-
-#include "LArHelpers/LArClusterHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
 
 #include "LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
 
@@ -62,13 +61,6 @@ void MultiValuedTransverseTrackHitsTool::GetThreeDPosition(const CaloHit *const 
 
     position3D = bestPosition3D;
     chiSquared = bestChiSquared;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode MultiValuedTransverseTrackHitsTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    return TransverseTrackHitsBaseTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

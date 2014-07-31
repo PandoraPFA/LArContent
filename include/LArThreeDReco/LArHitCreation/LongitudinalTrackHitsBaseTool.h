@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h
  *
- *  @brief  Header file for the longitudinal track hit creation tool.
+ *  @brief  Header file for the longitudinal track hits base tool.
  *
  *  $Log: $
  */
@@ -19,8 +19,6 @@ namespace lar
 class LongitudinalTrackHitsBaseTool : public TrackHitsBaseTool
 {
 protected:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
     /**
      *  @brief  Create three dimensional hits, using an input list of two dimensional hits and two associated sliding fit results
      *
@@ -43,11 +41,11 @@ protected:
      *  @param  chiSquared to receive the chi squared value
      */
     virtual void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        const pandora::CartesianVector &vtx3D, const pandora::CartesianVector &end3D, pandora::CartesianVector &position3D,
-        float &chiSquared) const = 0;
+        const pandora::CartesianVector &vtx3D, const pandora::CartesianVector &end3D, pandora::CartesianVector &position3D, float &chiSquared) const = 0;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
-
     /**
      *  @brief Get reconstructed vertex and end positions for this 3D track
      *
@@ -69,9 +67,8 @@ private:
      *  @param bestVtx the combined vertex position
      *  @param bestChi2 the chi-squared from the combination
      */
-    void UpdateBestPosition(const pandora::HitType hitType1, const pandora::HitType hitType2,
-        const pandora::CartesianVector &vtx1, const pandora::CartesianVector &vtx2, pandora::CartesianVector &bestVtx,
-        float &bestChi2) const;
+    void UpdateBestPosition(const pandora::HitType hitType1, const pandora::HitType hitType2, const pandora::CartesianVector &vtx1,
+        const pandora::CartesianVector &vtx2, pandora::CartesianVector &bestVtx, float &bestChi2) const;
 
     float  m_vtxDisplacementCutSquared;   ///<
     float  m_minTrackLengthSquared;       ///<
