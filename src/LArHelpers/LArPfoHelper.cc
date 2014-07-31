@@ -32,7 +32,7 @@ void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType &hitType, ClusterList &clusterList)
+void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitType &hitType, ClusterList &clusterList)
 {
     const ClusterList &pfoClusterList = pPfo->GetClusterList();
     for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
@@ -44,6 +44,28 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType &hi
 
         clusterList.insert(pPfoCluster);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllConnectedPfos(const PfoList &inputPfoList, PfoList &outputPfoList)
+{
+    for (PfoList::const_iterator pIter = inputPfoList.begin(), pIterEnd = inputPfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        LArPfoHelper::GetAllConnectedPfos(*pIter, outputPfoList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllConnectedPfos(ParticleFlowObject *const pPfo, PfoList &outputPfoList)
+{
+    if (outputPfoList.count(pPfo))
+        return;
+
+    outputPfoList.insert(pPfo);
+    LArPfoHelper::GetAllConnectedPfos(pPfo->GetParentPfoList(), outputPfoList);
+    LArPfoHelper::GetAllConnectedPfos(pPfo->GetDaughterPfoList(), outputPfoList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -39,6 +39,22 @@ public:
     static void GetClusters(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::ClusterList &clusterList);
 
     /**
+     *  @brief  Get a flat list of all pfos, recursively including all daughters and parents associated with those pfos in an input list
+     *
+     *  @param  inputPfoList the input pfo list
+     *  @param  outputPfoList to receive the output pfo list
+     */
+    static void GetAllConnectedPfos(const pandora::PfoList &inputPfoList, pandora::PfoList &outputPfoList);
+
+    /**
+     *  @brief  Get a flat list of all pfos, recursively including all daughters and parents associated with an input pfo
+     *
+     *  @param  pPfo the input Pfo
+     *  @param  outputPfoList to receive the output pfo list
+     */
+    static void GetAllConnectedPfos(pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
+
+    /**
      *  @brief  Calculate length of Pfo using 2D clusters
      *
      *  @param  pPfo the input Pfo
