@@ -87,8 +87,14 @@ StatusCode CheatingCosmicRayIdentificationAlg::ReadSettings(const TiXmlHandle xm
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputDaughterPfoListName", m_inputDaughterPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputDaughterPfoListName", m_outputDaughterPfoListName));
+
+    m_inputDaughterPfoListName = m_inputPfoListName;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputDaughterPfoListName", m_inputDaughterPfoListName));
+
+    m_outputDaughterPfoListName = m_outputPfoListName;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputDaughterPfoListName", m_outputDaughterPfoListName));
 
     return STATUS_CODE_SUCCESS;
 }

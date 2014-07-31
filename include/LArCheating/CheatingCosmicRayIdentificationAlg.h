@@ -34,8 +34,8 @@ private:
 
     std::string     m_inputPfoListName;             ///< The input pfo list name
     std::string     m_outputPfoListName;            ///< The output pfo list name
-    std::string     m_inputDaughterPfoListName;     ///< The input daughter pfo list name
-    std::string     m_outputDaughterPfoListName;    ///< The output daughter pfo list name
+    std::string     m_inputDaughterPfoListName;     ///< The input daughter pfo list name (if not specified, will assume same as main input list)
+    std::string     m_outputDaughterPfoListName;    ///< The output daughter pfo list name (if not specified, will assume same as main output list)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
