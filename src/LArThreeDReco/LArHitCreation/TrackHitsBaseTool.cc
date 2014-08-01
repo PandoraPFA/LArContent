@@ -72,6 +72,10 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
 StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_minViews = 2;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinViews", m_minViews));
+
     m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));

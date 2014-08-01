@@ -29,7 +29,7 @@ void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, con
     else if (fitPositionList1.empty())
     {
         if (fitPositionList2.size() != 1)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         const CartesianVector &fitPosition2 = *(fitPositionList2.begin());
         this->GetPosition3D(pCaloHit2D, hitType2, fitPosition2, position3D, chiSquared);
@@ -37,7 +37,7 @@ void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, con
     else if (fitPositionList2.empty())
     {
         if (fitPositionList1.size() != 1)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         const CartesianVector &fitPosition1 = *(fitPositionList1.begin());
         this->GetPosition3D(pCaloHit2D, hitType1, fitPosition1, position3D, chiSquared);
@@ -72,8 +72,9 @@ void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, con
 void HitCreationBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType1, const HitType hitType2,
     const CartesianVector &fitPosition1, const CartesianVector &fitPosition2, CartesianVector &position3D, float &chiSquared) const
 {
+    // TODO: Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
     const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
-    const float sigmaFit(sigmaHit); // TODO: Input uncertainties into this method
+    const float sigmaFit(sigmaHit); 
     const HitType hitType(pCaloHit2D->GetHitType());
 
     if (m_useChiSquaredApproach)

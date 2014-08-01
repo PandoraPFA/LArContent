@@ -73,6 +73,13 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
     {
     }
 
+    unsigned int nViews(1);
+    if (fitPositionList1.size() > 0) ++nViews;
+    if (fitPositionList2.size() > 0) ++nViews;
+
+    if (nViews < m_minViews)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
     this->GetBestPosition3D(pCaloHit2D, hitType1, hitType2, fitPositionList1, fitPositionList2, position3D, chiSquared);  
 }
 
