@@ -11,6 +11,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h"
+#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 
 using namespace pandora;
 

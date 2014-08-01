@@ -14,7 +14,7 @@
 namespace lar
 {
 
-class HitCreationTool;
+class HitCreationBaseTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -111,76 +111,8 @@ private:
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
     std::string             m_outputClusterListName;    ///< The name of the output cluster list
 
-    typedef std::vector<HitCreationTool*> HitCreationToolList;
+    typedef std::vector<HitCreationBaseTool*> HitCreationToolList;
     HitCreationToolList     m_algorithmToolList;        ///< The algorithm tool list
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  HitCreationTool class
- */
-class HitCreationTool : public pandora::AlgorithmTool
-{
-public:
-
-    /**
-     *  @brief  Run the algorithm tool
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pPfo the address of the pfo
-     *  @param  inputTwoDHits the list of input two dimensional hits
-     *  @param  newThreeDHits to receive the new three dimensional hits
-     */
-    virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
-        pandora::CaloHitList &newThreeDHits) = 0;
-
-protected:
-    /**
-     *  @brief  Get the three dimensional position using a provided two dimensional calo hit and candidate fit positions from the other two views
-     *
-     *  @param  pCaloHit2D address of the two dimensional calo hit
-     *  @param  hitType1 the hit type identifying the first view
-     *  @param  hitType2 the hit type identifying the second view
-     *  @param  fitPositionList1 the candidate sliding fit position in the first view
-     *  @param  fitPositionList2 the candidate sliding fit position in the second view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
-     */
-    void GetBestPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::HitType hitType1, const pandora::HitType hitType2,
-        const pandora::CartesianPointList &fitPositionList1, const pandora::CartesianPointList &fitPositionList2, pandora::CartesianVector &position3D, float &chiSquared) const;
-
-    /**
-     *  @brief  Get the three dimensional position using a provided two dimensional calo hit and candidate fit positions from the other two views
-     *
-     *  @param  pCaloHit2D address of the two dimensional calo hit
-     *  @param  hitType1 the hit type identifying the first view
-     *  @param  hitType2 the hit type identifying the second view
-     *  @param  fitPosition1 the candidate sliding fit position in the first view
-     *  @param  fitPosition2 the candidate sliding fit position in the second view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
-     */
-    void GetPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::HitType hitType1, const pandora::HitType hitType2,
-        const pandora::CartesianVector &fitPosition1, const pandora::CartesianVector &fitPosition2, pandora::CartesianVector &position3D, float &chiSquared) const;
-
-    /**
-     *  @brief  Get the three dimensional position using a provided two dimensional calo hit and candidate fit positions from the other two views
-     *
-     *  @param  pCaloHit2D address of the two dimensional calo hit
-     *  @param  hitType the hit type identifying the other view
-     *  @param  fitPosition the candidate sliding fit position in the other view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
-     */
-    void GetPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::HitType hitType, const pandora::CartesianVector &fitPosition,
-        pandora::CartesianVector &position3D, float &chiSquared) const;
-
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    bool    m_useChiSquaredApproach;    ///< Whether to obtain y, z positions via chi2 approach, or projected position approach
-    bool    m_useDeltaXCorrection;      ///< Whether to add a term to chi squared accounting for hit combination delta x values
-    float   m_sigmaX;                   ///< Resolution in x dimension, used for delta x correction to chi squared
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

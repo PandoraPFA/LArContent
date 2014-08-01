@@ -8,23 +8,25 @@
 #ifndef SHOWER_HITS_BASE_TOOL_H
 #define SHOWER_HITS_BASE_TOOL_H 1
 
-#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 namespace lar
 {
 
+class ThreeDHitCreationAlgorithm;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  ShowerHitsBaseTool class
  */
-class ShowerHitsBaseTool : public HitCreationTool
+class ShowerHitsBaseTool : public HitCreationBaseTool
 {
 public:
-
-    void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
+    virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 
 protected:
-
     /**
      *  @brief  Create three dimensional hits, using a list of input two dimensional hits and the hits (contained in the same particle)
      *          from the other two views
@@ -35,7 +37,7 @@ protected:
      *  @param  caloHitList2 the second
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList1,
+    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList1,
         const pandora::CaloHitList &caloHitList2, pandora::CaloHitList &newThreeDHits) const;
 
     /**
@@ -46,7 +48,7 @@ protected:
      *  @param  inputCaloHitList the input calo hit list
      *  @param  outputCaloHitList to receive the output calo hit list
      */
-    void FilterCaloHits(const float x, const float xTolerance, const pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList) const;
+    virtual void FilterCaloHits(const float x, const float xTolerance, const pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList) const;
 
     /**
      *  @brief  Get the three dimensional position for to a two dimensional calo hit, using the hit and a list of candidate matched

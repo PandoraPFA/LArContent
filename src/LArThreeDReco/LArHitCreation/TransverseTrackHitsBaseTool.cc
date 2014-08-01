@@ -6,13 +6,16 @@
  *  $Log: $
  */
 
+#include "Pandora/AlgorithmHeaders.h"
+
+#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h"
 
 using namespace pandora;
 
 namespace lar
 {
- 
+
 void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits, 
     const MatchedSlidingFitMap &matchedSlidingFitMap, CaloHitList &newThreeDHits) const
 {   

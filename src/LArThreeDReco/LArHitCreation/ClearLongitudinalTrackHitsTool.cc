@@ -34,7 +34,7 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
     const CartesianVector projection3D(vtx3D + (end3D - vtx3D) * frac);
 
     CartesianPointList fitPositionList1, fitPositionList2;
-    
+
     try
     {
         MatchedSlidingFitMap::const_iterator fIter1 = matchedSlidingFitMap.find(hitType1);

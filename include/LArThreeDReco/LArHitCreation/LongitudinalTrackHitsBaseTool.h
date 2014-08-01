@@ -27,7 +27,7 @@ protected:
      *  @param  matchedSlidingFitMap the sliding fit results for each view
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits,
+    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits,
         const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits) const;
 
     /**
@@ -35,15 +35,15 @@ protected:
      *
      *  @param  pCaloHit2D address of the two dimensional calo hit
      *  @param  matchedSlidingFitMap map of sliding fit results from each view
-     *  @param  vtx3D
-     *  @param  end3D
+     *  @param  vtx3D the 3D vertex position
+     *  @param  end3D the 3D end position
      *  @param  position3D to receive the three dimensional position
      *  @param  chiSquared to receive the chi squared value
      */
     virtual void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
         const pandora::CartesianVector &vtx3D, const pandora::CartesianVector &end3D, pandora::CartesianVector &position3D, float &chiSquared) const = 0;
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
     /**

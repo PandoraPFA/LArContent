@@ -59,7 +59,7 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
     if (Sq < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const CartesianVector position(Sqx/Sq, 0.f, Sqz/Sq);
+    const CartesianVector position(Sqx / Sq, 0.f, Sqz / Sq);
 
     this->GetPosition3D(pCaloHit2D, hitType, position, position3D, chiSquared);
 }

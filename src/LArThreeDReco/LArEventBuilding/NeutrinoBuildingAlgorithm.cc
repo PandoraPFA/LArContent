@@ -29,9 +29,9 @@ StatusCode NeutrinoBuildingAlgorithm::Run()
 
         this->AddDaughtersAndSetId(pNeutrinoPfo, daughterPfoList);
     }
-    catch (StatusCodeException &statusCodeException)
+    catch (StatusCodeException &)
     {
-        std::cout << "NeutrinoBuildingAlgorithm: unable to build neutrino " << statusCodeException.ToString() << std::endl;
+        std::cout << "NeutrinoBuildingAlgorithm: unable to build neutrino." << std::endl;
     }
 
     return STATUS_CODE_SUCCESS;

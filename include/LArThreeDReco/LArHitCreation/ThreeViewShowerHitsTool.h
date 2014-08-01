@@ -29,10 +29,8 @@ public:
     };
 
 private:
-
     void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitList &caloHitList1, const pandora::CaloHitList &caloHitList2,
         pandora::CartesianVector &position3D, float &chiSquared) const;
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
