@@ -72,68 +72,17 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackHitsBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType1, const HitType hitType2,
-    const CartesianVector &fitPosition1, const CartesianVector &fitPosition2, CartesianVector &position3D, float &chiSquared) const
-{
-    const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
-    const float sigmaFit(sigmaHit); // TODO: Input uncertainties into this method
-    const HitType hitType(pCaloHit2D->GetHitType());
-
-    if (m_useChiSquaredApproach)
-    {
-        const float u((TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-        const float v((TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-        const float w((TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-
-        const float sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
-        const float sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);
-        const float sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
-
-        float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
-        LArGeometryHelper::GetLArTransformationCalculator()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chiSquared);
-        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), bestY, bestZ);
-    }
-    else
-    {
-        const LArTransformationCalculator::PositionAndType hitPositionAndType(pCaloHit2D->GetPositionVector().GetZ(), hitType);
-        const LArTransformationCalculator::PositionAndType fitPositionAndType1(fitPosition1.GetZ(), hitType1);
-        const LArTransformationCalculator::PositionAndType fitPositionAndType2(fitPosition2.GetZ(), hitType2);
-
-        float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
-        LArGeometryHelper::GetLArTransformationCalculator()->GetProjectedYZ(hitPositionAndType, fitPositionAndType1, fitPositionAndType2, sigmaHit, sigmaFit, bestY, bestZ, chiSquared);
-        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), bestY, bestZ);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackHitsBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType, const CartesianVector &fitPosition,
-    CartesianVector &position3D, float &chiSquared) const
-{
-    if (pCaloHit2D->GetHitType() == hitType)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    LArGeometryHelper::MergeTwoPositions3D(pCaloHit2D->GetHitType(), hitType, pCaloHit2D->GetPositionVector(), fitPosition,
-        position3D, chiSquared);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 
-    m_useChiSquaredApproach = true;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseChiSquaredApproach", m_useChiSquaredApproach));
-
     m_chiSquaredCut = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ChiSquaredCut", m_chiSquaredCut));
 
-    return STATUS_CODE_SUCCESS;
+    return HitCreationTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

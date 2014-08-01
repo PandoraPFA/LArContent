@@ -35,10 +35,12 @@
 #include "LArThreeDReco/LArEventBuilding/NeutrinoBuildingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
-#include "LArThreeDReco/LArHitCreation/ShowerHitCreationTool.h"
+#include "LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
@@ -155,9 +157,11 @@ public:
         d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
         d("LArClearLongitudinalTrackHits",          lar::ClearLongitudinalTrackHitsTool::Factory)                               \
         d("LArClearTransverseTrackHits",            lar::ClearTransverseTrackHitsTool::Factory)                                 \
+        d("LArDeltaRayShowerHits",                  lar::DeltaRayShowerHitsTool::Factory)                                       \
         d("LArMultiValuedLongitudinalTrackHits",    lar::MultiValuedLongitudinalTrackHitsTool::Factory)                         \
         d("LArMultiValuedTransverseTrackHits",      lar::MultiValuedTransverseTrackHitsTool::Factory)                           \
-        d("LArShowerHitCreation",                   lar::ShowerHitCreationTool::Factory)                                        \
+        d("LArThreeViewShowerHits",                 lar::ThreeViewShowerHitsTool::Factory)                                      \
+        d("LArTwoViewShowerHits",                   lar::TwoViewShowerHitsTool::Factory)                                        \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
         d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
         d("LArClearRemnants",                       lar::ClearRemnantsTool::Factory)                                            \

@@ -31,36 +31,14 @@ void MultiValuedTransverseTrackHitsTool::GetThreeDPosition(const CaloHit *const 
     const TwoDSlidingFitResult &fitResult1 = fIter1->second;
     const TwoDSlidingFitResult &fitResult2 = fIter2->second;
 
-    CartesianPointList fitPositions1, fitPositions2;
-    fitResult1.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositions1);
-    fitResult2.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositions2);
+    CartesianPointList fitPositionList1, fitPositionList2;
+    fitResult1.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositionList1);
+    fitResult2.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositionList2);
 
-    bool foundPosition(false);
-    CartesianVector bestPosition3D(0.f, 0.f, 0.f);
-    float bestChiSquared(std::numeric_limits<float>::max());
-
-    for (CartesianPointList::const_iterator iter1 = fitPositions1.begin(), iter1End = fitPositions1.end(); iter1 != iter1End; ++iter1)
-    {
-        for (CartesianPointList::const_iterator iter2 = fitPositions2.begin(), iter2End = fitPositions2.end(); iter2 != iter2End; ++iter2)
-        {
-            CartesianVector thisPosition3D(0.f, 0.f, 0.f);
-            float thisChiSquared(std::numeric_limits<float>::max());
-            this->GetPosition3D(pCaloHit2D, hitType1, hitType2, *iter1, *iter2, thisPosition3D, thisChiSquared);
-
-            if (thisChiSquared < bestChiSquared)
-            {
-                foundPosition = true;
-                bestPosition3D = thisPosition3D;
-                bestChiSquared = thisChiSquared;
-            }
-        }
-    }
-
-    if (!foundPosition)
+    if (fitPositionList1.empty() || fitPositionList2.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    position3D = bestPosition3D;
-    chiSquared = bestChiSquared;
+    this->GetBestPosition3D(pCaloHit2D, hitType1, hitType2, fitPositionList1, fitPositionList2, position3D, chiSquared);
 }
 
 } // namespace lar

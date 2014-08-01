@@ -33,8 +33,7 @@ void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *cons
     const float frac((end2D - vtx2D).GetDotProduct(pCaloHit2D->GetPositionVector() - vtx2D) / (end2D - vtx2D).GetMagnitudeSquared());
     const CartesianVector projection3D(vtx3D + (end3D - vtx3D) * frac);
 
-    bool foundPosition1(false), foundPosition2(false);
-    CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f);
+    CartesianPointList fitPositionList1, fitPositionList2;
 
     try
     {
@@ -45,8 +44,9 @@ void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *cons
         const TwoDSlidingFitResult &fitResult1 = fIter1->second;
         const CartesianVector position2D(LArGeometryHelper::ProjectPosition(projection3D, hitType1));
 
+        CartesianVector position1(0.f, 0.f, 0.f);
         fitResult1.GetGlobalFitProjection(position2D, position1);
-        foundPosition1 = true;
+        fitPositionList1.push_back(position1);
     }
     catch (StatusCodeException &)
     {
@@ -61,29 +61,15 @@ void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *cons
         const TwoDSlidingFitResult &fitResult2 = fIter2->second;
         const CartesianVector position2D(LArGeometryHelper::ProjectPosition(projection3D, hitType2));
 
+        CartesianVector position2(0.f, 0.f, 0.f);
         fitResult2.GetGlobalFitProjection(position2D, position2);
-        foundPosition2 = true;
+        fitPositionList2.push_back(position2);
     }
     catch (StatusCodeException &)
     {
     }
 
-    if (foundPosition1 && foundPosition2)
-    {
-        this->GetPosition3D(pCaloHit2D, hitType1, hitType2, position1, position2, position3D, chiSquared);
-    }
-    else if(foundPosition1)
-    {
-        this->GetPosition3D(pCaloHit2D, hitType1, position1, position3D, chiSquared);
-    }
-    else if(foundPosition2)
-    {
-        this->GetPosition3D(pCaloHit2D, hitType2, position2, position3D, chiSquared);
-    }
-    else
-    {
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    }
+    this->GetBestPosition3D(pCaloHit2D, hitType1, hitType2, fitPositionList1, fitPositionList2, position3D, chiSquared);  
 }
 
 } // namespace lar
