@@ -10,13 +10,15 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+
 namespace lar
 {
 
 /**
  *  @brief  ConeBasedMergingAlgorithm class
  */
-class ConeBasedMergingAlgorithm : public pandora::Algorithm
+class ConeBasedMergingAlgorithm : public ClusterMopUpAlgorithm
 {
 public:
     /**
@@ -29,9 +31,6 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
     /**
      *  @brief  ConeParameters class
      */
@@ -42,8 +41,10 @@ private:
          *  @brief  Constructor
          * 
          *  @param  pCluster address of the cluster
+         *  @param  slidingFitWindow the layer window to use in sliding shower fit used for cone construction
+         *  @param  coneAngleCentile the cone angle centile
          */
-        ConeParameters(pandora::Cluster *pCluster);
+        ConeParameters(pandora::Cluster *pCluster, const unsigned int slidingFitWindow, const float coneAngleCentile);
 
         /**
          *  @brief  Get the address of the cluster
@@ -88,11 +89,11 @@ private:
         float GetConeCosHalfAngle() const;
 
         /**
-         *  @brief  Whether the cone points forwards in Z (i.e. apex at low Z)
+         *  @brief  Whether the cone points forward wrt to increasing sliding fit layers (i.e. apex at min layer)
          * 
          *  @return boolean
          */
-        bool IsForwardInZ() const;
+        bool IsForward() const;
 
         /**
          *  @brief  Get the cos half angle for a specified position
@@ -113,146 +114,57 @@ private:
         float GetConeAxisProjection(const pandora::CartesianVector &position) const;
 
     private:
-        pandora::Cluster           *m_pCluster;                 ///< 
-        pandora::CartesianVector    m_direction;                ///< 
-        pandora::CartesianVector    m_apex;                     ///< 
-        pandora::CartesianVector    m_baseCentre;               ///< 
-        float                       m_coneLength;               ///< 
-        float                       m_coneCosHalfAngle;         ///< 
-        bool                        m_isForwardInZ;             ///< 
+        /**
+         *  @brief  Get the cone direction estimate, using a provided sliding linear fit
+         * 
+         *  @param  fitResult the sliding linear fit result
+         *  @param  isForward to receive the estimate of whether cone points forward wrt to increasing sliding fit layers
+         *  @param  direction to receive the direction estimate
+         */
+        void GetDirectionEstimate(const TwoDSlidingFitResult &fitResult, bool &isForward, pandora::CartesianVector &direction) const;
+
+        /**
+         *  @brief  Get the cone cos half angle estimate for a specified cluster
+         * 
+         *  @param  position the specified position
+         *  @param  direction the cone direction
+         *  @param  apex the cone apex
+         *  @param  coneAngleCentile the cone angle centile
+         * 
+         *  @return the cone cos half angle estimate
+         */
+        float GetCosHalfAngleEstimate(const pandora::Cluster *const pCluster, const pandora::CartesianVector &direction,
+            const pandora::CartesianVector &apex, const float coneAngleCentile) const;
+
+        typedef std::map<int, unsigned int> HitsPerLayerMap;
+
+        pandora::Cluster           *m_pCluster;             ///< The address of the cluster
+        pandora::CartesianVector    m_direction;            ///< The cone direction
+        pandora::CartesianVector    m_apex;                 ///< The position vector of the cone apex
+        pandora::CartesianVector    m_baseCentre;           ///< The position vector of the centre of the cone base
+        float                       m_coneLength;           ///< The cone length
+        float                       m_coneCosHalfAngle;     ///< The cone cos half angle
+        bool                        m_isForward;            ///< The cone points forward wrt to increasing sliding fit layers (i.e. apex at min layer)
     };
 
-    typedef std::vector<ConeParameters> ConeParametersList;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
 
     /**
-     *  @brief  MergeParameters class
-     */
-    class MergeParameters
-    {
-    public:
-        /**
-         *  @brief  Default constructor
-         */
-        MergeParameters();
-
-        /**
-         *  @brief  Constructor
-         * 
-         *  @param  pDaughterCluster address of the daughter cluster
-         *  @param  parentConeParameters the parent cone parameters
-         */
-        MergeParameters(pandora::Cluster *const pDaughterCluster, const ConeParameters &parentConeParameters);
-
-        /**
-         *  @brief  Whether the merge parameters are initialized
-         * 
-         *  @return boolean
-         */
-        bool IsInitialized() const;
-
-        /**
-         *  @brief  Get the address of the daughter cluster
-         * 
-         *  @return the address of the daughter cluster
-         */
-        pandora::Cluster *GetDaughterCluster() const;
-
-        /**
-         *  @brief  Get the address of the parent cluster
-         * 
-         *  @return the address of the parent cluster
-         */
-        pandora::Cluster *GetParentCluster() const;
-
-        /**
-         *  @brief  Get the cosine of the daughter inner vertex wrt the parent cone axis
-         * 
-         *  @return the cosine of the daughter inner vertex wrt the parent cone axis
-         */
-        float GetCosThetaInner() const;
-
-        /**
-         *  @brief  Get the cosine of the daughter outer vertex wrt the parent cone axis
-         * 
-         *  @return the cosine of the daughter outer vertex wrt the parent cone axis
-         */
-        float GetCosThetaOuter() const;
-
-        /**
-         *  @brief  Get the maximum of the inner and outer cosine theta measurements
-         * 
-         *  @return the maximum of the inner and outer cosine theta measurements
-         */
-        float GetCosThetaMax() const;
-
-        /**
-         *  @brief  Get the cosine of the daughter midpoint wrt the parent cone axis
-         * 
-         *  @return the cosine of the daughter midpoint wrt the parent cone axis
-         */
-        float GetCosThetaMidpoint() const;
-
-        /**
-         *  @brief  Get the daughter cone axis projection
-         * 
-         *  @return the daughter cone axis projection
-         */
-        float GetConeAxisProjection() const;
-
-        /**
-         *  @brief  Get the parent cluster cone length
-         * 
-         *  @return the parent cluster cone length
-         */
-        float GetParentConeLength() const;
-
-        /**
-         *  @brief  Get the cosine of the parent cluster cone half angle
-         * 
-         *  @return the cosine of the parent cluster cone half angle
-         */
-        float GetParentCosConeHalfAngle() const;
-
-        /**
-         *  @brief  operator<
-         * 
-         *  @param  rhs merge parameters for comparison
-         */
-        bool operator< (const MergeParameters &rhs) const;
-
-    private:
-        bool                        m_isInitialized;            ///< Whether the merge parameters are initialized
-        pandora::Cluster           *m_pDaughterCluster;         ///< The address of the daughter cluster
-        pandora::Cluster           *m_pParentCluster;           ///< The address of the daughter cluster
-        float                       m_cosThetaInner;            ///< The cosine of the daughter inner vertex wrt. the parent cone axis
-        float                       m_cosThetaOuter;            ///< The cosine of the daughter outer vertex wrt. the parent cone axis
-        float                       m_cosThetaMidpoint;         ///< The cosine of the daughter midpoint wrt the parent cone axis
-        float                       m_coneAxisProjection;       ///< The daughter cone axis projection
-        float                       m_parentConeLength;         ///< The parent cluster cone length
-        float                       m_parentCosConeHalfAngle;   ///< The cosine of the parent cluster cone half angle
-    };
-
-    typedef std::vector<MergeParameters> MergeParametersList;
-    typedef std::map<pandora::Cluster*, MergeParametersList> ClusterMergeMap;
-
-    /**
-     *  @brief  Sort merge parameters by cos theta max
+     *  @brief  Get the fraction of hits in a cluster bounded by a specified cluster cone
      * 
-     *  @param  rhs merge parameters
-     *  @param  lhs merge parameters
-     */
-    static bool SortByCosThetaMax(const MergeParameters &lhs, const MergeParameters &rhs);
-
-    /**
-     *  @brief  Sort merge parameters by cone axis projection
+     *  @param  pCluster address of the cluster
+     *  @param  coneParameters the cone parameters
      * 
-     *  @param  rhs merge parameters
-     *  @param  lhs merge parameters
+     *  @return the fraction of bounded hits
      */
-    static bool SortByConeAxisProjection(const MergeParameters &lhs, const MergeParameters &rhs);
+    float GetBoundedFraction(const pandora::Cluster *const pCluster, const ConeParameters &coneParameters) const;
 
-    std::string                     m_seedClusterListName;      ///< The seed cluster list name
-    std::string                     m_nonSeedClusterListName;   ///< The non seed cluster list name
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
+    float           m_coneAngleCentile;         ///< Cluster cone angle is defined using specified centile of distribution of hit cos half angles
+    float           m_minBoundedFraction;       ///< The minimum cluster bounded fraction for merging
+    float           m_maxConeLengthMultiplier;  ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -307,93 +219,9 @@ inline float ConeBasedMergingAlgorithm::ConeParameters::GetConeCosHalfAngle() co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool ConeBasedMergingAlgorithm::ConeParameters::IsForwardInZ() const
+inline bool ConeBasedMergingAlgorithm::ConeParameters::IsForward() const
 {
-    return m_isForwardInZ;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline ConeBasedMergingAlgorithm::MergeParameters::MergeParameters() :
-     m_isInitialized(false),
-     m_pDaughterCluster(NULL),
-     m_pParentCluster(NULL),
-     m_cosThetaInner(-1.f),
-     m_cosThetaOuter(-1.f),
-     m_cosThetaMidpoint(-1.f),
-     m_coneAxisProjection(std::numeric_limits<float>::max())
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool ConeBasedMergingAlgorithm::MergeParameters::IsInitialized() const
-{
-    return m_isInitialized;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Cluster *ConeBasedMergingAlgorithm::MergeParameters::GetDaughterCluster() const
-{
-    return m_pDaughterCluster;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Cluster *ConeBasedMergingAlgorithm::MergeParameters::GetParentCluster() const
-{
-    return m_pParentCluster;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ConeBasedMergingAlgorithm::MergeParameters::GetCosThetaInner() const
-{
-    return m_cosThetaInner;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ConeBasedMergingAlgorithm::MergeParameters::GetCosThetaOuter() const
-{
-    return m_cosThetaOuter;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ConeBasedMergingAlgorithm::MergeParameters::GetCosThetaMax() const
-{
-    return std::max(m_cosThetaInner, m_cosThetaOuter);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ConeBasedMergingAlgorithm::MergeParameters::GetCosThetaMidpoint() const
-{
-    return m_cosThetaMidpoint;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ConeBasedMergingAlgorithm::MergeParameters::GetConeAxisProjection() const
-{
-    return m_coneAxisProjection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ConeBasedMergingAlgorithm::MergeParameters::GetParentConeLength() const
-{
-    return m_parentConeLength;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float ConeBasedMergingAlgorithm::MergeParameters::GetParentCosConeHalfAngle() const
-{
-    return m_parentCosConeHalfAngle;
+    return m_isForward;
 }
 
 } // namespace lar

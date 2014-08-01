@@ -24,7 +24,7 @@ namespace lar
 StatusCode DeltaRayMatchingAlgorithm::Run()
 {
     PfoVector pfoVector;
-    this->GetPfos(m_parentPfoListName, pfoVector);
+    this->GetAllPfos(m_parentPfoListName, pfoVector);
 
     if (pfoVector.empty())
     {
@@ -41,7 +41,7 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::GetPfos(const std::string inputPfoListName, PfoVector &pfoVector) const
+void DeltaRayMatchingAlgorithm::GetAllPfos(const std::string inputPfoListName, PfoVector &pfoVector) const
 {
     const PfoList *pPfoList = NULL;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
@@ -54,6 +54,24 @@ void DeltaRayMatchingAlgorithm::GetPfos(const std::string inputPfoListName, PfoV
         pfoVector.push_back(*iter);
 
     std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeltaRayMatchingAlgorithm::GetTrackPfos(const std::string inputPfoListName, PfoVector &pfoVector) const
+{
+    PfoVector inputVector;
+    this->GetAllPfos(inputPfoListName, inputVector);
+
+    for (PfoVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
+    {
+        ParticleFlowObject *pPfo = *iter;
+
+        if (!LArPfoHelper::IsTrack(pPfo))
+            continue;
+
+        pfoVector.push_back(pPfo);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,7 +177,7 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
                 ParticleFlowObject *pBestPfo = NULL;
                 this->FindBestParentPfo(pCluster1, pCluster2, pCluster3, pBestPfo);
 
-                // Note: record all matches when all three views are used
+                // ATTN: need to record all matches when all three views are used
 
                 particleList.push_back(Particle(pCluster1, pCluster2, pCluster3, pBestPfo));
             }
@@ -277,8 +295,8 @@ void DeltaRayMatchingAlgorithm::SelectParticles(const ParticleList &initialParti
 void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList) const
 {
     PfoVector parentVector, daughterVector;
-    this->GetPfos(m_parentPfoListName, parentVector);
-    this->GetPfos(m_daughterPfoListName, daughterVector);
+    this->GetTrackPfos(m_parentPfoListName, parentVector);
+    this->GetAllPfos(m_daughterPfoListName, daughterVector);
 
     PfoList parentList(parentVector.begin(), parentVector.end());
     PfoList daughterList(daughterVector.begin(), daughterVector.end());
@@ -418,8 +436,8 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Clus
 
 {
     PfoVector pfoVector;
-    this->GetPfos(m_parentPfoListName, pfoVector);
-    this->GetPfos(m_daughterPfoListName, pfoVector);
+    this->GetTrackPfos(m_parentPfoListName, pfoVector);
+    this->GetAllPfos(m_daughterPfoListName, pfoVector);
 
     if (pfoVector.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -485,10 +503,10 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Clus
 
 float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pCluster, const ParticleFlowObject *const pPfo) const
 {
-    ClusterVector pfoClusterVector;
-    LArPfoHelper::GetClusters(pPfo, LArClusterHelper::GetClusterHitType(pCluster), pfoClusterVector);
+    ClusterList pfoClusterList;
+    LArPfoHelper::GetClusters(pPfo, LArClusterHelper::GetClusterHitType(pCluster), pfoClusterList);
 
-    return LArClusterHelper::GetClosestDistance(pCluster, pfoClusterVector);
+    return LArClusterHelper::GetClosestDistance(pCluster, pfoClusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -500,11 +518,11 @@ void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList
 
     // TODO - correct these placeholder parameters
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-    pfoParameters.m_particleId = 22;
-    pfoParameters.m_charge = 0;
-    pfoParameters.m_mass = 0.f;
+    pfoParameters.m_particleId = E_MINUS; // SHOWER
+    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0., 0., 0.);
+    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
     pfoParameters.m_clusterList = clusterList;
 
     ParticleFlowObject *pDaughterPfo(NULL);
@@ -523,18 +541,18 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
 {
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster* pDaughterCluster = *cIter;
+        Cluster *pDaughterCluster = *cIter;
         const HitType hitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? m_inputClusterListNameU :
                                           (TPC_VIEW_V == hitType) ? m_inputClusterListNameV : m_inputClusterListNameW);
 
-        ClusterVector pfoClusters;
+        ClusterList pfoClusters;
         LArPfoHelper::GetClusters(pParentPfo, hitType, pfoClusters);
 
         if (pfoClusters.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        Cluster* pParentCluster = *(pfoClusters.begin());
+        Cluster *pParentCluster = *(pfoClusters.begin());
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
             clusterListName, clusterListName));

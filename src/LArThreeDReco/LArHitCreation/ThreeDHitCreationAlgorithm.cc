@@ -1,20 +1,16 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the three dimensional hit creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCalculators/LArTransformationCalculator.h"
-
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
-
+#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 
 using namespace pandora;
@@ -22,7 +18,23 @@ using namespace pandora;
 namespace lar
 {
 
-void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList) const
+void ThreeDHitCreationAlgorithm::GetRemainingTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &remainingHits) const
+{
+    CaloHitList usedHits;
+    this->SeparateTwoDHits(pPfo, usedHits, remainingHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::GetUsedTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &usedHits) const
+{
+    CaloHitList remainingHits;
+    this->SeparateTwoDHits(pPfo, usedHits, remainingHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &usedHits, CaloHitList &remainingHits) const
 {
     ClusterList threeDClusterList;
     const ClusterList &pfoClusterList(pPfo->GetClusterList());
@@ -33,7 +45,7 @@ void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *con
 
         if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
         {
-            (*iter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+            (*iter)->GetOrderedCaloHitList().GetCaloHitList(remainingHits);
         }
         else if (TPC_3D == hitType)
         {
@@ -53,12 +65,13 @@ void ThreeDHitCreationAlgorithm::GetUnusedTwoDHits(const ParticleFlowObject *con
         for (CaloHitList::const_iterator hIter = localCaloHitList.begin(), hIterEnd = localCaloHitList.end(); hIter != hIterEnd; ++hIter)
         {
             CaloHit *pTargetCaloHit = static_cast<CaloHit*>(const_cast<void*>((*hIter)->GetParentCaloHitAddress()));
-            CaloHitList::iterator eraseIter = caloHitList.find(pTargetCaloHit);
+            CaloHitList::iterator eraseIter = remainingHits.find(pTargetCaloHit);
 
-            if (caloHitList.end() == eraseIter)
+            if (remainingHits.end() == eraseIter)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            caloHitList.erase(eraseIter);
+            usedHits.insert(pTargetCaloHit);
+            remainingHits.erase(eraseIter);
         }
     }
 }
@@ -136,19 +149,22 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     {
         ParticleFlowObject *pPfo = *pIter;
 
-        CaloHitList allNewThreeDHits, inputTwoDHits;
-        this->GetUnusedTwoDHits(pPfo, inputTwoDHits);
+        CaloHitList allNewThreeDHits;
 
         for (HitCreationToolList::const_iterator tIter = m_algorithmToolList.begin(), tIterEnd = m_algorithmToolList.end(); tIter != tIterEnd; ++tIter)
         {
-            CaloHitList newThreeDHits, omittedTwoDHits;
-            (*tIter)->Run(this, pPfo, inputTwoDHits, newThreeDHits, omittedTwoDHits);
+            CaloHitList remainingTwoDHits, newThreeDHits;
+            this->GetRemainingTwoDHits(pPfo, remainingTwoDHits);
+
+            if (remainingTwoDHits.empty())
+                break;
+
+            (*tIter)->Run(this, pPfo, remainingTwoDHits, newThreeDHits);
 
             if (!newThreeDHits.empty())
             {
                 Cluster *pCluster3D(NULL);
                 this->AddThreeDHitsToPfo(pPfo, newThreeDHits, pCluster3D);
-                inputTwoDHits = omittedTwoDHits;
                 allNewThreeDHits.insert(newThreeDHits.begin(), newThreeDHits.end());
             }
         }
@@ -216,7 +232,7 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        HitCreationTool *pHitCreationTool(dynamic_cast<HitCreationTool*>(*iter));
+        HitCreationBaseTool *pHitCreationTool(dynamic_cast<HitCreationBaseTool*>(*iter));
 
         if (NULL == pHitCreationTool)
             return STATUS_CODE_INVALID_PARAMETER;

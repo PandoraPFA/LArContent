@@ -113,16 +113,12 @@ void LArClusterHelper::LArTwoDSlidingFit(const Cluster *const pCluster, const un
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::LArTwoDShowerEdgeFit(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const CartesianVector &axisIntercept,
-    const CartesianVector &axisDirection, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult)
+void LArClusterHelper::LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult)
 {
-    if ((std::fabs(axisIntercept.GetY()) > std::numeric_limits<float>::epsilon()) || (std::fabs(axisDirection.GetY()) > std::numeric_limits<float>::epsilon()))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    twoDSlidingFitResult.m_pCluster = pCluster;
-    twoDSlidingFitResult.m_layerFitHalfWindow = layerFitHalfWindow;
-    twoDSlidingFitResult.m_axisIntercept = axisIntercept;
-    twoDSlidingFitResult.m_axisDirection = axisDirection;
+    twoDSlidingFitResult.m_pCluster = fullShowerFit.GetCluster();
+    twoDSlidingFitResult.m_layerFitHalfWindow = fullShowerFit.GetLayerFitHalfWindow();
+    twoDSlidingFitResult.m_axisIntercept = fullShowerFit.GetAxisIntercept();
+    twoDSlidingFitResult.m_axisDirection = fullShowerFit.GetAxisDirection();
     TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap(twoDSlidingFitResult.m_layerFitContributionMap);
 
     // Examine all possible fit contributions
@@ -131,7 +127,7 @@ void LArClusterHelper::LArTwoDShowerEdgeFit(const Cluster *const pCluster, const
     typedef std::map<int, FitCoordinateList> FitCoordinateMap;
 
     FitCoordinateMap fitCoordinateMap;
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    const OrderedCaloHitList &orderedCaloHitList(fullShowerFit.GetCluster()->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -140,8 +136,23 @@ void LArClusterHelper::LArTwoDShowerEdgeFit(const Cluster *const pCluster, const
             float rL(0.f), rT(0.f);
             twoDSlidingFitResult.GetLocalPosition((*hitIter)->GetPositionVector(), rL, rT);
 
-            if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rT < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rT > 0.f)))
+            try
+            {
+                CartesianVector fullShowerFitPosition(0.f, 0.f, 0.f);
+                fullShowerFit.GetGlobalFitPosition(rL, fullShowerFitPosition);
+
+                float rLFit(0.f), rTFit(0.f);
+                twoDSlidingFitResult.GetLocalPosition(fullShowerFitPosition, rLFit, rTFit);
+
+                const float rTDiff(rT - rTFit);
+
+                if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rTDiff < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rTDiff > 0.f)))
+                    rT = rTFit;
+            }
+            catch (StatusCodeException &)
+            {
                 continue;
+            }
 
             const int layer(twoDSlidingFitResult.GetLayer(rL));
             fitCoordinateMap[layer].push_back(FitCoordinate(rL, rT));
@@ -345,20 +356,20 @@ float LArClusterHelper::GetLayerOccupancy(const Cluster *const pCluster1, const 
 
     return 0.f;
 }
-  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetClosestDistance(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2)
+float LArClusterHelper::GetClosestDistance(const ClusterList &clusterList1, const ClusterList &clusterList2)
 {
-    if (clusterVector1.empty() || clusterVector2.empty())
+    if (clusterList1.empty() || clusterList2.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float closestDistance(std::numeric_limits<float>::max());
 
-    for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
+    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iterEnd1 = clusterList1.end(); iter1 != iterEnd1; ++iter1)
     {
         const Cluster *pCluster1 = *iter1;
-        const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster1, clusterVector2));
+        const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster1, clusterList2));
  
         if (thisDistance < closestDistance)
             closestDistance = thisDistance; 
@@ -368,15 +379,15 @@ float LArClusterHelper::GetClosestDistance(const ClusterVector &clusterVector1, 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- 
-float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const ClusterVector &clusterVector)
+
+float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const ClusterList &clusterList)
 {
-    if (clusterVector.empty())
+    if (clusterList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float closestDistance(std::numeric_limits<float>::max());
 
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *pTestCluster = *iter;
         const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster, pTestCluster));
@@ -687,8 +698,7 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
 
 void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingFitResult)
 {
-    TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.m_layerFitResultMap);
-    TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap(twoDSlidingFitResult.m_layerFitContributionMap);
+    const TwoDSlidingFitResult::LayerFitContributionMap &layerFitContributionMap(twoDSlidingFitResult.m_layerFitContributionMap);
 
     if (layerFitContributionMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -696,6 +706,11 @@ void LArClusterHelper::StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingF
     const int innerLayer(layerFitContributionMap.begin()->first);
     const int outerLayer(layerFitContributionMap.rbegin()->first);
     const int layerFitHalfWindow(twoDSlidingFitResult.m_layerFitHalfWindow);
+
+    TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.m_layerFitResultMap);
+
+    if (!layerFitResultMap.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     // Use sliding fit to fill occupied layers
     unsigned int slidingNPoints(0);
@@ -793,10 +808,12 @@ void LArClusterHelper::CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSli
     TransverseDirection previousDirection(UNKNOWN), sustainedDirection(UNKNOWN);
     TwoDSlidingFitResult::LayerFitResultMap::const_iterator sustainedDirectionStartIter, sustainedDirectionEndIter;
 
-    const unsigned int slidingFitWindow(twoDSlidingFitResult.GetLayerFitHalfWindow());
     const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(twoDSlidingFitResult.GetLayerFitResultMap());
 
     TwoDSlidingFitResult::FitSegmentList &fitSegmentList(twoDSlidingFitResult.m_fitSegmentList);
+
+    if (!fitSegmentList.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
     {
@@ -804,14 +821,14 @@ void LArClusterHelper::CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSli
         twoDSlidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
 
         const CartesianVector delta(position - previousPosition);
-        const TransverseDirection currentDirection((std::fabs(delta.GetX()) < std::fabs(delta.GetZ()) * -1.f) ?
-            UNCHANGED_IN_X : (delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
+        const TransverseDirection currentDirection((delta.GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
+        // TODO: currentDirection could also be UNCHANGED_IN_X
 
         if (previousDirection == currentDirection)
         {
             ++nSustainedSteps;
 
-            if (2 * nSustainedSteps > slidingFitWindow)
+            if (nSustainedSteps > 2)
             {
                 sustainedDirection = currentDirection;
                 sustainedDirectionEndIter = iter;

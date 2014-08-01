@@ -32,24 +32,35 @@
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoBuildingAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
-#include "LArThreeDReco/LArHitCreation/TransverseTrackHitCreationTool.h"
+#include "LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
-#include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
+#include "LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
+#include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
+#include "LArThreeDReco/LArShowerMatching/SimpleShowersTool.h"
+#include "LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
-#include "LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
@@ -75,8 +86,6 @@
 #include "LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
-#include "LArTwoDReco/LArSeedFinding/SeedBranchGrowingAlgorithm.h"
-#include "LArTwoDReco/LArSeedFinding/VertexSeedFindingAlgorithm.h"
 #include "LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 #include "LArUtility/ListChangingAlgorithm.h"
@@ -102,6 +111,7 @@ public:
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
         d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
         d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
+        d("LArNeutrinoBuilding",                    lar::NeutrinoBuildingAlgorithm::Factory)                                    \
         d("LArDeltaRayIdentification",              lar::DeltaRayIdentificationAlgorithm::Factory)                              \
         d("LArDeltaRayMatching",                    lar::DeltaRayMatchingAlgorithm::Factory)                                    \
         d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
@@ -133,8 +143,6 @@ public:
         d("LArTrackConsolidation",                  lar::TrackConsolidationAlgorithm::Factory)                                  \
         d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
         d("LArClusterCharacterisation",             lar::ClusterCharacterisationAlgorithm::Factory)                             \
-        d("LArSeedBranchGrowing",                   lar::SeedBranchGrowingAlgorithm::Factory)                                   \
-        d("LArVertexSeedFinding",                   lar::VertexSeedFindingAlgorithm::Factory)                                   \
         d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
         d("LArListChanging",                        lar::ListChangingAlgorithm::Factory)                                        \
         d("LArListDissolution",                     lar::ListDissolutionAlgorithm::Factory)                                     \
@@ -142,8 +150,18 @@ public:
         d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArClearShowers",                        lar::ClearShowersTool::Factory)                                             \
+        d("LArShowerTensorVisualization",           lar::ShowerTensorVisualizationTool::Factory)                                \
+        d("LArSimpleShowers",                       lar::SimpleShowersTool::Factory)                                            \
+        d("LArSplitShowers",                        lar::SplitShowersTool::Factory)                                             \
         d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
-        d("LArTransverseTrackHitCreation",          lar::TransverseTrackHitCreationTool::Factory)                               \
+        d("LArClearLongitudinalTrackHits",          lar::ClearLongitudinalTrackHitsTool::Factory)                               \
+        d("LArClearTransverseTrackHits",            lar::ClearTransverseTrackHitsTool::Factory)                                 \
+        d("LArDeltaRayShowerHits",                  lar::DeltaRayShowerHitsTool::Factory)                                       \
+        d("LArMultiValuedLongitudinalTrackHits",    lar::MultiValuedLongitudinalTrackHitsTool::Factory)                         \
+        d("LArMultiValuedTransverseTrackHits",      lar::MultiValuedTransverseTrackHitsTool::Factory)                           \
+        d("LArThreeViewShowerHits",                 lar::ThreeViewShowerHitsTool::Factory)                                      \
+        d("LArTwoViewShowerHits",                   lar::TwoViewShowerHitsTool::Factory)                                        \
         d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
         d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
         d("LArClearRemnants",                       lar::ClearRemnantsTool::Factory)                                            \
@@ -152,8 +170,8 @@ public:
         d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \
         d("LArMissingTrackSegment",                 lar::MissingTrackSegmentTool::Factory)                                      \
         d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
-        d("LArTensorVisualization",                 lar::TensorVisualizationTool::Factory)                                      \
         d("LArTrackSplitting",                      lar::TrackSplittingTool::Factory)                                           \
+        d("LArTransverseTensorVisualization",       lar::TransverseTensorVisualizationTool::Factory)                            \
         d("LArUndershootTracks",                    lar::UndershootTracksTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \

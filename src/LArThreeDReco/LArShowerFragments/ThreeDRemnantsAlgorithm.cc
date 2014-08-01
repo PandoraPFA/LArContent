@@ -38,6 +38,21 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeDRemnantsAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+{
+    // TODO - correct these placeholder parameters
+    pfoParameters.m_particleId = E_MINUS; // Shower
+    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
+    pfoParameters.m_energy = 0.f;
+    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
 {
     try
@@ -110,12 +125,12 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        RemnantTensorTool *pTensorManipulationTool(dynamic_cast<RemnantTensorTool*>(*iter));
+        RemnantTensorTool *pRemnantTensorTool(dynamic_cast<RemnantTensorTool*>(*iter));
 
-        if (NULL == pTensorManipulationTool)
+        if (NULL == pRemnantTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pTensorManipulationTool);
+        m_algorithmToolList.push_back(pRemnantTensorTool);
     }
 
     m_nMaxTensorToolRepeats = 5000;

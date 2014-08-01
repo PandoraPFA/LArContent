@@ -56,7 +56,7 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAl
         if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
             continue;
 
-        const TransverseOverlapResult::XOverlap &xOverlap(iter->GetOverlapResult().GetXOverlap());
+        const XOverlap &xOverlap(iter->GetOverlapResult().GetXOverlap());
 
         if ((xOverlap.GetXSpanU() < std::numeric_limits<float>::epsilon()) || (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanU() < m_minXOverlapFraction))
             continue;

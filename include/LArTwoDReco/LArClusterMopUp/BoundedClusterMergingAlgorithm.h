@@ -10,59 +10,18 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
+
+#include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+
 namespace lar
 {
-
-/**
- *  @brief  BoundedCluster class
- */
-
-class BoundedCluster 
-{
-public:
-    /**
-     *  @brief  Constructor
-     * 
-     *  @param  pCluster address of the cluster
-     */
-    BoundedCluster( const pandora::Cluster* pCluster = NULL);
-    BoundedCluster( const BoundedCluster& rhs );
-    ~BoundedCluster();
-
-    /**
-     *  @brief  Build a new bounding box from an inputted cluster
-     * 
-     *  @param  pCluster address of the cluster
-     */
-    void BuildBoundingBox( const pandora::Cluster* pCluster);
-     
-    /**
-     *  @brief  Are the inner and outer layers of a cluster enclosed in the bounding box?
-     * 
-     *  @param  pCluster address of the cluster
-     */
-    unsigned int NumberOfEnclosedEnds( const pandora::Cluster* pCluster);
-
-private:
-
-    bool*  fBoxFlag;
-    float* fBoxMinX;
-    float* fBoxMaxX;
-    float* fBoxMinY;
-    float* fBoxMaxY;
-
-    unsigned int fBoxLayers;
-    unsigned int fNumLayers;
-    unsigned int fMinLayer;
-    unsigned int fMaxLayer;
-
-};
 
 /**
  *  @brief  BoundedClusterMergingAlgorithm class
  */
 
-class BoundedClusterMergingAlgorithm : public pandora::Algorithm
+class BoundedClusterMergingAlgorithm : public ClusterMopUpAlgorithm
 {
 public:
     /**
@@ -75,44 +34,50 @@ public:
     };
 
 private:
-    pandora::StatusCode Run();
+    /**
+     *  @brief  XSampling class
+     */
+    class XSampling
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  fitResult the sliding fit result
+         */
+        XSampling(const TwoDSlidingFitResult &fitResult);
+
+        float       m_minX;          ///< The min x value
+        float       m_maxX;          ///< The max x value
+        float       m_xPitch;        ///< The x sampling pitch to be used
+    };
+
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+
+    /**
+     *  @brief  Get the shower position map containing high and low edge z positions in bins of x
+     * 
+     *  @param  fitResult the sliding shower fit result
+     *  @param  xSampling the x sampling details
+     *  @param  showerPositionMap to receive the shower position map
+     */
+    void GetShowerPositionMap(const TwoDSlidingShowerFitResult &fitResult, const XSampling &xSampling, ShowerPositionMap &showerPositionMap) const;
+
+    /**
+     *  @brief  Get the fraction of hits in a cluster bounded by a specified shower position map
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  xSampling the x sampling details
+     *  @param  showerPositionMap the shower position map
+     * 
+     *  @return the fraction of bounded hits
+     */
+    float GetBoundedFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string         m_seedClusterListName;      ///< The seed cluster list name
-    std::string         m_nonSeedClusterListName;   ///< The non seed cluster list name
-
-    float               m_vertexVetoRadius;
-    unsigned int        m_minClusterSize;
-
-private:
-    void ConstructBoundingBox( const pandora::Cluster* pCluster );
-    unsigned int ApplyBoundingBox( const pandora::Cluster* pCluster );
-
-    bool PassesVertexVeto( const pandora::Cluster* seedCluster, const pandora::Cluster* candCluster );
-    bool PassesLengthVeto( const pandora::Cluster* seedCluster, const pandora::Cluster* candCluster );
-
-    void PrepareMerges();
-    void PrepareAssociations();
-
-    void SetGoodAssociation( pandora::Cluster* pCandidateCluster );
-    void SetBadAssociation( pandora::Cluster* pCandidateCluster );
-
-    void MakeAssociation( pandora::Cluster* pSeedCluster, pandora::Cluster* pCandidateCluster, unsigned int numEnds );
-
-    typedef std::map<pandora::Cluster*,pandora::Cluster*> ClusterAssociationMap;
-    typedef std::map<pandora::Cluster*,pandora::ClusterList> ClusterMergeMap;
-
-    ClusterAssociationMap fGoodAssociations;
-    ClusterAssociationMap fBadAssociations;
-    ClusterAssociationMap fDoubleAssociations;
-    ClusterAssociationMap fSingleAssociations;
-    ClusterAssociationMap fRepeatedDoubleAssociations;
-    ClusterAssociationMap fRepeatedSingleAssociations;
-
-    ClusterMergeMap fClusterMergeMap; 
-
-    BoundedCluster fBoundingBox;
-
+    unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    float                   m_minBoundedFraction;           ///< The minimum cluster bounded fraction for merging
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

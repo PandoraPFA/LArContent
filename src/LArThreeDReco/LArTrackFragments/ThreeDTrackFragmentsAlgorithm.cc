@@ -198,6 +198,23 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitR
     CartesianPointList projectedPositions;
     this->GetProjectedPositions(fitResult1, fitResult2, projectedPositions);
 
+// --- BEGIN EVENT DISPLAY ---
+// ClusterList tempList1, tempList2, tempList3;
+// tempList1.insert((Cluster*)pCluster1);
+// tempList2.insert((Cluster*)pCluster2);
+// tempList3.insert(inputClusterList.begin(), inputClusterList.end());
+// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
+// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Clusters (U)", RED);
+// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Clusters (V)", BLUE);
+// PandoraMonitoringApi::VisualizeClusters(&tempList3, "Clusters (W)", BLACK);
+// for (unsigned int p=0; p < projectedPositions.size(); ++p)
+// {
+// CartesianVector projectedPosition = projectedPositions.at(p);
+// PandoraMonitoringApi::AddMarkerToVisualization(&projectedPosition, "ProjectedPosition", RED, 3);
+// }
+// PandoraMonitoringApi::ViewEvent();
+// --- END EVENT DISPLAY ---
+
     CaloHitList matchedHits;
     ClusterList matchedClusters;
     HitToClusterMap hitToClusterMap;
@@ -312,6 +329,8 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
             fitResult2.GetTransverseProjection(x, fitSegment2, position2);
             LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, position1, position2, position3, chi2);
 
+            // TODO: For highly multi-valued x, the projected positions can be unreliable.
+            //       Need to make the interpolation more robust for these cases.
             if (foundLastPosition)
             {
                 const float thisDisplacement((lastPosition - position3).GetMagnitude());
@@ -468,7 +487,7 @@ void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPoin
 // PANDORA_MONITORING_API(AddMarkerToVisualization(&projectedPosition, "FitPosition", GREEN, 2.5));
 // }
 // PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY
+// --- END EVENT DISPLAY ---
 
 }
 
@@ -585,12 +604,12 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        FragmentTensorTool *pTensorManipulationTool(dynamic_cast<FragmentTensorTool*>(*iter));
+        FragmentTensorTool *pFragmentTensorTool(dynamic_cast<FragmentTensorTool*>(*iter));
 
-        if (NULL == pTensorManipulationTool)
+        if (NULL == pFragmentTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pTensorManipulationTool);
+        m_algorithmToolList.push_back(pFragmentTensorTool);
     }
 
     m_nMaxTensorToolRepeats = 5000;

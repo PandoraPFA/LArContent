@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  TrackSplittingTool class
  */
-class TrackSplittingTool : public TensorManipulationTool
+class TrackSplittingTool : public TransverseTensorTool
 {
 public:
     /**
@@ -60,10 +60,11 @@ private:
     /**
      *  @brief  Find remaining tracks, hidden by spurious track segments (and maybe other ambiguities) in the tensor
      * 
+     *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  splitPositionMap to receive the split position map
      */
-    void FindTracks(const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
+    void FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
 
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
@@ -77,11 +78,22 @@ private:
     /**
      *  @brief  Whether a provided tensor element can be used to construct a pfo
      * 
+     *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
      *  @param  usedClusters the list of used clusters
      *  @param  splitPositionMap to receive the split position map
      */
-    bool PassesChecks(const TensorType::Element &element, pandora::ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const;
+    bool PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, pandora::ClusterList &usedClusters,
+        SplitPositionMap &splitPositionMap) const;
+
+    /**
+     *  @brief  Check a candidate split position for consistency with the associated track cluster sliding linear fit
+     * 
+     *  @param  splitPosition the candidate split position
+     *  @param  splitX the split x coordinate
+     *  @param  longFitResult the sliding linear fit for the long cluster
+     */
+    bool CheckSplitPosition(const pandora::CartesianVector &splitPosition, const float splitX, const TwoDSlidingFitResult &longFitResult) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
@@ -93,6 +105,7 @@ private:
     float           m_minLongDeltaXFraction;            ///< Min x distance between ends of short and long clusters (measured as fraction of long cluster x length)
     float           m_minAbsoluteLongDeltaX;            ///< Min x distance between ends of short and long clusters (measured as an absolute distance)
     float           m_minSplitToVertexProjection;       ///< Min projected distance between split position and either inner or outer vertex of long cluster
+    float           m_maxSplitVsFitPositionDistance;    ///< Max allowed distance between split position and sliding linear fit position at the split x coordinate
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

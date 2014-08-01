@@ -1,21 +1,21 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.cc
+ *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.cc
  * 
- *  @brief  Implementation of the tensor visualization tool class.
+ *  @brief  Implementation of the transverse tensor visualization tool class.
  * 
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/TensorVisualizationTool.h"
+#include "LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 
 using namespace pandora;
 
 namespace lar
 {
 
-bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraSettings::ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
@@ -94,7 +94,7 @@ bool TensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, T
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TransverseTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     m_minClusterConnections = 1;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

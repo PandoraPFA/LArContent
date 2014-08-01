@@ -46,16 +46,20 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
     PfoVector parentPfos, daughterPfos;
     this->GetPfos(m_parentPfoListName, parentPfos);
     this->GetPfos(m_daughterPfoListName, daughterPfos);
-    
-    // Sort parent and daughter clusters
-    ClusterVector parentClusters, daughterClusters;
-    LArPfoHelper::GetClusters(parentPfos, clusterHitType, parentClusters);
-    LArPfoHelper::GetClusters(daughterPfos, clusterHitType, daughterClusters);
+
+    // TODO Think about sorting of the seed cluster list; currently pfos with most hits contribute first, but their daughter clusters are unsorted
+    ClusterList parentClusters, daughterClusters;
+
+    for (PfoVector::const_iterator iter = parentPfos.begin(), iterEnd = parentPfos.end(); iter != iterEnd; ++iter)
+        LArPfoHelper::GetClusters(*iter, clusterHitType, parentClusters);
+
+    for (PfoVector::const_iterator iter = daughterPfos.begin(), iterEnd = daughterPfos.end(); iter != iterEnd; ++iter)
+        LArPfoHelper::GetClusters(*iter, clusterHitType, daughterClusters);
 
      // Select short parent clusters
-    for (ClusterVector::const_iterator cIter = parentClusters.begin(), cIterEnd = parentClusters.end(); cIter != cIterEnd; ++cIter)
-    {  
-        Cluster* pCluster = *cIter;
+    for (ClusterList::const_iterator cIter = parentClusters.begin(), cIterEnd = parentClusters.end(); cIter != cIterEnd; ++cIter)
+    {
+        Cluster *pCluster = *cIter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) > m_maxSeedClusterLength  * m_maxSeedClusterLength)
             continue;
@@ -64,7 +68,7 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
     }
 
     // Select all secondary clusters
-    for (ClusterVector::const_iterator cIter = daughterClusters.begin(), cIterEnd = daughterClusters.end(); cIter != cIterEnd; ++cIter)
+    for (ClusterList::const_iterator cIter = daughterClusters.begin(), cIterEnd = daughterClusters.end(); cIter != cIterEnd; ++cIter)
     {
         seedClusters.push_back(*cIter);
     }
@@ -72,7 +76,7 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
     // Select other possible delta rays
     for (ClusterVector::const_iterator cIter = inputClusters.begin(), cIterEnd = inputClusters.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster* pCluster = *cIter;
+        Cluster *pCluster = *cIter;
  
         if (pCluster->GetNCaloHits() < m_minSeedClusterCaloHits)
             continue;

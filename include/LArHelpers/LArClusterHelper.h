@@ -9,6 +9,7 @@
 #define LAR_CLUSTER_HELPER_H 1
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include "Objects/Cluster.h"
 
@@ -24,17 +25,6 @@ enum TransverseDirection
     NEGATIVE_IN_X,
     UNCHANGED_IN_X,
     UNKNOWN
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  ShowerEdge enum
- */
-enum ShowerEdge
-{
-    POSITIVE_SHOWER_EDGE,
-    NEGATIVE_SHOWER_EDGE
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -61,7 +51,7 @@ public:
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
         TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
@@ -71,7 +61,7 @@ public:
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
+    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
         TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
@@ -83,23 +73,19 @@ public:
      *  @param  axisDirection the axis direction vector
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
+    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection,
         TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
      *
-     *  @param  pCluster address of the cluster
-     *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  axisIntercept the axis intercept position
-     *  @param  axisDirection the axis direction vector
+     *  @param  fullShowerFit the result of fitting the full shower
      *  @param  showerEdge the shower edge
      *  @param  twoDSlidingFitResult to receive the fit result
      */
-    static void LArTwoDShowerEdgeFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, 
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
-        const ShowerEdge showerEdge, TwoDSlidingFitResult &twoDSlidingFitResult);
+    static void LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
+        TwoDSlidingFitResult &twoDSlidingFitResult);
 
     /**
      *  @brief  Whether fit results are multivalued in x
@@ -181,24 +167,24 @@ public:
     static float GetLayerOccupancy(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
 
     /**
-     *  @brief  Get closest distance between clusters in a pair of cluster vectors
+     *  @brief  Get closest distance between clusters in a pair of cluster lists
      *
-     *  @param  clusterVector1 the first cluster vector
-     *  @param  clusterVector2 the second cluster vector
+     *  @param  clusterList1 the first cluster list
+     *  @param  clusterList2 the second cluster list
      *
      *  @return the closest distance
      */
-    static float GetClosestDistance(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2);
+    static float GetClosestDistance(const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2);
 
     /**
-     *  @brief  Get closest distance between a specified cluster and vector of clusters
+     *  @brief  Get closest distance between a specified cluster and list of clusters
      *
      *  @param  pCluster address of the input cluster
-     *  @param  clusterVector vector of input clusters
+     *  @param  clusterList list of input clusters
      *
      *  @return the closest distance
      */
-    static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::ClusterVector &clusterVector);
+    static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::ClusterList &clusterList);
 
     /**
      *  @brief  Get closest distance between a pair of clusters

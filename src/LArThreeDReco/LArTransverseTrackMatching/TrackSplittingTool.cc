@@ -26,7 +26,7 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
        std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
 
     SplitPositionMap splitPositionMap;
-    this->FindTracks(overlapTensor, splitPositionMap);
+    this->FindTracks(pAlgorithm, overlapTensor, splitPositionMap);
 
     const bool splitsMade(pAlgorithm->MakeClusterSplits(splitPositionMap));
     return splitsMade;
@@ -34,7 +34,7 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackSplittingTool::FindTracks(const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
+void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
 {
     ClusterList usedClusters;
 
@@ -58,7 +58,7 @@ void TrackSplittingTool::FindTracks(const TensorType &overlapTensor, SplitPositi
             if (!LongTracksTool::IsLongerThanDirectConnections(iIter, elementList, m_minMatchedSamplingPointRatio, usedClusters))
                 continue;
 
-            if (!this->PassesChecks(*(*iIter), usedClusters, splitPositionMap))
+            if (!this->PassesChecks(pAlgorithm, *(*iIter), usedClusters, splitPositionMap))
                 continue;
 
             usedClusters.insert((*iIter)->GetClusterU());
@@ -83,7 +83,7 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
         if (eIter->GetOverlapResult().GetNMatchedSamplingPoints() < m_minMatchedSamplingPoints)
             continue;
 
-        const TransverseOverlapResult::XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
+        const XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
         const float longSpan(std::max(xOverlap.GetXSpanU(), std::max(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float shortSpan1(std::min(xOverlap.GetXSpanU(), std::min(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float shortSpan2(((xOverlap.GetXSpanU() > shortSpan1) && (xOverlap.GetXSpanU() < longSpan)) ? xOverlap.GetXSpanU() :
@@ -107,7 +107,8 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
+bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, ClusterList &usedClusters,
+    SplitPositionMap &splitPositionMap) const
 {
     const Particle particle(element);
 
@@ -122,8 +123,10 @@ bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, Cluste
     const LArPointingCluster pointingCluster1(particle.m_pCluster1);
     const LArPointingCluster pointingCluster2(particle.m_pCluster2);
     const LArPointingCluster longPointingCluster(particle.m_pLongCluster);
+
     const HitType hitType1(LArClusterHelper::GetClusterHitType(particle.m_pCluster1));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(particle.m_pCluster2));
+    const TwoDSlidingFitResult &longFitResult(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
 
     bool passesChecks(false);
 
@@ -141,15 +144,18 @@ bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, Cluste
         float chiSquared(std::numeric_limits<float>::max());
         LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
 
-        const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
-        const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
-        const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
-
-        if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
-            (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
+        if (this->CheckSplitPosition(splitPosition, splitMinX, longFitResult))
         {
-            splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
-            passesChecks = true;
+            const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
+            const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
+            const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
+
+            if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
+                (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
+            {
+                splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
+                passesChecks = true;
+            }
         }
     }
 
@@ -167,15 +173,18 @@ bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, Cluste
         float chiSquared(std::numeric_limits<float>::max());
         LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
 
-        const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
-        const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
-        const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
-
-        if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
-            (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
+        if (this->CheckSplitPosition(splitPosition, splitMaxX, longFitResult))
         {
-            splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
-            passesChecks = true;
+            const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
+            const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
+            const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
+
+            if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
+                (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
+            {
+                splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
+                passesChecks = true;
+            }
         }
     }
 
@@ -183,11 +192,33 @@ bool TrackSplittingTool::PassesChecks(const TensorType::Element &element, Cluste
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackSplittingTool::CheckSplitPosition(const CartesianVector &splitPosition, const float splitX, const TwoDSlidingFitResult &longFitResult) const
+{
+    try
+    {
+        CartesianPointList fitPositionList;
+        longFitResult.GetGlobalFitPositionListAtX(splitX, fitPositionList);
+
+        for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
+        {
+            if ((splitPosition - *iter).GetMagnitude() < m_maxSplitVsFitPositionDistance)
+                return true;
+        }
+    }
+    catch (StatusCodeException &)
+    {
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackSplittingTool::Particle::Particle(const TensorType::Element &element)
 {
-    const TransverseOverlapResult::XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
+    const XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
 
     const HitType longHitType = ((xOverlap.GetXSpanU() > xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() > xOverlap.GetXSpanW())) ? TPC_VIEW_U :
         ((xOverlap.GetXSpanV() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() > xOverlap.GetXSpanW())) ? TPC_VIEW_V :
@@ -247,6 +278,10 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
     m_minSplitToVertexProjection = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSplitToVertexProjection", m_minSplitToVertexProjection));
+
+    m_maxSplitVsFitPositionDistance = 1.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxSplitVsFitPositionDistance", m_maxSplitVsFitPositionDistance));
 
     return STATUS_CODE_SUCCESS;
 }

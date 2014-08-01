@@ -87,9 +87,9 @@ private:
      *  @brief Calculate closest 2D separation between a set of vertices and a set of clusters
      *
      *  @param vertexList the list of possible vertex positions
-     *  @param clustervector the vector of clusters
+     *  @param clusterList the list of clusters
      */
-    float GetClosestDistance(const pandora::CartesianPointList &vertexList, const pandora::ClusterVector &clusterVector) const;
+    float GetClosestDistance(const pandora::CartesianPointList &vertexList, const pandora::ClusterList &clusterList) const;
 
     /**
      *  @brief Build the parent/daughter links from the map of parent/daughter associations

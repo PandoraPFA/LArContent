@@ -212,7 +212,36 @@ public:
      */
     static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    /**
+     *  @brief  Simple and fast vertex selection, choosing best vertex from a specified list to represent a set of pointing clusters
+     * 
+     *  @param  vertexList the candidate vertex list
+     *  @param  pointingClusterList the pointing cluster list
+     * 
+     *  @return the best vertex estimate
+     */
+    static LArPointingCluster::Vertex GetBestVertexEstimate(const LArPointingClusterVertexList &vertexList, const LArPointingClusterList &pointingClusterList);
+
 private:
+    /**
+     *  @brief  Collect cluster vertices, from a provided input list, associated with a specified vertex
+     * 
+     *  @param  vertex the vertex
+     *  @param  inputList the input list of pointing clusters
+     *  @param  outputList to receive the output list of cluster vertices associated with the specified vertex
+     */
+    static void CollectAssociatedClusters(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &inputList, LArPointingClusterVertexList &outputList);
+
+    /**
+     *  @brief  Get an estimate of the energy associated with a specified vertex
+     * 
+     *  @param  vertex the vertex
+     *  @param  clusterVertices the list of cluster vertices associated with the specified vertex
+     * 
+     *  @return the energy associated with a specified vertex
+     */
+    static float GetAssociatedEnergy(const LArPointingCluster::Vertex &vertex, const LArPointingClusterVertexList &clusterVertices);
+
     static float    m_maxNodeRadiusSquared;                 ///< 
     static float    m_maxPointingLongitudinalDistance;      ///< 
     static float    m_minPointingLongitudinalDistance;      ///<

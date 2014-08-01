@@ -322,6 +322,14 @@ public:
     void GetMinAndMaxX(float &minX, float &maxX) const;
 
     /**
+     *  @brief  Get the minimum and maximum z coordinates associated with the sliding fit
+     *
+     *  @param  to receive the min z value
+     *  @param  to receive the max z value
+     */
+    void GetMinAndMaxZ(float &minZ, float &maxZ) const;
+
+    /**
      *  @brief  Get layer number for given sliding linear fit longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
@@ -496,6 +504,14 @@ public:
         pandora::CartesianVector &direction) const;
 
     /**
+     *  @brief  Get extrapolated position (beyond span) for a given input x coordinate
+     *
+     *  @param  x the input coordinate
+     *  @param  position the extrapolated position at these coordinates
+     */
+    void GetExtrapolatedPositionAtX(const float x, pandora::CartesianVector &position) const;
+
+    /**
      *  @brief Get fit segment for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
@@ -524,6 +540,14 @@ public:
     const FitSegmentList &GetFitSegmentList() const;
 
 private:
+    /**
+     *  @brief  Get the minimum and maximum x or z coordinates associated with the sliding fit
+     *
+     *  @param  isX whether to provide extremal x or z coordinates
+     *  @param  to receive the min coordinate value
+     *  @param  to receive the max coordinate value
+     */
+    void GetMinAndMaxCoordinate(const bool isX, float &min, float &max) const;
 
     /**
      *  @brief Interpolate a position between two layers
@@ -532,7 +556,7 @@ private:
      *
      *  @return the interpolated position
      */
-    pandora::CartesianVector GetGlobalFitPosition(LayerInterpolation layerInterpolation) const;
+    pandora::CartesianVector GetGlobalFitPosition(const LayerInterpolation &layerInterpolation) const;
 
     /**
      *  @brief Interpolate a direction between two layers
@@ -541,7 +565,7 @@ private:
      *
      *  @return the interpolated direction
      */
-    pandora::CartesianVector GetGlobalFitDirection(LayerInterpolation layerInterpolation) const;
+    pandora::CartesianVector GetGlobalFitDirection(const LayerInterpolation &layerInterpolation) const;
 
     /**
      *  @brief Interpolate a rms between two layers
@@ -550,7 +574,7 @@ private:
      *
      *  @return the interpolated rms
      */
-    float GetFitRms(LayerInterpolation layerInterpolation) const;
+    float GetFitRms(const LayerInterpolation &layerInterpolation) const;
 
     /**
      *  @brief  Get the pair of layers surrounding a specified longitudinal position
@@ -670,6 +694,16 @@ inline const pandora::CartesianVector &TwoDSlidingFitResult::GetAxisDirection() 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline int TwoDSlidingFitResult::GetMinLayer() const
+{
+    if (m_layerFitResultMap.empty())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_layerFitResultMap.begin()->first;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline int TwoDSlidingFitResult::GetMaxLayer() const
 {
     if (m_layerFitResultMap.empty())
@@ -680,12 +714,16 @@ inline int TwoDSlidingFitResult::GetMaxLayer() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int TwoDSlidingFitResult::GetMinLayer() const
+inline void TwoDSlidingFitResult::GetMinAndMaxX(float &minX, float &maxX) const
 {
-    if (m_layerFitResultMap.empty())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+    return this->GetMinAndMaxCoordinate(true, minX, maxX);
+}
 
-    return m_layerFitResultMap.begin()->first;
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void TwoDSlidingFitResult::GetMinAndMaxZ(float &minZ, float &maxZ) const
+{
+    return this->GetMinAndMaxCoordinate(false, minZ, maxZ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -40,7 +40,7 @@ StatusCode ClusterGrowingAlgorithm::Run()
     this->GetListOfCleanClusters(pClusterList, inputClusters);
     this->GetListOfSeedClusters(inputClusters, seedClusters);
 
-    while (1)
+    while (true)
     {
         ClusterVector currentClusters, nonSeedClusters;
         this->GetListOfCleanClusters(pClusterList, currentClusters);

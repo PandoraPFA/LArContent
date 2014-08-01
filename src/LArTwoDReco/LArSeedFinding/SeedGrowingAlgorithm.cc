@@ -18,42 +18,6 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode SeedGrowingAlgorithm::Run()
-{
-    const ClusterList *pSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList));
-
-    ClusterVector particleSeedVector(pSeedClusterList->begin(), pSeedClusterList->end());
-    std::sort(particleSeedVector.begin(), particleSeedVector.end(), LArClusterHelper::SortByNOccupiedLayers);
-
-    const ClusterList *pNonSeedClusterList = NULL;
-    const StatusCode statusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
-
-    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_INITIALIZED != statusCode))
-        return statusCode;
-
-    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
-        return STATUS_CODE_SUCCESS;
-
-    ClusterUsageMap forwardUsageMap, backwardUsageMap;
-
-    for (ClusterVector::const_iterator iter = particleSeedVector.begin(), iterEnd = particleSeedVector.end(); iter != iterEnd; ++iter)
-    {
-        ClusterVector candidateClusters;
-        this->GetCandidateClusters(pNonSeedClusterList, candidateClusters);
-        std::sort(candidateClusters.begin(), candidateClusters.end(), LArClusterHelper::SortByNOccupiedLayers);
-        this->FindAssociatedClusters(*iter, candidateClusters, forwardUsageMap, backwardUsageMap);
-    }
-
-    SeedAssociationList seedAssociationList;
-    this->IdentifyClusterMerges(particleSeedVector, backwardUsageMap, seedAssociationList);
-    this->MakeClusterMerges(seedAssociationList);
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void SeedGrowingAlgorithm::FindAssociatedClusters(Cluster *const pParticleSeed, ClusterVector &candidateClusters,
     ClusterUsageMap &forwardUsageMap, ClusterUsageMap &backwardUsageMap) const
 {
@@ -163,32 +127,8 @@ void SeedGrowingAlgorithm::IdentifyClusterMerges(const ClusterVector &particleSe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedGrowingAlgorithm::MakeClusterMerges(const SeedAssociationList &seedAssociationList) const
+StatusCode SeedGrowingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    for (SeedAssociationList::const_iterator iter = seedAssociationList.begin(), iterEnd = seedAssociationList.end(); iter != iterEnd; ++iter)
-    {
-        Cluster *pParticleSeed = iter->first;
-
-        for (ClusterVector::const_iterator iterM = iter->second.begin(), iterMEnd = iter->second.end(); iterM != iterMEnd; ++iterM)
-        {
-            Cluster *pDaughterCluster = *iterM;
-
-            if (pDaughterCluster == pParticleSeed)
-                continue;
-
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParticleSeed, pDaughterCluster,
-                m_seedClusterListName, m_nonSeedClusterListName));
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode SeedGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
-
     return STATUS_CODE_SUCCESS;
 }
 

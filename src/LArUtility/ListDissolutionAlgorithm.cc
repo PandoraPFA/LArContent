@@ -41,7 +41,7 @@ StatusCode ListDissolutionAlgorithm::Run()
         }
         catch (StatusCodeException &)
         {
-            std::cout << "ListDissolutionAlgorithm: Pfo list " << listName << " not found." << std::endl;
+            std::cout << "ListDissolutionAlgorithm: pfo list " << listName << " unavailable." << std::endl;
         }
     }
 
@@ -73,7 +73,7 @@ StatusCode ListDissolutionAlgorithm::Run()
         }
         catch (StatusCodeException &)
         {
-            std::cout << "ListDissolutionAlgorithm: Cluster list " << listName << " not found." << std::endl;
+            std::cout << "ListDissolutionAlgorithm: cluster list " << listName << " unavailable." << std::endl;
         }
     }
 

@@ -22,18 +22,30 @@ using namespace pandora;
 namespace lar
 {
 
-void LArPfoHelper::GetClusters(const PfoVector &pfoVector, const HitType &hitType, ClusterVector &clusterVector)
+void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitType &hitType, CaloHitList &caloHitList)
 {
-    for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
+
+    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        const ParticleFlowObject *pPfo = *pIter;
-        LArPfoHelper::GetClusters(pPfo, hitType, clusterVector);
+        (*cIter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType &hitType, ClusterVector &clusterVector)
+void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, ClusterList &clusterList)
+{
+    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        LArPfoHelper::GetClusters(*pIter, hitType, clusterList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitType &hitType, ClusterList &clusterList)
 {
     const ClusterList &pfoClusterList = pPfo->GetClusterList();
     for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
@@ -43,11 +55,33 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *pPfo, const HitType &hi
         if (hitType != LArClusterHelper::GetClusterHitType(pPfoCluster))
             continue;
 
-        clusterVector.push_back(pPfoCluster);
+        clusterList.insert(pPfoCluster);
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllConnectedPfos(const PfoList &inputPfoList, PfoList &outputPfoList)
+{
+    for (PfoList::const_iterator pIter = inputPfoList.begin(), pIterEnd = inputPfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        LArPfoHelper::GetAllConnectedPfos(*pIter, outputPfoList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllConnectedPfos(ParticleFlowObject *const pPfo, PfoList &outputPfoList)
+{
+    if (outputPfoList.count(pPfo))
+        return;
+
+    outputPfoList.insert(pPfo);
+    LArPfoHelper::GetAllConnectedPfos(pPfo->GetParentPfoList(), outputPfoList);
+    LArPfoHelper::GetAllConnectedPfos(pPfo->GetDaughterPfoList(), outputPfoList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
 {
@@ -93,15 +127,15 @@ float LArPfoHelper::GetClosestDistance(const ParticleFlowObject *const pPfo, con
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-    ClusterVector clusterVector;
-    LArPfoHelper::GetClusters(pPfo, hitType, clusterVector);
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
 
-    if (clusterVector.empty())
+    if (clusterList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float bestDistance(std::numeric_limits<float>::max());
 
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster* pPfoCluster = *iter;
         const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster, pPfoCluster));
@@ -117,35 +151,35 @@ float LArPfoHelper::GetClosestDistance(const ParticleFlowObject *const pPfo, con
 
 float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2)
 {
-    ClusterVector clusterVectorU1, clusterVectorV1, clusterVectorW1;
-    ClusterVector clusterVectorU2, clusterVectorV2, clusterVectorW2;
+    ClusterList clusterListU1, clusterListV1, clusterListW1;
+    ClusterList clusterListU2, clusterListV2, clusterListW2;
 
-    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_U, clusterVectorU1);
-    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_V, clusterVectorV1);
-    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_W, clusterVectorW1);
+    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_U, clusterListU1);
+    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_V, clusterListV1);
+    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_W, clusterListW1);
 
-    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_U, clusterVectorU2);
-    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_V, clusterVectorV2);
-    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_W, clusterVectorW2);
+    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_U, clusterListU2);
+    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_V, clusterListV2);
+    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_W, clusterListW2);
 
     float numViews(0.f);
     float distanceSquared(0.f);
 
-    if (!clusterVectorU1.empty() && !clusterVectorU2.empty())
+    if (!clusterListU1.empty() && !clusterListU2.empty())
     {
-        distanceSquared += LArClusterHelper::GetClosestDistance(clusterVectorU1, clusterVectorU2);
+        distanceSquared += LArClusterHelper::GetClosestDistance(clusterListU1, clusterListU2);
         numViews += 1.f;
     }
 
-    if (!clusterVectorV1.empty() && !clusterVectorV2.empty())
+    if (!clusterListV1.empty() && !clusterListV2.empty())
     {
-        distanceSquared += LArClusterHelper::GetClosestDistance(clusterVectorV1, clusterVectorV2);
+        distanceSquared += LArClusterHelper::GetClosestDistance(clusterListV1, clusterListV2);
         numViews += 1.f;
     }
 
-    if (!clusterVectorW1.empty() && !clusterVectorW2.empty())
+    if (!clusterListW1.empty() && !clusterListW2.empty())
     {
-        distanceSquared += LArClusterHelper::GetClosestDistance(clusterVectorW1, clusterVectorW2);
+        distanceSquared += LArClusterHelper::GetClosestDistance(clusterListW1, clusterListW2);
         numViews += 1.f;
     }
 
@@ -154,20 +188,40 @@ float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, con
 
     return std::sqrt(distanceSquared / numViews);
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArPfoHelper::GetThreeDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2)
 {
-    ClusterVector clusterVector1, clusterVector2;
+    ClusterList clusterList1, clusterList2;
 
-    LArPfoHelper::GetClusters(pPfo1, TPC_3D, clusterVector1);
-    LArPfoHelper::GetClusters(pPfo2, TPC_3D, clusterVector2);
+    LArPfoHelper::GetClusters(pPfo1, TPC_3D, clusterList1);
+    LArPfoHelper::GetClusters(pPfo2, TPC_3D, clusterList2);
 
-    if (clusterVector1.empty() || clusterVector2.empty())
+    if (clusterList1.empty() || clusterList2.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return LArClusterHelper::GetClosestDistance(clusterVector1, clusterVector2);
+    return LArClusterHelper::GetClosestDistance(clusterList1, clusterList2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::IsTrack(const ParticleFlowObject *const pPfo)
+{
+    const int pdg(pPfo->GetParticleId());
+
+    // muon, pion, proton, kaon
+    return ((MU_MINUS == std::abs(pdg)) || (PI_PLUS == std::abs(pdg)) || (PROTON == std::abs(pdg)) || (K_PLUS == std::abs(pdg)));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::IsShower(const ParticleFlowObject *const pPfo)
+{
+    const int pdg(pPfo->GetParticleId());
+
+    // electron, photon
+    return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

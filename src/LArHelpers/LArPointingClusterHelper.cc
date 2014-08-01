@@ -9,6 +9,7 @@
 #include "Helpers/ClusterHelper.h"
 #include "Helpers/XmlHelper.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
 using namespace pandora;
@@ -323,6 +324,89 @@ void LArPointingClusterHelper::GetIntersection(const LArPointingCluster::Vertex 
 
     if (!foundIntersection)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArPointingCluster::Vertex LArPointingClusterHelper::GetBestVertexEstimate(const LArPointingClusterVertexList &vertexList,
+    const LArPointingClusterList &pointingClusterList)
+{
+    float bestAssociatedEnergy(0.f);
+    LArPointingClusterVertexList::const_iterator bestVertexIter(vertexList.end());
+
+    for (LArPointingClusterVertexList::const_iterator iter = vertexList.begin(), iterEnd = vertexList.end(); iter != iterEnd; ++iter)
+    {
+        const LArPointingCluster::Vertex &vertex(*iter);
+
+        LArPointingClusterVertexList associatedVertices;
+        LArPointingClusterHelper::CollectAssociatedClusters(vertex, pointingClusterList, associatedVertices);
+
+        const float associatedEnergy(LArPointingClusterHelper::GetAssociatedEnergy(vertex, associatedVertices));
+
+        if (associatedEnergy > bestAssociatedEnergy)
+        {
+            bestVertexIter = iter;
+            bestAssociatedEnergy = associatedEnergy;
+        }
+    }
+
+    if (vertexList.end() == bestVertexIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return (*bestVertexIter);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPointingClusterHelper::CollectAssociatedClusters(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &inputList,
+    LArPointingClusterVertexList &outputList)
+{
+    for (LArPointingClusterList::const_iterator iter = inputList.begin(), iterEnd = inputList.end(); iter != iterEnd; ++iter)
+    {
+        const LArPointingCluster &pointingCluster = *iter;
+        const LArPointingCluster::Vertex &innerVertex = pointingCluster.GetInnerVertex();
+        const LArPointingCluster::Vertex &outerVertex = pointingCluster.GetOuterVertex();
+
+        const float innerDistanceSquared = (innerVertex.GetPosition() - vertex.GetPosition()).GetMagnitudeSquared();
+        const float outerDistanceSquared = (outerVertex.GetPosition() - vertex.GetPosition()).GetMagnitudeSquared();
+
+        const LArPointingCluster::Vertex &chosenVertex((innerDistanceSquared < outerDistanceSquared) ? innerVertex : outerVertex);
+
+        if (LArPointingClusterHelper::IsNode(vertex.GetPosition(), chosenVertex) ||
+            LArPointingClusterHelper::IsEmission(vertex.GetPosition(), chosenVertex))
+        {
+            outputList.push_back(chosenVertex);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArPointingClusterHelper::GetAssociatedEnergy(const LArPointingCluster::Vertex &vertex, const LArPointingClusterVertexList &associatedVertices)
+{
+    float associatedEnergy(0.f);
+
+    for (LArPointingClusterVertexList::const_iterator iter = associatedVertices.begin(), iterEnd = associatedVertices.end(); iter != iterEnd; ++iter)
+    {
+        const LArPointingCluster::Vertex &clusterVertex(*iter);
+        const Cluster *pCluster(clusterVertex.GetCluster());
+
+        const float clusterEnergy(LArClusterHelper::GetEnergyFromLength(pCluster));
+        const float clusterLength(LArClusterHelper::GetLength(pCluster));
+        const float deltaLength(clusterVertex.GetDirection().GetDotProduct(vertex.GetPosition() - clusterVertex.GetPosition()));
+
+        if (deltaLength < std::numeric_limits<float>::epsilon())
+        {
+            associatedEnergy += clusterEnergy;
+        }
+        else if(deltaLength < clusterLength)
+        {
+            associatedEnergy += clusterEnergy * (1.f - (deltaLength / clusterLength));
+        }
+    }
+
+    return associatedEnergy;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

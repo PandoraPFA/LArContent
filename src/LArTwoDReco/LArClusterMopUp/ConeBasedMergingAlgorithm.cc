@@ -8,6 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
+#include "LArObjects/LArTwoDSlidingFitResult.h"
+
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 
 using namespace pandora;
@@ -15,158 +19,152 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode ConeBasedMergingAlgorithm::Run()
+void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
+    const ClusterToListNameMap &clusterToListNameMap) const
 {
-    // Input lists
-    const ClusterList *pSeedClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_seedClusterListName, pSeedClusterList));
+    ClusterAssociationMap clusterAssociationMap;
 
-    ClusterVector seedClusterVector(pSeedClusterList->begin(), pSeedClusterList->end());
-    std::sort(seedClusterVector.begin(), seedClusterVector.end(), Cluster::SortByInnerLayer);
-
-    const ClusterList *pNonSeedClusterList = NULL;
-    const StatusCode listStatusCode(PandoraContentApi::GetList(*this, m_nonSeedClusterListName, pNonSeedClusterList));
-
-    if ((STATUS_CODE_SUCCESS != listStatusCode) && (STATUS_CODE_NOT_INITIALIZED != listStatusCode))
-        return listStatusCode;
-
-    if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
-        return STATUS_CODE_SUCCESS;
-
-    ClusterVector nonSeedClusterVector(pNonSeedClusterList->begin(), pNonSeedClusterList->end());
-    std::sort(nonSeedClusterVector.begin(), nonSeedClusterVector.end(), Cluster::SortByInnerLayer);
-
-    // Fit cones to parent clusters, using vertex for direction finding
-    ConeParametersList coneParametersList;
-
-    for (ClusterVector::const_iterator iter = seedClusterVector.begin(), iterEnd = seedClusterVector.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
-        try
+        Cluster *pPfoCluster(*pIter);
+        const ConeParameters coneParameters(pPfoCluster, m_slidingFitWindow, m_coneAngleCentile);
+
+        for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
         {
-            if (!ParticleIdHelper::IsMuonFast(*iter))
-                coneParametersList.push_back(ConeParameters(*iter));
-        }
-        catch (StatusCodeException &)
-        {
-        }
-    }
+            Cluster *pRemnantCluster(*rIter);
+            const float boundedFraction(this->GetBoundedFraction(pRemnantCluster, coneParameters));
 
-    // Use cone fractions to match daughters to best parents
-    ClusterMergeMap clusterMergeMap;
-
-    for (ClusterVector::const_iterator iterI = nonSeedClusterVector.begin(), iterIEnd = nonSeedClusterVector.end(); iterI != iterIEnd; ++iterI)
-    {
-        Cluster *pDaughterCluster = *iterI;
-
-        if (pDaughterCluster->GetNCaloHits() < 6)
-            continue;
-
-        MergeParameters bestMergeParameters;
-
-        for (ConeParametersList::const_iterator iterJ = coneParametersList.begin(), iterJEnd = coneParametersList.end(); iterJ != iterJEnd; ++iterJ)
-        {
-            const ConeParameters &parentConeParameters(*iterJ);
-            MergeParameters mergeParameters(pDaughterCluster, parentConeParameters);
-
-            if (mergeParameters.GetCosThetaMax() < 0.6f)
+            if (boundedFraction < m_minBoundedFraction)
                 continue;
 
-            if (mergeParameters.GetConeAxisProjection() < 0.f)
+            AssociationDetails &associationDetails(clusterAssociationMap[pRemnantCluster]);
+
+            if (!associationDetails.insert(AssociationDetails::value_type(pPfoCluster, boundedFraction)).second)
+                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+        }
+    }
+
+    this->MakeClusterMerges(clusterAssociationMap, clusterToListNameMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ConeBasedMergingAlgorithm::GetBoundedFraction(const Cluster *const pCluster, const ConeParameters &coneParameters) const
+{
+    unsigned int nMatchedHits(0);
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hIter = iter->second->begin(), hIterEnd = iter->second->end(); hIter != hIterEnd; ++hIter)
+        {
+            CaloHit *pCaloHit = *hIter;
+            const CartesianVector &positionVector(pCaloHit->GetPositionVector());
+
+            if (coneParameters.GetPositionCosHalfAngle(positionVector) < coneParameters.GetConeCosHalfAngle())
                 continue;
 
-            if (mergeParameters < bestMergeParameters)
-                bestMergeParameters = mergeParameters;
-        }
+            if (coneParameters.GetConeAxisProjection(positionVector) > m_maxConeLengthMultiplier * coneParameters.GetConeLength())
+                continue;
 
-        if (bestMergeParameters.IsInitialized())
-            clusterMergeMap[bestMergeParameters.GetParentCluster()].push_back(bestMergeParameters);
-    }
-
-    // Make the cluster merges
-    for (ClusterMergeMap::const_iterator iter = clusterMergeMap.begin(), iterEnd = clusterMergeMap.end(); iter != iterEnd; ++iter)
-    {
-        MergeParametersList cosThetaMaxList(iter->second);
-
-        std::sort(cosThetaMaxList.begin(), cosThetaMaxList.end(), ConeBasedMergingAlgorithm::SortByCosThetaMax);
-        MergeParametersList coneAxisProjectionList;
-
-        for (MergeParametersList::iterator mIter = cosThetaMaxList.begin(), mIterEnd = cosThetaMaxList.end(); mIter != mIterEnd; ++mIter)
-        {
-            MergeParameters &mergeParameters(*mIter);
-
-            if (mergeParameters.GetCosThetaMax() > mergeParameters.GetParentCosConeHalfAngle())
-            {
-                coneAxisProjectionList.push_back(mergeParameters);
-            }
-        }
-
-        std::sort(coneAxisProjectionList.begin(), coneAxisProjectionList.end(), ConeBasedMergingAlgorithm::SortByConeAxisProjection);
-        ClusterList finalDaughterList;
-
-        for (MergeParametersList::iterator mIter = coneAxisProjectionList.begin(), mIterEnd = coneAxisProjectionList.end(); mIter != mIterEnd; ++mIter)
-        {
-            MergeParameters &mergeParameters(*mIter);
-
-            if (mergeParameters.GetConeAxisProjection() < 2.f * mergeParameters.GetParentConeLength())
-            {
-                finalDaughterList.insert(mergeParameters.GetDaughterCluster());
-            }
-        }
-
-        for (ClusterList::const_iterator dauIter = finalDaughterList.begin(), dauIterEnd = finalDaughterList.end(); dauIter != dauIterEnd; ++dauIter)
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *dauIter,
-                m_seedClusterListName, m_nonSeedClusterListName));
+            ++nMatchedHits;
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return (static_cast<float>(nMatchedHits) / static_cast<float>(pCluster->GetNCaloHits()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster) :
+ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster, const unsigned int slidingFitWindow, const float coneAngleCentile) :
     m_pCluster(pCluster),
     m_direction(0.f, 0.f, 0.f),
     m_apex(0.f, 0.f, 0.f),
     m_baseCentre(0.f, 0.f, 0.f),
     m_coneLength(0.f),
     m_coneCosHalfAngle(0.f),
-    m_isForwardInZ(true)
+    m_isForward(true)
 {
-    // Cluster fits and direction finding
-    const ClusterHelper::ClusterFitResult &clusterFitResult(pCluster->GetFitToAllHitsResult());
+    TwoDSlidingFitResult fitResult;
+    LArClusterHelper::LArTwoDSlidingFit(pCluster, slidingFitWindow, fitResult);
 
-    if (!clusterFitResult.IsFitSuccessful())
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    this->GetDirectionEstimate(fitResult, m_isForward, m_direction);
+    const CartesianVector basePosition(m_isForward ? fitResult.GetGlobalMaxLayerPosition() : fitResult.GetGlobalMinLayerPosition());
 
-    const bool isForwardInZ(false); //TODO
-    const bool isbackwardInZ(false);//TODO
-
-    if (isForwardInZ == isbackwardInZ)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    // Cone axis, apex, base-centre
-    const CartesianVector &intercept(clusterFitResult.GetIntercept());
-    const CartesianVector &direction(clusterFitResult.GetDirection());
-    const CartesianVector innerLayerCentre(intercept - direction * (pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()) - intercept).GetMagnitude());
-    const CartesianVector outerLayerCentre(intercept + direction * (pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()) - intercept).GetMagnitude());
-
-    m_isForwardInZ = isForwardInZ;
-    m_direction = (isForwardInZ) ? direction : direction * -1.f;
-    m_apex = (isForwardInZ) ? innerLayerCentre : outerLayerCentre;
-    m_baseCentre = (isForwardInZ) ? outerLayerCentre : innerLayerCentre;
+    m_apex = m_isForward ? fitResult.GetGlobalMinLayerPosition() : fitResult.GetGlobalMaxLayerPosition();
+    m_baseCentre = m_apex + m_direction * (basePosition - m_apex).GetDotProduct(m_direction);
     m_coneLength = (m_baseCentre - m_apex).GetMagnitude();
+    m_coneCosHalfAngle = this->GetCosHalfAngleEstimate(pCluster, m_direction, m_apex, coneAngleCentile);
+}
 
-    // Find representative parent cone cos half-angle
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ConeBasedMergingAlgorithm::ConeParameters::GetDirectionEstimate(const TwoDSlidingFitResult &fitResult, bool &isForward, CartesianVector &direction) const
+{
+    HitsPerLayerMap hitsPerLayerMap;
+    const OrderedCaloHitList &orderedCaloHitList(fitResult.GetCluster()->GetOrderedCaloHitList());
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+            float rL(0.f), rT(0.f);
+            fitResult.GetLocalPosition((*hitIter)->GetPositionVector(), rL, rT);
+            hitsPerLayerMap[fitResult.GetLayer(rL)] += 1;
+        }
+    }
+
+    CartesianVector directionSum(0.f, 0.f, 0.f);
+    int layerCounter(0), hitCounter(0), layerSum(0), layerHitWeightedSum(0);
+    const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(fitResult.GetLayerFitResultMap());
+
+    for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const int layer(iter->first);
+            const unsigned int hitsInLayer(hitsPerLayerMap[layer]);
+
+            CartesianVector fitDirection(0.f, 0.f, 0.f);
+            fitResult.GetGlobalDirection(iter->second.GetGradient(), fitDirection);
+
+            if (0 < hitsInLayer)
+            {
+                layerCounter += 1;
+                hitCounter += hitsInLayer;
+
+                layerSum += layer;
+                layerHitWeightedSum += layer * hitsInLayer;
+                directionSum += fitDirection * static_cast<float>(hitsInLayer);
+            }
+        }
+        catch (StatusCodeException &) {}
+    }
+
+    if ((0 == hitCounter) || (0 == layerCounter))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const float meanLayer(static_cast<float>(layerSum) / static_cast<float>(layerCounter));
+    const float meanHitWeightedLayer(static_cast<float>(layerHitWeightedSum) / static_cast<float>(hitCounter));
+    isForward = (meanHitWeightedLayer > meanLayer);
+
+    const CartesianVector meanDirection((directionSum * (1.f / static_cast<float>(hitCounter))).GetUnitVector());
+    direction = isForward ? meanDirection : meanDirection * -1.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ConeBasedMergingAlgorithm::ConeParameters::GetCosHalfAngleEstimate(const Cluster *const pCluster, const CartesianVector &direction,
+    const CartesianVector &apex, const float coneAngleCentile) const
+{
     FloatVector cosHalfAngleValues;
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-            cosHalfAngleValues.push_back(m_direction.GetCosOpeningAngle((*hitIter)->GetPositionVector() - m_apex));
+            cosHalfAngleValues.push_back(direction.GetCosOpeningAngle((*hitIter)->GetPositionVector() - apex));
     }
 
     std::sort(cosHalfAngleValues.begin(), cosHalfAngleValues.end());
@@ -174,7 +172,8 @@ ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster) :
     if (cosHalfAngleValues.empty())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    m_coneCosHalfAngle = cosHalfAngleValues.at(0.15f * cosHalfAngleValues.size());
+    const unsigned int cosHalfAngleBin(coneAngleCentile * cosHalfAngleValues.size());
+    return cosHalfAngleValues.at(cosHalfAngleBin);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -194,61 +193,25 @@ float ConeBasedMergingAlgorithm::ConeParameters::GetConeAxisProjection(const Car
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ConeBasedMergingAlgorithm::MergeParameters::MergeParameters(pandora::Cluster *const pDaughterCluster, const ConeParameters &parentConeParameters) :
-    m_isInitialized(true),
-    m_pDaughterCluster(pDaughterCluster),
-    m_pParentCluster(parentConeParameters.GetCluster()),
-    m_parentConeLength(parentConeParameters.GetConeLength()),
-    m_parentCosConeHalfAngle(parentConeParameters.GetConeCosHalfAngle())
-{
-    const CartesianVector daughterInnerCentroid(pDaughterCluster->GetCentroid(pDaughterCluster->GetInnerPseudoLayer()));
-    const CartesianVector daughterOuterCentroid(pDaughterCluster->GetCentroid(pDaughterCluster->GetOuterPseudoLayer()));
-    const CartesianVector daughterMidpoint(daughterInnerCentroid + (daughterOuterCentroid - daughterInnerCentroid) * 0.5f);
-
-    m_cosThetaInner = (parentConeParameters.GetPositionCosHalfAngle(daughterInnerCentroid));
-    m_cosThetaOuter = (parentConeParameters.GetPositionCosHalfAngle(daughterOuterCentroid));
-    m_cosThetaMidpoint = (parentConeParameters.GetPositionCosHalfAngle(daughterMidpoint));
-
-    const CartesianVector &referencePosition(parentConeParameters.IsForwardInZ() ? daughterInnerCentroid : daughterOuterCentroid);
-    m_coneAxisProjection = (parentConeParameters.GetConeAxisProjection(referencePosition));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ConeBasedMergingAlgorithm::MergeParameters::operator< (const MergeParameters &rhs) const
-{
-    if (m_isInitialized != rhs.m_isInitialized)
-        return m_isInitialized;
-
-    if (m_cosThetaMidpoint != rhs.m_cosThetaMidpoint)
-        return (m_cosThetaMidpoint > rhs.m_cosThetaMidpoint);
-
-    return (this->GetCosThetaMax() > rhs.GetCosThetaMax());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ConeBasedMergingAlgorithm::SortByCosThetaMax(const MergeParameters &lhs, const MergeParameters &rhs)
-{
-    return (lhs.GetCosThetaMax() > rhs.GetCosThetaMax());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ConeBasedMergingAlgorithm::SortByConeAxisProjection(const MergeParameters &lhs, const MergeParameters &rhs)
-{
-    return (lhs.GetConeAxisProjection() < rhs.GetConeAxisProjection());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ConeBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SeedClusterListName", m_seedClusterListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NonSeedClusterListName", m_nonSeedClusterListName));
+    m_slidingFitWindow = 20;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "SlidingFitWindow", m_slidingFitWindow));
 
-    return STATUS_CODE_SUCCESS;
+    m_coneAngleCentile = 0.25f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ConeAngleCentile", m_coneAngleCentile));
+
+    m_maxConeLengthMultiplier = 1.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
+
+    m_minBoundedFraction = 0.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MinBoundedFraction", m_minBoundedFraction));
+
+    return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

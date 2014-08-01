@@ -189,31 +189,31 @@ float DeltaRayIdentificationAlgorithm::GetTwoDSeparation(const ParticleFlowObjec
     this->GetTwoDVertexList(pDaughterPfo, TPC_VIEW_V, vertexListV);
     this->GetTwoDVertexList(pDaughterPfo, TPC_VIEW_W, vertexListW);
 
-    ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
-    LArPfoHelper::GetClusters(pParentPfo, TPC_VIEW_U, clusterVectorU);
-    LArPfoHelper::GetClusters(pParentPfo, TPC_VIEW_V, clusterVectorV);
-    LArPfoHelper::GetClusters(pParentPfo, TPC_VIEW_W, clusterVectorW);
+    ClusterList clusterListU, clusterListV, clusterListW;
+    LArPfoHelper::GetClusters(pParentPfo, TPC_VIEW_U, clusterListU);
+    LArPfoHelper::GetClusters(pParentPfo, TPC_VIEW_V, clusterListV);
+    LArPfoHelper::GetClusters(pParentPfo, TPC_VIEW_W, clusterListW);
 
     float sumViews(0.f);
     float sumDisplacementSquared(0.f);
 
     if (!vertexListU.empty())
     {
-        const float thisDisplacement(this->GetClosestDistance(vertexListU, clusterVectorU));
+        const float thisDisplacement(this->GetClosestDistance(vertexListU, clusterListU));
         sumDisplacementSquared += thisDisplacement * thisDisplacement;
         sumViews += 1.f;
     }
 
     if (!vertexListV.empty())
     {
-        const float thisDisplacement(this->GetClosestDistance(vertexListV, clusterVectorV));
+        const float thisDisplacement(this->GetClosestDistance(vertexListV, clusterListV));
         sumDisplacementSquared += thisDisplacement * thisDisplacement;
         sumViews += 1.f;
     }
 
     if (!vertexListW.empty())
     {
-        const float thisDisplacement(this->GetClosestDistance(vertexListW, clusterVectorW));
+        const float thisDisplacement(this->GetClosestDistance(vertexListW, clusterListW));
         sumDisplacementSquared += thisDisplacement * thisDisplacement;
         sumViews += 1.f;
     }
@@ -228,10 +228,10 @@ float DeltaRayIdentificationAlgorithm::GetTwoDSeparation(const ParticleFlowObjec
 
 void DeltaRayIdentificationAlgorithm::GetTwoDVertexList(const ParticleFlowObject *const pPfo, const HitType &hitType, CartesianPointList &vertexList) const
 {
-    ClusterVector clusterVector;
-    LArPfoHelper::GetClusters(pPfo, hitType, clusterVector);
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
 
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *pCluster = *iter;
 
@@ -245,9 +245,9 @@ void DeltaRayIdentificationAlgorithm::GetTwoDVertexList(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float DeltaRayIdentificationAlgorithm::GetClosestDistance(const CartesianPointList &vertexList, const ClusterVector &clusterVector) const
+float DeltaRayIdentificationAlgorithm::GetClosestDistance(const CartesianPointList &vertexList, const ClusterList &clusterList) const
 {
-    if (vertexList.empty() || clusterVector.empty())
+    if (vertexList.empty() || clusterList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float bestDisplacement(std::numeric_limits<float>::max());
@@ -256,7 +256,7 @@ float DeltaRayIdentificationAlgorithm::GetClosestDistance(const CartesianPointLi
     {
         const CartesianVector &thisVertex = *iter1;
 
-        for (ClusterVector::const_iterator iter2 = clusterVector.begin(), iterEnd2 = clusterVector.end(); iter2 != iterEnd2; ++iter2)
+        for (ClusterList::const_iterator iter2 = clusterList.begin(), iterEnd2 = clusterList.end(); iter2 != iterEnd2; ++iter2)
         {
             const Cluster *pCluster = *iter2;
             const float thisDisplacement(LArClusterHelper::GetClosestDistance(thisVertex, pCluster));
@@ -283,7 +283,11 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
         if (NULL == pParentPfo)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
+        if (!LArPfoHelper::IsTrack(pParentPfo))
+            continue;
+
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
+        pDaughterPfo->SetParticleId(11);
         daughterPfoList.insert(pDaughterPfo);
     }
 }

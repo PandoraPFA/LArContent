@@ -18,7 +18,7 @@
 namespace lar
 {
 
-class TensorManipulationTool;
+class TransverseTensorTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -126,16 +126,16 @@ private:
     unsigned int                m_minOverallMatchedPoints;  ///< The minimum number of matched segment sampling points to allow particle creation
     float                       m_minSamplingPointsPerLayer;///< The minimum number of sampling points per layer to allow particle creation
 
-    typedef std::vector<TensorManipulationTool*> TensorToolList;
+    typedef std::vector<TransverseTensorTool*> TensorToolList;
     TensorToolList              m_algorithmToolList;        ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  TensorManipulationTool class
+ *  @brief  TransverseTensorTool class
  */
-class TensorManipulationTool : public pandora::AlgorithmTool
+class TransverseTensorTool : public pandora::AlgorithmTool
 {
 public:
     typedef ThreeDTransverseTracksAlgorithm::TensorType TensorType;

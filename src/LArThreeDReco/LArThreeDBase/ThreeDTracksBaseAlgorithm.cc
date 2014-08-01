@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
+#include "LArObjects/LArPointingCluster.h"
 #include "LArObjects/LArTrackOverlapResult.h"
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
@@ -28,6 +29,99 @@ const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitRes
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPositionMap)
+{
+    bool changesMade(false);
+
+    for (SplitPositionMap::const_iterator iter = splitPositionMap.begin(), iterEnd = splitPositionMap.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pCurrentCluster = iter->first;
+        CartesianPointList splitPositions(iter->second);
+        std::sort(splitPositions.begin(), splitPositions.end(), ThreeDTracksBaseAlgorithm::SortSplitPositions);
+
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCurrentCluster));
+        const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
+
+        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
+
+        for (CartesianPointList::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
+        {
+            Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
+            this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster);
+
+            this->UpdateUponSplit(pLowXCluster, pHighXCluster, pCurrentCluster);
+            changesMade = true;
+            pCurrentCluster = pHighXCluster;
+        }
+    }
+
+    return changesMade;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, Cluster *&pCurrentCluster, Cluster *&pLowXCluster, Cluster *&pHighXCluster) const
+{
+    pLowXCluster = NULL;
+    pHighXCluster = NULL;
+
+    std::string originalListName, fragmentListName;
+    ClusterList clusterList; clusterList.insert(pCurrentCluster);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, originalListName, fragmentListName));
+
+    CaloHitList caloHitList;
+    pCurrentCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+
+    LArPointingCluster pointingCluster(pCurrentCluster);
+    const bool innerIsLowX(pointingCluster.GetInnerVertex().GetPosition().GetX() < pointingCluster.GetOuterVertex().GetPosition().GetX());
+    const CartesianVector &lowXEnd(innerIsLowX ? pointingCluster.GetInnerVertex().GetPosition() : pointingCluster.GetOuterVertex().GetPosition());
+    const CartesianVector &highXEnd(innerIsLowX ? pointingCluster.GetOuterVertex().GetPosition() : pointingCluster.GetInnerVertex().GetPosition());
+
+    const CartesianVector lowXUnitVector((lowXEnd - splitPosition).GetUnitVector());
+    const CartesianVector highXUnitVector((highXEnd - splitPosition).GetUnitVector());
+
+    for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
+    {
+        CaloHit *pCaloHit = *hIter;
+        const CartesianVector unitVector((pCaloHit->GetPositionVector() - splitPosition).GetUnitVector());
+
+        const float dotProductLowX(unitVector.GetDotProduct(lowXUnitVector));
+        const float dotProductHighX(unitVector.GetDotProduct(highXUnitVector));
+        Cluster *&pClusterToModify((dotProductLowX > dotProductHighX) ? pLowXCluster : pHighXCluster);
+
+        if (NULL == pClusterToModify)
+        {
+            PandoraContentApi::Cluster::Parameters parameters;
+            parameters.m_caloHitList.insert(pCaloHit);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pClusterToModify));
+        }
+        else
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pClusterToModify, pCaloHit));
+        }
+    }
+
+    if ((NULL == pLowXCluster) || (NULL == pHighXCluster))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+bool ThreeDTracksBaseAlgorithm<T>::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
+{
+    return (lhs.GetX() < rhs.GetX());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,11 +176,7 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
 
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {
-        TwoDSlidingFitResult slidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(*iter, m_slidingFitWindow, slidingFitResult);
-
-        if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+        this->AddToSlidingFitCache(*iter);
     }
 }
 
@@ -97,6 +187,22 @@ void ThreeDTracksBaseAlgorithm<T>::TidyUp()
 {
     m_slidingFitResultMap.clear();
     return ThreeDBaseAlgorithm<T>::TidyUp();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+{
+    // TODO - correct these placeholder parameters
+    pfoParameters.m_particleId = MU_MINUS; // Track
+    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
+    pfoParameters.m_energy = 0.f;
+    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,7 +249,6 @@ StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandl
     return ThreeDBaseAlgorithm<T>::ReadSettings(xmlHandle);
 }
 
-template class ThreeDTracksBaseAlgorithm<float>;
 template class ThreeDTracksBaseAlgorithm<TransverseOverlapResult>;
 template class ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>;
 template class ThreeDTracksBaseAlgorithm<FragmentOverlapResult>;

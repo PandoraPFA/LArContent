@@ -121,10 +121,10 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
-     *  @param  newlyAvailableClusters the list of clusters newly made available for future particle reconstruction
+     *  @param  newAvailableClusters the list of clusters newly made available for future particle reconstruction
      */
     void UpdateTensor(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor,
-        const pandora::ClusterList &unavailableClusters, const pandora::ClusterList &newlyAvailableClusters) const;
+        const pandora::ClusterList &unavailableClusters, const pandora::ClusterList &newAvailableClusters) const;
 
     /**
      *  @brief  Get a list of the tensor key clusters for which tensor elements have been impacted by fragmentation operations
