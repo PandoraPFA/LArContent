@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
+#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 
 using namespace pandora;
 
@@ -30,7 +30,7 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const P
         if (!LArPfoHelper::IsShower(pPfo))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        if (pPfo->GetParentPfoList().size() !=1)
+        if (pPfo->GetParentPfoList().size() != 1)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
         const ParticleFlowObject *pParentPfo = *(pPfo->GetParentPfoList().begin());
@@ -53,7 +53,6 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const P
 void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits, const CaloHitList &caloHitList3D, 
     CaloHitList &newThreeDHits) const
 {
-
     for (CaloHitList::const_iterator iter1 = inputTwoDHits.begin(), iterEnd1 = inputTwoDHits.end(); iter1 != iterEnd1; ++iter1)
     {
         try
@@ -71,7 +70,7 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgor
             for (CaloHitList::const_iterator iter2 = caloHitList3D.begin(), iterEnd2 = caloHitList3D.end(); iter2 != iterEnd2; ++iter2)
             {
                 const CartesianVector thisPosition3D((*iter2)->GetPositionVector());
-                const CartesianVector thisPosition2D(LArGeometryHelper::ProjectPosition(thisPosition3D, hitType));                
+                const CartesianVector thisPosition2D(LArGeometryHelper::ProjectPosition(thisPosition3D, hitType));
                 const float thisDistanceSquared((pCaloHit2D->GetPositionVector() - thisPosition2D).GetMagnitudeSquared());
 
                 if (thisDistanceSquared <  closestDistanceSquared)
@@ -86,12 +85,11 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgor
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
             const CartesianVector position1(LArGeometryHelper::ProjectPosition(closestPosition3D, hitType1));
-            const CartesianVector position2(LArGeometryHelper::ProjectPosition(closestPosition3D, hitType2));   
+            const CartesianVector position2(LArGeometryHelper::ProjectPosition(closestPosition3D, hitType2));
 
-            float chiSquared(std::numeric_limits<float>::max());
             CartesianVector position3D(0.f, 0.f, 0.f);
-
-            this->GetPosition3D(pCaloHit2D, hitType1, hitType2, position1, position2, position3D, chiSquared); 
+            float chiSquared(std::numeric_limits<float>::max());
+            this->GetPosition3D(pCaloHit2D, hitType1, hitType2, position1, position2, position3D, chiSquared);
 
             CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);

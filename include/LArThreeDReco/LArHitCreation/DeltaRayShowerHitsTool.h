@@ -8,15 +8,19 @@
 #ifndef DELTA_RAY_SHOWER_HITS_TOOL_H
 #define DELTA_RAY_SHOWER_HITS_TOOL_H 1
 
-#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 namespace lar
 {
 
+class ThreeDHitCreationAlgorithm;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  DeltaRayShowerHitsTool class
  */
-class DeltaRayShowerHitsTool : public HitCreationTool
+class DeltaRayShowerHitsTool : public HitCreationBaseTool
 {
 public:
     /**
@@ -32,17 +36,16 @@ public:
         pandora::CaloHitList &newThreeDHits);
 
 private:
-
      /**
      *  @brief  Create three dimensional hits, using a list of input two dimensional hits and the 3D hits from the parent particle
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  inputTwoDHits the list of input two dimensional hits
-     *  @param  caloHitList3D 
+     *  @param  caloHitList3D the list of 3D hits from the parent particle
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList3D, pandora::CaloHitList &newThreeDHits) const;
-
+    void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList3D,
+        pandora::CaloHitList &newThreeDHits) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -8,12 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCalculators/LArTransformationCalculator.h"
-
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
 
+#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
 using namespace pandora;
@@ -82,7 +80,7 @@ StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ChiSquaredCut", m_chiSquaredCut));
 
-    return HitCreationTool::ReadSettings(xmlHandle);
+    return HitCreationBaseTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar

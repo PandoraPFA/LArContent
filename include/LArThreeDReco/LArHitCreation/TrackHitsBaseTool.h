@@ -10,18 +10,22 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 namespace lar
 {
 
+class ThreeDHitCreationAlgorithm;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  TrackHitsBaseTool class
  */
-class TrackHitsBaseTool : public HitCreationTool
+class TrackHitsBaseTool : public HitCreationBaseTool
 {
 public:
-    void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
+    virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 
 protected:
@@ -33,7 +37,7 @@ protected:
      *  @param  pPfo  the input particle flow object
      *  @param  matchedSlidingFitMap  the group of sliding fit results
      */
-    void BuildSlidingFitMap(const pandora::ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const;
+    virtual void BuildSlidingFitMap(const pandora::ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const;
 
     /**
      *  @brief  Calculate 3D hits from an input list of 2D hits
@@ -47,11 +51,10 @@ protected:
     virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits,
         const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits) const = 0;
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
     float           m_chiSquaredCut;            ///< The chi squared cut (accept only values below the cut value)
-
 };
 
 } // namespace lar
