@@ -33,9 +33,8 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
     const float frac((end2D - vtx2D).GetDotProduct(pCaloHit2D->GetPositionVector() - vtx2D) / (end2D - vtx2D).GetMagnitudeSquared());
     const CartesianVector projection3D(vtx3D + (end3D - vtx3D) * frac);
 
-    bool foundPosition1(false), foundPosition2(false);
-    CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f);
-
+    CartesianPointList fitPositionList1, fitPositionList2;
+    
     try
     {
         MatchedSlidingFitMap::const_iterator fIter1 = matchedSlidingFitMap.find(hitType1);
@@ -46,9 +45,10 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
         const CartesianVector position2D(LArGeometryHelper::ProjectPosition(projection3D, hitType1));
 
         float rL1(0.f), rT1(0.f);
+        CartesianVector position1(0.f, 0.f, 0.f);
         fitResult1.GetLocalPosition(position2D, rL1, rT1);
         fitResult1.GetTransverseProjection(pCaloHit2D->GetPositionVector().GetX(), fitResult1.GetFitSegment(rL1), position1);
-        foundPosition1 = true;
+        fitPositionList1.push_back(position1);
     }
     catch (StatusCodeException &)
     {
@@ -64,30 +64,16 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
         const CartesianVector position2D(LArGeometryHelper::ProjectPosition(projection3D, hitType2));
 
         float rL2(0.f), rT2(0.f);
+        CartesianVector position2(0.f, 0.f, 0.f);
         fitResult2.GetLocalPosition(position2D, rL2, rT2);
         fitResult2.GetTransverseProjection(pCaloHit2D->GetPositionVector().GetX(), fitResult2.GetFitSegment(rL2), position2);
-        foundPosition2 = true;
+        fitPositionList2.push_back(position2);
     }
     catch (StatusCodeException &)
     {
     }
 
-    if (foundPosition1 && foundPosition2)
-    {
-        this->GetPosition3D(pCaloHit2D, hitType1, hitType2, position1, position2, position3D, chiSquared);
-    }
-    else if(foundPosition1)
-    {
-        this->GetPosition3D(pCaloHit2D, hitType1, position1, position3D, chiSquared);
-    }
-    else if(foundPosition2)
-    {
-        this->GetPosition3D(pCaloHit2D, hitType2, position2, position3D, chiSquared);
-    }
-    else
-    {
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    }
+    this->GetBestPosition3D(pCaloHit2D, hitType1, hitType2, fitPositionList1, fitPositionList2, position3D, chiSquared);  
 }
 
 } // namespace lar
