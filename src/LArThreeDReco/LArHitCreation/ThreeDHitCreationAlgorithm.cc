@@ -242,11 +242,7 @@ void HitCreationTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, const H
         if (fitPositionList2.size() != 1)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        CartesianPointList::const_iterator iter2 = fitPositionList2.begin();
-        if (fitPositionList2.end() == iter2)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        const CartesianVector &fitPosition2 = *iter2;
+        const CartesianVector &fitPosition2 = *(fitPositionList2.begin());
         this->GetPosition3D(pCaloHit2D, hitType2, fitPosition2, position3D, chiSquared);
     }
     else if (fitPositionList2.empty())
@@ -254,11 +250,7 @@ void HitCreationTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, const H
         if (fitPositionList1.size() != 1)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        CartesianPointList::const_iterator iter1 = fitPositionList1.begin();
-        if (fitPositionList1.end() == iter1)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        const CartesianVector &fitPosition1 = *iter1;
+        const CartesianVector &fitPosition1 = *(fitPositionList1.begin());
         this->GetPosition3D(pCaloHit2D, hitType1, fitPosition1, position3D, chiSquared);
     }
     else

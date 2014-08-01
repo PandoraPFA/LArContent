@@ -20,6 +20,16 @@ namespace lar
 class LArPfoHelper
 {
 public:
+
+    /**
+     *  @brief  Get a list of calo hits of a particular hit type from a given pfo
+     *
+     *  @param  pPfo the input Pfo
+     *  @param  hitType the cluster hit type
+     *  @param  caloHitList the output list of calo hits
+     */
+    static void GetCaloHits(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::CaloHitList &caloHitList);
+
     /**
      *  @brief  Get a list of clusters of a particular hit type from a list of pfos
      *
