@@ -22,6 +22,19 @@ using namespace pandora;
 namespace lar
 {
 
+void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitType &hitType, CaloHitList &caloHitList)
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
+
+    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        (*cIter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, ClusterList &clusterList)
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)

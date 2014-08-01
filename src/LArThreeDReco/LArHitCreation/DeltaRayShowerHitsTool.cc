@@ -30,33 +30,13 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const P
         if (!LArPfoHelper::IsShower(pPfo))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        if (pPfo->GetParentPfoList().size() !=1 )
+        if (pPfo->GetParentPfoList().size() !=1)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
         const ParticleFlowObject *pParentPfo = *(pPfo->GetParentPfoList().begin());
 
-        // ------------------------
-
         CaloHitList caloHitList3D;
-        ClusterList clusterList3D;
-        const ClusterList &pfoClusterList(pParentPfo->GetClusterList());
-
-        for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
-        {
-            const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
-
-            if (TPC_3D != hitType)
-                continue;
-
-            clusterList3D.insert(*iter);
-        }
-
-        for (ClusterList::const_iterator iter = clusterList3D.begin(), iterEnd = clusterList3D.end(); iter != iterEnd; ++iter)
-        {
-            (*iter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList3D);
-        }
-
-        // ------------------------
+        LArPfoHelper::GetCaloHits(pParentPfo, TPC_3D, caloHitList3D);
 
         if (caloHitList3D.empty())
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
