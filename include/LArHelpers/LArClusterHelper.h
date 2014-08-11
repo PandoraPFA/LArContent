@@ -197,7 +197,7 @@ public:
     static float GetClosestDistance(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
 
     /**
-     *  @brief  Get closest distance between a specified position vector and the layer centroids of a specified cluster
+     *  @brief  Get closest distance between a specified position vector and the hits in a specified cluster
      *
      *  @param  position the position vector
      *  @param  pCluster address of the cluster
