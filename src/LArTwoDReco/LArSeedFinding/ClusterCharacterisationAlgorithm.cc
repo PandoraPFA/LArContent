@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
@@ -322,10 +323,10 @@ LArPointingCluster::Vertex ClusterCharacterisationAlgorithm::GetBestVertexEstima
     if (m_useMCVertexSelection)
     {
         const MCParticle *pSeedMCParticle = MCParticleHelper::GetMainMCParticle(pSeedCluster);
-        const CartesianVector mcVertex(pSeedMCParticle->GetVertex());
+        const CartesianVector mcVertex2D(LArGeometryHelper::ProjectPosition(pSeedMCParticle->GetVertex(), LArClusterHelper::GetClusterHitType(pSeedCluster)));
 
-        const float innerDistanceSquared = (pointingSeedCluster.GetInnerVertex().GetPosition() - mcVertex).GetMagnitudeSquared();
-        const float outerDistanceSquared = (pointingSeedCluster.GetOuterVertex().GetPosition() - mcVertex).GetMagnitudeSquared();
+        const float innerDistanceSquared = (pointingSeedCluster.GetInnerVertex().GetPosition() - mcVertex2D).GetMagnitudeSquared();
+        const float outerDistanceSquared = (pointingSeedCluster.GetOuterVertex().GetPosition() - mcVertex2D).GetMagnitudeSquared();
 
         return ((innerDistanceSquared < outerDistanceSquared) ? pointingSeedCluster.GetInnerVertex() : pointingSeedCluster.GetOuterVertex());
     }
