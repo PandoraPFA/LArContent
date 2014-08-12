@@ -10,6 +10,8 @@
 
 #include "LArCheating/CheatingPfoCreationAlgorithm.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 using namespace pandora;
 
 namespace lar
@@ -51,7 +53,15 @@ void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *cons
         try
         {
             Cluster *pCluster(*iter);
+
+            if (m_useOnlyAvailableClusters && !pCluster->IsAvailable())
+                continue;
+
             const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+
+            if (!m_particleIdList.empty() && !m_particleIdList.count(pMCParticle->GetParticleId()))
+                continue;
+
             const int id(intptr_t(pMCParticle->GetUid()) - idOffset);
             idToClusterListMap[id].insert(pCluster);
         }
@@ -93,6 +103,9 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const IdToClusterListMap &idToClus
         const int id(iter->first);
         const ClusterList &clusterList(iter->second);
 
+        if (this->GetNHitTypesAboveThreshold(clusterList, m_nHitsForGoodHitType) < m_minGoodHitTypes)
+            continue;
+
         IdToMCParticleMap::const_iterator mcIter = idToMCParticleMap.find(id);
 
         if (idToMCParticleMap.end() == mcIter)
@@ -128,6 +141,28 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const IdToClusterListMap &idToClus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+unsigned int CheatingPfoCreationAlgorithm::GetNHitTypesAboveThreshold(const ClusterList &clusterList, const unsigned int nHitsThreshold) const
+{
+    HitTypeMap hitTypeMap;
+
+    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        hitTypeMap[LArClusterHelper::GetClusterHitType(*cIter)] += (*cIter)->GetNCaloHits();
+    }
+
+    unsigned int nGoodViews(0);
+
+    for (HitTypeMap::const_iterator hIter = hitTypeMap.begin(), hIterEnd = hitTypeMap.end(); hIter != hIterEnd; ++hIter)
+    {
+        if (hIter->second > nHitsThreshold)
+            ++nGoodViews;
+    }
+
+    return nGoodViews;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
@@ -139,6 +174,24 @@ StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "IdOffsetV", m_idOffsetV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "IdOffsetW", m_idOffsetW));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticle3DListName", m_mcParticle3DListName));
+
+    m_useOnlyAvailableClusters = true;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseOnlyAvailableClusters", m_useOnlyAvailableClusters));
+
+    IntVector particleIdVector;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "ParticleIdList", particleIdVector));
+
+    m_particleIdList.insert(particleIdVector.begin(), particleIdVector.end());
+
+    m_minGoodHitTypes = 0;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinGoodHitTypes", m_minGoodHitTypes));
+
+    m_nHitsForGoodHitType = 10;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NHitsForGoodHitType", m_nHitsForGoodHitType));
 
     return STATUS_CODE_SUCCESS;
 }
