@@ -59,15 +59,33 @@ private:
      */
     void CreatePfos(const IdToClusterListMap &idToClusterListMap, const IdToMCParticleMap &idToMCParticleMap) const;
 
-    std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string     m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string     m_inputClusterListNameW;        ///< The name of the view W cluster list
-    std::string     m_outputPfoListName;            ///< The output pfo list name
+    /**
+     *  @brief  Get the number of hit types containing more than a specified number of hits
+     * 
+     *  @param  clusterList the cluster list, consider all hits in clusters in this list
+     *  @param  nHitsThreshold the threshold number of hits of a specified hit type
+     * 
+     *  @return the number of good hit types
+     */
+    unsigned int GetNHitTypesAboveThreshold(const pandora::ClusterList &clusterList, const unsigned int nHitsThreshold) const;
 
-    int             m_idOffsetU;                    ///< The mc particle parent address offset for u clusters
-    int             m_idOffsetV;                    ///< The mc particle parent address offset for v clusters
-    int             m_idOffsetW;                    ///< The mc particle parent address offset for w clusters
-    std::string     m_mcParticle3DListName;         ///< The name of the three d mc particle list name
+    typedef std::map<pandora::HitType, unsigned int> HitTypeMap;
+    typedef std::set<int> ParticleIdList;
+
+    std::string     m_inputClusterListNameU;    ///< The name of the view U cluster list
+    std::string     m_inputClusterListNameV;    ///< The name of the view V cluster list
+    std::string     m_inputClusterListNameW;    ///< The name of the view W cluster list
+    std::string     m_outputPfoListName;        ///< The output pfo list name
+
+    int             m_idOffsetU;                ///< The mc particle parent address offset for u clusters
+    int             m_idOffsetV;                ///< The mc particle parent address offset for v clusters
+    int             m_idOffsetW;                ///< The mc particle parent address offset for w clusters
+    std::string     m_mcParticle3DListName;     ///< The name of the three d mc particle list name
+
+    bool            m_useOnlyAvailableClusters; ///< Whether to consider unavailable clusters when identifying cheated pfos
+    unsigned int    m_minGoodHitTypes;          ///< The min number of good hit types in the clusters collected for a given mc particle
+    unsigned int    m_nHitsForGoodHitType;      ///< The min number of hits of a particular hit type in order to declare the hit type is good
+    ParticleIdList  m_particleIdList;           ///< The list of particle ids to consider for pfo creation; will consider all ids if empty
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
