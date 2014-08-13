@@ -72,28 +72,18 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::RebuildClusters(Cluster* pClusterToDelete, ClusterList &newClusters) const
+void ThreeDTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuildList, ClusterList &newClusters) const
 {
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterToDelete));
+    const ClusterList *pNewClusterList = NULL;
+    std::string oldClusterListName, newClusterListName;
 
-    std::string currentCaloHitListName((TPC_VIEW_U == hitType) ? m_inputCaloHitListNameU :
-                                       (TPC_VIEW_V == hitType) ? m_inputCaloHitListNameV : m_inputCaloHitListNameW);
-    std::string currentClusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() :
-                                       (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, currentCaloHitListName));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pClusterToDelete));
-
-    const ClusterList *pClusterList = NULL;
-    std::string newClusterListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeReclustering(*this, TrackList(), rebuildList,
+        oldClusterListName));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_reclusteringAlgorithmName,
-        pClusterList, newClusterListName));
+        pNewClusterList, newClusterListName));
 
-    newClusters.insert(pClusterList->begin(), pClusterList->end());
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
+    newClusters.insert(pNewClusterList->begin(), pNewClusterList->end());
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, newClusterListName));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -624,10 +614,10 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-    m_maxPointDisplacement = 1.5f;
+    float maxPointDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPointDisplacement", m_maxPointDisplacement));
-    m_maxPointDisplacementSquared = m_maxPointDisplacement * m_maxPointDisplacement;
+        "MaxPointDisplacement", maxPointDisplacement));
+    m_maxPointDisplacementSquared = maxPointDisplacement * maxPointDisplacement;
 
     m_minMatchedSamplingPointFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

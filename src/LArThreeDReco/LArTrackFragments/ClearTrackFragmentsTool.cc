@@ -324,18 +324,19 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorith
 void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const ClusterList &modifiedClusters,
     const ClusterList &deletedClusters, ClusterList &newClusters) const
 {
+    ClusterList rebuildList;
+
     for (ClusterList::const_iterator cIter = modifiedClusters.begin(), cIterEnd = modifiedClusters.end(); cIter != cIterEnd; ++cIter)
     {
         Cluster *pCluster = *cIter;
 
-        if (deletedClusters.count(pCluster))
+        if (deletedClusters.count(pCluster) || !pCluster->IsAvailable())
             continue;
 
-        if (!pCluster->IsAvailable())
-            continue;
-
-        pAlgorithm->RebuildClusters(pCluster, newClusters);
+        rebuildList.insert(pCluster);
     }
+
+    pAlgorithm->RebuildClusters(rebuildList, newClusters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
