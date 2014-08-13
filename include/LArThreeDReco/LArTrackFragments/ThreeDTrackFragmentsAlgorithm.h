@@ -42,10 +42,10 @@ public:
     /**
      *  @brief  Rebuild clusters after fragmentation
      *
-     *  @param pCluster the cluster to be rebuilt
+     *  @param rebuildList the list of clusters containing hits to be rebuilt
      *  @param newClusters the output list of clusters
      */
-    void RebuildClusters(pandora::Cluster *pCluster, pandora::ClusterList &newClusters) const;
+    void RebuildClusters(const pandora::ClusterList &rebuildList, pandora::ClusterList &newClusters) const;
 
 protected:
     void PerformMainLoop();
@@ -144,12 +144,10 @@ protected:
 
     float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
     float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
-    float               m_maxPointDisplacement;             ///< maximum allowed distance between projected points and associated hits
     float               m_maxPointDisplacementSquared;      ///< maximum allowed distance (squared) between projected points and associated hits
     unsigned int        m_minMatchedSamplingPoints;         ///< minimum number of matched sampling points
     float               m_minMatchedSamplingPointFraction;  ///< minimum fraction of matched sampling points
     unsigned int        m_minMatchedHits;                   ///< minimum number of matched calo hits
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
