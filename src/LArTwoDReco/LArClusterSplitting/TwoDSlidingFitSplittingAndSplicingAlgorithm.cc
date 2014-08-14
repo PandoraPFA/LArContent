@@ -25,8 +25,9 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::Run()
     TwoDSlidingFitResultMap branchSlidingFitResultMap, replacementSlidingFitResultMap;
 
     bool carryOn(true);
+    unsigned int repeatCounter(0);
 
-    while (carryOn)
+    while (carryOn && ++repeatCounter < 100) // Protect against flip-flopping
     {
         carryOn = false;
 
