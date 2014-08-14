@@ -88,6 +88,9 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
         if (caloHitListToRemove.empty())
             continue;
 
+        if (unavailableClusters.count(pCluster))
+            continue;
+
         CaloHitList caloHitList, caloHitListToKeep;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
         for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
@@ -125,6 +128,9 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
         const CaloHitList &caloHitList = iterI->second;
 
         if (caloHitList.empty())
+            continue;
+
+        if (unavailableClusters.count(pCluster))
             continue;
 
         unavailableClusters.insert(pCluster);
