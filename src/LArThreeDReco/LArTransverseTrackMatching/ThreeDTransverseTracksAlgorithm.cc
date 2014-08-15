@@ -152,9 +152,9 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
     float pseudoChi2Sum(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
 
-    for (unsigned int n = 0; n < nPoints; ++n)
+    for (unsigned int n = 0; n <= nPoints; ++n)
     {
-        const float x(minX + (maxX - minX) * (static_cast<float>(n) + 0.5f) / static_cast<float>(nPoints));
+        const float x(minX + (maxX - minX) * static_cast<float>(n) / static_cast<float>(nPoints));
 
         try
         {

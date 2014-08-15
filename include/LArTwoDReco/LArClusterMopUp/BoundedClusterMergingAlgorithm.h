@@ -47,9 +47,16 @@ private:
          */
         XSampling(const TwoDSlidingFitResult &fitResult);
 
-        float       m_minX;          ///< The min x value
-        float       m_maxX;          ///< The max x value
-        float       m_xPitch;        ///< The x sampling pitch to be used
+        /**
+         *  @brief  Convert an x position into a sampling bin
+         *
+         *  @param  x  the input x coordinate
+         */
+        int GetBin(const float x) const; 
+
+        float     m_minX;          ///< The min x value
+        float     m_maxX;          ///< The max x value
+        int       m_nPoints;       ///< The number of sampling points to be used
     };
 
     void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;

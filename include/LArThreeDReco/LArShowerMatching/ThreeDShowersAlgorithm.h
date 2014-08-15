@@ -75,6 +75,13 @@ private:
          */
         XSampling(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV, const TwoDSlidingFitResult &fitResultW);
 
+        /**
+         *  @brief  Convert an x position into a sampling bin
+         *
+         *  @param  x  the input x coordinate
+         */
+        int GetBin(const float x) const; 
+
         float       m_uMinX;         ///< The min x value in the u view
         float       m_uMaxX;         ///< The max x value in the u view
         float       m_vMinX;         ///< The min x value in the v view
@@ -84,7 +91,7 @@ private:
         float       m_minX;          ///< The min x value of the common x-overlap range
         float       m_maxX;          ///< The max x value of the common x-overlap range
         float       m_xOverlapSpan;  ///< The x-overlap span
-        float       m_xPitch;        ///< The x sampling pitch to be used
+        float       m_nPoints;       ///< The number of sampling points to be used
     };
 
     void PreparationStep();
