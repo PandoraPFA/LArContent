@@ -203,7 +203,7 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
     const float nPoints1(std::fabs(static_cast<float>(fitResult1.GetMaxLayer() - fitResult1.GetMinLayer())));
     const float nPoints2(std::fabs(static_cast<float>(fitResult2.GetMaxLayer() - fitResult2.GetMinLayer())));
 
-    const unsigned int nPoints(static_cast<unsigned int>((nPoints1 + nPoints2) / 2.f));
+    const unsigned int nPoints(static_cast<unsigned int>(1.f + (nPoints1 + nPoints2) / 2.f));
 
     for (unsigned n = 0; n <= nPoints; ++n)
     {
