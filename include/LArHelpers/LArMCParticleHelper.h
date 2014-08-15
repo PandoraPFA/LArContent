@@ -26,7 +26,7 @@ public:
      * 
      *  @return boolean
      */
-    static bool IsNeutrinoInduced(const pandora::MCParticle *const pMCParticle);
+    static bool IsNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Whether a mc particle is a neutrino or (antineutrino)

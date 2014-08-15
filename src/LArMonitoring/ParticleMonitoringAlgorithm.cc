@@ -246,7 +246,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
     {
         const MCParticle *pMCParticle = *iter;
 
-        if (pMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))
+        if (pMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle))
         {
             if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
                 mcPrimaryMap[pMCParticle] = pMCParticle;
@@ -265,7 +265,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
                     mcPrimaryMap[pMCParticle] = mcPrimaryMap[pParentMCParticle];
                     break;
                 }
-                else if (pParentMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoInduced(pParentMCParticle))
+                else if (pParentMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoFinalState(pParentMCParticle))
                 {
                     mcPrimaryMap[pMCParticle] = pParentMCParticle;
                     break;
