@@ -121,6 +121,51 @@ public:
     static bool IsShower(const pandora::ParticleFlowObject *const pPfo);
 
     /**
+     *  @brief  Get primary neutrino or antineutrino
+     * 
+     *  @param  pPfo the address of the Pfo
+     * 
+     *  @return pdg code of neutrino (or zero, otherwise)
+     */
+    static int GetPrimaryNeutrino(const pandora::ParticleFlowObject *const pPfo);
+
+     /**
+     *  @brief  Whether a pfo is a final-state particle from a neutrino (or antineutrino) interaction
+     * 
+     *  @param  pPfo the address of the Pfo
+     * 
+     *  @return boolean
+     */
+    static bool IsNeutrinoFinalState(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Whether a pfo is a neutrino or (antineutrino)
+     * 
+     *  @param  pPfo the address of the Pfo
+     * 
+     *  @return boolean
+     */
+    static bool IsNeutrino(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Get the primary parent pfo
+     * 
+     *  @param  pPfo the address of the Pfo 
+     * 
+     *  @return address of the primary parent pfo
+     */
+    static const pandora::ParticleFlowObject *GetParentPfo(const pandora::ParticleFlowObject *const pPfo);
+
+     /**
+     *  @brief  Get primary neutrino or antineutrino
+     * 
+     *  @param   pPfo the address of the Pfo
+     * 
+     *  @return address of primary neutrino pfo
+     */
+    static const pandora::ParticleFlowObject *GetParentNeutrino(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief  Sort pfos by number of constituent hits
      * 
      *  @param  pLhs address of first pfo

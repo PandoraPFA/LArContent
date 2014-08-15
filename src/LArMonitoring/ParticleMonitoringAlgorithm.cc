@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArMCParticleHelper.h"
 
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
@@ -36,8 +37,9 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 {
     // Tree elements
     int nMCParticlesTotal(0), nPfosTotal(0);
-    IntVector mcPdgVector, mcNeutrinoVector, nMCHitsVector, pfoPdgVector, nPfoHitsVector, nMatchedHitsVector, nMCHitsUVector, nPfoHitsUVector,
-        nMatchedHitsUVector, nMCHitsVVector, nPfoHitsVVector, nMatchedHitsVVector, nMCHitsWVector, nPfoHitsWVector, nMatchedHitsWVector;
+    IntVector mcPdgVector, mcNeutrinoVector, nMCHitsVector, pfoPdgVector, pfoNeutrinoVector, nPfoHitsVector, nMatchedHitsVector, 
+        nMCHitsUVector, nPfoHitsUVector, nMatchedHitsUVector, nMCHitsVVector, nPfoHitsVVector, nMatchedHitsVVector, nMCHitsWVector, 
+        nPfoHitsWVector, nMatchedHitsWVector;
     FloatVector completenessVector, purityVector, mcPxVector, mcPyVector, mcPzVector, mcThetaVector, mcEnergyVector, mcPTotVector,
         mcVtxXPosVector, mcVtxYPosVector, mcVtxZPosVector, mcEndXPosVector, mcEndYPosVector, mcEndZPosVector;
 
@@ -117,7 +119,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             const int nMCHitsV(this->CountHitsByType(TPC_VIEW_V, mcHitList));
             const int nMCHitsW(this->CountHitsByType(TPC_VIEW_W, mcHitList));
 
-            int pfoPdg(0), nPfoHits(0), nPfoHitsU(0), nPfoHitsV(0), nPfoHitsW(0);
+            int pfoPdg(0), pfoNeutrinoPdg(0), nPfoHits(0), nPfoHitsU(0), nPfoHitsV(0), nPfoHitsW(0);
             MCToPfoMap::const_iterator pIter1 = matchedPfoMap.find(pMCParticle3D);
 
             if (matchedPfoMap.end() != pIter1)
@@ -129,6 +131,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
                 pfoPdg = pPfo->GetParticleId();
+                pfoNeutrinoPdg = LArPfoHelper::GetPrimaryNeutrino(pPfo);
 
                 const CaloHitList &pfoHitList(pIter2->second);
                 nPfoHits = pfoHitList.size();
@@ -152,6 +155,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             // TODO use pfo vertex list to specify pfo vertex and end positions
 
             pfoPdgVector.push_back(pfoPdg);
+            pfoNeutrinoVector.push_back(pfoNeutrinoPdg);
             purityVector.push_back((nPfoHits == 0) ? 0 : static_cast<float>(nMatchedHits) / static_cast<float>(nPfoHits));
             completenessVector.push_back((nPfoHits == 0) ? 0 : static_cast<float>(nMatchedHits) / static_cast<float>(nMCHits));
             nMCHitsVector.push_back(nMCHits);
@@ -196,6 +200,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcEndZPos", &mcEndZPosVector));
 
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "pfoPdg", &pfoPdgVector));
+    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "pfoNuPdg", &pfoNeutrinoVector));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "completeness", &completenessVector));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "purity", &purityVector));
     PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMCHits", &nMCHitsVector));
