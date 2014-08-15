@@ -223,6 +223,66 @@ bool LArPfoHelper::IsShower(const ParticleFlowObject *const pPfo)
     // electron, photon
     return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int LArPfoHelper::GetPrimaryNeutrino(const ParticleFlowObject *const pPfo)
+{
+    try
+    {
+        const ParticleFlowObject *pParentPfo = LArPfoHelper::GetParentNeutrino(pPfo);
+        return pParentPfo->GetParticleId();
+    }
+    catch (const StatusCodeException &)
+    {
+        return 0;
+    }
+}
+  
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArPfoHelper::IsNeutrinoFinalState(const ParticleFlowObject *const pPfo)
+{
+    return ((pPfo->GetParentPfoList().size() == 1) && (LArPfoHelper::IsNeutrino(*(pPfo->GetParentPfoList().begin()))));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
+{
+    const int absoluteParticleId(std::abs(pPfo->GetParticleId()));
+
+    if ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId))
+        return true;
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+const ParticleFlowObject *LArPfoHelper::GetParentPfo(const ParticleFlowObject *const pPfo)
+{
+    const ParticleFlowObject *pParentPfo = pPfo;
+
+    while (pParentPfo->GetParentPfoList().empty() == false)
+    {
+        pParentPfo = *(pParentPfo->GetParentPfoList().begin());
+    }
+
+    return pParentPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------  
+
+const ParticleFlowObject *LArPfoHelper::GetParentNeutrino(const ParticleFlowObject *const pPfo)
+{
+    const ParticleFlowObject *pParentPfo = LArPfoHelper::GetParentPfo(pPfo);  
+
+    if(!LArPfoHelper::IsNeutrino(pParentPfo))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return pParentPfo;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
