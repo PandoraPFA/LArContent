@@ -198,10 +198,16 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
     const TwoDSlidingShowerFitResult &fitResultW, const XSampling &xSampling, ShowerPositionMapPair &positionMapsU, ShowerPositionMapPair &positionMapsV,
     ShowerPositionMapPair &positionMapsW) const
 {
-    for (float x = xSampling.m_minX; x < xSampling.m_maxX; x += xSampling.m_xPitch)
+    const unsigned int nPoints(static_cast<unsigned int>(xSampling.m_nPoints));
+    
+    for (unsigned n = 0; n <= nPoints; ++n)
     {
+        const float x(xSampling.m_minX + (xSampling.m_maxX - xSampling.m_minX) * static_cast<float>(n) / static_cast<float>(nPoints));
+
         try
         {
+            const int xBin(xSampling.GetBin(x));
+
             FloatVector uValues, vValues, wValues;
             fitResultU.GetShowerEdges(x, uValues);
             fitResultV.GetShowerEdges(x, vValues);
@@ -210,8 +216,6 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
             std::sort(uValues.begin(), uValues.end());
             std::sort(vValues.begin(), vValues.end());
             std::sort(wValues.begin(), wValues.end());
-
-            const int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
 
             if ((uValues.size() > 1) && (vValues.size() > 1))
             {
@@ -260,7 +264,7 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
 void ThreeDShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMapPair &positionMaps,
     unsigned int &nSampledHits, unsigned int &nMatchedHits) const
 {
-    if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (xSampling.m_xPitch < std::numeric_limits<float>::epsilon()))
+    if ((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     nSampledHits = 0; nMatchedHits = 0;
@@ -275,20 +279,24 @@ void ThreeDShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pClu
             const float x(pCaloHit->GetPositionVector().GetX());
             const float z(pCaloHit->GetPositionVector().GetZ());
 
-            if ((x < xSampling.m_minX) || (x > xSampling.m_maxX))
-                continue;
+            try
+            {
+                const int xBin(xSampling.GetBin(x));
 
-            ++nSampledHits;
-            const int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
+                ++nSampledHits;
 
-            ShowerPositionMap::const_iterator positionIter1 = positionMaps.first.find(xBin);
-            ShowerPositionMap::const_iterator positionIter2 = positionMaps.second.find(xBin);
+                ShowerPositionMap::const_iterator positionIter1 = positionMaps.first.find(xBin);
+                ShowerPositionMap::const_iterator positionIter2 = positionMaps.second.find(xBin);
 
-            if ((positionMaps.first.end() != positionIter1) && (z > positionIter1->second.GetLowEdgeZ()) && (z < positionIter1->second.GetHighEdgeZ()))
-                ++nMatchedHits1;
+                if ((positionMaps.first.end() != positionIter1) && (z > positionIter1->second.GetLowEdgeZ()) && (z < positionIter1->second.GetHighEdgeZ()))
+                    ++nMatchedHits1;
 
-            if ((positionMaps.second.end() != positionIter2) && (z > positionIter2->second.GetLowEdgeZ()) && (z < positionIter2->second.GetHighEdgeZ()))
-                ++nMatchedHits2;
+                if ((positionMaps.second.end() != positionIter2) && (z > positionIter2->second.GetLowEdgeZ()) && (z < positionIter2->second.GetHighEdgeZ()))
+                    ++nMatchedHits2;
+            }
+            catch (StatusCodeException &)
+            {
+            }
         }
     }
 
@@ -329,16 +337,26 @@ ThreeDShowersAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitResu
     m_minX = std::max(m_uMinX, std::max(m_vMinX, m_wMinX));
     m_maxX = std::min(m_uMaxX, std::min(m_vMaxX, m_wMaxX));
     m_xOverlapSpan = (m_maxX - m_minX);
+    m_nPoints = 1.f;
+
+    if (m_xOverlapSpan < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const float nPointsU(std::fabs((m_xOverlapSpan / (m_uMaxX - m_uMinX)) * static_cast<float>(fitResultU.GetMaxLayer() - fitResultU.GetMinLayer())));
     const float nPointsV(std::fabs((m_xOverlapSpan / (m_vMaxX - m_vMinX)) * static_cast<float>(fitResultV.GetMaxLayer() - fitResultV.GetMinLayer())));
     const float nPointsW(std::fabs((m_xOverlapSpan / (m_wMaxX - m_wMinX)) * static_cast<float>(fitResultW.GetMaxLayer() - fitResultW.GetMinLayer())));
-    const float nPoints(nPointsU + nPointsV + nPointsW);
 
-    if ((m_xOverlapSpan < std::numeric_limits<float>::epsilon()) || (nPoints < std::numeric_limits<float>::epsilon()))
+    m_nPoints = 1.f + ((nPointsU + nPointsV + nPointsW) / 3.f);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int ThreeDShowersAlgorithm::XSampling::GetBin(const float x) const
+{
+    if (((x - m_minX) < -std::numeric_limits<float>::epsilon()) || ((x - m_maxX) > +std::numeric_limits<float>::epsilon()))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    m_xPitch = 3.f * m_xOverlapSpan / nPoints;
+    return static_cast<int>(0.5f + m_nPoints * (x - m_minX) / (m_maxX - m_minX));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
