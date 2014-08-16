@@ -24,13 +24,10 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::Run()
 
     TwoDSlidingFitResultMap branchSlidingFitResultMap, replacementSlidingFitResultMap;
 
-    bool carryOn(true);
-    unsigned int repeatCounter(0);
+    unsigned int nIterations(0);
 
-    while (carryOn && ++repeatCounter < 100) // Protect against flip-flopping
+    while (++nIterations < 100) // Protect against flip-flopping between two answers
     {
-        carryOn = false;
-
         // Get ordered list of candidate clusters
         ClusterVector clusterVector;
         this->GetListOfCleanClusters(pClusterList, clusterVector);
@@ -56,8 +53,8 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::Run()
         }
 
         // Run splitting and extension
-        if (STATUS_CODE_SUCCESS == this->RunSplitAndExtension(splitList, branchSlidingFitResultMap, replacementSlidingFitResultMap))
-            carryOn = true;
+        if (STATUS_CODE_SUCCESS != this->RunSplitAndExtension(splitList, branchSlidingFitResultMap, replacementSlidingFitResultMap))
+            break;
     }
 
     return STATUS_CODE_SUCCESS;
@@ -350,7 +347,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
 // ClusterList tempList1, tempList2;
 // tempList1.insert(pBranchCluster);
 // tempList2.insert(pReplacementCluster);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
+// PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
 // PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "BranchCluster", BLUE));
 // PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "ReplacementCluster", GREEN));
 // PANDORA_MONITORING_API(AddMarkerToVisualization(&branchSplitPosition, "BranchStartPosition", RED, 2.75));
