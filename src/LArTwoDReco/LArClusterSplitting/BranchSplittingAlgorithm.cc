@@ -47,26 +47,33 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
             // Project the principal vertex onto the branch cluster
             CartesianVector projectedBranchPosition(0.f,0.f,0.f);
             float projectedDistanceSquared(std::numeric_limits<float>::max());
+            float branchDistanceSquared(0.f), replacementDistanceSquared(0.f), commonDistanceSquared(0.f);
 
             try
             {
                 projectedBranchPosition = LArPointingClusterHelper::GetProjectedPosition(principalVertexPosition, principalVertexDirection, branchSlidingFit.GetCluster());
-                projectedDistanceSquared = (projectedBranchPosition - principalVertexPosition).GetMagnitudeSquared();
+                projectedDistanceSquared   = (projectedBranchPosition - principalVertexPosition).GetMagnitudeSquared();
+                replacementDistanceSquared = (projectedBranchPosition - principalEndPosition).GetMagnitudeSquared();
+                branchDistanceSquared      = (projectedBranchPosition - branchVertexPosition).GetMagnitudeSquared(); 
+                commonDistanceSquared      = (projectedBranchPosition - branchEndPosition).GetMagnitudeSquared(); 
             }
             catch (StatusCodeException &)
             {
             }
 
-            if (projectedDistanceSquared > m_maxLongitudinalDisplacement *m_maxLongitudinalDisplacement)
+            if (projectedDistanceSquared > m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement)
                 continue;
 
-            if ((projectedBranchPosition - branchEndPosition).GetMagnitudeSquared() < projectedDistanceSquared)
+            if (projectedDistanceSquared > commonDistanceSquared)
                 continue;
 
-            if (principalVertexDirection.GetDotProduct(principalEndPosition - branchVertexPosition) < m_minLongitudinalExtension)
+            if (replacementDistanceSquared < m_minLongitudinalExtension * m_minLongitudinalExtension)
                 continue;
 
-            // Require that principal vertex and branch projection have good pointing
+            if (branchDistanceSquared > 4.f * replacementDistanceSquared)
+                continue;
+
+            // Require that principal vertex and branch projection have good (and improved) pointing
             bool foundSplit(false);
 
             const float halfWindowLength(branchSlidingFit.GetLayerFitHalfWindowLength());
@@ -81,6 +88,17 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
 
                 CartesianVector projectedBranchDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
                 const float cosTheta(-projectedBranchDirection.GetDotProduct(principalVertexDirection));
+
+                try
+                {
+                    const float currentCosTheta(branchSlidingFit.GetCosScatteringAngle(localL)); 
+
+                    if (cosTheta < currentCosTheta)
+                        continue;
+                }
+                catch (StatusCodeException &)
+                {
+                }
 
                 float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
                 LArPointingClusterHelper::GetImpactParameters(projectedBranchPosition, projectedBranchDirection, principalVertexPosition, rL1, rT1);
