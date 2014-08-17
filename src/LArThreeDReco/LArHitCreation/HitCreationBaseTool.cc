@@ -65,6 +65,9 @@ void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, con
             }
         }
     }
+
+    // TODO: Check that 3D position is inside the detector (currently, algorithm bail outs if pseudo layer is out of range)
+    // (PseudoLayer) GeometryHelper::GetPseudoLayer(position3D);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
