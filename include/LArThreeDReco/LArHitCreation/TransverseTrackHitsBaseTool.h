@@ -40,6 +40,25 @@ protected:
      */
     virtual void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
         pandora::CartesianVector &position3D, float &chiSquared) const = 0;
+
+    /**
+     *  @brief  Calculate an additional contribution to the chi-squared based on the steepness of the track
+     * 
+     *  @param  pCaloHit2D address of the two dimensional calo hit
+     *  @param  matchedSlidingFitMap map of sliding fit results from each view
+     *  @param  position3D the calculated three dimensional position
+     *  @param  chiSquared to receive the chi squared value
+     */
+    virtual void GetTransverseChi2(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
+        const pandora::CartesianVector &position3D, float &chiSquared) const;
+        
+    /**
+     *  @brief  Calculate an additional contribution to the chi-squared based on the steepness of the track
+     * 
+     *  @param  position2D the calculated two dimensional position
+     *  @param  fitResult the sliding fit to the track
+     */
+    virtual float GetTransverseChi2(const pandora::CartesianVector &position2D, const TwoDSlidingFitResult &fitResult) const;
 };
 
 } // namespace lar

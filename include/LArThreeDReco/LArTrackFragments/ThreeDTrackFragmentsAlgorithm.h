@@ -134,9 +134,6 @@ protected:
     typedef std::map<pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
     typedef std::vector<FragmentTensorTool*> TensorToolList;
 
-    std::string         m_inputCaloHitListNameU;            ///< Name of the view U calo hit list
-    std::string         m_inputCaloHitListNameV;            ///< Name of the view V calo hit list
-    std::string         m_inputCaloHitListNameW;            ///< Name of the view W calo hit list
     std::string         m_reclusteringAlgorithmName;        ///< Name of daughter algorithm to use for cluster re-building
 
     unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
