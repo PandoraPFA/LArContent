@@ -109,7 +109,10 @@ void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(ParticleFlowObject *const pP
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDHitCreationAlgorithm::CreateThreeDHit(CaloHit *pCaloHit2D, const CartesianVector &position3D, CaloHit *&pCaloHit3D) const
-{
+{ 
+    if (!this->CheckThreeDHit(position3D))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
     PandoraContentApi::CaloHit::Parameters parameters;
     parameters.m_positionVector = position3D;
     parameters.m_hitType = TPC_3D;
@@ -133,6 +136,25 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHit(CaloHit *pCaloHit2D, const Cart
     parameters.m_layer = pCaloHit2D->GetLayer();
     parameters.m_isInOuterSamplingLayer = pCaloHit2D->IsInOuterSamplingLayer();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pCaloHit3D));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ThreeDHitCreationAlgorithm::CheckThreeDHit(const CartesianVector &position3D) const
+{
+    // Check that corresponding pseudo layer is within range
+    try
+    {
+        (PseudoLayer) GeometryHelper::GetPseudoLayer(position3D);
+    }
+    catch (StatusCodeException &)
+    {
+        return false;
+    }
+
+    // TODO: Check against detector geometry
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
