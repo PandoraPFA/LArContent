@@ -336,6 +336,9 @@ void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAl
         rebuildList.insert(pCluster);
     }
 
+    if (rebuildList.empty())
+        return;
+        
     pAlgorithm->RebuildClusters(rebuildList, newClusters);
 }
 
