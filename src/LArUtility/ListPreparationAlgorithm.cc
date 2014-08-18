@@ -73,6 +73,18 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         if (pCaloHit->GetMipEquivalentEnergy() < m_mipEquivalentCut)
             continue;
 
+        if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
+        {
+            std::cout << "ListPreparationAlgorithm: Found a hit with zero extent, will remove it" << std::endl;
+            continue;
+        }
+
+        if (pCaloHit->GetInputEnergy() < std::numeric_limits<float>::epsilon())
+        {
+            std::cout << "ListPreparationAlgorithm: Found a hit with zero energy, will remove it" << std::endl;
+            continue;
+        }
+
         if (TPC_VIEW_U == (*hitIter)->GetHitType())
         {
             if (!selectedCaloHitListU.insert(*hitIter).second)
@@ -148,7 +160,7 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
         }
         else
         {   
-            std::cout << "ListPreparationAlgorithm: Found two hits in the same location, will remove the lowest pulse height" << std::endl;
+            std::cout << "ListPreparationAlgorithm: Found two hits in same location, will remove lowest pulse height" << std::endl;
         }
     }
 
