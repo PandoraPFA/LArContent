@@ -62,6 +62,13 @@ private:
      */
     bool AreClustersAssociated(const pandora::CartesianVector &innerClusterEnd, const pandora::CartesianVector &outerClusterStart, const float hitSizeX,
         const float hitSizeZ, const pandora::ClusterHelper::ClusterFitResult &innerFit, const pandora::ClusterHelper::ClusterFitResult &outerFit) const;
+
+    unsigned int m_minClusterLayers;            ///< minimum allowed number of layers for a clean cluster
+    unsigned int m_maxGapLayers;                ///< maximum allowed number of layers between associated clusters
+    float        m_maxGapDistanceSquared;       ///< maximum allowed distance (squared) between associated clusters
+    float        m_minCosRelativeAngle;         ///< maximum allowed relative angle between associated clusters
+    float        m_maxTransverseDisplacement;   ///< maximum allowed transverse displacement after extrapolation (normalised to cell size)
+    float        m_maxLongitudinalDisplacement; ///< maximum allowed longitudinal displacement after extrapolation (normalised to cell size)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
