@@ -45,7 +45,15 @@ const TwoDSlidingShowerFitResult &ThreeDShowersAlgorithm::GetCachedSlidingFitRes
 
 void ThreeDShowersAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
 {
-    this->AddToSlidingFitCache(pNewCluster);
+    try
+    {
+        this->AddToSlidingFitCache(pNewCluster);
+    }
+    catch (StatusCodeException &)
+    {
+        return;
+    }
+
     ThreeDBaseAlgorithm<ShowerOverlapResult>::UpdateForNewCluster(pNewCluster);
 }
 
@@ -104,7 +112,13 @@ void ThreeDShowersAlgorithm::PreparationStep()
 
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {
-        this->AddToSlidingFitCache(*iter);
+        try
+        {
+            this->AddToSlidingFitCache(*iter);
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 }
 
@@ -121,6 +135,13 @@ void ThreeDShowersAlgorithm::TidyUp()
 void ThreeDShowersAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
 {
     const TwoDSlidingShowerFitResult slidingShowerFitResult(pCluster, m_slidingFitWindow);
+
+    if (slidingShowerFitResult.GetShowerFitResult().GetLayerFitResultMap().empty() ||
+        slidingShowerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap().empty() ||
+        slidingShowerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap().empty())
+    {
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    }
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingShowerFitResultMap::value_type(pCluster, slidingShowerFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);

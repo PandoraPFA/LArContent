@@ -129,7 +129,15 @@ bool ThreeDTracksBaseAlgorithm<T>::SortSplitPositions(const pandora::CartesianVe
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
 {
-    this->AddToSlidingFitCache(pNewCluster);
+    try
+    {
+        this->AddToSlidingFitCache(pNewCluster);
+    }
+    catch (StatusCodeException &)
+    {
+        return;
+    }
+
     ThreeDBaseAlgorithm<T>::UpdateForNewCluster(pNewCluster);
 }
 
@@ -176,7 +184,13 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
 
     for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
     {
-        this->AddToSlidingFitCache(*iter);
+        try
+        {
+            this->AddToSlidingFitCache(*iter);
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 }
 
@@ -212,6 +226,9 @@ void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
 {
     TwoDSlidingFitResult slidingFitResult;
     LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
+
+    if (slidingFitResult.GetLayerFitResultMap().empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);
