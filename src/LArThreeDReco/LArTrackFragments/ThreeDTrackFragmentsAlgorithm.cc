@@ -22,7 +22,14 @@ namespace lar
 
 void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
 {
-    this->AddToSlidingFitCache(pNewCluster);
+    try
+    {
+        this->AddToSlidingFitCache(pNewCluster);
+    }
+    catch (StatusCodeException &)
+    {
+        return;
+    }
 
     const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
 
