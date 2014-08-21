@@ -95,7 +95,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const
             }
             catch (StatusCodeException &statusCodeException)
             {
-                if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                     throw statusCodeException;
             }
         }

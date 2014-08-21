@@ -51,7 +51,7 @@ void ThreeDShowersAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
     }
     catch (StatusCodeException &statusCodeException)
     {
-        if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+        if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
             throw statusCodeException;
 
         return;
@@ -121,7 +121,7 @@ void ThreeDShowersAlgorithm::PreparationStep()
         }
         catch (StatusCodeException &statusCodeException)
         {
-            if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
         }
     }
