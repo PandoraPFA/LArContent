@@ -28,7 +28,7 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
 
     if (pfoVector.empty())
     {
-        std::cout << "DeltaRayMatchingAlgorithm: could not find pfo list " << m_parentPfoListName << std::endl;
+        std::cout << "DeltaRayMatchingAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 

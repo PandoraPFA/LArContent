@@ -26,7 +26,7 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
 
     if (parentPfos.empty())
     {
-        std::cout << "DeltaRayIdentificationAlgorithm: could not find pfo list " << m_parentPfoListName << std::endl;
+        std::cout << "DeltaRayIdentificationAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 

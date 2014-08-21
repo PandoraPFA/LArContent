@@ -30,7 +30,7 @@ StatusCode ListPreparationAlgorithm::Run()
     if (!m_currentCaloHitListReplacement.empty())
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_currentCaloHitListReplacement))
-            std::cout << "ListPreparationAlgorithm: Could not replace current calo hit list with list named: " << m_currentCaloHitListReplacement << std::endl;
+            std::cout << "ListPreparationAlgorithm: could not replace current calo hit list with list named: " << m_currentCaloHitListReplacement << std::endl;
     }
 
     try
@@ -44,7 +44,7 @@ StatusCode ListPreparationAlgorithm::Run()
     if (!m_currentMCParticleListReplacement.empty())
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<MCParticle>(*this, m_currentMCParticleListReplacement))
-            std::cout << "ListPreparationAlgorithm: Could not replace current MC particle list with list named: " << m_currentMCParticleListReplacement << std::endl;
+            std::cout << "ListPreparationAlgorithm: could not replace current MC particle list with list named: " << m_currentMCParticleListReplacement << std::endl;
     }
 
     return STATUS_CODE_SUCCESS;
@@ -75,13 +75,13 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
         if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
         {
-            std::cout << "ListPreparationAlgorithm: Found a hit with zero extent, will remove it" << std::endl;
+            std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
             continue;
         }
 
         if (pCaloHit->GetInputEnergy() < std::numeric_limits<float>::epsilon())
         {
-            std::cout << "ListPreparationAlgorithm: Found a hit with zero energy, will remove it" << std::endl;
+            std::cout << "ListPreparationAlgorithm: found a hit with zero energy, will remove it" << std::endl;
             continue;
         }
 
@@ -160,7 +160,7 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
         }
         else
         {   
-            std::cout << "ListPreparationAlgorithm: Found two hits in same location, will remove lowest pulse height" << std::endl;
+            std::cout << "ListPreparationAlgorithm: found two hits in same location, will remove lowest pulse height" << std::endl;
         }
     }
 
