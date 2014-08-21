@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 using namespace pandora;
@@ -20,13 +22,21 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
     if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
         return STATUS_CODE_NOT_FOUND;
 
-    TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitHalfWindow, slidingFitResult);
+    try
+    {
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow);
+        CartesianVector splitPosition(0.f, 0.f, 0.f);
 
-    CartesianVector splitPosition(0.f, 0.f, 0.f);
-
-    if (STATUS_CODE_SUCCESS == this->FindBestSplitPosition(slidingFitResult, splitPosition))
-        return this->SplitCluster(slidingFitResult, splitPosition, firstHitList, secondHitList);
+        if (STATUS_CODE_SUCCESS == this->FindBestSplitPosition(slidingFitResult, splitPosition))
+        {
+            return this->SplitCluster(slidingFitResult, splitPosition, firstHitList, secondHitList);
+        }
+    }
+    catch (StatusCodeException &statusCodeException)
+    {
+        if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+            throw statusCodeException;
+    }
 
     return STATUS_CODE_NOT_FOUND;
 }

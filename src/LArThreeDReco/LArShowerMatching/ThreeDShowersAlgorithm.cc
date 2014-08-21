@@ -49,8 +49,11 @@ void ThreeDShowersAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
     {
         this->AddToSlidingFitCache(pNewCluster);
     }
-    catch (StatusCodeException &)
+    catch (StatusCodeException &statusCodeException)
     {
+        if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+            throw statusCodeException;
+
         return;
     }
 
@@ -116,8 +119,10 @@ void ThreeDShowersAlgorithm::PreparationStep()
         {
             this->AddToSlidingFitCache(*iter);
         }
-        catch (StatusCodeException &)
+        catch (StatusCodeException &statusCodeException)
         {
+            if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+                throw statusCodeException;
         }
     }
 }
@@ -135,13 +140,6 @@ void ThreeDShowersAlgorithm::TidyUp()
 void ThreeDShowersAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
 {
     const TwoDSlidingShowerFitResult slidingShowerFitResult(pCluster, m_slidingFitWindow);
-
-    if (slidingShowerFitResult.GetShowerFitResult().GetLayerFitResultMap().empty() ||
-        slidingShowerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap().empty() ||
-        slidingShowerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap().empty())
-    {
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-    }
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingShowerFitResultMap::value_type(pCluster, slidingShowerFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);

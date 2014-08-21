@@ -172,7 +172,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
         try
         {
             const TwoDSlidingFitResult &slidingFitResult(pAlgorithm->GetCachedSlidingFitResult(pCluster));
-            slidingFitResultMap[pCluster] = slidingFitResult;
+            (void) slidingFitResultMap.insert(SlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)
@@ -181,9 +181,8 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
 
         try
         {
-            TwoDSlidingFitResult slidingFitResult;
-            LArClusterHelper::LArTwoDSlidingFit(pCluster, pAlgorithm->GetSlidingFitWindow(), slidingFitResult);
-            slidingFitResultMap[pCluster] = slidingFitResult;
+            const TwoDSlidingFitResult slidingFitResult(pCluster, pAlgorithm->GetSlidingFitWindow());
+            (void) slidingFitResultMap.insert(SlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)

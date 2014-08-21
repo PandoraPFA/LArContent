@@ -17,10 +17,7 @@ namespace lar
 LArPointingCluster::LArPointingCluster(Cluster *const pCluster)
 {
     const unsigned int halfWindowLayers(10); // TODO - add to settings, or add to constructor
-
-    TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, halfWindowLayers, slidingFitResult);
-
+    const TwoDSlidingFitResult slidingFitResult(pCluster, halfWindowLayers);
     this->BuildPointingCluster(slidingFitResult);
 }
 

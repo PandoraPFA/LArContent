@@ -26,8 +26,11 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewClust
     {
         this->AddToSlidingFitCache(pNewCluster);
     }
-    catch (StatusCodeException &)
+    catch (StatusCodeException &statusCodeException)
     {
+        if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+            throw statusCodeException;
+
         return;
     }
 
@@ -128,28 +131,30 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     if (CUSTOM == missingHitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const TwoDSlidingFitResult &fitResult1((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterV) :
-        (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterU) : this->GetCachedSlidingFitResult(pClusterU));
-
-    const TwoDSlidingFitResult &fitResult2((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) :
-        (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) : this->GetCachedSlidingFitResult(pClusterV));
-
-    const ClusterList &inputClusterList((TPC_VIEW_U == missingHitType) ? this->GetInputClusterListU() :
-        (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
-
-
     // Calculate new overlap result and replace old overlap result where necessary
     FragmentOverlapResult oldOverlapResult, newOverlapResult;
     Cluster *pMatchedClusterU(NULL), *pMatchedClusterV(NULL), *pMatchedClusterW(NULL);
 
     try
     {
+        const TwoDSlidingFitResult &fitResult1((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterV) :
+            (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterU) : this->GetCachedSlidingFitResult(pClusterU));
+
+        const TwoDSlidingFitResult &fitResult2((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) :
+            (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) : this->GetCachedSlidingFitResult(pClusterV));
+
+        const ClusterList &inputClusterList((TPC_VIEW_U == missingHitType) ? this->GetInputClusterListU() :
+            (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
+
         Cluster *pBestMatchedCluster(NULL);
         this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult);
 
         pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
         pMatchedClusterV = ((NULL != pClusterV) ? pClusterV : pBestMatchedCluster);
         pMatchedClusterW = ((NULL != pClusterW) ? pClusterW : pBestMatchedCluster);
+
+        if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
         oldOverlapResult = m_overlapTensor.GetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW);
     }
@@ -161,9 +166,6 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
 
     if (!newOverlapResult.IsInitialized())
         return;
-
-    if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
 
     if (!oldOverlapResult.IsInitialized())
     {
@@ -317,8 +319,8 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
             fitResult1.GetLocalPosition(fitPosition1, rL1, rT1);
             fitResult2.GetLocalPosition(fitPosition2, rL2, rT2);
 
-            const TwoDSlidingFitResult::FitSegment& fitSegment1 = fitResult1.GetFitSegment(rL1);
-            const TwoDSlidingFitResult::FitSegment& fitSegment2 = fitResult2.GetFitSegment(rL2);
+            const FitSegment &fitSegment1 = fitResult1.GetFitSegment(rL1);
+            const FitSegment &fitSegment2 = fitResult2.GetFitSegment(rL2);
 
             const float x(0.5 * (fitPosition1.GetX() + fitPosition2.GetX()));
             CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);

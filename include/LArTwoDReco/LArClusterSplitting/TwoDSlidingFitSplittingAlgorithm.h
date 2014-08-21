@@ -8,7 +8,7 @@
 #ifndef LAR_TWO_D_SLIDING_FIT_SPLITTING_ALGORITHM_H
 #define LAR_TWO_D_SLIDING_FIT_SPLITTING_ALGORITHM_H 1
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "LArObjects/LArTwoDSlidingFitResult.h"
 
 #include "LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 

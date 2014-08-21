@@ -133,8 +133,11 @@ void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluste
     {
         this->AddToSlidingFitCache(pNewCluster);
     }
-    catch (StatusCodeException &)
+    catch (StatusCodeException &statusCodeException)
     {
+        if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+            throw statusCodeException;
+
         return;
     }
 
@@ -188,8 +191,10 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
         {
             this->AddToSlidingFitCache(*iter);
         }
-        catch (StatusCodeException &)
+        catch (StatusCodeException &statusCodeException)
         {
+            if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+                throw statusCodeException;
         }
     }
 }
@@ -224,11 +229,7 @@ void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoPa
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
 {
-    TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
-
-    if (slidingFitResult.GetLayerFitResultMap().empty())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);

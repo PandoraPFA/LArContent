@@ -41,6 +41,16 @@ public:
     TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow);
 
     /**
+     *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
+     *
+     *  @param  fullShowerFit the result of fitting the full shower
+     *  @param  showerEdge the shower edge
+     * 
+     *  @return the shower edge fit result
+     */
+    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge);
+
+    /**
      *  @brief  Get the sliding fit result for the full shower cluster
      * 
      *  @return the sliding fit result for the full shower cluster
