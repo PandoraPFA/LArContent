@@ -15,11 +15,10 @@ using namespace pandora;
 namespace lar
 {
 
-StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult,
-    CartesianVector& splitPosition) const
+StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, CartesianVector& splitPosition) const
 {
     // Search for scatters by scanning over the layers in the sliding fit result
-    const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
+    const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
     const int minLayer(layerFitResultMap.begin()->first), maxLayer(layerFitResultMap.rbegin()->first);
 
     const int nLayersHalfWindow(slidingFitResult.GetLayerFitHalfWindow());
@@ -32,8 +31,7 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitRes
 
     float bestCosTheta(1.f);
 
-    for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end();
-        iter != iterEnd; ++iter)
+    for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
     {
         const int iLayer(iter->first);
 

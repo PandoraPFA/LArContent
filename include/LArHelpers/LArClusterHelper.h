@@ -8,26 +8,10 @@
 #ifndef LAR_CLUSTER_HELPER_H
 #define LAR_CLUSTER_HELPER_H 1
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
-#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
-
 #include "Objects/Cluster.h"
 
 namespace lar
 {
-
-/**
- *  @brief  TransverseDirection enum
- */
-enum TransverseDirection
-{
-    POSITIVE_IN_X,
-    NEGATIVE_IN_X,
-    UNCHANGED_IN_X,
-    UNKNOWN
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  LArClusterHelper class
@@ -43,72 +27,6 @@ public:
      *  @return the cluster hit type
      */
     static pandora::HitType GetClusterHitType(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Perform two dimensional sliding fit, using a three dimensional fit to the cluster to define primary axis
-     *
-     *  @param  pCluster address of the cluster
-     *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  twoDSlidingFitResult to receive the fit result
-     */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
-        TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    /**
-     *  @brief  Perform two dimensional sliding fit, using z axis as primary axis, fitting x coordinates
-     *
-     *  @param  pCluster address of the cluster
-     *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  twoDSlidingFitResult to receive the fit result
-     */
-    static void LArTwoDSlidingXZFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
-        TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    /**
-     *  @brief  Perform two dimensional sliding fit, using the specified primary axis
-     *
-     *  @param  pCluster address of the cluster
-     *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  axisIntercept the axis intercept position
-     *  @param  axisDirection the axis direction vector
-     *  @param  twoDSlidingFitResult to receive the fit result
-     */
-    static void LArTwoDSlidingFit(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow,
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection,
-        TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    /**
-     *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
-     *
-     *  @param  fullShowerFit the result of fitting the full shower
-     *  @param  showerEdge the shower edge
-     *  @param  twoDSlidingFitResult to receive the fit result
-     */
-    static void LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
-        TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    /**
-     *  @brief  Whether fit results are multivalued in x
-     *
-     *  @return boolean
-     */
-    static bool IsMultivaluedInX(const TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    /**
-     *  @brief  Get the sliding fit width
-     *
-     *  @return the sliding fit width
-     */
-    static float GetSlidingFitWidth(const TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    /**
-     *  @brief  Measure width of cluster using multiple straight line fits
-     *
-     *  @param  pCluster address of the cluster
-     *
-     *  @return float
-     */
-    static float LArTrackWidth(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Get length squared of cluster
@@ -144,7 +62,6 @@ public:
      *
      *  @return the layer span
      */
-
     static unsigned int GetLayerSpan(const pandora::Cluster *const pCluster);
 
     /**
@@ -254,7 +171,6 @@ public:
      *  @param  zmin the lower z for this range of x
      *  @param  zmax the upper z for this range in x
      */
-
     static void GetClusterSpanZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &zmin, float &zmax);
 
     /**
@@ -296,27 +212,6 @@ public:
      *  @param  xmlHandle the relevant xml handle
      */
     static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-private:
-    /**
-     *  @brief  Perform two dimensional sliding fit, using the information stored in the sliding fit result object
-     *
-     *  @param  twoDSlidingFitResult to receive the fit result
-     */
-    static void StoreSlidingFitResults(TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    /**
-     *  @brief  Calculate a fit segment list for a given sliding fit result
-     *
-     *  @param  twoDSlidingFitResult the sliding fit result
-     *  @param  fitSegmentList to receive the fit segment list
-     */
-    static void CalculateSlidingFitSegments(TwoDSlidingFitResult &twoDSlidingFitResult);
-
-    static unsigned int             m_layerFitHalfWindow;           ///< The layer fit half window for sliding 2d x-z fits
-    static float                    m_multiValuedTanThetaCut;       ///< Tan theta cut for finding sliding fits multivalued in x
-    static float                    m_multiValuedStepFractionCut;   ///< Step fraction cut for finding sliding fits multivalued in x
-    static float                    m_trackResidualQuantile;        ///< Track residual quantile, used for calculating sliding track width
 };
 
 } // namespace lar

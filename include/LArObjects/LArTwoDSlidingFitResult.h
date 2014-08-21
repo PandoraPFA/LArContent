@@ -10,6 +10,8 @@
 
 #include "Api/PandoraApi.h"
 
+#include "LArObjects/LArTwoDSlidingFitObjects.h"
+
 namespace lar
 {
 
@@ -20,249 +22,35 @@ class TwoDSlidingFitResult
 {
 public:
     /**
-     *  @brief  Constructor
+     *  @brief  Constructor using cluster extremal x-z positions to define primary axis
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  layerFitHalfWindow the layer fit half window
      */
-    TwoDSlidingFitResult();
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow);
 
     /**
-     *  @brief  class LayerFitResult
+     *  @brief  Constructor using specified primary axis
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  axisIntercept the axis intercept position
+     *  @param  axisDirection the axis direction vector
      */
-    class LayerFitResult
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         *
-         *  @param  l the l coordinate
-         *  @param  fitT the fitted t coordinate
-         *  @param  gradient the fitted gradient dt/dl
-         *  @param  rms the rms of the fit residuals
-         */
-        LayerFitResult(const double l, const double fitT, const double gradient, const double rms);
-
-        /**
-         *  @brief  Get the l coordinate
-         *
-         *  @return the l coordinate
-         */
-        double GetL() const;
-
-        /**
-         *  @brief  Get the fitted t coordinate
-         *
-         *  @return the fitted t coordinate
-         */
-        double GetFitT() const;
-
-        /**
-         *  @brief  Get the fitted gradient dt/dz
-         *
-         *  @return the fitted gradient dt/dl
-         */
-        double GetGradient() const;
-
-        /**
-         *  @brief  Get the rms of the fit residuals
-         *
-         *  @return the rms of the fit residuals
-         */
-        double GetRms() const;
-
-    private:
-        double                  m_l;                            ///< The l coordinate
-        double                  m_fitT;                         ///< The fitted t coordinate
-        double                  m_gradient;                     ///< The fitted gradient dt/dl
-        double                  m_rms;                          ///< The rms of the fit residuals
-    };
-
-    typedef std::map<int, LayerFitResult> LayerFitResultMap;
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
+        const pandora::CartesianVector &axisDirection);
 
     /**
-     *  @brief  LayerFitContribution class
+     *  @brief  Constructor using specified primary axis and layer fit contribution map
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  axisIntercept the axis intercept position
+     *  @param  axisDirection the axis direction vector
+     *  @param  layerFitContributionMap the layer fit contribution map
      */
-    class LayerFitContribution
-    {
-    public:
-        /**
-         *  @brief  Default constructor
-         */
-        LayerFitContribution();
-
-        /**
-         *  @brief  Add point to layer fit
-         *
-         *  @param  l the longitudinal coordinate
-         *  @param  t the transverse coordinate
-         */
-        void AddPoint(const float l, const float t);
-
-        /**
-         *  @brief  Get the sum t
-         *
-         *  @return the sum t
-         */
-        double GetSumT() const;
-
-        /**
-         *  @brief  Get the sum l
-         *
-         *  @return the sum l
-         */
-        double GetSumL() const;
-
-        /**
-         *  @brief  Get the sum t * t
-         *
-         *  @return the sum t * t
-         */
-        double GetSumTT() const;
-
-        /**
-         *  @brief  Get the sum l * t
-         *
-         *  @return the sum l * t
-         */
-        double GetSumLT() const;
-
-        /**
-         *  @brief  Get the sum l * l
-         *
-         *  @return the sum z * z
-         */
-        double GetSumLL() const;
-
-        /**
-         *  @brief  Get the number of points used
-         *
-         *  @return the number of points used
-         */
-        unsigned int GetNPoints() const;
-
-    private:
-        double                  m_sumT;                ///< The sum t
-        double                  m_sumL;                ///< The sum l
-        double                  m_sumTT;               ///< The sum t * t
-        double                  m_sumLT;               ///< The sum l * t
-        double                  m_sumLL;               ///< The sum l * l
-        unsigned int            m_nPoints;             ///< The number of points used
-    };
-
-    typedef std::map<int, LayerFitContribution> LayerFitContributionMap;
-
-    /**
-     *  @brief  LayerInterpolation class
-     */
-    class LayerInterpolation
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         *
-         *  @param firstayerIter  the iterator for the upstream layer
-         *  @param secondLayerIter  the iterator for the downstream layer
-         *  @param firstWeight  the weight to be applied to the upstream layer
-         *  @param secondWeight  the weight to be applied to the downstream layer
-         */
-        LayerInterpolation(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter,
-            const float firstWeight, const float secondWeight);
-
-        /**
-         *  @brief  Get the start layer iterator
-         *
-         *  @return the iterator for the start layer
-         */
-        LayerFitResultMap::const_iterator GetStartLayerIter() const;
-
-        /**
-         *  @brief  Get the end layer iterator
-         *
-         *  @return the iterator for the end layer
-         */
-        LayerFitResultMap::const_iterator GetEndLayerIter() const;
-
-        /**
-         *  @brief  Get the start layer weight
-        *
-         *  @return the weight for the start layer
-         */
-        float GetStartLayerWeight() const;
-
-        /**
-         *  @brief  Get the end layer weight
-         *
-         *  @return the weight for the end layer
-         */
-        float GetEndLayerWeight() const;
-
-    private:
-        LayerFitResultMap::const_iterator m_startLayerIter;     ///< The start layer iterator
-        LayerFitResultMap::const_iterator m_endLayerIter;       ///< The end layer iterator
-        float                             m_startLayerWeight;   ///< The start layer weight
-        float                             m_endLayerWeight;     ///< The end layer weight
-    };
-
-    typedef std::vector<LayerInterpolation> LayerInterpolationList;
-
-    /**
-     *  @brief  FitSegment class
-     */
-    class FitSegment
-    {
-        public:
-        /**
-         *  @brief Constructor
-         *
-         *  @param startLayer the start layer
-         *  @param endLayer the end layer
-         *  @param startX the x position at the start layer
-         *  @param endX the x position at the end layer
-         */
-        FitSegment(const int startLayer, const int endLayer, const float startX, const float endX);
-
-        /**
-         *  @brief  Get start layer
-         *
-         *  @return the start layer
-         */
-        int GetStartLayer() const;
-
-        /**
-         *  @brief  Get end layer
-         *
-         *  @return the end layer
-         */
-        int GetEndLayer() const;
-
-        /**
-         *  @brief  Get the minimum x value
-         *
-         *  @return the minimum x value
-         */
-        float GetMinX() const;
-
-        /**
-         *  @brief  Get the maximum x value
-         *
-         *  @return the maximum x value
-         */
-        float GetMaxX() const;
-
-        /**
-         *  @brief  Whether the x coordinate increases between the start and end layers
-         *
-         *  @return boolean
-         */
-        bool IsIncreasingX() const;
-
-    private:
-        int         m_startLayer;               ///< The start layer
-        int         m_endLayer;                 ///< The end layer
-        float       m_minX;                     ///< The minimum x value
-        float       m_maxX;                     ///< The maximum x value
-        bool        m_isIncreasingX;            ///< Whether the x coordinate increases between the start and end layers
-    };
-
-    typedef std::vector<FitSegment> FitSegmentList;
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
+        const pandora::CartesianVector &axisDirection, const LayerFitContributionMap &layerFitContributionMap);
 
     /**
      *  @brief  Get the address of the cluster
@@ -278,13 +66,6 @@ public:
      */
     unsigned int GetLayerFitHalfWindow() const;
 
-     /**
-     *  @brief  Get the layer fit half window length
-     *
-     *  @return the layer fit half window length
-     */
-    float GetLayerFitHalfWindowLength() const;
-
     /**
      *  @brief  Get the axis intercept position
      *
@@ -298,6 +79,34 @@ public:
      *  @return the axis direction vector
      */
     const pandora::CartesianVector &GetAxisDirection() const;
+
+    /**
+     *  @brief  Get the layer fit result map
+     *
+     *  @return the layer fit result map
+     */
+    const LayerFitResultMap &GetLayerFitResultMap() const;
+
+    /**
+     *  @brief  Get the layer fit contribution map
+     *
+     *  @return the layer fit contribution map
+     */
+    const LayerFitContributionMap &GetLayerFitContributionMap() const;
+
+     /**
+     *  @brief  Get the fit segment list
+     *
+     *  @return the fit segment list
+     */
+    const FitSegmentList &GetFitSegmentList() const;
+
+     /**
+     *  @brief  Get the layer fit half window length
+     *
+     *  @return the layer fit half window length
+     */
+    float GetLayerFitHalfWindowLength() const;
 
     /**
      *  @brief  Get the minimum occupied layer in the sliding fit
@@ -516,30 +325,24 @@ public:
      *
      *  @param  rL the longitudinal coordinate
      */
-    FitSegment GetFitSegment(const float rL) const;
-
-    /**
-     *  @brief  Get the layer fit result map
-     *
-     *  @return the layer fit result map
-     */
-    const LayerFitResultMap &GetLayerFitResultMap() const;
-
-    /**
-     *  @brief  Get the layer fit contribution map
-     *
-     *  @return the layer fit contribution map
-     */
-    const LayerFitContributionMap &GetLayerFitContributionMap() const;
-
-     /**
-     *  @brief  Get the fit segment list
-     *
-     *  @return the fit segment list
-     */
-    const FitSegmentList &GetFitSegmentList() const;
+    const FitSegment &GetFitSegment(const float rL) const;
 
 private:
+    /**
+     *  @brief  Fill the layer fit contribution map
+     */
+    void FillLayerFitContributionMap();
+
+    /**
+     *  @brief  Perform the sliding linear fit
+     */
+    void PerformSlidingLinearFit();
+
+    /**
+     *  @brief  Find sliding fit segments; sections with tramsverse direction
+     */
+    void FindSlidingFitSegments();
+
     /**
      *  @brief  Get the minimum and maximum x or z coordinates associated with the sliding fit
      *
@@ -656,8 +459,6 @@ private:
     LayerFitResultMap           m_layerFitResultMap;        ///< The layer fit result map
     LayerFitContributionMap     m_layerFitContributionMap;  ///< The layer fit contribution map
     FitSegmentList              m_fitSegmentList;           ///< The fit segment list
-
-    friend class LArClusterHelper;
 };
 
 typedef std::vector<TwoDSlidingFitResult> TwoDSlidingFitResultList;
@@ -694,22 +495,23 @@ inline const pandora::CartesianVector &TwoDSlidingFitResult::GetAxisDirection() 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int TwoDSlidingFitResult::GetMinLayer() const
+inline const LayerFitResultMap &TwoDSlidingFitResult::GetLayerFitResultMap() const
 {
-    if (m_layerFitResultMap.empty())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
-
-    return m_layerFitResultMap.begin()->first;
+    return m_layerFitResultMap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int TwoDSlidingFitResult::GetMaxLayer() const
+inline const LayerFitContributionMap &TwoDSlidingFitResult::GetLayerFitContributionMap() const
 {
-    if (m_layerFitResultMap.empty())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+    return m_layerFitContributionMap;
+}
 
-    return m_layerFitResultMap.rbegin()->first;
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const FitSegmentList &TwoDSlidingFitResult::GetFitSegmentList() const
+{
+    return m_fitSegmentList;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -724,164 +526,6 @@ inline void TwoDSlidingFitResult::GetMinAndMaxX(float &minX, float &maxX) const
 inline void TwoDSlidingFitResult::GetMinAndMaxZ(float &minZ, float &maxZ) const
 {
     return this->GetMinAndMaxCoordinate(false, minZ, maxZ);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const TwoDSlidingFitResult::LayerFitResultMap &TwoDSlidingFitResult::GetLayerFitResultMap() const
-{
-    return m_layerFitResultMap;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const TwoDSlidingFitResult::LayerFitContributionMap &TwoDSlidingFitResult::GetLayerFitContributionMap() const
-{
-    return m_layerFitContributionMap;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const TwoDSlidingFitResult::FitSegmentList &TwoDSlidingFitResult::GetFitSegmentList() const
-{
-    return m_fitSegmentList;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitResult::GetL() const
-{
-    return m_l;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitResult::GetFitT() const
-{
-    return m_fitT;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitResult::GetGradient() const
-{
-    return m_gradient;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitResult::GetRms() const
-{
-    return m_rms;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitContribution::GetSumT() const
-{
-    return m_sumT;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitContribution::GetSumL() const
-{
-    return m_sumL;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitContribution::GetSumLT() const
-{
-    return m_sumLT;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitContribution::GetSumLL() const
-{
-    return m_sumLL;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double TwoDSlidingFitResult::LayerFitContribution::GetSumTT() const
-{
-    return m_sumTT;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline unsigned int TwoDSlidingFitResult::LayerFitContribution::GetNPoints() const
-{
-    return m_nPoints;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline TwoDSlidingFitResult::LayerFitResultMap::const_iterator TwoDSlidingFitResult::LayerInterpolation::GetStartLayerIter() const
-{
-    return m_startLayerIter;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline TwoDSlidingFitResult::LayerFitResultMap::const_iterator TwoDSlidingFitResult::LayerInterpolation::GetEndLayerIter() const
-{
-    return m_endLayerIter;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TwoDSlidingFitResult::LayerInterpolation::GetStartLayerWeight() const
-{
-    return m_startLayerWeight;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TwoDSlidingFitResult::LayerInterpolation::GetEndLayerWeight() const
-{
-    return m_endLayerWeight;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline int TwoDSlidingFitResult::FitSegment::GetStartLayer() const
-{
-    return m_startLayer;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline int TwoDSlidingFitResult::FitSegment::GetEndLayer() const
-{
-    return m_endLayer;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TwoDSlidingFitResult::FitSegment::GetMinX() const
-{
-    return m_minX;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TwoDSlidingFitResult::FitSegment::GetMaxX() const
-{
-    return m_maxX;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool TwoDSlidingFitResult::FitSegment::IsIncreasingX() const
-{
-    return m_isIncreasingX;
 }
 
 } // namespace lar

@@ -60,11 +60,18 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
         if (matchedSlidingFitMap.end() != matchedSlidingFitMap.find(hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        TwoDSlidingFitResult slidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
+        try
+        {
+            const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow);
 
-        if (!matchedSlidingFitMap.insert(MatchedSlidingFitMap::value_type(hitType, slidingFitResult)).second)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+            if (!matchedSlidingFitMap.insert(MatchedSlidingFitMap::value_type(hitType, slidingFitResult)).second)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
     }
 }
 
