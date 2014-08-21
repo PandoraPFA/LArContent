@@ -135,7 +135,7 @@ void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluste
     }
     catch (StatusCodeException &statusCodeException)
     {
-        if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+        if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
             throw statusCodeException;
 
         return;
@@ -193,7 +193,7 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
         }
         catch (StatusCodeException &statusCodeException)
         {
-            if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
         }
     }

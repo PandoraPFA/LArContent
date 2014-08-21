@@ -42,12 +42,12 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
                 AssociationDetails &associationDetails(clusterAssociationMap[pRemnantCluster]);
 
                 if (!associationDetails.insert(AssociationDetails::value_type(pPfoCluster, boundedFraction)).second)
-                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
             }
         }
         catch (StatusCodeException &statusCodeException)
         {
-            if (STATUS_CODE_NOT_INITIALIZED != statusCodeException.GetStatusCode())
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
         }
     }
