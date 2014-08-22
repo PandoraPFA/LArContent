@@ -145,7 +145,7 @@ bool ThreeDHitCreationAlgorithm::CheckThreeDHit(const CartesianVector &position3
     // Check that corresponding pseudo layer is within range
     try
     {
-        (PseudoLayer) GeometryHelper::GetPseudoLayer(position3D);
+        (void) GeometryHelper::GetPseudoLayer(position3D);
     }
     catch (StatusCodeException &)
     {
