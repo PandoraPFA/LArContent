@@ -22,6 +22,15 @@ class LArPfoHelper
 public:
 
     /**
+     *  @brief  Get a list of calo hits of a particular hit type from a list of pfos
+     *
+     *  @param  pfoList the input list of Pfos
+     *  @param  hitType the cluster hit type
+     *  @param  caloHitList the output list of calo hits
+     */
+    static void GetCaloHits(const pandora::PfoList &pfoList, const pandora::HitType &hitType, pandora::CaloHitList &caloHitList);
+
+    /**
      *  @brief  Get a list of calo hits of a particular hit type from a given pfo
      *
      *  @param  pPfo the input Pfo
@@ -63,6 +72,22 @@ public:
      *  @param  outputPfoList to receive the output pfo list
      */
     static void GetAllConnectedPfos(pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
+
+    /**
+     *  @brief  Get a flat list of all pfos, recursively, of all daughters associated with those pfos in an input list
+     *
+     *  @param  inputPfoList the input pfo list
+     *  @param  outputPfoList to receive the output pfo list
+     */
+    static void GetAllDownstreamPfos(const pandora::PfoList &inputPfoList, pandora::PfoList &outputPfoList);
+
+    /**
+     *  @brief  Get a flat list of all pfos, recursively, of all daughters and parents associated with an input pfo
+     *
+     *  @param  pPfo the input Pfo
+     *  @param  outputPfoList to receive the output pfo list
+     */
+    static void GetAllDownstreamPfos(pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
 
     /**
      *  @brief  Calculate length of Pfo using 2D clusters
@@ -128,6 +153,15 @@ public:
      *  @return pdg code of neutrino (or zero, otherwise)
      */
     static int GetPrimaryNeutrino(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Whether a pfo is a primary parent particle 
+     * 
+     *  @param  pPfo the address of the Pfo
+     * 
+     *  @return boolean
+     */
+    static bool IsFinalState(const pandora::ParticleFlowObject *const pPfo);
 
      /**
      *  @brief  Whether a pfo is a final-state particle from a neutrino (or antineutrino) interaction
