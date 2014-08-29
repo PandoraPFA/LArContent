@@ -22,6 +22,16 @@ using namespace pandora;
 namespace lar
 {
 
+void LArPfoHelper::GetCaloHits(const PfoList &pfoList, const HitType &hitType, CaloHitList &caloHitList)
+{
+    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        LArPfoHelper::GetCaloHits(*pIter, hitType, caloHitList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitType &hitType, CaloHitList &caloHitList)
 {
     ClusterList clusterList;
@@ -79,6 +89,27 @@ void LArPfoHelper::GetAllConnectedPfos(ParticleFlowObject *const pPfo, PfoList &
     outputPfoList.insert(pPfo);
     LArPfoHelper::GetAllConnectedPfos(pPfo->GetParentPfoList(), outputPfoList);
     LArPfoHelper::GetAllConnectedPfos(pPfo->GetDaughterPfoList(), outputPfoList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllDownstreamPfos(const PfoList &inputPfoList, PfoList &outputPfoList)
+{
+    for (PfoList::const_iterator pIter = inputPfoList.begin(), pIterEnd = inputPfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        LArPfoHelper::GetAllDownstreamPfos(*pIter, outputPfoList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllDownstreamPfos(ParticleFlowObject *const pPfo, PfoList &outputPfoList)
+{
+    if (outputPfoList.count(pPfo))
+        return;
+
+    outputPfoList.insert(pPfo);
+    LArPfoHelper::GetAllDownstreamPfos(pPfo->GetDaughterPfoList(), outputPfoList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,6 +270,19 @@ int LArPfoHelper::GetPrimaryNeutrino(const ParticleFlowObject *const pPfo)
     }
 }
   
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArPfoHelper::IsFinalState(const ParticleFlowObject *const pPfo)
+{
+    if (pPfo->GetParentPfoList().size() == 0 && !LArPfoHelper::IsNeutrino(pPfo))
+        return true;
+
+    if (LArPfoHelper::IsNeutrinoFinalState(pPfo))
+        return true;
+
+    return false;   
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------ 
 
 bool LArPfoHelper::IsNeutrinoFinalState(const ParticleFlowObject *const pPfo)
