@@ -146,19 +146,6 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
     if (!foundSplit)
         return STATUS_CODE_NOT_FOUND;
 
-// --- EVENT DISPLAY [BEGIN] ---
-// ClusterList tempList1, tempList2;
-// Cluster* pCluster1 = (Cluster*)(slidingFitResult1.GetCluster());
-// Cluster* pCluster2 = (Cluster*)(slidingFitResult2.GetCluster());
-// tempList1.insert(pCluster1);
-// tempList2.insert(pCluster2);
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Cluster1", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Cluster2", BLUE);
-// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition,"SplitPosition",BLACK,2.5);
-// PandoraMonitoringApi::ViewEvent();
-// --- EVENT DISPLAY [END] ---
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -167,7 +154,7 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
 void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *const pCluster1, const Cluster *const pCluster2,
     CartesianPointList &candidateList) const
 {
-    // TODO: The following is double-double counting
+    // ATTN The following is double-double counting
     CaloHitList caloHitList1, caloHitList2;
     pCluster1->GetOrderedCaloHitList().GetCaloHitList(caloHitList1);
     pCluster2->GetOrderedCaloHitList().GetCaloHitList(caloHitList2);

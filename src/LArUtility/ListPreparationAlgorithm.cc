@@ -164,9 +164,7 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
         }
     }
 
-    // TODO: Could merge these hits instead
-
-    // TODO: Could also chop up long hits around this point
+    // TODO Could merge these hits instead. Could also chop up long hits around this point
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,7 +182,7 @@ void ListPreparationAlgorithm::ProcessMCParticles()
 
     for (MCParticleList::const_iterator mcIter = pMCParticleList->begin(), mcIterEnd = pMCParticleList->end(); mcIter != mcIterEnd; ++mcIter)
     {
-        if (m_mcNeutrinoSelection && !LArMCParticleHelper::GetPrimaryNeutrino(*mcIter))
+        if (m_mcNeutrinoSelection && !LArMCParticleHelper::GetParentNeutrinoId(*mcIter))
             continue;
 
         if (MC_VIEW_U == (*mcIter)->GetMCParticleType())

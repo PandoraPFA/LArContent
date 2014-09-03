@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArParticleIdHelper.h"
 
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 

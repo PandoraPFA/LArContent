@@ -130,7 +130,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
             if (branchSlidingFitResultMap.end() == iterBranchI || branchSlidingFitResultMap.end() == iterBranchJ ||
                 replacementSlidingFitResultMap.end() == iterReplacementI || replacementSlidingFitResultMap.end() == iterReplacementJ)
             {
-                // TODO, may want to raise an exception under certain conditions
+                // TODO May want to raise an exception under certain conditions
                 continue;
             }
 

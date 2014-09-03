@@ -16,8 +16,8 @@ namespace lar
 
 bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraSettings::ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindMissingTracks(overlapTensor, protoParticleVector);

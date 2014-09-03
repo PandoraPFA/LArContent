@@ -60,7 +60,7 @@ const MCParticle *LArMCParticleHelper::GetParentNeutrino(const MCParticle *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int LArMCParticleHelper::GetPrimaryNeutrino(const MCParticle *const pMCParticle)
+int LArMCParticleHelper::GetParentNeutrinoId(const MCParticle *const pMCParticle)
 {
     try
     {

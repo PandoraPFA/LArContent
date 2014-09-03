@@ -7,7 +7,6 @@
  */
 
 #include "Pandora/PandoraInputTypes.h"
-#include "Pandora/PandoraSettings.h"
 
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/PandoraInputTypes.h"
@@ -27,7 +26,7 @@ namespace lar
 {
 
 template <typename T>
-void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, AmbiguityFunction *pAmbiguityFunction, ElementList &elementList) const
+void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, ElementList &elementList) const
 {
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
@@ -36,10 +35,10 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Ambi
         this->GetConnectedElements(iterU->first, ignoreUnavailable, tempElementList, clusterListU, clusterListV, clusterListW);
 
         Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
-        if (!(*pAmbiguityFunction)(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
+        if (!this->DefaultAmbiguityFunction(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
             continue;
 
-        // ATTN: With custom definitions, it is possible to navigate from different U clusters to same combination
+        // ATTN With custom definitions, it is possible to navigate from different U clusters to same combination
         if (iterU->first != pClusterU)
             continue;
 
@@ -63,7 +62,7 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Ambi
 
 template <typename T>
 bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
-    Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW)
+    Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW) const
 {
     if ((1 != clusterListU.size()) || (1 != clusterListV.size()) || (1 != clusterListW.size()))
         return false;

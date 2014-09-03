@@ -79,9 +79,6 @@ private:
          */
         float GetSecondaryDistanceSquared() const;
 
-        static float        m_maxSeparationSquared;         ///< Maximum separation squared
-        static float        m_closeSeparationSquared;       ///< Close separation squared
-
     private:
         pandora::CaloHit   *m_pPrimaryTarget;               ///< the primary target
         pandora::CaloHit   *m_pSecondaryTarget;             ///< the secondary target
@@ -200,12 +197,14 @@ private:
     pandora::CaloHit *TraceHitAssociation(pandora::CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ,
         unsigned int &nSteps) const;
 
-    std::string          m_inputCaloHitListName;         ///< The input calo hit list name
-    std::string          m_outputClusterListName;        ///< The output cluster list name
+    std::string         m_inputCaloHitListName;         ///< The input calo hit list name
+    std::string         m_outputClusterListName;        ///< The output cluster list name
 
-    bool                 m_mergeBackFilteredHits;        ///< Merge rejected hits into their associated clusters
-    unsigned int         m_maxGapLayers;                 ///< Maximum number of layers for a gap
-    float                m_minCaloHitSeparationSquared;  ///< Square of minimum calo hit separation
+    bool                m_mergeBackFilteredHits;        ///< Merge rejected hits into their associated clusters
+    unsigned int        m_maxGapLayers;                 ///< Maximum number of layers for a gap
+    float               m_maxCaloHitSeparationSquared;  ///< Square of maximum calo hit separation
+    float               m_minCaloHitSeparationSquared;  ///< Square of minimum calo hit separation
+    float               m_closeSeparationSquared;       ///< Length scale (squared) for close hit separation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -222,7 +221,7 @@ inline TrackClusterCreationAlgorithm::HitAssociation::HitAssociation(pandora::Ca
     m_pPrimaryTarget(pPrimaryTarget),
     m_pSecondaryTarget(NULL),
     m_primaryDistanceSquared(primaryDistanceSquared),
-    m_secondaryDistanceSquared(m_closeSeparationSquared)
+    m_secondaryDistanceSquared(std::numeric_limits<float>::max())
 {
 }
 

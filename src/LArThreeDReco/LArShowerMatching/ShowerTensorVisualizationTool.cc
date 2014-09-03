@@ -17,8 +17,8 @@ namespace lar
 
 bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraSettings::ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
     ClusterList usedUClusters;
 
@@ -67,28 +67,28 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, Tens
                 clusterListV.insert(eIter->GetClusterV());
                 clusterListW.insert(eIter->GetClusterW());
 
-                PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-                PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "UCluster", RED));
-                PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "VCluster", GREEN));
-                PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "WCluster", BLUE));
-                PANDORA_MONITORING_API(ViewEvent());
+                PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListU, "UCluster", RED));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListV, "VCluster", GREEN));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListW, "WCluster", BLUE));
+                PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
             }
         }
 
         std::cout << " All Connected Clusters " << std::endl;
-        PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-        PANDORA_MONITORING_API(VisualizeClusters(&allClusterListU, "AllUClusters", RED));
-        PANDORA_MONITORING_API(VisualizeClusters(&allClusterListV, "AllVClusters", GREEN));
-        PANDORA_MONITORING_API(VisualizeClusters(&allClusterListW, "AllWClusters", BLUE));
+        PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ));
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListU, "AllUClusters", RED));
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListV, "AllVClusters", GREEN));
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListW, "AllWClusters", BLUE));
 
         if (m_showContext)
         {
-            PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListU()), "InputClusterListU", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListV()), "InputClusterListV", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(&(pAlgorithm->GetInputClusterListW()), "InputClusterListW", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListU()), "InputClusterListU", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListV()), "InputClusterListV", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListW()), "InputClusterListW", GRAY));
         }
 
-        PANDORA_MONITORING_API(ViewEvent());
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
     return false;

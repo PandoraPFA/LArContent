@@ -66,7 +66,7 @@ void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, con
         }
     }
 
-    // TODO: Add additional chi-squared at edge of detector
+    // TODO Add additional chi-squared at edge of detector
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, con
 void HitCreationBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType1, const HitType hitType2,
     const CartesianVector &fitPosition1, const CartesianVector &fitPosition2, CartesianVector &position3D, float &chiSquared) const
 {
-    // TODO: Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
+    // TODO Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
     const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
     const float sigmaFit(sigmaHit); 
     const HitType hitType(pCaloHit2D->GetHitType());

@@ -63,7 +63,7 @@ void NeutrinoBuildingAlgorithm::GetDaughterPfoList(PfoList &pfoList) const
 
 void NeutrinoBuildingAlgorithm::CreateNeutrinoPfo(ParticleFlowObject *&pNeutrinoPfo) const
 {
-    // TODO - correct these placeholder parameters
+    // TODO Correct these placeholder parameters
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
     pfoParameters.m_particleId = NU_MU;
     pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());

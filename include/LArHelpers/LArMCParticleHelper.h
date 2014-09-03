@@ -47,7 +47,7 @@ public:
     static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
 
      /**
-     *  @brief  Get primary neutrino or antineutrino
+     *  @brief  Get parent neutrino or antineutrino
      * 
      *  @param  pMCParticle
      * 
@@ -56,13 +56,13 @@ public:
     static const pandora::MCParticle *GetParentNeutrino(const pandora::MCParticle *const pMCParticle);
 
     /**
-     *  @brief  Get primary neutrino or antineutrino
+     *  @brief  Get parent neutrino or antineutrino pdg code
      * 
      *  @param  pMCParticle
      * 
      *  @return pdg code of neutrino (or zero, otherwise)
      */
-    static int GetPrimaryNeutrino(const pandora::MCParticle *const pMCParticle);
+    static int GetParentNeutrinoId(const pandora::MCParticle *const pMCParticle);
 };
 
 } // namespace lar

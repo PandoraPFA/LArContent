@@ -22,7 +22,7 @@ using namespace pandora;
 
 StatusCode VisualMonitoringAlgorithm::Run()
 {
-    PANDORA_MONITORING_API(SetEveDisplayParameters(m_showDetector, (m_detectorView.find("xz") != std::string::npos) ? DETECTOR_VIEW_XZ :
+    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), m_showDetector, (m_detectorView.find("xz") != std::string::npos) ? DETECTOR_VIEW_XZ :
         (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT, m_transparencyThresholdE, m_energyScaleThresholdE));
 
     // Show current mc particles
@@ -100,7 +100,7 @@ StatusCode VisualMonitoringAlgorithm::Run()
     // Finally, display the event and pause application
     if (m_displayEvent)
     {
-        PANDORA_MONITORING_API(ViewEvent());
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -129,7 +129,7 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeMCParticles(pMCParticleList, listName.empty() ? "currentMCParticles" : listName.c_str(),
+    PANDORA_MONITORING_API(VisualizeMCParticles(this->GetPandora(), pMCParticleList, listName.empty() ? "currentMCParticles" : listName.c_str(),
         AUTO, &m_particleSuppressionMap));
 }
 
@@ -175,7 +175,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeCaloHits(&caloHitList, listName.empty() ? "currentCaloHits" : listName.c_str(),
+    PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, listName.empty() ? "currentCaloHits" : listName.c_str(),
         (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY : GRAY)));
 }
 
@@ -215,7 +215,7 @@ void VisualMonitoringAlgorithm::VisualizeTrackList(const std::string &listName) 
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeTracks(&trackList, listName.empty() ? "currentTracks" : listName.c_str(), GRAY));
+    PANDORA_MONITORING_API(VisualizeTracks(this->GetPandora(), &trackList, listName.empty() ? "currentTracks" : listName.c_str(), GRAY));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeClusters(&clusterList, listName.empty() ? "currentClusters" : listName.c_str(),
+    PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, listName.empty() ? "currentClusters" : listName.c_str(),
         (m_hitColors.find("particleid") != std::string::npos) ? AUTOID :
         (m_hitColors.find("iterate") != std::string::npos ? AUTOITER :
         (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY :
@@ -284,7 +284,7 @@ void VisualMonitoringAlgorithm::VisualizeParticleFlowList(const std::string &lis
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeParticleFlowObjects(pPfoList, listName.empty() ? "currentPfos" : listName.c_str(),
+    PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), pPfoList, listName.empty() ? "currentPfos" : listName.c_str(),
         (m_hitColors.find("particleid") != std::string::npos) ? AUTOID :
         (m_hitColors.find("iterate") != std::string::npos ? AUTOITER :
         (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY :
@@ -314,7 +314,7 @@ void VisualMonitoringAlgorithm::VisualizeVertexList(const std::string &listName)
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeVertices(pVertexList, listName.empty() ? "currentVertices" : listName.c_str(), AUTO));
+    PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), pVertexList, listName.empty() ? "currentVertices" : listName.c_str(), AUTO));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

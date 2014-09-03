@@ -12,21 +12,20 @@
 #include "LArCalculators/LArPseudoLayerCalculator.h"
 
 #include "LArCheating/CheatingClusterCreationAlgorithm.h"
-#include "LArCheating/CheatingClusterCharacterisationAlg.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
 #include "LArCheating/CheatingPfoCreationAlgorithm.h"
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArParticleIdHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
-#include "LArMonitoring/NtupleWritingAlgorithm.h"
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
+
+#include "LArPlugins/LArParticleIdPlugins.h"
 
 #include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
@@ -101,11 +100,9 @@ class LArContent
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
         d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
-        d("LArNtupleWriting",                       lar::NtupleWritingAlgorithm::Factory)                                       \
         d("LArParticleMonitoring",                  lar::ParticleMonitoringAlgorithm::Factory)                                  \
         d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
         d("LArCheatingClusterCreation",             lar::CheatingClusterCreationAlgorithm::Factory)                             \
-        d("LArCheatingClusterCharacterisation",     lar::CheatingClusterCharacterisationAlg::Factory)                           \
         d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
         d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
         d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
@@ -175,17 +172,7 @@ public:
         d("LArUndershootTracks",                    lar::UndershootTracksTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
-        d("LArEmShowerId",                          &lar::LArParticleIdHelper::LArEmShowerId)                                   \
-        d("LArPhotonId",                            &lar::LArParticleIdHelper::LArPhotonId)                                     \
-        d("LArElectronId",                          &lar::LArParticleIdHelper::LArElectronId)                                   \
-        d("LArMuonId",                              &lar::LArParticleIdHelper::LArMuonId)
-
-    #define LAR_SETTINGS_LIST(d)                                                                                                \
-        d("LArClusterHelper",                       &lar::LArClusterHelper::ReadSettings)                                       \
-        d("LArGeometryHelper",                      &lar::LArGeometryHelper::ReadSettings)                                      \
-        d("LArParticleIdHelper",                    &lar::LArParticleIdHelper::ReadSettings)                                    \
-        d("LArPointingClusterHelper",               &lar::LArPointingClusterHelper::ReadSettings)                               \
-        d("LArPfoHelper",                           &lar::LArPfoHelper::ReadSettings)
+        d("LArMuonId",                              lar::LArParticleIdPlugins::LArMuonId)
 
     /**
      *  @brief  Register all the lar content algorithms and tools with pandora
@@ -195,18 +182,11 @@ public:
     static pandora::StatusCode RegisterAlgorithms(pandora::Pandora &pandora);
 
     /**
-     *  @brief  Register all the lar content helper functions with pandora
+     *  @brief  Register all the lar content plugins with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
      */
-    static pandora::StatusCode RegisterHelperFunctions(pandora::Pandora &pandora);
-
-    /**
-     *  @brief  Register all the lar content functions with pandora
-     * 
-     *  @param  pandora the pandora instance with which to register content
-     */
-    static pandora::StatusCode RegisterResetFunctions(pandora::Pandora &pandora);
+    static pandora::StatusCode RegisterPlugins(pandora::Pandora &pandora);
 
     /**
      *  @brief  Register all the lar content functions with pandora
@@ -237,18 +217,10 @@ inline pandora::StatusCode LArContent::RegisterAlgorithms(pandora::Pandora &pand
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::RegisterHelperFunctions(pandora::Pandora &pandora)
+inline pandora::StatusCode LArContent::RegisterPlugins(pandora::Pandora &pandora)
 {
     LAR_PARTICLE_ID_LIST(PANDORA_REGISTER_PARTICLE_ID);
-    LAR_SETTINGS_LIST(PANDORA_REGISTER_SETTINGS);
 
-    return pandora::STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &/*pandora*/)
-{
     return pandora::STATUS_CODE_SUCCESS;
 }
 
@@ -256,7 +228,7 @@ inline pandora::StatusCode LArContent::RegisterResetFunctions(pandora::Pandora &
 
 inline pandora::StatusCode LArContent::SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator)
 {
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(pandora, pLArPseudoLayerCalculator));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, pLArPseudoLayerCalculator));
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, lar::LArGeometryHelper::SetLArPseudoLayerCalculator(pLArPseudoLayerCalculator));
 
     return pandora::STATUS_CODE_SUCCESS;
