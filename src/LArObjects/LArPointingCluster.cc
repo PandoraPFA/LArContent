@@ -14,13 +14,9 @@ using namespace pandora;
 namespace lar
 {
 
-LArPointingCluster::LArPointingCluster(Cluster *const pCluster)
+LArPointingCluster::LArPointingCluster(Cluster *const pCluster, const unsigned int layerFitHalfWindow)
 {
-    const unsigned int halfWindowLayers(10); // TODO - add to settings, or add to constructor
-
-    TwoDSlidingFitResult slidingFitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, halfWindowLayers, slidingFitResult);
-
+    const TwoDSlidingFitResult slidingFitResult(pCluster, layerFitHalfWindow);
     this->BuildPointingCluster(slidingFitResult);
 }
 

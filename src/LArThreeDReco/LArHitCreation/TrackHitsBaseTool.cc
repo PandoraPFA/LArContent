@@ -22,8 +22,8 @@ namespace lar
 void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
     CaloHitList &newThreeDHits)
 {
-    if (PandoraSettings::ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
     try
     {
@@ -60,11 +60,18 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
         if (matchedSlidingFitMap.end() != matchedSlidingFitMap.find(hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        TwoDSlidingFitResult slidingFitResult;
-        LArClusterHelper::LArTwoDSlidingFit(pCluster, m_slidingFitWindow, slidingFitResult);
+        try
+        {
+            const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow);
 
-        if (!matchedSlidingFitMap.insert(MatchedSlidingFitMap::value_type(hitType, slidingFitResult)).second)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+            if (!matchedSlidingFitMap.insert(MatchedSlidingFitMap::value_type(hitType, slidingFitResult)).second)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
     }
 }
 

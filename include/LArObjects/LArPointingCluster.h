@@ -117,8 +117,9 @@ public:
      *  @brief  Constructor
      * 
      *  @param  pCluster address of the cluster
+     *  @param  layerFitHalfWindow the layer fit half window
      */
-    LArPointingCluster(pandora::Cluster *const pCluster);
+    LArPointingCluster(pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow = 10);
 
     /**
      *  @brief  Constructor

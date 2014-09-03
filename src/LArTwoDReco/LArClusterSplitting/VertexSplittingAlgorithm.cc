@@ -24,7 +24,7 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
     Vertex *pSelectedVertex(NULL);
     for (VertexList::const_iterator iter = pVertexList->begin(), iterEnd = pVertexList->end(); iter != iterEnd; ++iter)
     {
-        // TODO vertex selection
+        // TODO Vertex selection
         return STATUS_CODE_NOT_INITIALIZED;
     }
 

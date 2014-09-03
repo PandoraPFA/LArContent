@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "LArObjects/LArTwoDSlidingFitResult.h"
 
 namespace lar
 {

@@ -6,9 +6,6 @@
  *  $Log: $
  */
 
-#include "Helpers/ClusterHelper.h"
-#include "Helpers/XmlHelper.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
@@ -33,22 +30,13 @@ float LArPointingClusterHelper::GetLength(const LArPointingCluster &pointingClus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const CartesianVector &daughterVertex)
-{
-    if ((parentVertex - daughterVertex).GetMagnitudeSquared() < m_maxNodeRadiusSquared)
-        return true;
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
+bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex,
+    const float minLongitudinalDistance, const float maxTransverseDistance)
 {
     float rL(0.f), rT(0.f);
     LArPointingClusterHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
-    if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) || rT > m_maxPointingTransverseDistance)
+    if (std::fabs(rL) > std::fabs(minLongitudinalDistance) || rT > maxTransverseDistance)
         return false;
 
     return true;
@@ -56,17 +44,18 @@ bool LArPointingClusterHelper::IsNode(const CartesianVector &parentVertex, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex)
+bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, const LArPointingCluster::Vertex &daughterVertex,
+    const float minLongitudinalDistance, const float maxLongitudinalDistance, const float maxTransverseDistance, const float angularAllowance)
 {
     float rL(0.f), rT(0.f);
     LArPointingClusterHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), parentVertex, rL, rT);
 
-    if (std::fabs(rL) > std::fabs(m_minPointingLongitudinalDistance) && (rL < 0 || rL > m_maxPointingLongitudinalDistance))
+    if (std::fabs(rL) > std::fabs(minLongitudinalDistance) && (rL < 0 || rL > maxLongitudinalDistance))
         return false;
 
-    static const float tanSqTheta(std::pow(std::tan(M_PI * m_pointingAngularAllowance / 180.f), 2.0));
+    const float tanSqTheta(std::pow(std::tan(M_PI * angularAllowance / 180.f), 2.0));
 
-    if (rT * rT > m_maxPointingTransverseDistance * m_maxPointingTransverseDistance + rL * rL * tanSqTheta)
+    if (rT * rT > maxTransverseDistance * maxTransverseDistance + rL * rL * tanSqTheta)
         return false;
 
     return true;
@@ -74,21 +63,8 @@ bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArPointingClusterHelper::GetProjectedDistance(const LArPointingCluster::Vertex &pointingVertex, const Cluster *const pCluster)
-{
-    return (pointingVertex.GetPosition() - LArPointingClusterHelper::GetProjectedPosition(pointingVertex, pCluster)).GetMagnitude();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CartesianVector LArPointingClusterHelper::GetProjectedPosition(const LArPointingCluster::Vertex &pointingVertex, const Cluster *const pCluster)
-{
-    return LArPointingClusterHelper::GetProjectedPosition(pointingVertex.GetPosition(), pointingVertex.GetDirection(), pCluster);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVector &vertexPosition, const CartesianVector &vertexDirection, const pandora::Cluster *const pCluster)
+CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVector &vertexPosition, const CartesianVector &vertexDirection,
+    const pandora::Cluster *const pCluster, const float projectionAngularAllowance)
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -107,10 +83,10 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVe
             if (distanceSquared > 0.f)
             {
                 const float cosTheta(-hitProjection.GetUnitVector().GetDotProduct(vertexDirection));
-                static const float minCosTheta(std::cos(M_PI * m_projectionAngularAllowance / 180.f));
+                const float minCosTheta(std::cos(M_PI * projectionAngularAllowance / 180.f));
 
-                // TODO: Try to give more weight to on-axis projections
-                if (distanceSquared < closestDistanceSquared && cosTheta > minCosTheta)
+                // TODO Try to give more weight to on-axis projections
+                if ((distanceSquared < closestDistanceSquared) && (cosTheta > minCosTheta))
                 {
                     pClosestCaloHit = pCaloHit;
                     closestDistanceSquared = distanceSquared;
@@ -330,7 +306,8 @@ void LArPointingClusterHelper::GetIntersection(const LArPointingCluster::Vertex 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArPointingCluster::Vertex LArPointingClusterHelper::GetBestVertexEstimate(const LArPointingClusterVertexList &vertexList,
-    const LArPointingClusterList &pointingClusterList)
+    const LArPointingClusterList &pointingClusterList, const float minLongitudinalDistance, const float maxLongitudinalDistance,
+    const float maxTransverseDistance, const float angularAllowance)
 {
     float bestAssociatedEnergy(0.f);
     LArPointingClusterVertexList::const_iterator bestVertexIter(vertexList.end());
@@ -340,7 +317,8 @@ LArPointingCluster::Vertex LArPointingClusterHelper::GetBestVertexEstimate(const
         const LArPointingCluster::Vertex &vertex(*iter);
 
         LArPointingClusterVertexList associatedVertices;
-        LArPointingClusterHelper::CollectAssociatedClusters(vertex, pointingClusterList, associatedVertices);
+        LArPointingClusterHelper::CollectAssociatedClusters(vertex, pointingClusterList, minLongitudinalDistance,
+            maxLongitudinalDistance, maxTransverseDistance, angularAllowance, associatedVertices);
 
         const float associatedEnergy(LArPointingClusterHelper::GetAssociatedEnergy(vertex, associatedVertices));
 
@@ -360,6 +338,7 @@ LArPointingCluster::Vertex LArPointingClusterHelper::GetBestVertexEstimate(const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPointingClusterHelper::CollectAssociatedClusters(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &inputList,
+    const float minLongitudinalDistance, const float maxLongitudinalDistance, const float maxTransverseDistance, const float angularAllowance,
     LArPointingClusterVertexList &outputList)
 {
     for (LArPointingClusterList::const_iterator iter = inputList.begin(), iterEnd = inputList.end(); iter != iterEnd; ++iter)
@@ -373,8 +352,8 @@ void LArPointingClusterHelper::CollectAssociatedClusters(const LArPointingCluste
 
         const LArPointingCluster::Vertex &chosenVertex((innerDistanceSquared < outerDistanceSquared) ? innerVertex : outerVertex);
 
-        if (LArPointingClusterHelper::IsNode(vertex.GetPosition(), chosenVertex) ||
-            LArPointingClusterHelper::IsEmission(vertex.GetPosition(), chosenVertex))
+        if (LArPointingClusterHelper::IsNode(vertex.GetPosition(), chosenVertex, minLongitudinalDistance, maxTransverseDistance) ||
+            LArPointingClusterHelper::IsEmission(vertex.GetPosition(), chosenVertex, minLongitudinalDistance, maxLongitudinalDistance, maxTransverseDistance, angularAllowance))
         {
             outputList.push_back(chosenVertex);
         }
@@ -407,40 +386,6 @@ float LArPointingClusterHelper::GetAssociatedEnergy(const LArPointingCluster::Ve
     }
 
     return associatedEnergy;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArPointingClusterHelper::m_maxNodeRadiusSquared = 4.f;
-float LArPointingClusterHelper::m_maxPointingLongitudinalDistance = 25.f;
-float LArPointingClusterHelper::m_minPointingLongitudinalDistance = -2.f;
-float LArPointingClusterHelper::m_maxPointingTransverseDistance = 2.f;
-float LArPointingClusterHelper::m_pointingAngularAllowance = 2.f; // degrees
-float LArPointingClusterHelper::m_projectionAngularAllowance = 20.f; // degrees
-
-StatusCode LArPointingClusterHelper::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    float maxNodeRadius = 2.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxNodeRadius", maxNodeRadius));
-    m_maxNodeRadiusSquared = maxNodeRadius * maxNodeRadius;
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPointingLongitudinalDistance", m_maxPointingLongitudinalDistance));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPointingLongitudinalDistance", m_minPointingLongitudinalDistance));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPointingTransverseDistance", m_maxPointingTransverseDistance));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PointingAngularAllowance", m_pointingAngularAllowance));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ProjectionAngularAllowance", m_projectionAngularAllowance));
-
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar

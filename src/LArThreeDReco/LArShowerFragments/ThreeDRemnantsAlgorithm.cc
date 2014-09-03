@@ -40,7 +40,7 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
 
 void ThreeDRemnantsAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
-    // TODO - correct these placeholder parameters
+    // TODO Correct these placeholder parameters
     pfoParameters.m_particleId = E_MINUS; // Shower
     pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());

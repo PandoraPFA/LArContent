@@ -26,21 +26,29 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
 
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
-        Cluster *pPfoCluster(*pIter);
-        const ConeParameters coneParameters(pPfoCluster, m_slidingFitWindow, m_coneAngleCentile);
-
-        for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
+        try
         {
-            Cluster *pRemnantCluster(*rIter);
-            const float boundedFraction(this->GetBoundedFraction(pRemnantCluster, coneParameters));
+            Cluster *pPfoCluster(*pIter);
+            const ConeParameters coneParameters(pPfoCluster, m_slidingFitWindow, m_coneAngleCentile);
 
-            if (boundedFraction < m_minBoundedFraction)
-                continue;
+            for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
+            {
+                Cluster *pRemnantCluster(*rIter);
+                const float boundedFraction(this->GetBoundedFraction(pRemnantCluster, coneParameters));
 
-            AssociationDetails &associationDetails(clusterAssociationMap[pRemnantCluster]);
+                if (boundedFraction < m_minBoundedFraction)
+                    continue;
 
-            if (!associationDetails.insert(AssociationDetails::value_type(pPfoCluster, boundedFraction)).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+                AssociationDetails &associationDetails(clusterAssociationMap[pRemnantCluster]);
+
+                if (!associationDetails.insert(AssociationDetails::value_type(pPfoCluster, boundedFraction)).second)
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+            }
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
         }
     }
 
@@ -86,9 +94,7 @@ ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster, con
     m_coneCosHalfAngle(0.f),
     m_isForward(true)
 {
-    TwoDSlidingFitResult fitResult;
-    LArClusterHelper::LArTwoDSlidingFit(pCluster, slidingFitWindow, fitResult);
-
+    const TwoDSlidingFitResult fitResult(pCluster, slidingFitWindow);
     this->GetDirectionEstimate(fitResult, m_isForward, m_direction);
     const CartesianVector basePosition(m_isForward ? fitResult.GetGlobalMaxLayerPosition() : fitResult.GetGlobalMinLayerPosition());
 
@@ -117,9 +123,9 @@ void ConeBasedMergingAlgorithm::ConeParameters::GetDirectionEstimate(const TwoDS
 
     CartesianVector directionSum(0.f, 0.f, 0.f);
     int layerCounter(0), hitCounter(0), layerSum(0), layerHitWeightedSum(0);
-    const TwoDSlidingFitResult::LayerFitResultMap &layerFitResultMap(fitResult.GetLayerFitResultMap());
+    const LayerFitResultMap &layerFitResultMap(fitResult.GetLayerFitResultMap());
 
-    for (TwoDSlidingFitResult::LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+    for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
     {
         try
         {

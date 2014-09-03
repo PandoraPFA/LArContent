@@ -24,8 +24,8 @@ namespace lar
 
 bool MissingTrackSegmentTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraSettings::ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector; ClusterMergeMap clusterMergeMap;
     this->FindTracks(pAlgorithm, overlapTensor, protoParticleVector, clusterMergeMap);
@@ -172,7 +172,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
         try
         {
             const TwoDSlidingFitResult &slidingFitResult(pAlgorithm->GetCachedSlidingFitResult(pCluster));
-            slidingFitResultMap[pCluster] = slidingFitResult;
+            (void) slidingFitResultMap.insert(SlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)
@@ -181,9 +181,8 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
 
         try
         {
-            TwoDSlidingFitResult slidingFitResult;
-            LArClusterHelper::LArTwoDSlidingFit(pCluster, pAlgorithm->GetSlidingFitWindow(), slidingFitResult);
-            slidingFitResultMap[pCluster] = slidingFitResult;
+            const TwoDSlidingFitResult slidingFitResult(pCluster, pAlgorithm->GetSlidingFitWindow());
+            (void) slidingFitResultMap.insert(SlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)
@@ -199,12 +198,16 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
 {
     const TwoDSlidingFitResult &fitResult1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster1));
     const TwoDSlidingFitResult &fitResult2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster2));
+
     const float nPoints1(std::fabs(static_cast<float>(fitResult1.GetMaxLayer() - fitResult1.GetMinLayer())));
     const float nPoints2(std::fabs(static_cast<float>(fitResult2.GetMaxLayer() - fitResult2.GetMinLayer())));
-    const float xPitch((particle.m_longMaxX - particle.m_longMinX) * 2.f / (nPoints1 + nPoints2));
 
-    for (float x = particle.m_longMinX; x < particle.m_longMaxX; x += xPitch)
+    const unsigned int nPoints(static_cast<unsigned int>(1.f + (nPoints1 + nPoints2) / 2.f));
+
+    for (unsigned n = 0; n <= nPoints; ++n)
     {
+        const float x(particle.m_longMinX + (particle.m_longMaxX - particle.m_longMinX) * static_cast<float>(n) / static_cast<float>(nPoints));
+
         if ((x > particle.m_shortMinX) && (x < particle.m_shortMaxX))
             continue;
 

@@ -8,7 +8,7 @@
 #ifndef LAR_PSEUDO_LAYER_CALCULATOR_H
 #define LAR_PSEUDO_LAYER_CALCULATOR_H 1
 
-#include "Utilities/PseudoLayerCalculator.h"
+#include "Plugins/PseudoLayerPlugin.h"
 
 namespace lar
 {
@@ -16,7 +16,7 @@ namespace lar
 /**
  *  @brief  LArPseudoLayerCalculator class
  */
-class LArPseudoLayerCalculator : public pandora::PseudoLayerCalculator
+class LArPseudoLayerCalculator : public pandora::PseudoLayerPlugin
 {
 public:
     /**

@@ -54,8 +54,10 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowerFitResult &fitResult, const XSampling &xSampling,
     ShowerPositionMap &showerPositionMap) const
 {
-    for (float x = xSampling.m_minX; x < xSampling.m_maxX; x += xSampling.m_xPitch)
+    for (int n=0; n <= xSampling.m_nPoints; ++n)
     {
+        const float x(xSampling.m_minX + (xSampling.m_maxX - xSampling.m_minX) * static_cast<float>(n) / static_cast<float>(xSampling.m_nPoints));
+
         FloatVector edgePositions;
         fitResult.GetShowerEdges(x, edgePositions);
 
@@ -63,8 +65,15 @@ void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowe
             continue;
 
         std::sort(edgePositions.begin(), edgePositions.end());
-        const int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
-        showerPositionMap.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, edgePositions.front(), edgePositions.back())));
+
+        try
+        {
+            const int xBin(xSampling.GetBin(x));
+            showerPositionMap.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, edgePositions.front(), edgePositions.back())));
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 }
 
@@ -72,8 +81,8 @@ void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowe
 
 float BoundedClusterMergingAlgorithm::GetBoundedFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const
 {
-    if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) ||
-        (xSampling.m_xPitch < std::numeric_limits<float>::epsilon()) || (0 == pCluster->GetNCaloHits()))
+  if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (0 >= xSampling.m_nPoints) || 
+      (0 == pCluster->GetNCaloHits()))
     {
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
@@ -89,15 +98,18 @@ float BoundedClusterMergingAlgorithm::GetBoundedFraction(const Cluster *const pC
             const float x(pCaloHit->GetPositionVector().GetX());
             const float z(pCaloHit->GetPositionVector().GetZ());
 
-            if ((x < xSampling.m_minX) || (x > xSampling.m_maxX))
-                continue;
+            try
+            {
+                const int xBin(xSampling.GetBin(x));
+            
+                ShowerPositionMap::const_iterator positionIter = showerPositionMap.find(xBin);
 
-            const int xBin((x - xSampling.m_minX) / xSampling.m_xPitch);
-
-            ShowerPositionMap::const_iterator positionIter = showerPositionMap.find(xBin);
-
-            if ((showerPositionMap.end() != positionIter) && (z > positionIter->second.GetLowEdgeZ()) && (z < positionIter->second.GetHighEdgeZ()))
-                ++nMatchedHits;
+                if ((showerPositionMap.end() != positionIter) && (z > positionIter->second.GetLowEdgeZ()) && (z < positionIter->second.GetHighEdgeZ()))
+                    ++nMatchedHits;
+            }
+            catch (StatusCodeException &)
+            {
+            }
         }
     }
 
@@ -110,14 +122,23 @@ float BoundedClusterMergingAlgorithm::GetBoundedFraction(const Cluster *const pC
 BoundedClusterMergingAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitResult)
 {
     fitResult.GetMinAndMaxX(m_minX, m_maxX);
-    const int nPoints(fitResult.GetMaxLayer() - fitResult.GetMinLayer());
 
-    if (0 >= nPoints)
+    m_nPoints = 1 + fitResult.GetMaxLayer() - fitResult.GetMinLayer();
+
+    if (((m_maxX - m_minX) < std::numeric_limits<float>::epsilon()) || (0 >= m_nPoints))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    m_xPitch = (m_maxX - m_minX) / static_cast<float>(nPoints);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int BoundedClusterMergingAlgorithm::XSampling::GetBin(const float x) const
+{
+    if (((x - m_minX) < -std::numeric_limits<float>::epsilon()) || ((x - m_maxX) > +std::numeric_limits<float>::epsilon()))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return static_cast<int>(0.5f + static_cast<float>(m_nPoints) * (x - m_minX) / (m_maxX - m_minX));
+}
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 

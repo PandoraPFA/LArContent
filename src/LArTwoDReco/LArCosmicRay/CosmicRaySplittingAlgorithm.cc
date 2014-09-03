@@ -40,8 +40,9 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
             continue;
 
         TwoDSlidingFitResultMap::const_iterator bFitIter = slidingFitResultMap.find(*bIter);
+
         if (slidingFitResultMap.end() == bFitIter)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+            continue;
 
         const TwoDSlidingFitResult &branchSlidingFitResult(bFitIter->second);
 
@@ -66,8 +67,9 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
                 continue;
 
             TwoDSlidingFitResultMap::const_iterator rFitIter = slidingFitResultMap.find(*rIter);
+
             if (slidingFitResultMap.end() == rFitIter)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+                continue;
 
             const TwoDSlidingFitResult &replacementSlidingFitResult(rFitIter->second);
 
@@ -181,11 +183,18 @@ void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &
     {
         if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
         {
-            TwoDSlidingFitResult slidingFitResult;
-            LArClusterHelper::LArTwoDSlidingFit(*iter, m_halfWindowLayers, slidingFitResult);
+            try
+            {
+                const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers);
 
-            if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+                if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+            }
+            catch (StatusCodeException &statusCodeException)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                    throw statusCodeException;
+            }
         }
     }
 }

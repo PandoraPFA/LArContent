@@ -6,12 +6,8 @@
  *  $Log: $
  */
 
-#include "Helpers/ClusterHelper.h"
-#include "Helpers/XmlHelper.h"
-
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
 
 #include <algorithm>
 #include <cmath>
@@ -21,6 +17,16 @@ using namespace pandora;
 
 namespace lar
 {
+
+void LArPfoHelper::GetCaloHits(const PfoList &pfoList, const HitType &hitType, CaloHitList &caloHitList)
+{
+    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        LArPfoHelper::GetCaloHits(*pIter, hitType, caloHitList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitType &hitType, CaloHitList &caloHitList)
 {
@@ -79,6 +85,27 @@ void LArPfoHelper::GetAllConnectedPfos(ParticleFlowObject *const pPfo, PfoList &
     outputPfoList.insert(pPfo);
     LArPfoHelper::GetAllConnectedPfos(pPfo->GetParentPfoList(), outputPfoList);
     LArPfoHelper::GetAllConnectedPfos(pPfo->GetDaughterPfoList(), outputPfoList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllDownstreamPfos(const PfoList &inputPfoList, PfoList &outputPfoList)
+{
+    for (PfoList::const_iterator pIter = inputPfoList.begin(), pIterEnd = inputPfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        LArPfoHelper::GetAllDownstreamPfos(*pIter, outputPfoList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllDownstreamPfos(ParticleFlowObject *const pPfo, PfoList &outputPfoList)
+{
+    if (outputPfoList.count(pPfo))
+        return;
+
+    outputPfoList.insert(pPfo);
+    LArPfoHelper::GetAllDownstreamPfos(pPfo->GetDaughterPfoList(), outputPfoList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -223,6 +250,79 @@ bool LArPfoHelper::IsShower(const ParticleFlowObject *const pPfo)
     // electron, photon
     return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int LArPfoHelper::GetPrimaryNeutrino(const ParticleFlowObject *const pPfo)
+{
+    try
+    {
+        const ParticleFlowObject *pParentPfo = LArPfoHelper::GetParentNeutrino(pPfo);
+        return pParentPfo->GetParticleId();
+    }
+    catch (const StatusCodeException &)
+    {
+        return 0;
+    }
+}
+  
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArPfoHelper::IsFinalState(const ParticleFlowObject *const pPfo)
+{
+    if (pPfo->GetParentPfoList().size() == 0 && !LArPfoHelper::IsNeutrino(pPfo))
+        return true;
+
+    if (LArPfoHelper::IsNeutrinoFinalState(pPfo))
+        return true;
+
+    return false;   
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArPfoHelper::IsNeutrinoFinalState(const ParticleFlowObject *const pPfo)
+{
+    return ((pPfo->GetParentPfoList().size() == 1) && (LArPfoHelper::IsNeutrino(*(pPfo->GetParentPfoList().begin()))));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
+{
+    const int absoluteParticleId(std::abs(pPfo->GetParticleId()));
+
+    if ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId))
+        return true;
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+const ParticleFlowObject *LArPfoHelper::GetParentPfo(const ParticleFlowObject *const pPfo)
+{
+    const ParticleFlowObject *pParentPfo = pPfo;
+
+    while (pParentPfo->GetParentPfoList().empty() == false)
+    {
+        pParentPfo = *(pParentPfo->GetParentPfoList().begin());
+    }
+
+    return pParentPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------  
+
+const ParticleFlowObject *LArPfoHelper::GetParentNeutrino(const ParticleFlowObject *const pPfo)
+{
+    const ParticleFlowObject *pParentPfo = LArPfoHelper::GetParentPfo(pPfo);  
+
+    if(!LArPfoHelper::IsNeutrino(pParentPfo))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return pParentPfo;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -254,13 +354,6 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
         return (nHitsLhs > nHitsRhs);
 
     return (LArPfoHelper::GetTwoDLengthSquared(pLhs) > LArPfoHelper::GetTwoDLengthSquared(pRhs));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArPfoHelper::ReadSettings(const TiXmlHandle /*xmlHandle*/)
-{
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar

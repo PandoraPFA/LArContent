@@ -68,13 +68,22 @@ public:
     void AddThreeDHitsToPfo(pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList, pandora::Cluster *&pCluster3D) const;
 
     /**
-     *  @brief  Create a new three dimensional cluster, using a list of provided three dimensional hits
+     *  @brief  Create a new three dimensional hit from a two dimensional hit
      *
      *  @param  pCaloHit2D the address of the two dimensional calo hit, for which a new three dimensional hit is to be created
      *  @param  position3D the position vector for the new three dimensional calo hit
      *  @param  pCaloHit3D to receive the address of the new three dimensional calo hit
      */
     void CreateThreeDHit(pandora::CaloHit *pCaloHit2D, const pandora::CartesianVector &position3D, pandora::CaloHit *&pCaloHit3D) const;
+
+    /**
+     *  @brief  Check that a new three dimensional position is not unphysical
+     *
+     *  @param  position3D the position vector for the new three dimensional calo hit
+     *
+     *  @param  boolean  
+     */
+    bool CheckThreeDHit(const pandora::CartesianVector &position3D) const;
 
 private:
     pandora::StatusCode Run();

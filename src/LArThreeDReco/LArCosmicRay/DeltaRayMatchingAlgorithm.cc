@@ -28,7 +28,7 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
 
     if (pfoVector.empty())
     {
-        std::cout << "DeltaRayMatchingAlgorithm: could not find pfo list " << m_parentPfoListName << std::endl;
+        std::cout << "DeltaRayMatchingAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -177,8 +177,7 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
                 ParticleFlowObject *pBestPfo = NULL;
                 this->FindBestParentPfo(pCluster1, pCluster2, pCluster3, pBestPfo);
 
-                // ATTN: need to record all matches when all three views are used
-
+                // ATTN Need to record all matches when all three views are used
                 particleList.push_back(Particle(pCluster1, pCluster2, pCluster3, pBestPfo));
             }
         }
@@ -516,7 +515,7 @@ void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList
     const PfoList *pPfoList = NULL; std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
-    // TODO - correct these placeholder parameters
+    // TODO Correct these placeholder parameters
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
     pfoParameters.m_particleId = E_MINUS; // SHOWER
     pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());

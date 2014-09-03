@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the longitudinal association algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -23,7 +23,7 @@ void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList 
     {
         Cluster *pCluster = *iter;
 
-        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < 4)
+        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < m_minClusterLayers)
             continue;
 
         clusterVector.push_back(pCluster);
@@ -36,7 +36,7 @@ void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList 
 
 void LongitudinalAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
-    // ATTN: This method assumes that clusters have been sorted by layer
+    // ATTN This method assumes that clusters have been sorted by layer
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
     {
         Cluster *pInnerCluster = *iterI;
@@ -83,6 +83,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     if (pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer())
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
+    // TODO Remove hardcoded numbers
     if ((pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer() + 3) ||
         (pInnerCluster->GetOuterPseudoLayer() + 3 > pOuterCluster->GetOuterPseudoLayer()))
     {
@@ -90,7 +91,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     }
 
     if ((pInnerCluster->GetOuterPseudoLayer() > pOuterCluster->GetInnerPseudoLayer() + 1) ||
-        (pOuterCluster->GetInnerPseudoLayer() > pInnerCluster->GetOuterPseudoLayer() + 7))
+        (pOuterCluster->GetInnerPseudoLayer() > pInnerCluster->GetOuterPseudoLayer() + m_maxGapLayers))
     {
         return false;
     }
@@ -104,16 +105,16 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     const CartesianVector innerEndCentroid(pInnerCluster->GetCentroid(pInnerCluster->GetOuterPseudoLayer()));
     const CartesianVector outerStartCentroid(pOuterCluster->GetCentroid(pOuterCluster->GetInnerPseudoLayer()));
 
-    if ((innerEndCentroid-outerStartCentroid).GetMagnitudeSquared() > 10.f)
+    if ((innerEndCentroid-outerStartCentroid).GetMagnitudeSquared() > m_maxGapDistanceSquared)
         return false;
 
     CaloHit *pOuterLayerHit = *(pInnerCluster->GetOrderedCaloHitList().rbegin()->second->begin());
     const float hitSizeX(pOuterLayerHit->GetCellLengthScale());
     const float hitSizeZ(pOuterLayerHit->GetCellThickness());
 
-    ClusterHelper::ClusterFitResult innerEndFit, outerStartFit;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pInnerCluster, 30, innerEndFit));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pOuterCluster, 30, outerStartFit));
+    ClusterFitResult innerEndFit, outerStartFit;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitEnd(pInnerCluster, m_fitLayers, innerEndFit));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitStart(pOuterCluster, m_fitLayers, outerStartFit));
 
     if (this->AreClustersAssociated(innerEndCentroid, outerStartCentroid, hitSizeX, hitSizeZ, innerEndFit, outerStartFit))
         return true;
@@ -124,12 +125,12 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVector &innerClusterEnd, const CartesianVector &outerClusterStart,
-    const float hitSizeX, const float hitSizeZ, const ClusterHelper::ClusterFitResult &innerFit, const ClusterHelper::ClusterFitResult &outerFit) const
+    const float hitSizeX, const float hitSizeZ, const ClusterFitResult &innerFit, const ClusterFitResult &outerFit) const
 {
     if (!innerFit.IsFitSuccessful() || !outerFit.IsFitSuccessful())
         return false;
 
-    if (innerFit.GetDirection().GetCosOpeningAngle(outerFit.GetDirection()) < 0.985f)
+    if (innerFit.GetDirection().GetCosOpeningAngle(outerFit.GetDirection()) < m_minCosRelativeAngle)
         return false;
 
     const CartesianVector innerEndFit1(innerFit.GetIntercept() + innerFit.GetDirection() * (innerFit.GetDirection().GetDotProduct(innerClusterEnd - innerFit.GetIntercept())));
@@ -140,22 +141,26 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
 
     const CartesianVector clusterSeparation(outerClusterStart - innerClusterEnd);
 
-    if ((std::fabs(clusterSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(clusterSeparation.GetZ() / hitSizeZ) < 2.f))
+    if ((std::fabs(clusterSeparation.GetX() / hitSizeX) < m_maxTransverseDisplacement) &&
+        (std::fabs(clusterSeparation.GetZ() / hitSizeZ) < m_maxLongitudinalDisplacement))
         return true;
 
     const CartesianVector fittedSeparation(outerStartFit1 - innerEndFit1);
 
-    if ((std::fabs(fittedSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(fittedSeparation.GetZ() / hitSizeZ) < 2.f))
+    if ((std::fabs(fittedSeparation.GetX() / hitSizeX) < m_maxTransverseDisplacement) &&
+        (std::fabs(fittedSeparation.GetZ() / hitSizeZ) < m_maxLongitudinalDisplacement))
         return true;
 
     const CartesianVector fittedInnerSeparation(innerEndFit2 - innerEndFit1);
 
-    if ((std::fabs(fittedInnerSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(fittedInnerSeparation.GetZ() / hitSizeZ) < 2.f))
+    if ((std::fabs(fittedInnerSeparation.GetX() / hitSizeX) < m_maxTransverseDisplacement) &&
+        (std::fabs(fittedInnerSeparation.GetZ() / hitSizeZ) < m_maxLongitudinalDisplacement))
         return true;
 
     const CartesianVector fittedOuterSeparation(outerStartFit2 - outerStartFit1);
 
-    if ((std::fabs(fittedOuterSeparation.GetX() / hitSizeX) < 2.f) && (std::fabs(fittedOuterSeparation.GetZ() / hitSizeZ) < 2.f))
+    if ((std::fabs(fittedOuterSeparation.GetX() / hitSizeX) < m_maxTransverseDisplacement) &&
+        (std::fabs(fittedOuterSeparation.GetZ() / hitSizeZ) < m_maxLongitudinalDisplacement))
         return true;
 
     return false;
@@ -165,6 +170,35 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
 
 StatusCode LongitudinalAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    m_minClusterLayers = 4;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterLayers", m_minClusterLayers));
+
+    m_maxGapLayers = 7;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxGapLayers", m_maxGapLayers));
+
+    m_fitLayers = 30;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FitLayers", m_fitLayers));
+
+    float maxGapDistance = std::sqrt(10.f);
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxGapDistance", maxGapDistance));
+    m_maxGapDistanceSquared = maxGapDistance * maxGapDistance;
+
+    m_minCosRelativeAngle = 0.985f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCosRelativeAngle", m_minCosRelativeAngle));
+
+    m_maxTransverseDisplacement = 2.f; // normalised units
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+
+    m_maxLongitudinalDisplacement = 2.f; // normalised units
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }
 

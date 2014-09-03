@@ -32,15 +32,15 @@ StatusCode ListMergingAlgorithm::Run()
         {
             if (STATUS_CODE_NOT_FOUND == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: Cluster list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                std::cout << "ListMergingAlgorithm: cluster list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: No clusters to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                std::cout << "ListMergingAlgorithm: no clusters to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else
             {
-                std::cout << "ListMergingAlgorithm: Error in cluster merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                std::cout << "ListMergingAlgorithm: error in cluster merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
                 return statusCode;
             }
         }
@@ -61,15 +61,15 @@ StatusCode ListMergingAlgorithm::Run()
         {
             if (STATUS_CODE_NOT_FOUND == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: Pfo list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                std::cout << "ListMergingAlgorithm: pfo list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: No pfos to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                std::cout << "ListMergingAlgorithm: no pfos to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else
             {
-                std::cout << "ListMergingAlgorithm: Error in pfo merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                std::cout << "ListMergingAlgorithm: error in pfo merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
                 return statusCode;
             }
         }
@@ -101,7 +101,7 @@ StatusCode ListMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     if ((m_sourceClusterListNames.size() != m_targetClusterListNames.size()) || (m_sourcePfoListNames.size() != m_targetPfoListNames.size()))
     {
-        std::cout << "ListMergingAlgorithm::ReadSettings - Invalid list configuration " << std::endl;
+        std::cout << "ListMergingAlgorithm::ReadSettings: invalid list configuration " << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 

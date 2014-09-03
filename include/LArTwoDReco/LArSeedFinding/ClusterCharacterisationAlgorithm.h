@@ -173,20 +173,25 @@ private:
     typedef std::map<pandora::Cluster*, LArPointingCluster::Vertex> ClusterToVertexMap;
     mutable ClusterToVertexMap  m_clusterToVertexMap;       ///< The cluster to vertex map
 
-    std::string                 m_inputClusterListName;     ///< The name of the input cluster list
-    pandora::StringVector       m_inputPfoListNames;        ///< The names of the input pfo lists
+    std::string             m_inputClusterListName;         ///< The name of the input cluster list
+    pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfo lists
 
-    unsigned int                m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per (seed or branch) cluster
-    float                       m_nearbyClusterDistance;    ///< The nearby cluster distance, used for determining cluster associations
-    float                       m_remoteClusterDistance;    ///< The remote cluster distance, used for determining cluster associations
+    unsigned int            m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
+    float                   m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
+    float                   m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
 
-    bool                        m_useMCFigureOfMerit;       ///< Whether to use a figure of merit based on mc particle information
-    bool                        m_useMCVertexSelection;     ///< Whether to select vertex based on mc particle information (reduced level of cheating)
-    bool                        m_useFirstImprovedSeed;     ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
+    bool                    m_useMCFigureOfMerit;           ///< Whether to use a figure of merit based on mc particle information
+    bool                    m_useMCVertexSelection;         ///< Whether to select vertex based on mc particle information (reduced level of cheating)
+    bool                    m_useFirstImprovedSeed;         ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
 
-    bool                        m_shouldRemoveShowerPfos;   ///< Whether to delete any existing pfos to which many shower branches have been added
-    unsigned int                m_showerLikeNBranches;      ///< The minimum number of branches before cluster is declared shower like
-    float                       m_showerLikeCaloHitRatio;   ///< The minimum ratio of final to original calo hits before cluster is declared shower like
+    bool                    m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added
+    unsigned int            m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
+    float                   m_showerLikeCaloHitRatio;       ///< The minimum ratio of final to original calo hits before cluster is declared shower like
+
+    float                   m_minVertexLongitudinalDistance;///< Best vertex estimate: min longitudinal distance cut
+    float                   m_maxVertexLongitudinalDistance;///< Best vertex estimate: max longitudinal distance cut
+    float                   m_maxVertexTransverseDistance;  ///< Best vertex estimate: max transverse distance cut
+    float                   m_vertexAngularAllowance;       ///< Best vertex estimate: pointing angular allowance in degrees
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -145,14 +145,17 @@ TransverseOverlapResult ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const
     const float nPointsU(std::fabs((xOverlap / xSpanU) * static_cast<float>(fitSegmentU.GetEndLayer() - fitSegmentU.GetStartLayer())));
     const float nPointsV(std::fabs((xOverlap / xSpanV) * static_cast<float>(fitSegmentV.GetEndLayer() - fitSegmentV.GetStartLayer())));
     const float nPointsW(std::fabs((xOverlap / xSpanW) * static_cast<float>(fitSegmentW.GetEndLayer() - fitSegmentW.GetStartLayer())));
-    const float xPitch(3.f * xOverlap / (nPointsU + nPointsV + nPointsW));
+
+    const unsigned int nPoints(1 + static_cast<unsigned int>((nPointsU + nPointsV + nPointsW) / 3.f));
 
     // Chi2 calculations
     float pseudoChi2Sum(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
 
-    for (float x = minX; x < maxX; x += xPitch)
+    for (unsigned int n = 0; n <= nPoints; ++n)
     {
+        const float x(minX + (maxX - minX) * static_cast<float>(n) / static_cast<float>(nPoints));
+
         try
         {
             CartesianVector fitUVector(0.f, 0.f, 0.f), fitVVector(0.f, 0.f, 0.f), fitWVector(0.f, 0.f, 0.f);

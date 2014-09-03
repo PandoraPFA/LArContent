@@ -10,8 +10,6 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "Helpers/ClusterHelper.h"
-
 namespace lar
 {
 

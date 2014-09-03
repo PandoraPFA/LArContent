@@ -42,27 +42,6 @@ private:
      */
     void CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 
-    /**
-     *  @brief  Classify elements of a cluster list as track-like or shower-like (uses IsMipTrack cluster flags, set by previous algs).
-     * 
-     *  @param  clusterList the input cluster list
-     *  @param  trackClusterList to receive the list of track-like clusters
-     *  @param  showerClusterList to receive the list of shower-like clusters
-     */
-    static void ClassifyClusters(const pandora::ClusterList &clusterList, pandora::ClusterList &trackClusterList, pandora::ClusterList &showerClusterList);
-
-    static bool TrackTrackTrackAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
-        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
-
-    static bool TrackTrackShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
-        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
-
-    static bool TrackShowerShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
-        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
-
-    static bool ShowerShowerShowerAmbiguity(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV,
-        const pandora::ClusterList &clusterListW,  pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW);
-
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
 };

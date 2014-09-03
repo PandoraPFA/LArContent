@@ -64,23 +64,23 @@ StatusCode TwoDParticleCreationAlgorithm::CreatePFOs(const ClusterList *const pC
         if (pCluster->GetNCaloHits() < m_minHitsInCluster)
             continue;
 
-        // TODO - finalize particle id and energy measurement here
-        const float clusterEnergy(pCluster->GetCorrectedElectromagneticEnergy());
+        // TODO Finalize particle id and energy measurement here
+        const float clusterEnergy(pCluster->GetElectromagneticEnergy());
 
         if (clusterEnergy < m_minClusterEnergy)
             continue;
 
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
 
-        // TODO - finalize particle id here
-        const ParticleType particleType(ParticleIdHelper::IsMuonFast(pCluster) ? MU_MINUS : PHOTON);
+        // TODO Finalize particle id here
+        const ParticleType particleType(PandoraContentApi::GetPlugins(*this)->GetParticleId()->IsMuon(pCluster) ? MU_MINUS : PHOTON);
 
-        const ClusterHelper::ClusterFitResult &fitToAllHitsResult(pCluster->GetFitToAllHitsResult());
+        const ClusterFitResult &fitToAllHitsResult(pCluster->GetFitToAllHitsResult());
 
         if (!fitToAllHitsResult.IsFitSuccessful())
             continue;
 
-        // TODO - check remaining parameters
+        // TODO Check remaining parameters
         pfoParameters.m_particleId = particleType;
         pfoParameters.m_charge = 0;
         pfoParameters.m_mass = 0.;

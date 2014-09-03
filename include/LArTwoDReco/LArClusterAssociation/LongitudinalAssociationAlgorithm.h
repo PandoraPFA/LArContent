@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "Helpers/ClusterHelper.h"
+#include "Helpers/ClusterFitHelper.h"
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
 
@@ -61,7 +61,15 @@ private:
      *  @return whether the clusters are associated
      */
     bool AreClustersAssociated(const pandora::CartesianVector &innerClusterEnd, const pandora::CartesianVector &outerClusterStart, const float hitSizeX,
-        const float hitSizeZ, const pandora::ClusterHelper::ClusterFitResult &innerFit, const pandora::ClusterHelper::ClusterFitResult &outerFit) const;
+        const float hitSizeZ, const pandora::ClusterFitResult &innerFit, const pandora::ClusterFitResult &outerFit) const;
+
+    unsigned int m_minClusterLayers;            ///< minimum allowed number of layers for a clean cluster
+    unsigned int m_maxGapLayers;                ///< maximum allowed number of layers between associated clusters
+    unsigned int m_fitLayers;                   ///< number of layers to fit at start and end of cluster
+    float        m_maxGapDistanceSquared;       ///< maximum allowed distance (squared) between associated clusters
+    float        m_minCosRelativeAngle;         ///< maximum allowed relative angle between associated clusters
+    float        m_maxTransverseDisplacement;   ///< maximum allowed transverse displacement after extrapolation (normalised to cell size)
+    float        m_maxLongitudinalDisplacement; ///< maximum allowed longitudinal displacement after extrapolation (normalised to cell size)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

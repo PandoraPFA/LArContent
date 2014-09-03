@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h"
 
 using namespace pandora;
@@ -48,7 +50,7 @@ void TwoDSlidingFitConsolidationAlgorithm::SortInputClusters(const ClusterList *
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster* pCluster = *iter;
+        Cluster *pCluster = *iter;
 
         const float thisLengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
 
@@ -69,9 +71,16 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 {
     for (ClusterVector::const_iterator iter = trackClusters.begin(), iterEnd = trackClusters.end(); iter != iterEnd; ++iter)
     {
-         TwoDSlidingFitResult slidingFitResult;
-         LArClusterHelper::LArTwoDSlidingFit(*iter, m_halfWindowLayers, slidingFitResult);
-         slidingFitResultList.push_back(slidingFitResult);
+        try
+        {
+            const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers);
+            slidingFitResultList.push_back(slidingFitResult);
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
     }
 }
 
@@ -86,6 +95,9 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
         const CaloHitList &caloHitListToRemove = iterI->second;
 
         if (caloHitListToRemove.empty())
+            continue;
+
+        if (unavailableClusters.count(pCluster))
             continue;
 
         CaloHitList caloHitList, caloHitListToKeep;
@@ -125,6 +137,9 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
         const CaloHitList &caloHitList = iterI->second;
 
         if (caloHitList.empty())
+            continue;
+
+        if (unavailableClusters.count(pCluster))
             continue;
 
         unavailableClusters.insert(pCluster);

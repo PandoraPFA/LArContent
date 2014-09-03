@@ -19,8 +19,8 @@ namespace lar
 
 bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraSettings::ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << m_algorithmToolType << std::endl;
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
     return this->FindTrackFragments(pAlgorithm, overlapTensor);
 }
@@ -142,7 +142,7 @@ bool ClearTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::ElementLi
 
 bool ClearTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
 {
-    // ATTN: This method is currently mirrored in ThreeDTrackFragmentsAlgorithm algorithm
+    // ATTN This method is currently mirrored in ThreeDTrackFragmentsAlgorithm algorithm
 
     if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
         return false;
@@ -285,7 +285,7 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorith
     }
     else
     {
-        // ATTN: Can't delete these clusters yet
+        // ATTN Can't delete these clusters yet
         for (CaloHitList::const_iterator hIter = daughterHits.begin(), hIterEnd = daughterHits.end(); hIter != hIterEnd; ++hIter)
         {
             CaloHit *pCaloHit = *hIter;
@@ -324,18 +324,22 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorith
 void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const ClusterList &modifiedClusters,
     const ClusterList &deletedClusters, ClusterList &newClusters) const
 {
+    ClusterList rebuildList;
+
     for (ClusterList::const_iterator cIter = modifiedClusters.begin(), cIterEnd = modifiedClusters.end(); cIter != cIterEnd; ++cIter)
     {
         Cluster *pCluster = *cIter;
 
-        if (deletedClusters.count(pCluster))
+        if (deletedClusters.count(pCluster) || !pCluster->IsAvailable())
             continue;
 
-        if (!pCluster->IsAvailable())
-            continue;
-
-        pAlgorithm->RebuildClusters(pCluster, newClusters);
+        rebuildList.insert(pCluster);
     }
+
+    if (rebuildList.empty())
+        return;
+        
+    pAlgorithm->RebuildClusters(rebuildList, newClusters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

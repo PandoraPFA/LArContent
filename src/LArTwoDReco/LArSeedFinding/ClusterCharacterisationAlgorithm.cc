@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
@@ -322,10 +323,10 @@ LArPointingCluster::Vertex ClusterCharacterisationAlgorithm::GetBestVertexEstima
     if (m_useMCVertexSelection)
     {
         const MCParticle *pSeedMCParticle = MCParticleHelper::GetMainMCParticle(pSeedCluster);
-        const CartesianVector mcVertex(pSeedMCParticle->GetVertex());
+        const CartesianVector mcVertex2D(LArGeometryHelper::ProjectPosition(pSeedMCParticle->GetVertex(), LArClusterHelper::GetClusterHitType(pSeedCluster)));
 
-        const float innerDistanceSquared = (pointingSeedCluster.GetInnerVertex().GetPosition() - mcVertex).GetMagnitudeSquared();
-        const float outerDistanceSquared = (pointingSeedCluster.GetOuterVertex().GetPosition() - mcVertex).GetMagnitudeSquared();
+        const float innerDistanceSquared = (pointingSeedCluster.GetInnerVertex().GetPosition() - mcVertex2D).GetMagnitudeSquared();
+        const float outerDistanceSquared = (pointingSeedCluster.GetOuterVertex().GetPosition() - mcVertex2D).GetMagnitudeSquared();
 
         return ((innerDistanceSquared < outerDistanceSquared) ? pointingSeedCluster.GetInnerVertex() : pointingSeedCluster.GetOuterVertex());
     }
@@ -335,7 +336,8 @@ LArPointingCluster::Vertex ClusterCharacterisationAlgorithm::GetBestVertexEstima
         vertexList.push_back(pointingSeedCluster.GetInnerVertex());
         vertexList.push_back(pointingSeedCluster.GetOuterVertex());
 
-        return LArPointingClusterHelper::GetBestVertexEstimate(vertexList, pointingClusterList);
+        return LArPointingClusterHelper::GetBestVertexEstimate(vertexList, pointingClusterList, m_minVertexLongitudinalDistance,
+            m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance);
     }
 }
 
@@ -347,8 +349,8 @@ unsigned int ClusterCharacterisationAlgorithm::GetNumberOfNodes(const LArPointin
 
     for (LArPointingClusterList::const_iterator cIter = pointingClusterList.begin(), cIterEnd = pointingClusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        if (LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetInnerVertex()) ||
-            LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetOuterVertex()))
+        if (LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+            LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance))
         {
             ++nNodes;
         }
@@ -394,7 +396,7 @@ void ClusterCharacterisationAlgorithm::GetInputPfoList(PfoList &pfoList) const
 
 void ClusterCharacterisationAlgorithm::StoreNCaloHitsPerCluster(const Cluster *const pCluster, ClusterInfoMap &clusterInfoMap) const
 {
-    // ATTN: Stores only first value provided per cluster
+    // ATTN Stores only first value provided per cluster
     if (clusterInfoMap.count(pCluster))
         return;
 
@@ -407,7 +409,7 @@ void ClusterCharacterisationAlgorithm::StoreNCaloHitsPerCluster(const Cluster *c
 void ClusterCharacterisationAlgorithm::StoreNBranchesPerCluster(const Cluster *const pCluster, const ClusterVector &branchList,
     ClusterInfoMap &clusterInfoMap) const
 {
-    // ATTN: Stores total number of branches linked to eventual parent cluster
+    // ATTN Stores total number of branches linked to eventual parent cluster
     ClusterInfoMap::const_iterator iIter = clusterInfoMap.find(pCluster);
     unsigned int nBranchesSum((clusterInfoMap.end() == iIter) ? 0 : iIter->second);
 
@@ -534,6 +536,22 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     m_showerLikeCaloHitRatio = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerLikeCaloHitRatio", m_showerLikeCaloHitRatio));
+
+    m_minVertexLongitudinalDistance = -2.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
+
+    m_maxVertexLongitudinalDistance = 25.f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
+
+    m_maxVertexTransverseDistance = 2.5f;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
+
+    m_vertexAngularAllowance = 5.f; // degrees
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexAngularAllowance", m_vertexAngularAllowance));
 
     return SeedGrowingAlgorithm::ReadSettings(xmlHandle);
 }
