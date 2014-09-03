@@ -53,8 +53,7 @@ void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm 
 void LongitudinalTrackHitsBaseTool::GetVertexAndEndPositions(const MatchedSlidingFitMap &inputSlidingFitMap,
     MatchedSlidingFitMap &outputSlidingFitMap, CartesianVector &bestVtx3D, CartesianVector &bestEnd3D) const
 {
-    // TODO - Tidy up! The code below is quite repetitive...
-
+    // TODO Tidy up: The code below is quite repetitive...
     MatchedSlidingFitMap::const_iterator iterU = inputSlidingFitMap.find(TPC_VIEW_U);
     const bool foundU(inputSlidingFitMap.end() != iterU);
 
@@ -176,8 +175,7 @@ void LongitudinalTrackHitsBaseTool::GetVertexAndEndPositions(const MatchedSlidin
         }
     }
 
-    // TODO - Do I really have to do this ?
-
+    // TODO Do I really have to do this ?
     if (useU)
         outputSlidingFitMap.insert(MatchedSlidingFitMap::value_type(iterU->first, iterU->second));
 

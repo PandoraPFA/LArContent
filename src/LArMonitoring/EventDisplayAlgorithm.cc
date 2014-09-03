@@ -45,18 +45,19 @@ StatusCode EventDisplayAlgorithm::Run()
         for ( ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter )
         {
             Cluster *pCluster = *iter;
+            const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_U))
-                hitType = TPC_VIEW_U;
+            if (CUSTOM == hitType)
+            {
+                if ((TPC_VIEW_U != clusterHitType) && (TPC_VIEW_V != clusterHitType) && (TPC_VIEW_W != clusterHitType))
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_V))
-                hitType = TPC_VIEW_V;
-
-            if (hitType == CUSTOM && pCluster->ContainsHitType(TPC_VIEW_W))
-                hitType = TPC_VIEW_W;
-
-            if (pCluster->ContainsHitType(hitType) == false)
+                hitType = clusterHitType;
+            }
+            else if (hitType != clusterHitType)
+            {
                 throw StatusCodeException(STATUS_CODE_FAILURE);
+            }
 
             if (pCluster->IsAvailable())
                 clusterList.insert(pCluster);
@@ -81,14 +82,14 @@ StatusCode EventDisplayAlgorithm::Run()
             {
                 Cluster *pCluster = *cIter;
 
-                if ( pCluster->ContainsHitType(hitType) )
+                if (hitType == LArClusterHelper::GetClusterHitType(pCluster))
                     particleClusterList.insert(pCluster);
             }
 
-            PANDORA_MONITORING_API(VisualizeClusters(&particleClusterList, "Particles", GetColor(n++) ));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &particleClusterList, "Particles", GetColor(n++) ));
         }
 
-        PANDORA_MONITORING_API(VisualizeClusters(&clusterList, "Clusters", GRAY ));
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, "Clusters", GRAY ));
     }
 
     else if( NULL != pClusterList )
@@ -98,11 +99,11 @@ StatusCode EventDisplayAlgorithm::Run()
             Cluster* pCluster = *iter;
             ClusterList tempList;
             tempList.insert(pCluster);
-            PANDORA_MONITORING_API(VisualizeClusters(&tempList, "Clusters", GetColor(n++) ));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &tempList, "Clusters", GetColor(n++) ));
         }
     }
 
-    PANDORA_MONITORING_API(ViewEvent());
+    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
 
     return STATUS_CODE_SUCCESS;

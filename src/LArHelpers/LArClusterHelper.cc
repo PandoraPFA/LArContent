@@ -6,11 +6,6 @@
  *  $Log: $
  */
 
-#include "Helpers/ClusterHelper.h"
-#include "Helpers/XmlHelper.h"
-
-#include "Pandora/PandoraSettings.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 
 #include <algorithm>
@@ -26,34 +21,11 @@ HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
 {
     if (0 == pCluster->GetNCaloHits())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+// TODO static
+//    if (!pandora->GetSettings()->SingleHitTypeClusteringMode())
+//        throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    if (PandoraSettings::SingleHitTypeClusteringMode())
-        return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
-
-    HitType hitType(CUSTOM);
-
-    if (pCluster->ContainsHitType(TPC_VIEW_U))
-    {
-        if (CUSTOM == hitType) hitType = TPC_VIEW_U;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (pCluster->ContainsHitType(TPC_VIEW_V))
-    {
-        if (CUSTOM == hitType) hitType = TPC_VIEW_V;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (pCluster->ContainsHitType(TPC_VIEW_W))
-    {
-        if (CUSTOM == hitType) hitType = TPC_VIEW_W;
-        else throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    if (CUSTOM == hitType)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    return hitType;
+    return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,7 +37,7 @@ float LArClusterHelper::GetLengthSquared(const Cluster *const pCluster)
     if (orderedCaloHitList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    // ATTN: in 2D case, we will actually calculate the quadrature sum of deltaX and deltaU/V/W
+    // ATTN In 2D case, we will actually calculate the quadrature sum of deltaX and deltaU/V/W
     float minX(std::numeric_limits<float>::max()), maxX(-std::numeric_limits<float>::max());
     float minY(std::numeric_limits<float>::max()), maxY(-std::numeric_limits<float>::max());
     float minZ(std::numeric_limits<float>::max()), maxZ(-std::numeric_limits<float>::max());
@@ -99,8 +71,7 @@ float LArClusterHelper::GetLength(const Cluster *const pCluster)
 
 float LArClusterHelper::GetEnergyFromLength(const Cluster *const pCluster)
 {
-    static const float dEdX(0.002f); // approximately 2 MeV/cm
-
+    const float dEdX(0.002f); // approximately 2 MeV/cm
     return (dEdX * LArClusterHelper::GetLength(pCluster));
 }
 
@@ -184,7 +155,39 @@ float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const 
 
 float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
-    return ClusterHelper::GetDistanceToClosestHit(pCluster1, pCluster2);
+    bool distanceFound(false);
+    float minDistanceSquared(std::numeric_limits<float>::max());
+    const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
+    const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
+
+    // Loop over hits in cluster 1
+    for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
+    {
+        for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
+        {
+            const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
+
+            // For each hit in cluster 1, find closest distance to a hit in cluster 2
+            for (OrderedCaloHitList::const_iterator iter2 = orderedCaloHitList2.begin(), iter2End = orderedCaloHitList2.end(); iter2 != iter2End; ++iter2)
+            {
+                for (CaloHitList::const_iterator hitIter2 = iter2->second->begin(), hitIter2End = iter2->second->end(); hitIter2 != hitIter2End; ++hitIter2)
+                {
+                    const float distanceSquared((positionVector1 - (*hitIter2)->GetPositionVector()).GetMagnitudeSquared());
+
+                    if (distanceSquared < minDistanceSquared)
+                    {
+                        minDistanceSquared = distanceSquared;
+                        distanceFound = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!distanceFound)
+        return std::numeric_limits<float>::max();
+
+    return std::sqrt(minDistanceSquared);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -473,13 +476,6 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
         return (layerSpanLhs > layerSpanRhs);
 
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArClusterHelper::ReadSettings(const TiXmlHandle /*xmlHandle*/)
-{
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar

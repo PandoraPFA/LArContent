@@ -28,6 +28,56 @@ TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, FloatVector &edgePositions) const
+{
+    edgePositions.clear();
+    CartesianPointList fitPositionList;
+    try {this->GetNegativeEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
+    try {this->GetPositiveEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
+
+    if (fitPositionList.size() < 2)
+    {
+        float minXn(0.f), maxXn(0.f), minXp(0.f), maxXp(0.f);
+        this->GetNegativeEdgeFitResult().GetMinAndMaxX(minXn, maxXn);
+        this->GetPositiveEdgeFitResult().GetMinAndMaxX(minXp, maxXp);
+        const float minX(std::min(minXn, minXp)), maxX(std::max(maxXn, maxXp));
+
+        if ((x < minX) || (x > maxX))
+            return;
+
+        float minZn(0.f), maxZn(0.f), minZp(0.f), maxZp(0.f);
+        this->GetNegativeEdgeFitResult().GetMinAndMaxZ(minZn, maxZn);
+        this->GetPositiveEdgeFitResult().GetMinAndMaxZ(minZp, maxZp);
+        const float minZ(std::min(minZn, minZp)), maxZ(std::max(maxZn, maxZp));
+
+        if (fitPositionList.empty())
+        {
+            fitPositionList.push_back(CartesianVector(x, 0.f, minZ));
+            fitPositionList.push_back(CartesianVector(x, 0.f, maxZ));
+        }
+        else if (1 == fitPositionList.size())
+        {
+            // ATTN Could improve sophistication of choice of second bounding edge
+            const float existingEdge(fitPositionList.front().GetZ());
+            const float secondEdge((std::fabs(existingEdge - minZ) < std::fabs(existingEdge - maxZ)) ? minZ : maxZ);
+            fitPositionList.push_back(CartesianVector(x, 0.f, secondEdge));
+        }
+    }
+
+    FloatVector localEdgePositions;
+    for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
+        localEdgePositions.push_back(iter->GetZ());
+
+    if (localEdgePositions.size() < 2)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    std::sort(localEdgePositions.begin(), localEdgePositions.end());
+    edgePositions.push_back(localEdgePositions.front());
+    edgePositions.push_back(localEdgePositions.back());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge)
 {
     LayerFitContributionMap layerFitContributionMap;
@@ -76,7 +126,7 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
         const int layer(iter->first);
         const FitCoordinateList &fitCoordinateList(iter->second);
 
-        // TODO, improve this hit selection
+        // ATTN Could modify this hit selection, e.g. add inertia to edge positions
         bool bestFitCoordinateFound(false);
         FitCoordinate bestFitCoordinate = (POSITIVE_SHOWER_EDGE == showerEdge) ?
             FitCoordinate(0.f, -std::numeric_limits<float>::max()) :
@@ -98,56 +148,6 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
 
     return TwoDSlidingFitResult(fullShowerFit.GetCluster(), fullShowerFit.GetLayerFitHalfWindow(), fullShowerFit.GetAxisIntercept(),
         fullShowerFit.GetAxisDirection(), layerFitContributionMap);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, FloatVector &edgePositions) const
-{
-    edgePositions.clear();
-    CartesianPointList fitPositionList;
-    try {this->GetNegativeEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
-    try {this->GetPositiveEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
-
-    if (fitPositionList.size() < 2)
-    {
-        float minXn(0.f), maxXn(0.f), minXp(0.f), maxXp(0.f);
-        this->GetNegativeEdgeFitResult().GetMinAndMaxX(minXn, maxXn);
-        this->GetPositiveEdgeFitResult().GetMinAndMaxX(minXp, maxXp);
-        const float minX(std::min(minXn, minXp)), maxX(std::max(maxXn, maxXp));
-
-        if ((x < minX) || (x > maxX))
-            return;
-
-        float minZn(0.f), maxZn(0.f), minZp(0.f), maxZp(0.f);
-        this->GetNegativeEdgeFitResult().GetMinAndMaxZ(minZn, maxZn);
-        this->GetPositiveEdgeFitResult().GetMinAndMaxZ(minZp, maxZp);
-        const float minZ(std::min(minZn, minZp)), maxZ(std::max(maxZn, maxZp));
-
-        if (fitPositionList.empty())
-        {
-            fitPositionList.push_back(CartesianVector(x, 0.f, minZ));
-            fitPositionList.push_back(CartesianVector(x, 0.f, maxZ));
-        }
-        else if (1 == fitPositionList.size())
-        {
-            // TODO More sophisticated choice of second bounding edge
-            const float existingEdge(fitPositionList.front().GetZ());
-            const float secondEdge((std::fabs(existingEdge - minZ) < std::fabs(existingEdge - maxZ)) ? minZ : maxZ);
-            fitPositionList.push_back(CartesianVector(x, 0.f, secondEdge));
-        }
-    }
-
-    FloatVector localEdgePositions;
-    for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
-        localEdgePositions.push_back(iter->GetZ());
-
-    if (localEdgePositions.size() < 2)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    std::sort(localEdgePositions.begin(), localEdgePositions.end());
-    edgePositions.push_back(localEdgePositions.front());
-    edgePositions.push_back(localEdgePositions.back());
 }
 
 } // namespace lar

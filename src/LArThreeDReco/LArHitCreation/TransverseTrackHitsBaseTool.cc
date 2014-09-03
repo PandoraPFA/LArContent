@@ -50,7 +50,7 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *p
 void TransverseTrackHitsBaseTool::GetTransverseChi2(const CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
     const CartesianVector &position3D, float &chiSquared) const
 {  
-    // TODO: Develop a proper treatment of the |dz/dx| * sigmaX uncertainty
+    // TODO Develop a proper treatment of the |dz/dx| * sigmaX uncertainty
     chiSquared = 0.f;
 
     for (MatchedSlidingFitMap::const_iterator iter = matchedSlidingFitMap.begin(), iterEnd = matchedSlidingFitMap.end();

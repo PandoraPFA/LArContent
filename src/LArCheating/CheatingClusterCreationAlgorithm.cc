@@ -45,7 +45,7 @@ StatusCode CheatingClusterCreationAlgorithm::Run()
 
 void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(CaloHit *const pCaloHit, MCParticleToHitListMap &mcParticleToHitListMap) const
 {
-    const MCParticle *pMCParticle(pCaloHit->GetMainMCParticle());
+    const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
     if (!this->SelectMCParticlesForClustering(pMCParticle))
         return;

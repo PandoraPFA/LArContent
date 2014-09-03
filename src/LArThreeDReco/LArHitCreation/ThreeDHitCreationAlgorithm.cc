@@ -145,14 +145,14 @@ bool ThreeDHitCreationAlgorithm::CheckThreeDHit(const CartesianVector &position3
     // Check that corresponding pseudo layer is within range
     try
     {
-        (void) GeometryHelper::GetPseudoLayer(position3D);
+        (void) PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayer(position3D);
     }
     catch (StatusCodeException &)
     {
         return false;
     }
 
-    // TODO: Check against detector geometry
+    // TODO Check against detector geometry
 
     return true;
 }

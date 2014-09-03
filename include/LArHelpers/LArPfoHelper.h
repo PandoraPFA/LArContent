@@ -20,7 +20,6 @@ namespace lar
 class LArPfoHelper
 {
 public:
-
     /**
      *  @brief  Get a list of calo hits of a particular hit type from a list of pfos
      *
@@ -206,13 +205,6 @@ public:
      *  @param  pRhs address of second pfo
      */
     static bool SortByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
-
-    /**
-     *  @brief  Read the vertex helper settings
-     *
-     *  @param  xmlHandle the relevant xml handle
-     */
-    static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
 } // namespace lar

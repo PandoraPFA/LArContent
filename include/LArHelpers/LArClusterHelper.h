@@ -205,13 +205,6 @@ public:
      *  @param  pRhs address of second cluster
      */
     static bool SortByNHits(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
-
-    /**
-     *  @brief  Read the vertex helper settings
-     *
-     *  @param  xmlHandle the relevant xml handle
-     */
-    static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
 } // namespace lar

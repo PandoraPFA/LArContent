@@ -51,7 +51,8 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
 
             try
             {
-                projectedBranchPosition = LArPointingClusterHelper::GetProjectedPosition(principalVertexPosition, principalVertexDirection, branchSlidingFit.GetCluster());
+                projectedBranchPosition = LArPointingClusterHelper::GetProjectedPosition(principalVertexPosition, principalVertexDirection,
+                    branchSlidingFit.GetCluster(), m_projectionAngularAllowance);
                 projectedDistanceSquared   = (projectedBranchPosition - principalVertexPosition).GetMagnitudeSquared();
                 replacementDistanceSquared = (projectedBranchPosition - principalEndPosition).GetMagnitudeSquared();
                 branchDistanceSquared      = (projectedBranchPosition - branchVertexPosition).GetMagnitudeSquared(); 
@@ -143,6 +144,10 @@ StatusCode BranchSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_minCosRelativeAngle = 0.966;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
+
+    m_projectionAngularAllowance = 20.f; // degrees
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ProjectionAngularAllowance", m_projectionAngularAllowance));
 
     return TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(xmlHandle);
 }

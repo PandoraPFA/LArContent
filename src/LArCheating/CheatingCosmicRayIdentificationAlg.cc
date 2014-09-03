@@ -49,7 +49,7 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
             {
                 const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
-                if (!LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle))
+                if (!LArMCParticleHelper::GetParentNeutrinoId(pMCParticle))
                     isCosmicRay = true;
             }
             catch (StatusCodeException &)

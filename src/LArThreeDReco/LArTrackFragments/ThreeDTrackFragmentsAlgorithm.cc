@@ -328,8 +328,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
             fitResult2.GetTransverseProjection(x, fitSegment2, position2);
             LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, position1, position2, position3, chi2);
 
-            // TODO: For highly multi-valued x, the projected positions can be unreliable.
-            //       Need to make the interpolation more robust for these cases.
+            // TODO For highly multi-valued x, projected positions can be unreliable. Need to make interpolation more robust for these cases.
             if (foundLastPosition)
             {
                 const float thisDisplacement((lastPosition - position3).GetMagnitude());
@@ -553,8 +552,7 @@ bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointLis
 
 bool ThreeDTrackFragmentsAlgorithm::CheckOverlapResult(const FragmentOverlapResult &overlapResult) const
 {
-    // ATTN: This method is currently mirrored in ClearTrackFragments tool
-
+    // ATTN This method is currently mirrored in ClearTrackFragments tool
     if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
         return false;
 

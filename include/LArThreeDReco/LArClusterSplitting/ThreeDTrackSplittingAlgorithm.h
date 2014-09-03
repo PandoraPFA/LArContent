@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArThreeDReco/LArClusterSplitting/ThreeDTrackSplittingAlgorithm.h
  * 
- *  @brief  Header file for the cosmic ray identification algorithm class.
+ *  @brief  Header file for the three d track splitting algorithm class.
  * 
  *  $Log: $
  */

@@ -21,14 +21,13 @@ namespace lar
 
 ParticleMonitoringAlgorithm::ParticleMonitoringAlgorithm()
 {
-    PANDORA_MONITORING_API(Create());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ParticleMonitoringAlgorithm::~ParticleMonitoringAlgorithm()
 {
-    PANDORA_MONITORING_API(SaveTree(m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,7 +97,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             const MCParticle *pMCParticle3D(iter->first);
             const CaloHitList &mcHitList(iter->second);
 
-            mcNeutrinoVector.push_back(LArMCParticleHelper::GetPrimaryNeutrino(pMCParticle3D));
+            mcNeutrinoVector.push_back(LArMCParticleHelper::GetParentNeutrinoId(pMCParticle3D));
             mcPdgVector.push_back(pMCParticle3D->GetParticleId());
             mcPxVector.push_back(pMCParticle3D->GetMomentum().GetX());
             mcPyVector.push_back(pMCParticle3D->GetMomentum().GetY());
@@ -181,43 +180,43 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             throw statusCodeException;
     }
 
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMCParticlesTotal", nMCParticlesTotal));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nPfosTotal", nPfosTotal));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCParticlesTotal", nMCParticlesTotal));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPfosTotal", nPfosTotal));
 
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcPdg", &mcPdgVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcNuPdg", &mcNeutrinoVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcPx", &mcPxVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcPy", &mcPyVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcPz", &mcPzVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcPTot", &mcPTotVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcEnergy", &mcEnergyVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcTheta", &mcThetaVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcVtxXPos", &mcVtxXPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcVtxYPos", &mcVtxYPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcVtxZPos", &mcVtxZPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcEndXPos", &mcEndXPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcEndYPos", &mcEndYPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "mcEndZPos", &mcEndZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPdg", &mcPdgVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNuPdg", &mcNeutrinoVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPx", &mcPxVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPy", &mcPyVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPz", &mcPzVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPTot", &mcPTotVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEnergy", &mcEnergyVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcTheta", &mcThetaVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxXPos", &mcVtxXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxYPos", &mcVtxYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxZPos", &mcVtxZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndXPos", &mcEndXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndYPos", &mcEndYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndZPos", &mcEndZPosVector));
 
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "pfoPdg", &pfoPdgVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "pfoNuPdg", &pfoNeutrinoVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "completeness", &completenessVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "purity", &purityVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMCHits", &nMCHitsVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nPfoHits", &nPfoHitsVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMatchedHits", &nMatchedHitsVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPdg", &pfoPdgVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoNuPdg", &pfoNeutrinoVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "completeness", &completenessVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "purity", &purityVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCHits", &nMCHitsVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPfoHits", &nPfoHitsVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMatchedHits", &nMatchedHitsVector));
 
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMCHitsU", &nMCHitsUVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nPfoHitsU", &nPfoHitsUVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMatchedHitsU", &nMatchedHitsUVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMCHitsV", &nMCHitsVVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nPfoHitsV", &nPfoHitsVVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMatchedHitsV", &nMatchedHitsVVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMCHitsW", &nMCHitsWVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nPfoHitsW", &nPfoHitsWVector));
-    PANDORA_MONITORING_API(SetTreeVariable(m_treeName.c_str(), "nMatchedHitsW", &nMatchedHitsWVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCHitsU", &nMCHitsUVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPfoHitsU", &nPfoHitsUVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMatchedHitsU", &nMatchedHitsUVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCHitsV", &nMCHitsVVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPfoHitsV", &nPfoHitsVVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMatchedHitsV", &nMatchedHitsVVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCHitsW", &nMCHitsWVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPfoHitsW", &nPfoHitsWVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMatchedHitsW", &nMatchedHitsWVector));
 
-    PANDORA_MONITORING_API(FillTree(m_treeName.c_str()));
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -345,7 +344,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToCaloHitMatches(const CaloHitLis
         try
         {
             CaloHit *pCaloHit = *iter;
-            const MCParticle *pHitParticle(pCaloHit->GetMainMCParticle());
+            const MCParticle *pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
             MCRelationMap::const_iterator mcIter = mcPrimaryMap.find(pHitParticle);
 

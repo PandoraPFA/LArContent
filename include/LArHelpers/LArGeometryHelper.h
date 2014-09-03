@@ -192,13 +192,6 @@ public:
      */
     static const LArTransformationCalculator *GetLArTransformationCalculator();
 
-    /**
-     *  @brief  Read the vertex helper settings
-     * 
-     *  @param  xmlHandle the relevant xml handle
-     */
-    static pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
 private:
     static const LArPseudoLayerCalculator     *m_pLArPseudoLayerCalculator;       ///< Address of the lar pseudolayer calculator
     static const LArTransformationCalculator  *m_pLArTransformationCalculator;    ///< Address of the lar transformation calculator

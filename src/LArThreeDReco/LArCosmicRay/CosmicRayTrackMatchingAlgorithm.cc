@@ -454,7 +454,7 @@ void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particl
         if (pClusterV) clusterList.insert(pClusterV);
         if (pClusterW) clusterList.insert(pClusterW);
 
-        // TODO - correct these placeholder parameters
+        // TODO Correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
         pfoParameters.m_particleId = MU_MINUS; // TRACK
         pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());

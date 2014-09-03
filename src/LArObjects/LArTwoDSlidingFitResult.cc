@@ -380,7 +380,7 @@ void TwoDSlidingFitResult::GetExtrapolatedPositionAtX(const float x, CartesianVe
     {
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
-    // TODO: How to assign an uncertainty on the extrapolated position?
+    // TODO How to assign an uncertainty on the extrapolated position?
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -540,7 +540,7 @@ void TwoDSlidingFitResult::FindSlidingFitSegments()
         CartesianVector position(0.f, 0.f, 0.f);
         this->GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), position);
 
-        // TODO: currentDirection could also be UNCHANGED_IN_X
+        // TODO currentDirection could also be UNCHANGED_IN_X
         const TransverseDirection currentDirection(((position - previousPosition).GetX() > 0.f) ? POSITIVE_IN_X : NEGATIVE_IN_X);
 
         if (previousDirection == currentDirection)

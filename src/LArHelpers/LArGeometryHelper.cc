@@ -18,6 +18,7 @@ using namespace pandora;
 namespace lar
 {
 
+// TODO static
 const LArPseudoLayerCalculator *LArGeometryHelper::m_pLArPseudoLayerCalculator = NULL;
 const LArTransformationCalculator *LArGeometryHelper::m_pLArTransformationCalculator = NULL;
 
@@ -69,8 +70,6 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const HitType view1, const
     // x components must be consistent
     if (direction1.GetX() * direction2.GetX() < 0.f)
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    // TODO: Can do better than this...
 
     // scale x components to a common value
     const float s1((std::fabs(direction1.GetX()) > std::numeric_limits<float>::epsilon()) ? 100.f * std::fabs(direction2.GetX()) : 1.f);
@@ -322,13 +321,6 @@ CartesianVector LArGeometryHelper::ProjectDirection(const CartesianVector &direc
     }
 
     throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArGeometryHelper::ReadSettings(const TiXmlHandle /*xmlHandle*/)
-{
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar

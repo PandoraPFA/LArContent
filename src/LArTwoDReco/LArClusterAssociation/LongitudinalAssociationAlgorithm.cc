@@ -36,7 +36,7 @@ void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList 
 
 void LongitudinalAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
-    // ATTN: This method assumes that clusters have been sorted by layer
+    // ATTN This method assumes that clusters have been sorted by layer
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
     {
         Cluster *pInnerCluster = *iterI;
@@ -83,6 +83,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     if (pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer())
         throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
+    // TODO Remove hardcoded numbers
     if ((pOuterCluster->GetInnerPseudoLayer() < pInnerCluster->GetInnerPseudoLayer() + 3) ||
         (pInnerCluster->GetOuterPseudoLayer() + 3 > pOuterCluster->GetOuterPseudoLayer()))
     {
@@ -111,9 +112,9 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     const float hitSizeX(pOuterLayerHit->GetCellLengthScale());
     const float hitSizeZ(pOuterLayerHit->GetCellThickness());
 
-    ClusterHelper::ClusterFitResult innerEndFit, outerStartFit;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitEnd(pInnerCluster, 30, innerEndFit));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterHelper::FitStart(pOuterCluster, 30, outerStartFit));
+    ClusterFitResult innerEndFit, outerStartFit;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitEnd(pInnerCluster, m_fitLayers, innerEndFit));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitStart(pOuterCluster, m_fitLayers, outerStartFit));
 
     if (this->AreClustersAssociated(innerEndCentroid, outerStartCentroid, hitSizeX, hitSizeZ, innerEndFit, outerStartFit))
         return true;
@@ -124,7 +125,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVector &innerClusterEnd, const CartesianVector &outerClusterStart,
-    const float hitSizeX, const float hitSizeZ, const ClusterHelper::ClusterFitResult &innerFit, const ClusterHelper::ClusterFitResult &outerFit) const
+    const float hitSizeX, const float hitSizeZ, const ClusterFitResult &innerFit, const ClusterFitResult &outerFit) const
 {
     if (!innerFit.IsFitSuccessful() || !outerFit.IsFitSuccessful())
         return false;
@@ -176,6 +177,10 @@ StatusCode LongitudinalAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     m_maxGapLayers = 7;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGapLayers", m_maxGapLayers));
+
+    m_fitLayers = 30;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FitLayers", m_fitLayers));
 
     float maxGapDistance = std::sqrt(10.f);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

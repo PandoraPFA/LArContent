@@ -6,12 +6,8 @@
  *  $Log: $
  */
 
-#include "Helpers/ClusterHelper.h"
-#include "Helpers/XmlHelper.h"
-
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
 
 #include <algorithm>
 #include <cmath>
@@ -358,13 +354,6 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
         return (nHitsLhs > nHitsRhs);
 
     return (LArPfoHelper::GetTwoDLengthSquared(pLhs) > LArPfoHelper::GetTwoDLengthSquared(pRhs));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArPfoHelper::ReadSettings(const TiXmlHandle /*xmlHandle*/)
-{
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar
