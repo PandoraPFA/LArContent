@@ -214,9 +214,9 @@ OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, con
 {
     const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU()) ? TPC_VIEW_U :
         (elementA.GetClusterV() == elementB.GetClusterV()) ? TPC_VIEW_V :
-        (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W : CUSTOM);
+        (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W : HIT_CUSTOM);
 
-    if (CUSTOM == commonView)
+    if (HIT_CUSTOM == commonView)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     m_pCommonCluster = (TPC_VIEW_U == commonView) ? elementA.GetClusterU() : (TPC_VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();

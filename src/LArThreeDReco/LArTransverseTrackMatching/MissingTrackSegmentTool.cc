@@ -347,9 +347,9 @@ MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
 
     m_shortHitType = ((xOverlap.GetXSpanU() < xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() < xOverlap.GetXSpanW())) ? TPC_VIEW_U :
         ((xOverlap.GetXSpanV() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() < xOverlap.GetXSpanW())) ? TPC_VIEW_V :
-        ((xOverlap.GetXSpanW() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() < xOverlap.GetXSpanV())) ? TPC_VIEW_W : CUSTOM;
+        ((xOverlap.GetXSpanW() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() < xOverlap.GetXSpanV())) ? TPC_VIEW_W : HIT_CUSTOM;
 
-    if (CUSTOM == m_shortHitType)
+    if (HIT_CUSTOM == m_shortHitType)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     m_pShortCluster = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterU() : (TPC_VIEW_V == m_shortHitType) ? element.GetClusterV() : element.GetClusterW();
