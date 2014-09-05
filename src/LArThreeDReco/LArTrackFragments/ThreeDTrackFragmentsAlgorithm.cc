@@ -126,9 +126,9 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
     const HitType missingHitType(
         ((NULL != pClusterU) && (NULL != pClusterV) && (NULL == pClusterW)) ? TPC_VIEW_W :
         ((NULL != pClusterU) && (NULL == pClusterV) && (NULL != pClusterW)) ? TPC_VIEW_V :
-        ((NULL == pClusterU) && (NULL != pClusterV) && (NULL != pClusterW)) ? TPC_VIEW_U : CUSTOM);
+        ((NULL == pClusterU) && (NULL != pClusterV) && (NULL != pClusterW)) ? TPC_VIEW_U : HIT_CUSTOM);
 
-    if (CUSTOM == missingHitType)
+    if (HIT_CUSTOM == missingHitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     // Calculate new overlap result and replace old overlap result where necessary
@@ -245,9 +245,9 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
     const HitType hitType3((TPC_VIEW_U != hitType1 && TPC_VIEW_U != hitType2) ? TPC_VIEW_U :
                            (TPC_VIEW_V != hitType1 && TPC_VIEW_V != hitType2) ? TPC_VIEW_V :
-                           (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : CUSTOM);
+                           (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : HIT_CUSTOM);
 
-    if (CUSTOM == hitType3)
+    if (HIT_CUSTOM == hitType3)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     // Check absolute and fractional overlap in x coordinate

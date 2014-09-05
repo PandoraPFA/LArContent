@@ -568,9 +568,9 @@ DeltaRayMatchingAlgorithm::Particle::Particle(Cluster *const pCluster1, Cluster 
     m_pClusterW(NULL),
     m_pParentPfo(NULL)
 {
-    const HitType hitType1(NULL != pCluster1 ? LArClusterHelper::GetClusterHitType(pCluster1) : CUSTOM);
-    const HitType hitType2(NULL != pCluster2 ? LArClusterHelper::GetClusterHitType(pCluster2) : CUSTOM);
-    const HitType hitType3(NULL != pCluster3 ? LArClusterHelper::GetClusterHitType(pCluster3) : CUSTOM);
+    const HitType hitType1(NULL != pCluster1 ? LArClusterHelper::GetClusterHitType(pCluster1) : HIT_CUSTOM);
+    const HitType hitType2(NULL != pCluster2 ? LArClusterHelper::GetClusterHitType(pCluster2) : HIT_CUSTOM);
+    const HitType hitType3(NULL != pCluster3 ? LArClusterHelper::GetClusterHitType(pCluster3) : HIT_CUSTOM);
 
     m_pClusterU = ((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
     m_pClusterV = ((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);

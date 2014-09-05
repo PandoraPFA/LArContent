@@ -76,7 +76,7 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const HitType view1, const
     const float s2((std::fabs(direction2.GetX()) > std::numeric_limits<float>::epsilon()) ? 100.f * std::fabs(direction1.GetX()) : 1.f);
 
     float pX(s1 * direction1.GetX()), pU(0.f), pV(0.f), pW(0.f);
-    HitType newView(INNER_DETECTOR);
+    HitType newView(HIT_CUSTOM);
 
     if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_V))
     {

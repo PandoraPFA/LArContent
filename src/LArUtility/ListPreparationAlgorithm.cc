@@ -200,7 +200,7 @@ void ListPreparationAlgorithm::ProcessMCParticles()
             if (!mcParticleListW.insert(*mcIter).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
-        else if (MC_STANDARD == (*mcIter)->GetMCParticleType())
+        else if (MC_3D == (*mcIter)->GetMCParticleType())
         {
             if (!mcParticleList3D.insert(*mcIter).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);

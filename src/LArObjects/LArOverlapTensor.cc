@@ -38,7 +38,7 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
         if (!this->DefaultAmbiguityFunction(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
             continue;
 
-        // ATTN With custom definitions, it is possible to navigate from different U clusters to same combination
+        // ATTN With HIT_CUSTOM definitions, it is possible to navigate from different U clusters to same combination
         if (iterU->first != pClusterU)
             continue;
 

@@ -55,6 +55,7 @@ StatusCode ThreeDTrackSplittingAlgorithm::Run()
 
 
 // --- BEGIN EVENT DISPLAY ---
+#ifdef MONITORING
 ClusterList tempClusterListU, tempClusterListV, tempClusterListW;
 CartesianPointList tempMarkerListU, tempMarkerListV, tempMarkerListW;
 
@@ -86,6 +87,7 @@ PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &positionW, 
 }
 
 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+#endif
 // --- END EVENT DISPLAY ---
 
 
