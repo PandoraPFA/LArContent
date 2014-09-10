@@ -51,7 +51,7 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Partic
 void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const
 {
     const ClusterList &clusterList(pPfo->GetClusterList());
-    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
@@ -66,7 +66,7 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
         try
         {
-            const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitZPitch);
+            const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
             if (!matchedSlidingFitMap.insert(MatchedSlidingFitMap::value_type(hitType, slidingFitResult)).second)
                 throw StatusCodeException(STATUS_CODE_FAILURE);

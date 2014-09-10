@@ -26,20 +26,20 @@ public:
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  layerZPitch the layer z pitch, units cm
+     *  @param  layerPitch the layer pitch, units cm
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerZPitch);
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch);
 
     /**
      *  @brief  Constructor using specified primary axis
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  layerZPitch the layer z pitch, units cm
+     *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerZPitch,
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
         const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection);
 
     /**
@@ -48,12 +48,12 @@ public:
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
-     *  @param  layerZPitch the layer z pitch, units cm
+     *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
      *  @param  layerFitContributionMap the layer fit contribution map
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerZPitch,
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
         const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, const LayerFitContributionMap &layerFitContributionMap);
 
     /**
@@ -71,11 +71,11 @@ public:
     unsigned int GetLayerFitHalfWindow() const;
 
     /**
-     *  @brief  Get the layer z pitch, units cm
+     *  @brief  Get the layer pitch, units cm
      *
-     *  @return the layer z pitch
+     *  @return the layer pitch
      */
-    float GetLayerZPitch() const;
+    float GetLayerPitch() const;
 
     /**
      *  @brief  Get the axis intercept position
@@ -465,7 +465,7 @@ private:
 
     const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
     unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
-    float                       m_layerZPitch;              ///< The layer z pitch, units cm
+    float                       m_layerPitch;               ///< The layer pitch, units cm
     pandora::CartesianVector    m_axisIntercept;            ///< The axis intercept position
     pandora::CartesianVector    m_axisDirection;            ///< The axis direction vector
     LayerFitResultMap           m_layerFitResultMap;        ///< The layer fit result map
@@ -493,9 +493,9 @@ inline unsigned int TwoDSlidingFitResult::GetLayerFitHalfWindow() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoDSlidingFitResult::GetLayerZPitch() const
+inline float TwoDSlidingFitResult::GetLayerPitch() const
 {
-    return m_layerZPitch;
+    return m_layerPitch;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

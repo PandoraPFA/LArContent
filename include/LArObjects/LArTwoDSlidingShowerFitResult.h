@@ -37,9 +37,9 @@ public:
      * 
      *  @param  pCluster address of the candidate shower cluster
      *  @param  slidingFitWindow the sliding fit window
-     *  @param  slidingFitZPitch the sliding fit z pitch, units cm
+     *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
      */
-    TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitZPitch);
+    TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
 
     /**
      *  @brief  Get the sliding fit result for the full shower cluster

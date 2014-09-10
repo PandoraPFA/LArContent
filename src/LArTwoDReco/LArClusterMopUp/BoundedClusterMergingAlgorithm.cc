@@ -24,12 +24,12 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
     const ClusterToListNameMap &clusterToListNameMap) const
 {
     ClusterAssociationMap clusterAssociationMap;
-    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         Cluster *pPfoCluster(*pIter);
-        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitZPitch);
+        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch);
 
         ShowerPositionMap showerPositionMap;
         const XSampling xSampling(fitResult.GetShowerFitResult());

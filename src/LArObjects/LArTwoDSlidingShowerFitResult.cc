@@ -19,8 +19,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitZPitch) :
-    m_showerFitResult(TwoDSlidingFitResult(pCluster, slidingFitWindow, slidingFitZPitch)),
+TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch) :
+    m_showerFitResult(TwoDSlidingFitResult(pCluster, slidingFitWindow, slidingFitLayerPitch)),
     m_negativeEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, NEGATIVE_SHOWER_EDGE)),
     m_positiveEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, POSITIVE_SHOWER_EDGE))
 {
@@ -146,7 +146,7 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
             layerFitContributionMap[layer].AddPoint(bestFitCoordinate.first, bestFitCoordinate.second);
     }
 
-    return TwoDSlidingFitResult(fullShowerFit.GetCluster(), fullShowerFit.GetLayerFitHalfWindow(), fullShowerFit.GetLayerZPitch(),
+    return TwoDSlidingFitResult(fullShowerFit.GetCluster(), fullShowerFit.GetLayerFitHalfWindow(), fullShowerFit.GetLayerPitch(),
         fullShowerFit.GetAxisIntercept(), fullShowerFit.GetAxisDirection(), layerFitContributionMap);
 }
 

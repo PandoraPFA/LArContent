@@ -182,7 +182,7 @@ void CosmicRaySplittingAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector,
     TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
@@ -190,7 +190,7 @@ void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &
         {
             try
             {
-                const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitZPitch);
+                const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitPitch);
 
                 if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);

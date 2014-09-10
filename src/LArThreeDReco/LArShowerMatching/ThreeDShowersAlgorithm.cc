@@ -141,8 +141,8 @@ void ThreeDShowersAlgorithm::TidyUp()
 
 void ThreeDShowersAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
 {
-    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
-    const TwoDSlidingShowerFitResult slidingShowerFitResult(pCluster, m_slidingFitWindow, slidingFitZPitch);
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const TwoDSlidingShowerFitResult slidingShowerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingShowerFitResultMap::value_type(pCluster, slidingShowerFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);
