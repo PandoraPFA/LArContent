@@ -22,7 +22,7 @@ HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
     if (0 == pCluster->GetNCaloHits())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    // TODO static
+    // TODO Find a way of confirming single hit-type clustering mode; currently only checked in ListPreparation algorithm
     // if (!pandora->GetSettings()->SingleHitTypeClusteringMode())
     //     throw StatusCodeException(STATUS_CODE_FAILURE);
 
