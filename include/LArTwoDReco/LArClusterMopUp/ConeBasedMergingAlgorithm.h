@@ -41,10 +41,11 @@ private:
          *  @brief  Constructor
          * 
          *  @param  pCluster address of the cluster
-         *  @param  slidingFitWindow the layer window to use in sliding shower fit used for cone construction
+         *  @param  slidingFitWindow the layer window to use in sliding shower fit for cone construction
+         *  @param  slidingFitZPitch the z pitch, in cm, to use in sliding shower fit for cone construction
          *  @param  coneAngleCentile the cone angle centile
          */
-        ConeParameters(pandora::Cluster *pCluster, const unsigned int slidingFitWindow, const float coneAngleCentile);
+        ConeParameters(pandora::Cluster *pCluster, const unsigned int slidingFitWindow, const float slidingFitZPitch, const float coneAngleCentile);
 
         /**
          *  @brief  Get the address of the cluster

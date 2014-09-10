@@ -9,8 +9,11 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 
@@ -23,13 +26,14 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
     const ClusterToListNameMap &clusterToListNameMap) const
 {
     ClusterAssociationMap clusterAssociationMap;
+    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         try
         {
             Cluster *pPfoCluster(*pIter);
-            const ConeParameters coneParameters(pPfoCluster, m_slidingFitWindow, m_coneAngleCentile);
+            const ConeParameters coneParameters(pPfoCluster, m_slidingFitWindow, slidingFitZPitch, m_coneAngleCentile);
 
             for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
             {
@@ -85,7 +89,8 @@ float ConeBasedMergingAlgorithm::GetBoundedFraction(const Cluster *const pCluste
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster, const unsigned int slidingFitWindow, const float coneAngleCentile) :
+ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster, const unsigned int slidingFitWindow, const float slidingFitZPitch,
+        const float coneAngleCentile) :
     m_pCluster(pCluster),
     m_direction(0.f, 0.f, 0.f),
     m_apex(0.f, 0.f, 0.f),
@@ -94,7 +99,7 @@ ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster, con
     m_coneCosHalfAngle(0.f),
     m_isForward(true)
 {
-    const TwoDSlidingFitResult fitResult(pCluster, slidingFitWindow);
+    const TwoDSlidingFitResult fitResult(pCluster, slidingFitWindow, slidingFitZPitch);
     this->GetDirectionEstimate(fitResult, m_isForward, m_direction);
     const CartesianVector basePosition(m_isForward ? fitResult.GetGlobalMaxLayerPosition() : fitResult.GetGlobalMinLayerPosition());
 

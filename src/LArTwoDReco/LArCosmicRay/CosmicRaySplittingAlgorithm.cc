@@ -11,7 +11,10 @@
 #include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 using namespace pandora;
 
@@ -179,13 +182,15 @@ void CosmicRaySplittingAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector,
     TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
+    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
         {
             try
             {
-                const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers);
+                const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitZPitch);
 
                 if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);

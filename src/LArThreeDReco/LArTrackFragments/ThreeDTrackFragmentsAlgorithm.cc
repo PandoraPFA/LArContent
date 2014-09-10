@@ -11,7 +11,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArPseudoLayerPlugin.h"
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 
@@ -292,7 +292,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const CartesianVector vtxProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtxPosition3D, hitType3));
     const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), endPosition3D, hitType3));
 
-    const float samplingPitch(0.5f * LArGeometryHelper::GetLArPseudoLayerPlugin(this->GetPandora())->GetZPitch());
+    const float samplingPitch(0.5f * LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
     const float nSamplingPoints((endProjection3 - vtxProjection3).GetMagnitude() / samplingPitch);
 
     if (nSamplingPoints < 1.f)

@@ -21,9 +21,10 @@ HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
 {
     if (0 == pCluster->GetNCaloHits())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-// TODO static
-//    if (!pandora->GetSettings()->SingleHitTypeClusteringMode())
-//        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    // TODO static
+    // if (!pandora->GetSettings()->SingleHitTypeClusteringMode())
+    //     throw StatusCodeException(STATUS_CODE_FAILURE);
 
     return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
 }

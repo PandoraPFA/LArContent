@@ -9,6 +9,9 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
@@ -24,7 +27,8 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
 
     try
     {
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow);
+        const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitZPitch);
         CartesianVector splitPosition(0.f, 0.f, 0.f);
 
         if (STATUS_CODE_SUCCESS == this->FindBestSplitPosition(slidingFitResult, splitPosition))

@@ -10,7 +10,6 @@
 
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArPseudoLayerPlugin.h"
 #include "LArPlugins/LArTransformationPlugin.h"
 
 using namespace pandora;
@@ -321,19 +320,6 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
     }
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const LArPseudoLayerPlugin *LArGeometryHelper::GetLArPseudoLayerPlugin(const Pandora &pandora)
-{
-    const PseudoLayerPlugin *pPseudoLayerPlugin(pandora.GetPlugins()->GetPseudoLayerPlugin());
-    const LArPseudoLayerPlugin *pLArPseudoLayerPlugin(dynamic_cast<const LArPseudoLayerPlugin*>(pPseudoLayerPlugin));
-
-    if (NULL == pLArPseudoLayerPlugin)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    return pLArPseudoLayerPlugin;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
