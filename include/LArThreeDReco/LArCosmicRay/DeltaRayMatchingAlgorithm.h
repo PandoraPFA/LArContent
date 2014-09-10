@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -272,6 +272,6 @@ inline pandora::Algorithm *DeltaRayMatchingAlgorithm::Factory::CreateAlgorithm()
     return new DeltaRayMatchingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_DELTA_RAY_MATCHING_ALGORITHM_H

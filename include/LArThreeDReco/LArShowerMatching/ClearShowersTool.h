@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -87,6 +87,6 @@ inline pandora::AlgorithmTool *ClearShowersTool::Factory::CreateAlgorithmTool() 
     return new ClearShowersTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef CLEAR_SHOWERS_TOOL_H

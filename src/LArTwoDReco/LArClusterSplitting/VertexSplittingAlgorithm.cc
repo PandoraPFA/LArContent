@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
  
 StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, CartesianVector &splitPosition) const
@@ -81,4 +81,4 @@ StatusCode VertexSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return TwoDSlidingFitSplittingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

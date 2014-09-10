@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -75,6 +75,6 @@ inline pandora::Algorithm *ListPreparationAlgorithm::Factory::CreateAlgorithm() 
     return new ListPreparationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_LIST_PREPARATION_ALGORITHM_H

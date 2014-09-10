@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -40,6 +40,6 @@ inline pandora::AlgorithmTool *ThreeViewShowerHitsTool::Factory::CreateAlgorithm
     return new ThreeViewShowerHitsTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef THREE_VIEW_SHOWER_HITS_TOOL_H

@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -85,6 +85,6 @@ private:
     float         m_minClusterLength;     ///< minimum length of clusters
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TWO_D_SLIDING_FIT_SPLITTING_AND_SWITCHING_ALGORITHM_H

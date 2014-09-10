@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -142,6 +142,6 @@ inline pandora::Algorithm *ParticleMonitoringAlgorithm::Factory::CreateAlgorithm
     return new ParticleMonitoringAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // LAR_PARTICLE_MONITORING_ALGORITHM_H

@@ -12,7 +12,7 @@
 
 #include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -224,6 +224,6 @@ inline bool ConeBasedMergingAlgorithm::ConeParameters::IsForward() const
     return m_isForward;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CONE_BASED_MERGING_ALGORITHM_H

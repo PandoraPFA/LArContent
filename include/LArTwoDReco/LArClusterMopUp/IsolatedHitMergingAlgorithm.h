@@ -12,7 +12,7 @@
 
 #include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -77,6 +77,6 @@ inline pandora::Algorithm *IsolatedHitMergingAlgorithm::Factory::CreateAlgorithm
     return new IsolatedHitMergingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_ISOLATED_HIT_MERGING_ALGORITHM_H

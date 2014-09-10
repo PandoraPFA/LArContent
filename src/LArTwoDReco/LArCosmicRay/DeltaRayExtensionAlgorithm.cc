@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void DeltaRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
@@ -368,4 +368,4 @@ StatusCode DeltaRayExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

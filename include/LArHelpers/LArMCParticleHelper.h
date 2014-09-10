@@ -10,7 +10,7 @@
 
 #include "Pandora/PandoraInternal.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -65,6 +65,6 @@ public:
     static int GetParentNeutrinoId(const pandora::MCParticle *const pMCParticle);
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_MC_PARTICLE_HELPER_H

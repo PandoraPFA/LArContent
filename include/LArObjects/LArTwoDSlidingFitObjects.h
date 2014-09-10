@@ -12,7 +12,7 @@
 #include <map>
 #include <vector>
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -470,6 +470,6 @@ inline bool FitSegment::IsIncreasingX() const
     return m_isIncreasingX;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TWO_D_SLIDING_FIT_OBJECTS_H

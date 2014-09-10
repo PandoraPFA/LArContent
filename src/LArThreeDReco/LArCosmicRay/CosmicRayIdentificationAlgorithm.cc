@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode CosmicRayIdentificationAlgorithm::Run()
@@ -30,4 +30,4 @@ StatusCode CosmicRayIdentificationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

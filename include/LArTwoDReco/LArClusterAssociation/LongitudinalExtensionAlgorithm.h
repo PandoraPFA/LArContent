@@ -12,7 +12,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -62,6 +62,6 @@ inline pandora::Algorithm *LongitudinalExtensionAlgorithm::Factory::CreateAlgori
     return new LongitudinalExtensionAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_LONGITUDINAL_EXTENSION_ALGORITHM_H

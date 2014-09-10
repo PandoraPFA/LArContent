@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -56,6 +56,6 @@ inline pandora::Algorithm *CheatingCosmicRayShowerMatchingAlg::Factory::CreateAl
     return new CheatingCosmicRayShowerMatchingAlg();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CHEATING_COSMIC_RAY_SHOWER_MATCHING_ALG_H

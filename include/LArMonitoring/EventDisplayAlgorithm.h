@@ -15,7 +15,7 @@
 #include "PandoraMonitoringApi.h"
 #endif
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -52,6 +52,6 @@ inline pandora::Algorithm *EventDisplayAlgorithm::Factory::CreateAlgorithm() con
     return new EventDisplayAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_EVENT_DISPLAY_ALGORITHM_H

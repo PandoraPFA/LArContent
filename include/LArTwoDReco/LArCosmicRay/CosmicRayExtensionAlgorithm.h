@@ -14,7 +14,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -74,6 +74,6 @@ inline pandora::Algorithm *CosmicRayExtensionAlgorithm::Factory::CreateAlgorithm
     return new CosmicRayExtensionAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_COSMIC_RAY_EXTENSION_ALGORITHM_H

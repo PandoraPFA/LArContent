@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
@@ -150,4 +150,4 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return ThreeDBaseAlgorithm<float>::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

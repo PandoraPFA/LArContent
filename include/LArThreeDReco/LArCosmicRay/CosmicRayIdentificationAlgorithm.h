@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -43,6 +43,6 @@ inline pandora::Algorithm *CosmicRayIdentificationAlgorithm::Factory::CreateAlgo
     return new CosmicRayIdentificationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_COSMIC_RAY_IDENTIFICATION_ALGORITHM_H

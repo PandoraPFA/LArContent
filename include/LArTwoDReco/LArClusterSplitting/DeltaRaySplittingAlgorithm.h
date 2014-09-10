@@ -10,7 +10,7 @@
 
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -48,6 +48,6 @@ inline pandora::Algorithm *DeltaRaySplittingAlgorithm::Factory::CreateAlgorithm(
     return new DeltaRaySplittingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_DELTA_RAY_SPLITTING_ALGORITHM_H

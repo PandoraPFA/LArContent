@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -129,6 +129,6 @@ private:
     bool ApplyChanges(ThreeDTransverseTracksAlgorithm *pAlgorithm, const ModificationList &modificationList) const;
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef THREE_D_KINK_BASE_TOOL_H

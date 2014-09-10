@@ -11,7 +11,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 LArPointingCluster::LArPointingCluster(Cluster *const pCluster, const unsigned int layerFitHalfWindow)
@@ -126,4 +126,4 @@ LArPointingCluster::Vertex &LArPointingCluster::Vertex::operator=(const Vertex &
     return *this;
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -132,6 +132,6 @@ inline pandora::AlgorithmTool *SplitShowersTool::Factory::CreateAlgorithmTool() 
     return new SplitShowersTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef SPLIT_SHOWERS_TOOL_H

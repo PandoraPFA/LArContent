@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -61,6 +61,6 @@ protected:
     virtual float GetTransverseChi2(const pandora::CartesianVector &position2D, const TwoDSlidingFitResult &fitResult) const;
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef TRANSVERSE_TRACK_HITS_BASE_TOOL_H

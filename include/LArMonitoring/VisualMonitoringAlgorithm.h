@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -118,6 +118,6 @@ inline pandora::Algorithm *VisualMonitoringAlgorithm::Factory::CreateAlgorithm()
     return new VisualMonitoringAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_VISUAL_MONITORING_ALGORITHM_H

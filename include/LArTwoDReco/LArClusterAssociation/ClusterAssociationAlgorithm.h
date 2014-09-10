@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -119,6 +119,6 @@ private:
     bool         m_resolveAmbiguousAssociations;        ///< Whether to resolve ambiguous associations
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_ASSOCIATION_ALGORITHM_H

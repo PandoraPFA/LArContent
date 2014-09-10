@@ -10,7 +10,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -274,6 +274,6 @@ inline bool LArPointingCluster::Vertex::IsInitialized() const
     return m_isInitialized;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_POINTING_CLUSTER_H

@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType1, const HitType hitType2,
@@ -143,4 +143,4 @@ StatusCode HitCreationBaseTool::ReadSettings(const pandora::TiXmlHandle xmlHandl
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

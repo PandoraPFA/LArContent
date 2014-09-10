@@ -12,7 +12,7 @@
 
 #include "Objects/CartesianVector.h"
 
-namespace lar
+namespace lar_content
 {
 
 class LArPseudoLayerPlugin;
@@ -200,6 +200,6 @@ private:
     static TransformationInstanceMap    m_transformationInstanceMap;    ///< The transformation instance map
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_GEOMETRY_HELPER_H

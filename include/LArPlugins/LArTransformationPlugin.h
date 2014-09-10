@@ -10,7 +10,7 @@
 
 #include "Pandora/PandoraInputTypes.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -156,6 +156,6 @@ public:
         const PositionAndType &fitPositionAndType2, const float sigmaHit, const float sigmaFit, float &y, float &z, float &chiSquared) const = 0;
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TRANSFORMATION_PLUGIN_H

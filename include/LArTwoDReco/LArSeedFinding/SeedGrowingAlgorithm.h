@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -166,6 +166,6 @@ inline SeedGrowingAlgorithm::AssociationType SeedGrowingAlgorithm::Association::
     return m_type;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_SEED_GROWING_ALGORITHM_H

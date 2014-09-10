@@ -12,7 +12,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -67,6 +67,6 @@ inline pandora::Algorithm *TrackConsolidationAlgorithm::Factory::CreateAlgorithm
     return new TrackConsolidationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TRACK_CONSOLIDATION_ALGORITHM_H

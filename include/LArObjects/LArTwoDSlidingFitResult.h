@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitObjects.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -528,6 +528,6 @@ inline void TwoDSlidingFitResult::GetMinAndMaxZ(float &minZ, float &maxZ) const
     return this->GetMinAndMaxCoordinate(false, minZ, maxZ);
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TWO_D_SLIDING_FIT_RESULT_H

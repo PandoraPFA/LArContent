@@ -8,7 +8,7 @@
 #ifndef LAR_X_OVERLAP_H
 #define LAR_X_OVERLAP_H 1
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -219,6 +219,6 @@ inline XOverlap operator+(const XOverlap &lhs, const XOverlap &rhs)
     return XOverlap(uMinX, uMaxX, vMinX, vMaxX, wMinX, wMaxX, xOverlapSpan);
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_X_OVERLAP_H

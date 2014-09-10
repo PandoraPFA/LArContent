@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -74,6 +74,6 @@ private:
     float           m_maxClusterSeparation;  ///< Maximum distance at which clusters can be joined
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_GROWING_ALGORITHM_H

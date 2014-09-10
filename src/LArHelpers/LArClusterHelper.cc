@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
@@ -478,4 +478,4 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
 }
 
-} // namespace lar
+} // namespace lar_content

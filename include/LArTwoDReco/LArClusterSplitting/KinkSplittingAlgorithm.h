@@ -10,7 +10,7 @@
 
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -53,6 +53,6 @@ inline pandora::Algorithm *KinkSplittingAlgorithm::Factory::CreateAlgorithm() co
     return new KinkSplittingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_KINK_SPLITTING_ALGORITHM_H

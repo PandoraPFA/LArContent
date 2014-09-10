@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 TrackOverlapResult::TrackOverlapResult() :
@@ -300,4 +300,4 @@ pandora::HitType FragmentOverlapResult::GetFragmentHitType() const
     return (*(m_caloHitList.begin()))->GetHitType();
 }
 
-} // namespace lar
+} // namespace lar_content

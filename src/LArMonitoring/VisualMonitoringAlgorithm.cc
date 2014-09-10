@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <string>
 
-namespace lar
+namespace lar_content
 {
 
 using namespace pandora;
@@ -430,4 +430,4 @@ StatusCode VisualMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -40,6 +40,6 @@ inline pandora::AlgorithmTool *ClearLongitudinalTrackHitsTool::Factory::CreateAl
     return new ClearLongitudinalTrackHitsTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef CLEAR_LONGITUDINAL_TRACK_HITS_TOOL_H

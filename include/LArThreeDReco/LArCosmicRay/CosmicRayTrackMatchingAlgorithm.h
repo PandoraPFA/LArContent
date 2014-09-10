@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -176,6 +176,6 @@ inline pandora::Algorithm *CosmicRayTrackMatchingAlgorithm::Factory::CreateAlgor
     return new CosmicRayTrackMatchingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_COSMIC_RAY_TRACK_MATCHING_ALGORITHM_H

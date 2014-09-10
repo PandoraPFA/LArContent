@@ -15,7 +15,7 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 class FragmentTensorTool;
@@ -176,6 +176,6 @@ inline pandora::Algorithm *ThreeDTrackFragmentsAlgorithm::Factory::CreateAlgorit
     return new ThreeDTrackFragmentsAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_TRACK_FRAGMENTS_ALGORITHM_H

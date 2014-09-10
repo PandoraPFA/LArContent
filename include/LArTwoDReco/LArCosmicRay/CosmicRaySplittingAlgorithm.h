@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -170,6 +170,6 @@ inline pandora::Algorithm *CosmicRaySplittingAlgorithm::Factory::CreateAlgorithm
     return new CosmicRaySplittingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_COSMIC_RAY_SPLITTING_ALGORITHM_H
