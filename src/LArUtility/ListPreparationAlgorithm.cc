@@ -19,6 +19,12 @@ namespace lar_content
 
 StatusCode ListPreparationAlgorithm::Run()
 {
+    if (!this->GetPandora().GetSettings()->SingleHitTypeClusteringMode())
+    {
+        std::cout << "ListPreparationAlgorithm: expect Pandora to be configured in SingleHitTypeClusteringMode." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
     try
     {
         this->ProcessCaloHits();
