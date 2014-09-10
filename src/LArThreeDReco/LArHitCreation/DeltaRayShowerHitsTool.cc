@@ -70,7 +70,7 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgor
             for (CaloHitList::const_iterator iter2 = caloHitList3D.begin(), iterEnd2 = caloHitList3D.end(); iter2 != iterEnd2; ++iter2)
             {
                 const CartesianVector thisPosition3D((*iter2)->GetPositionVector());
-                const CartesianVector thisPosition2D(LArGeometryHelper::ProjectPosition(thisPosition3D, hitType));
+                const CartesianVector thisPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), thisPosition3D, hitType));
                 const float thisDistanceSquared((pCaloHit2D->GetPositionVector() - thisPosition2D).GetMagnitudeSquared());
 
                 if (thisDistanceSquared <  closestDistanceSquared)
@@ -84,8 +84,8 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgor
             if (!foundClosestPosition)
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            const CartesianVector position1(LArGeometryHelper::ProjectPosition(closestPosition3D, hitType1));
-            const CartesianVector position2(LArGeometryHelper::ProjectPosition(closestPosition3D, hitType2));
+            const CartesianVector position1(LArGeometryHelper::ProjectPosition(this->GetPandora(), closestPosition3D, hitType1));
+            const CartesianVector position2(LArGeometryHelper::ProjectPosition(this->GetPandora(), closestPosition3D, hitType2));
 
             CartesianVector position3D(0.f, 0.f, 0.f);
             float chiSquared(std::numeric_limits<float>::max());

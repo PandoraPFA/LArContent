@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArCalculators/LArTransformationCalculator.h
+ *  @file   LArContent/include/LArPlugins/LArTransformationPlugin.h
  * 
- *  @brief  Header file for the transformation calculator interface class.
+ *  @brief  Header file for the transformation plugin interface class.
  * 
  *  $Log: $
  */
-#ifndef LAR_TRANSFORMATION_CALCULATOR_H
-#define LAR_TRANSFORMATION_CALCULATOR_H 1
+#ifndef LAR_TRANSFORMATION_PLUGIN_H
+#define LAR_TRANSFORMATION_PLUGIN_H 1
 
 #include "Pandora/PandoraInputTypes.h"
 
@@ -14,9 +14,9 @@ namespace lar
 {
 
 /**
- *  @brief  LArTransformationCalculator class
+ *  @brief  LArTransformationPlugin class
  */
-class LArTransformationCalculator
+class LArTransformationPlugin
 {
 public:
     /** 
@@ -158,4 +158,4 @@ public:
 
 } // namespace lar
 
-#endif // #ifndef LAR_TRANSFORMATION_CALCULATOR_H
+#endif // #ifndef LAR_TRANSFORMATION_PLUGIN_H

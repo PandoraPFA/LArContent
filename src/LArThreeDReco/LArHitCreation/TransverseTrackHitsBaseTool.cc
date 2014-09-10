@@ -61,7 +61,7 @@ void TransverseTrackHitsBaseTool::GetTransverseChi2(const CaloHit *const pCaloHi
         if (pCaloHit2D->GetHitType() == hitType)
             continue;
 
-        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(position3D, hitType));
+        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, hitType));
         const TwoDSlidingFitResult &fitResult(iter->second);
 
         chiSquared += this->GetTransverseChi2(position2D, fitResult);

@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCalculators/LArTransformationCalculator.h"
-
 #include "LArHelpers/LArGeometryHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
@@ -75,7 +75,7 @@ void HitCreationBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const H
     const CartesianVector &fitPosition1, const CartesianVector &fitPosition2, CartesianVector &position3D, float &chiSquared) const
 {
     // TODO Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
-    const float sigmaHit(LArGeometryHelper::GetLArTransformationCalculator()->GetSigmaUVW());
+    const float sigmaHit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
     const float sigmaFit(sigmaHit); 
     const HitType hitType(pCaloHit2D->GetHitType());
 
@@ -90,17 +90,17 @@ void HitCreationBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const H
         const float sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
 
         float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
-        LArGeometryHelper::GetLArTransformationCalculator()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chiSquared);
+        LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chiSquared);
         position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), bestY, bestZ);
     }
     else
     {
-        const LArTransformationCalculator::PositionAndType hitPositionAndType(pCaloHit2D->GetPositionVector().GetZ(), hitType);
-        const LArTransformationCalculator::PositionAndType fitPositionAndType1(fitPosition1.GetZ(), hitType1);
-        const LArTransformationCalculator::PositionAndType fitPositionAndType2(fitPosition2.GetZ(), hitType2);
+        const LArTransformationPlugin::PositionAndType hitPositionAndType(pCaloHit2D->GetPositionVector().GetZ(), hitType);
+        const LArTransformationPlugin::PositionAndType fitPositionAndType1(fitPosition1.GetZ(), hitType1);
+        const LArTransformationPlugin::PositionAndType fitPositionAndType2(fitPosition2.GetZ(), hitType2);
 
         float bestY(std::numeric_limits<float>::max()), bestZ(std::numeric_limits<float>::max());
-        LArGeometryHelper::GetLArTransformationCalculator()->GetProjectedYZ(hitPositionAndType, fitPositionAndType1, fitPositionAndType2, sigmaHit, sigmaFit, bestY, bestZ, chiSquared);
+        LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetProjectedYZ(hitPositionAndType, fitPositionAndType1, fitPositionAndType2, sigmaHit, sigmaFit, bestY, bestZ, chiSquared);
         position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), bestY, bestZ);
     }
 
@@ -120,8 +120,8 @@ void HitCreationBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const H
     if (pCaloHit2D->GetHitType() == hitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    LArGeometryHelper::MergeTwoPositions3D(pCaloHit2D->GetHitType(), hitType, pCaloHit2D->GetPositionVector(), fitPosition,
-        position3D, chiSquared);
+    LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), pCaloHit2D->GetHitType(), hitType, pCaloHit2D->GetPositionVector(),
+        fitPosition, position3D, chiSquared);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

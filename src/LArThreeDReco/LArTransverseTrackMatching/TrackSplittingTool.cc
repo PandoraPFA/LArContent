@@ -142,7 +142,7 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
 
         CartesianVector splitPosition(0.f, 0.f, 0.f);
         float chiSquared(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
+        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
 
         if (this->CheckSplitPosition(splitPosition, splitMinX, longFitResult))
         {
@@ -171,7 +171,7 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
 
         CartesianVector splitPosition(0.f, 0.f, 0.f);
         float chiSquared(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
+        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
 
         if (this->CheckSplitPosition(splitPosition, splitMaxX, longFitResult))
         {
