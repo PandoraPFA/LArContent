@@ -31,8 +31,8 @@ bool LArParticleIdPlugins::LArMuonId::IsMatch(const Cluster *const pCluster) con
     if (LArClusterHelper::GetLayerOccupancy(pCluster) < m_minLayerOccupancy)
         return false;
 
-    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
-    const TwoDSlidingFitResult twoDSlidingFitResult(pCluster, m_layerFitHalfWindow, slidingFitZPitch);
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const TwoDSlidingFitResult twoDSlidingFitResult(pCluster, m_layerFitHalfWindow, slidingFitPitch);
 
     if (this->GetMuonTrackWidth(twoDSlidingFitResult) > m_maxTrackWidth)
         return false;

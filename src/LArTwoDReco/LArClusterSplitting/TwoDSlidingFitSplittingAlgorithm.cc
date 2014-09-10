@@ -27,8 +27,8 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
 
     try
     {
-        const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitZPitch);
+        const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
         CartesianVector splitPosition(0.f, 0.f, 0.f);
 
         if (STATUS_CODE_SUCCESS == this->FindBestSplitPosition(slidingFitResult, splitPosition))

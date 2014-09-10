@@ -85,7 +85,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::GetListOfCleanClusters(const C
 void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, const unsigned int halfWindowLayers,
     TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
@@ -93,7 +93,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const
         {
             try
             {
-                const TwoDSlidingFitResult slidingFitResult(*iter, halfWindowLayers, slidingFitZPitch);
+                const TwoDSlidingFitResult slidingFitResult(*iter, halfWindowLayers, slidingFitPitch);
 
                 if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);

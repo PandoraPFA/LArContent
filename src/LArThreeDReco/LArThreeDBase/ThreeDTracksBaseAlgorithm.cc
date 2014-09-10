@@ -232,8 +232,8 @@ void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoPa
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
 {
-    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
-    const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitZPitch);
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);

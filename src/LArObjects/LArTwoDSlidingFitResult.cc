@@ -20,10 +20,10 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerZPitch) :
+TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
-    m_layerZPitch(layerZPitch),
+    m_layerPitch(layerPitch),
     m_axisIntercept(0.f, 0.f, 0.f),
     m_axisDirection(0.f, 0.f, 0.f)
 {
@@ -39,11 +39,11 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerZPitch,
+TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
         const CartesianVector &axisIntercept, const CartesianVector &axisDirection) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
-    m_layerZPitch(layerZPitch),
+    m_layerPitch(layerPitch),
     m_axisIntercept(axisIntercept),
     m_axisDirection(axisDirection)
 {
@@ -54,11 +54,11 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerZPitch,
+TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
         const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const LayerFitContributionMap &layerFitContributionMap) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
-    m_layerZPitch(layerZPitch),
+    m_layerPitch(layerPitch),
     m_axisIntercept(axisIntercept),
     m_axisDirection(axisDirection),
     m_layerFitContributionMap(layerFitContributionMap)
@@ -71,7 +71,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 
 float TwoDSlidingFitResult::GetLayerFitHalfWindowLength() const
 {
-    return (static_cast<float>(m_layerFitHalfWindow)) * m_layerZPitch;
+    return (static_cast<float>(m_layerFitHalfWindow)) * m_layerPitch;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,17 +98,17 @@ int TwoDSlidingFitResult::GetMaxLayer() const
 
 int TwoDSlidingFitResult::GetLayer(const float rL) const
 {
-    if (m_layerZPitch < std::numeric_limits<float>::epsilon())
+    if (m_layerPitch < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    return std::floor(rL / m_layerZPitch);
+    return std::floor(rL / m_layerPitch);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float TwoDSlidingFitResult::GetL(const int layer) const
 {
-    return (static_cast<float>(layer) + 0.5f) * m_layerZPitch;
+    return (static_cast<float>(layer) + 0.5f) * m_layerPitch;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -409,7 +409,7 @@ const FitSegment &TwoDSlidingFitResult::GetFitSegment(const float rL) const
 
 void TwoDSlidingFitResult::FillLayerFitContributionMap()
 {
-    if (m_layerZPitch < std::numeric_limits<float>::epsilon())
+    if (m_layerPitch < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     if (!m_layerFitContributionMap.empty())
@@ -437,7 +437,7 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
 
     if ((std::fabs(m_axisIntercept.GetY()) > std::numeric_limits<float>::epsilon()) ||
         (std::fabs(m_axisDirection.GetY()) > std::numeric_limits<float>::epsilon()) ||
-        (m_layerZPitch < std::numeric_limits<float>::epsilon()) ||
+        (m_layerPitch < std::numeric_limits<float>::epsilon()) ||
         (m_layerFitContributionMap.empty()) )
     {
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
