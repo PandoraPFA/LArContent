@@ -123,6 +123,13 @@ public:
     virtual float GetSigmaUVW() const = 0;
 
     /** 
+     *  @brief  Get wire z pitch, in cm
+     * 
+     *  @return wire z pitch, in cm
+     */
+    virtual float GetWireZPitch() const = 0;
+
+    /** 
      *  @brief  Get the y, z position that yields the minimum chi squared value with respect to specified u, v and w coordinates
      * 
      *  @param  u the u coordinate

@@ -11,8 +11,10 @@
 #include "Objects/Cluster.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArPlugins/LArParticleIdPlugins.h"
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -29,7 +31,8 @@ bool LArParticleIdPlugins::LArMuonId::IsMatch(const Cluster *const pCluster) con
     if (LArClusterHelper::GetLayerOccupancy(pCluster) < m_minLayerOccupancy)
         return false;
 
-    const TwoDSlidingFitResult twoDSlidingFitResult(pCluster, m_layerFitHalfWindow);
+    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const TwoDSlidingFitResult twoDSlidingFitResult(pCluster, m_layerFitHalfWindow, slidingFitZPitch);
 
     if (this->GetMuonTrackWidth(twoDSlidingFitResult) > m_maxTrackWidth)
         return false;

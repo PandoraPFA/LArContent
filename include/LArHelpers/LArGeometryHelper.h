@@ -15,7 +15,6 @@
 namespace lar_content
 {
 
-class LArPseudoLayerPlugin;
 class LArTransformationPlugin;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,15 +167,6 @@ public:
      */
     static pandora::CartesianVector ProjectDirection(const pandora::Pandora &pandora, const pandora::CartesianVector &direction3D,
         const pandora::HitType view);
-
-    /**
-     *  @brief  Get the LArPseudoLayerPlugin (dynamic cast, if successful, of registered PseudoLayerPlugin)
-     *
-     *  @param  pandora the associated pandora instance
-     * 
-     *  @return the address of the LArPseudoLayerPlugin
-     */
-    static const LArPseudoLayerPlugin *GetLArPseudoLayerPlugin(const pandora::Pandora &pandora);
 
     /**
      *  @brief  Get the LArTransformationPlugin registered with a specified pandora instance

@@ -9,6 +9,9 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h"
 
@@ -69,11 +72,13 @@ void TwoDSlidingFitConsolidationAlgorithm::SortInputClusters(const ClusterList *
 void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector &trackClusters,
     TwoDSlidingFitResultList &slidingFitResultList) const
 {
+    const float slidingFitZPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+
     for (ClusterVector::const_iterator iter = trackClusters.begin(), iterEnd = trackClusters.end(); iter != iterEnd; ++iter)
     {
         try
         {
-            const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers);
+            const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitZPitch);
             slidingFitResultList.push_back(slidingFitResult);
         }
         catch (StatusCodeException &statusCodeException)
