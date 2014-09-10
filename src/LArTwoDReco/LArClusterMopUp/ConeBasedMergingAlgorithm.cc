@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
@@ -220,4 +220,4 @@ StatusCode ConeBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -12,7 +12,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -57,6 +57,6 @@ inline pandora::Algorithm *SimpleClusterMergingAlgorithm::Factory::CreateAlgorit
     return new SimpleClusterMergingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_SIMPLE_CLUSTER_MERGING_ALGORITHM_H

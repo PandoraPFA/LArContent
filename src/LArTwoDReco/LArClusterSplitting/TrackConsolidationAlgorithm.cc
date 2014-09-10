@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultList &slidingFitResultListI,
@@ -144,4 +144,4 @@ StatusCode TrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     return TwoDSlidingFitConsolidationAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

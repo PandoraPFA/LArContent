@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
@@ -117,4 +117,4 @@ StatusCode ShowerTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHand
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

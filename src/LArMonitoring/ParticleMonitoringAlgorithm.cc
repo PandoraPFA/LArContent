@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 ParticleMonitoringAlgorithm::ParticleMonitoringAlgorithm()
@@ -490,4 +490,4 @@ StatusCode ParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

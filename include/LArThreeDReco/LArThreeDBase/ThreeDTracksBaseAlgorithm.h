@@ -12,7 +12,7 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
@@ -108,6 +108,6 @@ inline unsigned int ThreeDTracksBaseAlgorithm<T>::GetSlidingFitWindow() const
     return m_slidingFitWindow;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H

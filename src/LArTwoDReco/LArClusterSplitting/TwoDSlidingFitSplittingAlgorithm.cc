@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
@@ -93,4 +93,4 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlH
     return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

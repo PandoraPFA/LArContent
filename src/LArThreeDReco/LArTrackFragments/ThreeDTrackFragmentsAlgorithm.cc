@@ -17,7 +17,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
@@ -633,4 +633,4 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     return ThreeDTracksBaseAlgorithm<FragmentOverlapResult>::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -422,6 +422,6 @@ const typename OverlapTensor<T>::OverlapResult &OverlapTensor<T>::Element::GetOv
     return m_overlapResult;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_OVERLAP_TENSOR_H

@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ClusterExtensionAlgorithm::PopulateClusterMergeMap(const ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
@@ -29,4 +29,4 @@ StatusCode ClusterExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return ClusterMergingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

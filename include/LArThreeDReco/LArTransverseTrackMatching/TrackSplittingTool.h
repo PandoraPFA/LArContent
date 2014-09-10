@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -115,6 +115,6 @@ inline pandora::AlgorithmTool *TrackSplittingTool::Factory::CreateAlgorithmTool(
     return new TrackSplittingTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef TRACK_SPLITTING_TOOL_H

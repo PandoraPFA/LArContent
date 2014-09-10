@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &principalSlidingFit, 
@@ -143,4 +143,4 @@ StatusCode DeltaRaySplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

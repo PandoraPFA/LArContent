@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
@@ -115,4 +115,4 @@ StatusCode TransverseTensorVisualizationTool::ReadSettings(const TiXmlHandle xml
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

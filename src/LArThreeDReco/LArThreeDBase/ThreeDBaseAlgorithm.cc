@@ -18,7 +18,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 template <typename T>
@@ -314,4 +314,4 @@ template class ThreeDBaseAlgorithm<LongitudinalOverlapResult>;
 template class ThreeDBaseAlgorithm<FragmentOverlapResult>;
 template class ThreeDBaseAlgorithm<ShowerOverlapResult>;
 
-} // namespace lar
+} // namespace lar_content

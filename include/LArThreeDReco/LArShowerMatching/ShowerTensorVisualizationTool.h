@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -46,6 +46,6 @@ inline pandora::AlgorithmTool *ShowerTensorVisualizationTool::Factory::CreateAlg
     return new ShowerTensorVisualizationTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef SHOWER_TENSOR_VISUALIZATION_TOOL_H

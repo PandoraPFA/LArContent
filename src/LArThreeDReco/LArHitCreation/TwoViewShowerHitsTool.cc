@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitList &caloHitList1, const CaloHitList &caloHitList2,
@@ -64,4 +64,4 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
     this->GetPosition3D(pCaloHit2D, hitType, position, position3D, chiSquared);
 }
 
-} // namespace lar
+} // namespace lar_content

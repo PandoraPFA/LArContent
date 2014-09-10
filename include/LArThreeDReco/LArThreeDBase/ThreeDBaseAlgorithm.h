@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArOverlapTensor.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -303,6 +303,6 @@ inline const std::string &ThreeDBaseAlgorithm<T>::GetClusterListNameW() const
     return m_inputClusterListNameW;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_BASE_ALGORITHM_H

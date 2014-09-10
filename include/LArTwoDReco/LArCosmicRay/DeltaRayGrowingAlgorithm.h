@@ -12,7 +12,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -60,6 +60,6 @@ inline pandora::Algorithm *DeltaRayGrowingAlgorithm::Factory::CreateAlgorithm() 
     return new DeltaRayGrowingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_DELTA_RAY_GROWING_ALGORITHM_H

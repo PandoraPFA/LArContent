@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 LArGeometryHelper::TransformationInstanceMap LArGeometryHelper::m_transformationInstanceMap;
@@ -363,4 +363,4 @@ StatusCode LArGeometryHelper::SetLArTransformationPlugin(const Pandora &pandora,
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

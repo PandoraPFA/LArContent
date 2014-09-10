@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 OvershootTracksTool::OvershootTracksTool() :
@@ -249,4 +249,4 @@ StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     return ThreeDKinkBaseTool::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

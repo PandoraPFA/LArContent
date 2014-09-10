@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -186,6 +186,6 @@ inline float ShowerExtent::GetLowEdgeZ() const
     return m_lowEdgeZ;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TWO_D_SLIDING_SHOWER_FIT_RESULT_H

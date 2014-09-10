@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 ThreeDKinkBaseTool::ThreeDKinkBaseTool(const unsigned int nCommonClusters) :
@@ -284,4 +284,4 @@ StatusCode ThreeDKinkBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

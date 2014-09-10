@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool ThreeDShowersAlgorithm::SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs)
@@ -429,4 +429,4 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return ThreeDBaseAlgorithm<ShowerOverlapResult>::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -14,7 +14,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -79,6 +79,6 @@ inline pandora::Algorithm *LongitudinalAssociationAlgorithm::Factory::CreateAlgo
     return new LongitudinalAssociationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_LONGITUDINAL_ASSOCIATION_ALGORITHM_H

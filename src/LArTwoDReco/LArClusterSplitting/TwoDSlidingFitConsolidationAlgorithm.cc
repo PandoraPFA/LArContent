@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
@@ -213,4 +213,4 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::ReadSettings(const TiXmlHandle 
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

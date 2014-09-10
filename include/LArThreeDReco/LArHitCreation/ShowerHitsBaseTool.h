@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 class ThreeDHitCreationAlgorithm;
@@ -69,6 +69,6 @@ protected:
     float     m_chiSquaredCut;       ///< The chi squared cut (accept only values below the cut value)
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef SHOWER_HITS_BASE_TOOL_H

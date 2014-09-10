@@ -19,7 +19,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow) :
@@ -898,4 +898,4 @@ void TwoDSlidingFitResult::GetTransverseInterpolationWeights(const float x, cons
     }
 }
 
-} // namespace lar
+} // namespace lar_content

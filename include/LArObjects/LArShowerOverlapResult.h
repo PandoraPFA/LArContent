@@ -16,7 +16,7 @@
 #include <cmath>
 #include <vector>
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -161,6 +161,6 @@ inline const XOverlap &ShowerOverlapResult::GetXOverlap() const
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_SHOWER_OVERLAP_RESULT_H

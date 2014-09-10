@@ -22,7 +22,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 template <typename T>
@@ -283,4 +283,4 @@ template class OverlapTensor<LongitudinalOverlapResult>;
 template class OverlapTensor<FragmentOverlapResult>;
 template class OverlapTensor<ShowerOverlapResult>;
 
-} // namespace lar
+} // namespace lar_content

@@ -17,7 +17,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
@@ -286,4 +286,4 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

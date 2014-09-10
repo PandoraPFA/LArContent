@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -50,6 +50,6 @@ inline pandora::AlgorithmTool *ClearRemnantsTool::Factory::CreateAlgorithmTool()
     return new ClearRemnantsTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef CLEAR_REMNANTS_TOOL_H

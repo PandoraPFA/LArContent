@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs)
@@ -361,4 +361,4 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     return ThreeDTracksBaseAlgorithm<TransverseOverlapResult>::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

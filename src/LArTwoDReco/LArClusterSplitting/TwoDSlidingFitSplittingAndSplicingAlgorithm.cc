@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::Run()
@@ -433,4 +433,4 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(const TiXml
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

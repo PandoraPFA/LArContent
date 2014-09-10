@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 class ThreeDHitCreationAlgorithm;
@@ -55,6 +55,6 @@ inline pandora::AlgorithmTool *DeltaRayShowerHitsTool::Factory::CreateAlgorithmT
     return new DeltaRayShowerHitsTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef DELTA_RAY_SHOWER_HITS_TOOL_H

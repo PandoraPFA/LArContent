@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -74,6 +74,6 @@ private:
     float  m_minTrackLengthSquared;       ///<
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LONGITUDINAL_TRACK_HITS_BASE_TOOL_H

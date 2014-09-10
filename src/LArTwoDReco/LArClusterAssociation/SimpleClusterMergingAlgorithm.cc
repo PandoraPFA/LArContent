@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void SimpleClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
@@ -99,4 +99,4 @@ StatusCode SimpleClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     return ClusterMergingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

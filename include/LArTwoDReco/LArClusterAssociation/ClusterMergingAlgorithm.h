@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -81,6 +81,6 @@ protected:
     std::string     m_inputClusterListName;     ///< The name of the input cluster list. If not specified, will access current list.
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_MERGING_ALGORITHM_H

@@ -10,7 +10,7 @@
 
 #include "Plugins/ParticleIdPlugin.h"
 
-namespace lar
+namespace lar_content
 {
 
 class TwoDSlidingFitResult;
@@ -50,6 +50,6 @@ public:
     };
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_PARTICLE_ID_PLUGINS_H

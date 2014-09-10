@@ -15,7 +15,7 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 class LongitudinalTensorTool;
@@ -118,6 +118,6 @@ inline pandora::Algorithm *ThreeDLongitudinalTracksAlgorithm::Factory::CreateAlg
     return new ThreeDLongitudinalTracksAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_LONGITUDINAL_TRACKS_ALGORITHM_H

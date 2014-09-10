@@ -10,7 +10,7 @@
 
 #include "Plugins/PseudoLayerPlugin.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -27,6 +27,6 @@ public:
     virtual float GetZPitch() const = 0;
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_PSEUDO_LAYER_PLUGIN_H

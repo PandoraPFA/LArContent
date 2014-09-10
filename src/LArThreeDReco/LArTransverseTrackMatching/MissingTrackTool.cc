@@ -11,7 +11,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
@@ -125,4 +125,4 @@ StatusCode MissingTrackTool::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -15,7 +15,7 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 class ShowerTensorTool;
@@ -200,6 +200,6 @@ inline pandora::Algorithm *ThreeDShowersAlgorithm::Factory::CreateAlgorithm() co
     return new ThreeDShowersAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H

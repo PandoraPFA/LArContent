@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
@@ -83,4 +83,4 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
     this->GetBestPosition3D(pCaloHit2D, hitType1, hitType2, fitPositionList1, fitPositionList2, position3D, chiSquared);  
 }
 
-} // namespace lar
+} // namespace lar_content

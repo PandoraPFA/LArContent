@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits, 
@@ -106,4 +106,4 @@ float TransverseTrackHitsBaseTool::GetTransverseChi2(const CartesianVector &posi
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
-} // namespace lar
+} // namespace lar_content

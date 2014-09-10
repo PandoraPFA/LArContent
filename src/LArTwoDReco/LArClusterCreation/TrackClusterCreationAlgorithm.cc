@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode TrackClusterCreationAlgorithm::Run()
@@ -447,4 +447,4 @@ StatusCode TrackClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

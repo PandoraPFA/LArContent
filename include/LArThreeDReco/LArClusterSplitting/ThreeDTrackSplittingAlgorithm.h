@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArPointingCluster.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -68,6 +68,6 @@ inline pandora::Algorithm *ThreeDTrackSplittingAlgorithm::Factory::CreateAlgorit
     return new ThreeDTrackSplittingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_TRACK_SPLITTING_ALGORITHM_H

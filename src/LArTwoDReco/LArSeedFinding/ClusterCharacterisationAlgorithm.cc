@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode ClusterCharacterisationAlgorithm::Run()
@@ -556,4 +556,4 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     return SeedGrowingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

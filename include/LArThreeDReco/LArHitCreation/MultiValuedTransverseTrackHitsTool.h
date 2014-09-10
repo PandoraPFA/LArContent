@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -40,6 +40,6 @@ inline pandora::AlgorithmTool *MultiValuedTransverseTrackHitsTool::Factory::Crea
     return new MultiValuedTransverseTrackHitsTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef MULTI_VALUED_TRANSVERSE_TRACK_HITS_TOOL_H

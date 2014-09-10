@@ -14,7 +14,7 @@
 
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -201,6 +201,6 @@ inline pandora::Algorithm *ClusterCharacterisationAlgorithm::Factory::CreateAlgo
     return new ClusterCharacterisationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H

@@ -15,7 +15,7 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 class TransverseTensorTool;
@@ -156,6 +156,6 @@ inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgor
     return new ThreeDTransverseTracksAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H

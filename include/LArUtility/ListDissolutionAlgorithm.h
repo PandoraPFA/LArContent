@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -44,6 +44,6 @@ inline pandora::Algorithm *ListDissolutionAlgorithm::Factory::CreateAlgorithm() 
     return new ListDissolutionAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_LIST_DISSOLUTION_ALGORITHM_H

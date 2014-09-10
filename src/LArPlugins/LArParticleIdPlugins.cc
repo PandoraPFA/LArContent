@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace lar
+namespace lar_content
 {
 
 using namespace pandora;
@@ -97,4 +97,4 @@ StatusCode LArParticleIdPlugins::LArMuonId::ReadSettings(const TiXmlHandle xmlHa
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

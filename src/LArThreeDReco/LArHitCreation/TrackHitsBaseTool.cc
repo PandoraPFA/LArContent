@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
@@ -94,4 +94,4 @@ StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
     return HitCreationBaseTool::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -53,6 +53,6 @@ inline pandora::AlgorithmTool *ClearTracksTool::Factory::CreateAlgorithmTool() c
     return new ClearTracksTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef CLEAR_TRACKS_TOOL_H

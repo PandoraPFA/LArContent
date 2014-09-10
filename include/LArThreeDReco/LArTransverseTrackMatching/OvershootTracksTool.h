@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -106,6 +106,6 @@ inline pandora::AlgorithmTool *OvershootTracksTool::Factory::CreateAlgorithmTool
     return new OvershootTracksTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef OVERSHOOT_TRACKS_TOOL_H

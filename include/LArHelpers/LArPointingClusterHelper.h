@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArPointingCluster.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -226,6 +226,6 @@ private:
     static float GetAssociatedEnergy(const LArPointingCluster::Vertex &vertex, const LArPointingClusterVertexList &clusterVertices);
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_POINTING_CLUSTER_HELPER_H

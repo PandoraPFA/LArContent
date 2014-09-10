@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode CheatingPfoCreationAlgorithm::Run()
@@ -196,4 +196,4 @@ StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

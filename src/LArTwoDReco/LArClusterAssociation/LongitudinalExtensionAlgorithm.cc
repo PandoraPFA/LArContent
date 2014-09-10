@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
@@ -369,4 +369,4 @@ StatusCode LongitudinalExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content
