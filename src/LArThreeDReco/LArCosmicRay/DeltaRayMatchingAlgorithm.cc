@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCalculators/LArPseudoLayerCalculator.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
+
+#include "LArPlugins/LArPseudoLayerPlugin.h"
 
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 
@@ -405,11 +405,11 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
             const float dz1(zMax1 - zMin1);
             const float dz2(zMax2 - zMin2);
             const float dz3(zMax3 - zMin3);
-            const float dz4(LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
+            const float dz4(LArGeometryHelper::GetLArPseudoLayerPlugin(this->GetPandora())->GetZPitch());
 
-            const float zproj1(LArGeometryHelper::MergeTwoPositions(hitType2, hitType3, z2, z3));
-            const float zproj2(LArGeometryHelper::MergeTwoPositions(hitType3, hitType1, z3, z1));
-            const float zproj3(LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, z1, z2));
+            const float zproj1(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType2, hitType3, z2, z3));
+            const float zproj2(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType3, hitType1, z3, z1));
+            const float zproj3(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, z1, z2));
 
             const float deltaSquared(((z1 - zproj1) * (z1 - zproj1) + (z2 - zproj2) * (z2 - zproj2) + (z3 - zproj3) * (z3 - zproj3)) / 3.f);
             const float sigmaSquared(dz1 * dz1 + dz2 * dz2 + dz3 * dz3 + dz4 * dz4);

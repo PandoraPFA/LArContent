@@ -240,10 +240,10 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
             {
                 const float uMin(uValues.front()), uMax(uValues.back());
                 const float vMin(vValues.front()), vMax(vValues.back());
-                const float uv2wMinMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMin, vMin));
-                const float uv2wMaxMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMax, vMax));
-                const float uv2wMinMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMin, vMax));
-                const float uv2wMaxMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, uMax, vMin));
+                const float uv2wMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMin, vMin));
+                const float uv2wMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMax, vMax));
+                const float uv2wMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMin, vMax));
+                const float uv2wMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMax, vMin));
                 positionMapsW.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uv2wMinMin, uv2wMaxMax)));
                 positionMapsW.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uv2wMinMax, uv2wMaxMin)));
             }
@@ -252,10 +252,10 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
             {
                 const float uMin(uValues.front()), uMax(uValues.back());
                 const float wMin(wValues.front()), wMax(wValues.back());
-                const float uw2vMinMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMin, wMin));
-                const float uw2vMaxMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMax, wMax));
-                const float uw2vMinMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMin, wMax));
-                const float uw2vMaxMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_W, uMax, wMin));
+                const float uw2vMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMin, wMin));
+                const float uw2vMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMax, wMax));
+                const float uw2vMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMin, wMax));
+                const float uw2vMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMax, wMin));
                 positionMapsV.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uw2vMinMin, uw2vMaxMax)));
                 positionMapsV.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uw2vMinMax, uw2vMaxMin)));
             }
@@ -264,10 +264,10 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
             {
                 const float vMin(vValues.front()), vMax(vValues.back());
                 const float wMin(wValues.front()), wMax(wValues.back());
-                const float vw2uMinMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMin, wMin));
-                const float vw2uMaxMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMax, wMax));
-                const float vw2uMinMax(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMin, wMax));
-                const float vw2uMaxMin(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, vMax, wMin));
+                const float vw2uMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMin, wMin));
+                const float vw2uMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMax, wMax));
+                const float vw2uMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMin, wMax));
+                const float vw2uMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMax, wMin));
                 positionMapsU.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, vw2uMinMin, vw2uMaxMax)));
                 positionMapsU.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, vw2uMinMax, vw2uMaxMin)));
             }

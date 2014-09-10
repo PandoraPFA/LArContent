@@ -8,9 +8,6 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
-#include "LArCalculators/LArTransformationCalculator.h"
-#include "LArCalculators/LArPseudoLayerCalculator.h"
-
 #include "LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
@@ -26,6 +23,8 @@
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "LArPlugins/LArParticleIdPlugins.h"
+#include "LArPlugins/LArPseudoLayerPlugin.h"
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
@@ -179,35 +178,35 @@ public:
      * 
      *  @param  pandora the pandora instance with which to register content
      */
-    static pandora::StatusCode RegisterAlgorithms(pandora::Pandora &pandora);
+    static pandora::StatusCode RegisterAlgorithms(const pandora::Pandora &pandora);
 
     /**
-     *  @brief  Register all the lar content plugins with pandora
+     *  @brief  Register the basic lar content plugins with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
      */
-    static pandora::StatusCode RegisterPlugins(pandora::Pandora &pandora);
+    static pandora::StatusCode RegisterBasicPlugins(const pandora::Pandora &pandora);
 
     /**
-     *  @brief  Register all the lar content functions with pandora
+     *  @brief  Register lar pseudo layer plugin with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
-     *  @param  pLArPseudoLayerCalculator the address of the lar pseudo layer calculator
+     *  @param  pLArPseudoLayerPlugin the address of the lar pseudo layer plugin
      */
-    static pandora::StatusCode SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator);
+    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar::LArPseudoLayerPlugin *pLArPseudoLayerPlugin);
 
     /**
-     *  @brief  Register all the lar content functions with pandora
+     *  @brief  Register lar coordinate transformation plugin with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
-     *  @param  pLArTransformationCalculator the address of the lar transformation calculator
+     *  @param  pLArTransformationPlugin the address of the lar transformation plugin
      */
-    static pandora::StatusCode SetLArTransformationCalculator(pandora::Pandora &pandora, lar::LArTransformationCalculator *pLArTransformationCalculator);
+    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, lar::LArTransformationPlugin *pLArTransformationPlugin);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::RegisterAlgorithms(pandora::Pandora &pandora)
+inline pandora::StatusCode LArContent::RegisterAlgorithms(const pandora::Pandora &pandora)
 {
     LAR_ALGORITHM_LIST(PANDORA_REGISTER_ALGORITHM);
     LAR_ALGORITHM_TOOL_LIST(PANDORA_REGISTER_ALGORITHM_TOOL);
@@ -217,7 +216,7 @@ inline pandora::StatusCode LArContent::RegisterAlgorithms(pandora::Pandora &pand
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::RegisterPlugins(pandora::Pandora &pandora)
+inline pandora::StatusCode LArContent::RegisterBasicPlugins(const pandora::Pandora &pandora)
 {
     LAR_PARTICLE_ID_LIST(PANDORA_REGISTER_PARTICLE_ID);
 
@@ -226,19 +225,16 @@ inline pandora::StatusCode LArContent::RegisterPlugins(pandora::Pandora &pandora
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator)
+inline pandora::StatusCode LArContent::SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar::LArPseudoLayerPlugin *pLArPseudoLayerPlugin)
 {
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, pLArPseudoLayerCalculator));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, lar::LArGeometryHelper::SetLArPseudoLayerCalculator(pLArPseudoLayerCalculator));
-
-    return pandora::STATUS_CODE_SUCCESS;
+    return PandoraApi::SetPseudoLayerPlugin(pandora, pLArPseudoLayerPlugin);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::SetLArTransformationCalculator(pandora::Pandora &/*pandora*/, lar::LArTransformationCalculator *pLArTransformationCalculator)
+inline pandora::StatusCode LArContent::SetLArTransformationPlugin(const pandora::Pandora &pandora, lar::LArTransformationPlugin *pLArTransformationPlugin)
 {
-    return lar::LArGeometryHelper::SetLArTransformationCalculator(pLArTransformationCalculator);
+    return lar::LArGeometryHelper::SetLArTransformationPlugin(pandora, pLArTransformationPlugin);
 }
 
 #endif // #ifndef LAR_CONTENT_H

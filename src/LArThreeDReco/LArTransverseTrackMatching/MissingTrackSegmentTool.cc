@@ -216,7 +216,7 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
             CartesianVector fitVector1(0.f, 0.f, 0.f), fitVector2(0.f, 0.f, 0.f);
             fitResult1.GetGlobalFitPositionAtX(x, fitVector1);
             fitResult2.GetGlobalFitPositionAtX(x, fitVector2);
-            const float prediction(LArGeometryHelper::MergeTwoPositions(particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
+            const float prediction(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
 
             for (SlidingFitResultMap::const_iterator iter = slidingFitResultMap.begin(), iterEnd = slidingFitResultMap.end(); iter != iterEnd; ++iter)
             {

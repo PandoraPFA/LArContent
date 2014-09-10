@@ -6,12 +6,12 @@
  *  $Log: $
  */
 
-#include "LArCalculators/LArPseudoLayerCalculator.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
+
+#include "LArPlugins/LArPseudoLayerPlugin.h"
 
 #include <algorithm>
 #include <cmath>
@@ -70,7 +70,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 
 float TwoDSlidingFitResult::GetLayerFitHalfWindowLength() const
 {
-    return (static_cast<float>(m_layerFitHalfWindow)) * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
+    return (static_cast<float>(m_layerFitHalfWindow)) * 0.3f;// TODO static LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,14 +97,14 @@ int TwoDSlidingFitResult::GetMaxLayer() const
 
 int TwoDSlidingFitResult::GetLayer(const float rL) const
 {
-    return std::floor(rL / LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
+    return std::floor(rL / 0.3f);// TODO static LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float TwoDSlidingFitResult::GetL(const int layer) const
 {
-    return (static_cast<float>(layer) + 0.5f) * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
+    return (static_cast<float>(layer) + 0.5f) * 0.3f; // TODO static LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

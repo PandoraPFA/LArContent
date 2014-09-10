@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCalculators/LArPseudoLayerCalculator.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
+
+#include "LArPlugins/LArPseudoLayerPlugin.h"
 
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 
@@ -283,16 +283,16 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     // Calculate vertex and end positions (3D)
     float vtxChi2(0.f);
     CartesianVector vtxPosition3D(0.f, 0.f, 0.f);
-    LArGeometryHelper::MergeTwoPositions3D(hitType1, hitType2, vtxPosition1, vtxPosition2, vtxPosition3D, vtxChi2);
+    LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, vtxPosition1, vtxPosition2, vtxPosition3D, vtxChi2);
 
     float endChi2(0.f);
     CartesianVector endPosition3D(0.f, 0.f, 0.f);
-    LArGeometryHelper::MergeTwoPositions3D(hitType1, hitType2, endPosition1, endPosition2, endPosition3D, endChi2);
+    LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, endPosition1, endPosition2, endPosition3D, endChi2);
 
-    const CartesianVector vtxProjection3(LArGeometryHelper::ProjectPosition(vtxPosition3D, hitType3));
-    const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(endPosition3D, hitType3));
+    const CartesianVector vtxProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtxPosition3D, hitType3));
+    const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), endPosition3D, hitType3));
 
-    const float samplingPitch(0.5f * LArGeometryHelper::GetLArPseudoLayerCalculator()->GetZPitch());
+    const float samplingPitch(0.5f * LArGeometryHelper::GetLArPseudoLayerPlugin(this->GetPandora())->GetZPitch());
     const float nSamplingPoints((endProjection3 - vtxProjection3).GetMagnitude() / samplingPitch);
 
     if (nSamplingPoints < 1.f)
@@ -305,8 +305,8 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     for (float iSample = 0.5f; iSample < nSamplingPoints; iSample += 1.f)
     {
         const CartesianVector linearPosition3D(vtxPosition3D + (endPosition3D - vtxPosition3D) * (iSample / nSamplingPoints));
-        const CartesianVector linearPosition1(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType1));
-        const CartesianVector linearPosition2(LArGeometryHelper::ProjectPosition(linearPosition3D, hitType2));
+        const CartesianVector linearPosition1(LArGeometryHelper::ProjectPosition(this->GetPandora(), linearPosition3D, hitType1));
+        const CartesianVector linearPosition2(LArGeometryHelper::ProjectPosition(this->GetPandora(), linearPosition3D, hitType2));
 
         try
         {
@@ -326,7 +326,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
             CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);
             fitResult1.GetTransverseProjection(x, fitSegment1, position1);
             fitResult2.GetTransverseProjection(x, fitSegment2, position2);
-            LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, position1, position2, position3, chi2);
+            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, position1, position2, position3, chi2);
 
             // TODO For highly multi-valued x, projected positions can be unreliable. Need to make interpolation more robust for these cases.
             if (foundLastPosition)
