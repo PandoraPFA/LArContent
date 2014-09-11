@@ -29,6 +29,11 @@ public:
     class LArMuonId : public pandora::ParticleIdPlugin
     {
     public:
+        /**
+         *  @brief  Default constructor
+         */
+        LArMuonId();
+
         bool IsMatch(const pandora::Cluster *const pCluster) const;
 
     private:

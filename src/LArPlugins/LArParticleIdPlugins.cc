@@ -26,6 +26,16 @@ namespace lar_content
 
 using namespace pandora;
 
+LArParticleIdPlugins::LArMuonId::LArMuonId() :
+    m_layerFitHalfWindow(20),
+    m_minLayerOccupancy (0.75f),
+    m_maxTrackWidth(0.5f),
+    m_trackResidualQuantile(0.8f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArParticleIdPlugins::LArMuonId::IsMatch(const Cluster *const pCluster) const
 {
     if (LArClusterHelper::GetLayerOccupancy(pCluster) < m_minLayerOccupancy)
@@ -81,19 +91,15 @@ float LArParticleIdPlugins::LArMuonId::GetMuonTrackWidth(const TwoDSlidingFitRes
 
 StatusCode LArParticleIdPlugins::LArMuonId::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_layerFitHalfWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LayerFitHalfWindow", m_layerFitHalfWindow));
 
-    m_minLayerOccupancy = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinLayerOccupancy", m_minLayerOccupancy));
 
-    m_maxTrackWidth = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTrackWidth", m_maxTrackWidth));
 
-    m_trackResidualQuantile = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrackResidualQuantile", m_trackResidualQuantile));
 
