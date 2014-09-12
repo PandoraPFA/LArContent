@@ -22,7 +22,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 template <typename T>
@@ -38,7 +38,7 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
         if (!this->DefaultAmbiguityFunction(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
             continue;
 
-        // ATTN With custom definitions, it is possible to navigate from different U clusters to same combination
+        // ATTN With HIT_CUSTOM definitions, it is possible to navigate from different U clusters to same combination
         if (iterU->first != pClusterU)
             continue;
 
@@ -283,4 +283,4 @@ template class OverlapTensor<LongitudinalOverlapResult>;
 template class OverlapTensor<FragmentOverlapResult>;
 template class OverlapTensor<ShowerOverlapResult>;
 
-} // namespace lar
+} // namespace lar_content

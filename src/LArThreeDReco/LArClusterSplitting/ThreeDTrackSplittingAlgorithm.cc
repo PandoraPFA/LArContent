@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode ThreeDTrackSplittingAlgorithm::Run()
@@ -55,6 +55,7 @@ StatusCode ThreeDTrackSplittingAlgorithm::Run()
 
 
 // --- BEGIN EVENT DISPLAY ---
+#ifdef MONITORING
 ClusterList tempClusterListU, tempClusterListV, tempClusterListW;
 CartesianPointList tempMarkerListU, tempMarkerListV, tempMarkerListW;
 
@@ -86,6 +87,7 @@ PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &positionW, 
 }
 
 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+#endif
 // --- END EVENT DISPLAY ---
 
 
@@ -173,4 +175,4 @@ StatusCode ThreeDTrackSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

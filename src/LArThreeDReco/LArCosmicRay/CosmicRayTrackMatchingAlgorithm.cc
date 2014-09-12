@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode CosmicRayTrackMatchingAlgorithm::Run()
@@ -395,12 +395,12 @@ bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *cons
             CartesianVector projVtx2(0.f,0.f,0.f), projEnd2(0.f,0.f,0.f);
             CartesianVector projVtx3(0.f,0.f,0.f), projEnd3(0.f,0.f,0.f);
 
-            LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, vtx1, vtx2, projVtx3, chi2);
-            LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, end1, end2, projEnd3, chi2);
-            LArGeometryHelper::MergeTwoPositions(hitType2, hitType3, vtx2, vtx3, projVtx1, chi2);
-            LArGeometryHelper::MergeTwoPositions(hitType2, hitType3, end2, end3, projEnd1, chi2);
-            LArGeometryHelper::MergeTwoPositions(hitType3, hitType1, vtx3, vtx1, projVtx2, chi2);
-            LArGeometryHelper::MergeTwoPositions(hitType3, hitType1, end3, end1, projEnd2, chi2);
+            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, vtx1, vtx2, projVtx3, chi2);
+            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, end1, end2, projEnd3, chi2);
+            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType2, hitType3, vtx2, vtx3, projVtx1, chi2);
+            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType2, hitType3, end2, end3, projEnd1, chi2);
+            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType3, hitType1, vtx3, vtx1, projVtx2, chi2);
+            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType3, hitType1, end3, end1, projEnd2, chi2);
 
             const bool matchedVtx1(LArClusterHelper::GetClosestDistance(projVtx1, pCluster1) < m_maxDisplacement);
             const bool matchedVtx2(LArClusterHelper::GetClosestDistance(projVtx2, pCluster2) < m_maxDisplacement);
@@ -521,4 +521,4 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

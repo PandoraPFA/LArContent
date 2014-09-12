@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool ClearRemnantsTool::Run(ThreeDRemnantsAlgorithm *pAlgorithm, TensorType &overlapTensor)
@@ -55,4 +55,4 @@ StatusCode ClearRemnantsTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

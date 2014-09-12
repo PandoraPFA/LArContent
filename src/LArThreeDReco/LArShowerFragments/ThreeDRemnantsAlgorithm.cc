@@ -10,14 +10,12 @@
 
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
-#include "LArCalculators/LArPseudoLayerCalculator.h"
-
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
@@ -75,9 +73,9 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster
         const float v(LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax));
         const float w(LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax));
 
-        const float uv2w(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_U, TPC_VIEW_V, u, v));
-        const float vw2u(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_V, TPC_VIEW_W, v, w));
-        const float wu2v(LArGeometryHelper::MergeTwoPositions(TPC_VIEW_W, TPC_VIEW_U, w, u));
+        const float uv2w(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, u, v));
+        const float vw2u(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, v, w));
+        const float wu2v(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, w, u));
 
         const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
 
@@ -152,4 +150,4 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return ThreeDBaseAlgorithm<float>::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

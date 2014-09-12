@@ -14,7 +14,7 @@
 
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -115,7 +115,7 @@ private:
     unsigned int GetNumberOfNodes(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &pointingClusterList) const;
 
     /**
-     *  @brief  Custom sorting for clusters to determine order in which seeds are considered
+     *  @brief  HIT_CUSTOM sorting for clusters to determine order in which seeds are considered
      *
      *  @param  pLhs address of first cluster
      *  @param  pRhs address of second cluster
@@ -201,6 +201,6 @@ inline pandora::Algorithm *ClusterCharacterisationAlgorithm::Factory::CreateAlgo
     return new ClusterCharacterisationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H

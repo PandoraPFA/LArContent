@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -37,8 +37,9 @@ public:
      * 
      *  @param  pCluster address of the candidate shower cluster
      *  @param  slidingFitWindow the sliding fit window
+     *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
      */
-    TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow);
+    TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
 
     /**
      *  @brief  Get the sliding fit result for the full shower cluster
@@ -186,6 +187,6 @@ inline float ShowerExtent::GetLowEdgeZ() const
     return m_lowEdgeZ;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TWO_D_SLIDING_SHOWER_FIT_RESULT_H

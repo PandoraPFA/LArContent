@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 
@@ -236,4 +236,4 @@ StatusCode TransverseExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -8,15 +8,18 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
@@ -48,6 +51,7 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Partic
 void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const
 {
     const ClusterList &clusterList(pPfo->GetClusterList());
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
@@ -62,7 +66,7 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
         try
         {
-            const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow);
+            const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
             if (!matchedSlidingFitMap.insert(MatchedSlidingFitMap::value_type(hitType, slidingFitResult)).second)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -94,4 +98,4 @@ StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
     return HitCreationBaseTool::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

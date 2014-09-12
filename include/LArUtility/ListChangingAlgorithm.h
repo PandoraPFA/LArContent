@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -45,6 +45,6 @@ inline pandora::Algorithm *ListChangingAlgorithm::Factory::CreateAlgorithm() con
     return new ListChangingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_LIST_CHANGING_ALGORITHM_H

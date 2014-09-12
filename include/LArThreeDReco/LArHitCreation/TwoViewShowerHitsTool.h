@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -52,6 +52,6 @@ inline pandora::AlgorithmTool *TwoViewShowerHitsTool::Factory::CreateAlgorithmTo
     return new TwoViewShowerHitsTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef TWO_VIEW_SHOWER_HITS_TOOL_H

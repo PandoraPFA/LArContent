@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ThreeDHitCreationAlgorithm::GetRemainingTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &remainingHits) const
@@ -132,7 +132,7 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHit(CaloHit *pCaloHit2D, const Cart
     parameters.m_electromagneticEnergy = pCaloHit2D->GetElectromagneticEnergy();
     parameters.m_hadronicEnergy = pCaloHit2D->GetHadronicEnergy();
     parameters.m_isDigital = pCaloHit2D->IsDigital();
-    parameters.m_detectorRegion = pCaloHit2D->GetDetectorRegion();
+    parameters.m_hitRegion = pCaloHit2D->GetHitRegion();
     parameters.m_layer = pCaloHit2D->GetLayer();
     parameters.m_isInOuterSamplingLayer = pCaloHit2D->IsInOuterSamplingLayer();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pCaloHit3D));
@@ -269,4 +269,4 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

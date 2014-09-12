@@ -12,7 +12,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -47,6 +47,6 @@ inline pandora::Algorithm *VertexSplittingAlgorithm::Factory::CreateAlgorithm() 
     return new VertexSplittingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_VERTEX_SPLITTING_ALGORITHM_H

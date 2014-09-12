@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
@@ -24,8 +24,8 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
     const HitType hitType1((TPC_VIEW_U == hitType) ? TPC_VIEW_V : (TPC_VIEW_V == hitType) ? TPC_VIEW_W : TPC_VIEW_U);
     const HitType hitType2((TPC_VIEW_U == hitType) ? TPC_VIEW_W : (TPC_VIEW_V == hitType) ? TPC_VIEW_U : TPC_VIEW_V);
 
-    const CartesianVector vtx2D(LArGeometryHelper::ProjectPosition(vtx3D, hitType));
-    const CartesianVector end2D(LArGeometryHelper::ProjectPosition(end3D, hitType));
+    const CartesianVector vtx2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtx3D, hitType));
+    const CartesianVector end2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), end3D, hitType));
 
     if ((end2D - vtx2D).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -42,7 +42,7 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
         const TwoDSlidingFitResult &fitResult1 = fIter1->second;
-        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(projection3D, hitType1));
+        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), projection3D, hitType1));
 
         float rL1(0.f), rT1(0.f);
         CartesianVector position1(0.f, 0.f, 0.f);
@@ -61,7 +61,7 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
         const TwoDSlidingFitResult &fitResult2 = fIter2->second;
-        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(projection3D, hitType2));
+        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), projection3D, hitType2));
 
         float rL2(0.f), rT2(0.f);
         CartesianVector position2(0.f, 0.f, 0.f);
@@ -83,4 +83,4 @@ void ClearLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCal
     this->GetBestPosition3D(pCaloHit2D, hitType1, hitType2, fitPositionList1, fitPositionList2, position3D, chiSquared);  
 }
 
-} // namespace lar
+} // namespace lar_content

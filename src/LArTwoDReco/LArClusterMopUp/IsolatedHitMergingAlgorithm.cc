@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void IsolatedHitMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
@@ -143,4 +143,4 @@ StatusCode IsolatedHitMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

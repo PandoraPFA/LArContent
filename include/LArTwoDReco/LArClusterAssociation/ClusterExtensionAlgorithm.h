@@ -10,7 +10,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -155,6 +155,6 @@ inline float ClusterExtensionAlgorithm::ClusterAssociation::GetFigureOfMerit() c
     return m_fom;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_EXTENSION_ALGORITHM_H

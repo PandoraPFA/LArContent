@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode ClusterSplittingAlgorithm::Run()
@@ -78,4 +78,4 @@ StatusCode ClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

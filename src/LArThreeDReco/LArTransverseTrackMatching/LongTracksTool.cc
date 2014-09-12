@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool LongTracksTool::HasLongDirectConnections(IteratorList::const_iterator iIter, const IteratorList &iteratorList)
@@ -158,4 +158,4 @@ StatusCode LongTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

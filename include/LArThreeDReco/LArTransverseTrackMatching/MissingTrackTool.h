@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -54,6 +54,6 @@ inline pandora::AlgorithmTool *MissingTrackTool::Factory::CreateAlgorithmTool() 
     return new MissingTrackTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef MISSING_TRACK_TOOL_H

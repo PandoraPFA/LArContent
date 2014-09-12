@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -75,6 +75,6 @@ inline pandora::Algorithm *NeutrinoBuildingAlgorithm::Factory::CreateAlgorithm()
     return new NeutrinoBuildingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_NEUTRINO_BUILDING_ALGORITHM_H

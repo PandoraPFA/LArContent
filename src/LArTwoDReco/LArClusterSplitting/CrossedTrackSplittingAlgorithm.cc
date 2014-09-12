@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
@@ -198,4 +198,4 @@ StatusCode CrossedTrackSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     return TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -1,15 +1,12 @@
 /**
  *  @file   LArContent/include/LArContent.h
  * 
- *  @brief  Header file detailing content for use with liquid argon time projection chambers
+ *  @brief  Header file detailing content for use with particle flow reconstruction at liquid argon time projection chambers
  * 
  *  $Log: $
  */
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
-
-#include "LArCalculators/LArTransformationCalculator.h"
-#include "LArCalculators/LArPseudoLayerCalculator.h"
 
 #include "LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
@@ -26,6 +23,7 @@
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "LArPlugins/LArParticleIdPlugins.h"
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
@@ -99,115 +97,115 @@ class LArContent
 {
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
-        d("LArEventDisplay",                        lar::EventDisplayAlgorithm::Factory)                                        \
-        d("LArParticleMonitoring",                  lar::ParticleMonitoringAlgorithm::Factory)                                  \
-        d("LArVisualMonitoring",                    lar::VisualMonitoringAlgorithm::Factory)                                    \
-        d("LArCheatingClusterCreation",             lar::CheatingClusterCreationAlgorithm::Factory)                             \
-        d("LArCheatingCosmicRayIdentification",     lar::CheatingCosmicRayIdentificationAlg::Factory)                           \
-        d("LArCheatingCosmicRayShowerMatching",     lar::CheatingCosmicRayShowerMatchingAlg::Factory)                           \
-        d("LArCheatingPfoCreation",                 lar::CheatingPfoCreationAlgorithm::Factory)                                 \
-        d("LArCosmicRayIdentification",             lar::CosmicRayIdentificationAlgorithm::Factory)                             \
-        d("LArCosmicRayTrackMatching",              lar::CosmicRayTrackMatchingAlgorithm::Factory)                              \
-        d("LArNeutrinoBuilding",                    lar::NeutrinoBuildingAlgorithm::Factory)                                    \
-        d("LArDeltaRayIdentification",              lar::DeltaRayIdentificationAlgorithm::Factory)                              \
-        d("LArDeltaRayMatching",                    lar::DeltaRayMatchingAlgorithm::Factory)                                    \
-        d("LArThreeDHitCreation",                   lar::ThreeDHitCreationAlgorithm::Factory)                                   \
-        d("LArThreeDLongitudinalTracks",            lar::ThreeDLongitudinalTracksAlgorithm::Factory)                            \
-        d("LArThreeDRemnants",                      lar::ThreeDRemnantsAlgorithm::Factory)                                      \
-        d("LArThreeDShowers",                       lar::ThreeDShowersAlgorithm::Factory)                                       \
-        d("LArThreeDTrackFragments",                lar::ThreeDTrackFragmentsAlgorithm::Factory)                                \
-        d("LArThreeDTransverseTracks",              lar::ThreeDTransverseTracksAlgorithm::Factory)                              \
-        d("LArLongitudinalAssociation",             lar::LongitudinalAssociationAlgorithm::Factory)                             \
-        d("LArLongitudinalExtension",               lar::LongitudinalExtensionAlgorithm::Factory)                               \
-        d("LArSimpleClusterMerging",                lar::SimpleClusterMergingAlgorithm::Factory)                                \
-        d("LArTransverseAssociation",               lar::TransverseAssociationAlgorithm::Factory)                               \
-        d("LArTransverseExtension",                 lar::TransverseExtensionAlgorithm::Factory)                                 \
-        d("LArSimpleClusterCreation",               lar::SimpleClusterCreationAlgorithm::Factory)                               \
-        d("LArTrackClusterCreation",                lar::TrackClusterCreationAlgorithm::Factory)                                \
-        d("LArClusteringParent",                    lar::ClusteringParentAlgorithm::Factory)                                    \
-        d("LArBoundedClusterMerging",               lar::BoundedClusterMergingAlgorithm::Factory)                               \
-        d("LArConeBasedMerging",                    lar::ConeBasedMergingAlgorithm::Factory)                                    \
-        d("LArIsolatedHitMerging",                  lar::IsolatedHitMergingAlgorithm::Factory)                                  \
-        d("LArCosmicRayExtension",                  lar::CosmicRayExtensionAlgorithm::Factory)                                  \
-        d("LArCosmicRaySplitting",                  lar::CosmicRaySplittingAlgorithm::Factory)                                  \
-        d("LArDeltaRayExtension",                   lar::DeltaRayExtensionAlgorithm::Factory)                                   \
-        d("LArDeltaRayGrowing",                     lar::DeltaRayGrowingAlgorithm::Factory)                                     \
-        d("LArBranchSplitting",                     lar::BranchSplittingAlgorithm::Factory)                                     \
-        d("LArCrossedTrackSplitting",               lar::CrossedTrackSplittingAlgorithm::Factory)                               \
-        d("LArDeltaRaySplitting",                   lar::DeltaRaySplittingAlgorithm::Factory)                                   \
-        d("LArKinkSplitting",                       lar::KinkSplittingAlgorithm::Factory)                                       \
-        d("LArLayerSplitting",                      lar::LayerSplittingAlgorithm::Factory)                                      \
-        d("LArTrackConsolidation",                  lar::TrackConsolidationAlgorithm::Factory)                                  \
-        d("LArVertexSplitting",                     lar::VertexSplittingAlgorithm::Factory)                                     \
-        d("LArClusterCharacterisation",             lar::ClusterCharacterisationAlgorithm::Factory)                             \
-        d("LArTwoDParticleCreationAlgorithm",       lar::TwoDParticleCreationAlgorithm::Factory)                                \
-        d("LArListChanging",                        lar::ListChangingAlgorithm::Factory)                                        \
-        d("LArListDissolution",                     lar::ListDissolutionAlgorithm::Factory)                                     \
-        d("LArListMerging",                         lar::ListMergingAlgorithm::Factory)                                         \
-        d("LArListPreparation",                     lar::ListPreparationAlgorithm::Factory)
+        d("LArEventDisplay",                        lar_content::EventDisplayAlgorithm::Factory)                                \
+        d("LArParticleMonitoring",                  lar_content::ParticleMonitoringAlgorithm::Factory)                          \
+        d("LArVisualMonitoring",                    lar_content::VisualMonitoringAlgorithm::Factory)                            \
+        d("LArCheatingClusterCreation",             lar_content::CheatingClusterCreationAlgorithm::Factory)                     \
+        d("LArCheatingCosmicRayIdentification",     lar_content::CheatingCosmicRayIdentificationAlg::Factory)                   \
+        d("LArCheatingCosmicRayShowerMatching",     lar_content::CheatingCosmicRayShowerMatchingAlg::Factory)                   \
+        d("LArCheatingPfoCreation",                 lar_content::CheatingPfoCreationAlgorithm::Factory)                         \
+        d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
+        d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
+        d("LArNeutrinoBuilding",                    lar_content::NeutrinoBuildingAlgorithm::Factory)                            \
+        d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
+        d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
+        d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \
+        d("LArThreeDLongitudinalTracks",            lar_content::ThreeDLongitudinalTracksAlgorithm::Factory)                    \
+        d("LArThreeDRemnants",                      lar_content::ThreeDRemnantsAlgorithm::Factory)                              \
+        d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
+        d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
+        d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
+        d("LArLongitudinalAssociation",             lar_content::LongitudinalAssociationAlgorithm::Factory)                     \
+        d("LArLongitudinalExtension",               lar_content::LongitudinalExtensionAlgorithm::Factory)                       \
+        d("LArSimpleClusterMerging",                lar_content::SimpleClusterMergingAlgorithm::Factory)                        \
+        d("LArTransverseAssociation",               lar_content::TransverseAssociationAlgorithm::Factory)                       \
+        d("LArTransverseExtension",                 lar_content::TransverseExtensionAlgorithm::Factory)                         \
+        d("LArSimpleClusterCreation",               lar_content::SimpleClusterCreationAlgorithm::Factory)                       \
+        d("LArTrackClusterCreation",                lar_content::TrackClusterCreationAlgorithm::Factory)                        \
+        d("LArClusteringParent",                    lar_content::ClusteringParentAlgorithm::Factory)                            \
+        d("LArBoundedClusterMerging",               lar_content::BoundedClusterMergingAlgorithm::Factory)                       \
+        d("LArConeBasedMerging",                    lar_content::ConeBasedMergingAlgorithm::Factory)                            \
+        d("LArIsolatedHitMerging",                  lar_content::IsolatedHitMergingAlgorithm::Factory)                          \
+        d("LArCosmicRayExtension",                  lar_content::CosmicRayExtensionAlgorithm::Factory)                          \
+        d("LArCosmicRaySplitting",                  lar_content::CosmicRaySplittingAlgorithm::Factory)                          \
+        d("LArDeltaRayExtension",                   lar_content::DeltaRayExtensionAlgorithm::Factory)                           \
+        d("LArDeltaRayGrowing",                     lar_content::DeltaRayGrowingAlgorithm::Factory)                             \
+        d("LArBranchSplitting",                     lar_content::BranchSplittingAlgorithm::Factory)                             \
+        d("LArCrossedTrackSplitting",               lar_content::CrossedTrackSplittingAlgorithm::Factory)                       \
+        d("LArDeltaRaySplitting",                   lar_content::DeltaRaySplittingAlgorithm::Factory)                           \
+        d("LArKinkSplitting",                       lar_content::KinkSplittingAlgorithm::Factory)                               \
+        d("LArLayerSplitting",                      lar_content::LayerSplittingAlgorithm::Factory)                              \
+        d("LArTrackConsolidation",                  lar_content::TrackConsolidationAlgorithm::Factory)                          \
+        d("LArVertexSplitting",                     lar_content::VertexSplittingAlgorithm::Factory)                             \
+        d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \
+        d("LArTwoDParticleCreationAlgorithm",       lar_content::TwoDParticleCreationAlgorithm::Factory)                        \
+        d("LArListChanging",                        lar_content::ListChangingAlgorithm::Factory)                                \
+        d("LArListDissolution",                     lar_content::ListDissolutionAlgorithm::Factory)                             \
+        d("LArListMerging",                         lar_content::ListMergingAlgorithm::Factory)                                 \
+        d("LArListPreparation",                     lar_content::ListPreparationAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
-        d("LArClearShowers",                        lar::ClearShowersTool::Factory)                                             \
-        d("LArShowerTensorVisualization",           lar::ShowerTensorVisualizationTool::Factory)                                \
-        d("LArSimpleShowers",                       lar::SimpleShowersTool::Factory)                                            \
-        d("LArSplitShowers",                        lar::SplitShowersTool::Factory)                                             \
-        d("LArClearTrackFragments",                 lar::ClearTrackFragmentsTool::Factory)                                      \
-        d("LArClearLongitudinalTrackHits",          lar::ClearLongitudinalTrackHitsTool::Factory)                               \
-        d("LArClearTransverseTrackHits",            lar::ClearTransverseTrackHitsTool::Factory)                                 \
-        d("LArDeltaRayShowerHits",                  lar::DeltaRayShowerHitsTool::Factory)                                       \
-        d("LArMultiValuedLongitudinalTrackHits",    lar::MultiValuedLongitudinalTrackHitsTool::Factory)                         \
-        d("LArMultiValuedTransverseTrackHits",      lar::MultiValuedTransverseTrackHitsTool::Factory)                           \
-        d("LArThreeViewShowerHits",                 lar::ThreeViewShowerHitsTool::Factory)                                      \
-        d("LArTwoViewShowerHits",                   lar::TwoViewShowerHitsTool::Factory)                                        \
-        d("LArClearLongitudinalTracks",             lar::ClearLongitudinalTracksTool::Factory)                                  \
-        d("LArMatchedEndPoints",                    lar::MatchedEndPointsTool::Factory)                                         \
-        d("LArClearRemnants",                       lar::ClearRemnantsTool::Factory)                                            \
-        d("LArClearTracks",                         lar::ClearTracksTool::Factory)                                              \
-        d("LArLongTracks",                          lar::LongTracksTool::Factory)                                               \
-        d("LArMissingTrack",                        lar::MissingTrackTool::Factory)                                             \
-        d("LArMissingTrackSegment",                 lar::MissingTrackSegmentTool::Factory)                                      \
-        d("LArOvershootTracks",                     lar::OvershootTracksTool::Factory)                                          \
-        d("LArTrackSplitting",                      lar::TrackSplittingTool::Factory)                                           \
-        d("LArTransverseTensorVisualization",       lar::TransverseTensorVisualizationTool::Factory)                            \
-        d("LArUndershootTracks",                    lar::UndershootTracksTool::Factory)
+        d("LArClearShowers",                        lar_content::ClearShowersTool::Factory)                                     \
+        d("LArShowerTensorVisualization",           lar_content::ShowerTensorVisualizationTool::Factory)                        \
+        d("LArSimpleShowers",                       lar_content::SimpleShowersTool::Factory)                                    \
+        d("LArSplitShowers",                        lar_content::SplitShowersTool::Factory)                                     \
+        d("LArClearTrackFragments",                 lar_content::ClearTrackFragmentsTool::Factory)                              \
+        d("LArClearLongitudinalTrackHits",          lar_content::ClearLongitudinalTrackHitsTool::Factory)                       \
+        d("LArClearTransverseTrackHits",            lar_content::ClearTransverseTrackHitsTool::Factory)                         \
+        d("LArDeltaRayShowerHits",                  lar_content::DeltaRayShowerHitsTool::Factory)                               \
+        d("LArMultiValuedLongitudinalTrackHits",    lar_content::MultiValuedLongitudinalTrackHitsTool::Factory)                 \
+        d("LArMultiValuedTransverseTrackHits",      lar_content::MultiValuedTransverseTrackHitsTool::Factory)                   \
+        d("LArThreeViewShowerHits",                 lar_content::ThreeViewShowerHitsTool::Factory)                              \
+        d("LArTwoViewShowerHits",                   lar_content::TwoViewShowerHitsTool::Factory)                                \
+        d("LArClearLongitudinalTracks",             lar_content::ClearLongitudinalTracksTool::Factory)                          \
+        d("LArMatchedEndPoints",                    lar_content::MatchedEndPointsTool::Factory)                                 \
+        d("LArClearRemnants",                       lar_content::ClearRemnantsTool::Factory)                                    \
+        d("LArClearTracks",                         lar_content::ClearTracksTool::Factory)                                      \
+        d("LArLongTracks",                          lar_content::LongTracksTool::Factory)                                       \
+        d("LArMissingTrack",                        lar_content::MissingTrackTool::Factory)                                     \
+        d("LArMissingTrackSegment",                 lar_content::MissingTrackSegmentTool::Factory)                              \
+        d("LArOvershootTracks",                     lar_content::OvershootTracksTool::Factory)                                  \
+        d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
+        d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
+        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
-        d("LArMuonId",                              lar::LArParticleIdPlugins::LArMuonId)
+        d("LArMuonId",                              lar_content::LArParticleIdPlugins::LArMuonId)
 
     /**
      *  @brief  Register all the lar content algorithms and tools with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
      */
-    static pandora::StatusCode RegisterAlgorithms(pandora::Pandora &pandora);
+    static pandora::StatusCode RegisterAlgorithms(const pandora::Pandora &pandora);
 
     /**
-     *  @brief  Register all the lar content plugins with pandora
+     *  @brief  Register the basic lar content plugins with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
      */
-    static pandora::StatusCode RegisterPlugins(pandora::Pandora &pandora);
+    static pandora::StatusCode RegisterBasicPlugins(const pandora::Pandora &pandora);
 
     /**
-     *  @brief  Register all the lar content functions with pandora
+     *  @brief  Register pseudo layer plugin with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
-     *  @param  pLArPseudoLayerCalculator the address of the lar pseudo layer calculator
+     *  @param  pPseudoLayerPlugin the address of the pseudo layer plugin
      */
-    static pandora::StatusCode SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator);
+    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, pandora::PseudoLayerPlugin *pPseudoLayerPlugin);
 
     /**
-     *  @brief  Register all the lar content functions with pandora
+     *  @brief  Register lar coordinate transformation plugin with pandora
      * 
      *  @param  pandora the pandora instance with which to register content
-     *  @param  pLArTransformationCalculator the address of the lar transformation calculator
+     *  @param  pLArTransformationPlugin the address of the lar transformation plugin
      */
-    static pandora::StatusCode SetLArTransformationCalculator(pandora::Pandora &pandora, lar::LArTransformationCalculator *pLArTransformationCalculator);
+    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, lar_content::LArTransformationPlugin *pLArTransformationPlugin);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::RegisterAlgorithms(pandora::Pandora &pandora)
+inline pandora::StatusCode LArContent::RegisterAlgorithms(const pandora::Pandora &pandora)
 {
     LAR_ALGORITHM_LIST(PANDORA_REGISTER_ALGORITHM);
     LAR_ALGORITHM_TOOL_LIST(PANDORA_REGISTER_ALGORITHM_TOOL);
@@ -217,7 +215,7 @@ inline pandora::StatusCode LArContent::RegisterAlgorithms(pandora::Pandora &pand
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::RegisterPlugins(pandora::Pandora &pandora)
+inline pandora::StatusCode LArContent::RegisterBasicPlugins(const pandora::Pandora &pandora)
 {
     LAR_PARTICLE_ID_LIST(PANDORA_REGISTER_PARTICLE_ID);
 
@@ -226,19 +224,16 @@ inline pandora::StatusCode LArContent::RegisterPlugins(pandora::Pandora &pandora
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::SetLArPseudoLayerCalculator(pandora::Pandora &pandora, lar::LArPseudoLayerCalculator *pLArPseudoLayerCalculator)
+inline pandora::StatusCode LArContent::SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, pandora::PseudoLayerPlugin *pPseudoLayerPlugin)
 {
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, pLArPseudoLayerCalculator));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, lar::LArGeometryHelper::SetLArPseudoLayerCalculator(pLArPseudoLayerCalculator));
-
-    return pandora::STATUS_CODE_SUCCESS;
+    return PandoraApi::SetPseudoLayerPlugin(pandora, pPseudoLayerPlugin);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::SetLArTransformationCalculator(pandora::Pandora &/*pandora*/, lar::LArTransformationCalculator *pLArTransformationCalculator)
+inline pandora::StatusCode LArContent::SetLArTransformationPlugin(const pandora::Pandora &pandora, lar_content::LArTransformationPlugin *pLArTransformationPlugin)
 {
-    return lar::LArGeometryHelper::SetLArTransformationCalculator(pLArTransformationCalculator);
+    return lar_content::LArGeometryHelper::SetLArTransformationPlugin(pandora, pLArTransformationPlugin);
 }
 
 #endif // #ifndef LAR_CONTENT_H

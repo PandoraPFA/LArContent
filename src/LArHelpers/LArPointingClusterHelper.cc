@@ -11,7 +11,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 float LArPointingClusterHelper::GetLengthSquared(const LArPointingCluster &pointingCluster)
@@ -388,4 +388,4 @@ float LArPointingClusterHelper::GetAssociatedEnergy(const LArPointingCluster::Ve
     return associatedEnergy;
 }
 
-} // namespace lar
+} // namespace lar_content

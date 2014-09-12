@@ -12,7 +12,7 @@
 
 #include <list>
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -46,6 +46,6 @@ private:
     pandora::StatusCode SplitCluster(pandora::Cluster *const pCluster, ClusterSplittingList &clusterSplittingList) const;
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_SPLITTING_ALGORITHM_H

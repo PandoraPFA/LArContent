@@ -9,12 +9,15 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
@@ -24,7 +27,8 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
 
     try
     {
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow);
+        const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
         CartesianVector splitPosition(0.f, 0.f, 0.f);
 
         if (STATUS_CODE_SUCCESS == this->FindBestSplitPosition(slidingFitResult, splitPosition))
@@ -93,4 +97,4 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlH
     return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

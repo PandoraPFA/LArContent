@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor)
@@ -100,7 +100,7 @@ bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTe
     overlapTensor.GetConnectedElements(pCluster, true, elementList, nU, nV, nW);
 
     // Only allow one fragment hit type
-    HitType fragmentHitType(CUSTOM);
+    HitType fragmentHitType(HIT_CUSTOM);
 
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
@@ -109,7 +109,7 @@ bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTe
         if (!((TPC_VIEW_U == thisHitType) || (TPC_VIEW_V == thisHitType) || (TPC_VIEW_W == thisHitType)))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        if (thisHitType != fragmentHitType && CUSTOM != fragmentHitType)
+        if (thisHitType != fragmentHitType && HIT_CUSTOM != fragmentHitType)
             return false;
 
         fragmentHitType = thisHitType;
@@ -417,4 +417,4 @@ StatusCode ClearTrackFragmentsTool::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

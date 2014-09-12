@@ -14,11 +14,17 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode ListPreparationAlgorithm::Run()
 {
+    if (!this->GetPandora().GetSettings()->SingleHitTypeClusteringMode())
+    {
+        std::cout << "ListPreparationAlgorithm: expect Pandora to be configured in SingleHitTypeClusteringMode." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
     try
     {
         this->ProcessCaloHits();
@@ -200,7 +206,7 @@ void ListPreparationAlgorithm::ProcessMCParticles()
             if (!mcParticleListW.insert(*mcIter).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
-        else if (MC_STANDARD == (*mcIter)->GetMCParticleType())
+        else if (MC_3D == (*mcIter)->GetMCParticleType())
         {
             if (!mcParticleList3D.insert(*mcIter).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -288,4 +294,4 @@ StatusCode ListPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -12,7 +12,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode CheatingClusterCreationAlgorithm::Run()
@@ -120,4 +120,4 @@ StatusCode CheatingClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

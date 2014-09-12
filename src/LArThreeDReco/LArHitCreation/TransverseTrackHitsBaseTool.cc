@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits, 
@@ -61,7 +61,7 @@ void TransverseTrackHitsBaseTool::GetTransverseChi2(const CaloHit *const pCaloHi
         if (pCaloHit2D->GetHitType() == hitType)
             continue;
 
-        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(position3D, hitType));
+        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, hitType));
         const TwoDSlidingFitResult &fitResult(iter->second);
 
         chiSquared += this->GetTransverseChi2(position2D, fitResult);
@@ -106,4 +106,4 @@ float TransverseTrackHitsBaseTool::GetTransverseChi2(const CartesianVector &posi
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
-} // namespace lar
+} // namespace lar_content

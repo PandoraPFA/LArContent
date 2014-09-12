@@ -14,16 +14,17 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
 {
     if (0 == pCluster->GetNCaloHits())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-// TODO static
-//    if (!pandora->GetSettings()->SingleHitTypeClusteringMode())
-//        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    // TODO Find a way of confirming single hit-type clustering mode; currently only checked in ListPreparation algorithm
+    // if (!pandora->GetSettings()->SingleHitTypeClusteringMode())
+    //     throw StatusCodeException(STATUS_CODE_FAILURE);
 
     return (*(pCluster->GetOrderedCaloHitList().begin()->second->begin()))->GetHitType();
 }
@@ -478,4 +479,4 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
 }
 
-} // namespace lar
+} // namespace lar_content

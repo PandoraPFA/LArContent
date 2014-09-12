@@ -9,12 +9,15 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.h"
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
@@ -106,13 +109,15 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::GetListOfCleanClusters(const 
 void TwoDSlidingFitSplittingAndSwitchingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector,
     TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
         if (slidingFitResultMap.end() == slidingFitResultMap.find(*iter))
         {
             try
             {
-                const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers);
+                const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitPitch);
 
                 if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -198,4 +203,4 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReadSettings(const TiXm
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

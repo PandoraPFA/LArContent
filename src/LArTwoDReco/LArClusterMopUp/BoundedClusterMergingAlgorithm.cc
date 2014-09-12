@@ -9,23 +9,27 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
     const ClusterToListNameMap &clusterToListNameMap) const
 {
     ClusterAssociationMap clusterAssociationMap;
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         Cluster *pPfoCluster(*pIter);
-        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow);
+        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch);
 
         ShowerPositionMap showerPositionMap;
         const XSampling xSampling(fitResult.GetShowerFitResult());
@@ -155,4 +159,4 @@ StatusCode BoundedClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

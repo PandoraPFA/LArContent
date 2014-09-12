@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -95,6 +95,6 @@ inline pandora::Algorithm *CheatingPfoCreationAlgorithm::Factory::CreateAlgorith
     return new CheatingPfoCreationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CHEATING_PFO_CREATION_ALGORITHM_H

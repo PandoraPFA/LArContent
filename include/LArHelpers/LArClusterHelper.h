@@ -10,7 +10,7 @@
 
 #include "Objects/Cluster.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -207,6 +207,6 @@ public:
     static bool SortByNHits(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_HELPER_H

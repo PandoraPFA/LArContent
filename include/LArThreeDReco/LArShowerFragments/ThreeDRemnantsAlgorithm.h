@@ -15,7 +15,7 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 class RemnantTensorTool;
@@ -86,6 +86,6 @@ inline pandora::Algorithm *ThreeDRemnantsAlgorithm::Factory::CreateAlgorithm() c
     return new ThreeDRemnantsAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_REMNANTS_ALGORITHM_H

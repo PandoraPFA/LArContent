@@ -9,15 +9,18 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 #include "LArObjects/LArTrackOverlapResult.h"
+
+#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 template<typename T>
@@ -229,7 +232,8 @@ void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoPa
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
 {
-    const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow);
+    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -271,4 +275,4 @@ template class ThreeDTracksBaseAlgorithm<TransverseOverlapResult>;
 template class ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>;
 template class ThreeDTracksBaseAlgorithm<FragmentOverlapResult>;
 
-} // namespace lar
+} // namespace lar_content

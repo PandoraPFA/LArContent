@@ -12,7 +12,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -61,6 +61,6 @@ inline pandora::Algorithm *DeltaRayExtensionAlgorithm::Factory::CreateAlgorithm(
     return new DeltaRayExtensionAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_DELTA_RAY_EXTENSION_ALGORITHM_H

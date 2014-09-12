@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void LArPfoHelper::GetCaloHits(const PfoList &pfoList, const HitType &hitType, CaloHitList &caloHitList)
@@ -356,4 +356,4 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
     return (LArPfoHelper::GetTwoDLengthSquared(pLhs) > LArPfoHelper::GetTwoDLengthSquared(pRhs));
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -261,6 +261,6 @@ inline float TrackClusterCreationAlgorithm::HitAssociation::GetSecondaryDistance
     return m_secondaryDistanceSquared;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TRACK_CLUSTER_CREATION_ALGORITHM_H

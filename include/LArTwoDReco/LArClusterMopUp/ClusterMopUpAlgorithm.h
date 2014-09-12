@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -98,6 +98,6 @@ protected:
     pandora::StringVector   m_additionalClusterListNames;   ///< The list of additional cluster list names, maybe specifying lists containing pfo clusters
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_MOP_UP_ALGORITHM_H

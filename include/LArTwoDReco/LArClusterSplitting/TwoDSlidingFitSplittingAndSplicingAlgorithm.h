@@ -12,7 +12,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -235,6 +235,6 @@ inline const pandora::CartesianVector &TwoDSlidingFitSplittingAndSplicingAlgorit
     return m_branchDirection;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TWO_D_SLIDING_FIT_SPLITTING_AND_SPLICING_ALGORITHM_H

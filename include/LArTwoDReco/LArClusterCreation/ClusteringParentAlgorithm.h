@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -49,6 +49,6 @@ inline pandora::Algorithm *ClusteringParentAlgorithm::Factory::CreateAlgorithm()
     return new ClusteringParentAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTERING_PARENT_ALGORITHM_H

@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 OvershootTracksTool::OvershootTracksTool() :
@@ -144,7 +144,7 @@ void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &ver
 
     CartesianVector splitPosition(0.f, 0.f, 0.f);
     float chiSquared(std::numeric_limits<float>::max());
-    LArGeometryHelper::MergeTwoPositions(LArClusterHelper::GetClusterHitType(particle.m_pClusterA1),
+    LArGeometryHelper::MergeTwoPositions(this->GetPandora(), LArClusterHelper::GetClusterHitType(particle.m_pClusterA1),
         LArClusterHelper::GetClusterHitType(particle.m_pClusterA2), particle.m_splitPosition1, particle.m_splitPosition2, splitPosition, chiSquared);
 
     particle.m_splitPosition = splitPosition;
@@ -185,9 +185,9 @@ bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgorit
 
         CartesianVector minus(0.f, 0.f, 0.f), split(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
         float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()), chi2Plus(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeThreePositions3D(hitType1, hitType2, hitType3, minus1, minus2, minus3, minus, chi2Minus);
-        LArGeometryHelper::MergeThreePositions3D(hitType1, hitType2, hitType3, split1, split2, split3, split, chi2Split);
-        LArGeometryHelper::MergeThreePositions3D(hitType1, hitType2, hitType3, plus1, plus2, plus3, plus, chi2Plus);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, minus1, minus2, minus3, minus, chi2Minus);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, split1, split2, split3, split, chi2Split);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, plus1, plus2, plus3, plus, chi2Plus);
 
         // Apply final cuts
         const CartesianVector minusToSplit((split - minus).GetUnitVector());
@@ -214,9 +214,9 @@ OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, con
 {
     const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU()) ? TPC_VIEW_U :
         (elementA.GetClusterV() == elementB.GetClusterV()) ? TPC_VIEW_V :
-        (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W : CUSTOM);
+        (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W : HIT_CUSTOM);
 
-    if (CUSTOM == commonView)
+    if (HIT_CUSTOM == commonView)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     m_pCommonCluster = (TPC_VIEW_U == commonView) ? elementA.GetClusterU() : (TPC_VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();
@@ -249,4 +249,4 @@ StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     return ThreeDKinkBaseTool::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

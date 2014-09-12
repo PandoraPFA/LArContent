@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode EventDisplayAlgorithm::Run()
@@ -34,7 +34,7 @@ StatusCode EventDisplayAlgorithm::Run()
 
 
     // Hit type
-    HitType hitType(CUSTOM);
+    HitType hitType(HIT_CUSTOM);
 
 
     // Add the seed clusters
@@ -47,7 +47,7 @@ StatusCode EventDisplayAlgorithm::Run()
             Cluster *pCluster = *iter;
             const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-            if (CUSTOM == hitType)
+            if (HIT_CUSTOM == hitType)
             {
                 if ((TPC_VIEW_U != clusterHitType) && (TPC_VIEW_V != clusterHitType) && (TPC_VIEW_W != clusterHitType))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -66,7 +66,9 @@ StatusCode EventDisplayAlgorithm::Run()
 
 
     // Start Drawing Stuff
+#ifdef MONITORING
     unsigned int n(0);
+#endif
 
     if ( NULL != pPfoList )
     {
@@ -96,7 +98,7 @@ StatusCode EventDisplayAlgorithm::Run()
     {
         for( ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter )
         {
-            Cluster* pCluster = *iter;
+            Cluster *pCluster = *iter;
             ClusterList tempList;
             tempList.insert(pCluster);
             PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &tempList, "Clusters", GetColor(n++) ));
@@ -104,7 +106,6 @@ StatusCode EventDisplayAlgorithm::Run()
     }
 
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-
 
     return STATUS_CODE_SUCCESS;
 }
@@ -150,4 +151,4 @@ StatusCode EventDisplayAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

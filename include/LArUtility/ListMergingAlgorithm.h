@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -46,6 +46,6 @@ inline pandora::Algorithm *ListMergingAlgorithm::Factory::CreateAlgorithm() cons
     return new ListMergingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_LIST_MERGING_ALGORITHM_H

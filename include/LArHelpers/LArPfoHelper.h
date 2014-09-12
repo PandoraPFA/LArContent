@@ -11,7 +11,7 @@
 #include "Objects/Cluster.h"
 #include "Objects/ParticleFlowObject.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -207,6 +207,6 @@ public:
     static bool SortByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
 };
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_PFO_HELPER_H

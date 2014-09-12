@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 ShowerOverlapResult::ShowerOverlapResult() :
@@ -111,4 +111,4 @@ ShowerOverlapResult &ShowerOverlapResult::operator=(const ShowerOverlapResult &r
     return *this;
 }
 
-} // namespace lar
+} // namespace lar_content

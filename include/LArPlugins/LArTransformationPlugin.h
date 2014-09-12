@@ -1,22 +1,22 @@
 /**
- *  @file   LArContent/include/LArCalculators/LArTransformationCalculator.h
+ *  @file   LArContent/include/LArPlugins/LArTransformationPlugin.h
  * 
- *  @brief  Header file for the transformation calculator interface class.
+ *  @brief  Header file for the transformation plugin interface class.
  * 
  *  $Log: $
  */
-#ifndef LAR_TRANSFORMATION_CALCULATOR_H
-#define LAR_TRANSFORMATION_CALCULATOR_H 1
+#ifndef LAR_TRANSFORMATION_PLUGIN_H
+#define LAR_TRANSFORMATION_PLUGIN_H 1
 
 #include "Pandora/PandoraInputTypes.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
- *  @brief  LArTransformationCalculator class
+ *  @brief  LArTransformationPlugin class
  */
-class LArTransformationCalculator
+class LArTransformationPlugin
 {
 public:
     /** 
@@ -123,6 +123,13 @@ public:
     virtual float GetSigmaUVW() const = 0;
 
     /** 
+     *  @brief  Get wire z pitch, in cm
+     * 
+     *  @return wire z pitch, in cm
+     */
+    virtual float GetWireZPitch() const = 0;
+
+    /** 
      *  @brief  Get the y, z position that yields the minimum chi squared value with respect to specified u, v and w coordinates
      * 
      *  @param  u the u coordinate
@@ -156,6 +163,6 @@ public:
         const PositionAndType &fitPositionAndType2, const float sigmaHit, const float sigmaFit, float &y, float &z, float &chiSquared) const = 0;
 };
 
-} // namespace lar
+} // namespace lar_content
 
-#endif // #ifndef LAR_TRANSFORMATION_CALCULATOR_H
+#endif // #ifndef LAR_TRANSFORMATION_PLUGIN_H

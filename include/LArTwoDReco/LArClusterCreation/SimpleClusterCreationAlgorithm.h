@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -85,6 +85,6 @@ inline pandora::Algorithm *SimpleClusterCreationAlgorithm::Factory::CreateAlgori
     return new SimpleClusterCreationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_SIMPLE_CLUSTER_CREATION_ALGORITHM_H

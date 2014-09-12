@@ -12,7 +12,7 @@
 
 #include "LArObjects/LArTwoDSlidingFitObjects.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -26,31 +26,35 @@ public:
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  layerPitch the layer pitch, units cm
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow);
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch);
 
     /**
      *  @brief  Constructor using specified primary axis
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
-        const pandora::CartesianVector &axisDirection);
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection);
 
     /**
-     *  @brief  Constructor using specified primary axis and layer fit contribution map
+     *  @brief  Constructor using specified primary axis and layer fit contribution map. User is responsible for ensuring that
+     *          z-pitch, axis intercept and axis direction agree with calculations used to fill the layer fit contribution map.
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
      *  @param  layerFitContributionMap the layer fit contribution map
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const pandora::CartesianVector &axisIntercept,
-        const pandora::CartesianVector &axisDirection, const LayerFitContributionMap &layerFitContributionMap);
+    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, const LayerFitContributionMap &layerFitContributionMap);
 
     /**
      *  @brief  Get the address of the cluster
@@ -65,6 +69,13 @@ public:
      *  @return the layer fit half window
      */
     unsigned int GetLayerFitHalfWindow() const;
+
+    /**
+     *  @brief  Get the layer pitch, units cm
+     *
+     *  @return the layer pitch
+     */
+    float GetLayerPitch() const;
 
     /**
      *  @brief  Get the axis intercept position
@@ -454,6 +465,7 @@ private:
 
     const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
     unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
+    float                       m_layerPitch;               ///< The layer pitch, units cm
     pandora::CartesianVector    m_axisIntercept;            ///< The axis intercept position
     pandora::CartesianVector    m_axisDirection;            ///< The axis direction vector
     LayerFitResultMap           m_layerFitResultMap;        ///< The layer fit result map
@@ -477,6 +489,13 @@ inline const pandora::Cluster *TwoDSlidingFitResult::GetCluster() const
 inline unsigned int TwoDSlidingFitResult::GetLayerFitHalfWindow() const
 {
     return m_layerFitHalfWindow;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TwoDSlidingFitResult::GetLayerPitch() const
+{
+    return m_layerPitch;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -528,6 +547,6 @@ inline void TwoDSlidingFitResult::GetMinAndMaxZ(float &minZ, float &maxZ) const
     return this->GetMinAndMaxCoordinate(false, minZ, maxZ);
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TWO_D_SLIDING_FIT_RESULT_H

@@ -10,7 +10,7 @@
 
 #include "LArHelpers/LArMCParticleHelper.h"
 
-namespace lar
+namespace lar_content
 {
 
 using namespace pandora;
@@ -73,4 +73,4 @@ int LArMCParticleHelper::GetParentNeutrinoId(const MCParticle *const pMCParticle
     }
 }
 
-} // namespace lar
+} // namespace lar_content

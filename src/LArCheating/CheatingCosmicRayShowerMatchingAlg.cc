@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
@@ -120,4 +120,4 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::ReadSettings(const TiXmlHandle xm
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

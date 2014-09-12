@@ -14,7 +14,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void SeedGrowingAlgorithm::FindAssociatedClusters(Cluster *const pParticleSeed, ClusterVector &candidateClusters,
@@ -131,4 +131,4 @@ StatusCode SeedGrowingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -15,7 +15,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 void CosmicRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
@@ -365,4 +365,4 @@ StatusCode CosmicRayExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

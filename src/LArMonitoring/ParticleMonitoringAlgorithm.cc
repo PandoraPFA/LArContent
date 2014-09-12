@@ -16,7 +16,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 ParticleMonitoringAlgorithm::ParticleMonitoringAlgorithm()
@@ -34,6 +34,7 @@ ParticleMonitoringAlgorithm::~ParticleMonitoringAlgorithm()
 
 StatusCode ParticleMonitoringAlgorithm::Run()
 {
+#ifdef MONITORING
     // Tree elements
     int nMCParticlesTotal(0), nPfosTotal(0);
     IntVector mcPdgVector, mcNeutrinoVector, nMCHitsVector, pfoPdgVector, pfoNeutrinoVector, nPfoHitsVector, nMatchedHitsVector, 
@@ -217,7 +218,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMatchedHitsW", &nMatchedHitsWVector));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-
+#endif
     return STATUS_CODE_SUCCESS;
 }
 
@@ -489,4 +490,4 @@ StatusCode ParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

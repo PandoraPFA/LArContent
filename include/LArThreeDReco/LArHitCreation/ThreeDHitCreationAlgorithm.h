@@ -11,7 +11,7 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-namespace lar
+namespace lar_content
 {
 
 class HitCreationBaseTool;
@@ -131,6 +131,6 @@ inline pandora::Algorithm *ThreeDHitCreationAlgorithm::Factory::CreateAlgorithm(
     return new ThreeDHitCreationAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_THREE_D_HIT_CREATION_ALGORITHM_H

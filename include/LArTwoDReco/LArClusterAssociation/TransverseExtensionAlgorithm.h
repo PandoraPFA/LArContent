@@ -14,7 +14,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -62,6 +62,6 @@ inline pandora::Algorithm *TransverseExtensionAlgorithm::Factory::CreateAlgorith
     return new TransverseExtensionAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_TRANSVERSE_EXTENSION_ALGORITHM_H

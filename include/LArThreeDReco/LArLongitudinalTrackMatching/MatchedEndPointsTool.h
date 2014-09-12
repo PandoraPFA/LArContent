@@ -10,7 +10,7 @@
 
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -52,6 +52,6 @@ inline pandora::AlgorithmTool *MatchedEndPointsTool::Factory::CreateAlgorithmToo
     return new MatchedEndPointsTool();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef MATCHED_END_POINTS_TOOL_H

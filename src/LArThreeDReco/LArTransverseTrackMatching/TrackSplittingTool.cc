@@ -17,7 +17,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
@@ -142,7 +142,7 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
 
         CartesianVector splitPosition(0.f, 0.f, 0.f);
         float chiSquared(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
+        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
 
         if (this->CheckSplitPosition(splitPosition, splitMinX, longFitResult))
         {
@@ -171,7 +171,7 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorith
 
         CartesianVector splitPosition(0.f, 0.f, 0.f);
         float chiSquared(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeTwoPositions(hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
+        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
 
         if (this->CheckSplitPosition(splitPosition, splitMaxX, longFitResult))
         {
@@ -222,9 +222,9 @@ TrackSplittingTool::Particle::Particle(const TensorType::Element &element)
 
     const HitType longHitType = ((xOverlap.GetXSpanU() > xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() > xOverlap.GetXSpanW())) ? TPC_VIEW_U :
         ((xOverlap.GetXSpanV() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() > xOverlap.GetXSpanW())) ? TPC_VIEW_V :
-        ((xOverlap.GetXSpanW() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() > xOverlap.GetXSpanV())) ? TPC_VIEW_W : CUSTOM;
+        ((xOverlap.GetXSpanW() > xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() > xOverlap.GetXSpanV())) ? TPC_VIEW_W : HIT_CUSTOM;
 
-    if (CUSTOM == longHitType)
+    if (HIT_CUSTOM == longHitType)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     m_pLongCluster = (TPC_VIEW_U == longHitType) ? element.GetClusterU() : (TPC_VIEW_V == longHitType) ? element.GetClusterV() : element.GetClusterW();
@@ -286,4 +286,4 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar
+} // namespace lar_content

@@ -18,7 +18,7 @@
 
 using namespace pandora;
 
-namespace lar
+namespace lar_content
 {
 
 UndershootTracksTool::UndershootTracksTool() :
@@ -149,9 +149,9 @@ bool UndershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgori
 
         CartesianVector minus(0.f, 0.f, 0.f), split(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
         float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()), chi2Plus(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeThreePositions3D(hitType1, hitType2, hitType3, minus1, minus2, minus3, minus, chi2Minus);
-        LArGeometryHelper::MergeThreePositions3D(hitType1, hitType2, hitType3, split1, split2, split3, split, chi2Split);
-        LArGeometryHelper::MergeThreePositions3D(hitType1, hitType2, hitType3, plus1, plus2, plus3, plus, chi2Plus);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, minus1, minus2, minus3, minus, chi2Minus);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, split1, split2, split3, split, chi2Split);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, plus1, plus2, plus3, plus, chi2Plus);
 
         // Apply final cuts
         const CartesianVector minusToSplit((split - minus).GetUnitVector());
@@ -210,4 +210,4 @@ StatusCode UndershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     return ThreeDKinkBaseTool::ReadSettings(xmlHandle);
 }
 
-} // namespace lar
+} // namespace lar_content

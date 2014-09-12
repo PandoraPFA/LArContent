@@ -10,7 +10,7 @@
 
 #include "LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
-namespace lar
+namespace lar_content
 {
 
 /**
@@ -75,6 +75,6 @@ inline pandora::Algorithm *LayerSplittingAlgorithm::Factory::CreateAlgorithm() c
     return new LayerSplittingAlgorithm();
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_LAYER_SPLITTING_ALGORITHM_H
