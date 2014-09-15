@@ -10,6 +10,8 @@
 
 #include "LArHelpers/LArMCParticleHelper.h"
 
+#include <cstdlib>
+
 namespace lar_content
 {
 
