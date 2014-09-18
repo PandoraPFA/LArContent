@@ -22,11 +22,11 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
 
     Vertex *pSelectedVertex(NULL);
-    for (VertexList::const_iterator iter = pVertexList->begin(), iterEnd = pVertexList->end(); iter != iterEnd; ++iter)
-    {
-        // TODO Vertex selection
-        return STATUS_CODE_NOT_INITIALIZED;
-    }
+    // TODO Vertex selection
+    //for (VertexList::const_iterator iter = pVertexList->begin(), iterEnd = pVertexList->end(); iter != iterEnd; ++iter)
+    //{
+    //}
+    return STATUS_CODE_NOT_INITIALIZED;
 
     if (!pSelectedVertex)
         return STATUS_CODE_SUCCESS;

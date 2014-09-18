@@ -46,16 +46,6 @@ StatusCode ClusterGrowingAlgorithm::Run()
         this->GetListOfCleanClusters(pClusterList, currentClusters);
         this->GetListOfNonSeedClusters(currentClusters, seedClusters, nonSeedClusters);
 
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempList1, tempList2;
-// tempList1.insert(seedClusters.begin(), seedClusters.end());
-// tempList2.insert(nonSeedClusters.begin(), nonSeedClusters.end());
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Seed Clusters", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "NonSeed Clusters", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
         ClusterMergeMap clusterMergeMap;
         this->PopulateClusterMergeMap(seedClusters, nonSeedClusters, clusterMergeMap);
 

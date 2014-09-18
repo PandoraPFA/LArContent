@@ -112,20 +112,6 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
             figureOfMerit = outerL;
         }
 
-// --- BEGIN DISPLAY ---
-// if(associationType != ClusterAssociation::NONE)
-// {
-// if (associationType == ClusterAssociation::WEAK) std::cout << " WEAK " << std::endl; else std::cout << " STRONG " << std::endl;
-// std::cout << " RMS=" << pointingVertex.GetRms() << std::endl;
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-// --- END DISPLAY ---
         (void) clusterAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster,
                ClusterAssociation(vertexType, vertexType, associationType, figureOfMerit)));
     }
@@ -203,16 +189,6 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
         {
             clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
             clusterMergeMap[pDaughterCluster].insert(pParentCluster);
-
-// --- BEGIN DISPLAY ---
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// --- END DISPLAY ---
         }
     }
 }

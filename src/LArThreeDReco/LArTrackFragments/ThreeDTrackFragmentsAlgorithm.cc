@@ -197,23 +197,6 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitR
     CartesianPointList projectedPositions;
     this->GetProjectedPositions(fitResult1, fitResult2, projectedPositions);
 
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempList1, tempList2, tempList3;
-// tempList1.insert((Cluster*)pCluster1);
-// tempList2.insert((Cluster*)pCluster2);
-// tempList3.insert(inputClusterList.begin(), inputClusterList.end());
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Clusters (U)", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "Clusters (V)", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList3, "Clusters (W)", BLACK);
-// for (unsigned int p=0; p < projectedPositions.size(); ++p)
-// {
-// CartesianVector projectedPosition = projectedPositions.at(p);
-// PandoraMonitoringApi::AddMarkerToVisualization(&projectedPosition, "ProjectedPosition", RED, 3);
-// }
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
     CaloHitList matchedHits;
     ClusterList matchedClusters;
     HitToClusterMap hitToClusterMap;
@@ -474,19 +457,6 @@ void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPoin
     }
 
     fragmentOverlapResult = FragmentOverlapResult(nMatchedSamplingPoints, projectedPositions.size(), chi2Sum, matchedHits, matchedClusters);
-
-// --- BEGIN EVENT DISPLAY ---
-// std::cout << " MatchedSamplingPoints=" << fragmentOverlapResult.GetNMatchedSamplingPoints() << " MatchedFraction=" << fragmentOverlapResult.GetMatchedFraction() << " MatchedCaloHits=" << fragmentOverlapResult.GetFragmentCaloHitList().size() << std::endl;
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeCaloHits(&matchedHits, "MatchedHits", BLUE);
-// for (unsigned int p=0; p < projectedPositions.size(); ++p)
-// {
-// CartesianVector projectedPosition = projectedPositions.at(p);
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&projectedPosition, "FitPosition", GREEN, 2.5));
-// }
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

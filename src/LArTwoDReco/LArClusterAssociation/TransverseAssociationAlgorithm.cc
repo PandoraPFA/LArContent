@@ -59,64 +59,18 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
         //         clusters as selected in the previous step.
         this->FillTransverseClusterList(transverseClusters, firstAssociationMap, transverseClusterList);
 
-// ---- BEGIN DISPLAY ----
-// ClusterList tempList1, tempList2, tempList3;
-// tempList1.insert(transverseClusters.begin(), transverseClusters.end());
-// for (unsigned int nCluster = 0; nCluster<transverseClusterList.size(); ++nCluster)
-// {
-// LArTransverseCluster* transverseCluster = transverseClusterList.at(nCluster);
-// Cluster* pCluster = transverseCluster->GetSeedCluster();
-// tempList2.insert(pCluster);
-// if( tempList1.count(pCluster)) tempList1.erase(pCluster);
-// }
-// tempList3.insert(longitudinalMediumClusters.begin(), longitudinalMediumClusters.end());
-// tempList3.insert(longClusters.begin(), longClusters.end());
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ShortClusters", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "TransverseClusters", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList3, "LongClusters", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// ---- END DISPLAY ----
+        // Step 4: Form loose transverse associations between transverse clusters
+        //         (First, associate medium clusters, without hopping over long clusters
+        //          Next, associate all transverse clusters, without hopping over any clusters)
+        ClusterAssociationMap secondAssociationMap;
+        this->FillReducedAssociationMap(transverseMediumClusters, longClusters, secondAssociationMap);
+        this->FillReducedAssociationMap(transverseClusters, allClusters, secondAssociationMap);
 
-    // Step 4: Form loose transverse associations between transverse clusters
-    //         (First, associate medium clusters, without hopping over long clusters
-    //          Next, associate all transverse clusters, without hopping over any clusters)
-    ClusterAssociationMap secondAssociationMap;
-    this->FillReducedAssociationMap(transverseMediumClusters, longClusters, secondAssociationMap);
-    this->FillReducedAssociationMap(transverseClusters, allClusters, secondAssociationMap);
-
-    // Step 5: Form associations between transverse cluster objects
-    //         (These transverse associations must already exist as loose associations
-    //          between transverse clusters as identified in the previous step).
-    ClusterAssociationMap transverseAssociationMap;
-    this->FillTransverseAssociationMap(transverseClusterList, secondAssociationMap, transverseAssociationMap);
-
-// ---- BEGIN DISPLAY ----
-// ClusterList tempList, tempListForward, tempListBackward;
-// for (ClusterAssociationMap::iterator iterI = transverseAssociationMap.begin(), iterEndI = transverseAssociationMap.end(); iterI != iterEndI; ++iterI)
-// {
-// Cluster *pCluster = iterI->first;
-// for (ClusterList::iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
-// tempListForward.insert(*iterJ);
-// for (ClusterList::iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
-// tempListBackward.insert(*iterJ);
-// }
-// for (ClusterAssociationMap::iterator iterI = transverseAssociationMap.begin(), iterEndI = transverseAssociationMap.end(); iterI != iterEndI; ++iterI)
-// {
-// Cluster *pCluster = iterI->first;
-// if(tempListForward.count(pCluster) > 0 && tempListBackward.count(pCluster) > 0)
-// {
-// tempList.insert(pCluster);
-// tempListForward.erase(pCluster);
-// tempListBackward.erase(pCluster);
-// }
-// }
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "Associations", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempListForward, "ForwardOnly", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempListBackward, "BackwardOnly", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// ---- END DISPLAY ----
+        // Step 5: Form associations between transverse cluster objects
+        //         (These transverse associations must already exist as loose associations
+        //          between transverse clusters as identified in the previous step).
+        ClusterAssociationMap transverseAssociationMap;
+        this->FillTransverseAssociationMap(transverseClusterList, secondAssociationMap, transverseAssociationMap);
 
         // Step 6: Finalise the forward/backward transverse associations by symmetrising the
         //         transverse association map and removing any double-counting
@@ -207,20 +161,6 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterVect
     this->FillAssociationMap(firstVector, firstVector, firstAssociationMap, firstAssociationMapSwapped);
     this->FillAssociationMap(firstVector, secondVector, secondAssociationMap, secondAssociationMapSwapped);
     this->FillReducedAssociationMap(firstAssociationMap, secondAssociationMap, secondAssociationMapSwapped, clusterAssociationMap);
-
-// ---- BEGIN DISPLAY ----
-// for (ClusterAssociationMap::iterator iter = clusterAssociationMap.begin(), iterEnd = clusterAssociationMap.end(); iter != iterEnd; ++iter)
-// {
-// Cluster *pCluster = iter->first;
-// ClusterList tempList;
-// tempList.insert(pCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "CentralCluster", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&iter->second.m_forwardAssociations,"ForwardAssociations",RED);
-// PandoraMonitoringApi::VisualizeClusters(&iter->second.m_backwardAssociations,"BackwardAssociations",GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// }
-// ---- END DISPLAY ----
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -237,19 +177,6 @@ void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterVect
         if (this->GetTransverseSpan(pCluster, associatedClusters) < m_transverseClusterMinLength)
             continue;
 
-// ---- BEGIN DISPLAY ----
-// ClusterList tempList1, tempList2;
-// tempList1.insert(pCluster);
-// for (unsigned int nCluster = 0; nCluster<associatedClusters.size(); ++nCluster)
-// {
-// Cluster* pTempCluster = associatedClusters.at(nCluster);
-// tempList2.insert(pTempCluster);
-// }
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "CentralCluster", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "AssociatedClusters", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// ---- END DISPLAY ----
         transverseClusterList.push_back(new LArTransverseCluster(pCluster, associatedClusters));
     }
 }

@@ -113,28 +113,15 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
 
         Cluster *pBranchCluster = const_cast<Cluster*>(branchSlidingFitResult.GetCluster());
 
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempClusterList1, tempClusterList2;
-// tempClusterList1.insert(pBranchCluster);
-// if (pReplacementCluster1) tempClusterList2.insert(pReplacementCluster1);
-// if (pReplacementCluster2) tempClusterList2.insert(pReplacementCluster2);
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempClusterList1, "BranchCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempClusterList2, "ReplacementCluster", BLUE);
-// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition,"SplitPosition",BLACK,2.5);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
         // Crossed tracks
         if (pReplacementCluster1 && pReplacementCluster2)
         {
             if (!(this->IdentifyCrossedTracks(pBranchCluster, pReplacementCluster1, pReplacementCluster2, splitPosition)))
-              continue;
+                continue;
 
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->PerformDoubleSplit(pBranchCluster, pReplacementCluster1,
                 pReplacementCluster2, splitPosition, splitDirection1, splitDirection2));
         }
-
         // Single scatter
         else if (pReplacementCluster1)
         {

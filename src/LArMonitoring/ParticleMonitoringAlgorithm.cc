@@ -19,7 +19,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ParticleMonitoringAlgorithm::ParticleMonitoringAlgorithm()
+ParticleMonitoringAlgorithm::ParticleMonitoringAlgorithm() :
+    m_useDaughterPfos(false),
+    m_extractNeutrinoDaughters(true)
 {
 }
 
@@ -479,11 +481,9 @@ StatusCode ParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputTree", m_treeName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
 
-    m_useDaughterPfos = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseDaughterPfos", m_useDaughterPfos));
 
-    m_extractNeutrinoDaughters = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ExtractNeutrinoDaughters", m_extractNeutrinoDaughters));
 

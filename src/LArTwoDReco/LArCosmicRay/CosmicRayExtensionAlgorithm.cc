@@ -293,15 +293,6 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
                 parentToDaughterAssociation.GetDaughter() == daughterToParentAssociation.GetParent())
             {
                 clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
-
-// ---- BEGIN DISPLAY ----
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// ---- END DISPLAY ----
             }
         }
     }

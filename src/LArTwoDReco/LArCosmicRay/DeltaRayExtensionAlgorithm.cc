@@ -130,17 +130,6 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
             break;
         }
 
-// if(associationType == ClusterAssociation::STRONG)
-// {
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// }
-
         if (parentVertexType > ClusterAssociation::UNDEFINED)
         {
             (void) clusterAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster,
@@ -331,17 +320,6 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
             clusterMergeMap[pParentCluster].insert(pBestOuter);
             clusterMergeMap[pBestOuter].insert((Cluster*)pParentCluster);
         }
-// if(pBestInner || pBestOuter)
-// {
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// if(pBestInner) tempList2.insert((Cluster*)pBestInner);
-// if(pBestOuter) tempList2.insert((Cluster*)pBestOuter);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", RED);
-// PandoraMonitoringApi::ViewEvent();
-// }
     }
 }
 
