@@ -20,6 +20,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+TwoDSlidingFitSplittingAlgorithm::TwoDSlidingFitSplittingAlgorithm() :
+    m_slidingFitHalfWindow(20),
+    m_minClusterLength(10.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
 {
     if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
@@ -86,11 +94,9 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const TwoDSlidingFitRe
 
 StatusCode TwoDSlidingFitSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_slidingFitHalfWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
-    m_minClusterLength = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", m_minClusterLength));
 

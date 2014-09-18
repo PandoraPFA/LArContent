@@ -30,6 +30,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    CosmicRayTrackMatchingAlgorithm();
+
 private:
     pandora::StatusCode Run();
 

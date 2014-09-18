@@ -34,6 +34,16 @@ public:
     virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits) = 0;
 
+    /**
+     *  @brief  Default constructor
+     */
+    HitCreationBaseTool();
+
+    /**
+     *  @brief  Destructor
+     */
+    virtual ~HitCreationBaseTool();
+
 protected:
     /**
      *  @brief  Get the three dimensional position using a provided two dimensional calo hit and candidate fit positions from the other two views

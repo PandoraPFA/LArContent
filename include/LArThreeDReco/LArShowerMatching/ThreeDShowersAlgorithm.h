@@ -38,6 +38,11 @@ public:
     };
 
     /**
+     *  @brief  Default constructor
+     */
+    ThreeDShowersAlgorithm();
+
+    /**
      *  @brief  Sort tensor elements by number of matched sampling points, using matched fraction then xoverlap span to resolve ties
      *
      *  @param  lhs the first tensor element

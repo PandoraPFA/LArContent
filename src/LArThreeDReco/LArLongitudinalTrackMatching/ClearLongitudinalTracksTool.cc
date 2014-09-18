@@ -15,6 +15,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClearLongitudinalTracksTool::ClearLongitudinalTracksTool() :
+    m_minMatchedFraction(0.8f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ClearLongitudinalTracksTool::Run(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -55,7 +62,6 @@ void ClearLongitudinalTracksTool::CreateThreeDParticles(ThreeDLongitudinalTracks
 
 StatusCode ClearLongitudinalTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 

@@ -28,6 +28,11 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    SimpleShowersTool();
+
     bool Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor);
 
 private:

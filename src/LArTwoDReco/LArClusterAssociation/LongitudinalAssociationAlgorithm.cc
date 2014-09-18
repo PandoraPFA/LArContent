@@ -17,6 +17,19 @@ using namespace pandora;
 namespace lar_content
 {
 
+LongitudinalAssociationAlgorithm::LongitudinalAssociationAlgorithm() :
+    m_minClusterLayers(4),
+    m_maxGapLayers(7),
+    m_fitLayers(30),
+    m_maxGapDistanceSquared(10.f),
+    m_minCosRelativeAngle(0.985f),
+    m_maxTransverseDisplacement(2.f),
+    m_maxLongitudinalDisplacement(2.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -170,32 +183,26 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const CartesianVect
 
 StatusCode LongitudinalAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterLayers = 4;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLayers", m_minClusterLayers));
 
-    m_maxGapLayers = 7;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGapLayers", m_maxGapLayers));
 
-    m_fitLayers = 30;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FitLayers", m_fitLayers));
 
-    float maxGapDistance = std::sqrt(10.f);
+    float maxGapDistance = std::sqrt(m_maxGapDistanceSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGapDistance", maxGapDistance));
     m_maxGapDistanceSquared = maxGapDistance * maxGapDistance;
 
-    m_minCosRelativeAngle = 0.985f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
 
-    m_maxTransverseDisplacement = 2.f; // normalised units
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    m_maxLongitudinalDisplacement = 2.f; // normalised units
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 

@@ -15,6 +15,17 @@ using namespace pandora;
 namespace lar_content
 {
 
+TrackClusterCreationAlgorithm::TrackClusterCreationAlgorithm() :
+    m_mergeBackFilteredHits(true),
+    m_maxGapLayers(2),
+    m_maxCaloHitSeparationSquared(1.3f * 1.3f),
+    m_minCaloHitSeparationSquared( 0.4f *  0.4f),
+    m_closeSeparationSquared(0.9f * 0.9f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TrackClusterCreationAlgorithm::Run()
 {
     const CaloHitList *pCaloHitList = NULL;
@@ -413,33 +424,23 @@ CaloHit *TrackClusterCreationAlgorithm::TraceHitAssociation(CaloHit *pCaloHit, c
 
 StatusCode TrackClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_inputCaloHitListName = "";
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputCaloHitListName", m_inputCaloHitListName));
-
-    m_outputClusterListName = "PrimaryClusterList";
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputClusterListName", m_outputClusterListName));
-
-    m_mergeBackFilteredHits = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MergeBackFilteredHits", m_mergeBackFilteredHits));
 
-    m_maxGapLayers = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGapLayers", m_maxGapLayers));
 
-    float maxCaloHitSeparation = 1.3f; // cm
+    float maxCaloHitSeparation = std::sqrt(m_maxCaloHitSeparationSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxCaloHitSeparation", maxCaloHitSeparation));
     m_maxCaloHitSeparationSquared = maxCaloHitSeparation * maxCaloHitSeparation;
 
-    float minCaloHitSeparation = 0.4f; // cm
+    float minCaloHitSeparation = std::sqrt(m_minCaloHitSeparationSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitSeparation", minCaloHitSeparation));
     m_minCaloHitSeparationSquared = minCaloHitSeparation * minCaloHitSeparation;
 
-    float closeSeparation = 0.9f; // cm
+    float closeSeparation = std::sqrt(m_closeSeparationSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CloseSeparation", closeSeparation));
     m_closeSeparationSquared = closeSeparation * closeSeparation;

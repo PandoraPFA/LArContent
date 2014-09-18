@@ -20,6 +20,12 @@ namespace lar_content
  */
 class TwoDSlidingFitSplittingAlgorithm : public ClusterSplittingAlgorithm
 {
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    TwoDSlidingFitSplittingAlgorithm();
+
 protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

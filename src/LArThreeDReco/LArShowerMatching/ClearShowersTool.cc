@@ -15,6 +15,17 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClearShowersTool::ClearShowersTool() :
+    m_minMatchedFraction(0.2f),
+    m_minMatchedSamplingPoints(40),
+    m_minXOverlapFraction(0.5f),
+    m_minMatchedSamplingPointRatio(2),
+    m_minXOverlapSpanRatio(2.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ClearShowersTool::HasLargeDirectConnections(IteratorList::const_iterator iIter, const IteratorList &iteratorList)
 {
     for (IteratorList::const_iterator iIter2 = iteratorList.begin(), iIter2End = iteratorList.end(); iIter2 != iIter2End; ++iIter2)
@@ -143,23 +154,18 @@ void ClearShowersTool::SelectLargeShowerElements(const TensorType::ElementList &
 
 StatusCode ClearShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 40;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minXOverlapFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-    m_minMatchedSamplingPointRatio = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
-    m_minXOverlapSpanRatio = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapSpanRatio", m_minXOverlapSpanRatio));
 

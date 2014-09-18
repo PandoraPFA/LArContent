@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    DeltaRaySplittingAlgorithm();
+
 private:
     void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &replacementSlidingFit, 
         pandora::CartesianVector &replacementStartPosition, pandora::CartesianVector &branchSplitPosition, 

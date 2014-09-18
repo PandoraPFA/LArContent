@@ -14,6 +14,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClearTracksTool::ClearTracksTool() :
+    m_minMatchedFraction(0.9f),
+    m_minXOverlapFraction(0.9f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -65,11 +73,9 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAl
 
 StatusCode ClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minXOverlapFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 

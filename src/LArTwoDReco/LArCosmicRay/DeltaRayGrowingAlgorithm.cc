@@ -18,6 +18,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+DeltaRayGrowingAlgorithm::DeltaRayGrowingAlgorithm() :
+    m_minCaloHitsPerCluster(2),
+    m_minSeedClusterCaloHits(5),
+    m_maxSeedClusterLength(10.f),
+    m_maxSeedClusterDisplacement(1.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void DeltaRayGrowingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -117,19 +127,15 @@ StatusCode DeltaRayGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentPfoListName", m_parentPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterPfoListName", m_daughterPfoListName));
 
-    m_minCaloHitsPerCluster = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    m_minSeedClusterCaloHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSeedClusterCaloHits", m_minSeedClusterCaloHits));
 
-    m_maxSeedClusterLength = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSeedClusterLength", m_maxSeedClusterLength));
 
-    m_maxSeedClusterDisplacement = 1.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSeedClusterDisplacement", m_maxSeedClusterDisplacement));
 

@@ -23,6 +23,11 @@ class ThreeDHitCreationAlgorithm;
 class ShowerHitsBaseTool : public HitCreationBaseTool
 {
 public:
+    /**
+     *  @brief  Default constructor
+     */
+    ShowerHitsBaseTool();
+
     virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 

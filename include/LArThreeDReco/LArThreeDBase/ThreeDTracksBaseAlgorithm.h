@@ -27,6 +27,16 @@ class ThreeDTracksBaseAlgorithm : public ThreeDBaseAlgorithm<T>
 {
 public:
     /**
+     *  @brief  Default constructor
+     */
+    ThreeDTracksBaseAlgorithm();
+
+    /**
+     *  @brief  Destructor
+     */
+    virtual ~ThreeDTracksBaseAlgorithm();
+
+    /**
      *  @brief  Get a sliding fit result from the algorithm cache
      * 
      *  @param  pCluster address of the relevant cluster

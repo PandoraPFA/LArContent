@@ -17,6 +17,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+CheatingPfoCreationAlgorithm::CheatingPfoCreationAlgorithm() :
+    m_useOnlyAvailableClusters(true),
+    m_minGoodHitTypes(0),
+    m_nHitsForGoodHitType(10)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingPfoCreationAlgorithm::Run()
 {
     const ClusterList *pInputClusterListU(NULL), *pInputClusterListV(NULL), *pInputClusterListW(NULL);
@@ -175,7 +184,6 @@ StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "IdOffsetW", m_idOffsetW));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticle3DListName", m_mcParticle3DListName));
 
-    m_useOnlyAvailableClusters = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseOnlyAvailableClusters", m_useOnlyAvailableClusters));
 
@@ -185,11 +193,9 @@ StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 
     m_particleIdList.insert(particleIdVector.begin(), particleIdVector.end());
 
-    m_minGoodHitTypes = 0;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinGoodHitTypes", m_minGoodHitTypes));
 
-    m_nHitsForGoodHitType = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NHitsForGoodHitType", m_nHitsForGoodHitType));
 

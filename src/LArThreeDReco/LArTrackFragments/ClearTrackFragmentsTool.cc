@@ -17,6 +17,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClearTrackFragmentsTool::ClearTrackFragmentsTool() :
+    m_minMatchedSamplingPointFraction(0.5f),
+    m_minMatchedHits(5)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -406,11 +414,9 @@ void ClearTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTe
 
 StatusCode ClearTrackFragmentsTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedSamplingPointFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointFraction", m_minMatchedSamplingPointFraction));
 
-    m_minMatchedHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedHits", m_minMatchedHits));
 

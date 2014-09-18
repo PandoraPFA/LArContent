@@ -15,6 +15,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+SimpleShowersTool::SimpleShowersTool() :
+    m_minMatchedFraction(0.2f),
+    m_minMatchedSamplingPoints(40),
+    m_minXOverlapFraction(0.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool SimpleShowersTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -90,15 +99,12 @@ bool SimpleShowersTool::PassesElementCuts(TensorType::ElementList::const_iterato
 
 StatusCode SimpleShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 40;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minXOverlapFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 

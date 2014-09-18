@@ -17,6 +17,17 @@ using namespace pandora;
 namespace lar_content
 {
 
+ListPreparationAlgorithm::ListPreparationAlgorithm() :
+    m_mipEquivalentCut(0.f),
+    m_onlyAvailableCaloHits(true),
+    m_inputCaloHitListName("Input"),
+    m_mcNeutrinoSelection(false),
+    m_inputMCParticleListName("Input")
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ListPreparationAlgorithm::Run()
 {
     if (!this->GetPandora().GetSettings()->SingleHitTypeClusteringMode())
@@ -231,63 +242,48 @@ void ListPreparationAlgorithm::ProcessMCParticles()
 
 StatusCode ListPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_mipEquivalentCut = 0.25f; // mips
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MipEquivalentCut", m_mipEquivalentCut));
 
-    m_onlyAvailableCaloHits = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OnlyAvailableCaloHits", m_onlyAvailableCaloHits));
 
-    m_inputCaloHitListName = "Input";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InputCaloHitListName", m_inputCaloHitListName));
 
-    m_outputCaloHitListNameU.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputCaloHitListNameU", m_outputCaloHitListNameU));
 
-    m_outputCaloHitListNameV.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputCaloHitListNameV", m_outputCaloHitListNameV));
 
-    m_outputCaloHitListNameW.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputCaloHitListNameW", m_outputCaloHitListNameW));
 
-    m_filteredCaloHitListName.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "FilteredCaloHitListName", m_filteredCaloHitListName));
 
-    m_currentCaloHitListReplacement.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "CurrentCaloHitListReplacement", m_currentCaloHitListReplacement));
 
-    m_mcNeutrinoSelection = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MCNeutrinoSelection", m_mcNeutrinoSelection));
 
-    m_inputMCParticleListName = "Input";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InputMCParticleListName", m_inputMCParticleListName));
 
-    m_outputMCParticleListNameU.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputMCParticleListNameU", m_outputMCParticleListNameU));
 
-    m_outputMCParticleListNameV.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputMCParticleListNameV", m_outputMCParticleListNameV));
 
-    m_outputMCParticleListNameW.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputMCParticleListNameW", m_outputMCParticleListNameW));
 
-    m_outputMCParticleListName3D.clear();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputMCParticleListName3D", m_outputMCParticleListName3D));
 
-    m_currentMCParticleListReplacement.clear();
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CurrentMCParticleListReplacement", m_currentMCParticleListReplacement));
 

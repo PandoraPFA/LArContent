@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    LayerSplittingAlgorithm();
+
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
@@ -61,8 +66,8 @@ private:
      */
     float CalculateRms(const pandora::Cluster *const pCluster, const unsigned int &firstLayer, const unsigned int& secondLayer) const;
 
-    unsigned int    m_layerWindow;            ///<
     unsigned int    m_minClusterLayers;       ///<
+    unsigned int    m_layerWindow;            ///<
     float           m_maxScatterRms;          ///<
     float           m_maxScatterCosTheta;     ///<
     float           m_maxSlidingCosTheta;     ///<

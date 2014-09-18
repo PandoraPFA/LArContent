@@ -15,6 +15,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+ShowerTensorVisualizationTool::ShowerTensorVisualizationTool() :
+    m_minClusterConnections(1),
+    m_ignoreUnavailableClusters(true),
+    m_showEachIndividualElement(false),
+    m_showContext(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -98,19 +108,15 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, Tens
 
 StatusCode ShowerTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterConnections = 1;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterConnections", m_minClusterConnections));
 
-    m_ignoreUnavailableClusters = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IgnoreUnavailableClusters", m_ignoreUnavailableClusters));
 
-    m_showEachIndividualElement = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowEachIndividualElement", m_showEachIndividualElement));
 
-    m_showContext = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowContext", m_showContext));
 

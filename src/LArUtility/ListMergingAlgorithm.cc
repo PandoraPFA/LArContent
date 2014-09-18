@@ -82,11 +82,6 @@ StatusCode ListMergingAlgorithm::Run()
 
 StatusCode ListMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_sourceClusterListNames.clear();
-    m_targetClusterListNames.clear();
-    m_sourcePfoListNames.clear();
-    m_targetPfoListNames.clear();
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "SourceClusterListNames", m_sourceClusterListNames));
 

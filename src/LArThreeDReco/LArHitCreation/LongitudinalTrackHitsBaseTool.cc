@@ -18,6 +18,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+LongitudinalTrackHitsBaseTool::LongitudinalTrackHitsBaseTool() :
+    m_vtxDisplacementCutSquared(5.f * 5.f),
+    m_minTrackLengthSquared(7.5f * 7.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits,
     const MatchedSlidingFitMap &inputSlidingFitMap, CaloHitList &newThreeDHits) const
 {
@@ -210,14 +218,14 @@ void LongitudinalTrackHitsBaseTool::UpdateBestPosition(const HitType hitType1, c
 
 StatusCode LongitudinalTrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    float vtxDisplacementCut = 5.f;
+    float vtxDisplacementCut = std::sqrt(m_vtxDisplacementCutSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexDisplacementCut", vtxDisplacementCut));
     m_vtxDisplacementCutSquared = vtxDisplacementCut * vtxDisplacementCut;
 
-    float minTrackLength = 7.5f;
+    float minTrackLength = std::sqrt(m_minTrackLengthSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ChiSquaredCut", minTrackLength));
+        "MinTrackLength", minTrackLength));
     m_minTrackLengthSquared =  minTrackLength * minTrackLength;
 
     return TrackHitsBaseTool::ReadSettings(xmlHandle);

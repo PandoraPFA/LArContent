@@ -30,6 +30,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    TransverseAssociationAlgorithm();
+
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
@@ -314,8 +319,8 @@ private:
     float          m_clusterTanAngle;                  ///<
 
     float          m_maxTransverseOverlap;             ///<
-    float          m_maxLongitudinalOverlap;           ///<
     float          m_maxProjectedOverlap;              ///<
+    float          m_maxLongitudinalOverlap;           ///<
 
     float          m_transverseClusterMinCosTheta;     ///<
     float          m_transverseClusterMinLength;       ///<

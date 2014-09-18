@@ -32,6 +32,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    CosmicRayExtensionAlgorithm();
+
 private:
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
     void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
@@ -61,8 +66,8 @@ private:
 
     float    m_minClusterLength;                ///<
     float    m_minSeedClusterLength;            ///<
-    float    m_maxTransverseDisplacement;       ///<
     float    m_maxLongitudinalDisplacement;     ///<
+    float    m_maxTransverseDisplacement;       ///<
     float    m_minCosRelativeAngle;             ///<
     float    m_maxAverageRms;                   ///<
 };

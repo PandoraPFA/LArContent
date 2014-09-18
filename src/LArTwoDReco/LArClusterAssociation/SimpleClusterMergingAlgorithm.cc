@@ -17,6 +17,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+SimpleClusterMergingAlgorithm::SimpleClusterMergingAlgorithm() :
+    m_minCaloHitsPerCluster(10),
+    m_maxClusterSeparation(2.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void SimpleClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -71,11 +79,9 @@ bool SimpleClusterMergingAlgorithm::IsAssociated(const Cluster* const pClusterI,
 
 StatusCode SimpleClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minCaloHitsPerCluster = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    m_maxClusterSeparation = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterSeparation", m_maxClusterSeparation));
 

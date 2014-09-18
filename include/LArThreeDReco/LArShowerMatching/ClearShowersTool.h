@@ -29,6 +29,11 @@ public:
     };
 
     /**
+     *  @brief  Default constructor
+     */
+    ClearShowersTool();
+
+    /**
      *  @brief  Whether a large shower-like element shares clusters with any other long elements
      * 
      *  @param  iIter specifies the large element under consideration

@@ -30,6 +30,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    LongitudinalExtensionAlgorithm();
+
 private:
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
     void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
@@ -50,9 +55,9 @@ private:
     float   m_clusterMinLayerOccupancy;             ///<
     float   m_nodeMaxDisplacement;                  ///<
     float   m_nodeMaxCosRelativeAngle;              ///<
-    float   m_emissionMaxCosRelativeAngle;          ///<
     float   m_emissionMaxLongitudinalDisplacement;  ///<
     float   m_emissionMaxTransverseDisplacement;    ///<
+    float   m_emissionMaxCosRelativeAngle;          ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

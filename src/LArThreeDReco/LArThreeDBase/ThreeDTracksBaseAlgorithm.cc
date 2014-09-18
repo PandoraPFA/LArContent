@@ -24,6 +24,23 @@ namespace lar_content
 {
 
 template<typename T>
+ThreeDTracksBaseAlgorithm<T>::ThreeDTracksBaseAlgorithm() :
+    m_slidingFitWindow(20),
+    m_minClusterCaloHits(5),
+    m_minClusterLengthSquared(3.f * 3.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+ThreeDTracksBaseAlgorithm<T>::~ThreeDTracksBaseAlgorithm()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
 const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitResult(Cluster *const pCluster) const
 {
     TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
@@ -255,15 +272,13 @@ void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(Cluster *const pClu
 template<typename T>
 StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 
-    m_minClusterCaloHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));
 
-    float minClusterLength = 3.f;
+    float minClusterLength = std::sqrt(m_minClusterLengthSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;

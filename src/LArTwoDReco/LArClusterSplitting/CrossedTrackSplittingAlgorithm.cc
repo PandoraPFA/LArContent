@@ -18,6 +18,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+CrossedTrackSplittingAlgorithm::CrossedTrackSplittingAlgorithm() :
+    m_maxClusterSeparation(2.f),
+    m_maxClusterSeparationSquared(m_maxClusterSeparation * m_maxClusterSeparation),
+    m_minCosRelativeAngle(0.966f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
     CartesianVector &splitPosition, CartesianVector &firstDirection, CartesianVector &secondDirection) const
 {
@@ -186,12 +195,10 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
 
 StatusCode CrossedTrackSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_maxClusterSeparation = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterSeparation", m_maxClusterSeparation));
     m_maxClusterSeparationSquared = m_maxClusterSeparation * m_maxClusterSeparation;
 
-    m_minCosRelativeAngle = 0.966;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
 
