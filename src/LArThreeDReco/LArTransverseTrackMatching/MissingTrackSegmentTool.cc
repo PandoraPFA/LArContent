@@ -24,6 +24,25 @@ using namespace pandora;
 namespace lar_content
 {
 
+MissingTrackSegmentTool::MissingTrackSegmentTool() :
+    m_minMatchedFraction(0.9f),
+    m_minMatchedSamplingPoints(10),
+    m_minMatchedSamplingPointRatio(2),
+    m_minInitialXOverlapFraction(0.75f),
+    m_minFinalXOverlapFraction(0.75f),
+    m_minCaloHitsInCandidateCluster(5),
+    m_pseudoChi2Cut(1.f),
+    m_makePfoMinSamplingPoints(5),
+    m_makePfoMinMatchedSamplingPoints(5),
+    m_makePfoMinMatchedFraction(0.8f),
+    m_makePfoMaxImpactParameter(3.f),
+    m_mergeMaxChi2PerSamplingPoint(0.25f),
+    m_mergeXContainmentTolerance(1.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool MissingTrackSegmentTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -373,55 +392,42 @@ MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
 
 StatusCode MissingTrackSegmentTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.9f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minMatchedSamplingPointRatio = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
-    m_minInitialXOverlapFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinInitialXOverlapFraction", m_minInitialXOverlapFraction));
 
-    m_minFinalXOverlapFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinFinalXOverlapFraction", m_minFinalXOverlapFraction));
 
-    m_minCaloHitsInCandidateCluster = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsInCandidateCluster", m_minCaloHitsInCandidateCluster));
 
-    m_pseudoChi2Cut = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    m_makePfoMinSamplingPoints = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MakePfoMinSamplingPoints", m_makePfoMinSamplingPoints));
 
-    m_makePfoMinMatchedSamplingPoints = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MakePfoMinMatchedSamplingPoints", m_makePfoMinMatchedSamplingPoints));
 
-    m_makePfoMinMatchedFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MakePfoMinMatchedFraction", m_makePfoMinMatchedFraction));
 
-    m_makePfoMaxImpactParameter = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MakePfoMaxImpactParameter", m_makePfoMaxImpactParameter));
 
-    m_mergeMaxChi2PerSamplingPoint = 0.25f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MergeMaxChi2PerSamplingPoint", m_mergeMaxChi2PerSamplingPoint));
 
-    m_mergeXContainmentTolerance = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MergeXContainmentTolerance", m_mergeXContainmentTolerance));
 

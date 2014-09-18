@@ -17,6 +17,24 @@ using namespace pandora;
 namespace lar_content
 {
 
+TransverseAssociationAlgorithm::TransverseAssociationAlgorithm() :
+    m_firstLengthCut(1.5f),
+    m_secondLengthCut(7.5f),
+    m_clusterWindow(3.f),
+    m_clusterAngle(45.f),
+    m_clusterCosAngle(std::cos(m_clusterAngle * M_PI / 180.f)),
+    m_clusterTanAngle(std::tan(m_clusterAngle * M_PI / 180.f)),
+    m_maxTransverseOverlap(0.5f),
+    m_maxProjectedOverlap(1.f),
+    m_maxLongitudinalOverlap(1.5f),
+    m_transverseClusterMinCosTheta(0.866f),
+    m_transverseClusterMinLength(0.5f),
+    m_transverseClusterMaxDisplacement(1.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TransverseAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     clusterVector.clear();
@@ -366,7 +384,7 @@ bool TransverseAssociationAlgorithm::IsOverlapping(const Cluster *const pInnerCl
     const float innerOverlapSquared((innerProjection - innerOuter).GetMagnitudeSquared());
     const float outerOverlapSquared((outerProjection - outerInner).GetMagnitudeSquared());
 
-    return (std::max(innerOverlapSquared,outerOverlapSquared) > m_maxProjectedOverlap * m_maxProjectedOverlap);
+    return (std::max(innerOverlapSquared, outerOverlapSquared) > m_maxProjectedOverlap * m_maxProjectedOverlap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -740,46 +758,42 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(Clust
 
 StatusCode TransverseAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_firstLengthCut = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FirstLengthCut", m_firstLengthCut));
 
-    m_secondLengthCut = 7.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SecondLengthCut", m_secondLengthCut));
 
-    m_clusterWindow = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterWindow", m_clusterWindow));
 
-    m_clusterAngle = 45.f;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "clusterAngle", m_clusterAngle));
+    const StatusCode angleStatusCode(XmlHelper::ReadValue(xmlHandle, "clusterAngle", m_clusterAngle));
 
-    m_clusterCosAngle = std::cos(m_clusterAngle * M_PI / 180.f);
-    m_clusterTanAngle = std::tan(m_clusterAngle * M_PI / 180.f);
+    if (STATUS_CODE_SUCCESS == angleStatusCode)
+    {
+        m_clusterCosAngle = std::cos(m_clusterAngle * M_PI / 180.f);
+        m_clusterTanAngle = std::tan(m_clusterAngle * M_PI / 180.f);
+    }
+    else if (STATUS_CODE_NOT_FOUND != angleStatusCode)
+    {
+        return angleStatusCode;
+    }
 
-    m_maxTransverseOverlap = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseOverlap", m_maxTransverseOverlap));
 
-    m_maxProjectedOverlap = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxProjectedOverlap", m_maxProjectedOverlap));
 
-    m_maxLongitudinalOverlap = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalOverlap", m_maxLongitudinalOverlap));
 
-    m_transverseClusterMinCosTheta = 0.866f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TransverseClusterMinCosTheta", m_transverseClusterMinCosTheta));
 
-    m_transverseClusterMinLength = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TransverseClusterMinLength", m_transverseClusterMinLength));
 
-    m_transverseClusterMaxDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TransverseClusterMaxDisplacement", m_transverseClusterMaxDisplacement));
 

@@ -17,6 +17,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClusterAssociationAlgorithm::ClusterAssociationAlgorithm() :
+    m_resolveAmbiguousAssociations(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ClusterAssociationAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -123,21 +130,9 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
 
     ClusterList firstClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pCluster, isForward, pExtremalCluster, firstClusterList);
-// ClusterList tempList1; tempList1.insert(pCluster);
-// ClusterList tempList2; tempList2.insert(pExtremalCluster);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-// PANDORA_MONITORING_API(VisualizeClusters(&firstClusterList, "ForwardProp", GREEN));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "InitialCluster", RED));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "ExtremalCluster", BLUE));
-// PANDORA_MONITORING_API(ViewEvent());
 
     ClusterList secondClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pExtremalCluster, !isForward, pExtremalCluster, secondClusterList);
-// ClusterList tempList3; tempList3.insert(pExtremalCluster);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-// PANDORA_MONITORING_API(VisualizeClusters(&secondClusterList, "BackwardProp", GREEN));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList3, "ExtremalCluster", BLUE));
-// PANDORA_MONITORING_API(ViewEvent());
 
     ClusterList daughterClusterList;
 
@@ -149,15 +144,6 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
                 daughterClusterList.insert(*fIter);
         }
     }
-
-// if ( daughterClusterList.empty() == false )
-// {
-// ClusterList tempList; tempList.insert(pCluster);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, false, -1, 1));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList, "PrimaryCluster", GREEN));
-// PANDORA_MONITORING_API(VisualizeClusters(&daughterClusterList, "Daughters", BLUE));
-// PANDORA_MONITORING_API(ViewEvent());
-// }
 
     for (ClusterList::const_iterator dIter = daughterClusterList.begin(), dIterEnd = daughterClusterList.end(); dIter != dIterEnd; ++dIter)
     {
@@ -299,7 +285,6 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
 
 StatusCode ClusterAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_resolveAmbiguousAssociations = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ResolveAmbiguousAssociations", m_resolveAmbiguousAssociations));
 

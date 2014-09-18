@@ -38,6 +38,11 @@ public:
     };
 
     /**
+     *  @brief  Default constructor
+     */
+    ThreeDTransverseTracksAlgorithm();
+
+    /**
      *  @brief  Sort tensor elements by number of matched sampling points, using matched fraction then xoverlap span to resolve ties
      *
      *  @param  lhs the first tensor element
@@ -114,6 +119,9 @@ private:
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    typedef std::vector<TransverseTensorTool*> TensorToolList;
+    TensorToolList              m_algorithmToolList;        ///< The algorithm tool list
+
     unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
@@ -121,9 +129,6 @@ private:
     float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
     unsigned int                m_minOverallMatchedPoints;  ///< The minimum number of matched segment sampling points to allow particle creation
     float                       m_minSamplingPointsPerLayer;///< The minimum number of sampling points per layer to allow particle creation
-
-    typedef std::vector<TransverseTensorTool*> TensorToolList;
-    TensorToolList              m_algorithmToolList;        ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

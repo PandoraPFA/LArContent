@@ -17,6 +17,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClusterGrowingAlgorithm::ClusterGrowingAlgorithm() :
+    m_maxClusterSeparation(2.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ClusterGrowingAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -140,11 +147,9 @@ void ClusterGrowingAlgorithm::MergeClusters(const ClusterMergeMap &clusterMergeM
 
 StatusCode ClusterGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_inputClusterListName.clear();
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InputClusterListName", m_inputClusterListName));
 
-    m_maxClusterSeparation = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterSeparation", m_maxClusterSeparation));
 

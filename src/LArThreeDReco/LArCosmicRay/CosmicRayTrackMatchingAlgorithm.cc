@@ -18,6 +18,17 @@ using namespace pandora;
 namespace lar_content
 {
 
+CosmicRayTrackMatchingAlgorithm::CosmicRayTrackMatchingAlgorithm() :
+    m_clusterMinLength(10.f),
+    m_vtxXOverlap(3.f),
+    m_minXOverlap(3.f),
+    m_minXOverlapFraction(0.8f),
+    m_maxDisplacement(10.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CosmicRayTrackMatchingAlgorithm::Run()
 {
     // Get the available clusters for each view
@@ -479,23 +490,18 @@ StatusCode CosmicRayTrackMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
 
-    m_clusterMinLength = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterMinLength", m_clusterMinLength));
 
-    m_vtxXOverlap = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VtxXOverlap", m_vtxXOverlap));
 
-    m_minXOverlap = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlap", m_minXOverlap));
 
-    m_minXOverlapFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-    m_maxDisplacement = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxDisplacement", m_maxDisplacement));
 

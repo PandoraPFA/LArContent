@@ -20,6 +20,19 @@ using namespace pandora;
 namespace lar_content
 {
 
+ThreeDShowersAlgorithm::ThreeDShowersAlgorithm() :
+    m_nMaxTensorToolRepeats(5000),
+    m_slidingFitWindow(20),
+    m_ignoreUnavailableClusters(true),
+    m_minClusterCaloHits(5),
+    m_minClusterLengthSquared(3.f * 3.f),
+    m_minShowerMatchedFraction(0.2f),
+    m_minShowerMatchedPoints(20)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ThreeDShowersAlgorithm::SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs)
 {
     if (lhs.GetOverlapResult().GetNMatchedSamplingPoints() != rhs.GetOverlapResult().GetNMatchedSamplingPoints())
@@ -387,7 +400,7 @@ int ThreeDShowersAlgorithm::XSampling::GetBin(const float x) const
 StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolList algorithmToolList;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "ShowerTools", algorithmToolList));
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
@@ -400,32 +413,26 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         m_algorithmToolList.push_back(pShowerTensorTool);
     }
 
-    m_nMaxTensorToolRepeats = 5000;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 
-    m_ignoreUnavailableClusters = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IgnoreUnavailableClusters", m_ignoreUnavailableClusters));
 
-    m_minClusterCaloHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));
 
-    float minClusterLength = 3.f;
+    float minClusterLength = std::sqrt(m_minClusterLengthSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
-    m_minShowerMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinShowerMatchedFraction", m_minShowerMatchedFraction));
 
-    m_minShowerMatchedPoints = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinShowerMatchedPoints", m_minShowerMatchedPoints));
 

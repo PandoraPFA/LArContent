@@ -22,6 +22,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+ConeBasedMergingAlgorithm::ConeBasedMergingAlgorithm() :
+    m_slidingFitWindow(20),
+    m_coneAngleCentile(0.25f),
+    m_maxConeLengthMultiplier(1.5f),
+    m_minBoundedFraction(0.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
     const ClusterToListNameMap &clusterToListNameMap) const
 {
@@ -206,19 +216,15 @@ float ConeBasedMergingAlgorithm::ConeParameters::GetConeAxisProjection(const Car
 
 StatusCode ConeBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "SlidingFitWindow", m_slidingFitWindow));
 
-    m_coneAngleCentile = 0.25f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "ConeAngleCentile", m_coneAngleCentile));
 
-    m_maxConeLengthMultiplier = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
 
-    m_minBoundedFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinBoundedFraction", m_minBoundedFraction));
 

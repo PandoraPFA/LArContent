@@ -15,6 +15,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClusteringParentAlgorithm::ClusteringParentAlgorithm() :
+    m_restoreOriginalCaloHitList(false),
+    m_replaceCurrentClusterList(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ClusteringParentAlgorithm::Run()
 {
     // If specified, change the current calo hit list, i.e. the input to the clustering algorithm
@@ -77,7 +85,6 @@ StatusCode ClusteringParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterListName", m_clusterListName));
 
-    m_replaceCurrentClusterList = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentClusterList", m_replaceCurrentClusterList));
 

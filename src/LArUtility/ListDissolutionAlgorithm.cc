@@ -15,6 +15,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+ListDissolutionAlgorithm::ListDissolutionAlgorithm() :
+    m_warnIfClustersUnavailable(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ListDissolutionAlgorithm::Run()
 {
     for (StringVector::const_iterator iter = m_pfoListNames.begin(), iterEnd = m_pfoListNames.end(); iter != iterEnd; ++iter)
@@ -84,16 +91,12 @@ StatusCode ListDissolutionAlgorithm::Run()
 
 StatusCode ListDissolutionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_pfoListNames.clear();
-    m_clusterListNames.clear();
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "PfoListNames", m_pfoListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "ClusterListNames", m_clusterListNames));
 
-    m_warnIfClustersUnavailable = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "WarnIfClustersUnavailable", m_warnIfClustersUnavailable));
 

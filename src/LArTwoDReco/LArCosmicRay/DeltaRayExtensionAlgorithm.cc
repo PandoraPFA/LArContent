@@ -17,6 +17,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+DeltaRayExtensionAlgorithm::DeltaRayExtensionAlgorithm() :
+    m_minClusterLength(1.f),
+    m_maxClusterLength(10.f),
+    m_maxLongitudinalDisplacement(2.5f),
+    m_maxTransverseDisplacement(1.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void DeltaRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -327,19 +337,15 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
 
 StatusCode DeltaRayExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterLength = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", m_minClusterLength));
 
-    m_maxClusterLength = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterLength", m_maxClusterLength));
 
-    m_maxLongitudinalDisplacement = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    m_maxTransverseDisplacement = 1.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 

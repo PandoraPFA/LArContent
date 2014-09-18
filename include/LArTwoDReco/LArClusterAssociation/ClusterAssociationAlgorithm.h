@@ -18,6 +18,12 @@ namespace lar_content
  */
 class ClusterAssociationAlgorithm : public pandora::Algorithm
 {
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    ClusterAssociationAlgorithm();
+
 protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

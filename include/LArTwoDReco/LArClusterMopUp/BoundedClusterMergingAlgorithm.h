@@ -33,6 +33,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    BoundedClusterMergingAlgorithm();
+
 private:
     /**
      *  @brief  XSampling class

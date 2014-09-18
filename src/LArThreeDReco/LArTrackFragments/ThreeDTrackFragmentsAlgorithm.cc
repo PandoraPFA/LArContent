@@ -20,6 +20,18 @@ using namespace pandora;
 namespace lar_content
 {
 
+ThreeDTrackFragmentsAlgorithm::ThreeDTrackFragmentsAlgorithm() :
+    m_nMaxTensorToolRepeats(5000),
+    m_minXOverlap(3.f),
+    m_minXOverlapFraction(0.8f),
+    m_maxPointDisplacementSquared(1.5f * 1.5f),
+    m_minMatchedSamplingPointFraction(0.5f),
+    m_minMatchedHits(5)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
 {
     try
@@ -562,7 +574,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
         "ClusterRebuilding", m_reclusteringAlgorithmName));
 
     AlgorithmToolList algorithmToolList;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "TrackTools", algorithmToolList));
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
@@ -575,28 +587,23 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
         m_algorithmToolList.push_back(pFragmentTensorTool);
     }
 
-    m_nMaxTensorToolRepeats = 5000;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    m_minXOverlap = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlap", m_minXOverlap));
 
-    m_minXOverlapFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-    float maxPointDisplacement = 1.5f;
+    float maxPointDisplacement = std::sqrt(m_maxPointDisplacementSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxPointDisplacement", maxPointDisplacement));
     m_maxPointDisplacementSquared = maxPointDisplacement * maxPointDisplacement;
 
-    m_minMatchedSamplingPointFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointFraction", m_minMatchedSamplingPointFraction));
 
-    m_minMatchedHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedHits", m_minMatchedHits));
 

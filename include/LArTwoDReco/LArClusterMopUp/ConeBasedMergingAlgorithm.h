@@ -30,6 +30,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    ConeBasedMergingAlgorithm();
+
 private:
     /**
      *  @brief  ConeParameters class
@@ -164,8 +169,8 @@ private:
 
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
     float           m_coneAngleCentile;         ///< Cluster cone angle is defined using specified centile of distribution of hit cos half angles
-    float           m_minBoundedFraction;       ///< The minimum cluster bounded fraction for merging
     float           m_maxConeLengthMultiplier;  ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
+    float           m_minBoundedFraction;       ///< The minimum cluster bounded fraction for merging
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    SimpleClusterCreationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 
@@ -71,9 +76,6 @@ private:
         pandora::CaloHitList &mergeList) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    std::string          m_inputCaloHitListName;         ///< The input calo hit list name
-    std::string          m_outputClusterListName;        ///< The output cluster list name
 
     float                m_clusteringWindowSquared;      ///< Maximum distance (squared) for two hits to be joined
 };

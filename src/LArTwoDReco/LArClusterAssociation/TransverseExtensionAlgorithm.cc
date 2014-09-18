@@ -18,6 +18,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+TransverseExtensionAlgorithm::TransverseExtensionAlgorithm() :
+    m_minClusterLength(5.f),
+    m_maxLongitudinalDisplacement(10.f),
+    m_maxTransverseDisplacement(1.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void TransverseExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
@@ -197,15 +205,12 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 
 StatusCode TransverseExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterLength = 5.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
     "MinClusterLength", m_minClusterLength));
 
-    m_maxLongitudinalDisplacement = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
     "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    m_maxTransverseDisplacement = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
     "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 

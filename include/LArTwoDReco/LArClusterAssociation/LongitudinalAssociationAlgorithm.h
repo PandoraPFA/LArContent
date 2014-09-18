@@ -32,6 +32,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    LongitudinalAssociationAlgorithm();
+
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;

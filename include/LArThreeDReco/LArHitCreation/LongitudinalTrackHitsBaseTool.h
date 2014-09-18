@@ -18,6 +18,12 @@ namespace lar_content
  */
 class LongitudinalTrackHitsBaseTool : public TrackHitsBaseTool
 {
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    LongitudinalTrackHitsBaseTool();
+
 protected:
     /**
      *  @brief  Create three dimensional hits, using an input list of two dimensional hits and two associated sliding fit results

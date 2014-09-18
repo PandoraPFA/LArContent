@@ -49,7 +49,7 @@ public:
     /**
      *  @brief  Destructor
      */
-    ~TrackOverlapResult();
+    virtual ~TrackOverlapResult();
 
     /**
      *  @brief  Whether the track overlap result has been initialized

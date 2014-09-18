@@ -22,11 +22,4 @@ void ClusterExtensionAlgorithm::PopulateClusterMergeMap(const ClusterVector &clu
     this->FillClusterMergeMap(clusterAssociationMatrix, clusterMergeMap);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode ClusterExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    return ClusterMergingAlgorithm::ReadSettings(xmlHandle);
-}
-
 } // namespace lar_content

@@ -20,6 +20,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+TwoDSlidingFitConsolidationAlgorithm::TwoDSlidingFitConsolidationAlgorithm() :
+    m_minTrackLength(7.5f),
+    m_maxClusterLength(15.f),
+    m_halfWindowLayers(25)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -203,15 +212,12 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::ReadSettings(const TiXmlHandle 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "ClusterRebuilding", m_reclusteringAlgorithmName));
 
-    m_minTrackLength = 7.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinTrackLength", m_minTrackLength));
 
-    m_maxClusterLength = 15.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterLength", m_maxClusterLength));
 
-    m_halfWindowLayers = 25;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
 

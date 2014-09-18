@@ -15,6 +15,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+TrackConsolidationAlgorithm::TrackConsolidationAlgorithm() :
+    m_maxTransverseDisplacement(1.f),
+    m_minAssociatedSpan(1.f),
+    m_minAssociatedFraction(0.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultList &slidingFitResultListI,
     const ClusterVector &showerClustersJ, ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
@@ -129,15 +138,12 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult&
 
 StatusCode TrackConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_maxTransverseDisplacement = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    m_minAssociatedSpan = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinAssociatedSpan", m_minAssociatedSpan));
 
-    m_minAssociatedFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinAssociatedFraction", m_minAssociatedFraction));
 
