@@ -22,7 +22,11 @@ namespace lar_content
 {
 
 UndershootTracksTool::UndershootTracksTool() :
-    ThreeDKinkBaseTool(2)
+    ThreeDKinkBaseTool(2),
+    m_splitMode(false),
+    m_maxTransverseImpactParameter(5.f),
+    m_minImpactParameterCosTheta(0.5f),
+    m_cosThetaCutForKinkSearch(0.75f)
 {
 }
 
@@ -191,19 +195,15 @@ UndershootTracksTool::Particle::Particle(const TensorType::Element &elementA, co
 
 StatusCode UndershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_splitMode = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SplitMode", m_splitMode));
 
-    m_maxTransverseImpactParameter = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseImpactParameter", m_maxTransverseImpactParameter));
 
-    m_minImpactParameterCosTheta = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinImpactParameterCosTheta", m_minImpactParameterCosTheta));
 
-    m_cosThetaCutForKinkSearch = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
 

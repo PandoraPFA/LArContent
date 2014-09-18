@@ -44,25 +44,6 @@ StatusCode CosmicRayTrackMatchingAlgorithm::Run()
     this->MatchTwoViews(matchedClusterUV, matchedClusterVW, matchedClusterWU, particleList);
     this->BuildParticles(particleList);
 
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempListU, tempListV, tempListW;
-// for (ParticleList::const_iterator iter = particleList.begin(), iterEnd = particleList.end(); iter != iterEnd; ++iter)
-// {
-// const Particle &particle = *iter;
-// Cluster* pClusterU = const_cast<Cluster*>(particle.m_pClusterU);
-// Cluster* pClusterV = const_cast<Cluster*>(particle.m_pClusterV);
-// Cluster* pClusterW = const_cast<Cluster*>(particle.m_pClusterW);
-// if(pClusterU) tempListU.insert(pClusterU);
-// if(pClusterV) tempListV.insert(pClusterV);
-// if(pClusterW) tempListW.insert(pClusterW);
-// }
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempListU, "MatchedClusterU", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempListV, "MatchedClusterV", BLUE);
-// PandoraMonitoringApi::VisualizeClusters(&tempListW, "MatchedClusterW", GREEN);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
     return STATUS_CODE_SUCCESS;
 }
 

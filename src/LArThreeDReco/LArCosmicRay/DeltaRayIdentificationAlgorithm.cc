@@ -167,16 +167,6 @@ bool DeltaRayIdentificationAlgorithm::IsAssociated(const ParticleFlowObject *con
     if (displacement > displacementCut)
         return false;
 
-// --- BEGIN EVENT DISPLAY ---
-// PfoList tempList1, tempList2;
-// tempList1.insert((ParticleFlowObject*)pParentPfo);
-// tempList2.insert((ParticleFlowObject*)pDaughterPfo);
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeParticleFlowObjects(&tempList1, "Parent", RED, false, false);
-// PandoraMonitoringApi::VisualizeParticleFlowObjects(&tempList2, "Daughter", BLUE, false, false);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
     return true;
 }
 

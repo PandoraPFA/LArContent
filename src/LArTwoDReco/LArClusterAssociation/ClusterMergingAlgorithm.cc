@@ -77,6 +77,8 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
             if (!pAssociatedCluster->IsAvailable())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
+            (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
+
             if (m_inputClusterListName.empty())
             {
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
@@ -86,8 +88,6 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
                     m_inputClusterListName, m_inputClusterListName));
             }
-
-            (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
         }
     }
 }

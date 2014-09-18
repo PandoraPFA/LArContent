@@ -20,7 +20,10 @@ namespace lar_content
 {
 
 OvershootTracksTool::OvershootTracksTool() :
-    ThreeDKinkBaseTool(1)
+    ThreeDKinkBaseTool(1),
+    m_splitMode(true),
+    m_maxVertexXSeparation(2.f),
+    m_cosThetaCutForKinkSearch(0.94f)
 {
 }
 
@@ -234,15 +237,12 @@ OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, con
 
 StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_splitMode = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SplitMode", m_splitMode));
 
-    m_maxVertexXSeparation = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexXSeparation", m_maxVertexXSeparation));
 
-    m_cosThetaCutForKinkSearch = 0.94f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
 

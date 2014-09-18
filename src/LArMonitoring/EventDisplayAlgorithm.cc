@@ -128,8 +128,7 @@ Color EventDisplayAlgorithm::GetColor( unsigned int icolor )
     case 6: return GRAY;
     case 7: return TEAL;
     case 8: return AZURE;
-    case 9: return DARKYELLOW;
-    default: return YELLOW;
+    default: return DARKYELLOW;
     }
 
     return YELLOW;
