@@ -392,11 +392,9 @@ StatusCode CosmicRaySplittingAlgorithm::PerformDoubleSplit(Cluster *pBranchClust
     this->GetCaloHitListToKeep(pBranchCluster, caloHitListToMove2, caloHitListToKeep2);
 
     if (caloHitListToKeep2.empty())
-        return STATUS_CODE_FAILURE;
+        return PandoraContentApi::MergeAndDeleteClusters(*this, pReplacementCluster2, pBranchCluster);
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pBranchCluster, pReplacementCluster2, caloHitListToMove2));
-
-    return STATUS_CODE_SUCCESS;
+    return this->SplitCluster(pBranchCluster, pReplacementCluster2, caloHitListToMove2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
