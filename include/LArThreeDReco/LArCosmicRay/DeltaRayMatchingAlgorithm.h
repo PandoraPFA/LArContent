@@ -30,6 +30,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    DeltaRayMatchingAlgorithm();
+
 private:
     pandora::StatusCode Run();
 

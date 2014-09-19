@@ -21,6 +21,20 @@ using namespace pandora;
 namespace lar_content
 {
 
+CosmicRaySplittingAlgorithm::CosmicRaySplittingAlgorithm() :
+    m_clusterMinLength(10.f),
+    m_halfWindowLayers(30),
+    m_samplingPitch(1.f),
+    m_maxCosSplittingAngle(0.9925f),
+    m_minCosMergingAngle(0.94f),
+    m_maxTransverseDisplacement(5.f),
+    m_maxLongitudinalDisplacement(30.f),
+    m_maxLongitudinalDisplacementSquared(m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CosmicRaySplittingAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -113,28 +127,15 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
 
         Cluster *pBranchCluster = const_cast<Cluster*>(branchSlidingFitResult.GetCluster());
 
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempClusterList1, tempClusterList2;
-// tempClusterList1.insert(pBranchCluster);
-// if (pReplacementCluster1) tempClusterList2.insert(pReplacementCluster1);
-// if (pReplacementCluster2) tempClusterList2.insert(pReplacementCluster2);
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempClusterList1, "BranchCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempClusterList2, "ReplacementCluster", BLUE);
-// PandoraMonitoringApi::AddMarkerToVisualization(&splitPosition,"SplitPosition",BLACK,2.5);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
-
         // Crossed tracks
         if (pReplacementCluster1 && pReplacementCluster2)
         {
             if (!(this->IdentifyCrossedTracks(pBranchCluster, pReplacementCluster1, pReplacementCluster2, splitPosition)))
-              continue;
+                continue;
 
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->PerformDoubleSplit(pBranchCluster, pReplacementCluster1,
                 pReplacementCluster2, splitPosition, splitDirection1, splitDirection2));
         }
-
         // Single scatter
         else if (pReplacementCluster1)
         {
@@ -360,30 +361,47 @@ StatusCode CosmicRaySplittingAlgorithm::PerformSingleSplit(Cluster *pBranchClust
     const CartesianVector &splitPosition, const CartesianVector &forwardDirection, const CartesianVector &backwardDirection) const
 {
     CaloHitList caloHitListToMove;
-    this->PerformSingleSplit(pBranchCluster, pReplacementCluster, splitPosition, forwardDirection, backwardDirection, caloHitListToMove);
+    this->GetCaloHitListToMove(pBranchCluster, pReplacementCluster, splitPosition, forwardDirection, backwardDirection, caloHitListToMove);
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pBranchCluster, pReplacementCluster, caloHitListToMove));
+    CaloHitList caloHitListToKeep;
+    this->GetCaloHitListToKeep(pBranchCluster, caloHitListToMove, caloHitListToKeep);
 
-    return STATUS_CODE_SUCCESS;
+    if (caloHitListToKeep.empty())
+        return PandoraContentApi::MergeAndDeleteClusters(*this, pReplacementCluster, pBranchCluster);
+
+    return this->SplitCluster(pBranchCluster, pReplacementCluster, caloHitListToMove);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::PerformDoubleSplit(Cluster* pBranchCluster, Cluster* pReplacementCluster1, Cluster* pReplacementCluster2,
+StatusCode CosmicRaySplittingAlgorithm::PerformDoubleSplit(Cluster *pBranchCluster, Cluster *pReplacementCluster1, Cluster *pReplacementCluster2,
     const CartesianVector &splitPosition, const CartesianVector &splitDirection1, const CartesianVector &splitDirection2) const
 {
-    CaloHitList caloHitList1, caloHitList2;
-    this->PerformDoubleSplit(pBranchCluster, splitPosition, splitDirection1, splitDirection2, caloHitList1, caloHitList2);
+    CaloHitList caloHitListToMove1, caloHitListToMove2;
+    this->GetCaloHitListsToMove(pBranchCluster, splitPosition, splitDirection1, splitDirection2, caloHitListToMove1, caloHitListToMove2);
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pBranchCluster, pReplacementCluster1, caloHitList1));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pBranchCluster, pReplacementCluster2, caloHitList2));
+    CaloHitList caloHitListToKeep1;
+    this->GetCaloHitListToKeep(pBranchCluster, caloHitListToMove1, caloHitListToKeep1);
+
+    if (caloHitListToKeep1.empty())
+        return STATUS_CODE_FAILURE;
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pBranchCluster, pReplacementCluster1, caloHitListToMove1));
+
+    CaloHitList caloHitListToKeep2;
+    this->GetCaloHitListToKeep(pBranchCluster, caloHitListToMove2, caloHitListToKeep2);
+
+    if (caloHitListToKeep2.empty())
+        return STATUS_CODE_FAILURE;
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SplitCluster(pBranchCluster, pReplacementCluster2, caloHitListToMove2));
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRaySplittingAlgorithm::PerformSingleSplit(Cluster *pBranchCluster, Cluster *pReplacementCluster,
+void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster,
     const CartesianVector &splitPosition, const CartesianVector &forwardDirection, const CartesianVector &backwardDirection,
     CaloHitList &caloHitListToMove) const
 {
@@ -435,8 +453,8 @@ void CosmicRaySplittingAlgorithm::PerformSingleSplit(Cluster *pBranchCluster, Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRaySplittingAlgorithm::PerformDoubleSplit(Cluster *pBranchCluster, const CartesianVector &splitPosition,
-    const CartesianVector &splitDirection1, const CartesianVector &splitDirection2, CaloHitList &caloHitList1, CaloHitList &caloHitList2) const
+void CosmicRaySplittingAlgorithm::GetCaloHitListsToMove(const Cluster *const pBranchCluster, const CartesianVector &splitPosition,
+    const CartesianVector &splitDirection1, const CartesianVector &splitDirection2, CaloHitList &caloHitListToMove1, CaloHitList &caloHitListToMove2) const
 {
     CaloHitList caloHitListToSort;
     pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitListToSort);
@@ -450,18 +468,18 @@ void CosmicRaySplittingAlgorithm::PerformDoubleSplit(Cluster *pBranchCluster, co
 
         if (displacement1 > displacement2)
         {
-            caloHitList1.insert(pCaloHit);
+            caloHitListToMove1.insert(pCaloHit);
         }
         else
         {
-            caloHitList2.insert(pCaloHit);
+            caloHitListToMove2.insert(pCaloHit);
         }
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRaySplittingAlgorithm::IdentifyCrossedTracks(Cluster* pBranchCluster, Cluster* pReplacementCluster1, Cluster* pReplacementCluster2,
-    const pandora::CartesianVector &splitPosition) const
+bool CosmicRaySplittingAlgorithm::IdentifyCrossedTracks(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster1,
+    const Cluster *const pReplacementCluster2, const pandora::CartesianVector &splitPosition) const
 {
     CartesianVector branchVertex1(0.f,0.f,0.f), branchVertex2(0.f,0.f,0.f);
     LArClusterHelper::GetExtremalCoordinatesXZ(pBranchCluster,branchVertex1,branchVertex2);
@@ -477,32 +495,38 @@ bool CosmicRaySplittingAlgorithm::IdentifyCrossedTracks(Cluster* pBranchCluster,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(const Cluster *const pBranchCluster, const CaloHitList &caloHitListToMove,
+    CaloHitList &caloHitListToKeep) const
+{
+    if (caloHitListToMove.empty())
+        return STATUS_CODE_FAILURE;
+
+    CaloHitList caloHitList;
+    pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+
+    for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
+    {
+        CaloHit *pCaloHit = *iter;
+
+        if (!caloHitListToMove.count(pCaloHit))
+            caloHitListToKeep.insert(pCaloHit);
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CosmicRaySplittingAlgorithm::SplitCluster(Cluster *pBranchCluster, Cluster *pReplacementCluster, const CaloHitList &caloHitListToMove) const
 {
     if (caloHitListToMove.empty())
         return STATUS_CODE_FAILURE;
 
-    CaloHitList caloHitList, caloHitListToKeep;
-    pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-    for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
+    for (CaloHitList::const_iterator iter = caloHitListToMove.begin(), iterEnd = caloHitListToMove.end(); iter != iterEnd; ++iter)
     {
         CaloHit *pCaloHit = *iter;
-        if (!caloHitListToMove.count(pCaloHit))
-            caloHitListToKeep.insert(pCaloHit);
-    }
-
-    if (caloHitListToKeep.empty())
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pReplacementCluster, pBranchCluster));
-    }
-    else
-    {
-        for (CaloHitList::const_iterator iter = caloHitListToMove.begin(), iterEnd = caloHitListToMove.end(); iter != iterEnd; ++iter)
-        {
-            CaloHit *pCaloHit = *iter;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pBranchCluster, pCaloHit));
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pReplacementCluster, pCaloHit));
-        }
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pBranchCluster, pCaloHit));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pReplacementCluster, pCaloHit));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -512,31 +536,27 @@ StatusCode CosmicRaySplittingAlgorithm::SplitCluster(Cluster *pBranchCluster, Cl
 
 StatusCode CosmicRaySplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_clusterMinLength = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterMinLength", m_clusterMinLength));
 
-    m_halfWindowLayers = 30;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
 
-    m_samplingPitch = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SamplingPitch", m_samplingPitch));
 
-    m_maxCosSplittingAngle = 0.9925;
+    if (m_samplingPitch < std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_INVALID_PARAMETER;
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxCosSplittingAngle", m_maxCosSplittingAngle));
 
-    m_minCosMergingAngle = 0.94;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosMergingAngle", m_minCosMergingAngle));
 
-    m_maxTransverseDisplacement = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    m_maxLongitudinalDisplacement = 30.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
     m_maxLongitudinalDisplacementSquared = m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement;

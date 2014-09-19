@@ -30,6 +30,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    TrackConsolidationAlgorithm();
+
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

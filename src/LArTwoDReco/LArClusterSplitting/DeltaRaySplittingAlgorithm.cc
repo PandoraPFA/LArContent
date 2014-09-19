@@ -17,6 +17,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+DeltaRaySplittingAlgorithm::DeltaRaySplittingAlgorithm() :
+    m_stepSize(1.f),
+    m_maxTransverseDisplacement(1.5f),
+    m_maxLongitudinalDisplacement(10.f),
+    m_minCosRelativeAngle(0.985f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &principalSlidingFit, 
     CartesianVector &principalStartPosition, CartesianVector &branchSplitPosition, CartesianVector &branchSplitDirection) const
 {
@@ -124,19 +134,15 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResul
 
 StatusCode DeltaRaySplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_stepSize = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "StepSize", m_stepSize));
 
-    m_maxTransverseDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    m_maxLongitudinalDisplacement = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    m_minCosRelativeAngle = 0.985;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
 

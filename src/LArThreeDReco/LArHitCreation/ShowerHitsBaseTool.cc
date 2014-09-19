@@ -18,6 +18,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+ShowerHitsBaseTool::ShowerHitsBaseTool() :
+    m_xTolerance(1.f),
+    m_chiSquaredCut(5.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
     CaloHitList &newThreeDHits)
 {
@@ -96,11 +104,9 @@ void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, c
 
 StatusCode ShowerHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_xTolerance = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "XTolerance", m_xTolerance));
 
-    m_chiSquaredCut = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ChiSquaredCut", m_chiSquaredCut));
 

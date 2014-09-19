@@ -20,7 +20,13 @@ namespace lar_content
 {
 
 ThreeDKinkBaseTool::ThreeDKinkBaseTool(const unsigned int nCommonClusters) :
-    m_nCommonClusters(nCommonClusters)
+    m_nCommonClusters(nCommonClusters),
+    m_majorityRulesMode(false),
+    m_minMatchedFraction(0.75f),
+    m_minMatchedSamplingPoints(10),
+    m_minLongitudinalImpactParameter(-1.f),
+    m_nLayersForKinkSearch(10),
+    m_additionalXStepForKinkSearch(0.01f)
 {
     if (!((1 == m_nCommonClusters) || (2 == m_nCommonClusters)))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -257,27 +263,21 @@ void ThreeDKinkBaseTool::SelectTensorElements(TensorType::ElementList::const_ite
 
 StatusCode ThreeDKinkBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_majorityRulesMode = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MajorityRulesMode", m_majorityRulesMode));
 
-    m_minMatchedFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minLongitudinalImpactParameter = -1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinLongitudinalImpactParameter", m_minLongitudinalImpactParameter));
 
-    m_nLayersForKinkSearch = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NLayersForKinkSearch", m_nLayersForKinkSearch));
 
-    m_additionalXStepForKinkSearch = 0.01f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "AdditionalXStepForKinkSearch", m_additionalXStepForKinkSearch));
 

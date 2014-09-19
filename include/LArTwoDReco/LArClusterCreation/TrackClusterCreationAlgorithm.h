@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    TrackClusterCreationAlgorithm();
+
 private:
     /**
      *  @brief  HitAssociation class
@@ -196,9 +201,6 @@ private:
      */
     pandora::CaloHit *TraceHitAssociation(pandora::CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ,
         unsigned int &nSteps) const;
-
-    std::string         m_inputCaloHitListName;         ///< The input calo hit list name
-    std::string         m_outputClusterListName;        ///< The output cluster list name
 
     bool                m_mergeBackFilteredHits;        ///< Merge rejected hits into their associated clusters
     unsigned int        m_maxGapLayers;                 ///< Maximum number of layers for a gap

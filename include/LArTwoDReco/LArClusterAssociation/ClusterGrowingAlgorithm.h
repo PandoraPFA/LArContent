@@ -18,6 +18,12 @@ namespace lar_content
  */
 class ClusterGrowingAlgorithm : public pandora::Algorithm
 {
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    ClusterGrowingAlgorithm();
+
 protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

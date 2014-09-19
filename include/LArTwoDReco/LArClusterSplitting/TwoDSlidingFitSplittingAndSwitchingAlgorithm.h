@@ -20,6 +20,11 @@ namespace lar_content
  */
 class TwoDSlidingFitSplittingAndSwitchingAlgorithm : public pandora::Algorithm
 {
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    TwoDSlidingFitSplittingAndSwitchingAlgorithm();
 
 protected:
     virtual pandora::StatusCode Run();
@@ -38,7 +43,6 @@ protected:
         pandora::CartesianVector &splitPosition, pandora::CartesianVector &direction1, pandora::CartesianVector &direction2) const = 0;
 
 private:
-
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
      *

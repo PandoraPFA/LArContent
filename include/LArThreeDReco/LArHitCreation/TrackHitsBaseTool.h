@@ -25,6 +25,11 @@ class ThreeDHitCreationAlgorithm;
 class TrackHitsBaseTool : public HitCreationBaseTool
 {
 public:
+    /**
+     *  @brief  Default constructor
+     */
+    TrackHitsBaseTool();
+
     virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 

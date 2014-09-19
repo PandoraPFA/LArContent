@@ -15,6 +15,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+KinkSplittingAlgorithm::KinkSplittingAlgorithm() :
+    m_maxScatterRms(0.2f),
+    m_maxScatterCosTheta(0.905f),
+    m_maxSlidingCosTheta(0.985f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, CartesianVector& splitPosition) const
 {
     // Search for scatters by scanning over the layers in the sliding fit result
@@ -77,15 +86,6 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitRes
     if (!foundSplit)
         return STATUS_CODE_NOT_FOUND;
 
-// --- BEGIN DISPLAY ---
-// ClusterList tempList;
-// tempList.insert((Cluster*)slidingFitResult.GetCluster());
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList, "Cluster", GREEN));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&splitPosition, "SplitPosition", RED, 2.75));
-// PANDORA_MONITORING_API(ViewEvent());
-// --- END DISPLAY ---
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -93,15 +93,12 @@ StatusCode KinkSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitRes
 
 StatusCode KinkSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_maxScatterRms = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxScatterRms", m_maxScatterRms));
 
-    m_maxScatterCosTheta = 0.905;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxScatterCosTheta", m_maxScatterCosTheta));
 
-    m_maxSlidingCosTheta = 0.985;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSlidingCosTeta", m_maxSlidingCosTheta));
 

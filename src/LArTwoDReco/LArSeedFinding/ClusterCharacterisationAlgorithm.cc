@@ -19,6 +19,25 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
+    m_minCaloHitsPerCluster(5),
+    m_nearbyClusterDistance(2.5f),
+    m_remoteClusterDistance(10.f),
+    m_useMCFigureOfMerit(false),
+    m_useMCVertexSelection(false),
+    m_useFirstImprovedSeed(false),
+    m_shouldRemoveShowerPfos(true),
+    m_showerLikeNBranches(5),
+    m_showerLikeCaloHitRatio(2.f),
+    m_minVertexLongitudinalDistance(-2.5f),
+    m_maxVertexLongitudinalDistance(25.f),
+    m_maxVertexTransverseDistance(2.5f),
+    m_vertexAngularAllowance(5.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ClusterCharacterisationAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -497,59 +516,45 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
 
-    m_inputPfoListNames.clear();
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "InputPfoListNames", m_inputPfoListNames));
 
-    m_minCaloHitsPerCluster = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    m_nearbyClusterDistance = 2.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NearbyClusterDistance", m_nearbyClusterDistance));
 
-    m_remoteClusterDistance = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "RemoteClusterDistance", m_remoteClusterDistance));
 
-    m_useMCFigureOfMerit = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseMCFigureOfMerit", m_useMCFigureOfMerit));
 
-    m_useMCVertexSelection = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseMCVertexSelection", m_useMCVertexSelection));
 
-    m_useFirstImprovedSeed = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseFirstImprovedSeed", m_useFirstImprovedSeed));
 
-    m_shouldRemoveShowerPfos = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldRemoveShowerPfos", m_shouldRemoveShowerPfos));
 
-    m_showerLikeNBranches = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerLikeNBranches", m_showerLikeNBranches));
 
-    m_showerLikeCaloHitRatio = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerLikeCaloHitRatio", m_showerLikeCaloHitRatio));
 
-    m_minVertexLongitudinalDistance = -2.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
 
-    m_maxVertexLongitudinalDistance = 25.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
 
-    m_maxVertexTransverseDistance = 2.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
 
-    m_vertexAngularAllowance = 5.f; // degrees
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexAngularAllowance", m_vertexAngularAllowance));
 

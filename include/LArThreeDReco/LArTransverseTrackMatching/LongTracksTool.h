@@ -29,6 +29,11 @@ public:
     };
 
     /**
+     *  @brief  Default constructor
+     */
+    LongTracksTool();
+
+    /**
      *  @brief  Whether a long element shares clusters with any other long elements
      * 
      *  @param  iIter specifies the long element under consideration

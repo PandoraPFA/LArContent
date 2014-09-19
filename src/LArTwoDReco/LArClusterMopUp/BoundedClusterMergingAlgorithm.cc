@@ -20,6 +20,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+BoundedClusterMergingAlgorithm::BoundedClusterMergingAlgorithm() :
+    m_slidingFitWindow(20),
+    m_minBoundedFraction(0.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
     const ClusterToListNameMap &clusterToListNameMap) const
 {
@@ -148,11 +156,9 @@ int BoundedClusterMergingAlgorithm::XSampling::GetBin(const float x) const
 
 StatusCode BoundedClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "SlidingFitWindow", m_slidingFitWindow));
 
-    m_minBoundedFraction = 0.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinBoundedFraction", m_minBoundedFraction));
 

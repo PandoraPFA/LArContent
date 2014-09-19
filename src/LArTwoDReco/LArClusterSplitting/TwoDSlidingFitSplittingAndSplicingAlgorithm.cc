@@ -20,6 +20,17 @@ using namespace pandora;
 namespace lar_content
 {
 
+TwoDSlidingFitSplittingAndSplicingAlgorithm::TwoDSlidingFitSplittingAndSplicingAlgorithm() :
+    m_shortHalfWindowLayers(10),
+    m_longHalfWindowLayers(20),
+    m_minClusterLength(7.5f),
+    m_vetoDisplacement(1.5f),
+    m_runCosmicMode(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -354,17 +365,6 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
             replacementResultMap.end() == iterReplacement1 || replacementResultMap.end() == iterReplacement2)
             continue;
 
-// --- BEGIN DISPLAY ---
-// ClusterList tempList1, tempList2;
-// tempList1.insert(pBranchCluster);
-// tempList2.insert(pReplacementCluster);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList1, "BranchCluster", BLUE));
-// PANDORA_MONITORING_API(VisualizeClusters(&tempList2, "ReplacementCluster", GREEN));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(&branchSplitPosition, "BranchStartPosition", RED, 2.75));
-// PANDORA_MONITORING_API(ViewEvent());
-// --- END DISPLAY ---
-
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
                                                                               branchSplitPosition, branchSplitDirection));
         branchResultMap.erase(iterBranch1);
@@ -415,23 +415,18 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(Cluster *c
 
 StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_shortHalfWindowLayers = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShortHalfWindow", m_shortHalfWindowLayers));
 
-    m_longHalfWindowLayers = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LongHalfWindow", m_longHalfWindowLayers));
 
-    m_minClusterLength = 7.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", m_minClusterLength));
 
-    m_vetoDisplacement = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VetoDisplacement", m_vetoDisplacement));
 
-    m_runCosmicMode = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CosmicMode", m_runCosmicMode));
 

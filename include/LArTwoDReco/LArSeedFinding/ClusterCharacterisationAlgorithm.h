@@ -32,6 +32,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    ClusterCharacterisationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 

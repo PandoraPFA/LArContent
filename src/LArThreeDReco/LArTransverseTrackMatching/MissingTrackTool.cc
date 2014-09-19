@@ -14,6 +14,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+MissingTrackTool::MissingTrackTool() :
+    m_minMatchedSamplingPoints(15),
+    m_minMatchedFraction(0.95f),
+    m_maxReducedChiSquared(0.707f),
+    m_minXOverlapFraction(0.75f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -106,19 +116,15 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
 
 StatusCode MissingTrackTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedSamplingPoints = 15;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minMatchedFraction = 0.95f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_maxReducedChiSquared = 0.707f; // Based upon an agressive sigmaUVW of 0.5cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxReducedChiSquared", m_maxReducedChiSquared));
 
-    m_minXOverlapFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 

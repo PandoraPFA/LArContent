@@ -18,6 +18,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+TransverseExtensionAlgorithm::TransverseExtensionAlgorithm() :
+    m_minClusterLength(5.f),
+    m_maxLongitudinalDisplacement(10.f),
+    m_maxTransverseDisplacement(1.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void TransverseExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
@@ -112,20 +120,6 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
             figureOfMerit = outerL;
         }
 
-// --- BEGIN DISPLAY ---
-// if(associationType != ClusterAssociation::NONE)
-// {
-// if (associationType == ClusterAssociation::WEAK) std::cout << " WEAK " << std::endl; else std::cout << " STRONG " << std::endl;
-// std::cout << " RMS=" << pointingVertex.GetRms() << std::endl;
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", GREEN);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-// --- END DISPLAY ---
         (void) clusterAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster,
                ClusterAssociation(vertexType, vertexType, associationType, figureOfMerit)));
     }
@@ -203,16 +197,6 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
         {
             clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
             clusterMergeMap[pDaughterCluster].insert(pParentCluster);
-
-// --- BEGIN DISPLAY ---
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(0, 0, -1.f, 1.f);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// --- END DISPLAY ---
         }
     }
 }
@@ -221,15 +205,12 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 
 StatusCode TransverseExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterLength = 5.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
     "MinClusterLength", m_minClusterLength));
 
-    m_maxLongitudinalDisplacement = 10.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
     "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    m_maxTransverseDisplacement = 1.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
     "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 

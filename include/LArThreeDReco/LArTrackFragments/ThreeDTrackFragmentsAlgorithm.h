@@ -37,6 +37,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    ThreeDTrackFragmentsAlgorithm();
+
     void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
 
     /**
@@ -132,12 +137,13 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::map<pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
-    typedef std::vector<FragmentTensorTool*> TensorToolList;
 
     std::string         m_reclusteringAlgorithmName;        ///< Name of daughter algorithm to use for cluster re-building
 
-    unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
+    typedef std::vector<FragmentTensorTool*> TensorToolList;
     TensorToolList      m_algorithmToolList;                ///< The algorithm tool list
+
+    unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
 
     float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
     float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters

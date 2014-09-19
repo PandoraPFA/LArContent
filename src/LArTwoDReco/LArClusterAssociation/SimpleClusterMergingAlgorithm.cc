@@ -17,6 +17,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+SimpleClusterMergingAlgorithm::SimpleClusterMergingAlgorithm() :
+    m_minCaloHitsPerCluster(10),
+    m_maxClusterSeparation(2.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void SimpleClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -55,23 +63,6 @@ void SimpleClusterMergingAlgorithm::PopulateClusterMergeMap(const ClusterVector 
             }
         }
     }
-
-// --- BEGIN EVENT DISPLAY ---
-// for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
-// {
-// Cluster *pCluster = *iter;
-// ClusterList associatedList;
-// this->CollectAssociatedClusters(pCluster, clusterMergeMap, associatedList);
-// if (associatedList.empty())
-// continue;
-// ClusterList tempList;
-// tempList.insert(pCluster);
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList, "SeedCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&associatedList, "AssociatedClusters", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// }
-// --- END EVENT DISPLAY ---
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -88,11 +79,9 @@ bool SimpleClusterMergingAlgorithm::IsAssociated(const Cluster* const pClusterI,
 
 StatusCode SimpleClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minCaloHitsPerCluster = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    m_maxClusterSeparation = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterSeparation", m_maxClusterSeparation));
 

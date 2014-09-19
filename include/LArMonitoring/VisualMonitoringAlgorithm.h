@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    VisualMonitoringAlgorithm();
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -99,6 +104,7 @@ private:
     std::string             m_detectorView;             ///< The detector view, default, xy or xz
 
     bool                    m_showOnlyAvailable;        ///< Whether to show only available  (i.e. non-clustered) calohits and tracks
+    bool                    m_showAssociatedTracks;     ///< Whether to display tracks associated to clusters when viewing cluster lists
     std::string             m_hitColors;                ///< Define the hit coloring scheme (default: pfo, choices: pfo, particleid)
     float                   m_thresholdEnergy;          ///< Cell energy threshold for display (em scale)
     float                   m_transparencyThresholdE;   ///< Cell energy for which transparency is saturated (0%, fully opaque)

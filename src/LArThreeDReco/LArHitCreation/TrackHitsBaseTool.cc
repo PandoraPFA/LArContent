@@ -22,6 +22,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+TrackHitsBaseTool::TrackHitsBaseTool() :
+    m_minViews(2),
+    m_slidingFitWindow(20),
+    m_chiSquaredCut(5.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
     CaloHitList &newThreeDHits)
 {
@@ -83,15 +92,12 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
 StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minViews = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinViews", m_minViews));
 
-    m_slidingFitWindow = 20;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 
-    m_chiSquaredCut = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ChiSquaredCut", m_chiSquaredCut));
 

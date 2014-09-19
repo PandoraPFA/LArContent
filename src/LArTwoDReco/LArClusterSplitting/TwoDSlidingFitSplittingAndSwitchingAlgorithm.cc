@@ -20,6 +20,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+TwoDSlidingFitSplittingAndSwitchingAlgorithm::TwoDSlidingFitSplittingAndSwitchingAlgorithm() :
+    m_halfWindowLayers(25),
+    m_minClusterLength(10.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -192,11 +200,9 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(Cluster
 
 StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_halfWindowLayers = 25;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "HalfWindowLayers", m_halfWindowLayers));
 
-    m_minClusterLength = 10.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", m_minClusterLength));
 

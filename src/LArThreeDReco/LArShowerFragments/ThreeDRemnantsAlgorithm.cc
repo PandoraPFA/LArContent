@@ -18,6 +18,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+ThreeDRemnantsAlgorithm::ThreeDRemnantsAlgorithm() :
+    m_nMaxTensorToolRepeats(5000),
+    m_minClusterCaloHits(5),
+    m_xOverlapWindow(2.f),
+    m_pseudoChi2Cut(20.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
@@ -118,7 +128,7 @@ void ThreeDRemnantsAlgorithm::ExamineTensor()
 StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolList algorithmToolList;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "TrackTools", algorithmToolList));
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
@@ -131,19 +141,15 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         m_algorithmToolList.push_back(pRemnantTensorTool);
     }
 
-    m_nMaxTensorToolRepeats = 5000;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    m_minClusterCaloHits = 5;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));
 
-    m_xOverlapWindow = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OverlapWindow", m_xOverlapWindow));
 
-    m_pseudoChi2Cut = 20.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 

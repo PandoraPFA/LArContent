@@ -20,6 +20,11 @@ namespace lar_content
  */
 class TwoDSlidingFitSplittingAndSplicingAlgorithm : public pandora::Algorithm
 {
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    TwoDSlidingFitSplittingAndSplicingAlgorithm();
 
 protected:
     virtual pandora::StatusCode Run();
@@ -180,8 +185,8 @@ private:
 
     unsigned int  m_shortHalfWindowLayers;          ///<
     unsigned int  m_longHalfWindowLayers;           ///<
-    float         m_vetoDisplacement;               ///<
     float         m_minClusterLength;               ///<
+    float         m_vetoDisplacement;               ///<
     bool          m_runCosmicMode;                  ///<
 };
 

@@ -116,12 +116,12 @@ private:
     void SeparateTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &usedHits,
         pandora::CaloHitList &remainingHits) const;
 
+    typedef std::vector<HitCreationBaseTool*> HitCreationToolList;
+    HitCreationToolList     m_algorithmToolList;        ///< The algorithm tool list
+
     std::string             m_inputPfoListName;         ///< The name of the input pfo list
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
     std::string             m_outputClusterListName;    ///< The name of the output cluster list
-
-    typedef std::vector<HitCreationBaseTool*> HitCreationToolList;
-    HitCreationToolList     m_algorithmToolList;        ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

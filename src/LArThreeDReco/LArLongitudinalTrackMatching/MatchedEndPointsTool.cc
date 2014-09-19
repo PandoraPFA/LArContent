@@ -15,6 +15,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+MatchedEndPointsTool::MatchedEndPointsTool() :
+    m_minMatchedFraction(0.8f),
+    m_maxEndPointChi2(3.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool MatchedEndPointsTool::Run(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -58,18 +66,6 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
             if (std::max(iter->GetOverlapResult().GetInnerChi2(),iter->GetOverlapResult().GetOuterChi2()) > m_maxEndPointChi2)
                 continue;
 
-// --- EVENT DISPLAY [BEGIN] ---
-// ClusterList clusterListU, clusterListV, clusterListW;
-// clusterListU.insert(iter->GetClusterU());
-// clusterListV.insert(iter->GetClusterV());
-// clusterListW.insert(iter->GetClusterW());
-// PANDORA_MONITORING_API(SetEveDisplayParameters(false, DETECTOR_VIEW_XZ));
-// PANDORA_MONITORING_API(VisualizeClusters(&clusterListU, "ClusterU", RED));
-// PANDORA_MONITORING_API(VisualizeClusters(&clusterListV, "ClusterV", GREEN));
-// PANDORA_MONITORING_API(VisualizeClusters(&clusterListW, "ClusterW", BLUE));
-// PANDORA_MONITORING_API(ViewEvent());
-// --- EVENT DISPLAY [END] ---
-
             ProtoParticle protoParticle;
             protoParticle.m_clusterListU.insert(iter->GetClusterU());
             protoParticle.m_clusterListV.insert(iter->GetClusterV());
@@ -87,11 +83,9 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
 
 StatusCode MatchedEndPointsTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.8f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_maxEndPointChi2 = 3.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxEndPointChi2", m_maxEndPointChi2));
 

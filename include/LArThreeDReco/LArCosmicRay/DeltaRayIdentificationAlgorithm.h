@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    DeltaRayIdentificationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 

@@ -18,6 +18,18 @@ using namespace pandora;
 namespace lar_content
 {
 
+CosmicRayExtensionAlgorithm::CosmicRayExtensionAlgorithm() :
+    m_minClusterLength(3.f),
+    m_minSeedClusterLength(6.f),
+    m_maxLongitudinalDisplacement(30.f),
+    m_maxTransverseDisplacement(2.f),
+    m_minCosRelativeAngle(0.966f),
+    m_maxAverageRms(1.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void CosmicRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -293,15 +305,6 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
                 parentToDaughterAssociation.GetDaughter() == daughterToParentAssociation.GetParent())
             {
                 clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
-
-// ---- BEGIN DISPLAY ----
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// ---- END DISPLAY ----
             }
         }
     }
@@ -338,27 +341,21 @@ float CosmicRayExtensionAlgorithm::CalculateRms(const Cluster *const pCluster, c
 
 StatusCode CosmicRayExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minClusterLength = 3.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", m_minClusterLength));
 
-    m_minSeedClusterLength = 6.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSeedClusterLength", m_minSeedClusterLength));
 
-    m_maxLongitudinalDisplacement = 30.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    m_maxTransverseDisplacement = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    m_minCosRelativeAngle = 0.966f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
 
-    m_maxAverageRms = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxAverageRms", m_maxAverageRms));
 

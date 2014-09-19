@@ -128,8 +128,7 @@ Color EventDisplayAlgorithm::GetColor( unsigned int icolor )
     case 6: return GRAY;
     case 7: return TEAL;
     case 8: return AZURE;
-    case 9: return DARKYELLOW;
-    default: return YELLOW;
+    default: return DARKYELLOW;
     }
 
     return YELLOW;
@@ -140,13 +139,8 @@ Color EventDisplayAlgorithm::GetColor( unsigned int icolor )
 
 StatusCode EventDisplayAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_clusterListName = "ClusterListName";
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterListName", m_clusterListName));
-
-    m_particleListName = "ParticleListName";
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ParticleListName", m_particleListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListName", m_clusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParticleListName", m_particleListName));
 
     return STATUS_CODE_SUCCESS;
 }

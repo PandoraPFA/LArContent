@@ -15,6 +15,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+SplitShowersTool::SplitShowersTool() :
+    m_nCommonClusters(2),
+    m_minMatchedFraction(0.2f),
+    m_minMatchedSamplingPoints(40),
+    m_minSplitXDifference(2.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool SplitShowersTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -283,7 +293,6 @@ bool SplitShowersTool::ApplyChanges(ThreeDShowersAlgorithm *pAlgorithm, const Cl
 
 StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_nCommonClusters = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NCommonClusters", m_nCommonClusters));
 
@@ -293,15 +302,12 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    m_minMatchedFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 40;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minSplitXDifference = 2.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSplitXDifference", m_minSplitXDifference));
 

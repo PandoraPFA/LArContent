@@ -19,6 +19,21 @@ using namespace pandora;
 namespace lar_content
 {
 
+HitCreationBaseTool::HitCreationBaseTool() :
+    m_useChiSquaredApproach(true),
+    m_useDeltaXCorrection(true),
+    m_sigmaX(1.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+HitCreationBaseTool::~HitCreationBaseTool()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType1, const HitType hitType2,
     const CartesianPointList &fitPositionList1, const CartesianPointList &fitPositionList2, CartesianVector &position3D, float &chiSquared) const
 {
@@ -128,15 +143,12 @@ void HitCreationBaseTool::GetPosition3D(const CaloHit *const pCaloHit2D, const H
 
 StatusCode HitCreationBaseTool::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
-    m_useChiSquaredApproach = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseChiSquaredApproach", m_useChiSquaredApproach));
 
-    m_useDeltaXCorrection = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseDeltaXCorrection", m_useDeltaXCorrection));
 
-    m_sigmaX = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SigmaX", m_sigmaX));
 

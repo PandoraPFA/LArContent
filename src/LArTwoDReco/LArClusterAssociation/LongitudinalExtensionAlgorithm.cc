@@ -18,6 +18,19 @@ using namespace pandora;
 namespace lar_content
 {
 
+LongitudinalExtensionAlgorithm::LongitudinalExtensionAlgorithm() :
+    m_clusterMinLength(5.f),
+    m_clusterMinLayerOccupancy(0.75f),
+    m_nodeMaxDisplacement(1.5f),
+    m_nodeMaxCosRelativeAngle(0.906f),
+    m_emissionMaxLongitudinalDisplacement(15.f),
+    m_emissionMaxTransverseDisplacement(2.5f),
+    m_emissionMaxCosRelativeAngle(0.985f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -321,14 +334,6 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
                 parentToDaughterAssociation.GetDaughter() == daughterToParentAssociation.GetParent())
             {
                 clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
-// ---- BEGIN DISPLAY ----
-// ClusterList tempList1, tempList2;
-// tempList1.insert((Cluster*)pParentCluster);
-// tempList2.insert((Cluster*)pDaughterCluster);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "ParentCluster", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "DaughterCluster", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// ---- END DISPLAY ----
             }
         }
     }
@@ -338,31 +343,24 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
 
 StatusCode LongitudinalExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_clusterMinLength = 5.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterMinLength", m_clusterMinLength));
 
-    m_clusterMinLayerOccupancy = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterMinLayerOccupancy", m_clusterMinLayerOccupancy));
 
-    m_nodeMaxDisplacement = 1.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NodeMaxDisplacement", m_nodeMaxDisplacement));
 
-    m_nodeMaxCosRelativeAngle = 0.906f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NodeMaxCosRelativeAngle", m_nodeMaxCosRelativeAngle));
 
-    m_emissionMaxLongitudinalDisplacement = 15.f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EmissionMaxLongitudinalDisplacement", m_emissionMaxLongitudinalDisplacement));
 
-    m_emissionMaxTransverseDisplacement = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EmissionMaxTransverseDisplacement", m_emissionMaxTransverseDisplacement));
 
-    m_emissionMaxCosRelativeAngle = 0.985f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EmissionMaxCosRelativeAngle", m_emissionMaxCosRelativeAngle));
 

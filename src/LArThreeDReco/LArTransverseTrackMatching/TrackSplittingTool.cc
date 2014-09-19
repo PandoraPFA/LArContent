@@ -20,6 +20,22 @@ using namespace pandora;
 namespace lar_content
 {
 
+TrackSplittingTool::TrackSplittingTool() :
+    m_minMatchedFraction(0.75f),
+    m_minMatchedSamplingPoints(10),
+    m_minXOverlapFraction(0.75f),
+    m_minMatchedSamplingPointRatio(2),
+    m_maxShortDeltaXFraction(0.2f),
+    m_maxAbsoluteShortDeltaX(5.f),
+    m_minLongDeltaXFraction(0.2f),
+    m_minAbsoluteLongDeltaX(1.f),
+    m_minSplitToVertexProjection(1.f),
+    m_maxSplitVsFitPositionDistance(1.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -243,43 +259,33 @@ TrackSplittingTool::Particle::Particle(const TensorType::Element &element)
 
 StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_minMatchedFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
 
-    m_minMatchedSamplingPoints = 10;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    m_minXOverlapFraction = 0.75f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-    m_minMatchedSamplingPointRatio = 2;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
-    m_maxShortDeltaXFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxShortDeltaXFraction", m_maxShortDeltaXFraction));
 
-    m_maxAbsoluteShortDeltaX = 5.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxAbsoluteShortDeltaX", m_maxAbsoluteShortDeltaX));
 
-    m_minLongDeltaXFraction = 0.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinLongDeltaXFraction", m_minLongDeltaXFraction));
 
-    m_minAbsoluteLongDeltaX = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinAbsoluteLongDeltaX", m_minAbsoluteLongDeltaX));
 
-    m_minSplitToVertexProjection = 1.f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSplitToVertexProjection", m_minSplitToVertexProjection));
 
-    m_maxSplitVsFitPositionDistance = 1.5f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSplitVsFitPositionDistance", m_maxSplitVsFitPositionDistance));
 

@@ -19,8 +19,6 @@ namespace lar_content
 class ClusterExtensionAlgorithm : public ClusterMergingAlgorithm
 {
 protected:
-    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
     void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMatrix) const;
 
     /**
@@ -112,7 +110,6 @@ protected:
      *  @param  clusterMergeMap the map of cluster merges
      */
     virtual void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const = 0;
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

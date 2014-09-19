@@ -28,6 +28,11 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    ClearTracksTool();
+
     bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
 
 private:

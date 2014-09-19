@@ -37,6 +37,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    ThreeDRemnantsAlgorithm();
+
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
     void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
@@ -46,14 +51,13 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
+    typedef std::vector<RemnantTensorTool*> RemnantTensorToolList;
+    RemnantTensorToolList  m_algorithmToolList;         ///< The algorithm tool list
 
+    unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     unsigned int    m_minClusterCaloHits;               ///< The selection cut on the number of cluster calo hits
     float           m_xOverlapWindow;                   ///< The sampling pitch in the x coordinate
     float           m_pseudoChi2Cut;                    ///< The selection cut on the matched chi2
-
-    typedef std::vector<RemnantTensorTool*> RemnantTensorToolList;
-    RemnantTensorToolList  m_algorithmToolList;         ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

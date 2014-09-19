@@ -38,6 +38,11 @@ public:
     };
 
     /**
+     *  @brief  Default constructor
+     */
+    ThreeDLongitudinalTracksAlgorithm();
+
+    /**
      *  @brief  Sort tensor elements by chi-squared
      * 
      *  @param  lhs the first tensor element
@@ -79,13 +84,13 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    typedef std::vector<LongitudinalTensorTool*> TensorToolList;
+    TensorToolList  m_algorithmToolList;                ///< The algorithm tool list
+
     unsigned int    m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
     float           m_vertexChi2Cut;                    ///< The maximum allowed chi2 for associating end points from three views
     float           m_reducedChi2Cut;                   ///< The maximum allowed chi2 for associating hit positions from three views
     float           m_samplingPitch;                    ///< Pitch used to generate sampling points along tracks
-
-    typedef std::vector<LongitudinalTensorTool*> TensorToolList;
-    TensorToolList  m_algorithmToolList;                ///< The algorithm tool list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

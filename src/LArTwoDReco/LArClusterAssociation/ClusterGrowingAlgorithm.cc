@@ -17,6 +17,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClusterGrowingAlgorithm::ClusterGrowingAlgorithm() :
+    m_maxClusterSeparation(2.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ClusterGrowingAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
@@ -45,16 +52,6 @@ StatusCode ClusterGrowingAlgorithm::Run()
         ClusterVector currentClusters, nonSeedClusters;
         this->GetListOfCleanClusters(pClusterList, currentClusters);
         this->GetListOfNonSeedClusters(currentClusters, seedClusters, nonSeedClusters);
-
-// --- BEGIN EVENT DISPLAY ---
-// ClusterList tempList1, tempList2;
-// tempList1.insert(seedClusters.begin(), seedClusters.end());
-// tempList2.insert(nonSeedClusters.begin(), nonSeedClusters.end());
-// PandoraMonitoringApi::SetEveDisplayParameters(false, DETECTOR_VIEW_XZ);
-// PandoraMonitoringApi::VisualizeClusters(&tempList1, "Seed Clusters", RED);
-// PandoraMonitoringApi::VisualizeClusters(&tempList2, "NonSeed Clusters", BLUE);
-// PandoraMonitoringApi::ViewEvent();
-// --- END EVENT DISPLAY ---
 
         ClusterMergeMap clusterMergeMap;
         this->PopulateClusterMergeMap(seedClusters, nonSeedClusters, clusterMergeMap);
@@ -150,11 +147,9 @@ void ClusterGrowingAlgorithm::MergeClusters(const ClusterMergeMap &clusterMergeM
 
 StatusCode ClusterGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    m_inputClusterListName.clear();
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InputClusterListName", m_inputClusterListName));
 
-    m_maxClusterSeparation = 2.5f; // cm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterSeparation", m_maxClusterSeparation));
 
