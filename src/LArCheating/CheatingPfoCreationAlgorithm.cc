@@ -18,6 +18,9 @@ namespace lar_content
 {
 
 CheatingPfoCreationAlgorithm::CheatingPfoCreationAlgorithm() :
+    m_idOffsetU(0),
+    m_idOffsetV(0),
+    m_idOffsetW(0),
     m_useOnlyAvailableClusters(true),
     m_minGoodHitTypes(0),
     m_nHitsForGoodHitType(10)
