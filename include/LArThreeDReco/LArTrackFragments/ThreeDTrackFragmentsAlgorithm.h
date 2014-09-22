@@ -148,7 +148,6 @@ protected:
     float               m_minXOverlap;                      ///< requirement on minimum X overlap for associated clusters
     float               m_minXOverlapFraction;              ///< requirement on minimum X overlap fraction for associated clusters
     float               m_maxPointDisplacementSquared;      ///< maximum allowed distance (squared) between projected points and associated hits
-    unsigned int        m_minMatchedSamplingPoints;         ///< minimum number of matched sampling points
     float               m_minMatchedSamplingPointFraction;  ///< minimum fraction of matched sampling points
     unsigned int        m_minMatchedHits;                   ///< minimum number of matched calo hits
 };
