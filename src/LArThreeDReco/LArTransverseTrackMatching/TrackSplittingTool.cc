@@ -74,8 +74,11 @@ void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm,
             if (!LongTracksTool::IsLongerThanDirectConnections(iIter, elementList, m_minMatchedSamplingPointRatio, usedClusters))
                 continue;
 
-            if (!this->PassesChecks(pAlgorithm, *(*iIter), usedClusters, splitPositionMap))
+            if (!this->PassesChecks(pAlgorithm, *(*iIter), true, usedClusters, splitPositionMap) &&
+                !this->PassesChecks(pAlgorithm, *(*iIter), false, usedClusters, splitPositionMap))
+            {
                 continue;
+            }
 
             usedClusters.insert((*iIter)->GetClusterU());
             usedClusters.insert((*iIter)->GetClusterV());
@@ -123,88 +126,62 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, ClusterList &usedClusters,
-    SplitPositionMap &splitPositionMap) const
+bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, const bool isMinX,
+    ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
 {
-    const Particle particle(element);
-
-    if (usedClusters.count(particle.m_pLongCluster) || usedClusters.count(particle.m_pCluster1) || usedClusters.count(particle.m_pCluster2))
-        return false;
-
-    const float longXSpan(particle.m_longMaxX - particle.m_longMinX);
-
-    if (longXSpan < std::numeric_limits<float>::epsilon())
-        return false;
-
-    const LArPointingCluster pointingCluster1(particle.m_pCluster1);
-    const LArPointingCluster pointingCluster2(particle.m_pCluster2);
-    const LArPointingCluster longPointingCluster(particle.m_pLongCluster);
-
-    const HitType hitType1(LArClusterHelper::GetClusterHitType(particle.m_pCluster1));
-    const HitType hitType2(LArClusterHelper::GetClusterHitType(particle.m_pCluster2));
-    const TwoDSlidingFitResult &longFitResult(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
-
-    bool passesChecks(false);
-
-    const float splitMinX(0.5f * (particle.m_short1MinX + particle.m_short2MinX));
-    const float shortDeltaMinX(std::fabs(particle.m_short1MinX - particle.m_short2MinX));
-    const float longDeltaMinX(splitMinX - particle.m_longMinX);
-
-    if (((shortDeltaMinX / longXSpan) < m_maxShortDeltaXFraction) && (shortDeltaMinX < m_maxAbsoluteShortDeltaX) &&
-        ((longDeltaMinX / longXSpan) > m_minLongDeltaXFraction) && (longDeltaMinX > m_minAbsoluteLongDeltaX))
+    try
     {
-        const CartesianVector &minPosition1(pointingCluster1.GetInnerVertex().GetPosition().GetX() < pointingCluster1.GetOuterVertex().GetPosition().GetX() ? pointingCluster1.GetInnerVertex().GetPosition() : pointingCluster1.GetOuterVertex().GetPosition());
-        const CartesianVector &minPosition2(pointingCluster2.GetInnerVertex().GetPosition().GetX() < pointingCluster2.GetOuterVertex().GetPosition().GetX() ? pointingCluster2.GetInnerVertex().GetPosition() : pointingCluster2.GetOuterVertex().GetPosition());
+        const Particle particle(element);
+
+        if (usedClusters.count(particle.m_pLongCluster) || usedClusters.count(particle.m_pCluster1) || usedClusters.count(particle.m_pCluster2))
+            return false;
+
+        const float longXSpan(particle.m_longMaxX - particle.m_longMinX);
+
+        if (longXSpan < std::numeric_limits<float>::epsilon())
+            return false;
+
+        const float splitX(isMinX ? (0.5f * (particle.m_short1MinX + particle.m_short2MinX)) : (0.5f * (particle.m_short1MaxX + particle.m_short2MaxX)));
+        const float shortDeltaX(isMinX ? std::fabs(particle.m_short1MinX - particle.m_short2MinX) : std::fabs(particle.m_short1MaxX - particle.m_short2MaxX));
+        const float longDeltaX(isMinX ? (splitX - particle.m_longMinX) : (particle.m_longMaxX - splitX));
+
+        if (((shortDeltaX / longXSpan) > m_maxShortDeltaXFraction) || (shortDeltaX > m_maxAbsoluteShortDeltaX) ||
+            ((longDeltaX / longXSpan) < m_minLongDeltaXFraction) || (longDeltaX < m_minAbsoluteLongDeltaX))
+        {
+            return false;
+        }
+
+        const LArPointingCluster pointingCluster1(particle.m_pCluster1);
+        const LArPointingCluster pointingCluster2(particle.m_pCluster2);
+        const LArPointingCluster longPointingCluster(particle.m_pLongCluster);
+
+        const CartesianVector &position1(pointingCluster1.GetInnerVertex().GetPosition().GetX() < pointingCluster1.GetOuterVertex().GetPosition().GetX() ? pointingCluster1.GetInnerVertex().GetPosition() : pointingCluster1.GetOuterVertex().GetPosition());
+        const CartesianVector &position2(pointingCluster2.GetInnerVertex().GetPosition().GetX() < pointingCluster2.GetOuterVertex().GetPosition().GetX() ? pointingCluster2.GetInnerVertex().GetPosition() : pointingCluster2.GetOuterVertex().GetPosition());
 
         CartesianVector splitPosition(0.f, 0.f, 0.f);
         float chiSquared(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, minPosition1, minPosition2, splitPosition, chiSquared);
+        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), LArClusterHelper::GetClusterHitType(particle.m_pCluster1),
+            LArClusterHelper::GetClusterHitType(particle.m_pCluster2), position1, position2, splitPosition, chiSquared);
 
-        if (this->CheckSplitPosition(splitPosition, splitMinX, longFitResult))
+        if (!this->CheckSplitPosition(splitPosition, splitX, pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster)))
+            return false;
+
+        const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
+        const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
+        const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
+
+        if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
+            (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
         {
-            const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
-            const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
-            const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
-
-            if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
-                (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
-            {
-                splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
-                passesChecks = true;
-            }
+            splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
+            return true;
         }
     }
-
-    const float splitMaxX(0.5f * (particle.m_short1MaxX + particle.m_short2MaxX));
-    const float shortDeltaMaxX(std::fabs(particle.m_short1MaxX - particle.m_short2MaxX));
-    const float longDeltaMaxX(particle.m_longMaxX - splitMaxX);
-
-    if (((shortDeltaMaxX / longXSpan) < m_maxShortDeltaXFraction) && (shortDeltaMaxX < m_maxAbsoluteShortDeltaX) &&
-        ((longDeltaMaxX / longXSpan) > m_minLongDeltaXFraction) && (longDeltaMaxX > m_minAbsoluteLongDeltaX))
+    catch (StatusCodeException &)
     {
-        const CartesianVector &maxPosition1(pointingCluster1.GetInnerVertex().GetPosition().GetX() > pointingCluster1.GetOuterVertex().GetPosition().GetX() ? pointingCluster1.GetInnerVertex().GetPosition() : pointingCluster1.GetOuterVertex().GetPosition());
-        const CartesianVector &maxPosition2(pointingCluster2.GetInnerVertex().GetPosition().GetX() > pointingCluster2.GetOuterVertex().GetPosition().GetX() ? pointingCluster2.GetInnerVertex().GetPosition() : pointingCluster2.GetOuterVertex().GetPosition());
-
-        CartesianVector splitPosition(0.f, 0.f, 0.f);
-        float chiSquared(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, maxPosition1, maxPosition2, splitPosition, chiSquared);
-
-        if (this->CheckSplitPosition(splitPosition, splitMaxX, longFitResult))
-        {
-            const CartesianVector splitToInnerVertex(splitPosition - longPointingCluster.GetInnerVertex().GetPosition());
-            const CartesianVector outerVertexToSplit(longPointingCluster.GetOuterVertex().GetPosition() - splitPosition);
-            const CartesianVector outerToInnerUnitVector((longPointingCluster.GetOuterVertex().GetPosition() - longPointingCluster.GetInnerVertex().GetPosition()).GetUnitVector());
-
-            if ((splitToInnerVertex.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection) &&
-                (outerVertexToSplit.GetDotProduct(outerToInnerUnitVector) > m_minSplitToVertexProjection))
-            {
-                splitPositionMap[particle.m_pLongCluster].push_back(splitPosition);
-                passesChecks = true;
-            }
-        }
     }
 
-    return passesChecks;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

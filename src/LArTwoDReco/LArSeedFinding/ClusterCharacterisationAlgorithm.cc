@@ -311,7 +311,9 @@ float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const SeedAssociati
         LArPointingClusterList pointingClusterList(1, pointingSeedCluster);
 
         for (ClusterVector::const_iterator cIter = associatedClusters.begin(), cIterEnd = associatedClusters.end(); cIter != cIterEnd; ++cIter)
-            pointingClusterList.push_back(LArPointingCluster(*cIter));
+        {
+            try {pointingClusterList.push_back(LArPointingCluster(*cIter));} catch (StatusCodeException &) {}
+        }
 
         ClusterToVertexMap::const_iterator mapIter = m_clusterToVertexMap.find(iter->first);
         const LArPointingCluster::Vertex bestVertex((m_clusterToVertexMap.end() != mapIter) ? mapIter->second :
