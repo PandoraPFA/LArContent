@@ -136,27 +136,34 @@ void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elem
 bool MissingTrackSegmentTool::PassesParticleChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element,
     ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
-    const Particle particle(element);
+    try
+    {
+        const Particle particle(element);
 
-    ClusterList candidateClusters;
-    this->GetCandidateClusters(pAlgorithm, particle, candidateClusters);
+        ClusterList candidateClusters;
+        this->GetCandidateClusters(pAlgorithm, particle, candidateClusters);
 
-    if (candidateClusters.empty())
+        if (candidateClusters.empty())
+            return false;
+
+        SlidingFitResultMap slidingFitResultMap;
+        this->GetSlidingFitResultMap(pAlgorithm, candidateClusters, slidingFitResultMap);
+
+        if (slidingFitResultMap.empty())
+            return false;
+
+        SegmentOverlapMap segmentOverlapMap;
+        this->GetSegmentOverlapMap(pAlgorithm, particle, slidingFitResultMap, segmentOverlapMap);
+
+        if (segmentOverlapMap.empty())
+            return false;
+
+        return this->MakeDecisions(particle, slidingFitResultMap, segmentOverlapMap, usedClusters, clusterMergeMap);
+    }
+    catch (StatusCodeException &)
+    {
         return false;
-
-    SlidingFitResultMap slidingFitResultMap;
-    this->GetSlidingFitResultMap(pAlgorithm, candidateClusters, slidingFitResultMap);
-
-    if (slidingFitResultMap.empty())
-        return false;
-
-    SegmentOverlapMap segmentOverlapMap;
-    this->GetSegmentOverlapMap(pAlgorithm, particle, slidingFitResultMap, segmentOverlapMap);
-
-    if (segmentOverlapMap.empty())
-        return false;
-
-    return this->MakeDecisions(particle, slidingFitResultMap, segmentOverlapMap, usedClusters, clusterMergeMap);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
