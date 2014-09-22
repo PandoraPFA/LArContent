@@ -29,16 +29,17 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
     const VertexList *pVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
 
-    Vertex *pSelectedVertex(NULL);
-    // TODO Vertex selection
-    //for (VertexList::const_iterator iter = pVertexList->begin(), iterEnd = pVertexList->end(); iter != iterEnd; ++iter)
-    //{
-    //}
-    return STATUS_CODE_NOT_INITIALIZED;
+    if (pVertexList->empty())
+        return STATUS_CODE_NOT_INITIALIZED;
 
-    if (!pSelectedVertex)
-        return STATUS_CODE_SUCCESS;
+    if (pVertexList->size() != 1)
+    {
+        // TODO Vertex selection
+        std::cout << "VertexSplittingAlgorithm: vertex selection not yet implemented " << std::endl;
+        return STATUS_CODE_OUT_OF_RANGE;
+    }
 
+    const Vertex *pSelectedVertex(*(pVertexList->begin()));
     const CartesianVector &theVertex(pSelectedVertex->GetPosition());
     const CartesianVector innerVertex(slidingFitResult.GetGlobalMinLayerPosition());
     const CartesianVector outerVertex(slidingFitResult.GetGlobalMaxLayerPosition());

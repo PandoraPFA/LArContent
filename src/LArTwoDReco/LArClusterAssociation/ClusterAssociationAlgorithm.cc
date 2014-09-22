@@ -18,6 +18,7 @@ namespace lar_content
 {
 
 ClusterAssociationAlgorithm::ClusterAssociationAlgorithm() :
+    m_mergeMade(false),
     m_resolveAmbiguousAssociations(true)
 {
 }
