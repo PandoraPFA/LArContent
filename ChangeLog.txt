@@ -1,0 +1,52 @@
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v00-06
+--------------------------------------------------------------------------------------------------------------------------------------------
+Update to reflect recent changes to PandoraSDK.
+Overhaul, with emphasis on ensuring that client applications can instantiate and use multiple concurrent pandora instances.
+Address issues highlighted by Coverity.
+Improved member variable initialization, with a default constructor for each algorithm.
+Improved construction of TwoDSlidingFitResults so that they cannot exist in an uninitialized state.
+Improved exception handling.
+Make use of improved monitoring functionality.
+Add to lar_content namespace.
+Address rare exceptions (floating point precision, hits outside detector, etc.) identified from long cosmic validation runs.
+Remove calo hits with zero transverse width or zero input pulse height.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tag v00-05-pre.
+--------------------------------------------------------------------------------------------------------------------------------------------
+Extensive development work - see svn log for details.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tag v00-04-pre.
+--------------------------------------------------------------------------------------------------------------------------------------------
+Extensive development work - see svn log for details.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tag v00-03-pre.
+--------------------------------------------------------------------------------------------------------------------------------------------
+Extensive development work - see svn log for details.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tag v00-02-pre.
+--------------------------------------------------------------------------------------------------------------------------------------------
+Extensive development work - see svn log for details.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tag v00-00-pre.
+--------------------------------------------------------------------------------------------------------------------------------------------
+Created pandora LAr Content library, containing algorithms, algorithm tools, plugins and helper classes for reconstructing events in liquid argon tpcs.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+GENERAL INFO:
+Pandora consists of the PandoraSDK (Software Development Kit), which comprises a single library and header files with flexible APIs.
+There is also an optional PandoraMonitoring library, which contains event display and tree/histogram-writing functionality.
+The PandoraMonitoring library depends on the PandoraSDK and ROOT.
+Pandora algorithms will necessarily depend upon the PandoraSDK (and also PandoraMonitoring, if desired).
+The algorithms can be built as part of a Pandora client application, such as MarlinPandora, or the standalone TestPandora binary.
+Algorithms declared to be suitably generic may be designed for use by multiple client applications.
+Such re-usable algorithms are best bundled together into a Pandora "content" library.
+Algorithms are always registered via the client application, using the PandoraAPIs, but the client app can link against as many content libraries as required.
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------

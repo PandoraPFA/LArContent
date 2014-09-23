@@ -11,7 +11,7 @@ PROJECT( LArContent )
 
 # project version
 SET( LArContent_VERSION_MAJOR 0 )
-SET( LArContent_VERSION_MINOR 17 )
+SET( LArContent_VERSION_MINOR 6 )
 SET( LArContent_VERSION_PATCH 0 )
 
 
