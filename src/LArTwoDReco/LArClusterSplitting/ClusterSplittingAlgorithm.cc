@@ -17,6 +17,12 @@ namespace lar_content
 
 StatusCode ClusterSplittingAlgorithm::Run()
 {
+    std::string originalListName;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, originalListName));
+
+    if (!m_inputClusterList.empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_inputClusterList));
+
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
@@ -24,15 +30,18 @@ StatusCode ClusterSplittingAlgorithm::Run()
 
     for (ClusterSplittingList::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
     {
-        Cluster* pCluster = *iter;
-
+        Cluster *pCluster = *iter;
         ClusterSplittingList clusterSplittingList;
+
         if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, clusterSplittingList))
             continue;
 
         internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
         *iter = NULL;
     }
+
+    if (!m_inputClusterList.empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, originalListName));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -43,7 +52,8 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, Clus
 {
     // Split cluster into two CaloHit lists
     PandoraContentApi::Cluster::Parameters firstParameters, secondParameters;
-    if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, firstParameters.m_caloHitList, secondParameters.m_caloHitList))
+
+    if (STATUS_CODE_SUCCESS != this->DivideCaloHits(pCluster, firstParameters.m_caloHitList, secondParameters.m_caloHitList))
         return STATUS_CODE_NOT_FOUND;
 
     if (firstParameters.m_caloHitList.empty() || secondParameters.m_caloHitList.empty())
@@ -73,8 +83,11 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(Cluster *const pCluster, Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode ClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputClusterList", m_inputClusterList));
+
     return STATUS_CODE_SUCCESS;
 }
 

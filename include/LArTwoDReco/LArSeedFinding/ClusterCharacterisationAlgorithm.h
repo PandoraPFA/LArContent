@@ -112,12 +112,12 @@ private:
     /**
      *  @brief  Get the number of clusters nodally associated with the best-guess vertex
      * 
-     *  @param  vertex the vertex
+     *  @param  vertexPosition2D the projected vertex position
      *  @param  pointingClusterList the list of relevant pointing clusters
      * 
      *  @return the number of clusters nodally associated with the best-guess vertex
      */
-    unsigned int GetNumberOfNodes(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &pointingClusterList) const;
+    unsigned int GetNumberOfNodes(const pandora::CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const;
 
     /**
      *  @brief  HIT_CUSTOM sorting for clusters to determine order in which seeds are considered
