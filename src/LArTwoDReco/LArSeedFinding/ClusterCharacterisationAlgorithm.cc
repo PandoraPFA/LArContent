@@ -231,6 +231,11 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
 
 float ClusterCharacterisationAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAssociationList) const
 {
+    const unsigned int nSeeds(seedAssociationList.size());
+
+    if (!((nSeeds == 1) || (nSeeds == 2)))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
     if (m_useMCFigureOfMerit)
     {
         return this->GetMCFigureOfMerit(seedAssociationList);
@@ -245,11 +250,6 @@ float ClusterCharacterisationAlgorithm::GetFigureOfMerit(const SeedAssociationLi
 
 float ClusterCharacterisationAlgorithm::GetMCFigureOfMerit(const SeedAssociationList &seedAssociationList) const
 {
-    const unsigned int nSeeds(seedAssociationList.size());
-
-    if (!((nSeeds == 1) || (nSeeds == 2)))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
     unsigned int nMatchedClusters(0), nClusters(0);
 
     for (SeedAssociationList::const_iterator iter1 = seedAssociationList.begin(), iter1End = seedAssociationList.end(); iter1 != iter1End; ++iter1)
@@ -289,11 +289,6 @@ float ClusterCharacterisationAlgorithm::GetMCFigureOfMerit(const SeedAssociation
 
 float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const SeedAssociationList &seedAssociationList) const
 {
-    const unsigned int nSeeds(seedAssociationList.size());
-
-    if (!((nSeeds == 1) || (nSeeds == 2)))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
     unsigned int nTotalNodes(0);
 
     for (SeedAssociationList::const_iterator iter = seedAssociationList.begin(), iterEnd = seedAssociationList.end(); iter != iterEnd; ++iter)
@@ -315,22 +310,33 @@ float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const SeedAssociati
             try {pointingClusterList.push_back(LArPointingCluster(*cIter));} catch (StatusCodeException &) {}
         }
 
-        ClusterToVertexMap::const_iterator mapIter = m_clusterToVertexMap.find(iter->first);
-        const LArPointingCluster::Vertex bestVertex((m_clusterToVertexMap.end() != mapIter) ? mapIter->second :
-            this->GetBestVertexEstimate(pSeedCluster, pointingClusterList));
+        unsigned int nNodes(0);
+        const VertexList *pVertexList(NULL);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
 
-        if (m_clusterToVertexMap.end() == mapIter)
-            m_clusterToVertexMap.insert(ClusterToVertexMap::value_type(iter->first, bestVertex));
+        if (pVertexList->size() == 1)
+        {
+            const Vertex *pSelectedVertex(*(pVertexList->begin()));
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pSeedCluster));
+            const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pSelectedVertex->GetPosition(), hitType));
+            nNodes = this->GetNumberOfNodes(theVertex2D, pointingClusterList);
+        }
+        else
+        {
+            ClusterToVertexMap::const_iterator mapIter = m_clusterToVertexMap.find(iter->first);
+            const LArPointingCluster::Vertex bestVertex((m_clusterToVertexMap.end() != mapIter) ? mapIter->second :
+                this->GetBestVertexEstimate(pSeedCluster, pointingClusterList));
 
-        const unsigned int nNodes(this->GetNumberOfNodes(bestVertex, pointingClusterList));
+            if (m_clusterToVertexMap.end() == mapIter)
+                m_clusterToVertexMap.insert(ClusterToVertexMap::value_type(iter->first, bestVertex));
 
-        if (0 == nNodes)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+            nNodes = this->GetNumberOfNodes(bestVertex.GetPosition(), pointingClusterList);
+        }
 
-        nTotalNodes += nNodes;
+        nTotalNodes += std::max(1u, nNodes);
     }
 
-    const float figureOfMerit(static_cast<float>(nSeeds) - static_cast<float>(nTotalNodes));
+    const float figureOfMerit(static_cast<float>(seedAssociationList.size()) - static_cast<float>(nTotalNodes));
     return figureOfMerit;
 }
 
@@ -364,14 +370,14 @@ LArPointingCluster::Vertex ClusterCharacterisationAlgorithm::GetBestVertexEstima
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int ClusterCharacterisationAlgorithm::GetNumberOfNodes(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &pointingClusterList) const
+unsigned int ClusterCharacterisationAlgorithm::GetNumberOfNodes(const CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const
 {
     unsigned int nNodes(0);
 
     for (LArPointingClusterList::const_iterator cIter = pointingClusterList.begin(), cIterEnd = pointingClusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        if (LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-            LArPointingClusterHelper::IsNode(vertex.GetPosition(), cIter->GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance))
+        if (LArPointingClusterHelper::IsNode(vertexPosition2D, cIter->GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+            LArPointingClusterHelper::IsNode(vertexPosition2D, cIter->GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance))
         {
             ++nNodes;
         }

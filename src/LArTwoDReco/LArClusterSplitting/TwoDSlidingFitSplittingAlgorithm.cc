@@ -28,7 +28,7 @@ TwoDSlidingFitSplittingAlgorithm::TwoDSlidingFitSplittingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
+StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
 {
     if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
         return STATUS_CODE_NOT_FOUND;
@@ -41,7 +41,7 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
 
         if (STATUS_CODE_SUCCESS == this->FindBestSplitPosition(slidingFitResult, splitPosition))
         {
-            return this->SplitCluster(slidingFitResult, splitPosition, firstHitList, secondHitList);
+            return this->DivideCaloHits(slidingFitResult, splitPosition, firstHitList, secondHitList);
         }
     }
     catch (StatusCodeException &statusCodeException)
@@ -55,13 +55,13 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAlgorithm::SplitCluster(const TwoDSlidingFitResult &slidingFitResult, const CartesianVector &splitPosition, 
+StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const CartesianVector &splitPosition, 
     CaloHitList &firstCaloHitList, CaloHitList &secondCaloHitList) const
 {
     float rL(0.f), rT(0.f);
     slidingFitResult.GetLocalPosition(splitPosition, rL, rT);
 
-    const Cluster* pCluster = slidingFitResult.GetCluster();
+    const Cluster *pCluster(slidingFitResult.GetCluster());
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(); iter != orderedCaloHitList.end(); ++iter)

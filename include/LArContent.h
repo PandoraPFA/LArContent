@@ -12,6 +12,7 @@
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
 #include "LArCheating/CheatingPfoCreationAlgorithm.h"
+#include "LArCheating/CheatingVertexCreationAlgorithm.h"
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
@@ -90,6 +91,9 @@
 #include "LArUtility/ListMergingAlgorithm.h"
 #include "LArUtility/ListPreparationAlgorithm.h"
 
+#include "LArVertex/CandidateVertexCreationAlgorithm.h"
+#include "LArVertex/VertexSelectionAlgorithm.h"
+
 /**
  *  @brief  LArContent class
  */
@@ -104,6 +108,7 @@ public:
         d("LArCheatingCosmicRayIdentification",     lar_content::CheatingCosmicRayIdentificationAlg::Factory)                   \
         d("LArCheatingCosmicRayShowerMatching",     lar_content::CheatingCosmicRayShowerMatchingAlg::Factory)                   \
         d("LArCheatingPfoCreation",                 lar_content::CheatingPfoCreationAlgorithm::Factory)                         \
+        d("LArCheatingVertexCreation",              lar_content::CheatingVertexCreationAlgorithm::Factory)                      \
         d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
         d("LArNeutrinoBuilding",                    lar_content::NeutrinoBuildingAlgorithm::Factory)                            \
@@ -142,7 +147,9 @@ public:
         d("LArListChanging",                        lar_content::ListChangingAlgorithm::Factory)                                \
         d("LArListDissolution",                     lar_content::ListDissolutionAlgorithm::Factory)                             \
         d("LArListMerging",                         lar_content::ListMergingAlgorithm::Factory)                                 \
-        d("LArListPreparation",                     lar_content::ListPreparationAlgorithm::Factory)
+        d("LArListPreparation",                     lar_content::ListPreparationAlgorithm::Factory)                             \
+        d("LArCandidateVertexCreation",             lar_content::CandidateVertexCreationAlgorithm::Factory)                     \
+        d("LArVertexSelection",                     lar_content::VertexSelectionAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
         d("LArClearShowers",                        lar_content::ClearShowersTool::Factory)                                     \
