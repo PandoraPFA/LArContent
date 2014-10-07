@@ -28,9 +28,17 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    VertexSelectionAlgorithm();
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
+    bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

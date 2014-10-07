@@ -42,6 +42,10 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
     const Vertex *pSelectedVertex(*(pVertexList->begin()));
+
+    if (VERTEX_3D != pSelectedVertex->GetVertexType())
+        return STATUS_CODE_INVALID_PARAMETER;
+
     const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pSelectedVertex->GetPosition(), hitType));
 
     const CartesianVector innerVertex2D(slidingFitResult.GetGlobalMinLayerPosition());
