@@ -38,6 +38,16 @@ public:
     ClusterCharacterisationAlgorithm();
 
 private:
+    /**
+     *  ClusterDirection enumeration
+     */
+    enum ClusterDirection
+    {
+        DIRECTION_FORWARD_IN_Z,
+        DIRECTION_BACKWARD_IN_Z,
+        DIRECTION_UNKNOWN
+    };
+
     pandora::StatusCode Run();
 
     /**
@@ -65,6 +75,16 @@ private:
     AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
 
     /**
+     *  @brief  Get the direction of the cluster in z, using a projection of the provided vertex
+     * 
+     *  @param  pVertex the address of the vertex
+     *  @param  pCluster the address of the cluster
+     * 
+     *  @return the cluster direction in z
+     */
+    ClusterDirection GetClusterDirectionInZ(const pandora::Vertex *const pVertex, const pandora::Cluster *const pCluster) const;
+
+    /**
      *  @brief  Check a provided seed association list for consistency, making changes as required
      * 
      *  @param  seedIter iterator to an element in the input seed association list
@@ -81,43 +101,34 @@ private:
      */
     float GetFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
 
-    /**
+     /**
      *  @brief  Get a figure of merit using mc information to provide best values technically possible
-     * 
+     *
      *  @param  seedAssociationList the seed association list
-     * 
+     *
      *  @return the figure of merit
      */
     float GetMCFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
 
     /**
      *  @brief  Get a figure of merit using purely reconstructed quantities
-     * 
+     *
+     *  @param  pVertex the address of the reconstructed 3d event vertex
      *  @param  seedAssociationList the seed association list
-     * 
+     *
      *  @return the figure of merit
      */
-    float GetRecoFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
+    float GetRecoFigureOfMerit(const pandora::Vertex *const pVertex, const SeedAssociationList &seedAssociationList) const;
 
     /**
-     *  @brief  Simple and fast vertex selection, choosing best vertex from a specified list to represent a set of pointing clusters
-     * 
-     *  @param  pSeedCluster address of the seed cluster
-     *  @param  pointingClusterList the list of relevant pointing clusters
-     * 
-     *  @return the best vertex estimate
-     */
-    LArPointingCluster::Vertex GetBestVertexEstimate(pandora::Cluster *pSeedCluster, const LArPointingClusterList &pointingClusterList) const;
-
-    /**
-     *  @brief  Get the number of clusters nodally associated with the best-guess vertex
+     *  @brief  Get the number of clusters associated with the vertex
      * 
      *  @param  vertexPosition2D the projected vertex position
      *  @param  pointingClusterList the list of relevant pointing clusters
      * 
      *  @return the number of clusters nodally associated with the best-guess vertex
      */
-    unsigned int GetNumberOfNodes(const pandora::CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const;
+    unsigned int GetNVertexConnections(const pandora::CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const;
 
     /**
      *  @brief  HIT_CUSTOM sorting for clusters to determine order in which seeds are considered
@@ -175,9 +186,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<pandora::Cluster*, LArPointingCluster::Vertex> ClusterToVertexMap;
-    mutable ClusterToVertexMap  m_clusterToVertexMap;       ///< The cluster to vertex map
-
     std::string             m_inputClusterListName;         ///< The name of the input cluster list
     pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfo lists
 
@@ -186,7 +194,6 @@ private:
     float                   m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
 
     bool                    m_useMCFigureOfMerit;           ///< Whether to use a figure of merit based on mc particle information
-    bool                    m_useMCVertexSelection;         ///< Whether to select vertex based on mc particle information (reduced level of cheating)
     bool                    m_useFirstImprovedSeed;         ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
 
     bool                    m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added

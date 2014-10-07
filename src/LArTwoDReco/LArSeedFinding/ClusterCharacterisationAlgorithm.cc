@@ -24,15 +24,14 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_nearbyClusterDistance(2.5f),
     m_remoteClusterDistance(10.f),
     m_useMCFigureOfMerit(false),
-    m_useMCVertexSelection(false),
     m_useFirstImprovedSeed(false),
     m_shouldRemoveShowerPfos(true),
     m_showerLikeNBranches(5),
     m_showerLikeCaloHitRatio(2.f),
     m_minVertexLongitudinalDistance(-2.5f),
-    m_maxVertexLongitudinalDistance(25.f),
-    m_maxVertexTransverseDistance(2.5f),
-    m_vertexAngularAllowance(5.f)
+    m_maxVertexLongitudinalDistance(10.f),
+    m_maxVertexTransverseDistance(1.f),
+    m_vertexAngularAllowance(3.f)
 {
 }
 
@@ -58,7 +57,6 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
         if (seedAssociationList.size() != 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        m_clusterToVertexMap.clear();
         SeedAssociationList finalSeedAssociationList;
         this->CheckSeedAssociationList(seedAssociationList.begin(), finalSeedAssociationList);
 
@@ -146,6 +144,20 @@ void ClusterCharacterisationAlgorithm::GetSeedAssociationList(const ClusterVecto
 
 ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
+    const VertexList *pVertexList(NULL);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
+    const Vertex *pVertex((pVertexList->size() == 1) ? *(pVertexList->begin()) : NULL);
+
+    // Direction of seed cluster
+    const ClusterDirection seedDirection((NULL != pVertex) ? this->GetClusterDirectionInZ(pVertex, pClusterSeed) : DIRECTION_UNKNOWN);
+    const bool checkSeedForward(seedDirection != DIRECTION_BACKWARD_IN_Z);
+    const bool checkSeedBackward(seedDirection != DIRECTION_FORWARD_IN_Z);
+
+    // Direction of candidate cluster
+    const ClusterDirection candidateDirection((NULL != pVertex) ? this->GetClusterDirectionInZ(pVertex, pCluster) : DIRECTION_UNKNOWN);
+    const bool checkCandidateForward(candidateDirection != DIRECTION_BACKWARD_IN_Z);
+    const bool checkCandidateBackward(candidateDirection != DIRECTION_FORWARD_IN_Z);
+
     // Calculate distances of association
     const float sOuter(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetOuterPseudoLayer()), pCluster));
     const float cOuter(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()), pClusterSeed));
@@ -153,25 +165,78 @@ ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorit
     const float cInner(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()), pClusterSeed));
 
     // Association check 1(a), look for enclosed clusters
-    if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) && (sInner > m_nearbyClusterDistance) && (sOuter > m_nearbyClusterDistance))
+    if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) &&
+        (!checkSeedForward || (sInner > m_nearbyClusterDistance)) &&
+        (!checkSeedBackward || (sOuter > m_nearbyClusterDistance)))
+    {
         return STRONG;
+    }
 
     // Association check 1(b), look for overlapping clusters
-    if ((cInner < m_nearbyClusterDistance && sOuter < m_nearbyClusterDistance) && (sInner > m_nearbyClusterDistance) && (cOuter > m_nearbyClusterDistance))
-        return STRONG;
+    if ((checkSeedForward == checkCandidateForward) && (checkSeedBackward == checkCandidateBackward))
+    {
+        if ((cInner < m_nearbyClusterDistance && sOuter < m_nearbyClusterDistance) &&
+            (!checkSeedForward || (sInner > m_nearbyClusterDistance)) &&
+            (!checkSeedBackward || (cOuter > m_nearbyClusterDistance)))
+        {
+            return STRONG;
+        }
 
-    if ((cOuter < m_nearbyClusterDistance && sInner < m_nearbyClusterDistance) && (sOuter > m_nearbyClusterDistance) && (cInner > m_nearbyClusterDistance))
-        return STRONG;
+        if ((cOuter < m_nearbyClusterDistance && sInner < m_nearbyClusterDistance) &&
+            (!checkSeedBackward || (sOuter > m_nearbyClusterDistance)) &&
+            (!checkSeedForward || (cInner > m_nearbyClusterDistance)))
+        {
+            return STRONG;
+        }
+    }
 
     // Association check 2, look for branching clusters
-    if ((sInner > m_remoteClusterDistance) && (sOuter > m_remoteClusterDistance) && ((cInner < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance)))
+    if ((!checkSeedForward || (sInner > m_remoteClusterDistance)) &&
+        (!checkSeedBackward || (sOuter > m_remoteClusterDistance)) &&
+        ((checkCandidateForward && (cInner < m_nearbyClusterDistance)) || (checkCandidateBackward && (cOuter < m_nearbyClusterDistance))))
+    {
         return STANDARD;
+    }
 
     // Association check 3, look any distance below threshold
     if ((sOuter < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance) || (sInner < m_nearbyClusterDistance) || (cInner < m_nearbyClusterDistance))
         return SINGLE_ORDER;
 
     return NONE;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+ClusterCharacterisationAlgorithm::ClusterDirection ClusterCharacterisationAlgorithm::GetClusterDirectionInZ(const Vertex *const pVertex, const Cluster *const pCluster) const
+{
+    if (VERTEX_3D != pVertex->GetVertexType())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+
+    const LArPointingCluster pointingCluster(pCluster);
+    const float length((pointingCluster.GetInnerVertex().GetPosition() - pointingCluster.GetOuterVertex().GetPosition()).GetMagnitude());
+    const bool innerIsAtLowerZ(pointingCluster.GetInnerVertex().GetPosition().GetZ() < pointingCluster.GetOuterVertex().GetPosition().GetZ());
+
+    float rLInner(std::numeric_limits<float>::max()), rTInner(std::numeric_limits<float>::max());
+    float rLOuter(std::numeric_limits<float>::max()), rTOuter(std::numeric_limits<float>::max());
+    LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetInnerVertex(), theVertex2D, rLInner, rTInner);
+    LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetOuterVertex(), theVertex2D, rLOuter, rTOuter);
+
+    const bool innerIsVertexAssociated(rLInner > 0.57735f * rTInner - 0.33333f * length); // TODO configurable parameters
+    const bool outerIsVertexAssociated(rLOuter > 0.57735f * rTOuter - 0.33333f * length);
+
+    if (innerIsVertexAssociated == outerIsVertexAssociated)
+        return DIRECTION_UNKNOWN;
+
+    if ((innerIsVertexAssociated && innerIsAtLowerZ) || (outerIsVertexAssociated && !innerIsAtLowerZ))
+        return DIRECTION_FORWARD_IN_Z;
+
+    if ((innerIsVertexAssociated && !innerIsAtLowerZ) || (outerIsVertexAssociated && innerIsAtLowerZ))
+        return DIRECTION_BACKWARD_IN_Z;
+
+    throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,6 +249,7 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
 
     SeedAssociationList seedAssociationList;
     seedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
+
     const float originalFigureOfMerit(this->GetFigureOfMerit(seedAssociationList));
     float bestFigureOfMerit(originalFigureOfMerit);
 
@@ -231,18 +297,22 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
 
 float ClusterCharacterisationAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAssociationList) const
 {
-    const unsigned int nSeeds(seedAssociationList.size());
-
-    if (!((nSeeds == 1) || (nSeeds == 2)))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    const VertexList *pVertexList(NULL);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
+    const Vertex *pVertex((1 == pVertexList->size()) ? *(pVertexList->begin()) : NULL);
 
     if (m_useMCFigureOfMerit)
     {
         return this->GetMCFigureOfMerit(seedAssociationList);
     }
+    else if ((NULL != pVertex) && (VERTEX_3D == pVertex->GetVertexType()))
+    {
+        return this->GetRecoFigureOfMerit(pVertex, seedAssociationList);
+    }
     else
     {
-        return this->GetRecoFigureOfMerit(seedAssociationList);
+        // ATTN Consistently returning same value will accept all candidate cluster merges
+        return -1.f;
     }
 }
 
@@ -287,103 +357,53 @@ float ClusterCharacterisationAlgorithm::GetMCFigureOfMerit(const SeedAssociation
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const SeedAssociationList &seedAssociationList) const
+float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const Vertex *const pVertex, const SeedAssociationList &seedAssociationList) const
 {
-    unsigned int nTotalNodes(0);
+    unsigned int nVertexAssociatedSeeds(0), nVertexAssociatedNonSeeds(0);
 
     for (SeedAssociationList::const_iterator iter = seedAssociationList.begin(), iterEnd = seedAssociationList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->second.empty())
-        {
-            ++nTotalNodes;
-            continue;
-        }
-
         Cluster *pSeedCluster(iter->first);
         const ClusterVector &associatedClusters(iter->second);
 
-        const LArPointingCluster pointingSeedCluster(pSeedCluster);
-        LArPointingClusterList pointingClusterList(1, pointingSeedCluster);
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pSeedCluster));
+        const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
+        const LArPointingCluster pointingSeedCluster(pSeedCluster);
+        LArPointingClusterList pointingClusterSeedList(1, pointingSeedCluster);
+
+        LArPointingClusterList pointingClusterNonSeedList;
         for (ClusterVector::const_iterator cIter = associatedClusters.begin(), cIterEnd = associatedClusters.end(); cIter != cIterEnd; ++cIter)
         {
-            try {pointingClusterList.push_back(LArPointingCluster(*cIter));} catch (StatusCodeException &) {}
+            try {pointingClusterNonSeedList.push_back(LArPointingCluster(*cIter));} catch (StatusCodeException &) {}
         }
 
-        unsigned int nNodes(0);
-        const VertexList *pVertexList(NULL);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-
-        if (pVertexList->size() == 1)
-        {
-            const Vertex *pSelectedVertex(*(pVertexList->begin()));
-            const HitType hitType(LArClusterHelper::GetClusterHitType(pSeedCluster));
-            const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pSelectedVertex->GetPosition(), hitType));
-            nNodes = this->GetNumberOfNodes(theVertex2D, pointingClusterList);
-        }
-        else
-        {
-            ClusterToVertexMap::const_iterator mapIter = m_clusterToVertexMap.find(iter->first);
-            const LArPointingCluster::Vertex bestVertex((m_clusterToVertexMap.end() != mapIter) ? mapIter->second :
-                this->GetBestVertexEstimate(pSeedCluster, pointingClusterList));
-
-            if (m_clusterToVertexMap.end() == mapIter)
-                m_clusterToVertexMap.insert(ClusterToVertexMap::value_type(iter->first, bestVertex));
-
-            nNodes = this->GetNumberOfNodes(bestVertex.GetPosition(), pointingClusterList);
-        }
-
-        nTotalNodes += std::max(1u, nNodes);
+        nVertexAssociatedSeeds += this->GetNVertexConnections(vertex2D, pointingClusterSeedList);
+        nVertexAssociatedNonSeeds += this->GetNVertexConnections(vertex2D, pointingClusterNonSeedList);
     }
 
-    const float figureOfMerit(static_cast<float>(seedAssociationList.size()) - static_cast<float>(nTotalNodes));
+    const float figureOfMerit(static_cast<float>(nVertexAssociatedSeeds) - static_cast<float>(nVertexAssociatedNonSeeds));
     return figureOfMerit;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------                                     
 
-LArPointingCluster::Vertex ClusterCharacterisationAlgorithm::GetBestVertexEstimate(pandora::Cluster *pSeedCluster,
-    const LArPointingClusterList &pointingClusterList) const
+unsigned int ClusterCharacterisationAlgorithm::GetNVertexConnections(const CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const
 {
-    const LArPointingCluster pointingSeedCluster(pSeedCluster);
-
-    if (m_useMCVertexSelection)
-    {
-        const MCParticle *pSeedMCParticle = MCParticleHelper::GetMainMCParticle(pSeedCluster);
-        const CartesianVector mcVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pSeedMCParticle->GetVertex(), LArClusterHelper::GetClusterHitType(pSeedCluster)));
-
-        const float innerDistanceSquared = (pointingSeedCluster.GetInnerVertex().GetPosition() - mcVertex2D).GetMagnitudeSquared();
-        const float outerDistanceSquared = (pointingSeedCluster.GetOuterVertex().GetPosition() - mcVertex2D).GetMagnitudeSquared();
-
-        return ((innerDistanceSquared < outerDistanceSquared) ? pointingSeedCluster.GetInnerVertex() : pointingSeedCluster.GetOuterVertex());
-    }
-    else
-    {
-        LArPointingClusterVertexList vertexList;
-        vertexList.push_back(pointingSeedCluster.GetInnerVertex());
-        vertexList.push_back(pointingSeedCluster.GetOuterVertex());
-
-        return LArPointingClusterHelper::GetBestVertexEstimate(vertexList, pointingClusterList, m_minVertexLongitudinalDistance,
-            m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-unsigned int ClusterCharacterisationAlgorithm::GetNumberOfNodes(const CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const
-{
-    unsigned int nNodes(0);
+    unsigned int nConnections(0);
 
     for (LArPointingClusterList::const_iterator cIter = pointingClusterList.begin(), cIterEnd = pointingClusterList.end(); cIter != cIterEnd; ++cIter)
     {
         if (LArPointingClusterHelper::IsNode(vertexPosition2D, cIter->GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-            LArPointingClusterHelper::IsNode(vertexPosition2D, cIter->GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance))
+            LArPointingClusterHelper::IsNode(vertexPosition2D, cIter->GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+            LArPointingClusterHelper::IsEmission(vertexPosition2D, cIter->GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+            LArPointingClusterHelper::IsEmission(vertexPosition2D, cIter->GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance))
         {
-            ++nNodes;
+            ++nConnections;
         }
     }
 
-    return nNodes;
+    return nConnections;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -538,9 +558,6 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseMCFigureOfMerit", m_useMCFigureOfMerit));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseMCVertexSelection", m_useMCVertexSelection));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseFirstImprovedSeed", m_useFirstImprovedSeed));
