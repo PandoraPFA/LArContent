@@ -167,13 +167,10 @@ private:
     /**
      *  @brief  Remove pfos containing clusters to which many shower branches have been added
      *
-     *  @param  pClusterList address of the cluster list
-     *  @param  pfoList the pfo list
      *  @param  nCaloHitsPerCluster the cluster info map
      *  @param  nBranchesPerCluster the cluster info map
      */
-    void RemoveShowerPfos(const pandora::ClusterList *const pClusterList, pandora::PfoList &pfoList, const ClusterInfoMap &nCaloHitsPerCluster,
-        const ClusterInfoMap &nBranchesPerCluster) const;
+    void RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster) const;
 
     /**
      *  @brief  Get the address of the pfo containing a specified cluster
@@ -186,12 +183,15 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_inputClusterListName;         ///< The name of the input cluster list
+    pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
     pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfo lists
 
     unsigned int            m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
     float                   m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
     float                   m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
+
+    float                   m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    float                   m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
 
     bool                    m_useMCFigureOfMerit;           ///< Whether to use a figure of merit based on mc particle information
     bool                    m_useFirstImprovedSeed;         ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
@@ -200,10 +200,10 @@ private:
     unsigned int            m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
     float                   m_showerLikeCaloHitRatio;       ///< The minimum ratio of final to original calo hits before cluster is declared shower like
 
-    float                   m_minVertexLongitudinalDistance;///< Best vertex estimate: min longitudinal distance cut
-    float                   m_maxVertexLongitudinalDistance;///< Best vertex estimate: max longitudinal distance cut
-    float                   m_maxVertexTransverseDistance;  ///< Best vertex estimate: max transverse distance cut
-    float                   m_vertexAngularAllowance;       ///< Best vertex estimate: pointing angular allowance in degrees
+    float                   m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
+    float                   m_maxVertexLongitudinalDistance;///< Vertex association check: max longitudinal distance cut
+    float                   m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
+    float                   m_vertexAngularAllowance;       ///< Vertex association check: pointing angular allowance in degrees
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

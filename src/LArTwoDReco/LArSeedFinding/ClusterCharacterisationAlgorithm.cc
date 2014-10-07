@@ -23,13 +23,15 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_minCaloHitsPerCluster(5),
     m_nearbyClusterDistance(2.5f),
     m_remoteClusterDistance(10.f),
+    m_directionTanAngle(1.732f),
+    m_directionApexShift(0.333f),
     m_useMCFigureOfMerit(false),
     m_useFirstImprovedSeed(false),
     m_shouldRemoveShowerPfos(true),
     m_showerLikeNBranches(5),
     m_showerLikeCaloHitRatio(2.f),
     m_minVertexLongitudinalDistance(-2.5f),
-    m_maxVertexLongitudinalDistance(10.f),
+    m_maxVertexLongitudinalDistance(20.f),
     m_maxVertexTransverseDistance(1.f),
     m_vertexAngularAllowance(3.f)
 {
@@ -39,46 +41,45 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
 
 StatusCode ClusterCharacterisationAlgorithm::Run()
 {
-    const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
-
-    PfoList pfoList;
-    this->GetInputPfoList(pfoList);
     ClusterInfoMap nCaloHitsPerCluster, nBranchesPerCluster;
 
-    ClusterList usedClusters;
-    Cluster *pSeedCluster = NULL;
-
-    while (this->GetNextSeedCandidate(pClusterList, usedClusters, pSeedCluster))
+    for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
-        SeedAssociationList seedAssociationList;
-        this->GetSeedAssociationList(ClusterVector(1, pSeedCluster), pClusterList, seedAssociationList);
+        const ClusterList *pClusterList = NULL;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
 
-        if (seedAssociationList.size() != 1)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        ClusterList usedClusters;
+        Cluster *pSeedCluster = NULL;
 
-        SeedAssociationList finalSeedAssociationList;
-        this->CheckSeedAssociationList(seedAssociationList.begin(), finalSeedAssociationList);
-
-        for (SeedAssociationList::const_iterator iter = finalSeedAssociationList.begin(), iterEnd = finalSeedAssociationList.end(); iter != iterEnd; ++iter)
+        while (this->GetNextSeedCandidate(pClusterList, usedClusters, pSeedCluster))
         {
-            usedClusters.insert(iter->first);
-            usedClusters.insert(iter->second.begin(), iter->second.end());
+            SeedAssociationList seedAssociationList;
+            this->GetSeedAssociationList(ClusterVector(1, pSeedCluster), pClusterList, seedAssociationList);
 
-            this->StoreNCaloHitsPerCluster(iter->first, nCaloHitsPerCluster);
-            this->StoreNBranchesPerCluster(iter->first, iter->second, nBranchesPerCluster);
+            if (seedAssociationList.size() != 1)
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-            for (ClusterVector::const_iterator iter2 = iter->second.begin(), iter2End = iter->second.end(); iter2 != iter2End; ++iter2)
+            SeedAssociationList finalSeedAssociationList;
+            this->CheckSeedAssociationList(seedAssociationList.begin(), finalSeedAssociationList);
+
+            for (SeedAssociationList::const_iterator iter = finalSeedAssociationList.begin(), iterEnd = finalSeedAssociationList.end(); iter != iterEnd; ++iter)
             {
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *iter2, m_inputClusterListName, m_inputClusterListName));
+                usedClusters.insert(iter->first);
+                usedClusters.insert(iter->second.begin(), iter->second.end());
+
+                this->StoreNCaloHitsPerCluster(iter->first, nCaloHitsPerCluster);
+                this->StoreNBranchesPerCluster(iter->first, iter->second, nBranchesPerCluster);
+
+                for (ClusterVector::const_iterator iter2 = iter->second.begin(), iter2End = iter->second.end(); iter2 != iter2End; ++iter2)
+                {
+                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *iter2, *listIter, *listIter));
+                }
             }
         }
     }
 
     if (m_shouldRemoveShowerPfos)
-    {
-        this->RemoveShowerPfos(pClusterList, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
-    }
+        this->RemoveShowerPfos(nCaloHitsPerCluster, nBranchesPerCluster);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -101,7 +102,7 @@ bool ClusterCharacterisationAlgorithm::GetNextSeedCandidate(const ClusterList *c
         if (usedClusters.count(pCluster))
             continue;
 
-        if (pCluster->IsAvailable() && (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
+        if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
             continue;
 
         pSeedCluster = pCluster;
@@ -224,8 +225,8 @@ ClusterCharacterisationAlgorithm::ClusterDirection ClusterCharacterisationAlgori
     LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetInnerVertex(), theVertex2D, rLInner, rTInner);
     LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetOuterVertex(), theVertex2D, rLOuter, rTOuter);
 
-    const bool innerIsVertexAssociated(rLInner > 0.57735f * rTInner - 0.33333f * length); // TODO configurable parameters
-    const bool outerIsVertexAssociated(rLOuter > 0.57735f * rTOuter - 0.33333f * length);
+    const bool innerIsVertexAssociated(rLInner > (rTInner / m_directionTanAngle) - (length * m_directionApexShift));
+    const bool outerIsVertexAssociated(rLOuter > (rTInner / m_directionTanAngle) - (length * m_directionApexShift));
 
     if (innerIsVertexAssociated == outerIsVertexAssociated)
         return DIRECTION_UNKNOWN;
@@ -249,7 +250,6 @@ void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationL
 
     SeedAssociationList seedAssociationList;
     seedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
-
     const float originalFigureOfMerit(this->GetFigureOfMerit(seedAssociationList));
     float bestFigureOfMerit(originalFigureOfMerit);
 
@@ -477,42 +477,50 @@ void ClusterCharacterisationAlgorithm::StoreNBranchesPerCluster(const Cluster *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCharacterisationAlgorithm::RemoveShowerPfos(const ClusterList *const pClusterList, PfoList &pfoList,
-    const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster) const
+void ClusterCharacterisationAlgorithm::RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster) const
 {
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    PfoList pfoList;
+    this->GetInputPfoList(pfoList);
+
+    for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
-        try
+        const ClusterList *pClusterList = NULL;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
+
+        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
-            Cluster *pCluster = *iter;
+            try
+            {
+                Cluster *pCluster = *iter;
 
-            if (pCluster->IsAvailable())
-                continue;
+                if (pCluster->IsAvailable())
+                    continue;
 
-            ClusterInfoMap::const_iterator nCaloHitsIter = nCaloHitsPerCluster.find(pCluster);
-            ClusterInfoMap::const_iterator nBranchesIter = nBranchesPerCluster.find(pCluster);
+                ClusterInfoMap::const_iterator nCaloHitsIter = nCaloHitsPerCluster.find(pCluster);
+                ClusterInfoMap::const_iterator nBranchesIter = nBranchesPerCluster.find(pCluster);
 
-            if ((nCaloHitsPerCluster.end() == nCaloHitsIter) || (nBranchesPerCluster.end() == nBranchesIter))
-                continue;
+                if ((nCaloHitsPerCluster.end() == nCaloHitsIter) || (nBranchesPerCluster.end() == nBranchesIter))
+                    continue;
 
-            if (0 == nCaloHitsIter->second)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+                if (0 == nCaloHitsIter->second)
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const float nCaloHitsRatio(static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(nCaloHitsIter->second));
-            const unsigned int nBranches(nBranchesIter->second);
+                const float nCaloHitsRatio(static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(nCaloHitsIter->second));
+                const unsigned int nBranches(nBranchesIter->second);
 
-            if ((nBranches < m_showerLikeNBranches) && (nCaloHitsRatio < m_showerLikeCaloHitRatio))
-                continue;
+                if ((nBranches < m_showerLikeNBranches) && (nCaloHitsRatio < m_showerLikeCaloHitRatio))
+                    continue;
 
-            Pfo *pTargetPfo = NULL;
-            this->FindTargetPfo(pCluster, pfoList, pTargetPfo);
+                Pfo *pTargetPfo = NULL;
+                this->FindTargetPfo(pCluster, pfoList, pTargetPfo);
 
-            pfoList.erase(pTargetPfo);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pTargetPfo));
-        }
-        catch (StatusCodeException &)
-        {
-            std::cout << "ClusterCharacterisationAlgorithm: Unable to remove shower-like pfo." << std::endl;
+                pfoList.erase(pTargetPfo);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pTargetPfo));
+            }
+            catch (StatusCodeException &)
+            {
+                std::cout << "ClusterCharacterisationAlgorithm: Unable to remove shower-like pfo." << std::endl;
+            }
         }
     }
 }
@@ -542,7 +550,7 @@ void ClusterCharacterisationAlgorithm::FindTargetPfo(Cluster *const pCluster, co
 
 StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "InputPfoListNames", m_inputPfoListNames));
@@ -555,6 +563,15 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "RemoteClusterDistance", m_remoteClusterDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DirectionTanAngle", m_directionTanAngle));
+
+    if (m_directionTanAngle < std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_INVALID_PARAMETER;
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DirectionApexShift", m_directionApexShift));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseMCFigureOfMerit", m_useMCFigureOfMerit));
