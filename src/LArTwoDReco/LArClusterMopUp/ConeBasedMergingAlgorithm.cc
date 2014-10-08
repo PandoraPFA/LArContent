@@ -113,6 +113,8 @@ ConeBasedMergingAlgorithm::ConeParameters::ConeParameters(Cluster *pCluster, con
     this->GetDirectionEstimate(fitResult, m_isForward, m_direction);
     const CartesianVector basePosition(m_isForward ? fitResult.GetGlobalMaxLayerPosition() : fitResult.GetGlobalMinLayerPosition());
 
+    
+
     m_apex = m_isForward ? fitResult.GetGlobalMinLayerPosition() : fitResult.GetGlobalMaxLayerPosition();
     m_baseCentre = m_apex + m_direction * (basePosition - m_apex).GetDotProduct(m_direction);
     m_coneLength = (m_baseCentre - m_apex).GetMagnitude();

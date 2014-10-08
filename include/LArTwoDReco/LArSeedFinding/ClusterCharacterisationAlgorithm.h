@@ -72,6 +72,25 @@ private:
     void GetSeedAssociationList(const pandora::ClusterVector &particleSeedVector, const pandora::ClusterList *const pClusterList,
         SeedAssociationList &seedAssociationList) const;
 
+    /**
+     *  @brief  Check a provided seed association list for consistency, making changes as required
+     * 
+     *  @param  seedIter iterator to an element in the input seed association list
+     *  @param  finalSeedAssociationList to receive the output seed association list
+     */
+    void CheckSeedAssociationList(SeedAssociationList::const_iterator seedIter, SeedAssociationList &finalSeedAssociationList) const;
+
+    /**
+     *  @brief  Process the list of branch clusters, merging with specified parent cluster, dealing with any existing pfos as required
+     * 
+     *  @param  pParentCluster the address of the parent cluster
+     *  @param  branchClusters the list of branch clusters for the specified seed cluster
+     *  @param  listName the cluster list name
+     *  @param  pfoList the input pfo list
+     */
+    void ProcessBranchClusters(pandora::Cluster *const pParentCluster, const pandora::ClusterVector &branchClusters, const std::string &listName,
+        pandora::PfoList &pfoList) const;
+
     AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
 
     /**
@@ -83,14 +102,6 @@ private:
      *  @return the cluster direction in z
      */
     ClusterDirection GetClusterDirectionInZ(const pandora::Vertex *const pVertex, const pandora::Cluster *const pCluster) const;
-
-    /**
-     *  @brief  Check a provided seed association list for consistency, making changes as required
-     * 
-     *  @param  seedIter iterator to an element in the input seed association list
-     *  @param  finalSeedAssociationList to receive the output seed association list
-     */
-    void CheckSeedAssociationList(SeedAssociationList::const_iterator seedIter, SeedAssociationList &finalSeedAssociationList) const;
 
     /**
      *  @brief  Get a figure of merit representing the consistency of the provided seed associated list
@@ -169,8 +180,9 @@ private:
      *
      *  @param  nCaloHitsPerCluster the cluster info map
      *  @param  nBranchesPerCluster the cluster info map
+     *  @param  pfoList the input pfo list
      */
-    void RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster) const;
+    void RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster, pandora::PfoList &pfoList) const;
 
     /**
      *  @brief  Get the address of the pfo containing a specified cluster
