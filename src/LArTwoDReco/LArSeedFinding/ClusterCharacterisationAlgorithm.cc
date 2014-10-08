@@ -41,6 +41,8 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
 
 StatusCode ClusterCharacterisationAlgorithm::Run()
 {
+    PfoList pfoList;
+    this->GetInputPfoList(pfoList);
     ClusterInfoMap nCaloHitsPerCluster, nBranchesPerCluster;
 
     for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
@@ -49,7 +51,7 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
 
         ClusterList usedClusters;
-        Cluster *pSeedCluster = NULL;
+        Cluster *pSeedCluster(NULL);
 
         while (this->GetNextSeedCandidate(pClusterList, usedClusters, pSeedCluster))
         {
@@ -64,22 +66,21 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
             for (SeedAssociationList::const_iterator iter = finalSeedAssociationList.begin(), iterEnd = finalSeedAssociationList.end(); iter != iterEnd; ++iter)
             {
-                usedClusters.insert(iter->first);
-                usedClusters.insert(iter->second.begin(), iter->second.end());
+                Cluster *pParentCluster(iter->first);
+                const ClusterVector &branchClusters(iter->second);
 
-                this->StoreNCaloHitsPerCluster(iter->first, nCaloHitsPerCluster);
-                this->StoreNBranchesPerCluster(iter->first, iter->second, nBranchesPerCluster);
+                this->StoreNCaloHitsPerCluster(pParentCluster, nCaloHitsPerCluster);
+                this->StoreNBranchesPerCluster(pParentCluster, branchClusters, nBranchesPerCluster);
+                this->ProcessBranchClusters(pParentCluster, branchClusters, *listIter, pfoList);
 
-                for (ClusterVector::const_iterator iter2 = iter->second.begin(), iter2End = iter->second.end(); iter2 != iter2End; ++iter2)
-                {
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, iter->first, *iter2, *listIter, *listIter));
-                }
+                usedClusters.insert(pParentCluster);
+                usedClusters.insert(branchClusters.begin(), branchClusters.end());
             }
         }
     }
 
     if (m_shouldRemoveShowerPfos)
-        this->RemoveShowerPfos(nCaloHitsPerCluster, nBranchesPerCluster);
+        this->RemoveShowerPfos(nCaloHitsPerCluster, nBranchesPerCluster, pfoList);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -124,7 +125,7 @@ void ClusterCharacterisationAlgorithm::GetSeedAssociationList(const ClusterVecto
     {
         Cluster *pCandidateCluster = *iter;
 
-        if (!pCandidateCluster->IsAvailable() || seedClusters.count(pCandidateCluster) || (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
+        if (seedClusters.count(pCandidateCluster) || (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
             continue;
 
         candidateClusters.push_back(pCandidateCluster);
@@ -139,6 +140,83 @@ void ClusterCharacterisationAlgorithm::GetSeedAssociationList(const ClusterVecto
     }
 
     this->IdentifyClusterMerges(particleSeedVector, backwardUsageMap, seedAssociationList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationList::const_iterator seedIter, SeedAssociationList &finalSeedAssociationList) const
+{
+    ClusterList usedClusters, availableClusters;
+    usedClusters.insert(seedIter->first);
+    availableClusters.insert(seedIter->second.begin(), seedIter->second.end());
+
+    SeedAssociationList seedAssociationList;
+    seedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
+    const float originalFigureOfMerit(this->GetFigureOfMerit(seedAssociationList));
+    float bestFigureOfMerit(originalFigureOfMerit);
+
+    Cluster *pTrialSeedCluster = NULL;
+    bool betterConfigurationFound(false);
+    SeedAssociationList bestSeedAssociationList;
+
+    while (this->GetNextSeedCandidate(&availableClusters, usedClusters, pTrialSeedCluster))
+    {
+        usedClusters.insert(pTrialSeedCluster);
+
+        ClusterVector trialParticleSeedVector;
+        trialParticleSeedVector.push_back(seedIter->first);
+        trialParticleSeedVector.push_back(pTrialSeedCluster);
+
+        SeedAssociationList trialSeedAssociationList;
+        this->GetSeedAssociationList(trialParticleSeedVector, &availableClusters, trialSeedAssociationList);
+        const float trialFigureOfMerit(this->GetFigureOfMerit(trialSeedAssociationList));
+
+        if (trialFigureOfMerit > bestFigureOfMerit)
+        {
+            betterConfigurationFound = true;
+            bestFigureOfMerit = trialFigureOfMerit;
+            bestSeedAssociationList = trialSeedAssociationList;
+
+            if (m_useFirstImprovedSeed)
+                break;
+        }
+    }
+
+    if (betterConfigurationFound)
+    {
+        for (SeedAssociationList::const_iterator iter = bestSeedAssociationList.begin(), iterEnd = bestSeedAssociationList.end(); iter != iterEnd; ++iter)
+        {
+            this->CheckSeedAssociationList(iter, finalSeedAssociationList);
+        }
+    }
+    else
+    {
+        finalSeedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ClusterCharacterisationAlgorithm::ProcessBranchClusters(Cluster *const pParentCluster, const ClusterVector &branchClusters, const std::string &listName,
+    PfoList &pfoList) const
+{
+    for (ClusterVector::const_iterator iter = branchClusters.begin(), iterEnd = branchClusters.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *pBranchCluster(*iter);
+
+        if (!pBranchCluster->IsAvailable() && m_shouldRemoveShowerPfos)
+        {
+            Pfo *pTargetPfo(NULL);
+            this->FindTargetPfo(pBranchCluster, pfoList, pTargetPfo);
+            pfoList.erase(pTargetPfo);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pTargetPfo));
+        }
+
+        if (pBranchCluster->IsAvailable())
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pBranchCluster, listName, listName));
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,59 +316,6 @@ ClusterCharacterisationAlgorithm::ClusterDirection ClusterCharacterisationAlgori
         return DIRECTION_BACKWARD_IN_Z;
 
     throw StatusCodeException(STATUS_CODE_FAILURE);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ClusterCharacterisationAlgorithm::CheckSeedAssociationList(SeedAssociationList::const_iterator seedIter, SeedAssociationList &finalSeedAssociationList) const
-{
-    ClusterList usedClusters, availableClusters;
-    usedClusters.insert(seedIter->first);
-    availableClusters.insert(seedIter->second.begin(), seedIter->second.end());
-
-    SeedAssociationList seedAssociationList;
-    seedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
-    const float originalFigureOfMerit(this->GetFigureOfMerit(seedAssociationList));
-    float bestFigureOfMerit(originalFigureOfMerit);
-
-    Cluster *pTrialSeedCluster = NULL;
-    bool betterConfigurationFound(false);
-    SeedAssociationList bestSeedAssociationList;
-
-    while (this->GetNextSeedCandidate(&availableClusters, usedClusters, pTrialSeedCluster))
-    {
-        usedClusters.insert(pTrialSeedCluster);
-
-        ClusterVector trialParticleSeedVector;
-        trialParticleSeedVector.push_back(seedIter->first);
-        trialParticleSeedVector.push_back(pTrialSeedCluster);
-
-        SeedAssociationList trialSeedAssociationList;
-        this->GetSeedAssociationList(trialParticleSeedVector, &availableClusters, trialSeedAssociationList);
-        const float trialFigureOfMerit(this->GetFigureOfMerit(trialSeedAssociationList));
-
-        if (trialFigureOfMerit > bestFigureOfMerit)
-        {
-            betterConfigurationFound = true;
-            bestFigureOfMerit = trialFigureOfMerit;
-            bestSeedAssociationList = trialSeedAssociationList;
-
-            if (m_useFirstImprovedSeed)
-                break;
-        }
-    }
-
-    if (betterConfigurationFound)
-    {
-        for (SeedAssociationList::const_iterator iter = bestSeedAssociationList.begin(), iterEnd = bestSeedAssociationList.end(); iter != iterEnd; ++iter)
-        {
-            this->CheckSeedAssociationList(iter, finalSeedAssociationList);
-        }
-    }
-    else
-    {
-        finalSeedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -477,11 +502,8 @@ void ClusterCharacterisationAlgorithm::StoreNBranchesPerCluster(const Cluster *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterCharacterisationAlgorithm::RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster) const
+void ClusterCharacterisationAlgorithm::RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster, PfoList &pfoList) const
 {
-    PfoList pfoList;
-    this->GetInputPfoList(pfoList);
-
     for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
         const ClusterList *pClusterList = NULL;
