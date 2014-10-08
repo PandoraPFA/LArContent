@@ -32,7 +32,7 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_showerLikeCaloHitRatio(2.f),
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
-    m_maxVertexTransverseDistance(1.f),
+    m_maxVertexTransverseDistance(1.5f),
     m_vertexAngularAllowance(3.f)
 {
 }
