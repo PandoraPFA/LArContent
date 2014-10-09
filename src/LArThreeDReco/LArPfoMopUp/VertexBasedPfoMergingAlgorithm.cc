@@ -24,7 +24,12 @@ namespace lar_content
 VertexBasedPfoMergingAlgorithm::VertexBasedPfoMergingAlgorithm() :
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexTransverseDistance(1.5f),
-    m_minVertexAssociatedHitTypes(2)
+    m_minVertexAssociatedHitTypes(2),
+    m_coneAngleCentile(0.8f),
+    m_maxConeLengthMultiplier(4.f),
+    m_meanBoundedFractionCut(0.6f),
+    m_maxBoundedFractionCut(0.7f),
+    m_minBoundedFractionCut(0.3f)
 {
 }
 
@@ -43,9 +48,7 @@ StatusCode VertexBasedPfoMergingAlgorithm::Run()
     {
         PfoList vertexPfos, nonVertexPfos;
         this->GetInputPfos(pVertex, vertexPfos, nonVertexPfos);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &vertexPfos, "vertexPfos", RED);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &nonVertexPfos, "nonVertexPfos", GREEN);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
         PfoAssociationList pfoAssociationList;
         this->GetPfoAssociations(pVertex, vertexPfos, nonVertexPfos, pfoAssociationList);
 
@@ -108,8 +111,30 @@ void VertexBasedPfoMergingAlgorithm::GetPfoAssociations(const Vertex *const pVer
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool VertexBasedPfoMergingAlgorithm::ProcessPfoAssociations(const PfoAssociationList &/*pfoAssociationList*/) const
+bool VertexBasedPfoMergingAlgorithm::ProcessPfoAssociations(const PfoAssociationList &pfoAssociationList) const
 {
+    for (PfoAssociationList::const_iterator iter = pfoAssociationList.begin(), iterEnd = pfoAssociationList.end(); iter != iterEnd; ++iter)
+    {
+        const PfoAssociation &pfoAssociation(*iter);
+
+        if ((pfoAssociation.GetMeanBoundedFraction() < m_meanBoundedFractionCut) ||
+            (pfoAssociation.GetMaxBoundedFraction() < m_maxBoundedFractionCut) ||
+            (pfoAssociation.GetMinBoundedFraction() < m_minBoundedFractionCut))
+        {
+            continue;
+        }
+//PfoList tempList1, tempList2;
+//tempList1.insert(pfoAssociation.GetVertexPfo());
+//tempList2.insert(pfoAssociation.GetDaughterPfo());
+//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempList1, "VertexCluster", BLUE);
+//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempList2, "DaughterCluster", GREEN);
+//std::cout << " Make merge, meanBoundedFraction " << pfoAssociation.GetMeanBoundedFraction() << " max " << pfoAssociation.GetMaxBoundedFraction() << " min " << pfoAssociation.GetMinBoundedFraction() << std::endl;
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+        this->MergePfos(pfoAssociation);
+        return true;
+    }
+
     return false;
 }
 
@@ -199,10 +224,98 @@ VertexBasedPfoMergingAlgorithm::PfoAssociation VertexBasedPfoMergingAlgorithm::G
 VertexBasedPfoMergingAlgorithm::ClusterAssociation VertexBasedPfoMergingAlgorithm::GetClusterAssociation(const CartesianVector &vertexPosition2D,
     Cluster *const pVertexCluster, Cluster *const pDaughterCluster) const
 {
-    const ConeParameters coneParameters(pVertexCluster, vertexPosition2D, 0.8f); // TODO config
-    const float boundedFraction(coneParameters.GetBoundedFraction(pDaughterCluster, 4.f)); // TODO config
+    const ConeParameters coneParameters(pVertexCluster, vertexPosition2D, m_coneAngleCentile);
+    const float boundedFraction(coneParameters.GetBoundedFraction(pDaughterCluster, m_maxConeLengthMultiplier));
 
     return ClusterAssociation(pVertexCluster, pDaughterCluster, boundedFraction);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexBasedPfoMergingAlgorithm::MergePfos(const PfoAssociation &pfoAssociation) const
+{
+    const PfoList *pTrackPfoList(NULL), *pShowerPfoList(NULL);
+    (void) PandoraContentApi::GetList(*this, m_trackPfoListName, pTrackPfoList);
+    (void) PandoraContentApi::GetList(*this, m_showerPfoListName, pShowerPfoList);
+
+    if ((NULL == pTrackPfoList) && (NULL == pShowerPfoList))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    Pfo *pVertexPfo(pfoAssociation.GetVertexPfo());
+    Pfo *pDaughterPfo(pfoAssociation.GetDaughterPfo());
+    const bool isvertexTrack((NULL != pTrackPfoList) && (pTrackPfoList->count(pVertexPfo) > 0));
+    const bool isDaughterShower((NULL != pShowerPfoList) && (pShowerPfoList->count(pDaughterPfo) > 0));
+    const bool isTrackToShowerMerge(isvertexTrack && isDaughterShower);
+
+    Cluster *pVertexClusterU(NULL), *pVertexClusterV(NULL), *pVertexClusterW(NULL);
+    this->Get2DClusters(pVertexPfo, pVertexClusterU, pVertexClusterV, pVertexClusterW);
+    Cluster *pDaughterClusterU(NULL), *pDaughterClusterV(NULL), *pDaughterClusterW(NULL);
+    this->Get2DClusters(pDaughterPfo, pDaughterClusterU, pDaughterClusterV, pDaughterClusterW);
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pDaughterPfo, isDaughterShower ? m_showerPfoListName : m_trackPfoListName));
+    pDaughterPfo = NULL;
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pVertexClusterU, pDaughterClusterU,
+        this->GetClusterListName(pVertexClusterU), this->GetClusterListName(pDaughterClusterU)));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pVertexClusterV, pDaughterClusterV,
+        this->GetClusterListName(pVertexClusterV), this->GetClusterListName(pDaughterClusterV)));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pVertexClusterW, pDaughterClusterW,
+        this->GetClusterListName(pVertexClusterW), this->GetClusterListName(pDaughterClusterW)));
+
+    if (isTrackToShowerMerge)
+    {
+        PfoList vertexPfoList;
+        vertexPfoList.insert(pVertexPfo);
+        pVertexPfo->SetParticleId(E_MINUS);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_trackPfoListName, m_showerPfoListName, vertexPfoList));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexBasedPfoMergingAlgorithm::Get2DClusters(const Pfo *const pPfo, Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW) const
+{
+    HitTypeToClusterMap hitTypeToClusterMap;
+    const ClusterList &clusterList(pPfo->GetClusterList());
+
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        Cluster *const pCluster(*iter);
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+
+        if (!hitTypeToClusterMap.insert(HitTypeToClusterMap::value_type(hitType, pCluster)).second)
+            throw STATUS_CODE_FAILURE;
+    }
+
+    HitTypeToClusterMap::const_iterator iterU = hitTypeToClusterMap.find(TPC_VIEW_U);
+    HitTypeToClusterMap::const_iterator iterV = hitTypeToClusterMap.find(TPC_VIEW_V);
+    HitTypeToClusterMap::const_iterator iterW = hitTypeToClusterMap.find(TPC_VIEW_W);
+
+    if ((hitTypeToClusterMap.end() == iterU) || (hitTypeToClusterMap.end() == iterV) || (hitTypeToClusterMap.end() == iterW))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    pClusterU = iterU->second;
+    pClusterV = iterV->second;
+    pClusterW = iterW->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::string VertexBasedPfoMergingAlgorithm::GetClusterListName(Cluster *const pCluster) const
+{
+    for (StringVector::const_iterator iter = m_clusterListNames.begin(), iterEnd = m_clusterListNames.end(); iter != iterEnd; ++iter)
+    {
+        const ClusterList *pClusterList(NULL);
+        (void) PandoraContentApi::GetList(*this, *iter, pClusterList);
+
+        if (NULL == pClusterList)
+            continue;
+
+        if (pClusterList->count(pCluster))
+            return *iter;
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -267,7 +380,15 @@ VertexBasedPfoMergingAlgorithm::ConeParameters::ConeParameters(const Cluster *co
     m_coneCosHalfAngle(0.f)
 {
     m_direction = this->GetDirectionEstimate();
-    m_coneLength = this->GetConeLength();
+    m_coneLength = this->GetSignedConeLength();
+
+    // ATTN Compensate for coordinate shift when fitting with vertex constraint (cleaner way to do this?)
+    if (m_coneLength < std::numeric_limits<float>::epsilon())
+    {
+        m_direction = m_direction * -1.f;
+        m_coneLength = std::fabs(m_coneLength);
+    }
+
     m_coneCosHalfAngle = this->GetCosHalfAngleEstimate(coneAngleCentile);
 }
 
@@ -325,7 +446,7 @@ CartesianVector VertexBasedPfoMergingAlgorithm::ConeParameters::GetDirectionEsti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexBasedPfoMergingAlgorithm::ConeParameters::GetConeLength() const
+float VertexBasedPfoMergingAlgorithm::ConeParameters::GetSignedConeLength() const
 {
     float maxProjectedLength(0.f);
     const OrderedCaloHitList &orderedCaloHitList(m_pCluster->GetOrderedCaloHitList());
@@ -333,7 +454,12 @@ float VertexBasedPfoMergingAlgorithm::ConeParameters::GetConeLength() const
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-            maxProjectedLength = std::max(maxProjectedLength, m_direction.GetDotProduct((*hitIter)->GetPositionVector() - m_apex));
+        {
+            const float projectedLength(m_direction.GetDotProduct((*hitIter)->GetPositionVector() - m_apex));
+
+            if (std::fabs(projectedLength) > std::fabs(maxProjectedLength))
+                maxProjectedLength = projectedLength;
+        }
     }
 
     return maxProjectedLength;
@@ -372,6 +498,9 @@ StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerPfoListName", m_showerPfoListName));
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "ClusterListNames", m_clusterListNames));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
 
@@ -380,6 +509,21 @@ StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexAssociatedHitTypes", m_minVertexAssociatedHitTypes));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ConeAngleCentile", m_coneAngleCentile));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MeanBoundedFractionCut", m_meanBoundedFractionCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxBoundedFractionCut", m_maxBoundedFractionCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinBoundedFractionCut", m_minBoundedFractionCut));
 
     return STATUS_CODE_SUCCESS;
 }
