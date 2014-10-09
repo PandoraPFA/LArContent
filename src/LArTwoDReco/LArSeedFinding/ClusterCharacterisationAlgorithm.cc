@@ -12,6 +12,8 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
+#include "LArObjects/LArPointingCluster.h"
+
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
 
 using namespace pandora;
