@@ -199,7 +199,7 @@ private:
          */
         float GetBoundedFraction(const pandora::Cluster *const pDaughterCluster, const float coneLengthMultiplier) const;
 
-    //private: // TODO put back in!
+    private:
         /**
          *  @brief  Get the cone direction estimate, with apex fixed at the 2d vertex position
          * 
@@ -208,11 +208,11 @@ private:
         pandora::CartesianVector GetDirectionEstimate() const;
 
         /**
-         *  @brief  Get the cone length
+         *  @brief  Get the cone length (signed, by projections of hits onto initial direction estimate)
          * 
          *  @return rhe cone length
          */
-        float GetConeLength() const;
+        float GetSignedConeLength() const;
 
         /**
          *  @brief  Get the cone cos half angle estimate
@@ -294,17 +294,52 @@ private:
     ClusterAssociation GetClusterAssociation(const pandora::CartesianVector &vertexPosition2D, pandora::Cluster *const pVertexCluster,
         pandora::Cluster *const pDaughterCluster) const;
 
+    /**
+     *  @brief  Merge the vertex and daughter pfos (deleting daughter pfo, merging clusters, etc.) described in the specified pfoAssociation
+     * 
+     *  @param  pfoAssociation the pfo association details
+     */
+    void MergePfos(const PfoAssociation &pfoAssociation) const;
+
+    /**
+     *  @brief  Get the 2d clusters (for the three constituent 2d hit type) from a specified pfo
+     * 
+     *  @param  pPfo the address of the pfo
+     *  @param  pClusterU to receive the address of the cluster in the u view
+     *  @param  pClusterV to receive the address of the cluster in the v view
+     *  @param  pClusterW to receive the address of the cluster in the w view
+     */
+    void Get2DClusters(const pandora::Pfo *const pPfo, pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW) const;
+
+    /**
+     *  @brief  Look through cluster lists (matching input cluster list names) to find name of list containing a specified cluster
+     * 
+     *  @param  pCluster the address of the cluster
+     *
+     *  @return the name of the list containing the specified cluster
+     */
+    std::string GetClusterListName(pandora::Cluster *const pCluster) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::set<pandora::HitType> HitTypeSet;
+    typedef std::map<pandora::HitType, pandora::Cluster*> HitTypeToClusterMap;
     typedef std::map<pandora::HitType, ClusterAssociation> HitTypeToAssociationMap;
 
-    std::string     m_trackPfoListName;                 ///< The input track pfo list name
-    std::string     m_showerPfoListName;                ///< The input shower pfo list name
+    std::string             m_trackPfoListName;                 ///< The input track pfo list name
+    std::string             m_showerPfoListName;                ///< The input shower pfo list name
+    pandora::StringVector   m_clusterListNames;                 ///< The list of underlying cluster list names
 
-    float           m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
-    float           m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
-    unsigned int    m_minVertexAssociatedHitTypes;      ///< The min number of vertex associated hit types for a vertex associated pfo
+    float                   m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
+    float                   m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
+    unsigned int            m_minVertexAssociatedHitTypes;      ///< The min number of vertex associated hit types for a vertex associated pfo
+
+    float                   m_coneAngleCentile;                 ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
+    float                   m_maxConeLengthMultiplier;          ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
+
+    float                   m_meanBoundedFractionCut;           ///< Cut on association info (mean bounded fraction) for determining pfo merges
+    float                   m_maxBoundedFractionCut;            ///< Cut on association info (max bounded fraction) for determining pfo merges
+    float                   m_minBoundedFractionCut;            ///< Cut on association info (min bounded fraction) for determining pfo merges
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
