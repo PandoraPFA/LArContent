@@ -42,6 +42,7 @@
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
+#include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
@@ -116,6 +117,7 @@ public:
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
         d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \
         d("LArThreeDLongitudinalTracks",            lar_content::ThreeDLongitudinalTracksAlgorithm::Factory)                    \
+        d("LArVertexBasedPfoMerging",               lar_content::VertexBasedPfoMergingAlgorithm::Factory)                       \
         d("LArThreeDRemnants",                      lar_content::ThreeDRemnantsAlgorithm::Factory)                              \
         d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \

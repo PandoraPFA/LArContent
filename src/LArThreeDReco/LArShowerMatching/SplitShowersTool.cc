@@ -12,6 +12,8 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
+#include "LArObjects/LArPointingCluster.h"
+
 #include "LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 
 using namespace pandora;
