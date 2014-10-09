@@ -173,7 +173,7 @@ private:
 
     unsigned int    m_minCaloHitsPerConeCluster;///< The min number of calo hits per cluster used to define a cone
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    float           m_coneAngleCentile;         ///< Cluster cone angle is defined using specified centile of distribution of hit cos half angles
+    float           m_coneAngleCentile;         ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
     float           m_maxConeLengthMultiplier;  ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
     float           m_minBoundedFraction;       ///< The minimum cluster bounded fraction for merging
 };
