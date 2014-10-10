@@ -26,7 +26,8 @@ VertexBasedPfoMergingAlgorithm::VertexBasedPfoMergingAlgorithm() :
     m_maxVertexTransverseDistance(1.5f),
     m_minVertexAssociatedHitTypes(2),
     m_coneAngleCentile(0.8f),
-    m_maxConeLengthMultiplier(4.f),
+    m_maxConeCosHalfAngle(0.95f),
+    m_maxConeLengthMultiplier(3.f),
     m_meanBoundedFractionCut(0.6f),
     m_maxBoundedFractionCut(0.7f),
     m_minBoundedFractionCut(0.3f)
@@ -224,7 +225,7 @@ VertexBasedPfoMergingAlgorithm::PfoAssociation VertexBasedPfoMergingAlgorithm::G
 VertexBasedPfoMergingAlgorithm::ClusterAssociation VertexBasedPfoMergingAlgorithm::GetClusterAssociation(const CartesianVector &vertexPosition2D,
     Cluster *const pVertexCluster, Cluster *const pDaughterCluster) const
 {
-    const ConeParameters coneParameters(pVertexCluster, vertexPosition2D, m_coneAngleCentile);
+    const ConeParameters coneParameters(pVertexCluster, vertexPosition2D, m_coneAngleCentile, m_maxConeCosHalfAngle);
     const float boundedFraction(coneParameters.GetBoundedFraction(pDaughterCluster, m_maxConeLengthMultiplier));
 
     return ClusterAssociation(pVertexCluster, pDaughterCluster, boundedFraction);
@@ -372,7 +373,8 @@ bool VertexBasedPfoMergingAlgorithm::PfoAssociation::operator< (const PfoAssocia
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMergingAlgorithm::ConeParameters::ConeParameters(const Cluster *const pCluster, const CartesianVector &vertexPosition2D, const float coneAngleCentile) :
+VertexBasedPfoMergingAlgorithm::ConeParameters::ConeParameters(const Cluster *const pCluster, const CartesianVector &vertexPosition2D,
+        const float coneAngleCentile, const float maxCosHalfAngle) :
     m_pCluster(pCluster),
     m_apex(vertexPosition2D),
     m_direction(0.f, 0.f, 0.f),
@@ -389,7 +391,7 @@ VertexBasedPfoMergingAlgorithm::ConeParameters::ConeParameters(const Cluster *co
         m_coneLength = std::fabs(m_coneLength);
     }
 
-    m_coneCosHalfAngle = this->GetCosHalfAngleEstimate(coneAngleCentile);
+    m_coneCosHalfAngle = std::min(maxCosHalfAngle, this->GetCosHalfAngleEstimate(coneAngleCentile));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -512,6 +514,9 @@ StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "ConeAngleCentile", m_coneAngleCentile));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MaxConeCosHalfAngle", m_maxConeCosHalfAngle));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
