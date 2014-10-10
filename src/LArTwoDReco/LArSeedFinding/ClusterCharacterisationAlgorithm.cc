@@ -23,6 +23,7 @@ namespace lar_content
 
 ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_minCaloHitsPerCluster(5),
+    m_nearbyTrackDistance(1.f),
     m_nearbyClusterDistance(2.5f),
     m_remoteClusterDistance(10.f),
     m_directionTanAngle(1.732f),
@@ -244,6 +245,14 @@ ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorit
     const float cOuter(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()), pClusterSeed));
     const float sInner(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetInnerPseudoLayer()), pCluster));
     const float cInner(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()), pClusterSeed));
+
+    // Veto track-track end-to-end associations
+    if (!pClusterSeed->IsAvailable() && !pCluster->IsAvailable() &&
+        (((seedDirection == DIRECTION_FORWARD_IN_Z) && (sOuter < m_nearbyTrackDistance)) ||
+        ((seedDirection == DIRECTION_BACKWARD_IN_Z) && (sInner < m_nearbyTrackDistance))) )
+    {
+        return NONE;
+    }
 
     // Association check 1(a), look for enclosed clusters
     if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) &&
@@ -581,6 +590,9 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NearbyTrackDistance", m_nearbyTrackDistance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NearbyClusterDistance", m_nearbyClusterDistance));

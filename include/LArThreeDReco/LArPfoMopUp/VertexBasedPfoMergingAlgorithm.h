@@ -186,8 +186,10 @@ private:
          *  @param  pCluster address of the cluster
          *  @param  vertexPosition2D the event 2D vertex position
          *  @param  coneAngleCentile the cone angle centile
+         *  @param  maxConeCosHalfAngle the maximum value for cosine of cone half angle
          */
-        ConeParameters(const pandora::Cluster *const pCluster, const pandora::CartesianVector &vertexPosition2D, const float coneAngleCentile);
+        ConeParameters(const pandora::Cluster *const pCluster, const pandora::CartesianVector &vertexPosition2D, const float coneAngleCentile,
+            const float maxConeCosHalfAngle);
 
         /**
          *  @brief  Get the fraction of hits in a candidate daughter cluster bounded by the cone
@@ -335,6 +337,7 @@ private:
     unsigned int            m_minVertexAssociatedHitTypes;      ///< The min number of vertex associated hit types for a vertex associated pfo
 
     float                   m_coneAngleCentile;                 ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
+    float                   m_maxConeCosHalfAngle;              ///< Maximum value for cosine of cone half angle
     float                   m_maxConeLengthMultiplier;          ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
 
     float                   m_meanBoundedFractionCut;           ///< Cut on association info (mean bounded fraction) for determining pfo merges
