@@ -8,6 +8,8 @@
 #ifndef LAR_VERTEX_BASED_PFO_MERGING_ALGORITHM_H
 #define LAR_VERTEX_BASED_PFO_MERGING_ALGORITHM_H 1
 
+#include "Objects/ParticleFlowObject.h"
+
 #include "Pandora/Algorithm.h"
 
 namespace lar_content
@@ -339,6 +341,9 @@ private:
     float                   m_coneAngleCentile;                 ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
     float                   m_maxConeCosHalfAngle;              ///< Maximum value for cosine of cone half angle
     float                   m_maxConeLengthMultiplier;          ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
+
+    float                   m_directionTanAngle;                ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    float                   m_directionApexShift;               ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
 
     float                   m_meanBoundedFractionCut;           ///< Cut on association info (mean bounded fraction) for determining pfo merges
     float                   m_maxBoundedFractionCut;            ///< Cut on association info (max bounded fraction) for determining pfo merges

@@ -11,6 +11,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 
@@ -28,6 +29,8 @@ VertexBasedPfoMergingAlgorithm::VertexBasedPfoMergingAlgorithm() :
     m_coneAngleCentile(0.8f),
     m_maxConeCosHalfAngle(0.95f),
     m_maxConeLengthMultiplier(3.f),
+    m_directionTanAngle(1.732f),
+    m_directionApexShift(0.333f),
     m_meanBoundedFractionCut(0.6f),
     m_maxBoundedFractionCut(0.7f),
     m_minBoundedFractionCut(0.3f)
@@ -195,6 +198,8 @@ VertexBasedPfoMergingAlgorithm::PfoAssociation VertexBasedPfoMergingAlgorithm::G
         Cluster *const pVertexCluster(*iter1);
         const HitType vertexHitType(LArClusterHelper::GetClusterHitType(pVertexCluster));
         const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), vertexHitType));
+        const LArVertexHelper::ClusterDirection vertexClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
+            pVertexCluster, m_directionTanAngle, m_directionApexShift));
 
         for (ClusterList::const_iterator iter2 = daughterClusterList.begin(), iter2End = daughterClusterList.end(); iter2 != iter2End; ++iter2)
         {
@@ -202,6 +207,12 @@ VertexBasedPfoMergingAlgorithm::PfoAssociation VertexBasedPfoMergingAlgorithm::G
             const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
 
             if (vertexHitType != daughterHitType)
+                continue;
+
+            const LArVertexHelper::ClusterDirection daughterClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
+                pDaughterCluster, m_directionTanAngle, m_directionApexShift));
+
+            if (vertexClusterDirection != daughterClusterDirection)
                 continue;
 
             const ClusterAssociation clusterAssociation(this->GetClusterAssociation(vertexPosition2D, pVertexCluster, pDaughterCluster));
@@ -521,6 +532,12 @@ StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DirectionTanAngle", m_directionTanAngle));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DirectionApexShift", m_directionApexShift));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MeanBoundedFractionCut", m_meanBoundedFractionCut));

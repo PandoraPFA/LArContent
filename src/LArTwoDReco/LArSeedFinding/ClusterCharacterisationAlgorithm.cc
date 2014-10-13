@@ -11,6 +11,7 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
+#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 
@@ -242,14 +243,16 @@ ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorit
     const Vertex *pVertex((pVertexList->size() == 1) ? *(pVertexList->begin()) : NULL);
 
     // Direction of seed cluster
-    const ClusterDirection seedDirection((NULL != pVertex) ? this->GetClusterDirectionInZ(pVertex, pClusterSeed) : DIRECTION_UNKNOWN);
-    const bool checkSeedForward(seedDirection != DIRECTION_BACKWARD_IN_Z);
-    const bool checkSeedBackward(seedDirection != DIRECTION_FORWARD_IN_Z);
+    const LArVertexHelper::ClusterDirection seedDirection((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
+        LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pClusterSeed, m_directionTanAngle, m_directionApexShift));
+    const bool checkSeedForward(seedDirection != LArVertexHelper::DIRECTION_BACKWARD_IN_Z);
+    const bool checkSeedBackward(seedDirection != LArVertexHelper::DIRECTION_FORWARD_IN_Z);
 
     // Direction of candidate cluster
-    const ClusterDirection candidateDirection((NULL != pVertex) ? this->GetClusterDirectionInZ(pVertex, pCluster) : DIRECTION_UNKNOWN);
-    const bool checkCandidateForward(candidateDirection != DIRECTION_BACKWARD_IN_Z);
-    const bool checkCandidateBackward(candidateDirection != DIRECTION_FORWARD_IN_Z);
+    const LArVertexHelper::ClusterDirection candidateDirection((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
+        LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pCluster, m_directionTanAngle, m_directionApexShift));
+    const bool checkCandidateForward(candidateDirection != LArVertexHelper::DIRECTION_BACKWARD_IN_Z);
+    const bool checkCandidateBackward(candidateDirection != LArVertexHelper::DIRECTION_FORWARD_IN_Z);
 
     // Calculate distances of association
     const float sOuter(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetOuterPseudoLayer()), pCluster));
@@ -303,40 +306,6 @@ ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorit
         return SINGLE_ORDER;
 
     return NONE;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-ClusterCharacterisationAlgorithm::ClusterDirection ClusterCharacterisationAlgorithm::GetClusterDirectionInZ(const Vertex *const pVertex, const Cluster *const pCluster) const
-{
-    if (VERTEX_3D != pVertex->GetVertexType())
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-    const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-
-    const LArPointingCluster pointingCluster(pCluster);
-    const float length((pointingCluster.GetInnerVertex().GetPosition() - pointingCluster.GetOuterVertex().GetPosition()).GetMagnitude());
-    const bool innerIsAtLowerZ(pointingCluster.GetInnerVertex().GetPosition().GetZ() < pointingCluster.GetOuterVertex().GetPosition().GetZ());
-
-    float rLInner(std::numeric_limits<float>::max()), rTInner(std::numeric_limits<float>::max());
-    float rLOuter(std::numeric_limits<float>::max()), rTOuter(std::numeric_limits<float>::max());
-    LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetInnerVertex(), theVertex2D, rLInner, rTInner);
-    LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetOuterVertex(), theVertex2D, rLOuter, rTOuter);
-
-    const bool innerIsVertexAssociated(rLInner > (rTInner / m_directionTanAngle) - (length * m_directionApexShift));
-    const bool outerIsVertexAssociated(rLOuter > (rTInner / m_directionTanAngle) - (length * m_directionApexShift));
-
-    if (innerIsVertexAssociated == outerIsVertexAssociated)
-        return DIRECTION_UNKNOWN;
-
-    if ((innerIsVertexAssociated && innerIsAtLowerZ) || (outerIsVertexAssociated && !innerIsAtLowerZ))
-        return DIRECTION_FORWARD_IN_Z;
-
-    if ((innerIsVertexAssociated && !innerIsAtLowerZ) || (outerIsVertexAssociated && innerIsAtLowerZ))
-        return DIRECTION_BACKWARD_IN_Z;
-
-    throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -618,9 +587,6 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DirectionTanAngle", m_directionTanAngle));
-
-    if (m_directionTanAngle < std::numeric_limits<float>::epsilon())
-        return STATUS_CODE_INVALID_PARAMETER;
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DirectionApexShift", m_directionApexShift));

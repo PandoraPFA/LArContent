@@ -14,10 +14,7 @@
 #include "LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "LArCheating/CheatingVertexCreationAlgorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
