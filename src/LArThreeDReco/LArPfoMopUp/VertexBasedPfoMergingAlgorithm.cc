@@ -33,7 +33,9 @@ VertexBasedPfoMergingAlgorithm::VertexBasedPfoMergingAlgorithm() :
     m_directionApexShift(0.333f),
     m_meanBoundedFractionCut(0.6f),
     m_maxBoundedFractionCut(0.7f),
-    m_minBoundedFractionCut(0.3f)
+    m_minBoundedFractionCut(0.3f),
+    m_minConsistentDirections(2),
+    m_minConsistentDirectionsTrack(3)
 {
 }
 
@@ -126,14 +128,24 @@ bool VertexBasedPfoMergingAlgorithm::ProcessPfoAssociations(const PfoAssociation
 
         if ((pfoAssociation.GetMeanBoundedFraction() < m_meanBoundedFractionCut) ||
             (pfoAssociation.GetMaxBoundedFraction() < m_maxBoundedFractionCut) ||
-            (pfoAssociation.GetMinBoundedFraction() < m_minBoundedFractionCut))
+            (pfoAssociation.GetMinBoundedFraction() < m_minBoundedFractionCut) ||
+            (pfoAssociation.GetNConsistentDirections() < m_minConsistentDirections))
         {
             continue;
         }
 
-        if ((NULL != pTrackPfoList) && (pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) && (pTrackPfoList->count(pfoAssociation.GetDaughterPfo()) > 0))
+        if (NULL != pTrackPfoList)
         {
-            continue;
+            if ((pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) && (pTrackPfoList->count(pfoAssociation.GetDaughterPfo()) > 0))
+            {
+                continue;
+            }
+
+            if (((pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) || (pTrackPfoList->count(pfoAssociation.GetDaughterPfo()) > 0)) &&
+                (pfoAssociation.GetNConsistentDirections() < m_minConsistentDirectionsTrack))
+            {
+                continue;
+            }
         }
 
         this->MergePfos(pfoAssociation);
@@ -197,9 +209,6 @@ VertexBasedPfoMergingAlgorithm::PfoAssociation VertexBasedPfoMergingAlgorithm::G
     {
         Cluster *const pVertexCluster(*iter1);
         const HitType vertexHitType(LArClusterHelper::GetClusterHitType(pVertexCluster));
-        const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), vertexHitType));
-        const LArVertexHelper::ClusterDirection vertexClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
-            pVertexCluster, m_directionTanAngle, m_directionApexShift));
 
         for (ClusterList::const_iterator iter2 = daughterClusterList.begin(), iter2End = daughterClusterList.end(); iter2 != iter2End; ++iter2)
         {
@@ -209,13 +218,7 @@ VertexBasedPfoMergingAlgorithm::PfoAssociation VertexBasedPfoMergingAlgorithm::G
             if (vertexHitType != daughterHitType)
                 continue;
 
-            const LArVertexHelper::ClusterDirection daughterClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
-                pDaughterCluster, m_directionTanAngle, m_directionApexShift));
-
-            if (vertexClusterDirection != daughterClusterDirection)
-                continue;
-
-            const ClusterAssociation clusterAssociation(this->GetClusterAssociation(vertexPosition2D, pVertexCluster, pDaughterCluster));
+            const ClusterAssociation clusterAssociation(this->GetClusterAssociation(pVertex, pVertexCluster, pDaughterCluster));
 
             if (!hitTypeToAssociationMap.insert(HitTypeToAssociationMap::value_type(vertexHitType, clusterAssociation)).second)
                 throw STATUS_CODE_FAILURE;
@@ -234,13 +237,22 @@ VertexBasedPfoMergingAlgorithm::PfoAssociation VertexBasedPfoMergingAlgorithm::G
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMergingAlgorithm::ClusterAssociation VertexBasedPfoMergingAlgorithm::GetClusterAssociation(const CartesianVector &vertexPosition2D,
+VertexBasedPfoMergingAlgorithm::ClusterAssociation VertexBasedPfoMergingAlgorithm::GetClusterAssociation(const Vertex *const pVertex,
     Cluster *const pVertexCluster, Cluster *const pDaughterCluster) const
 {
+    const HitType vertexHitType(LArClusterHelper::GetClusterHitType(pVertexCluster));
+    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), vertexHitType));
+
     const ConeParameters coneParameters(pVertexCluster, vertexPosition2D, m_coneAngleCentile, m_maxConeCosHalfAngle);
     const float boundedFraction(coneParameters.GetBoundedFraction(pDaughterCluster, m_maxConeLengthMultiplier));
 
-    return ClusterAssociation(pVertexCluster, pDaughterCluster, boundedFraction);
+    const LArVertexHelper::ClusterDirection vertexClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
+        pVertexCluster, m_directionTanAngle, m_directionApexShift));
+    const LArVertexHelper::ClusterDirection daughterClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
+        pDaughterCluster, m_directionTanAngle, m_directionApexShift));
+    const bool isConsistentDirection(vertexClusterDirection == daughterClusterDirection);
+
+    return ClusterAssociation(pVertexCluster, pDaughterCluster, boundedFraction, isConsistentDirection);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -334,10 +346,12 @@ std::string VertexBasedPfoMergingAlgorithm::GetClusterListName(Cluster *const pC
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMergingAlgorithm::ClusterAssociation::ClusterAssociation(Cluster *pVertexCluster, Cluster *pDaughterCluster, const float boundedFraction) :
+VertexBasedPfoMergingAlgorithm::ClusterAssociation::ClusterAssociation(Cluster *pVertexCluster, Cluster *pDaughterCluster, const float boundedFraction,
+        const bool isConsistentDirection) :
     m_pVertexCluster(pVertexCluster),
     m_pDaughterCluster(pDaughterCluster),
-    m_boundedFraction(boundedFraction)
+    m_boundedFraction(boundedFraction),
+    m_isConsistentDirection(isConsistentDirection)
 {
 }
 
@@ -373,6 +387,24 @@ float VertexBasedPfoMergingAlgorithm::PfoAssociation::GetMaxBoundedFraction() co
 float VertexBasedPfoMergingAlgorithm::PfoAssociation::GetMinBoundedFraction() const
 {
     return std::min(this->GetClusterAssociationU().GetBoundedFraction(), std::min(this->GetClusterAssociationV().GetBoundedFraction(), this->GetClusterAssociationW().GetBoundedFraction()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int VertexBasedPfoMergingAlgorithm::PfoAssociation::GetNConsistentDirections() const
+{
+    unsigned int nConsistentDirections(0);
+
+    if (this->GetClusterAssociationU().IsConsistentDirection())
+        ++nConsistentDirections;
+
+    if (this->GetClusterAssociationV().IsConsistentDirection())
+        ++nConsistentDirections;
+
+    if (this->GetClusterAssociationW().IsConsistentDirection())
+        ++nConsistentDirections;
+
+    return nConsistentDirections;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -547,6 +579,12 @@ StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinBoundedFractionCut", m_minBoundedFractionCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinConsistentDirections", m_minConsistentDirections));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinConsistentDirectionsTrack", m_minConsistentDirectionsTrack));
 
     return STATUS_CODE_SUCCESS;
 }
