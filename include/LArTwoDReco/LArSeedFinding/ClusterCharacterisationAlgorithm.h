@@ -38,16 +38,6 @@ public:
     ClusterCharacterisationAlgorithm();
 
 private:
-    /**
-     *  ClusterDirection enumeration
-     */
-    enum ClusterDirection
-    {
-        DIRECTION_FORWARD_IN_Z,
-        DIRECTION_BACKWARD_IN_Z,
-        DIRECTION_UNKNOWN
-    };
-
     pandora::StatusCode Run();
 
     /**
@@ -92,16 +82,6 @@ private:
         pandora::PfoList &pfoList) const;
 
     AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
-
-    /**
-     *  @brief  Get the direction of the cluster in z, using a projection of the provided vertex
-     * 
-     *  @param  pVertex the address of the vertex
-     *  @param  pCluster the address of the cluster
-     * 
-     *  @return the cluster direction in z
-     */
-    ClusterDirection GetClusterDirectionInZ(const pandora::Vertex *const pVertex, const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Get a figure of merit representing the consistency of the provided seed associated list
