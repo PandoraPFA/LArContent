@@ -203,6 +203,9 @@ private:
     float                   m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
     float                   m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
 
+    bool                    m_useExistingPfosAsSeeds;       ///< Whether to use clusters in existing pfos as seed clusters
+    bool                    m_useExistingPfosAsBranches;    ///< Whether to use clusters in existing pfos as branch clusters
+
     float                   m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
     float                   m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
 

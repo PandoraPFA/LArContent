@@ -26,6 +26,8 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_nearbyTrackDistance(1.f),
     m_nearbyClusterDistance(2.5f),
     m_remoteClusterDistance(10.f),
+    m_useExistingPfosAsSeeds(true),
+    m_useExistingPfosAsBranches(false),
     m_directionTanAngle(1.732f),
     m_directionApexShift(0.333f),
     m_useMCFigureOfMerit(false),
@@ -106,6 +108,9 @@ bool ClusterCharacterisationAlgorithm::GetNextSeedCandidate(const ClusterList *c
         if (usedClusters.count(pCluster))
             continue;
 
+        if (!m_useExistingPfosAsSeeds && !pCluster->IsAvailable())
+            continue;
+
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
             continue;
 
@@ -128,7 +133,13 @@ void ClusterCharacterisationAlgorithm::GetSeedAssociationList(const ClusterVecto
     {
         Cluster *pCandidateCluster = *iter;
 
-        if (seedClusters.count(pCandidateCluster) || (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
+        if (seedClusters.count(pCandidateCluster))
+            continue;
+
+        if (!m_useExistingPfosAsBranches && !pCandidateCluster->IsAvailable())
+            continue;
+
+        if (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
             continue;
 
         candidateClusters.push_back(pCandidateCluster);
@@ -598,6 +609,12 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "RemoteClusterDistance", m_remoteClusterDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseExistingPfosAsSeeds", m_useExistingPfosAsSeeds));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseExistingPfosAsBranches", m_useExistingPfosAsBranches));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DirectionTanAngle", m_directionTanAngle));

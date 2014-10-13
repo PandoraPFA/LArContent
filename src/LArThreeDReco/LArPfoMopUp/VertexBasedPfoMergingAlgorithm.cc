@@ -128,7 +128,7 @@ bool VertexBasedPfoMergingAlgorithm::ProcessPfoAssociations(const PfoAssociation
             continue;
         }
 
-        if ((NULL != pTrackPfoList) && (pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) && (pTrackPfoList->count(pfoAssociation.GetDaughterPfo())))
+        if ((NULL != pTrackPfoList) && (pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) && (pTrackPfoList->count(pfoAssociation.GetDaughterPfo()) > 0))
         {
             continue;
         }
