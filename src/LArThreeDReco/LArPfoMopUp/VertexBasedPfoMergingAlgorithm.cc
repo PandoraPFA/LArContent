@@ -114,6 +114,9 @@ void VertexBasedPfoMergingAlgorithm::GetPfoAssociations(const Vertex *const pVer
 
 bool VertexBasedPfoMergingAlgorithm::ProcessPfoAssociations(const PfoAssociationList &pfoAssociationList) const
 {
+    const PfoList *pTrackPfoList(NULL);
+    (void) PandoraContentApi::GetList(*this, m_trackPfoListName, pTrackPfoList);
+
     for (PfoAssociationList::const_iterator iter = pfoAssociationList.begin(), iterEnd = pfoAssociationList.end(); iter != iterEnd; ++iter)
     {
         const PfoAssociation &pfoAssociation(*iter);
@@ -124,13 +127,11 @@ bool VertexBasedPfoMergingAlgorithm::ProcessPfoAssociations(const PfoAssociation
         {
             continue;
         }
-//PfoList tempList1, tempList2;
-//tempList1.insert(pfoAssociation.GetVertexPfo());
-//tempList2.insert(pfoAssociation.GetDaughterPfo());
-//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempList1, "VertexCluster", BLUE);
-//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempList2, "DaughterCluster", GREEN);
-//std::cout << " Make merge, meanBoundedFraction " << pfoAssociation.GetMeanBoundedFraction() << " max " << pfoAssociation.GetMaxBoundedFraction() << " min " << pfoAssociation.GetMinBoundedFraction() << std::endl;
-//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+        if ((NULL != pTrackPfoList) && (pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) && (pTrackPfoList->count(pfoAssociation.GetDaughterPfo())))
+        {
+            continue;
+        }
 
         this->MergePfos(pfoAssociation);
         return true;

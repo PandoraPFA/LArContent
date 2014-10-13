@@ -248,8 +248,7 @@ ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorit
 
     // Veto track-track end-to-end associations
     if (!pClusterSeed->IsAvailable() && !pCluster->IsAvailable() &&
-        (((seedDirection == DIRECTION_FORWARD_IN_Z) && (sOuter < m_nearbyTrackDistance)) ||
-        ((seedDirection == DIRECTION_BACKWARD_IN_Z) && (sInner < m_nearbyTrackDistance))) )
+        ((sOuter < m_nearbyTrackDistance) || (sInner < m_nearbyTrackDistance)))
     {
         return NONE;
     }
