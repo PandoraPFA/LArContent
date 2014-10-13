@@ -49,7 +49,8 @@ private:
          *  @param  pDaughterCluster the address of the daughter cluster
          *  @param  boundedFraction the fraction of daughter hits bounded by the cone defined by the vertex cluster
          */
-        ClusterAssociation(pandora::Cluster *pVertexCluster, pandora::Cluster *pDaughterCluster, const float boundedFraction);
+        ClusterAssociation(pandora::Cluster *pVertexCluster, pandora::Cluster *pDaughterCluster, const float boundedFraction,
+            const bool isConsistentDirection);
 
         /**
          *  @brief  Get the address of the vertex cluster
@@ -72,10 +73,18 @@ private:
          */
         float GetBoundedFraction() const;
 
+        /**
+         *  @brief  Whether the vertex and daughter clusters have consistent directions
+         *
+         *  @return boolean
+         */
+        bool IsConsistentDirection() const;
+
     private:
         pandora::Cluster   *m_pVertexCluster;           ///< The address of the vertex cluster
         pandora::Cluster   *m_pDaughterCluster;         ///< The address of the daughter cluster
         float               m_boundedFraction;          ///< The fraction of daughter hits bounded by the cone defined by the vertex cluster
+        bool                m_isConsistentDirection;    ///< Whether the vertex and daughter clusters have consistent directions
     };
 
     /**
@@ -130,6 +139,13 @@ private:
          *  @return the minimum bounded fraction from the u, v and w views
          */
         float GetMinBoundedFraction() const;
+
+        /**
+         *  @brief  Get the number of views for which the vertex and daughter cluster directions are consistent
+         *
+         *  @return the number of views for which the cluster directions are consistent
+         */
+        unsigned int GetNConsistentDirections() const;
 
         /**
          *  @brief  Get the cluster association in the u view
@@ -289,13 +305,13 @@ private:
     /**
      *  @brief  Get cluster association details between a vertex-associated cluster and a non-vertex associated daughter candidate cluster
      * 
-     *  @param  vertexPosition2D the projected vertex position
+     *  @param  pVertex the address of the vertex
      *  @param  pVertexCluster the address of the vertex-associated cluster
      *  @param  pDaughterCluster the address of the non-vertex-associated cluster
      * 
      *  @return the cluster association details
      */
-    ClusterAssociation GetClusterAssociation(const pandora::CartesianVector &vertexPosition2D, pandora::Cluster *const pVertexCluster,
+    ClusterAssociation GetClusterAssociation(const pandora::Vertex *const pVertex, pandora::Cluster *const pVertexCluster,
         pandora::Cluster *const pDaughterCluster) const;
 
     /**
@@ -348,6 +364,9 @@ private:
     float                   m_meanBoundedFractionCut;           ///< Cut on association info (mean bounded fraction) for determining pfo merges
     float                   m_maxBoundedFractionCut;            ///< Cut on association info (max bounded fraction) for determining pfo merges
     float                   m_minBoundedFractionCut;            ///< Cut on association info (min bounded fraction) for determining pfo merges
+
+    unsigned int            m_minConsistentDirections;          ///< The minimum number of consistent cluster directions to allow a pfo merge
+    unsigned int            m_minConsistentDirectionsTrack;     ///< The minimum number of consistent cluster directions to allow a merge involving a track pfo
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -377,6 +396,13 @@ inline pandora::Cluster *VertexBasedPfoMergingAlgorithm::ClusterAssociation::Get
 inline float VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetBoundedFraction() const
 {
     return m_boundedFraction;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool VertexBasedPfoMergingAlgorithm::ClusterAssociation::IsConsistentDirection() const
+{
+    return m_isConsistentDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
