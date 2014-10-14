@@ -27,26 +27,33 @@ LArVertexHelper::ClusterDirection LArVertexHelper::GetClusterDirectionInZ(const 
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(pandora, pVertex->GetPosition(), hitType));
 
-    const LArPointingCluster pointingCluster(pCluster);
-    const float length((pointingCluster.GetInnerVertex().GetPosition() - pointingCluster.GetOuterVertex().GetPosition()).GetMagnitude());
-    const bool innerIsAtLowerZ(pointingCluster.GetInnerVertex().GetPosition().GetZ() < pointingCluster.GetOuterVertex().GetPosition().GetZ());
+    try
+    {
+        const LArPointingCluster pointingCluster(pCluster);
+        const float length((pointingCluster.GetInnerVertex().GetPosition() - pointingCluster.GetOuterVertex().GetPosition()).GetMagnitude());
+        const bool innerIsAtLowerZ(pointingCluster.GetInnerVertex().GetPosition().GetZ() < pointingCluster.GetOuterVertex().GetPosition().GetZ());
 
-    float rLInner(std::numeric_limits<float>::max()), rTInner(std::numeric_limits<float>::max());
-    float rLOuter(std::numeric_limits<float>::max()), rTOuter(std::numeric_limits<float>::max());
-    LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetInnerVertex(), theVertex2D, rLInner, rTInner);
-    LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetOuterVertex(), theVertex2D, rLOuter, rTOuter);
+        float rLInner(std::numeric_limits<float>::max()), rTInner(std::numeric_limits<float>::max());
+        float rLOuter(std::numeric_limits<float>::max()), rTOuter(std::numeric_limits<float>::max());
+        LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetInnerVertex(), theVertex2D, rLInner, rTInner);
+        LArPointingClusterHelper::GetImpactParameters(pointingCluster.GetOuterVertex(), theVertex2D, rLOuter, rTOuter);
 
-    const bool innerIsVertexAssociated(rLInner > (rTInner / tanAngle) - (length * apexShift));
-    const bool outerIsVertexAssociated(rLOuter > (rTInner / tanAngle) - (length * apexShift));
+        const bool innerIsVertexAssociated(rLInner > (rTInner / tanAngle) - (length * apexShift));
+        const bool outerIsVertexAssociated(rLOuter > (rTInner / tanAngle) - (length * apexShift));
 
-    if (innerIsVertexAssociated == outerIsVertexAssociated)
+        if (innerIsVertexAssociated == outerIsVertexAssociated)
+            return DIRECTION_UNKNOWN;
+
+        if ((innerIsVertexAssociated && innerIsAtLowerZ) || (outerIsVertexAssociated && !innerIsAtLowerZ))
+            return DIRECTION_FORWARD_IN_Z;
+
+        if ((innerIsVertexAssociated && !innerIsAtLowerZ) || (outerIsVertexAssociated && innerIsAtLowerZ))
+            return DIRECTION_BACKWARD_IN_Z;
+    }
+    catch (StatusCodeException &)
+    {
         return DIRECTION_UNKNOWN;
-
-    if ((innerIsVertexAssociated && innerIsAtLowerZ) || (outerIsVertexAssociated && !innerIsAtLowerZ))
-        return DIRECTION_FORWARD_IN_Z;
-
-    if ((innerIsVertexAssociated && !innerIsAtLowerZ) || (outerIsVertexAssociated && innerIsAtLowerZ))
-        return DIRECTION_BACKWARD_IN_Z;
+    }
 
     throw StatusCodeException(STATUS_CODE_FAILURE);
 }

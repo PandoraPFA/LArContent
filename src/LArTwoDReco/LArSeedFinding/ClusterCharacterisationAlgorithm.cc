@@ -384,8 +384,8 @@ float ClusterCharacterisationAlgorithm::GetRecoFigureOfMerit(const Vertex *const
         const HitType hitType(LArClusterHelper::GetClusterHitType(pSeedCluster));
         const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
-        const LArPointingCluster pointingSeedCluster(pSeedCluster);
-        LArPointingClusterList pointingClusterSeedList(1, pointingSeedCluster);
+        LArPointingClusterList pointingClusterSeedList;
+        try {pointingClusterSeedList.push_back(LArPointingCluster(pSeedCluster));} catch (StatusCodeException &) {}
 
         LArPointingClusterList pointingClusterNonSeedList;
         for (ClusterVector::const_iterator cIter = associatedClusters.begin(), cIterEnd = associatedClusters.end(); cIter != cIterEnd; ++cIter)
