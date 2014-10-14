@@ -23,11 +23,11 @@ namespace lar_content
 
 SplitShowersTool::SplitShowersTool() :
     m_nCommonClusters(2),
-    m_minMatchedFraction(0.2f),
+    m_minMatchedFraction(0.25f),
     m_minMatchedSamplingPoints(40),
     m_vetoMergeXDifference(2.f),
     m_vetoMergeXOverlap(2.f),
-    m_maxClusterSeparation(2.5f),
+    m_maxClusterSeparation(25.f),
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
     m_maxVertexTransverseDistance(1.5f),
