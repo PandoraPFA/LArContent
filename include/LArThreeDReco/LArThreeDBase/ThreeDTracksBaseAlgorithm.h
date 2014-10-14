@@ -66,8 +66,10 @@ public:
      *  @param  pCurrentCluster the cluster to split
      *  @param  pLowXCluster to receive the low x cluster
      *  @param  pHighXCluster to receive the high x cluster
+     * 
+     *  @return whether a cluster split occurred
      */
-    virtual void MakeClusterSplit(const pandora::CartesianVector &splitPosition, pandora::Cluster *&pCurrentCluster,
+    virtual bool MakeClusterSplit(const pandora::CartesianVector &splitPosition, pandora::Cluster *&pCurrentCluster,
         pandora::Cluster *&pLowXCluster, pandora::Cluster *&pHighXCluster) const;
 
     /**
