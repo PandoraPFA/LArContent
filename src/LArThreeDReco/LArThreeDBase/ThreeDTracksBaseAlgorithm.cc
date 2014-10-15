@@ -75,11 +75,13 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
         for (CartesianPointList::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
         {
             Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
-            this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster);
 
-            this->UpdateUponSplit(pLowXCluster, pHighXCluster, pCurrentCluster);
-            changesMade = true;
-            pCurrentCluster = pHighXCluster;
+            if (this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster))
+            {
+                changesMade = true;
+                this->UpdateUponSplit(pLowXCluster, pHighXCluster, pCurrentCluster);
+                pCurrentCluster = pHighXCluster;
+            }
         }
     }
 
@@ -89,7 +91,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, Cluster *&pCurrentCluster, Cluster *&pLowXCluster, Cluster *&pHighXCluster) const
+bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, Cluster *&pCurrentCluster, Cluster *&pLowXCluster, Cluster *&pHighXCluster) const
 {
     pLowXCluster = NULL;
     pHighXCluster = NULL;
@@ -131,9 +133,13 @@ void ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
     }
 
     if ((NULL == pLowXCluster) || (NULL == pHighXCluster))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalListName, fragmentListName));
+        return false;
+    }
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

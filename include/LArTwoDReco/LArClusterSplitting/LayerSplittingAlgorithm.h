@@ -35,7 +35,7 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
+    pandora::StatusCode DivideCaloHits(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
         pandora::CaloHitList &secondCaloHitList) const;
 
     /**
@@ -54,7 +54,7 @@ private:
      *  @param  firstCaloHitList the hits in the first cluster fragment
      *  @param  secondCaloHitList the hits in the second cluster fragment
      */
-    pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, const unsigned int &splitLayer,
+    pandora::StatusCode DivideCaloHits(const pandora::Cluster *const pCluster, const unsigned int &splitLayer,
         pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
     /**

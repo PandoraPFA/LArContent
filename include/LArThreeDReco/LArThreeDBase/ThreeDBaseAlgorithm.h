@@ -8,6 +8,8 @@
 #ifndef LAR_THREE_D_BASE_ALGORITHM_H
 #define LAR_THREE_D_BASE_ALGORITHM_H 1
 
+#include "Api/PandoraContentApi.h"
+
 #include "Pandora/Algorithm.h"
 
 #include "LArObjects/LArOverlapTensor.h"

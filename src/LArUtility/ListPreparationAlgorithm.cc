@@ -18,7 +18,9 @@ namespace lar_content
 {
 
 ListPreparationAlgorithm::ListPreparationAlgorithm() :
-    m_mipEquivalentCut(0.f),
+    m_mipEquivalentCut(std::numeric_limits<float>::epsilon()),
+    m_minCellLengthScale(std::numeric_limits<float>::epsilon()),
+    m_maxCellLengthScale(2.f),
     m_onlyAvailableCaloHits(true),
     m_inputCaloHitListName("Input"),
     m_mcNeutrinoSelection(false),
@@ -90,9 +92,9 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         if (pCaloHit->GetMipEquivalentEnergy() < m_mipEquivalentCut)
             continue;
 
-        if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
+        if ((pCaloHit->GetCellLengthScale() < m_minCellLengthScale) || (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale))
         {
-            std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
+            std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() << ", will remove it" << std::endl;
             continue;
         }
 
@@ -244,6 +246,12 @@ StatusCode ListPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MipEquivalentCut", m_mipEquivalentCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCellLengthScale", m_minCellLengthScale));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxCellLengthScale", m_maxCellLengthScale));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OnlyAvailableCaloHits", m_onlyAvailableCaloHits));

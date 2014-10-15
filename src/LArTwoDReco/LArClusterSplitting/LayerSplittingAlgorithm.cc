@@ -26,12 +26,12 @@ LayerSplittingAlgorithm::LayerSplittingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LayerSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
+StatusCode LayerSplittingAlgorithm::DivideCaloHits(const Cluster *const pCluster, CaloHitList &firstHitList, CaloHitList &secondHitList) const
 {
     unsigned int splitLayer(0);
 
     if (STATUS_CODE_SUCCESS == this->FindBestSplitLayer(pCluster, splitLayer))
-        return this->SplitCluster(pCluster, splitLayer, firstHitList, secondHitList);
+        return this->DivideCaloHits(pCluster, splitLayer, firstHitList, secondHitList);
 
     return STATUS_CODE_NOT_FOUND;
 }
@@ -149,7 +149,7 @@ float LayerSplittingAlgorithm::CalculateRms(const Cluster *const pCluster, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LayerSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, const unsigned int &splitLayer, CaloHitList &firstHitList, CaloHitList &secondHitList) const
+StatusCode LayerSplittingAlgorithm::DivideCaloHits(const Cluster *const pCluster, const unsigned int &splitLayer, CaloHitList &firstHitList, CaloHitList &secondHitList) const
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 

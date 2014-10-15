@@ -39,7 +39,7 @@ public:
          *  @param  rms the rms from vertex fit
          *  @param  isInner whether this is a cluster inner or outer vertex
          */
-        Vertex(pandora::Cluster *const pCluster, const pandora::CartesianVector &position, const pandora::CartesianVector &direction,
+        Vertex(const pandora::Cluster *const pCluster, const pandora::CartesianVector &position, const pandora::CartesianVector &direction,
             const float rms, const bool isInner);
 
         /**
@@ -60,7 +60,7 @@ public:
          * 
          *  @return the address of the cluster
          */
-        pandora::Cluster *GetCluster() const;
+        const pandora::Cluster *GetCluster() const;
 
         /**
          *  @brief  Get the vertex position
@@ -105,7 +105,7 @@ public:
         Vertex &operator=(const Vertex &rhs);
 
     private:
-        pandora::Cluster           *m_pCluster;             ///< The address of the cluster
+        const pandora::Cluster     *m_pCluster;             ///< The address of the cluster
         pandora::CartesianVector    m_position;             ///< The vertex position
         pandora::CartesianVector    m_direction;            ///< The vertex direction
         float                       m_rms;                  ///< Rms from vertex fit
@@ -120,7 +120,7 @@ public:
      *  @param  fitHalfLayerWindow the fit layer half window
      *  @param  fitLayerPitch the fit layer pitch, units cm
      */
-    LArPointingCluster(pandora::Cluster *const pCluster, const unsigned int fitHalfLayerWindow = 10, const float fitLayerPitch = 0.3f);
+    LArPointingCluster(const pandora::Cluster *const pCluster, const unsigned int fitHalfLayerWindow = 10, const float fitLayerPitch = 0.3f);
 
     /**
      *  @brief  Constructor
@@ -134,7 +134,7 @@ public:
      * 
      *  @return the address of the cluster
      */
-    pandora::Cluster *GetCluster() const;
+    const pandora::Cluster *GetCluster() const;
 
     /**
      *  @brief  Get the inner vertex
@@ -173,7 +173,7 @@ private:
      */
     void BuildPointingCluster(const TwoDSlidingFitResult &slidingFitResult);
 
-    pandora::Cluster               *m_pCluster;             ///< The address of the cluster
+    const pandora::Cluster         *m_pCluster;             ///< The address of the cluster
     Vertex                          m_innerVertex;          ///< The inner vertex
     Vertex                          m_outerVertex;          ///< The outer vertex
 };
@@ -184,7 +184,7 @@ typedef std::map<const pandora::Cluster*, LArPointingCluster> LArPointingCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster *LArPointingCluster::GetCluster() const
+inline const pandora::Cluster *LArPointingCluster::GetCluster() const
 {
     return m_pCluster;
 }
@@ -220,7 +220,7 @@ inline float LArPointingCluster::GetLength() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster *LArPointingCluster::Vertex::GetCluster() const
+inline const pandora::Cluster *LArPointingCluster::Vertex::GetCluster() const
 {
     if (!m_isInitialized)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);

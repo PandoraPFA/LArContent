@@ -56,6 +56,9 @@ private:
     void ProcessMCParticles();
 
     float           m_mipEquivalentCut;                 ///< Minimum mip equivalent energy for calo hit
+    float           m_minCellLengthScale;               ///< The minimum length scale for calo hit
+    float           m_maxCellLengthScale;               ///< The maximum length scale for calo hit
+
     bool            m_onlyAvailableCaloHits;            ///< Whether to only include available calo hits
     std::string     m_inputCaloHitListName;             ///< The input calo hit list name
     std::string     m_outputCaloHitListNameU;           ///< The output calo hit list name for TPC_VIEW_U hits

@@ -71,6 +71,13 @@ void NeutrinoBuildingAlgorithm::CreateNeutrinoPfo(ParticleFlowObject *&pNeutrino
     pfoParameters.m_energy = 0.f;
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
 
+    const VertexList *pVertexList(NULL);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
+    Vertex *const pVertex((1 == pVertexList->size()) ? *(pVertexList->begin()) : NULL);
+
+    if ((NULL != pVertex) && (VERTEX_3D == pVertex->GetVertexType()))
+        pfoParameters.m_vertexList.insert(pVertex);
+
     std::string neutrinoPfoListName;
     const PfoList *pNeutrinoPfoList = NULL;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNeutrinoPfoList, neutrinoPfoListName));

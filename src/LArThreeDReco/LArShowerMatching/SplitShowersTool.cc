@@ -8,6 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
+
+#include "LArObjects/LArPointingCluster.h"
+
 #include "LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 
 using namespace pandora;
@@ -17,9 +23,16 @@ namespace lar_content
 
 SplitShowersTool::SplitShowersTool() :
     m_nCommonClusters(2),
-    m_minMatchedFraction(0.2f),
+    m_minMatchedFraction(0.25f),
     m_minMatchedSamplingPoints(40),
-    m_minSplitXDifference(2.f)
+    m_vetoMergeXDifference(2.f),
+    m_vetoMergeXOverlap(2.f),
+    m_maxClusterSeparation(25.f),
+    m_minVertexLongitudinalDistance(-2.5f),
+    m_maxVertexLongitudinalDistance(20.f),
+    m_maxVertexTransverseDistance(1.5f),
+    m_vertexAngularAllowance(3.f),
+    m_maxVertexAssociations(1)
 {
 }
 
@@ -162,6 +175,9 @@ void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, cons
                 if (!this->CheckClusterConsistency(pAlgorithm, clusterListU) ||
                     !this->CheckClusterConsistency(pAlgorithm, clusterListV) ||
                     !this->CheckClusterConsistency(pAlgorithm, clusterListW) ||
+                    !this->CheckClusterVertexConsistency(pAlgorithm, clusterListU) ||
+                    !this->CheckClusterVertexConsistency(pAlgorithm, clusterListV) ||
+                    !this->CheckClusterVertexConsistency(pAlgorithm, clusterListW) ||
                     !this->CheckClusterConsistencies(pAlgorithm, clusterListU, clusterListV, clusterListW))
                 {
                     continue;
@@ -192,7 +208,55 @@ bool SplitShowersTool::CheckClusterConsistency(ThreeDShowersAlgorithm */*pAlgori
     if (2 != clusterList.size())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    // TODO Want to merge clusters in most cases, but some sanity checks here required
+    const Cluster *const pCluster1(*(clusterList.begin()));
+    const Cluster *const pCluster2(*(clusterList.rbegin()));
+
+    const float outer12(LArClusterHelper::GetClosestDistance(pCluster1->GetCentroid(pCluster1->GetOuterPseudoLayer()), pCluster2));
+    const float outer21(LArClusterHelper::GetClosestDistance(pCluster2->GetCentroid(pCluster2->GetOuterPseudoLayer()), pCluster1));
+    const float inner12(LArClusterHelper::GetClosestDistance(pCluster1->GetCentroid(pCluster1->GetInnerPseudoLayer()), pCluster2));
+    const float inner21(LArClusterHelper::GetClosestDistance(pCluster2->GetCentroid(pCluster2->GetInnerPseudoLayer()), pCluster1));
+
+    if ((outer12 > m_maxClusterSeparation) && (outer21 > m_maxClusterSeparation) && (inner12 > m_maxClusterSeparation) && (inner21 > m_maxClusterSeparation))
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SplitShowersTool::CheckClusterVertexConsistency(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterList) const
+{
+    const VertexList *pVertexList(NULL);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList));
+    const Vertex *const pVertex((1 == pVertexList->size()) ? *(pVertexList->begin()) : NULL);
+
+    if ((NULL == pVertex) || (VERTEX_3D != pVertex->GetVertexType()))
+        return true;
+
+    unsigned int nVertexAssociations(0);
+
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
+            const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+            const LArPointingCluster pointingCluster(*iter);
+
+            if (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+                LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+                LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+                LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance))
+            {
+                ++nVertexAssociations;
+            }
+        }
+        catch (StatusCodeException &) {}
+    }
+
+    if (nVertexAssociations > m_maxVertexAssociations)
+        return false;
+
     return true;
 }
 
@@ -213,10 +277,13 @@ bool SplitShowersTool::CheckClusterConsistencies(ThreeDShowersAlgorithm *pAlgori
     if ((2 != clusterList1.size()) || (2 != clusterList2.size()))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const float splitPosition1(this->GetSplitXCoordinate(pAlgorithm, *(clusterList1.begin()), *(clusterList1.rbegin())));
-    const float splitPosition2(this->GetSplitXCoordinate(pAlgorithm, *(clusterList2.begin()), *(clusterList2.rbegin())));
+    float splitXPosition1(0.f), overlapX1(0.f);
+    this->GetSplitXDetails(pAlgorithm, *(clusterList1.begin()), *(clusterList1.rbegin()), splitXPosition1, overlapX1);
 
-    if (std::fabs(splitPosition1 - splitPosition2) < m_minSplitXDifference)
+    float splitXPosition2(0.f), overlapX2(0.f);
+    this->GetSplitXDetails(pAlgorithm, *(clusterList2.begin()), *(clusterList2.rbegin()), splitXPosition2, overlapX2);
+
+    if ((std::fabs(splitXPosition1 - splitXPosition2) < m_vetoMergeXDifference) && (overlapX1 < m_vetoMergeXOverlap) && (overlapX2 < m_vetoMergeXOverlap))
         return false;
 
     return true;
@@ -224,24 +291,29 @@ bool SplitShowersTool::CheckClusterConsistencies(ThreeDShowersAlgorithm *pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float SplitShowersTool::GetSplitXCoordinate(ThreeDShowersAlgorithm *pAlgorithm, Cluster *const pClusterA, Cluster *const pClusterB) const
+void SplitShowersTool::GetSplitXDetails(ThreeDShowersAlgorithm *pAlgorithm, Cluster *const pClusterA, Cluster *const pClusterB,
+    float &splitXPosition, float &overlapX) const
 {
     const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).GetShowerFitResult());
     const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).GetShowerFitResult());
 
-    FloatVector floatVector;
-    floatVector.push_back(fitResultA.GetGlobalMinLayerPosition().GetX());
-    floatVector.push_back(fitResultA.GetGlobalMaxLayerPosition().GetX());
-    floatVector.push_back(fitResultB.GetGlobalMinLayerPosition().GetX());
-    floatVector.push_back(fitResultB.GetGlobalMaxLayerPosition().GetX());
+    const float minXA(std::min(fitResultA.GetGlobalMinLayerPosition().GetX(), fitResultA.GetGlobalMaxLayerPosition().GetX()));
+    const float maxXA(std::max(fitResultA.GetGlobalMinLayerPosition().GetX(), fitResultA.GetGlobalMaxLayerPosition().GetX()));
+    const float minXB(std::min(fitResultB.GetGlobalMinLayerPosition().GetX(), fitResultB.GetGlobalMaxLayerPosition().GetX()));
+    const float maxXB(std::max(fitResultB.GetGlobalMinLayerPosition().GetX(), fitResultB.GetGlobalMaxLayerPosition().GetX()));
 
+    FloatVector floatVector;
+    floatVector.push_back(minXA);
+    floatVector.push_back(maxXA);
+    floatVector.push_back(minXB);
+    floatVector.push_back(maxXB);
     std::sort(floatVector.begin(), floatVector.end());
 
     if (4 != floatVector.size())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const float splitXEstimate(0.5f * (floatVector.at(1) + floatVector.at(2)));
-    return splitXEstimate;
+    splitXPosition = 0.5f * (floatVector.at(1) + floatVector.at(2));
+    overlapX = std::max(0.f, std::min(maxXA, maxXB) - std::max(minXA, minXB));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -309,7 +381,28 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSplitXDifference", m_minSplitXDifference));
+        "VetoMergeXDifference", m_vetoMergeXDifference));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VetoMergeXOverlap", m_vetoMergeXOverlap));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxClusterSeparation", m_maxClusterSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexAngularAllowance", m_vertexAngularAllowance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexAssociations", m_maxVertexAssociations));
 
     return STATUS_CODE_SUCCESS;
 }

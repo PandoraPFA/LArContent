@@ -41,7 +41,7 @@ protected:
         pandora::CartesianVector& splitPosition) const = 0;
 
 private:
-    pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
+    pandora::StatusCode DivideCaloHits(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
         pandora::CaloHitList &secondCaloHitList) const;
 
     /**
@@ -54,7 +54,7 @@ private:
      *
      *  @return pandora::StatusCode
      */
-    pandora::StatusCode SplitCluster(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector& splitPosition, 
+    pandora::StatusCode DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector& splitPosition, 
         pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
     unsigned int    m_slidingFitHalfWindow;   ///<

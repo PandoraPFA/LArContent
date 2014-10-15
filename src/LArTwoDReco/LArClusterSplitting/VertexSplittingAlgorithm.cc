@@ -8,6 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
+
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 
 using namespace pandora;
@@ -33,32 +36,35 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
         return STATUS_CODE_NOT_INITIALIZED;
 
     if (pVertexList->size() != 1)
-    {
-        // TODO Vertex selection
-        std::cout << "VertexSplittingAlgorithm: vertex selection not yet implemented " << std::endl;
         return STATUS_CODE_OUT_OF_RANGE;
-    }
+
+    const Cluster *pCluster(slidingFitResult.GetCluster());
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
     const Vertex *pSelectedVertex(*(pVertexList->begin()));
-    const CartesianVector &theVertex(pSelectedVertex->GetPosition());
-    const CartesianVector innerVertex(slidingFitResult.GetGlobalMinLayerPosition());
-    const CartesianVector outerVertex(slidingFitResult.GetGlobalMaxLayerPosition());
 
-    if ((outerVertex - innerVertex).GetMagnitudeSquared() < 4.f * m_vertexDisplacementSquared)
+    if (VERTEX_3D != pSelectedVertex->GetVertexType())
+        return STATUS_CODE_INVALID_PARAMETER;
+
+    const CartesianVector theVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pSelectedVertex->GetPosition(), hitType));
+
+    const CartesianVector innerVertex2D(slidingFitResult.GetGlobalMinLayerPosition());
+    const CartesianVector outerVertex2D(slidingFitResult.GetGlobalMaxLayerPosition());
+
+    if ((outerVertex2D - innerVertex2D).GetMagnitudeSquared() < 4.f * m_vertexDisplacementSquared)
         return STATUS_CODE_NOT_FOUND;
 
     bool foundSplit(false);
 
     try
     {
-        slidingFitResult.GetGlobalFitProjection(theVertex, splitPosition); 
+        slidingFitResult.GetGlobalFitProjection(theVertex2D, splitPosition); 
 
-        const float splitDisplacementSquared((splitPosition - theVertex).GetMagnitudeSquared());
-        const float vertexDisplacementSquared(std::min((splitPosition - innerVertex).GetMagnitudeSquared(), (splitPosition - outerVertex).GetMagnitudeSquared()));
+        const float splitDisplacementSquared((splitPosition - theVertex2D).GetMagnitudeSquared());
+        const float vertexDisplacementSquared(std::min((splitPosition - innerVertex2D).GetMagnitudeSquared(), (splitPosition - outerVertex2D).GetMagnitudeSquared()));
 
-        if (splitDisplacementSquared < m_splitDisplacementSquared &&
-            vertexDisplacementSquared > m_vertexDisplacementSquared &&
-            splitDisplacementSquared < vertexDisplacementSquared )
+        if ((splitDisplacementSquared < m_splitDisplacementSquared) && (vertexDisplacementSquared > m_vertexDisplacementSquared) &&
+            (splitDisplacementSquared < vertexDisplacementSquared))
         {
             foundSplit = true;
         }

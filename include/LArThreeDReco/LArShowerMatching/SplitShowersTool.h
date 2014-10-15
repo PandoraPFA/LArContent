@@ -84,6 +84,14 @@ private:
     bool CheckClusterConsistency(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
 
     /**
+     *  @brief  Check the consistency of the clusters in a provided cluster list with the event vertex, if available
+     * 
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  clusterList the cluster list
+     */
+    bool CheckClusterVertexConsistency(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
+
+    /**
      *  @brief  Check the consistency of the clusters in the provided u, v and w cluster lists
      * 
      *  @param  pAlgorithm address of the calling algorithm
@@ -100,8 +108,11 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pClusterA the address of cluster A
      *  @param  pClusterB the address of cluster B
+     *  @param  splitXPosition to receive the split position estimate
+     *  @param  overlapX to receive the overlap estimate
      */
-    float GetSplitXCoordinate(ThreeDShowersAlgorithm *pAlgorithm, pandora::Cluster *const pClusterA, pandora::Cluster *const pClusterB) const;
+    void GetSplitXDetails(ThreeDShowersAlgorithm *pAlgorithm, pandora::Cluster *const pClusterA, pandora::Cluster *const pClusterB,
+        float &splitXPosition, float &overlapX) const;
 
     /**
      *  @brief  Populate the cluster merge map, based on the information contained in the provided cluster list
@@ -127,7 +138,15 @@ private:
     unsigned int    m_nCommonClusters;                  ///< The number of common clusters
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
-    float           m_minSplitXDifference;              ///< The min x distance between split positions in two views in order to refuse a merge
+    float           m_vetoMergeXDifference;             ///< The x distance between split positions in two views below which may refuse a merge
+    float           m_vetoMergeXOverlap;                ///< The x overlap between candidate cluster sliding fits below which may refuse a merge
+
+    float           m_maxClusterSeparation;             ///< The maximum separation for clusters to be merged
+    float           m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
+    float           m_maxVertexLongitudinalDistance;    ///< Vertex association check: max longitudinal distance cut
+    float           m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
+    float           m_vertexAngularAllowance;           ///< Vertex association check: pointing angular allowance in degrees
+    unsigned int    m_maxVertexAssociations;            ///< The maximum number of vertex associations for clusters to be merged
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

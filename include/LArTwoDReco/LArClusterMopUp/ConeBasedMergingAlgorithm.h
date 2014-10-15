@@ -46,18 +46,20 @@ private:
          *  @brief  Constructor
          * 
          *  @param  pCluster address of the cluster
+         *  @param  pVertexPosition2D address of the event 2D vertex position, if available, or NULL if unavailable
          *  @param  slidingFitWindow the layer window to use in sliding shower fit for cone construction
          *  @param  slidingFitLayerPitch the layer pitch, in cm, to use in sliding shower fit for cone construction
          *  @param  coneAngleCentile the cone angle centile
          */
-        ConeParameters(pandora::Cluster *pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch, const float coneAngleCentile);
+        ConeParameters(const pandora::Cluster *const pCluster, const pandora::CartesianVector *const pVertexPosition2D,
+            const unsigned int slidingFitWindow, const float slidingFitLayerPitch, const float coneAngleCentile);
 
         /**
          *  @brief  Get the address of the cluster
          * 
          *  @return address of the cluster
          */
-        pandora::Cluster *GetCluster() const;
+        const pandora::Cluster *GetCluster() const;
 
         /**
          *  @brief  Get the cone direction
@@ -124,10 +126,12 @@ private:
          *  @brief  Get the cone direction estimate, using a provided sliding linear fit
          * 
          *  @param  fitResult the sliding linear fit result
+         *  @param  pVertexPosition2D address of the event 2D vertex position, if available, or NULL if unavailable
          *  @param  isForward to receive the estimate of whether cone points forward wrt to increasing sliding fit layers
          *  @param  direction to receive the direction estimate
          */
-        void GetDirectionEstimate(const TwoDSlidingFitResult &fitResult, bool &isForward, pandora::CartesianVector &direction) const;
+        void GetDirectionEstimate(const TwoDSlidingFitResult &fitResult, const pandora::CartesianVector *const pVertexPosition2D,
+            bool &isForward, pandora::CartesianVector &direction) const;
 
         /**
          *  @brief  Get the cone cos half angle estimate for a specified cluster
@@ -144,7 +148,7 @@ private:
 
         typedef std::map<int, unsigned int> HitsPerLayerMap;
 
-        pandora::Cluster           *m_pCluster;             ///< The address of the cluster
+        const pandora::Cluster     *m_pCluster;             ///< The address of the cluster
         pandora::CartesianVector    m_direction;            ///< The cone direction
         pandora::CartesianVector    m_apex;                 ///< The position vector of the cone apex
         pandora::CartesianVector    m_baseCentre;           ///< The position vector of the centre of the cone base
@@ -167,8 +171,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    unsigned int    m_minCaloHitsPerConeCluster;///< The min number of calo hits per cluster used to define a cone
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    float           m_coneAngleCentile;         ///< Cluster cone angle is defined using specified centile of distribution of hit cos half angles
+    float           m_coneAngleCentile;         ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
     float           m_maxConeLengthMultiplier;  ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
     float           m_minBoundedFraction;       ///< The minimum cluster bounded fraction for merging
 };
@@ -183,7 +188,7 @@ inline pandora::Algorithm *ConeBasedMergingAlgorithm::Factory::CreateAlgorithm()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster *ConeBasedMergingAlgorithm::ConeParameters::GetCluster() const
+inline const pandora::Cluster *ConeBasedMergingAlgorithm::ConeParameters::GetCluster() const
 {
     return m_pCluster;
 }
