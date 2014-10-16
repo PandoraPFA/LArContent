@@ -23,7 +23,8 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_histogramNPhiBins(200),
     m_histogramPhiMin(-1.1f * M_PI),
     m_histogramPhiMax(+1.1f * M_PI),
-    m_maxHitVertexDisplacement(std::numeric_limits<float>::max())
+    m_maxHitVertexDisplacement(std::numeric_limits<float>::max()),
+    m_hitDeweightingPower(-0.5f)
 {
 }
 
@@ -111,7 +112,7 @@ void VertexSelectionAlgorithm::FillHistogram(const CartesianVector &vertexPositi
                 continue;
 
             const float phi(std::atan2(displacement.GetZ(), displacement.GetX()));
-            histogram.Fill(phi);//, std::pow(magnitude, -1.));
+            histogram.Fill(phi, std::pow(magnitude, m_hitDeweightingPower));
         }
     }
 }
@@ -166,6 +167,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxHitVertexDisplacement", m_maxHitVertexDisplacement));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "HitDeweightingPower", m_hitDeweightingPower));
 
     return STATUS_CODE_SUCCESS;
 }
