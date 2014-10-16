@@ -90,6 +90,7 @@ private:
     float                   m_histogramPhiMax;              ///< The histogram upper phi bound
 
     float                   m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
+    float                   m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
