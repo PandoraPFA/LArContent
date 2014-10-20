@@ -120,7 +120,9 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
         const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
         const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
 
-        if ((std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxClusterXDiscrepancy) &&
+        if ((((position1.GetX() < minLayerPosition2.GetX()) && (position1.GetX() < maxLayerPosition2.GetX())) ||
+            ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
+            (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxClusterXDiscrepancy) &&
             (std::fabs(position1.GetX() - maxLayerPosition2.GetX()) > m_maxClusterXDiscrepancy))
         {
             return;
