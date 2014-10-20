@@ -24,6 +24,7 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_histogramPhiMin(-1.1f * M_PI),
     m_histogramPhiMax(+1.1f * M_PI),
     m_maxHitVertexDisplacement(std::numeric_limits<float>::max()),
+    m_maxOnHitDisplacement(1.f),
     m_hitDeweightingPower(-0.5f),
     m_maxTopScoreCandidates(5),
     m_minCandidateDisplacement(2.f),
@@ -43,13 +44,17 @@ StatusCode VertexSelectionAlgorithm::Run()
     for (VertexList::const_iterator iter = pInputVertexList->begin(), iterEnd = pInputVertexList->end(); iter != iterEnd; ++iter)
     {
         Vertex *const pVertex(*iter);
+
         Histogram histogramU(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
         Histogram histogramV(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
         Histogram histogramW(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
 
-        this->FillHistogram(pVertex, TPC_VIEW_U, m_inputClusterListNameU, histogramU);
-        this->FillHistogram(pVertex, TPC_VIEW_V, m_inputClusterListNameV, histogramV);
-        this->FillHistogram(pVertex, TPC_VIEW_W, m_inputClusterListNameW, histogramW);
+        const bool isVertexOnHitU(this->FillHistogram(pVertex, TPC_VIEW_U, m_inputClusterListNameU, histogramU));
+        const bool isVertexOnHitV(this->FillHistogram(pVertex, TPC_VIEW_V, m_inputClusterListNameV, histogramV));
+        const bool isVertexOnHitW(this->FillHistogram(pVertex, TPC_VIEW_W, m_inputClusterListNameW, histogramW));
+
+        if (!isVertexOnHitU || !isVertexOnHitV || !isVertexOnHitW)
+            continue;
 
         const float figureOfMerit(this->GetFigureOfMerit(histogramU, histogramV, histogramW));
         vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
@@ -91,9 +96,10 @@ StatusCode VertexSelectionAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const HitType hitType, const std::string &clusterListName,
+bool VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const HitType hitType, const std::string &clusterListName,
     Histogram &histogram) const
 {
+    bool isVertexOnHit(false);
     const ClusterList *pClusterList = NULL;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
@@ -106,14 +112,17 @@ void VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const 
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-        this->FillHistogram(vertexPosition2D, pCluster, histogram);
+        isVertexOnHit |= this->FillHistogram(vertexPosition2D, pCluster, histogram);
     }
+
+    return isVertexOnHit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::FillHistogram(const CartesianVector &vertexPosition2D, const Cluster *const pCluster, Histogram &histogram) const
+bool VertexSelectionAlgorithm::FillHistogram(const CartesianVector &vertexPosition2D, const Cluster *const pCluster, Histogram &histogram) const
 {
+    bool isVertexOnHit(false);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
@@ -128,10 +137,15 @@ void VertexSelectionAlgorithm::FillHistogram(const CartesianVector &vertexPositi
             if (magnitude > m_maxHitVertexDisplacement)
                 continue;
 
+            if (magnitude < m_maxOnHitDisplacement)
+                isVertexOnHit = true;
+
             const float phi(std::atan2(displacement.GetZ(), displacement.GetX()));
             histogram.Fill(phi, std::pow(magnitude, m_hitDeweightingPower));
         }
     }
+
+    return isVertexOnHit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -214,6 +228,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxHitVertexDisplacement", m_maxHitVertexDisplacement));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxOnHitDisplacement", m_maxOnHitDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "HitDeweightingPower", m_hitDeweightingPower));
