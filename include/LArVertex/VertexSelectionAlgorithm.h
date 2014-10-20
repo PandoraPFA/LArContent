@@ -87,8 +87,10 @@ private:
      *  @param  hitType the relevant hit type
      *  @param  clusterListName the cluster list name
      *  @param  histogram to receive the populated histogram
+     * 
+     *  @return whether the vertex projection lies on a hit in the provided cluster list
      */
-    void FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, const std::string &clusterListName,
+    bool FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, const std::string &clusterListName,
         pandora::Histogram &histogram) const;
 
     /**
@@ -97,8 +99,10 @@ private:
      *  @param  vertexPosition2D the projected vertex position
      *  @param  pCluster the address of the cluster
      *  @param  histogram to receive the populated histogram
+     * 
+     *  @return whether the vertex projection lies on a hit in the provided cluster list
      */
-    void FillHistogram(const pandora::CartesianVector &vertexPosition2D, const pandora::Cluster *const pCluster,
+    bool FillHistogram(const pandora::CartesianVector &vertexPosition2D, const pandora::Cluster *const pCluster,
         pandora::Histogram &histogram) const;
 
     /**
@@ -154,6 +158,7 @@ private:
     float                   m_histogramPhiMax;              ///< The histogram upper phi bound
 
     float                   m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
+    float                   m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
     float                   m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
 
     unsigned int            m_maxTopScoreCandidates;        ///< Look at the n top-scoring candidates to select the final vertex
