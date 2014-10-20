@@ -24,7 +24,10 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_histogramPhiMin(-1.1f * M_PI),
     m_histogramPhiMax(+1.1f * M_PI),
     m_maxHitVertexDisplacement(std::numeric_limits<float>::max()),
-    m_hitDeweightingPower(-0.5f)
+    m_hitDeweightingPower(-0.5f),
+    m_maxTopScoreCandidates(5),
+    m_minCandidateDisplacement(2.f),
+    m_minCandidateScoreFraction(0.9f)
 {
 }
 
@@ -35,8 +38,7 @@ StatusCode VertexSelectionAlgorithm::Run()
     const VertexList *pInputVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
 
-    Vertex *pBestVertex(NULL);
-    float bestFigureOfMerit(0.f);
+    VertexScoreList vertexScoreList;
 
     for (VertexList::const_iterator iter = pInputVertexList->begin(), iterEnd = pInputVertexList->end(); iter != iterEnd; ++iter)
     {
@@ -50,16 +52,31 @@ StatusCode VertexSelectionAlgorithm::Run()
         this->FillHistogram(pVertex, TPC_VIEW_W, m_inputClusterListNameW, histogramW);
 
         const float figureOfMerit(this->GetFigureOfMerit(histogramU, histogramV, histogramW));
-
-        if (figureOfMerit > bestFigureOfMerit)
-        {
-            pBestVertex = pVertex;
-            bestFigureOfMerit = figureOfMerit;
-        }
+        vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
     }
 
-    if (NULL != pBestVertex)
+    std::sort(vertexScoreList.begin(), vertexScoreList.end());
+
+    unsigned int nVerticesConsidered(0);
+    VertexScoreList selectedVertexScoreList;
+
+    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
     {
+        if (++nVerticesConsidered > m_maxTopScoreCandidates)
+            break;
+
+        if (!selectedVertexScoreList.empty() && !this->AcceptVertexLocation(iter->GetVertex(), selectedVertexScoreList))
+            continue;
+
+        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(iter->GetScore(), selectedVertexScoreList))
+            continue;
+
+        selectedVertexScoreList.push_back(*iter);
+    }
+
+    if (!selectedVertexScoreList.empty())
+    {
+        Vertex *pBestVertex = vertexScoreList.at(0).GetVertex();
         VertexList selectedVertexList;
         selectedVertexList.insert(pBestVertex);
 
@@ -146,6 +163,36 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogram) con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex, const VertexScoreList &vertexScoreList) const
+{
+    const CartesianVector position(pVertex->GetPosition());
+
+    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
+    {
+        const float displacement3D((position - iter->GetVertex()->GetPosition()).GetMagnitude());
+
+        if (displacement3D < m_minCandidateDisplacement)
+            return false;
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexSelectionAlgorithm::AcceptVertexScore(const float score, const VertexScoreList &vertexScoreList) const
+{
+    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
+    {
+        if (score < m_minCandidateScoreFraction * iter->GetScore())
+            return false;
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
@@ -170,6 +217,15 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "HitDeweightingPower", m_hitDeweightingPower));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxTopScoreCandidates", m_maxTopScoreCandidates));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCandidateDisplacement", m_minCandidateDisplacement));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCandidateScoreFraction", m_minCandidateScoreFraction));
 
     return STATUS_CODE_SUCCESS;
 }
