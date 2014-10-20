@@ -34,6 +34,50 @@ public:
     VertexSelectionAlgorithm();
 
 private:
+    /**
+     *  @brief  VertexScore class
+     */
+    class VertexScore
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  pVertex the address of the vertex
+         *  @param  score the score
+         */
+        VertexScore(pandora::Vertex *pVertex, const float score);
+
+        /**
+         *  @brief  Get the address of the vertex
+         * 
+         *  @return the address of the vertex
+         */
+        pandora::Vertex *GetVertex() const;
+
+        /**
+         *  @brief  Get the score
+         * 
+         *  @return the score
+         */
+        float GetScore() const;
+
+        /**
+         *  @brief  operator<
+         * 
+         *  @param  rhs the value for comparison
+         * 
+         *  @return boolean
+         */
+        bool operator< (const VertexScore &rhs) const;
+
+    private:
+        pandora::Vertex    *m_pVertex;      ///< The address of the vertex
+        float               m_score;        ///< The score
+    };
+
+    typedef std::vector<VertexScore> VertexScoreList;
+
     pandora::StatusCode Run();
 
     /**
@@ -77,6 +121,26 @@ private:
      */
     float GetFigureOfMerit(const pandora::Histogram &histogram) const;
 
+    /**
+     *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates
+     * 
+     *  @param  pVertex the address of the vertex
+     *  @param  vertexScoreList the vertex score list
+     * 
+     *  @return boolean
+     */
+    bool AcceptVertexLocation(const pandora::Vertex *const pVertex, const VertexScoreList &vertexScoreList) const;
+
+    /**
+     *  @brief  Whether to accept a candidate vertex, based on its score in relation to other selected candidates
+     * 
+     *  @param  score the vertex score
+     *  @param  vertexScoreList the vertex score list
+     * 
+     *  @return boolean
+     */
+    bool AcceptVertexScore(const float score, const VertexScoreList &vertexScoreList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string             m_inputClusterListNameU;        ///< The name of the view U cluster list
@@ -91,6 +155,10 @@ private:
 
     float                   m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
     float                   m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
+
+    unsigned int            m_maxTopScoreCandidates;        ///< Look at the n top-scoring candidates to select the final vertex
+    float                   m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
+    float                   m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,6 +166,36 @@ private:
 inline pandora::Algorithm *VertexSelectionAlgorithm::Factory::CreateAlgorithm() const
 {
     return new VertexSelectionAlgorithm();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline VertexSelectionAlgorithm::VertexScore::VertexScore(pandora::Vertex *pVertex, const float score) :
+    m_pVertex(pVertex),
+    m_score(score)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Vertex *VertexSelectionAlgorithm::VertexScore::GetVertex() const
+{
+    return m_pVertex;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float VertexSelectionAlgorithm::VertexScore::GetScore() const
+{
+    return m_score;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool VertexSelectionAlgorithm::VertexScore::operator< (const VertexScore &rhs) const
+{
+    return (this->GetScore() > rhs.GetScore());
 }
 
 } // namespace lar_content
