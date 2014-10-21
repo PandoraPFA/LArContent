@@ -86,24 +86,28 @@ private:
      *  @param  pVertex the address of the vertex
      *  @param  hitType the relevant hit type
      *  @param  clusterListName the cluster list name
+     *  @param  maxHitVertexDisplacement the max hit to vertex displacement to consider hit contribution to histogram
+     *  @param  hitDeweightingPower the hit power used for distance-weighting hit contributions to histograms
      *  @param  histogram to receive the populated histogram
      * 
      *  @return whether the vertex projection lies on a hit in the provided cluster list
      */
     bool FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, const std::string &clusterListName,
-        pandora::Histogram &histogram) const;
+        const float maxHitVertexDisplacement, const float hitDeweightingPower, pandora::Histogram &histogram) const;
 
     /**
      *  @brief  Use a provided vertex position and cluster to fill a provided histogram with hit-vertex relationship information
      * 
      *  @param  vertexPosition2D the projected vertex position
      *  @param  pCluster the address of the cluster
+     *  @param  maxHitVertexDisplacement the max hit to vertex displacement to consider hit contribution to histogram
+     *  @param  hitDeweightingPower the hit power used for distance-weighting hit contributions to histograms
      *  @param  histogram to receive the populated histogram
      * 
      *  @return whether the vertex projection lies on a hit in the provided cluster list
      */
     bool FillHistogram(const pandora::CartesianVector &vertexPosition2D, const pandora::Cluster *const pCluster,
-        pandora::Histogram &histogram) const;
+        const float maxHitVertexDisplacement, const float hitDeweightingPower, pandora::Histogram &histogram) const;
 
     /**
      *  @brief  Get the figure of merit for a trio of histograms
@@ -161,7 +165,8 @@ private:
     float                   m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
     float                   m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
 
-    unsigned int            m_maxTopScoreCandidates;        ///< Look at the n top-scoring candidates to select the final vertex
+    unsigned int            m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for selection
+    unsigned int            m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for further investigation
     float                   m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
     float                   m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
 };
