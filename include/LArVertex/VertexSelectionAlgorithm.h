@@ -81,6 +81,37 @@ private:
     pandora::StatusCode Run();
 
     /**
+     *  @brief  Get the figure of merit for a candidate vertex, using the provided parameters
+     * 
+     *  @param  pVertex the address of the vertex
+     *  @param  maxHitVertexDisplacement the max hit to vertex displacement to consider hit contribution to histogram
+     *  @param  hitDeweightingPower the hit power used for distance-weighting hit contributions to histograms
+     * 
+     *  @return the figure of merit
+     */
+    float GetFigureOfMerit(const pandora::Vertex *const pVertex, const float maxHitVertexDisplacement, const float hitDeweightingPower) const;
+
+    /**
+     *  @brief  Get the figure of merit for a trio of histograms
+     * 
+     *  @param  histogramU the histogram for the u view
+     *  @param  histogramV the histogram for the v view
+     *  @param  histogramW the histogram for the w view
+     * 
+     *  @return the figure of merit
+     */
+    float GetFigureOfMerit(const pandora::Histogram &histogramU, const pandora::Histogram &histogramV, const pandora::Histogram &histogramW) const;
+
+    /**
+     *  @brief  Get the figure of merit contribution for a single histogram
+     * 
+     *  @param  histogram the histogram
+     * 
+     *  @return the figure of merit
+     */
+    float GetFigureOfMerit(const pandora::Histogram &histogram) const;
+
+    /**
      *  @brief  Use hits in clusters (in the provided named list) to fill a provided histogram with hit-vertex relationship information
      * 
      *  @param  pVertex the address of the vertex
@@ -110,24 +141,12 @@ private:
         const float maxHitVertexDisplacement, const float hitDeweightingPower, pandora::Histogram &histogram) const;
 
     /**
-     *  @brief  Get the figure of merit for a trio of histograms
+     *  @brief  From the top-scoring candidate vertices, select a subset for further investigation
      * 
-     *  @param  histogramU the histogram for the u view
-     *  @param  histogramV the histogram for the v view
-     *  @param  histogramW the histogram for the w view
-     * 
-     *  @return the figure of merit
+     *  @param  vertexScoreList the vertex score list
+     *  @param  selectedVertexScoreList to receive the selected vertex score list
      */
-    float GetFigureOfMerit(const pandora::Histogram &histogramU, const pandora::Histogram &histogramV, const pandora::Histogram &histogramW) const;
-
-    /**
-     *  @brief  Get the figure of merit contribution for a single histogram
-     * 
-     *  @param  histogram the histogram
-     * 
-     *  @return the figure of merit
-     */
-    float GetFigureOfMerit(const pandora::Histogram &histogram) const;
+    void SelectTopScoreVertices(const VertexScoreList &vertexScoreList, VertexScoreList &selectedVertexScoreList) const;
 
     /**
      *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates
@@ -149,6 +168,14 @@ private:
      */
     bool AcceptVertexScore(const float score, const VertexScoreList &vertexScoreList) const;
 
+    /**
+     *  @brief  Select the final vertex from the list of chosen top-scoring candidates
+     * 
+     *  @param  vertexScoreList the list of chosen top-scoring vertex candidates
+     *  @param  pFinalVertex to receive the address of the final vertex
+     */
+    void SelectFinalVertex(const VertexScoreList &vertexScoreList, pandora::Vertex *&pFinalVertex) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string             m_inputClusterListNameU;        ///< The name of the view U cluster list
@@ -169,6 +196,9 @@ private:
     unsigned int            m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for further investigation
     float                   m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
     float                   m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
+
+    pandora::FloatVector    m_hitVertexDisplacementList;    ///< The list of hit-vertex displacement cuts used in tests comparing top-scoring vertices
+    pandora::FloatVector    m_hitDeweightingPowerList;      ///< The list of hit deweighting powers used in tests comparing top-scoring vertices
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

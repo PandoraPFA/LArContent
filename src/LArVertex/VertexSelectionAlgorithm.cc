@@ -26,10 +26,10 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_maxHitVertexDisplacement(std::numeric_limits<float>::max()),
     m_maxOnHitDisplacement(1.f),
     m_hitDeweightingPower(-0.5f),
-    m_maxTopScoreCandidates(10),
+    m_maxTopScoreCandidates(50),
     m_maxTopScoreSelections(3),
     m_minCandidateDisplacement(2.f),
-    m_minCandidateScoreFraction(0.5f)
+    m_minCandidateScoreFraction(0.4f)
 {
 }
 
@@ -44,50 +44,31 @@ StatusCode VertexSelectionAlgorithm::Run()
 
     for (VertexList::const_iterator iter = pInputVertexList->begin(), iterEnd = pInputVertexList->end(); iter != iterEnd; ++iter)
     {
-        Vertex *const pVertex(*iter);
-
-        Histogram histogramU(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
-        Histogram histogramV(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
-        Histogram histogramW(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
-
-        const bool isVertexOnHitU(this->FillHistogram(pVertex, TPC_VIEW_U, m_inputClusterListNameU, m_maxHitVertexDisplacement, m_hitDeweightingPower, histogramU));
-        const bool isVertexOnHitV(this->FillHistogram(pVertex, TPC_VIEW_V, m_inputClusterListNameV, m_maxHitVertexDisplacement, m_hitDeweightingPower, histogramV));
-        const bool isVertexOnHitW(this->FillHistogram(pVertex, TPC_VIEW_W, m_inputClusterListNameW, m_maxHitVertexDisplacement, m_hitDeweightingPower, histogramW));
-
-        if (!isVertexOnHitU || !isVertexOnHitV || !isVertexOnHitW)
-            continue;
-
-        const float figureOfMerit(this->GetFigureOfMerit(histogramU, histogramV, histogramW));
-        vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
+        try
+        {
+            Vertex *const pVertex(*iter);
+            const float figureOfMerit(this->GetFigureOfMerit(pVertex, m_maxHitVertexDisplacement,m_hitDeweightingPower));
+            vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
     }
 
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
 
-    unsigned int nVerticesConsidered(0);
     VertexScoreList selectedVertexScoreList;
+    this->SelectTopScoreVertices(vertexScoreList, selectedVertexScoreList);
 
-    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
+    Vertex *pFinalVertex(NULL);
+    this->SelectFinalVertex(selectedVertexScoreList, pFinalVertex);
+
+    if (NULL != pFinalVertex)
     {
-        if (++nVerticesConsidered > m_maxTopScoreCandidates)
-            break;
-
-        if (selectedVertexScoreList.size() >= m_maxTopScoreSelections)
-            break;
-
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexLocation(iter->GetVertex(), selectedVertexScoreList))
-            continue;
-
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(iter->GetScore(), selectedVertexScoreList))
-            continue;
-
-        selectedVertexScoreList.push_back(*iter);
-    }
-
-    if (!selectedVertexScoreList.empty())
-    {
-        Vertex *pBestVertex = vertexScoreList.at(0).GetVertex();
         VertexList selectedVertexList;
-        selectedVertexList.insert(pBestVertex);
+        selectedVertexList.insert(pFinalVertex);
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
 
@@ -96,6 +77,51 @@ StatusCode VertexSelectionAlgorithm::Run()
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, const float maxHitVertexDisplacement, const float hitDeweightingPower) const
+{
+    Histogram histogramU(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
+    Histogram histogramV(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
+    Histogram histogramW(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
+
+    const bool isVertexOnHitU(this->FillHistogram(pVertex, TPC_VIEW_U, m_inputClusterListNameU, maxHitVertexDisplacement, hitDeweightingPower, histogramU));
+    const bool isVertexOnHitV(this->FillHistogram(pVertex, TPC_VIEW_V, m_inputClusterListNameV, maxHitVertexDisplacement, hitDeweightingPower, histogramV));
+    const bool isVertexOnHitW(this->FillHistogram(pVertex, TPC_VIEW_W, m_inputClusterListNameW, maxHitVertexDisplacement, hitDeweightingPower, histogramW));
+
+    if (!isVertexOnHitU || !isVertexOnHitV || !isVertexOnHitW)
+        throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+
+    return this->GetFigureOfMerit(histogramU, histogramV, histogramW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogramU, const Histogram &histogramV, const Histogram &histogramW) const
+{
+    float figureOfMerit(0.f);
+    figureOfMerit += this->GetFigureOfMerit(histogramU);
+    figureOfMerit += this->GetFigureOfMerit(histogramV);
+    figureOfMerit += this->GetFigureOfMerit(histogramW);
+
+    return figureOfMerit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogram) const
+{
+    float sumSquaredEntries(0.f);
+
+    for (int xBin = 0; xBin < histogram.GetNBinsX(); ++xBin)
+    {
+        const float binContent(histogram.GetBinContent(xBin));
+        sumSquaredEntries += binContent * binContent;
+    }
+
+    return sumSquaredEntries;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -155,29 +181,27 @@ bool VertexSelectionAlgorithm::FillHistogram(const CartesianVector &vertexPositi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogramU, const Histogram &histogramV, const Histogram &histogramW) const
+void VertexSelectionAlgorithm::SelectTopScoreVertices(const VertexScoreList &vertexScoreList, VertexScoreList &selectedVertexScoreList) const
 {
-    float figureOfMerit(0.f);
-    figureOfMerit += this->GetFigureOfMerit(histogramU);
-    figureOfMerit += this->GetFigureOfMerit(histogramV);
-    figureOfMerit += this->GetFigureOfMerit(histogramW);
+    // ATTN Assumes sorted vertex score list
+    unsigned int nVerticesConsidered(0);
 
-    return figureOfMerit;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogram) const
-{
-    float sumSquaredEntries(0.f);
-
-    for (int xBin = 0; xBin < histogram.GetNBinsX(); ++xBin)
+    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
     {
-        const float binContent(histogram.GetBinContent(xBin));
-        sumSquaredEntries += binContent * binContent;
-    }
+        if (++nVerticesConsidered > m_maxTopScoreCandidates)
+            break;
 
-    return sumSquaredEntries;
+        if (selectedVertexScoreList.size() >= m_maxTopScoreSelections)
+            break;
+
+        if (!selectedVertexScoreList.empty() && !this->AcceptVertexLocation(iter->GetVertex(), selectedVertexScoreList))
+            continue;
+
+        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(iter->GetScore(), selectedVertexScoreList))
+            continue;
+
+        selectedVertexScoreList.push_back(*iter);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -208,6 +232,44 @@ bool VertexSelectionAlgorithm::AcceptVertexScore(const float score, const Vertex
     }
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionAlgorithm::SelectFinalVertex(const VertexScoreList &vertexScoreList, Vertex *&pFinalVertex) const
+{
+    pFinalVertex = NULL;
+
+    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
+    {
+        Vertex *const pVertex(iter->GetVertex());
+
+        if (NULL == pFinalVertex)
+        {
+            pFinalVertex = pVertex;
+            continue;
+        }
+
+        unsigned int nWinsCurrent(0), nWinsNew(0);
+
+        for (FloatVector::const_iterator dIter = m_hitVertexDisplacementList.begin(), dIterEnd = m_hitVertexDisplacementList.end(); dIter != dIterEnd; ++dIter)
+        {
+            for (FloatVector::const_iterator pIter = m_hitDeweightingPowerList.begin(), pIterEnd = m_hitDeweightingPowerList.end(); pIter != pIterEnd; ++pIter)
+            {
+                if (this->GetFigureOfMerit(pFinalVertex, *dIter, *pIter) > this->GetFigureOfMerit(pVertex, *dIter, *pIter))
+                {
+                    ++nWinsCurrent;
+                }
+                else
+                {
+                    ++nWinsNew;
+                }
+            }
+        }
+
+        if (nWinsNew > nWinsCurrent)
+            pFinalVertex = pVertex;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -251,6 +313,24 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCandidateScoreFraction", m_minCandidateScoreFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "HitVertexDisplacementList", m_hitVertexDisplacementList));
+
+    if (m_hitVertexDisplacementList.empty())
+    {
+        const float values[4] = {5.f, 10.f, 20.f, std::numeric_limits<float>::max()};
+        m_hitVertexDisplacementList.insert(m_hitVertexDisplacementList.begin(), values, values + 4);
+    }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "HitDeweightingPowerList", m_hitDeweightingPowerList));
+
+    if (m_hitDeweightingPowerList.empty())
+    {
+        const float values[4] = {0.f, -0.25f, -0.5f, -0.75f};
+        m_hitDeweightingPowerList.insert(m_hitDeweightingPowerList.begin(), values, values + 4);
+    }
 
     return STATUS_CODE_SUCCESS;
 }
