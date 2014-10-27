@@ -149,6 +149,15 @@ private:
     void SelectTopScoreVertices(const VertexScoreList &vertexScoreList, VertexScoreList &selectedVertexScoreList) const;
 
     /**
+     *  @brief  From the top-scoring candidate vertices, select the best using beam-direction assumptions
+     * 
+     *  @param  vertexScoreList the vertex score list
+     *  @param  minZCoordinate the minimum candidate vertex z-coordinate
+     *  @param  selectedVertexScoreList may receive an additional selected vertex, using beam-direction evidence
+     */
+    void SelectTopScoreBeamVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, VertexScoreList &selectedVertexScoreList) const;
+
+    /**
      *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates
      * 
      *  @param  pVertex the address of the vertex
@@ -172,33 +181,38 @@ private:
      *  @brief  Select the final vertex from the list of chosen top-scoring candidates
      * 
      *  @param  vertexScoreList the list of chosen top-scoring vertex candidates
+     *  @param  minZCoordinate the minimum candidate vertex z-coordinate
      *  @param  pFinalVertex to receive the address of the final vertex
      */
-    void SelectFinalVertex(const VertexScoreList &vertexScoreList, pandora::Vertex *&pFinalVertex) const;
+    void SelectFinalVertex(const VertexScoreList &vertexScoreList, const float minZCoordinate, pandora::Vertex *&pFinalVertex) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string             m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string             m_inputClusterListNameW;        ///< The name of the view W cluster list
-    std::string             m_outputVertexListName;         ///< The name under which to save the output vertex list
-    bool                    m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
+    std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
+    std::string     m_inputClusterListNameV;        ///< The name of the view V cluster list
+    std::string     m_inputClusterListNameW;        ///< The name of the view W cluster list
+    std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
+    bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
-    unsigned int            m_histogramNPhiBins;            ///< The number of histogram bins in phi
-    float                   m_histogramPhiMin;              ///< The histogram lower phi bound
-    float                   m_histogramPhiMax;              ///< The histogram upper phi bound
+    bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
 
-    float                   m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
-    float                   m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
-    float                   m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
+    unsigned int    m_histogramNPhiBins;            ///< The number of histogram bins in phi
+    float           m_histogramPhiMin;              ///< The histogram lower phi bound
+    float           m_histogramPhiMax;              ///< The histogram upper phi bound
 
-    unsigned int            m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for selection
-    unsigned int            m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for further investigation
-    float                   m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
-    float                   m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
+    float           m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
+    float           m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
+    float           m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
 
-    pandora::FloatVector    m_hitVertexDisplacementList;    ///< The list of hit-vertex displacement cuts used in tests comparing top-scoring vertices
-    pandora::FloatVector    m_hitDeweightingPowerList;      ///< The list of hit deweighting powers used in tests comparing top-scoring vertices
+    unsigned int    m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for selection
+    unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for further investigation
+
+    float           m_beamScoreDecayConstant;       ///< The decay constant for calculating beam-modified vertex scores
+    unsigned int    m_maxBeamTopScoreCandidates;    ///< Max number of top-beam-scoring vertices to examine and put forward for selection
+    unsigned int    m_maxBeamTopScoreSelections;    ///< Max number of top-beam-scoring vertices to select for further investigation
+
+    float           m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
+    float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
