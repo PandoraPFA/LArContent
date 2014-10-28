@@ -21,19 +21,23 @@ namespace lar_content
 VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_replaceCurrentVertexList(true),
     m_beamMode(false),
+    m_selectSingleVertex(true),
     m_histogramNPhiBins(200),
     m_histogramPhiMin(-1.1f * M_PI),
     m_histogramPhiMax(+1.1f * M_PI),
-    m_maxHitVertexDisplacement(std::numeric_limits<float>::max()),
     m_maxOnHitDisplacement(1.f),
+    m_maxHitVertexDisplacement(std::numeric_limits<float>::max()),
     m_hitDeweightingPower(-0.5f),
     m_maxTopScoreCandidates(50),
     m_maxTopScoreSelections(3),
-    m_beamScoreDecayConstant(1.f / 20.f),
     m_maxBeamTopScoreCandidates(50),
     m_maxBeamTopScoreSelections(3),
     m_minCandidateDisplacement(2.f),
-    m_minCandidateScoreFraction(0.5f)
+    m_minCandidateScoreFraction(0.5f),
+    m_minBeamCandidateScoreFraction(0.5f),
+    m_nDecayLengthsInZSpan(2.f),
+    m_bestScoreMultiplier(0.75f),
+    m_bestBeamScoreMultiplier(1.1f)
 {
 }
 
@@ -45,7 +49,7 @@ StatusCode VertexSelectionAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
 
     VertexScoreList vertexScoreList;
-    float minZCoordinate(std::numeric_limits<float>::max());
+    float minZCoordinate(std::numeric_limits<float>::max()), maxZCoordinate(-std::numeric_limits<float>::max());
 
     for (VertexList::const_iterator iter = pInputVertexList->begin(), iterEnd = pInputVertexList->end(); iter != iterEnd; ++iter)
     {
@@ -57,6 +61,9 @@ StatusCode VertexSelectionAlgorithm::Run()
 
             if (pVertex->GetPosition().GetZ() < minZCoordinate)
                 minZCoordinate = pVertex->GetPosition().GetZ();
+
+            if (pVertex->GetPosition().GetZ() > maxZCoordinate)
+                maxZCoordinate = pVertex->GetPosition().GetZ();
         }
         catch (StatusCodeException &statusCodeException)
         {
@@ -66,22 +73,19 @@ StatusCode VertexSelectionAlgorithm::Run()
     }
 
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
+    const float zSpan(maxZCoordinate - minZCoordinate);
+    const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
 
     VertexScoreList selectedVertexScoreList;
     this->SelectTopScoreVertices(vertexScoreList, selectedVertexScoreList);
+    this->SelectTopScoreBeamVertices(vertexScoreList, minZCoordinate, decayConstant, selectedVertexScoreList);
 
-    if (m_beamMode)
-        this->SelectTopScoreBeamVertices(vertexScoreList, minZCoordinate, selectedVertexScoreList);
+    VertexList finalVertexList;
+    this->SelectFinalVertices(selectedVertexScoreList, minZCoordinate, decayConstant, finalVertexList);
 
-    Vertex *pFinalVertex(NULL);
-    this->SelectFinalVertex(selectedVertexScoreList, minZCoordinate, pFinalVertex);
-
-    if (NULL != pFinalVertex)
+    if (!finalVertexList.empty())
     {
-        VertexList selectedVertexList;
-        selectedVertexList.insert(pFinalVertex);
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, finalVertexList));
 
         if (m_replaceCurrentVertexList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
@@ -208,7 +212,7 @@ void VertexSelectionAlgorithm::SelectTopScoreVertices(const VertexScoreList &ver
         if (!selectedVertexScoreList.empty() && !this->AcceptVertexLocation(iter->GetVertex(), selectedVertexScoreList))
             continue;
 
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(iter->GetScore(), selectedVertexScoreList))
+        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(iter->GetScore(), m_minCandidateScoreFraction, selectedVertexScoreList))
             continue;
 
         selectedVertexScoreList.push_back(*iter);
@@ -218,13 +222,16 @@ void VertexSelectionAlgorithm::SelectTopScoreVertices(const VertexScoreList &ver
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexSelectionAlgorithm::SelectTopScoreBeamVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate,
-    VertexScoreList &selectedVertexScoreList) const
+    const float decayConstant, VertexScoreList &selectedVertexScoreList) const
 {
+    if (!m_beamMode)
+        return;
+
     VertexScoreList beamVertexScoreList;
 
     for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
     {
-        const float beamScore(iter->GetScore() * std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * m_beamScoreDecayConstant));
+        const float beamScore(iter->GetScore() * std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * decayConstant));
         beamVertexScoreList.push_back(VertexScore(iter->GetVertex(), beamScore));
     }
 
@@ -242,9 +249,9 @@ void VertexSelectionAlgorithm::SelectTopScoreBeamVertices(const VertexScoreList 
         if (!selectedVertexScoreList.empty() && !this->AcceptVertexLocation(iter->GetVertex(), selectedVertexScoreList))
             continue;
 
-        const float nonBeamScore(iter->GetScore() / std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * m_beamScoreDecayConstant));
+        const float nonBeamScore(iter->GetScore() / std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * decayConstant));
 
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(nonBeamScore, selectedVertexScoreList))
+        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(nonBeamScore, m_minBeamCandidateScoreFraction, selectedVertexScoreList))
             continue;
 
         ++nVerticesAdded;
@@ -274,11 +281,11 @@ bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool VertexSelectionAlgorithm::AcceptVertexScore(const float score, const VertexScoreList &vertexScoreList) const
+bool VertexSelectionAlgorithm::AcceptVertexScore(const float score, const float minScoreFraction, const VertexScoreList &vertexScoreList) const
 {
     for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
     {
-        if (score < m_minCandidateScoreFraction * iter->GetScore())
+        if (score < minScoreFraction * iter->GetScore())
             return false;
     }
 
@@ -287,23 +294,35 @@ bool VertexSelectionAlgorithm::AcceptVertexScore(const float score, const Vertex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::SelectFinalVertex(const VertexScoreList &vertexScoreList, const float minZCoordinate, Vertex *&pFinalVertex) const
+void VertexSelectionAlgorithm::SelectFinalVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
+    VertexList &finalVertexList) const
 {
-    pFinalVertex = NULL;
-    float bestScore(0.f), bestBeamScore(0.f); // TODO tidy-up
+    Vertex *pFinalVertex(NULL);
+    float bestScore(0.f), bestBeamScore(0.f);
 
     for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
     {
-        const float score(iter->GetScore());
-        const float beamScore(iter->GetScore() * std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * m_beamScoreDecayConstant));
-
-        if ((score > 0.6f * bestScore) && (beamScore > 1.4f * bestBeamScore)) // TODO config
+        if (!m_selectSingleVertex)
         {
-            pFinalVertex = iter->GetVertex();
-            bestScore = score;
-            bestBeamScore = beamScore;
+            finalVertexList.insert(iter->GetVertex());
+            continue;
         }
+
+        if (!m_beamMode && (iter->GetScore() < bestScore))
+            continue;
+
+        const float beamScore(iter->GetScore() * std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * decayConstant));
+
+        if (m_beamMode && ((iter->GetScore() < m_bestScoreMultiplier * bestScore) || (beamScore < m_bestBeamScoreMultiplier * bestBeamScore)))
+            continue;
+
+        pFinalVertex = iter->GetVertex();
+        bestScore = iter->GetScore();
+        bestBeamScore = beamScore;
     }
+
+    if (m_selectSingleVertex && (NULL != pFinalVertex))
+        finalVertexList.insert(pFinalVertex);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -322,6 +341,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "BeamMode", m_beamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectSingleVertex", m_selectSingleVertex));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "HistogramNPhiBins", m_histogramNPhiBins));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -331,10 +353,10 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "HistogramPhiMax", m_histogramPhiMax));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxHitVertexDisplacement", m_maxHitVertexDisplacement));
+        "MaxOnHitDisplacement", m_maxOnHitDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxOnHitDisplacement", m_maxOnHitDisplacement));
+        "MaxHitVertexDisplacement", m_maxHitVertexDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "HitDeweightingPower", m_hitDeweightingPower));
@@ -344,9 +366,6 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTopScoreSelections", m_maxTopScoreSelections));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BeamScoreDecayConstant", m_beamScoreDecayConstant));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxBeamTopScoreCandidates", m_maxBeamTopScoreCandidates));
@@ -359,6 +378,18 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCandidateScoreFraction", m_minCandidateScoreFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinBeamCandidateScoreFraction", m_minBeamCandidateScoreFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "BestScoreMultiplier", m_bestScoreMultiplier));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "BestBeamScoreMultiplier", m_bestBeamScoreMultiplier));
 
     return STATUS_CODE_SUCCESS;
 }
