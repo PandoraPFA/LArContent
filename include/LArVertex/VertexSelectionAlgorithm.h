@@ -153,9 +153,11 @@ private:
      * 
      *  @param  vertexScoreList the vertex score list
      *  @param  minZCoordinate the minimum candidate vertex z-coordinate
+     *  @param  decayConstant the decay constant for calculating beam-modified vertex scores
      *  @param  selectedVertexScoreList may receive an additional selected vertex, using beam-direction evidence
      */
-    void SelectTopScoreBeamVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, VertexScoreList &selectedVertexScoreList) const;
+    void SelectTopScoreBeamVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
+        VertexScoreList &selectedVertexScoreList) const;
 
     /**
      *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates
@@ -171,20 +173,23 @@ private:
      *  @brief  Whether to accept a candidate vertex, based on its score in relation to other selected candidates
      * 
      *  @param  score the vertex score
+     *  @param  minScoreFraction the minimum acceptable fraction of the current top-score
      *  @param  vertexScoreList the vertex score list
      * 
      *  @return boolean
      */
-    bool AcceptVertexScore(const float score, const VertexScoreList &vertexScoreList) const;
+    bool AcceptVertexScore(const float score, const float minScoreFraction, const VertexScoreList &vertexScoreList) const;
 
     /**
      *  @brief  Select the final vertex from the list of chosen top-scoring candidates
      * 
      *  @param  vertexScoreList the list of chosen top-scoring vertex candidates
      *  @param  minZCoordinate the minimum candidate vertex z-coordinate
-     *  @param  pFinalVertex to receive the address of the final vertex
+     *  @param  decayConstant the decay constant for calculating beam-modified vertex scores
+     *  @param  finalVertexList to receive the list of final vertices
      */
-    void SelectFinalVertex(const VertexScoreList &vertexScoreList, const float minZCoordinate, pandora::Vertex *&pFinalVertex) const;
+    void SelectFinalVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
+        pandora::VertexList &finalVertexList) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -195,24 +200,28 @@ private:
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
+    bool            m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
 
     unsigned int    m_histogramNPhiBins;            ///< The number of histogram bins in phi
     float           m_histogramPhiMin;              ///< The histogram lower phi bound
     float           m_histogramPhiMax;              ///< The histogram upper phi bound
 
-    float           m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
     float           m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
+    float           m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
     float           m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
 
-    unsigned int    m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for selection
-    unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for further investigation
-
-    float           m_beamScoreDecayConstant;       ///< The decay constant for calculating beam-modified vertex scores
-    unsigned int    m_maxBeamTopScoreCandidates;    ///< Max number of top-beam-scoring vertices to examine and put forward for selection
-    unsigned int    m_maxBeamTopScoreSelections;    ///< Max number of top-beam-scoring vertices to select for further investigation
+    unsigned int    m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for final selection
+    unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for final investigation
+    unsigned int    m_maxBeamTopScoreCandidates;    ///< Max number of top-beam-scoring vertices to examine and put forward for final selection
+    unsigned int    m_maxBeamTopScoreSelections;    ///< Max number of top-beam-scoring vertices to select for final investigation
 
     float           m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
     float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
+    float           m_minBeamCandidateScoreFraction;///< Ignore other top-beam-scoring candidates with score less than a fraction of original
+
+    float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
+    float           m_bestScoreMultiplier;          ///< In beam mode, best vertex must surpass a multiple of current best basic score
+    float           m_bestBeamScoreMultiplier;      ///< In beam mode, best vertex must surpass a multiple of current best beam-weighted score
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
