@@ -41,7 +41,7 @@ public:
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    const TwoDSlidingFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
+    const TwoDSlidingFitResult &GetCachedSlidingFitResult(const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Get the layer window for the sliding linear fits
@@ -94,14 +94,14 @@ protected:
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    void AddToSlidingFitCache(pandora::Cluster *const pCluster);
+    void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Remova an existing sliding fit result, for the specified cluster, from the algorithm cache
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    void RemoveFromSlidingFitCache(pandora::Cluster *const pCluster);
+    void RemoveFromSlidingFitCache(const pandora::Cluster *const pCluster);
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

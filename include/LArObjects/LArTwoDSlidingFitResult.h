@@ -474,7 +474,7 @@ private:
 };
 
 typedef std::vector<TwoDSlidingFitResult> TwoDSlidingFitResultList;
-typedef std::map<pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
+typedef std::map<const pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------

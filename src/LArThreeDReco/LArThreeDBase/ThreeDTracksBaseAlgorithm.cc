@@ -41,7 +41,7 @@ ThreeDTracksBaseAlgorithm<T>::~ThreeDTracksBaseAlgorithm()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitResult(Cluster *const pCluster) const
+const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitResult(const Cluster *const pCluster) const
 {
     TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -253,7 +253,7 @@ void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoPa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
+void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
 {
     const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
     const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
@@ -265,7 +265,7 @@ void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(Cluster *const pCluster)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(Cluster *const pCluster)
+void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *const pCluster)
 {
     TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pCluster);
 
