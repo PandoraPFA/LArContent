@@ -48,6 +48,7 @@
 #include "LArThreeDReco/LArShowerMatching/SimpleShowersTool.h"
 #include "LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "LArThreeDReco/LArTrackFragments/TrackRecoveryAlgorithm.h"
 #include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
@@ -118,6 +119,7 @@ public:
         d("LArThreeDRemnants",                      lar_content::ThreeDRemnantsAlgorithm::Factory)                              \
         d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
+        d("LArTrackRecovery",                       lar_content::TrackRecoveryAlgorithm::Factory)                               \
         d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
         d("LArLongitudinalAssociation",             lar_content::LongitudinalAssociationAlgorithm::Factory)                     \
         d("LArLongitudinalExtension",               lar_content::LongitudinalExtensionAlgorithm::Factory)                       \
