@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArThreeDReco/LArTrackFragments/TrackRecoveryAlgorithm.h"
 
@@ -19,7 +20,10 @@ namespace lar_content
 
 TrackRecoveryAlgorithm::TrackRecoveryAlgorithm() :
     m_minClusterCaloHits(5),
-    m_minClusterLengthSquared(1.f)
+    m_minClusterLengthSquared(1.f),
+    m_minClusterXSpan(0.5f),
+    m_minXOverlapFraction(0.5f),
+    m_pseudoChi2Cut(20.f)
 {
 }
 
@@ -31,11 +35,7 @@ StatusCode TrackRecoveryAlgorithm::Run()
     this->SelectInputClusters(m_inputClusterListNameU, selectedClusterListU);
     this->SelectInputClusters(m_inputClusterListNameV, selectedClusterListV);
     this->SelectInputClusters(m_inputClusterListNameW, selectedClusterListW);
-//std::cout << "TrackRecoveryAlgorithm: Selection, nU: " << selectedClusterListU.size() << ", nV: " << selectedClusterListV.size() << ", nW: " << selectedClusterListW.size() << std::endl;
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &selectedClusterListU, "selectedClusterListU", RED);
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &selectedClusterListV, "selectedClusterListV", GREEN);
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &selectedClusterListW, "selectedClusterListW", BLUE);
-//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
     SimpleOverlapTensor overlapTensor;
     this->FindOverlaps(selectedClusterListU, selectedClusterListV, overlapTensor);
     this->FindOverlaps(selectedClusterListV, selectedClusterListW, overlapTensor);
@@ -70,6 +70,12 @@ void TrackRecoveryAlgorithm::SelectInputClusters(const std::string &inputCluster
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
             continue;
 
+        float xMin(0.f), xMax(0.f);
+        LArClusterHelper::GetClusterSpanX(pCluster, xMin, xMax);
+
+        if ((xMax - xMin) < m_minClusterXSpan)
+            continue;
+
         selectedClusterList.insert(pCluster);
     }
 }
@@ -102,18 +108,14 @@ bool TrackRecoveryAlgorithm::IsOverlap(const Cluster *const pCluster1, const Clu
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
 
-    const float xSpan1(xMax1 - xMin1);
-    const float xSpan2(xMax2 - xMin2);
+    const float xSpan1(xMax1 - xMin1), xSpan2(xMax2 - xMin2);
 
-    if ((xSpan1 < 0.5f) || (xSpan2 < 0.5f)) // TODO config
-        return false;
+    if ((xSpan1 < std::numeric_limits<float>::epsilon()) || (xSpan2 < std::numeric_limits<float>::epsilon()))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
 
-    if (xOverlap < 0.5f) // TODO config
-        return false;
-
-    if (((xOverlap / xSpan1) < 0.5f) || ((xOverlap / xSpan2) < 0.5f)) // TODO config
+    if (((xOverlap / xSpan1) < m_minXOverlapFraction) || ((xOverlap / xSpan2) < m_minXOverlapFraction))
         return false;
 
     return true;
@@ -130,27 +132,69 @@ void TrackRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlapTen
         overlapTensor.GetConnectedElements(*iter, true, clusterListU, clusterListV, clusterListW);
         const unsigned int nU(clusterListU.size()), nV(clusterListV.size()), nW(clusterListW.size());
 
-        if ((1 == nU * nV * nW) || ((0 == nU * nV * nW) && ((1 == nU && 1 == nV) || (1 == nV && 1 == nW) || (1 == nW && 1 == nU))))
+        if ((0 == nU * nV) && (0 == nV * nW) && (0 == nW * nU))
+            continue;
+
+        ClusterList clusterListAll;
+        clusterListAll.insert(clusterListU.begin(), clusterListU.end());
+        clusterListAll.insert(clusterListV.begin(), clusterListV.end());
+        clusterListAll.insert(clusterListW.begin(), clusterListW.end());
+
+        if ((1 == nU * nV * nW) && this->CheckConsistency(*(clusterListU.begin()), *(clusterListV.begin()), *(clusterListW.begin())))
         {
-            // TODO check consistency, if we have three clusters
-            ClusterList clusterListAll;
-            clusterListAll.insert(clusterListU.begin(), clusterListU.end());
-            clusterListAll.insert(clusterListV.begin(), clusterListV.end());
-            clusterListAll.insert(clusterListW.begin(), clusterListW.end());
             this->CreateTrackParticle(clusterListAll);
-            std::cout << "TrackRecoveryAlgorithm: CreateTrackParticle, nU: " << nU << ", nV: " << nV << ", nW: " << nW << std::endl;
+        }
+        else if ((0 == nU * nV * nW) && ((1 == nU && 1 == nV) || (1 == nV && 1 == nW) || (1 == nW && 1 == nU)))
+        {
+            this->CreateTrackParticle(clusterListAll);
         }
         else
         {
-            // TODO Resolve ambiguities
-            std::cout << "TrackRecoveryAlgorithm: Ambiguity to resolve, nU: " << nU << ", nV: " << nV << ", nW: " << nW << std::endl;
+            // May later choose to resolve simple ambiguities, e.g. of form nU:nV:nW == 1:2:0
         }
-
-//        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterListU, "allClustersU", RED);
-//        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterListV, "allClustersV", GREEN);
-//        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterListW, "allClustersW", BLUE);
-//        PandoraMonitoringApi::ViewEvent(this->GetPandora());
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackRecoveryAlgorithm::CheckConsistency(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) const
+{
+    try
+    {
+        // Requirements on X matching
+        float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
+        LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
+        LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
+        LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
+
+        const float xMin(std::max(xMinU, std::max(xMinV, xMinW)));
+        const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)));
+        const float xOverlap(xMax - xMin);
+
+        if (xOverlap < std::numeric_limits<float>::epsilon())
+            return false;
+
+        // Requirements on 3D matching
+        const float u(LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax));
+        const float v(LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax));
+        const float w(LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax));
+
+        const float uv2w(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, u, v));
+        const float vw2u(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, v, w));
+        const float wu2v(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, w, u));
+
+        const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
+
+        if (pseudoChi2 > m_pseudoChi2Cut)
+            return false;
+
+        return true;
+    }
+    catch(StatusCodeException &)
+    {
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,6 +304,15 @@ StatusCode TrackRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterXSpan", m_minClusterXSpan));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinXOverlapFraction", m_minXOverlapFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PseudoChi2Cut", m_pseudoChi2Cut));
 
     return STATUS_CODE_SUCCESS;
 }
