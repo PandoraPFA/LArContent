@@ -111,6 +111,17 @@ private:
     void ExamineTensor(const SimpleOverlapTensor &overlapTensor) const;
 
     /**
+     *  @brief  Whether a trio of clusters are consistent with representing projections of the same 3d trajectory
+     *
+     *  @param  pClusterU the address of cluster u
+     *  @param  pClusterV the address of cluster v
+     *  @param  pClusterW the address of cluster w
+     * 
+     *  @return boolean
+     */
+    bool CheckConsistency(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW) const;
+
+    /**
      *  @brief  Create and save a track particle containing the provided clusters
      *
      *  @param  clusterList the cluster list
@@ -126,6 +137,10 @@ private:
 
     unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
+    float                       m_minClusterXSpan;              ///< The min x span required in order to consider a cluster
+
+    float                       m_minXOverlapFraction;          ///< The min x overlap fraction required in order to id overlapping clusters
+    float                       m_pseudoChi2Cut;                ///< The selection cut on the matched chi2
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
