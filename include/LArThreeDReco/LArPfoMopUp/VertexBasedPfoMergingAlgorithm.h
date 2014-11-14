@@ -181,10 +181,6 @@ private:
         pandora::Pfo       *m_pVertexPfo;               ///< The address of the vertex-associated pfo
         pandora::Pfo       *m_pDaughterPfo;             ///< The address of the non-vertex-associated candidate daughter pfo
 
-        float               m_meanBoundedFraction;      ///< The mean bounded fraction, averaging over the u, v and w views
-        float               m_maxBoundedFraction;       ///< The maximum bounded fraction from the u, v and w views
-        float               m_minBoundedFraction;       ///< The minimum bounded fraction from the u, v and w views
-
         ClusterAssociation  m_clusterAssociationU;      ///< The cluster association in the u view
         ClusterAssociation  m_clusterAssociationV;      ///< The cluster association in the v view
         ClusterAssociation  m_clusterAssociationW;      ///< The cluster association in the w view
