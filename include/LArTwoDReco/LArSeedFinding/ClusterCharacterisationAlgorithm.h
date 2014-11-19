@@ -37,6 +37,11 @@ public:
      */
     ClusterCharacterisationAlgorithm();
 
+    /**
+     *  @brief  Destructor
+     */
+    ~ClusterCharacterisationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 
@@ -173,6 +178,16 @@ private:
      */
     void FindTargetPfo(pandora::Cluster *const pCluster, const pandora::PfoList &pfoList, pandora::Pfo *&pTargetPfo) const;
 
+    /**
+     *  @brief  Fill the track/shower identification monitoring tree with entries for a given cluster
+     *
+     *  @param  pCluster address of the relevant cluster
+     *  @param  isSeed whether the intent is to use the cluster as a shower seed
+     * 
+     *  @return whether cluster is identified as a shower
+     */
+    bool FillTree(pandora::Cluster *const pCluster, const bool isSeed) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
@@ -200,6 +215,13 @@ private:
     float                   m_maxVertexLongitudinalDistance;///< Vertex association check: max longitudinal distance cut
     float                   m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
     float                   m_vertexAngularAllowance;       ///< Vertex association check: pointing angular allowance in degrees
+
+    std::string             m_fileName;                     ///< Name of output file
+    std::string             m_treeName;                     ///< Name of output tree
+
+    mutable pandora::ClusterList    m_usedSeedClusters;     ///< The nasty mutable used cluster list hack
+    mutable pandora::ClusterList    m_usedBranchClusters;   ///< The nasty mutable used cluster list hack
+    std::string             m_clusteringAlgorithmName;      ///< The clustering daughter algorithm name
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
