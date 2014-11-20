@@ -83,6 +83,7 @@
 #include "LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
+#include "LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
 #include "LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 #include "LArUtility/ListChangingAlgorithm.h"
@@ -144,6 +145,7 @@ public:
         d("LArTrackConsolidation",                  lar_content::TrackConsolidationAlgorithm::Factory)                          \
         d("LArVertexSplitting",                     lar_content::VertexSplittingAlgorithm::Factory)                             \
         d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \
+        d("LArShowerGrowing",                       lar_content::ShowerGrowingAlgorithm::Factory)                               \
         d("LArTwoDParticleCreationAlgorithm",       lar_content::TwoDParticleCreationAlgorithm::Factory)                        \
         d("LArListChanging",                        lar_content::ListChangingAlgorithm::Factory)                                \
         d("LArListDissolution",                     lar_content::ListDissolutionAlgorithm::Factory)                             \
