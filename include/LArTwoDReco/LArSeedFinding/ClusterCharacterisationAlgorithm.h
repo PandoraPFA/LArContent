@@ -179,14 +179,13 @@ private:
     void FindTargetPfo(pandora::Cluster *const pCluster, const pandora::PfoList &pfoList, pandora::Pfo *&pTargetPfo) const;
 
     /**
-     *  @brief  Fill the track/shower identification monitoring tree with entries for a given cluster
+     *  @brief  Whether cluster is identified as a shower
      *
      *  @param  pCluster address of the relevant cluster
-     *  @param  isSeed whether the intent is to use the cluster as a shower seed
      * 
-     *  @return whether cluster is identified as a shower
+     *  @return boolean
      */
-    bool FillTree(pandora::Cluster *const pCluster, const bool isSeed) const;
+    bool IsShower(pandora::Cluster *const pCluster) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

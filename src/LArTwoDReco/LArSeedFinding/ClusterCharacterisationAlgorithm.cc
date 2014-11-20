@@ -14,7 +14,7 @@
 #include "LArHelpers/LArVertexHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
-
+    #include "LArObjects/LArTwoDSlidingShowerFitResult.h"
 #include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
@@ -121,10 +121,7 @@ bool ClusterCharacterisationAlgorithm::GetNextSeedCandidate(const ClusterList *c
         if (usedClusters.count(pCluster))
             continue;
 
-        //if (!m_useExistingPfosAsSeeds && !pCluster->IsAvailable())
-        //    continue;
-
-        if (!this->FillTree(pCluster, true))
+        if (!this->IsShower(pCluster))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
@@ -154,10 +151,7 @@ void ClusterCharacterisationAlgorithm::GetSeedAssociationList(const ClusterVecto
         if (seedClusters.count(pCandidateCluster))
             continue;
 
-        //if (!m_useExistingPfosAsBranches && !pCandidateCluster->IsAvailable())
-        //    continue;
-
-        if (!this->FillTree(pCandidateCluster, false))
+        if (!this->IsShower(pCandidateCluster))
             continue;
 
         if (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
@@ -279,13 +273,6 @@ ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorit
     const float cOuter(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()), pClusterSeed));
     const float sInner(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetInnerPseudoLayer()), pCluster));
     const float cInner(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()), pClusterSeed));
-
-    // Veto track-track end-to-end associations
-//    if (!pClusterSeed->IsAvailable() && !pCluster->IsAvailable() &&
-//        ((sOuter < m_nearbyTrackDistance) || (sInner < m_nearbyTrackDistance)))
-//    {
-//        return NONE;
-//    }
 
     // Association check 1(a), look for enclosed clusters
     if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) &&
@@ -580,163 +567,59 @@ void ClusterCharacterisationAlgorithm::FindTargetPfo(Cluster *const pCluster, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClusterCharacterisationAlgorithm::FillTree(Cluster *const pCluster, const bool isSeed) const
+bool ClusterCharacterisationAlgorithm::IsShower(Cluster *const pCluster) const
 {
-    bool writeToTree(true);
-
-    if (isSeed && !m_usedSeedClusters.insert(pCluster).second)
-        writeToTree = false;
-
-    if (!isSeed && !m_usedBranchClusters.insert(pCluster).second)
-        writeToTree = false;
-
-    static int counter(0);
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "counter", counter));
-    ++counter;
-
-    const int isSeedCandidate(isSeed ? 1 : 0);
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSeedCandidate", isSeedCandidate));
-
-    int isTrueShower(1);
-    try
-    {
-        const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-
-        if ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())))
-            isTrueShower = 0;
-    }
-    catch (StatusCodeException &) {}
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isTrueShower", isTrueShower));
-
     const int nHits(pCluster->GetNCaloHits());
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHits", nHits));
 
-    const int isAvailable(pCluster->IsAvailable() ? 1 : 0);
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isAvailable", isAvailable));
+    if (nHits < 20) // TODO config
+        return true;
 
-    const float emEnergy(pCluster->GetElectromagneticEnergy());
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "emEnergy", emEnergy));
+    float hitsPerUnitLength(-std::numeric_limits<float>::max());
+    float widthPerUnitLength(-std::numeric_limits<float>::max());
 
-    int muonId(0);
-    try { if (PandoraContentApi::GetPlugins(*this)->GetParticleId()->IsMuon(pCluster)) muonId = 1;} catch (StatusCodeException &) {}
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "muonId", muonId));
-
-    const float layerOccupancy(LArClusterHelper::GetLayerOccupancy(pCluster));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "layerOccupancy", layerOccupancy));
-
-    const int nPseudoLayers(pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()), nOccupiedPseudoLayers(pCluster->GetOrderedCaloHitList().size());
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPseudoLayers", nPseudoLayers));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nOccupiedPseudoLayers", nOccupiedPseudoLayers));
-
-    FloatVector xPositions, zPositions, residuals;
-    float integratedPathLength(0.f), straightLinePathLength(0.f), rmsSum(0.f);
-    int nFitLayers(0), nFitLayersOnHit(0), slidingFitSuccess(1);
     try
     {
         const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
-        const TwoDSlidingFitResult slidingFitResult(pCluster, 10, slidingFitPitch); // TODO config
+        const TwoDSlidingShowerFitResult showerFitResult(pCluster, 10, slidingFitPitch); // TODO config
 
-        CartesianVector previousFittedPosition(0.f, 0.f, 0.f);
-        const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
+        const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
+        const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
+        const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
 
-        CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        if (layerFitResultMapS.empty())
+            return true;
 
-        for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
+        CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);
+        showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);
+        showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);
+        const float straightLinePathLength((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());
+
+        float widthSum(0.f);
+
+        for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
         {
-            const CartesianVector &hitPosition((*hIter)->GetPositionVector());
-            xPositions.push_back(hitPosition.GetX());
-            zPositions.push_back(hitPosition.GetZ());
+            LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
+            LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
 
-            float rL(0.f), rT(0.f);
-            slidingFitResult.GetLocalPosition(hitPosition, rL, rT);
-            const int layer(slidingFitResult.GetLayer(rL));
-
-            LayerFitResultMap::const_iterator fitResultIter = layerFitResultMap.find(layer);
-
-            if (layerFitResultMap.end() == fitResultIter)
+            if ((layerFitResultMapP.end() == iterP) || (layerFitResultMapN.end() == iterN))
                 continue;
 
-            const double fitT(fitResultIter->second.GetFitT());
-            const double gradient(fitResultIter->second.GetGradient());
-            const double residualSquared((fitT - rT) * (fitT - rT) / (1. + gradient * gradient)); // angular correction (note: this is cheating!)
-            residuals.push_back(residualSquared);
+            widthSum += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
         }
 
-        for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+        if (straightLinePathLength > std::numeric_limits<float>::epsilon())
         {
-            rmsSum += iter->second.GetRms();
-
-            CartesianVector globalFittedPosition(0.f, 0.f, 0.f);
-            slidingFitResult.GetGlobalPosition(iter->second.GetL(), iter->second.GetFitT(), globalFittedPosition);
-
-            ++nFitLayers;
-
-            for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
-            {
-                if ((globalFittedPosition - (*hIter)->GetPositionVector()).GetMagnitudeSquared() < 0.25f * 0.25f) // TODO config
-                {
-                    ++nFitLayersOnHit;
-                    break;
-                }
-            }
-
-            if (layerFitResultMap.begin() != iter)
-                integratedPathLength += (globalFittedPosition - previousFittedPosition).GetMagnitude();
-
-            previousFittedPosition = globalFittedPosition;
-        }
-
-        if (!layerFitResultMap.empty())
-        {
-            CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);
-            slidingFitResult.GetGlobalPosition(layerFitResultMap.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);
-            slidingFitResult.GetGlobalPosition(layerFitResultMap.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);
-            straightLinePathLength = ((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());
+            hitsPerUnitLength = static_cast<float>(nHits) / straightLinePathLength;
+            widthPerUnitLength = widthSum / straightLinePathLength;
         }
     }
-    catch (StatusCodeException &) {slidingFitSuccess = 0;}
+    catch (StatusCodeException &)
+    {
+        return true;
+    }
 
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "slidingFitSuccess", slidingFitSuccess));
-
-    float trackWidth(-999.f);
-    if (!residuals.empty()) trackWidth = std::sqrt(residuals[0.8f * residuals.size()]); // TODO config
-
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xPositions", &xPositions));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zPositions", &zPositions));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "residuals", &residuals));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trackWidth", trackWidth));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "integratedPathLength", integratedPathLength));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "straightLinePathLength", straightLinePathLength));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rmsSum", rmsSum));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nFitLayers", nFitLayers));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nFitLayersOnHit", nFitLayersOnHit));
-
-//    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-//    const std::string newCurrentListName((TPC_VIEW_U == hitType) ? "ClustersU" : (TPC_VIEW_V == hitType) ? "ClustersV" : "ClustersW"); // TODO config
-//    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, newCurrentListName));
-//    const ClusterList *pNewClusterList(NULL);
-//    std::string originalListName, newListName;
-//    ClusterList clusterList; clusterList.insert(pCluster);
-//    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeReclustering(*this, TrackList(), clusterList, originalListName));
-//    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithmName, pNewClusterList, newListName));
-//    const int nDaughterClusters(pNewClusterList->size());
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nDaughterClusters", nDaughterClusters));
-//    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, originalListName));
-
-    if (writeToTree)
-        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-
-//    if (isTrueShower == 0)
-//    {
-//        return false;
-//    }
-//    else
-//    {
-//        return true;
-//    }
-
-    if ((slidingFitSuccess == 1) && (nHits > 20) && (nFitLayers > 0) && ((static_cast<float>(nFitLayersOnHit) / static_cast<float>(nFitLayers)) > 0.96f)) // TODO config
+    if ((widthPerUnitLength > 0.f) && ((widthPerUnitLength < 0.15f) || ((nHits > 40) && (hitsPerUnitLength < 1.5f))
+        || ((nHits > 60) && (widthPerUnitLength < 0.25f))   )) // TODO config
     {
         return false;
     }
