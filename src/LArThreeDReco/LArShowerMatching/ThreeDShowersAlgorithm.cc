@@ -24,6 +24,7 @@ ThreeDShowersAlgorithm::ThreeDShowersAlgorithm() :
     m_nMaxTensorToolRepeats(5000),
     m_slidingFitWindow(20),
     m_ignoreUnavailableClusters(true),
+    m_ignoreFixedTracks(true),
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f),
     m_minShowerMatchedFraction(0.2f),
@@ -92,6 +93,9 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
         Cluster *pCluster = *iter;
 
         if (m_ignoreUnavailableClusters && !pCluster->IsAvailable())
+            continue;
+
+        if (m_ignoreFixedTracks && pCluster->IsFixedMuon())
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
