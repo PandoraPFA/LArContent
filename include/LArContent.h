@@ -8,6 +8,7 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
+#include "LArCheating/CheatingClusterCharacterisationAlgorithm.h"
 #include "LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
@@ -104,6 +105,7 @@ public:
         d("LArEventDisplay",                        lar_content::EventDisplayAlgorithm::Factory)                                \
         d("LArParticleMonitoring",                  lar_content::ParticleMonitoringAlgorithm::Factory)                          \
         d("LArVisualMonitoring",                    lar_content::VisualMonitoringAlgorithm::Factory)                            \
+        d("LArCheatingClusterCharacterisation",     lar_content::CheatingClusterCharacterisationAlgorithm::Factory)             \
         d("LArCheatingClusterCreation",             lar_content::CheatingClusterCreationAlgorithm::Factory)                     \
         d("LArCheatingCosmicRayIdentification",     lar_content::CheatingCosmicRayIdentificationAlg::Factory)                   \
         d("LArCheatingCosmicRayShowerMatching",     lar_content::CheatingCosmicRayShowerMatchingAlg::Factory)                   \

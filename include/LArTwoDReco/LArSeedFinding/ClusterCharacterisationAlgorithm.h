@@ -48,6 +48,11 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
+
+    unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    unsigned int            m_minHitsInCluster;             ///< The minimum number of hits in a clear track candidate
+    float                   m_maxLayerGapFraction;          ///< The maximum (sliding fit) layer gap fraction for a clear track candidate
+    float                   m_maxWidthPerUnitLength;        ///< The maximum width per unit length for a clear track candidate
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

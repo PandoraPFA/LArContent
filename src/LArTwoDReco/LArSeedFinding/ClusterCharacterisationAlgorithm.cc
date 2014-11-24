@@ -21,7 +21,11 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm()
+ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
+    m_slidingFitWindow(10),
+    m_minHitsInCluster(20),
+    m_maxLayerGapFraction(0.2f),
+    m_maxWidthPerUnitLength(0.15f)
 {
 }
 
@@ -42,6 +46,10 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
             {
                 pCluster->SetIsFixedMuonFlag(true);
             }
+            else
+            {
+                pCluster->SetIsFixedMuonFlag(false);
+            }
         }
     }
 
@@ -52,24 +60,19 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
 bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
 {
-    const int nHits(pCluster->GetNCaloHits());
-
-    if (nHits < 20) // TODO config
+    if (pCluster->GetNCaloHits() < m_minHitsInCluster)
         return false;
-
-    float hitsPerUnitLength(-std::numeric_limits<float>::max());
-    float widthPerUnitLength(-std::numeric_limits<float>::max());
 
     try
     {
         const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
-        const TwoDSlidingShowerFitResult showerFitResult(pCluster, 10, slidingFitPitch); // TODO config
+        const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
         const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
 
-        if (layerFitResultMapS.empty())
+        if (layerFitResultMapS.size() < 2)
             return false;
 
         CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);
@@ -77,10 +80,20 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
         showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);
         const float straightLinePathLength((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());
 
+        if (straightLinePathLength < std::numeric_limits<float>::epsilon())
+            return false;
+
         float widthSum(0.f);
+        int biggestLayerGap(0), previousLayer(layerFitResultMapS.begin()->first);
 
         for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
         {
+            const int layerGap(iterS->first - previousLayer);
+            previousLayer = iterS->first;
+
+            if (layerGap > biggestLayerGap)
+                biggestLayerGap = layerGap;
+
             LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
             LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
 
@@ -90,22 +103,19 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
             widthSum += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
         }
 
-        if (straightLinePathLength > std::numeric_limits<float>::epsilon())
-        {
-            hitsPerUnitLength = static_cast<float>(nHits) / straightLinePathLength;
-            widthPerUnitLength = widthSum / straightLinePathLength;
-        }
+        const float layerGapFraction(static_cast<float>(biggestLayerGap) / static_cast<float>(layerFitResultMapS.size()));
+
+        if (layerGapFraction > m_maxLayerGapFraction)
+            return false;
+
+        // ATTN: Could also try to recover long (sideways) tracks, with cuts on nHits and nHitsPerUnitLength
+        const float widthPerUnitLength(widthSum / straightLinePathLength);
+
+        if (widthPerUnitLength < m_maxWidthPerUnitLength)
+            return true;
     }
     catch (StatusCodeException &)
     {
-        return false;
-    }
-
-    if ((widthPerUnitLength > 0.f) && ((widthPerUnitLength < 0.15f) ||
-        ((nHits > 40) && (hitsPerUnitLength < 1.5f)) ||
-        ((nHits > 60) && (widthPerUnitLength < 0.25f)) )) // TODO config + refine logic
-    {
-        return true;
     }
 
     return false;
@@ -116,6 +126,18 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitWindow", m_slidingFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitsInCluster", m_minHitsInCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxLayerGapFraction", m_maxLayerGapFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxWidthPerUnitLength", m_maxWidthPerUnitLength));
 
     return STATUS_CODE_SUCCESS;
 }
