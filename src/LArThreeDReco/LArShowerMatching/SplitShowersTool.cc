@@ -25,14 +25,17 @@ SplitShowersTool::SplitShowersTool() :
     m_nCommonClusters(2),
     m_minMatchedFraction(0.25f),
     m_minMatchedSamplingPoints(40),
-    m_vetoMergeXDifference(2.f),
-    m_vetoMergeXOverlap(2.f),
+    m_checkClusterProximities(true),
     m_maxClusterSeparation(25.f),
+    m_checkClusterVertexRelations(true),
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
     m_maxVertexTransverseDistance(1.5f),
     m_vertexAngularAllowance(3.f),
-    m_maxVertexAssociations(1)
+    m_maxVertexAssociations(1),
+    m_checkClusterSplitPositions(false),
+    m_vetoMergeXDifference(2.f),
+    m_vetoMergeXOverlap(2.f)
 {
 }
 
@@ -172,13 +175,21 @@ void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, cons
                 if ((1 == m_nCommonClusters) && !((2 == nClustersU) || (2 == nClustersV) || (2 == nClustersW)))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                if (!this->CheckClusterConsistency(pAlgorithm, clusterListU) ||
-                    !this->CheckClusterConsistency(pAlgorithm, clusterListV) ||
-                    !this->CheckClusterConsistency(pAlgorithm, clusterListW) ||
-                    !this->CheckClusterVertexConsistency(pAlgorithm, clusterListU) ||
-                    !this->CheckClusterVertexConsistency(pAlgorithm, clusterListV) ||
-                    !this->CheckClusterVertexConsistency(pAlgorithm, clusterListW) ||
-                    !this->CheckClusterConsistencies(pAlgorithm, clusterListU, clusterListV, clusterListW))
+                if (m_checkClusterProximities && (!this->CheckClusterProximities(pAlgorithm, clusterListU) ||
+                    !this->CheckClusterProximities(pAlgorithm, clusterListV) ||
+                    !this->CheckClusterProximities(pAlgorithm, clusterListW)))
+                {
+                    continue;
+                }
+
+                if (m_checkClusterVertexRelations && (!this->CheckClusterVertexRelations(pAlgorithm, clusterListU) ||
+                    !this->CheckClusterVertexRelations(pAlgorithm, clusterListV) ||
+                    !this->CheckClusterVertexRelations(pAlgorithm, clusterListW)))
+                {
+                    continue;
+                }
+
+                if (m_checkClusterSplitPositions && !this->CheckClusterSplitPositions(pAlgorithm, clusterListU, clusterListV, clusterListW))
                 {
                     continue;
                 }
@@ -200,7 +211,7 @@ void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::CheckClusterConsistency(ThreeDShowersAlgorithm */*pAlgorithm*/, const ClusterList &clusterList) const
+bool SplitShowersTool::CheckClusterProximities(ThreeDShowersAlgorithm */*pAlgorithm*/, const ClusterList &clusterList) const
 {
     if (1 == clusterList.size())
         return true;
@@ -224,7 +235,7 @@ bool SplitShowersTool::CheckClusterConsistency(ThreeDShowersAlgorithm */*pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::CheckClusterVertexConsistency(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterList) const
+bool SplitShowersTool::CheckClusterVertexRelations(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterList) const
 {
     const VertexList *pVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList));
@@ -262,7 +273,7 @@ bool SplitShowersTool::CheckClusterVertexConsistency(ThreeDShowersAlgorithm *pAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::CheckClusterConsistencies(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterListU,
+bool SplitShowersTool::CheckClusterSplitPositions(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterListU,
     const ClusterList &clusterListV, const ClusterList &clusterListW) const
 {
     const unsigned int nClustersU(clusterListU.size()), nClustersV(clusterListV.size()), nClustersW(clusterListW.size());
@@ -381,13 +392,13 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VetoMergeXDifference", m_vetoMergeXDifference));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VetoMergeXOverlap", m_vetoMergeXOverlap));
+        "CheckClusterProximities", m_checkClusterProximities));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxClusterSeparation", m_maxClusterSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CheckClusterVertexRelations", m_checkClusterVertexRelations));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
@@ -403,6 +414,15 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexAssociations", m_maxVertexAssociations));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CheckClusterSplitPositions", m_checkClusterSplitPositions));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VetoMergeXDifference", m_vetoMergeXDifference));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VetoMergeXOverlap", m_vetoMergeXOverlap));
 
     return STATUS_CODE_SUCCESS;
 }
