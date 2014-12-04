@@ -20,7 +20,7 @@ namespace lar_content
 IsolatedHitMergingAlgorithm::IsolatedHitMergingAlgorithm() :
     m_maxCaloHitsInCluster(10),
     m_hitLayerSearchWindow(10),
-    m_maxHitClusterDistance(5.f)
+    m_maxHitClusterDistance(10.f)
 {
 }
 

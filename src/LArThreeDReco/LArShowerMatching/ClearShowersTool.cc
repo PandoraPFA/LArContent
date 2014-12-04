@@ -19,8 +19,8 @@ ClearShowersTool::ClearShowersTool() :
     m_minMatchedFraction(0.2f),
     m_minMatchedSamplingPoints(40),
     m_minXOverlapFraction(0.5f),
-    m_minMatchedSamplingPointRatio(2),
-    m_minXOverlapSpanRatio(2.f)
+    m_minMatchedSamplingPointRatio(3),
+    m_minXOverlapSpanRatio(3.f)
 {
 }
 
