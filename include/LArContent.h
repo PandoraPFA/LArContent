@@ -40,6 +40,7 @@
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
+#include "LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h"
 #include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
@@ -49,7 +50,6 @@
 #include "LArThreeDReco/LArShowerMatching/SimpleShowersTool.h"
 #include "LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
-#include "LArThreeDReco/LArTrackFragments/TrackRecoveryAlgorithm.h"
 #include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
@@ -118,11 +118,11 @@ public:
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
         d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \
         d("LArThreeDLongitudinalTracks",            lar_content::ThreeDLongitudinalTracksAlgorithm::Factory)                    \
+        d("LArParticleRecovery",                    lar_content::ParticleRecoveryAlgorithm::Factory)                            \
         d("LArVertexBasedPfoMerging",               lar_content::VertexBasedPfoMergingAlgorithm::Factory)                       \
         d("LArThreeDRemnants",                      lar_content::ThreeDRemnantsAlgorithm::Factory)                              \
         d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
-        d("LArTrackRecovery",                       lar_content::TrackRecoveryAlgorithm::Factory)                               \
         d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
         d("LArLongitudinalAssociation",             lar_content::LongitudinalAssociationAlgorithm::Factory)                     \
         d("LArLongitudinalExtension",               lar_content::LongitudinalExtensionAlgorithm::Factory)                       \

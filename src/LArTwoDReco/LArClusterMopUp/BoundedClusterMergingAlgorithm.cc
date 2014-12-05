@@ -22,6 +22,7 @@ namespace lar_content
 
 BoundedClusterMergingAlgorithm::BoundedClusterMergingAlgorithm() :
     m_slidingFitWindow(20),
+    m_showerEdgeMultiplier(2.f),
     m_minBoundedFraction(0.5f)
 {
 }
@@ -37,7 +38,7 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         Cluster *pPfoCluster(*pIter);
-        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch);
+        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
         ShowerPositionMap showerPositionMap;
         const XSampling xSampling(fitResult.GetShowerFitResult());
@@ -158,6 +159,9 @@ StatusCode BoundedClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "SlidingFitWindow", m_slidingFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ShowerEdgeMultiplier", m_showerEdgeMultiplier));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinBoundedFraction", m_minBoundedFraction));

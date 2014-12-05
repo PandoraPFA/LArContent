@@ -88,8 +88,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    float                   m_minBoundedFraction;           ///< The minimum cluster bounded fraction for merging
+    unsigned int    m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    float           m_showerEdgeMultiplier;         ///< Artificially tune width of shower envelope so as to make it more/less inclusive
+    float           m_minBoundedFraction;           ///< The minimum cluster bounded fraction for merging
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
