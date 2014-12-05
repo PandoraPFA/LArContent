@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTrackFragments/TrackRecoveryAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.cc
  * 
- *  @brief  Implementation of the track recovery algorithm class.
+ *  @brief  Implementation of the particle recovery algorithm class.
  * 
  *  $Log: $
  */
@@ -10,37 +10,47 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
+#include "LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArThreeDReco/LArTrackFragments/TrackRecoveryAlgorithm.h"
+#include "LArObjects/LArPointingCluster.h"
+
+#include "LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-TrackRecoveryAlgorithm::TrackRecoveryAlgorithm() :
-    m_minClusterCaloHits(5),
-    m_minClusterLengthSquared(1.f),
-    m_minClusterXSpan(0.5f),
-    m_minXOverlapFraction(0.5f),
-    m_pseudoChi2Cut(20.f)
+ParticleRecoveryAlgorithm::ParticleRecoveryAlgorithm() :
+    m_includeTracks(true),
+    m_includeShowers(true),
+    m_minClusterCaloHits(20),
+    m_minClusterLengthSquared(5.f * 5.f),
+    m_minClusterXSpan(0.25f),
+    m_vertexClusterMode(false),
+    m_minVertexLongitudinalDistance(-2.5f),
+    m_maxVertexTransverseDistance(1.5f),
+    m_minXOverlapFraction(0.75f),
+    m_pseudoChi2Cut(5.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackRecoveryAlgorithm::Run()
+StatusCode ParticleRecoveryAlgorithm::Run()
 {
+    ClusterList inputClusterListU, inputClusterListV, inputClusterListW;
+    this->GetInputClusters(inputClusterListU, inputClusterListV, inputClusterListW);
+
     ClusterList selectedClusterListU, selectedClusterListV, selectedClusterListW;
-    this->SelectInputClusters(m_inputClusterListNameU, selectedClusterListU);
-    this->SelectInputClusters(m_inputClusterListNameV, selectedClusterListV);
-    this->SelectInputClusters(m_inputClusterListNameW, selectedClusterListW);
+    this->SelectInputClusters(inputClusterListU, selectedClusterListU);
+    this->SelectInputClusters(inputClusterListV, selectedClusterListV);
+    this->SelectInputClusters(inputClusterListW, selectedClusterListW);
 
     SimpleOverlapTensor overlapTensor;
     this->FindOverlaps(selectedClusterListU, selectedClusterListV, overlapTensor);
     this->FindOverlaps(selectedClusterListV, selectedClusterListW, overlapTensor);
     this->FindOverlaps(selectedClusterListW, selectedClusterListU, overlapTensor);
-
     this->ExamineTensor(overlapTensor);
 
     return STATUS_CODE_SUCCESS;
@@ -48,20 +58,58 @@ StatusCode TrackRecoveryAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRecoveryAlgorithm::SelectInputClusters(const std::string &inputClusterListName, ClusterList &selectedClusterList) const
+void ParticleRecoveryAlgorithm::GetInputClusters(ClusterList &inputClusterListU, ClusterList &inputClusterListV, ClusterList &inputClusterListW) const
 {
-    const ClusterList *pInputClusterList(NULL);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputClusterListName, pInputClusterList));
+    for (StringVector::const_iterator iter = m_inputClusterListNames.begin(), iterEnd = m_inputClusterListNames.end(); iter != iterEnd; ++iter)
+    {
+        const ClusterList *pClusterList(NULL);
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *iter, pClusterList));
 
-    if (!pInputClusterList)
-        return;
+        if (!pClusterList)
+            continue;
 
-    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+        for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
+        {
+            Cluster *const pCluster(*cIter);
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+
+            if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            ClusterList &clusterList((TPC_VIEW_U == hitType) ? inputClusterListU : (TPC_VIEW_V == hitType) ? inputClusterListV : inputClusterListW);
+            clusterList.insert(pCluster);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParticleRecoveryAlgorithm::SelectInputClusters(const ClusterList &inputClusterList, ClusterList &selectedClusterList) const
+{
+    if (m_vertexClusterMode)
+    {
+        ClusterList vertexClusterList;
+        this->VertexClusterSelection(inputClusterList, vertexClusterList);
+        this->StandardClusterSelection(vertexClusterList, selectedClusterList);
+    }
+    else
+    {
+        this->StandardClusterSelection(inputClusterList, selectedClusterList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inputClusterList, ClusterList &selectedClusterList) const
+{
+    for (ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
     {
         Cluster *pCluster = *iter;
 
         if (!pCluster->IsAvailable())
+            continue;
+
+        if ((!m_includeTracks && pCluster->IsFixedMuon()) || (!m_includeShowers && !pCluster->IsFixedMuon()))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
@@ -82,7 +130,52 @@ void TrackRecoveryAlgorithm::SelectInputClusters(const std::string &inputCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRecoveryAlgorithm::FindOverlaps(const ClusterList &clusterList1, const ClusterList &clusterList2, SimpleOverlapTensor &overlapTensor) const
+void ParticleRecoveryAlgorithm::VertexClusterSelection(const ClusterList &inputClusterList, ClusterList &selectedClusterList) const
+{
+    CartesianPointList vertexList;
+
+    for (ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            if (!(*iter)->IsAvailable())
+            {
+                const LArPointingCluster pointingCluster(*iter);
+                vertexList.push_back(pointingCluster.GetInnerVertex().GetPosition());
+                vertexList.push_back(pointingCluster.GetOuterVertex().GetPosition());
+            }
+        }
+        catch (StatusCodeException &) {}
+    }
+
+    for (ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            Cluster *pCluster = *iter;
+
+            if (!pCluster->IsAvailable())
+                continue;
+
+            const LArPointingCluster pointingCluster(pCluster);
+
+            for (CartesianPointList::const_iterator vIter = vertexList.begin(), vIterEnd = vertexList.end(); vIter != vIterEnd; ++vIter)
+            {
+                if (LArPointingClusterHelper::IsNode(*vIter, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+                    LArPointingClusterHelper::IsNode(*vIter, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance))
+                {
+                    selectedClusterList.insert(pCluster);
+                    break;
+                }
+            }
+        }
+        catch (StatusCodeException &) {}
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParticleRecoveryAlgorithm::FindOverlaps(const ClusterList &clusterList1, const ClusterList &clusterList2, SimpleOverlapTensor &overlapTensor) const
 {
     for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
     {
@@ -96,7 +189,7 @@ void TrackRecoveryAlgorithm::FindOverlaps(const ClusterList &clusterList1, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackRecoveryAlgorithm::IsOverlap(const Cluster *const pCluster1, const Cluster *const pCluster2) const
+bool ParticleRecoveryAlgorithm::IsOverlap(const Cluster *const pCluster1, const Cluster *const pCluster2) const
 {
     if (LArClusterHelper::GetClusterHitType(pCluster1) == LArClusterHelper::GetClusterHitType(pCluster2))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -123,7 +216,7 @@ bool TrackRecoveryAlgorithm::IsOverlap(const Cluster *const pCluster1, const Clu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlapTensor) const
+void ParticleRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlapTensor) const
 {
     for (ClusterList::const_iterator iter = overlapTensor.GetKeyClusters().begin(), iterEnd = overlapTensor.GetKeyClusters().end(); iter != iterEnd; ++iter)
     {
@@ -157,7 +250,7 @@ void TrackRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlapTen
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackRecoveryAlgorithm::CheckConsistency(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) const
+bool ParticleRecoveryAlgorithm::CheckConsistency(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) const
 {
     try
     {
@@ -199,7 +292,7 @@ bool TrackRecoveryAlgorithm::CheckConsistency(const Cluster *const pClusterU, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterList) const
+void ParticleRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterList) const
 {
     if (clusterList.size() < 2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -218,7 +311,10 @@ void TrackRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterList)
 
     ParticleFlowObject *pPfo(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
-
+PfoList pfoList;
+pfoList.insert(pPfo);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "RecoveryPfo", AUTO);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
     if (!pPfoList->empty())
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
@@ -229,7 +325,7 @@ void TrackRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterList)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(Cluster *pCluster1, Cluster *pCluster2)
+void ParticleRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(Cluster *pCluster1, Cluster *pCluster2)
 {
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
@@ -261,7 +357,7 @@ void TrackRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(Cluster *pClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRecoveryAlgorithm::SimpleOverlapTensor::GetConnectedElements(Cluster *const pCluster, const bool ignoreUnavailable,
+void ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetConnectedElements(Cluster *const pCluster, const bool ignoreUnavailable,
     ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     if (ignoreUnavailable && !pCluster->IsAvailable())
@@ -290,15 +386,19 @@ void TrackRecoveryAlgorithm::SimpleOverlapTensor::GetConnectedElements(Cluster *
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ParticleRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IncludeTracks", m_includeTracks));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IncludeShowers", m_includeShowers));
 
     float minClusterLength = std::sqrt(m_minClusterLengthSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -307,6 +407,15 @@ StatusCode TrackRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterXSpan", m_minClusterXSpan));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexClusterMode", m_vertexClusterMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));

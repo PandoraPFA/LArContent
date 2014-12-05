@@ -19,10 +19,11 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch) :
+TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pCluster, const unsigned int slidingFitWindow,
+        const float slidingFitLayerPitch, const float showerEdgeMultiplier) :
     m_showerFitResult(TwoDSlidingFitResult(pCluster, slidingFitWindow, slidingFitLayerPitch)),
-    m_negativeEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, NEGATIVE_SHOWER_EDGE)),
-    m_positiveEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, POSITIVE_SHOWER_EDGE))
+    m_negativeEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, NEGATIVE_SHOWER_EDGE, showerEdgeMultiplier)),
+    m_positiveEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, POSITIVE_SHOWER_EDGE, showerEdgeMultiplier))
 {
 }
 
@@ -78,7 +79,8 @@ void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, FloatVector &edge
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge)
+TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
+    const float showerEdgeMultiplier)
 {
     LayerFitContributionMap layerFitContributionMap;
 
@@ -96,6 +98,7 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
         {
             float rL(0.f), rT(0.f);
             fullShowerFit.GetLocalPosition((*hitIter)->GetPositionVector(), rL, rT);
+            rT *= showerEdgeMultiplier;
 
             try
             {

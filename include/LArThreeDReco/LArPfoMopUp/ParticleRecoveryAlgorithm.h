@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTrackFragments/TrackRecoveryAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h
  * 
  *  @brief  Header file for the track recovery algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_TRACK_RECOVERY_ALGORITHM_H
-#define LAR_TRACK_RECOVERY_ALGORITHM_H 1
+#ifndef LAR_PARTICLE_RECOVERY_ALGORITHM_H
+#define LAR_PARTICLE_RECOVERY_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  TrackRecoveryAlgorithm class
+ *  @brief  ParticleRecoveryAlgorithm class
  */
-class TrackRecoveryAlgorithm : public pandora::Algorithm
+class ParticleRecoveryAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -31,7 +31,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    TrackRecoveryAlgorithm();
+    ParticleRecoveryAlgorithm();
 
 private:
     /**
@@ -79,12 +79,37 @@ private:
     pandora::StatusCode Run();
 
     /**
+     *  @brief  Get the input cluster lists for processing in this algorithm
+     *
+     *  @param  inputClusterListU to receive the list of clusters in the u view
+     *  @param  inputClusterListU to receive the list of clusters in the v view
+     *  @param  inputClusterListU to receive the list of clusters in the w view
+     */
+    void GetInputClusters(pandora::ClusterList &inputClusterListU, pandora::ClusterList &inputClusterListV, pandora::ClusterList &inputClusterListW) const;
+
+    /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
      *
-     *  @param  inputClusterListName the input cluster list name
+     *  @param  inputClusterList the input cluster list
      *  @param  selectedClusterList to receive the selected cluster list
      */
-    void SelectInputClusters(const std::string &inputClusterListName, pandora::ClusterList &selectedClusterList) const;
+    void SelectInputClusters(const pandora::ClusterList &inputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+    /**
+     *  @brief  Select a subset of input clusters for processing in this algorithm
+     *
+     *  @param  inputClusterList the input cluster list
+     *  @param  selectedClusterList to receive the selected cluster list
+     */
+    void StandardClusterSelection(const pandora::ClusterList &inputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+    /**
+     *  @brief  Select a subset of input clusters nodally associated with the vertices of existing particles
+     *
+     *  @param  inputClusterList the input cluster list
+     *  @param  selectedClusterList to receive the selected cluster list
+     */
+    void VertexClusterSelection(const pandora::ClusterList &inputClusterList, pandora::ClusterList &selectedClusterList) const;
 
     /**
      *  @brief  Find cluster overlaps and record these in the overlap tensor
@@ -130,14 +155,19 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
+    pandora::StringVector       m_inputClusterListNames;        ///< The list of cluster list names
     std::string                 m_outputPfoListName;            ///< The output pfo list name
+
+    bool                        m_includeTracks;                ///< Whether to include fixed tracks in selected cluster list
+    bool                        m_includeShowers;               ///< Whether to include clusters not fixed as tracks in selected cluster list
 
     unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
     float                       m_minClusterXSpan;              ///< The min x span required in order to consider a cluster
+
+    bool                        m_vertexClusterMode;            ///< Whether to demand clusters are associated with vertices of existing particles
+    float                       m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
+    float                       m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
 
     float                       m_minXOverlapFraction;          ///< The min x overlap fraction required in order to id overlapping clusters
     float                       m_pseudoChi2Cut;                ///< The selection cut on the matched chi2
@@ -145,19 +175,19 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *TrackRecoveryAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ParticleRecoveryAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new TrackRecoveryAlgorithm();
+    return new ParticleRecoveryAlgorithm();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::ClusterList &TrackRecoveryAlgorithm::SimpleOverlapTensor::GetKeyClusters() const
+const pandora::ClusterList &ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetKeyClusters() const
 {
     return m_keyClusters;
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_TRACK_RECOVERY_ALGORITHM_H
+#endif // #ifndef LAR_PARTICLE_RECOVERY_ALGORITHM_H
