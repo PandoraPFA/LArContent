@@ -311,10 +311,7 @@ void ParticleRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterLi
 
     ParticleFlowObject *pPfo(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
-PfoList pfoList;
-pfoList.insert(pPfo);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "RecoveryPfo", AUTO);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
     if (!pPfoList->empty())
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
