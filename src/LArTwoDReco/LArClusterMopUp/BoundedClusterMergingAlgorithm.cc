@@ -22,7 +22,7 @@ namespace lar_content
 
 BoundedClusterMergingAlgorithm::BoundedClusterMergingAlgorithm() :
     m_slidingFitWindow(20),
-    m_showerEdgeMultiplier(2.f),
+    m_showerEdgeMultiplier(1.5f),
     m_minBoundedFraction(0.5f)
 {
 }
@@ -151,7 +151,7 @@ int BoundedClusterMergingAlgorithm::XSampling::GetBin(const float x) const
 
     return static_cast<int>(0.5f + static_cast<float>(m_nPoints) * (x - m_minX) / (m_maxX - m_minX));
 }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
