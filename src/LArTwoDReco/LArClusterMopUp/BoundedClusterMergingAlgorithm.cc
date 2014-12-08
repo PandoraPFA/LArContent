@@ -72,7 +72,7 @@ void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowe
         const float x(xSampling.m_minX + (xSampling.m_maxX - xSampling.m_minX) * static_cast<float>(n) / static_cast<float>(xSampling.m_nPoints));
 
         FloatVector edgePositions;
-        fitResult.GetShowerEdges(x, edgePositions);
+        fitResult.GetShowerEdges(x, false, edgePositions);
 
         if (edgePositions.size() < 2)
             continue;

@@ -68,9 +68,10 @@ public:
      *  @brief  Get the most appropriate shower edges at a given x coordinate
      * 
      *  @param  x the x coordinate
+     *  @param  widenIfAmbiguity whether to widen the shower edges in cases of ambiguities (i.e. be generous)
      *  @param  edgePositions to receive the list of intersections of the shower fit at the given x coordinate
      */
-    void GetShowerEdges(const float x, pandora::FloatVector &edgePositions) const;
+    void GetShowerEdges(const float x, const bool widenIfAmbiguity, pandora::FloatVector &edgePositions) const;
 
 private:
     /**
