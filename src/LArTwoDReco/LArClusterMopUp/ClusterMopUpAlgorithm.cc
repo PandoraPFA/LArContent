@@ -17,6 +17,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+ClusterMopUpAlgorithm::ClusterMopUpAlgorithm() :
+    m_excludePfosContainingTracks(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ClusterMopUpAlgorithm::Run()
 {
     ClusterList pfoClusterListU, pfoClusterListV, pfoClusterListW;
@@ -48,7 +55,20 @@ void ClusterMopUpAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, Cluste
 
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {
-        this->GetClusterLists((*pIter)->GetClusterList(), false, clusterListU, clusterListV, clusterListW);
+        bool containsFixedTrack(false);
+        const ClusterList &clusterList((*pIter)->GetClusterList());
+
+        for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+        {
+            if (m_excludePfosContainingTracks && (*cIter)->IsFixedMuon())
+            {
+                containsFixedTrack = true;
+                break;
+            }
+        }
+
+        if (!containsFixedTrack)
+            this->GetClusterLists(clusterList, false, clusterListU, clusterListV, clusterListW);
     }
 }
 
@@ -157,6 +177,9 @@ StatusCode ClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "AdditionalClusterListNames", m_additionalClusterListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ExcludePfosContainingTracks", m_excludePfosContainingTracks));
 
     return STATUS_CODE_SUCCESS;
 }
