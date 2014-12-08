@@ -29,7 +29,7 @@ TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, FloatVector &edgePositions) const
+void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, const bool widenIfAmbiguity, FloatVector &edgePositions) const
 {
     edgePositions.clear();
     CartesianPointList fitPositionList;
@@ -51,7 +51,11 @@ void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, FloatVector &edge
         this->GetPositiveEdgeFitResult().GetMinAndMaxZ(minZp, maxZp);
         const float minZ(std::min(minZn, minZp)), maxZ(std::max(maxZn, maxZp));
 
-        if (fitPositionList.empty())
+        if (!widenIfAmbiguity)
+        {
+            return;
+        }
+        else if (fitPositionList.empty())
         {
             fitPositionList.push_back(CartesianVector(x, 0.f, minZ));
             fitPositionList.push_back(CartesianVector(x, 0.f, maxZ));

@@ -248,9 +248,9 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
             const int xBin(xSampling.GetBin(x));
 
             FloatVector uValues, vValues, wValues;
-            fitResultU.GetShowerEdges(x, uValues);
-            fitResultV.GetShowerEdges(x, vValues);
-            fitResultW.GetShowerEdges(x, wValues);
+            fitResultU.GetShowerEdges(x, true, uValues);
+            fitResultV.GetShowerEdges(x, true, vValues);
+            fitResultW.GetShowerEdges(x, true, wValues);
 
             std::sort(uValues.begin(), uValues.end());
             std::sort(vValues.begin(), vValues.end());
