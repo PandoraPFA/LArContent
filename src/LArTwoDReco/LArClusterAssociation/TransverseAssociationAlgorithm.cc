@@ -497,7 +497,7 @@ void TransverseAssociationAlgorithm::GetExtremalCoordinatesXZ(const Cluster *con
     }
 
     if (maxXZ < minXZ)
-    throw pandora::StatusCodeException(STATUS_CODE_FAILURE);
+        throw pandora::StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -505,7 +505,7 @@ void TransverseAssociationAlgorithm::GetExtremalCoordinatesXZ(const Cluster *con
 void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate) const
 {
     CartesianVector firstCoordinate(0.f,0.f,0.f), secondCoordinate(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, firstCoordinate, secondCoordinate);
+    LArClusterHelper::GetExtremalCoordinates(pCluster, firstCoordinate, secondCoordinate);
 
     innerCoordinate = (firstCoordinate.GetX() < secondCoordinate.GetX() ? firstCoordinate : secondCoordinate);
     outerCoordinate = (firstCoordinate.GetX() > secondCoordinate.GetX() ? firstCoordinate : secondCoordinate);

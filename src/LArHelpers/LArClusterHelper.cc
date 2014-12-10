@@ -230,7 +230,7 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetClusterSpanXZ(const Cluster *const pCluster, CartesianVector &minimumCoordinate, CartesianVector &maximumCoordinate)
+void LArClusterHelper::GetClusterBoundingBox(const Cluster *const pCluster, CartesianVector &minimumCoordinate, CartesianVector &maximumCoordinate)
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -350,24 +350,55 @@ float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float x
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetExtremalCoordinatesXZ(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
+void LArClusterHelper::GetExtremalCoordinates(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
 {
+    // Will skip the Y coordinate in the case of 2D clusters
+    const bool is2D(LArClusterHelper::GetClusterHitType(pCluster) != TPC_3D);
+    
+    // Find the extremal hits separately for X, Y and Z coordinates
     CaloHitList candidateList;
+
+    // First, find the extremal hits in Z, using the inner and outer layers 
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    // Transfer all inner layer hits
     OrderedCaloHitList::const_iterator iterInner = orderedCaloHitList.begin();
-    for (CaloHitList::const_iterator hitIter = iterInner->second->begin(), hitIterEnd = iterInner->second->end(); hitIter != hitIterEnd; ++hitIter)
-        candidateList.insert(*hitIter);
-
-    // Transfer all outer layer hits
     OrderedCaloHitList::const_reverse_iterator iterOuter = orderedCaloHitList.rbegin();
-    for (CaloHitList::const_iterator hitIter = iterOuter->second->begin(), hitIterEnd = iterOuter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        candidateList.insert(*hitIter);
 
-    // Transfer the extremal hits in X (assume there are no ties)
-    CaloHit *pFirstCaloHit(NULL);
-    CaloHit *pSecondCaloHit(NULL);
+    float maxDistanceSquared(-std::numeric_limits<float>::epsilon());
+
+    CaloHit *pFirstCaloHitZ(NULL);
+    CaloHit *pSecondCaloHitZ(NULL);
+
+    for (CaloHitList::const_iterator iterI = iterInner->second->begin(), iterEndI = iterInner->second->end(); iterI != iterEndI; ++iterI)
+    {
+        CaloHit *pCaloHitI = *iterI;
+
+        for (CaloHitList::const_iterator iterJ = iterOuter->second->begin(), iterEndJ = iterOuter->second->end(); iterJ != iterEndJ; ++iterJ)
+        {
+            CaloHit *pCaloHitJ = *iterJ;
+
+            const float distanceSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
+
+            if (distanceSquared > maxDistanceSquared)
+            {
+                maxDistanceSquared = distanceSquared;
+                pFirstCaloHitZ = pCaloHitI;
+                pSecondCaloHitZ = pCaloHitJ;
+            }
+        }
+    }
+
+    if (NULL != pFirstCaloHitZ)
+        candidateList.insert(pFirstCaloHitZ);  
+
+    if (NULL != pSecondCaloHitZ)
+        candidateList.insert(pSecondCaloHitZ);  
+
+    // Next, find the extremal hits in X and Y, assuming there are no ties
+    CaloHit *pFirstCaloHitX(NULL);
+    CaloHit *pSecondCaloHitX(NULL);
+
+    CaloHit *pFirstCaloHitY(NULL);
+    CaloHit *pSecondCaloHitY(NULL);
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -375,22 +406,43 @@ void LArClusterHelper::GetExtremalCoordinatesXZ(const Cluster *const pCluster, C
         {
             CaloHit *pCaloHit = *hitIter;
 
-            if (NULL == pFirstCaloHit || pCaloHit->GetPositionVector().GetX() < pFirstCaloHit->GetPositionVector().GetX())
-                pFirstCaloHit = pCaloHit;
+            if (NULL == pFirstCaloHitX || pCaloHit->GetPositionVector().GetX() < pFirstCaloHitX->GetPositionVector().GetX())
+                pFirstCaloHitX = pCaloHit;
 
-            if (NULL == pSecondCaloHit || pCaloHit->GetPositionVector().GetX() > pSecondCaloHit->GetPositionVector().GetX())
-                pSecondCaloHit = pCaloHit;
+            if (NULL == pSecondCaloHitX || pCaloHit->GetPositionVector().GetX() > pSecondCaloHitX->GetPositionVector().GetX())
+                pSecondCaloHitX = pCaloHit;
+
+            if (is2D)
+                continue;
+
+            if (NULL == pFirstCaloHitY || pCaloHit->GetPositionVector().GetY() < pFirstCaloHitY->GetPositionVector().GetY())
+                pFirstCaloHitY = pCaloHit;
+
+            if (NULL == pSecondCaloHitY || pCaloHit->GetPositionVector().GetY() > pSecondCaloHitY->GetPositionVector().GetY())
+                pSecondCaloHitY = pCaloHit;
         }
     }
 
-    if (NULL == pFirstCaloHit || NULL == pSecondCaloHit)
+    if (NULL != pFirstCaloHitX)
+        candidateList.insert(pFirstCaloHitX);  
+
+    if (NULL != pSecondCaloHitX)
+        candidateList.insert(pSecondCaloHitX);  
+
+    if (NULL != pFirstCaloHitY)
+        candidateList.insert(pFirstCaloHitY);  
+
+    if (NULL != pSecondCaloHitY)
+        candidateList.insert(pSecondCaloHitY);  
+
+    if (candidateList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    candidateList.insert(pFirstCaloHit);
-    candidateList.insert(pSecondCaloHit);
+    // Finally, find the pair of hits that are separated by the greatest distance
+    maxDistanceSquared = +std::numeric_limits<float>::epsilon();
 
-    // Find the two most separated hits
-    float maxDistanceSquared(0.f);
+    CaloHit *pFirstCaloHit = *(candidateList.begin());
+    CaloHit *pSecondCaloHit = pFirstCaloHit;
 
     for (CaloHitList::const_iterator iterI = candidateList.begin(), iterEndI = candidateList.end(); iterI != iterEndI; ++iterI )
     {
@@ -399,6 +451,9 @@ void LArClusterHelper::GetExtremalCoordinatesXZ(const Cluster *const pCluster, C
         for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = candidateList.end(); iterJ != iterEndJ; ++iterJ )
         {
             CaloHit *pCaloHitJ = *iterJ;
+
+            if (pCaloHitI == pCaloHitJ)
+                continue;
 
             const float distanceSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
 

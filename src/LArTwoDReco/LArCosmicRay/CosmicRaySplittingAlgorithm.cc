@@ -480,7 +480,7 @@ bool CosmicRaySplittingAlgorithm::IdentifyCrossedTracks(const Cluster *const pBr
     const Cluster *const pReplacementCluster2, const pandora::CartesianVector &splitPosition) const
 {
     CartesianVector branchVertex1(0.f,0.f,0.f), branchVertex2(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pBranchCluster,branchVertex1,branchVertex2);
+    LArClusterHelper::GetExtremalCoordinates(pBranchCluster,branchVertex1,branchVertex2);
 
     const CartesianVector replacementVertex1(LArClusterHelper::GetClosestPosition(splitPosition,pReplacementCluster1));
     const CartesianVector replacementVertex2(LArClusterHelper::GetClosestPosition(splitPosition,pReplacementCluster2));

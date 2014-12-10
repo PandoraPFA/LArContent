@@ -28,7 +28,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(0.f, 0.f, 0.f)
 {
     CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, innerCoordinate, outerCoordinate);
+    LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
     m_axisIntercept = innerCoordinate;
     m_axisDirection = (outerCoordinate - innerCoordinate).GetUnitVector();
 

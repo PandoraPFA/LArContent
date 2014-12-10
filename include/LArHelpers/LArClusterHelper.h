@@ -134,27 +134,27 @@ public:
     static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Get positions of the two most distant calo hits in a 2D cluster (ordered by Z)
+     *  @brief  Get positions of the two most distant calo hits in a cluster (ordered by Z)
      *
      *  @param  pCluster address of the cluster
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
-    static void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, 
+    static void GetExtremalCoordinates(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, 
         pandora::CartesianVector &outerCoordinate);
 
     /**
-     *  @brief  Get minimum and maximum X, Y and Z positions of the calo hits in a 2D cluster
+     *  @brief  Get minimum and maximum X, Y and Z positions of the calo hits in a cluster
      *
      *  @param  pCluster address of the cluster
      *  @param  the minimum positions (x,y,z)
      *  @param  the maximum positions (x,y,z)
      */
-    static void GetClusterSpanXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, 
+    static void GetClusterBoundingBox(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, 
         pandora::CartesianVector &maximumCoordinate);
 
     /**
-     *  @brief  Get minimum and maximum x of the calo hits in a 2D cluster
+     *  @brief  Get minimum and maximum X positions of the calo hits in a cluster
      *
      *  @param  pCluster address of the cluster
      *  @param  the minimum position of x
@@ -163,7 +163,7 @@ public:
     static void GetClusterSpanX(const pandora::Cluster *const pCluster, float &xmin, float &xmax);
 
     /**
-     *  @brief  Get upper and lower Z positions of the calo hits in a 2D cluster in range xmin to xmax
+     *  @brief  Get upper and lower Z positions of the calo hits in a cluster in range xmin to xmax
      *
      *  @param  pCluster address of the cluster
      *  @param  xmin for range in x
@@ -174,7 +174,7 @@ public:
     static void GetClusterSpanZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &zmin, float &zmax);
 
     /**
-     *  @brief  Get average Z positions of the calo hits in a 2D cluster in range xmin to xmax
+     *  @brief  Get average Z positions of the calo hits in a cluster in range xmin to xmax
      *
      *  @param  pCluster address of the cluster
      *  @param  xmin for range in x
