@@ -79,8 +79,9 @@ StatusCode ListDissolutionAlgorithm::Run()
             }
         }
         catch (StatusCodeException &)
-        {
-            std::cout << "ListDissolutionAlgorithm: cluster list " << listName << " unavailable." << std::endl;
+        { 
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListDissolutionAlgorithm: cluster list " << listName << " unavailable." << std::endl;
         }
     }
 

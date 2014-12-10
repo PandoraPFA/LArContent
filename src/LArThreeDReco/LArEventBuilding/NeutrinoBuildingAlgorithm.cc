@@ -50,8 +50,9 @@ void NeutrinoBuildingAlgorithm::GetDaughterPfoList(PfoList &pfoList) const
             pfoList.insert(pPfoList->begin(), pPfoList->end());
         }
         else
-        {
-            std::cout << "NeutrinoBuildingAlgorithm: pfo list " << *iter << " unavailable." << std::endl;
+        { 
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "NeutrinoBuildingAlgorithm: pfo list " << *iter << " unavailable." << std::endl;
         }
     }
 

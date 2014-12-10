@@ -92,15 +92,32 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         if (pCaloHit->GetMipEquivalentEnergy() < m_mipEquivalentCut)
             continue;
 
-        if ((pCaloHit->GetCellLengthScale() < m_minCellLengthScale) || (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale))
-        {
-            std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() << ", will remove it" << std::endl;
-            continue;
-        }
-
         if (pCaloHit->GetInputEnergy() < std::numeric_limits<float>::epsilon())
         {
             std::cout << "ListPreparationAlgorithm: found a hit with zero energy, will remove it" << std::endl;
+            continue;
+        }
+
+        if (pCaloHit->GetCellLengthScale() < m_minCellLengthScale)
+        {
+            if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
+            {           
+                std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
+            }
+            else
+            {
+                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() 
+                              << " (<" << m_minCellLengthScale << "), will remove it" << std::endl;
+            }
+            continue;
+        }
+
+        if (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale)
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() 
+                          << " (>" << m_maxCellLengthScale << "), will remove it" << std::endl;
             continue;
         }
 

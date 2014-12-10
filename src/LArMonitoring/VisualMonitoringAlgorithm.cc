@@ -134,7 +134,8 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pMCParticleList))
         {
-            std::cout << "VisualMonitoringAlgorithm: mc particle list unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: mc particle list unavailable." << std::endl;
             return;
         }
     }
@@ -142,7 +143,8 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pMCParticleList))
         {
-            std::cout << "VisualMonitoringAlgorithm: mc particle list unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: mc particle list unavailable." << std::endl;
             return;
         }
     }
@@ -161,7 +163,8 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pCaloHitList))
         {
-            std::cout << "VisualMonitoringAlgorithm: current calo hit list unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: current calo hit list unavailable." << std::endl;
             return;
         }
     }
@@ -169,7 +172,8 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pCaloHitList))
         {
-            std::cout << "VisualMonitoringAlgorithm: calo hit list " << listName << " unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: calo hit list " << listName << " unavailable." << std::endl;
             return;
         }
     }
@@ -202,7 +206,8 @@ void VisualMonitoringAlgorithm::VisualizeTrackList(const std::string &listName) 
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pTrackList))
         {
-            std::cout << "VisualMonitoringAlgorithm: current track list unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: current track list unavailable." << std::endl;
             return;
         }
     }
@@ -210,7 +215,8 @@ void VisualMonitoringAlgorithm::VisualizeTrackList(const std::string &listName) 
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pTrackList))
         {
-            std::cout << "VisualMonitoringAlgorithm: track list " << listName << " unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: track list " << listName << " unavailable." << std::endl;
             return;
         }
     }
@@ -239,7 +245,8 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pClusterList))
         {
-            std::cout << "VisualMonitoringAlgorithm: current cluster list unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: current cluster list unavailable." << std::endl;
             return;
         }
     }
@@ -247,7 +254,8 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pClusterList))
         {
-            std::cout << "VisualMonitoringAlgorithm: cluster list " << listName << " unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: cluster list " << listName << " unavailable." << std::endl;
             return;
         }
     }
@@ -280,7 +288,8 @@ void VisualMonitoringAlgorithm::VisualizeParticleFlowList(const std::string &lis
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pPfoList))
         {
-            std::cout << "VisualMonitoringAlgorithm: current pfo list unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: current pfo list unavailable." << std::endl;
             return;
         }
     }
@@ -288,7 +297,8 @@ void VisualMonitoringAlgorithm::VisualizeParticleFlowList(const std::string &lis
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pPfoList))
         {
-            std::cout << "VisualMonitoringAlgorithm: pfo list " << listName << " unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: pfo list " << listName << " unavailable." << std::endl;
             return;
         }
     }
@@ -310,15 +320,17 @@ void VisualMonitoringAlgorithm::VisualizeVertexList(const std::string &listName)
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*this, pVertexList))
         {
-            std::cout << "VisualMonitoringAlgorithm: current vertex list unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: current vertex list unavailable." << std::endl;
             return;
         }
     }
     else
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pVertexList))
-        {
-            std::cout << "VisualMonitoringAlgorithm: vertex list " << listName << " unavailable." << std::endl;
+        { 
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VisualMonitoringAlgorithm: vertex list " << listName << " unavailable." << std::endl;
             return;
         }
     }
