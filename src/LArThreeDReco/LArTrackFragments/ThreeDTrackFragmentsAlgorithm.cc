@@ -511,7 +511,7 @@ bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointLis
         CartesianVector minPosition(0.f,0.f,0.f);
         CartesianVector maxPosition(0.f,0.f,0.f);
 
-        LArClusterHelper::GetClusterSpanXZ(pCluster, minPosition, maxPosition);
+        LArClusterHelper::GetClusterBoundingBox(pCluster, minPosition, maxPosition);
 
         minXcluster = std::min(minXcluster, minPosition.GetX());
         maxXcluster = std::max(maxXcluster, maxPosition.GetX());
