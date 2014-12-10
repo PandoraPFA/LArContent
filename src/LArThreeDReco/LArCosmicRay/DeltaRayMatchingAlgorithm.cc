@@ -38,7 +38,8 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
 
     if (pfoVector.empty())
     {
-        std::cout << "DeltaRayMatchingAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "DeltaRayMatchingAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 

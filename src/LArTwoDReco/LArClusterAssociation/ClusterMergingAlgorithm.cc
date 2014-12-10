@@ -32,7 +32,8 @@ StatusCode ClusterMergingAlgorithm::Run()
 
     if (NULL == pClusterList)
     {
-        std::cout << "ClusterMergingAlgorithm: could not find cluster list " << m_inputClusterListName << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ClusterMergingAlgorithm: could not find cluster list " << m_inputClusterListName << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 

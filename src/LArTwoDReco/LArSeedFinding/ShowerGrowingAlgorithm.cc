@@ -440,8 +440,9 @@ void ShowerGrowingAlgorithm::GetInputPfoList(PfoList &pfoList) const
         const PfoList *pPfoList = NULL;
 
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
-        {
-            std::cout << "ShowerGrowingAlgorithm : pfo list " << *iter << " unavailable." << std::endl;
+        { 
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ShowerGrowingAlgorithm : pfo list " << *iter << " unavailable." << std::endl;
             continue;
         }
 

@@ -25,7 +25,8 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
     if (NULL == pPfoList)
     {
-        std::cout << "CheatingCosmicRayIdentificationAlg: pfo list " << m_inputPfoListName << " unavailable." << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CheatingCosmicRayIdentificationAlg: pfo list " << m_inputPfoListName << " unavailable." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 

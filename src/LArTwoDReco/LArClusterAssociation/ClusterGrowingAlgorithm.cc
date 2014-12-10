@@ -39,7 +39,8 @@ StatusCode ClusterGrowingAlgorithm::Run()
 
     if (NULL == pClusterList)
     {
-        std::cout << "ClusterGrowingAlgorithm: could not find cluster list " << m_inputClusterListName << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ClusterGrowingAlgorithm: could not find cluster list " << m_inputClusterListName << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
