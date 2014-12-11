@@ -154,7 +154,7 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
     }
 
     return TwoDSlidingFitResult(fullShowerFit.GetCluster(), fullShowerFit.GetLayerFitHalfWindow(), fullShowerFit.GetLayerPitch(),
-        fullShowerFit.GetAxisIntercept(), fullShowerFit.GetAxisDirection(), layerFitContributionMap);
+        fullShowerFit.GetAxisIntercept(), fullShowerFit.GetAxisDirection(), fullShowerFit.GetOrthoDirection(), layerFitContributionMap);
 }
 
 } // namespace lar_content

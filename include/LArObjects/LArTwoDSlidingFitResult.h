@@ -31,30 +31,35 @@ public:
     TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch);
 
     /**
-     *  @brief  Constructor using specified primary axis
+     *  @brief  Constructor using specified primary axis. The orthogonal axis must be perpendicular to the primary axis.
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
+     *  @param  orthoDirection the orthogonal direction vector
      */
     TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection);
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
+        const pandora::CartesianVector &orthoDirection);
 
     /**
      *  @brief  Constructor using specified primary axis and layer fit contribution map. User is responsible for ensuring that
      *          z-pitch, axis intercept and axis direction agree with calculations used to fill the layer fit contribution map.
+     *          The orthogonal axis must be perpendicular to the primary axis.
      *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
+     *  @param  orthoDirection the orthogonal direction vector
      *  @param  layerFitContributionMap the layer fit contribution map
      */
     TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, const LayerFitContributionMap &layerFitContributionMap);
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
+        const pandora::CartesianVector &orthoDirection, const LayerFitContributionMap &layerFitContributionMap);
 
     /**
      *  @brief  Get the address of the cluster
@@ -90,6 +95,13 @@ public:
      *  @return the axis direction vector
      */
     const pandora::CartesianVector &GetAxisDirection() const;
+
+    /**
+     *  @brief  Get the orthogonal direction vector
+     *
+     *  @return the orthogonal direction vector
+     */
+    const pandora::CartesianVector &GetOrthoDirection() const;
 
     /**
      *  @brief  Get the layer fit result map
@@ -468,6 +480,7 @@ private:
     float                       m_layerPitch;               ///< The layer pitch, units cm
     pandora::CartesianVector    m_axisIntercept;            ///< The axis intercept position
     pandora::CartesianVector    m_axisDirection;            ///< The axis direction vector
+    pandora::CartesianVector    m_orthoDirection;           ///< The orthogonal direction vector
     LayerFitResultMap           m_layerFitResultMap;        ///< The layer fit result map
     LayerFitContributionMap     m_layerFitContributionMap;  ///< The layer fit contribution map
     FitSegmentList              m_fitSegmentList;           ///< The fit segment list
@@ -510,6 +523,13 @@ inline const pandora::CartesianVector &TwoDSlidingFitResult::GetAxisIntercept() 
 inline const pandora::CartesianVector &TwoDSlidingFitResult::GetAxisDirection() const
 {
     return m_axisDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CartesianVector &TwoDSlidingFitResult::GetOrthoDirection() const
+{
+    return m_orthoDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
