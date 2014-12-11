@@ -36,7 +36,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 
     // Use y-axis to generate an orthogonal axis (assuming that cluster occupies X-Z plane)
     CartesianVector yAxis(0.f, 1.f, 0.f);
-    m_orthoDirection = yAxis.GetCrossProduct(m_axisDirection);
+    m_orthoDirection = yAxis.GetCrossProduct(m_axisDirection).GetUnitVector();
 
     // Calculate the sliding fit result
     this->FillLayerFitContributionMap();
