@@ -176,7 +176,7 @@ private:
 };
 
 typedef std::vector<ThreeDSlidingFitResult> ThreeDSlidingFitResultList;
-typedef std::map<pandora::Cluster*, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
+typedef std::map<const pandora::Cluster*, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
