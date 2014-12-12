@@ -28,6 +28,7 @@
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/CosmicRayBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoBuildingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
@@ -114,6 +115,7 @@ public:
         d("LArCheatingVertexCreation",              lar_content::CheatingVertexCreationAlgorithm::Factory)                      \
         d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
+        d("LArCosmicRayBuilding",                   lar_content::CosmicRayBuildingAlgorithm::Factory)                           \
         d("LArNeutrinoBuilding",                    lar_content::NeutrinoBuildingAlgorithm::Factory)                            \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
