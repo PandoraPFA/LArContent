@@ -443,13 +443,8 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
     if (!m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    if ((std::fabs(m_axisIntercept.GetY()) > std::numeric_limits<float>::epsilon()) ||
-        (std::fabs(m_axisDirection.GetY()) > std::numeric_limits<float>::epsilon()) ||
-        (m_layerPitch < std::numeric_limits<float>::epsilon()) ||
-        (m_layerFitContributionMap.empty()) )
-    {
+    if ((m_layerPitch < std::numeric_limits<float>::epsilon()) || (m_layerFitContributionMap.empty()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
 
     unsigned int slidingNPoints(0);
     double slidingSumT(0.), slidingSumL(0.), slidingSumTT(0.), slidingSumLT(0.), slidingSumLL(0.);

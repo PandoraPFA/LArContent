@@ -36,7 +36,7 @@ ThreeDSlidingFitResult::ThreeDSlidingFitResult(const Cluster *const pCluster, co
     m_maxLayerPosition(0.f, 0.f, 0.f),
     m_minLayerDirection(0.f, 0.f, 0.f),
     m_maxLayerDirection(0.f, 0.f, 0.f)
-{
+{ 
     if (m_minLayer > m_maxLayer)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
