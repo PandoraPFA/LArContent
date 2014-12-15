@@ -183,7 +183,7 @@ inline pandora::Algorithm *ParticleRecoveryAlgorithm::Factory::CreateAlgorithm()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::ClusterList &ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetKeyClusters() const
+inline const pandora::ClusterList &ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetKeyClusters() const
 {
     return m_keyClusters;
 }
