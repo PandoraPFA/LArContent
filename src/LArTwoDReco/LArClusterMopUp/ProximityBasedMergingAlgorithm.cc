@@ -18,7 +18,11 @@ using namespace pandora;
 namespace lar_content
 {
 
-ProximityBasedMergingAlgorithm::ProximityBasedMergingAlgorithm()
+ProximityBasedMergingAlgorithm::ProximityBasedMergingAlgorithm() :
+    m_minHitsInCluster(5),
+    m_vertexProximity(5.f),
+    m_minClusterSeparation(2.5f),
+    m_touchingDistance(0.001f)
 {
 }
 
@@ -48,13 +52,14 @@ void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
         {
             Cluster *const pClusterR(*rIter);
 
-            if (pClusterR->GetNCaloHits() < 5)
+            if (pClusterR->GetNCaloHits() < m_minHitsInCluster)
                 continue;
 
             const float innerRV((vertexPosition2D - pClusterR->GetCentroid(pClusterR->GetInnerPseudoLayer())).GetMagnitude());
             const float outerRV((vertexPosition2D - pClusterR->GetCentroid(pClusterR->GetOuterPseudoLayer())).GetMagnitude());
 
-            if (pVertex && (((innerPV < 5.f) || (outerPV < 5.f)) && ((innerRV < 5.f) || (outerRV < 5.f)))) // TODO use pointing clusters
+            // ATTN Could use pointing clusters here, for consistency with other vertex association mechanics
+            if (pVertex && (((innerPV < m_vertexProximity) || (outerPV < m_vertexProximity)) && ((innerRV < m_vertexProximity) || (outerRV < m_vertexProximity))))
                 continue;
 
             const float innerRP(LArClusterHelper::GetClosestDistance(pClusterR->GetCentroid(pClusterR->GetInnerPseudoLayer()), pClusterP));
@@ -62,11 +67,15 @@ void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 
             const float minSeparation(std::min(innerRP, outerRP));
 
-            if (minSeparation > 2.5f) // TODO
+            if (minSeparation > m_minClusterSeparation)
                 continue;
 
+            // ATTN Use of ClusterMopUp base algorithm assumes bigger figure of merit means better association
+            if (m_touchingDistance < std::numeric_limits<float>::epsilon())
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
             AssociationDetails &associationDetails(clusterAssociationMap[pClusterR]);
-            const float figureOfMerit((minSeparation < 0.01f) ? std::numeric_limits<float>::max() : 1.f / minSeparation);
+            const float figureOfMerit((minSeparation < m_touchingDistance) ? 1.f / m_touchingDistance : 1.f / minSeparation);
 
             if (!associationDetails.insert(AssociationDetails::value_type(pClusterP, figureOfMerit)).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -80,6 +89,18 @@ void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 
 StatusCode ProximityBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitsInCluster", m_minHitsInCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexProximity", m_vertexProximity));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterSeparation", m_minClusterSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TouchingDistance", m_touchingDistance));
+
     return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
 }
 
