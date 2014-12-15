@@ -38,8 +38,10 @@ public:
      *  @param  pCluster address of the candidate shower cluster
      *  @param  slidingFitWindow the sliding fit window
      *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
+     *  @param  showerEdgeMultiplier artificially tune width of shower envelope so as to make it more/less inclusive
      */
-    TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
+    TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch,
+        const float showerEdgeMultiplier = 1.f);
 
     /**
      *  @brief  Get the sliding fit result for the full shower cluster
@@ -66,9 +68,10 @@ public:
      *  @brief  Get the most appropriate shower edges at a given x coordinate
      * 
      *  @param  x the x coordinate
+     *  @param  widenIfAmbiguity whether to widen the shower edges in cases of ambiguities (i.e. be generous)
      *  @param  edgePositions to receive the list of intersections of the shower fit at the given x coordinate
      */
-    void GetShowerEdges(const float x, pandora::FloatVector &edgePositions) const;
+    void GetShowerEdges(const float x, const bool widenIfAmbiguity, pandora::FloatVector &edgePositions) const;
 
 private:
     /**
@@ -76,10 +79,12 @@ private:
      *
      *  @param  fullShowerFit the result of fitting the full shower
      *  @param  showerEdge the shower edge
+     *  @param  showerEdgeMultiplier artificially tune width of shower envelope so as to make it more/less inclusive
      * 
      *  @return the shower edge fit result
      */
-    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge);
+    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
+        const float showerEdgeMultiplier);
 
     TwoDSlidingFitResult    m_showerFitResult;              ///< The sliding fit result for the full shower cluster
     TwoDSlidingFitResult    m_negativeEdgeFitResult;        ///< The sliding fit result for the negative shower edge

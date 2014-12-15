@@ -22,6 +22,7 @@ namespace lar_content
 
 BoundedClusterMergingAlgorithm::BoundedClusterMergingAlgorithm() :
     m_slidingFitWindow(20),
+    m_showerEdgeMultiplier(1.5f),
     m_minBoundedFraction(0.5f)
 {
 }
@@ -37,7 +38,7 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         Cluster *pPfoCluster(*pIter);
-        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch);
+        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
         ShowerPositionMap showerPositionMap;
         const XSampling xSampling(fitResult.GetShowerFitResult());
@@ -71,7 +72,7 @@ void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowe
         const float x(xSampling.m_minX + (xSampling.m_maxX - xSampling.m_minX) * static_cast<float>(n) / static_cast<float>(xSampling.m_nPoints));
 
         FloatVector edgePositions;
-        fitResult.GetShowerEdges(x, edgePositions);
+        fitResult.GetShowerEdges(x, false, edgePositions);
 
         if (edgePositions.size() < 2)
             continue;
@@ -150,7 +151,7 @@ int BoundedClusterMergingAlgorithm::XSampling::GetBin(const float x) const
 
     return static_cast<int>(0.5f + static_cast<float>(m_nPoints) * (x - m_minX) / (m_maxX - m_minX));
 }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -158,6 +159,9 @@ StatusCode BoundedClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "SlidingFitWindow", m_slidingFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "ShowerEdgeMultiplier", m_showerEdgeMultiplier));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinBoundedFraction", m_minBoundedFraction));

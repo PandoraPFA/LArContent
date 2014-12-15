@@ -29,6 +29,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    ClusterMopUpAlgorithm();
+
 protected:
     virtual pandora::StatusCode Run();
 
@@ -96,6 +101,8 @@ protected:
     std::string             m_pfoListName;                  ///< The pfo list name
     pandora::StringVector   m_remnantClusterListNames;      ///< The list of remnant cluster list names
     pandora::StringVector   m_additionalClusterListNames;   ///< The list of additional cluster list names, maybe specifying lists containing pfo clusters
+
+    bool                    m_excludePfosContainingTracks;  ///< Whether to exclude any pfos containing clusters flagged as fixed tracks
 };
 
 } // namespace lar_content

@@ -24,6 +24,7 @@ ThreeDShowersAlgorithm::ThreeDShowersAlgorithm() :
     m_nMaxTensorToolRepeats(5000),
     m_slidingFitWindow(20),
     m_ignoreUnavailableClusters(true),
+    m_ignoreFixedTracks(true),
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f),
     m_minShowerMatchedFraction(0.2f),
@@ -92,6 +93,9 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
         Cluster *pCluster = *iter;
 
         if (m_ignoreUnavailableClusters && !pCluster->IsAvailable())
+            continue;
+
+        if (m_ignoreFixedTracks && pCluster->IsFixedMuon())
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
@@ -244,9 +248,9 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
             const int xBin(xSampling.GetBin(x));
 
             FloatVector uValues, vValues, wValues;
-            fitResultU.GetShowerEdges(x, uValues);
-            fitResultV.GetShowerEdges(x, vValues);
-            fitResultW.GetShowerEdges(x, wValues);
+            fitResultU.GetShowerEdges(x, true, uValues);
+            fitResultV.GetShowerEdges(x, true, vValues);
+            fitResultW.GetShowerEdges(x, true, wValues);
 
             std::sort(uValues.begin(), uValues.end());
             std::sort(vValues.begin(), vValues.end());
@@ -421,6 +425,9 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IgnoreUnavailableClusters", m_ignoreUnavailableClusters));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IgnoreFixedTracks", m_ignoreFixedTracks));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));

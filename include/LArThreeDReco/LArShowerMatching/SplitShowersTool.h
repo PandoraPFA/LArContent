@@ -76,12 +76,12 @@ private:
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
-     *  @brief  Check the consistency of the clusters in a provided cluster list
+     *  @brief  Check the clusters in a provided cluster list are in suitable proximity for merging
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterList the cluster list
      */
-    bool CheckClusterConsistency(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
+    bool CheckClusterProximities(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
 
     /**
      *  @brief  Check the consistency of the clusters in a provided cluster list with the event vertex, if available
@@ -89,17 +89,17 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterList the cluster list
      */
-    bool CheckClusterVertexConsistency(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
+    bool CheckClusterVertexRelations(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
 
     /**
-     *  @brief  Check the consistency of the clusters in the provided u, v and w cluster lists
+     *  @brief  Check the consistency of the split positions in the provided u, v and w cluster lists
      * 
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterListU the u cluster list
      *  @param  clusterListV the v cluster list
      *  @param  clusterListW the w cluster list
      */
-    bool CheckClusterConsistencies(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterListU,
+    bool CheckClusterSplitPositions(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterListU,
         const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW) const;
 
     /**
@@ -138,15 +138,20 @@ private:
     unsigned int    m_nCommonClusters;                  ///< The number of common clusters
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
-    float           m_vetoMergeXDifference;             ///< The x distance between split positions in two views below which may refuse a merge
-    float           m_vetoMergeXOverlap;                ///< The x overlap between candidate cluster sliding fits below which may refuse a merge
 
+    bool            m_checkClusterProximities;          ///< Whether to check the proximities of the candidate split shower clusters
     float           m_maxClusterSeparation;             ///< The maximum separation for clusters to be merged
+
+    bool            m_checkClusterVertexRelations;      ///< Whether to check the consistency of the clusters with the event vertex
     float           m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
     float           m_maxVertexLongitudinalDistance;    ///< Vertex association check: max longitudinal distance cut
     float           m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
     float           m_vertexAngularAllowance;           ///< Vertex association check: pointing angular allowance in degrees
     unsigned int    m_maxVertexAssociations;            ///< The maximum number of vertex associations for clusters to be merged
+
+    bool            m_checkClusterSplitPositions;       ///< Whether to check the cluster split positions, if there are splits in multiple views
+    float           m_vetoMergeXDifference;             ///< The x distance between split positions in two views below which may refuse a merge
+    float           m_vetoMergeXOverlap;                ///< The x overlap between candidate cluster sliding fits below which may refuse a merge
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
