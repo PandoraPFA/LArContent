@@ -37,7 +37,8 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_minBeamCandidateScoreFraction(0.5f),
     m_nDecayLengthsInZSpan(2.f),
     m_bestScoreMultiplier(0.75f),
-    m_bestBeamScoreMultiplier(1.1f)
+    m_bestBeamScoreMultiplier(1.1f),
+    m_mustUseBeamScoreMultiplier(1.5f)
 {
 }
 
@@ -313,7 +314,10 @@ void VertexSelectionAlgorithm::SelectFinalVertices(const VertexScoreList &vertex
 
         const float beamScore(iter->GetScore() * std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * decayConstant));
 
-        if (m_beamMode && ((iter->GetScore() < m_bestScoreMultiplier * bestScore) || (beamScore < m_bestBeamScoreMultiplier * bestBeamScore)))
+        if (m_beamMode && (beamScore < m_bestBeamScoreMultiplier * bestBeamScore))
+            continue;
+
+        if (m_beamMode && (iter->GetScore() < m_bestScoreMultiplier * bestScore) && (beamScore < m_mustUseBeamScoreMultiplier * bestBeamScore))
             continue;
 
         pFinalVertex = iter->GetVertex();
@@ -390,6 +394,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BestBeamScoreMultiplier", m_bestBeamScoreMultiplier));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MustUseBeamScoreMultiplier", m_mustUseBeamScoreMultiplier));
 
     return STATUS_CODE_SUCCESS;
 }
