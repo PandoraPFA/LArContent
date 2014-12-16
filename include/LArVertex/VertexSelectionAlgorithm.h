@@ -222,6 +222,7 @@ private:
     float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
     float           m_bestScoreMultiplier;          ///< In beam mode, best vertex must surpass a multiple of current best basic score
     float           m_bestBeamScoreMultiplier;      ///< In beam mode, best vertex must surpass a multiple of current best beam-weighted score
+    float           m_mustUseBeamScoreMultiplier;   ///< Use ratio of beam scores to decide when to ensure beam score always overturns basic score
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
