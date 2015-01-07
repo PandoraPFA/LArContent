@@ -9,6 +9,7 @@
 #define LAR_POINTING_CLUSTER_H 1
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "LArObjects/LArThreeDSlidingFitResult.h"
 
 namespace lar_content
 {
@@ -127,7 +128,14 @@ public:
      * 
      *  @param slidingFitResult the input sliding fit result
      */
-    LArPointingCluster(const TwoDSlidingFitResult &slidingFitResult);
+    LArPointingCluster(const TwoDSlidingFitResult &slidingFitResult);   
+
+    /**
+     *  @brief  Constructor
+     * 
+     *  @param slidingFitResult the input sliding fit result
+     */
+    LArPointingCluster(const ThreeDSlidingFitResult &slidingFitResult);
 
     /**
      *  @brief  Get the address of the cluster
@@ -171,7 +179,14 @@ private:
      * 
      *  @param slidingFitResult the input sliding fit result
      */
-    void BuildPointingCluster(const TwoDSlidingFitResult &slidingFitResult);
+    void BuildPointingCluster(const TwoDSlidingFitResult &slidingFitResult);  
+
+    /**
+     *  @brief Build the pointing cluster object from the sliding fit result
+     * 
+     *  @param slidingFitResult the input sliding fit result
+     */
+    void BuildPointingCluster(const ThreeDSlidingFitResult &slidingFitResult);
 
     const pandora::Cluster         *m_pCluster;             ///< The address of the cluster
     Vertex                          m_innerVertex;          ///< The inner vertex

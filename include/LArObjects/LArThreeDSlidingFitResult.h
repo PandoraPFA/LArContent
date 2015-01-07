@@ -95,6 +95,43 @@ public:
     const pandora::CartesianVector &GetGlobalMaxLayerDirection() const;
 
     /**
+     *  @brief  Get the minimum occupied layer in the sliding fit
+     *
+     *  @param  the minimum occupied layer in the sliding fit
+     */
+    int GetMinLayer() const;
+
+    /**
+     *  @brief  Get the maximum occupied layer in the sliding fit
+     *
+     *  @param  the maximum occupied layer in the sliding fit
+     */
+    int GetMaxLayer() const;
+
+    /**
+     *  @brief  Get rms at minimum layer
+     *
+     *  @return the rms
+     */
+    float GetMinLayerRms() const;
+
+    /**
+     *  @brief  Get rms at maximum layer
+     *
+     *  @return the rms
+     */
+    float GetMaxLayerRms() const;
+
+    /**
+     *  @brief  Get fit rms for a given longitudinal coordinate
+     *
+     *  @param  rL the longitudinal coordinate
+     *
+     *  @return the fit rms
+     */
+    float GetFitRms(const float rL) const;
+
+    /**
      *  @brief  Get global fit position for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
