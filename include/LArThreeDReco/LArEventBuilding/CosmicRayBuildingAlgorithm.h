@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "LArObjects/LArPointingCluster.h"
 
 namespace lar_content
 {
@@ -50,25 +50,25 @@ private:
      *  @brief  Build a map of 3D sliding fits from the input Pfos.
      *
      *  @param  pfoList the input particle flow objects
-     *  @param  slidingFitResultMap the output map of 3D sliding fit results
+     *  @param  pointingClusterMap the output map of 3D pointing clusters
      */
-    void BuildSlidingFitResultMap(const pandora::PfoList &pfoList, ThreeDSlidingFitResultMap &slidingFitResultMap) const;
+    void BuildPointingClusterMap(const pandora::PfoList &pfoList, LArPointingClusterMap &pointingClusterMap) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a list of cosmic-ray Pfos
      *
-     *  @param  slidingFitResultMap the input map of 3D sliding fit results
+     *  @param  pointingClusterMap the input map of 3D pointing clusters
      *  @param  pfoList the input list of Pfos
      */
-    void BuildCosmicRayParticles(const ThreeDSlidingFitResultMap &slidingFitResultMap, const pandora::PfoList &pfoList) const;
+    void BuildCosmicRayParticles(const LArPointingClusterMap &pointingClusterMap, const pandora::PfoList &pfoList) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a parent cosmic-ray Pfo
      *
-     *  @param  slidingFitResultMap the input map of 3D sliding fit results
+     *  @param  pointingClusterMap the input map of 3D pointing clusters
      *  @param  pPfo the input Pfo
      */
-    void BuildCosmicRayParent(const ThreeDSlidingFitResultMap &slidingFitResultMap, pandora::ParticleFlowObject *const pPfo) const;
+    void BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a daughter cosmic-ray Pfo

@@ -34,9 +34,9 @@ StatusCode CosmicRayBuildingAlgorithm::Run()
         PfoList pfoList;
         this->GetInputPfoList(pfoList);
 
-        ThreeDSlidingFitResultMap slidingFitResultMap;
-        this->BuildSlidingFitResultMap(pfoList, slidingFitResultMap);
-        this->BuildCosmicRayParticles(slidingFitResultMap, pfoList);
+        LArPointingClusterMap pointingClusterMap;
+        this->BuildPointingClusterMap(pfoList, pointingClusterMap);
+        this->BuildCosmicRayParticles(pointingClusterMap, pfoList);
     }
     catch (StatusCodeException &)
     {
@@ -71,7 +71,7 @@ void CosmicRayBuildingAlgorithm::GetInputPfoList(PfoList &pfoList) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::BuildSlidingFitResultMap(const PfoList &pfoList, ThreeDSlidingFitResultMap &slidingFitResultMap) const
+void CosmicRayBuildingAlgorithm::BuildPointingClusterMap(const PfoList &pfoList, LArPointingClusterMap &pointingClusterMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
@@ -91,9 +91,9 @@ void CosmicRayBuildingAlgorithm::BuildSlidingFitResultMap(const PfoList &pfoList
 
             try
             {
-                const ThreeDSlidingFitResult slidingFitResult(pCluster, m_halfWindowLayers, slidingFitPitch);
+                const LArPointingCluster pointingCluster(pCluster, m_halfWindowLayers, slidingFitPitch);
 
-                if (!slidingFitResultMap.insert(ThreeDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)
+                if (!pointingClusterMap.insert(LArPointingClusterMap::value_type(pCluster, pointingCluster)).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
             }
             catch (StatusCodeException &statusCodeException)
@@ -107,7 +107,7 @@ void CosmicRayBuildingAlgorithm::BuildSlidingFitResultMap(const PfoList &pfoList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::BuildCosmicRayParticles(const ThreeDSlidingFitResultMap &slidingFitResultMap, const PfoList &pfoList) const
+void CosmicRayBuildingAlgorithm::BuildCosmicRayParticles(const LArPointingClusterMap &pointingClusterMap, const PfoList &pfoList) const
 {
     for (PfoList::const_iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; ++iter)
     {
@@ -115,7 +115,7 @@ void CosmicRayBuildingAlgorithm::BuildCosmicRayParticles(const ThreeDSlidingFitR
 
         if (LArPfoHelper::IsFinalState(pPfo))
         {
-            this->BuildCosmicRayParent(slidingFitResultMap, pPfo);
+            this->BuildCosmicRayParent(pointingClusterMap, pPfo);
         }
         else
         {
@@ -126,7 +126,7 @@ void CosmicRayBuildingAlgorithm::BuildCosmicRayParticles(const ThreeDSlidingFitR
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::BuildCosmicRayParent(const ThreeDSlidingFitResultMap &slidingFitResultMap, ParticleFlowObject *const pPfo) const
+void CosmicRayBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, ParticleFlowObject *const pPfo) const
 {
     ClusterList clusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
@@ -152,16 +152,16 @@ void CosmicRayBuildingAlgorithm::BuildCosmicRayParent(const ThreeDSlidingFitResu
             CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f,0.f,0.f);
             CartesianVector minDirection(0.f, 0.f, 0.f), maxDirection(0.f,0.f,0.f);
 
-            ThreeDSlidingFitResultMap::const_iterator cIter2 = slidingFitResultMap.find(pCluster);
+            LArPointingClusterMap::const_iterator cIter2 = pointingClusterMap.find(pCluster);
 
-            if (slidingFitResultMap.end() != cIter2)
+            if (pointingClusterMap.end() != cIter2)
             {
-                const ThreeDSlidingFitResult &slidingFitResult(cIter2->second);
+                const LArPointingCluster &pointingCluster(cIter2->second);
 
-                minPosition = slidingFitResult.GetGlobalMinLayerPosition();
-                maxPosition = slidingFitResult.GetGlobalMaxLayerPosition();
-                minDirection = slidingFitResult.GetGlobalMinLayerDirection();
-                maxDirection = slidingFitResult.GetGlobalMaxLayerDirection();
+                minPosition = pointingCluster.GetInnerVertex().GetPosition();
+                maxPosition = pointingCluster.GetOuterVertex().GetPosition();
+                minDirection = pointingCluster.GetInnerVertex().GetDirection();
+                maxDirection = pointingCluster.GetOuterVertex().GetDirection();
             }
             else
             {
@@ -213,8 +213,7 @@ void CosmicRayBuildingAlgorithm::BuildCosmicRayParent(const ThreeDSlidingFitResu
     if (!(foundVtx && foundEnd))
         return;
 
-    const float scaleFactor((vtxDirection.GetDotProduct(endPosition - vtxPosition) > 0.f) ? +1.f : -1.f);
-    this->SetParticleParameters(vtxPosition, vtxDirection * scaleFactor, pPfo);
+    this->SetParticleParameters(vtxPosition, vtxDirection, pPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

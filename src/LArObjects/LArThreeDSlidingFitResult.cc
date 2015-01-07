@@ -50,6 +50,56 @@ ThreeDSlidingFitResult::ThreeDSlidingFitResult(const Cluster *const pCluster, co
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+ 
+float ThreeDSlidingFitResult::GetMinLayerRms() const
+{
+    const float firstRms(m_firstFitResult.GetMinLayerRms());
+    const float secondRms(m_secondFitResult.GetMinLayerRms());
+
+    return std::sqrt(firstRms * firstRms + secondRms * secondRms);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int ThreeDSlidingFitResult::GetMinLayer() const
+{
+    const int firstLayer(m_firstFitResult.GetMinLayer());
+    const int secondLayer(m_secondFitResult.GetMinLayer());
+
+    return std::min(firstLayer, secondLayer);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int ThreeDSlidingFitResult::GetMaxLayer() const
+{
+    const int firstLayer(m_firstFitResult.GetMaxLayer());
+    const int secondLayer(m_secondFitResult.GetMaxLayer());
+
+    return std::max(firstLayer, secondLayer);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+ 
+float ThreeDSlidingFitResult::GetMaxLayerRms() const
+{
+    const float firstRms(m_firstFitResult.GetMaxLayerRms());
+    const float secondRms(m_secondFitResult.GetMaxLayerRms());
+
+    return std::sqrt(firstRms * firstRms + secondRms * secondRms);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+   
+float ThreeDSlidingFitResult::GetFitRms(const float rL) const
+{
+    const float firstRms(m_firstFitResult.GetFitRms(rL));
+    const float secondRms(m_secondFitResult.GetFitRms(rL));
+
+    return std::sqrt(firstRms * firstRms + secondRms * secondRms);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDSlidingFitResult::GetGlobalFitPosition(const float rL, CartesianVector &position) const
 {
