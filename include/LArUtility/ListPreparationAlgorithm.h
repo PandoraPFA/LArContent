@@ -67,13 +67,15 @@ private:
     std::string     m_filteredCaloHitListName;          ///< The output calo hit list name for all U, V and W hits
     std::string     m_currentCaloHitListReplacement;    ///< The name of the calo hit list to replace the current list (optional)
 
-    bool            m_mcNeutrinoSelection;              ///< Whether to only select MC particles associated with a neutrino
     std::string     m_inputMCParticleListName;          ///< The input MC particle list name
     std::string     m_outputMCParticleListNameU;        ///< The output MC particle list name for MC_VIEW_U particles
     std::string     m_outputMCParticleListNameV;        ///< The output MC particle list name for MC_VIEW_V particles
     std::string     m_outputMCParticleListNameW;        ///< The output MC particle list name for MC_VIEW_W particles
     std::string     m_outputMCParticleListName3D;       ///< The output MC particle list name for 3D particles
     std::string     m_currentMCParticleListReplacement; ///< The name of the MC particle list to replace the current list (optional)
+
+    bool            m_selectNeutrinos;                  ///< Select MC particles and hits associated with neutrinos
+    bool            m_selectCosmics;                    ///< Select MC particles and hits associated with cosmics
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
