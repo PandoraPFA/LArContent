@@ -36,6 +36,13 @@ bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsNeutrinoInduced(const MCParticle *const pMCParticle)
+{
+    return (LArMCParticleHelper::GetParentNeutrinoId(pMCParticle) != 0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *const pMCParticle)
 {
     const MCParticle *pParentMCParticle = pMCParticle;

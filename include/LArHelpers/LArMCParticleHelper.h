@@ -29,13 +29,22 @@ public:
     static bool IsNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
 
     /**
-     *  @brief  Whether a mc particle is a neutrino or (antineutrino)
+     *  @brief  Whether a mc particle is a neutrino or antineutrino
      * 
      *  @param  pMCParticle
      * 
      *  @return boolean
      */
-    static bool IsNeutrino(const pandora::MCParticle *const pMCParticle);
+    static bool IsNeutrino(const pandora::MCParticle *const pMCParticle);    
+
+    /**
+     *  @brief  Whether a mc particle is produced by the interation of a neutrino or antineutrino
+     * 
+     *  @param  pMCParticle
+     * 
+     *  @return boolean
+     */
+    static bool IsNeutrinoInduced(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Get the primary parent mc particle
