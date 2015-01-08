@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/CosmicRayBuildingAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h
  *
- *  @brief  Header file for the cosmic-ray building algorithm class.
+ *  @brief  Header file for the cosmic-ray vertex building algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_COSMIC_RAY_BUILDING_ALGORITHM_H
-#define LAR_COSMIC_RAY_BUILDING_ALGORITHM_H 1
+#ifndef LAR_COSMIC_RAY_VERTEX_BUILDING_ALGORITHM_H
+#define LAR_COSMIC_RAY_VERTEX_BUILDING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -16,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  CosmicRayBuildingAlgorithm class
+ *  @brief  CosmicRayVertexBuildingAlgorithm class
  */
-class CosmicRayBuildingAlgorithm : public pandora::Algorithm
+class CosmicRayVertexBuildingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -33,7 +33,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    CosmicRayBuildingAlgorithm();
+    CosmicRayVertexBuildingAlgorithm();
 
 private:
     pandora::StatusCode Run();
@@ -44,7 +44,7 @@ private:
      *
      *  @param  pfoList to receive the list of input pfos
      */
-    void GetInputPfoList(pandora::PfoList &pfoList) const;
+    void GetCosmicPfos(const pandora::PfoList *const pPfoList, pandora::PfoVector &pfoVector) const;
 
     /**
      *  @brief  Build a map of 3D sliding fits from the input Pfos.
@@ -52,7 +52,7 @@ private:
      *  @param  pfoList the input particle flow objects
      *  @param  pointingClusterMap the output map of 3D pointing clusters
      */
-    void BuildPointingClusterMap(const pandora::PfoList &pfoList, LArPointingClusterMap &pointingClusterMap) const;
+    void BuildPointingClusterMap(const pandora::PfoVector &pfoVector, LArPointingClusterMap &pointingClusterMap) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a list of cosmic-ray Pfos
@@ -60,7 +60,7 @@ private:
      *  @param  pointingClusterMap the input map of 3D pointing clusters
      *  @param  pfoList the input list of Pfos
      */
-    void BuildCosmicRayParticles(const LArPointingClusterMap &pointingClusterMap, const pandora::PfoList &pfoList) const;
+    void BuildCosmicRayParticles(const LArPointingClusterMap &pointingClusterMap, const pandora::PfoVector &pfoVector) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a parent cosmic-ray Pfo
@@ -88,17 +88,17 @@ private:
         pandora::ParticleFlowObject *const pPfo) const;
 
     unsigned int            m_halfWindowLayers;    ///< number of layers to use for half-window of sliding fit
-    pandora::StringVector   m_pfoListNames;        ///< The input list of pfo list names
-    std::string             m_vertexListName;      ///< The name of the output cosmic-ray vertex list
+    std::string             m_parentPfoListName;   ///< The name of the input pfo list
+    std::string             m_vertexListName;      ///< The name of the output vertex list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *CosmicRayBuildingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *CosmicRayVertexBuildingAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new CosmicRayBuildingAlgorithm();
+    return new CosmicRayVertexBuildingAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_COSMIC_RAY_BUILDING_ALGORITHM_H
+#endif // #ifndef LAR_COSMIC_RAY_VERTEX_BUILDING_ALGORITHM_H

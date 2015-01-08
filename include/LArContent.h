@@ -28,8 +28,10 @@
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
-#include "LArThreeDReco/LArEventBuilding/CosmicRayBuildingAlgorithm.h"
-#include "LArThreeDReco/LArEventBuilding/NeutrinoBuildingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoEventBuildingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
@@ -115,8 +117,10 @@ public:
         d("LArCheatingVertexCreation",              lar_content::CheatingVertexCreationAlgorithm::Factory)                      \
         d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
-        d("LArCosmicRayBuilding",                   lar_content::CosmicRayBuildingAlgorithm::Factory)                           \
-        d("LArNeutrinoBuilding",                    lar_content::NeutrinoBuildingAlgorithm::Factory)                            \
+        d("LArCosmicRayVertexBuilding",             lar_content::CosmicRayVertexBuildingAlgorithm::Factory)                     \
+        d("LArNeutrinoCreation",                    lar_content::NeutrinoCreationAlgorithm::Factory)                            \
+        d("LArNeutrinoEventBuilding",               lar_content::NeutrinoEventBuildingAlgorithm::Factory)                       \
+        d("LArNeutrinoVertexBuilding",              lar_content::NeutrinoVertexBuildingAlgorithm::Factory)                      \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
         d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \
