@@ -128,8 +128,7 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         {
             try
             {
-                const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
-                const bool isNeutrinoInduced(LArMCParticleHelper::IsNeutrinoInduced(pMCParticle));
+                const bool isNeutrinoInduced(LArMCParticleHelper::IsNeutrinoInduced(pCaloHit));
                 const bool isSelected(isNeutrinoInduced ? m_selectNeutrinos : m_selectCosmics);
 
                 if (!isSelected)
