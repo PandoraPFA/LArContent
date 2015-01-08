@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/CosmicRayBuildingAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.cc
  *
- *  @brief  Implementation of the cosmic-ray building algorithm class.
+ *  @brief  Implementation of the cosmic-ray vertex building algorithm class.
  *
  *  $Log: $
  */
@@ -13,69 +13,77 @@
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArPlugins/LArTransformationPlugin.h"
 
-#include "LArThreeDReco/LArEventBuilding/CosmicRayBuildingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-CosmicRayBuildingAlgorithm::CosmicRayBuildingAlgorithm() :
+CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
     m_halfWindowLayers(30)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayBuildingAlgorithm::Run()
+StatusCode CosmicRayVertexBuildingAlgorithm::Run()
 {
-    try
-    {
-        PfoList pfoList;
-        this->GetInputPfoList(pfoList);
+    const PfoList *pPfoList = NULL;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_parentPfoListName, 
+        pPfoList));
 
-        LArPointingClusterMap pointingClusterMap;
-        this->BuildPointingClusterMap(pfoList, pointingClusterMap);
-        this->BuildCosmicRayParticles(pointingClusterMap, pfoList);
-    }
-    catch (StatusCodeException &)
+    if (NULL == pPfoList)
     {
-        std::cout << "CosmicRayBuildingAlgorithm: unable to build cosmic rays." << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CosmicRayVertexBuildingAlgorithm: pfo list unavailable." << std::endl;
+
+        return STATUS_CODE_SUCCESS;
     }
 
+    PfoVector pfoVector;
+    LArPointingClusterMap pointingClusterMap;
+
+    this->GetCosmicPfos(pPfoList, pfoVector);
+    this->BuildPointingClusterMap(pfoVector, pointingClusterMap);
+    this->BuildCosmicRayParticles(pointingClusterMap, pfoVector);
+ 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::GetInputPfoList(PfoList &pfoList) const
+void CosmicRayVertexBuildingAlgorithm::GetCosmicPfos(const PfoList *const pPfoList, PfoVector &pfoVector) const
 {
-    for (StringVector::const_iterator iter = m_pfoListNames.begin(), iterEnd = m_pfoListNames.end(); iter != iterEnd; ++iter)
-    {
-        const PfoList *pPfoList(NULL);
+    PfoList outputList;
 
-        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, *iter, pPfoList))
-        {
-            pfoList.insert(pPfoList->begin(), pPfoList->end());
-        }
-        else
-        {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "CosmicRayBuildingAlgorithm: pfo list " << *iter << " unavailable." << std::endl;
-        }
+    for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
+    {
+        if (!LArPfoHelper::IsFinalState(*pIter))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER); 
+
+        LArPfoHelper::GetAllDownstreamPfos(*pIter, outputList);
     }
 
-    if (pfoList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    for (PfoList::const_iterator pIter = outputList.begin(), pIterEnd = outputList.end(); pIter != pIterEnd; ++pIter)
+    {
+        ClusterList clusterList;
+        LArPfoHelper::GetClusters(*pIter, TPC_3D, clusterList);
+
+        if (clusterList.empty())
+            continue;
+
+        pfoVector.push_back(*pIter);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::BuildPointingClusterMap(const PfoList &pfoList, LArPointingClusterMap &pointingClusterMap) const
+void CosmicRayVertexBuildingAlgorithm::BuildPointingClusterMap(const PfoVector &pfoVector, LArPointingClusterMap &pointingClusterMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
 
-    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
+    for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
     {
         const ParticleFlowObject *const pPfo = *pIter;
 
@@ -98,7 +106,7 @@ void CosmicRayBuildingAlgorithm::BuildPointingClusterMap(const PfoList &pfoList,
             }
             catch (StatusCodeException &statusCodeException)
             {
-                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode()) 
                     throw statusCodeException;
             }
         }
@@ -107,9 +115,9 @@ void CosmicRayBuildingAlgorithm::BuildPointingClusterMap(const PfoList &pfoList,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::BuildCosmicRayParticles(const LArPointingClusterMap &pointingClusterMap, const PfoList &pfoList) const
+void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParticles(const LArPointingClusterMap &pointingClusterMap, const PfoVector &pfoVector) const
 {
-    for (PfoList::const_iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; ++iter)
+    for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
         ParticleFlowObject *const pPfo = *iter;
 
@@ -126,7 +134,7 @@ void CosmicRayBuildingAlgorithm::BuildCosmicRayParticles(const LArPointingCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, ParticleFlowObject *const pPfo) const
+void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, ParticleFlowObject *const pPfo) const
 {
     ClusterList clusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
@@ -218,7 +226,7 @@ void CosmicRayBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClusterMa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::BuildCosmicRayDaughter(ParticleFlowObject *const pDaughterPfo) const
+void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -290,7 +298,7 @@ void CosmicRayBuildingAlgorithm::BuildCosmicRayDaughter(ParticleFlowObject *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
+void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
     ParticleFlowObject *const pPfo) const
 {
     if (!pPfo->GetVertexList().empty())
@@ -317,9 +325,9 @@ void CosmicRayBuildingAlgorithm::SetParticleParameters(const CartesianVector &vt
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CosmicRayVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_pfoListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_parentPfoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
 
