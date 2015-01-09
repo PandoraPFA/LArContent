@@ -41,9 +41,10 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     int nMCParticlesTotal(0), nPfosTotal(0);
     IntVector mcPdgVector, mcNeutrinoVector, nMCHitsVector, pfoPdgVector, pfoNeutrinoVector, nPfoHitsVector, nMatchedHitsVector, 
         nMCHitsUVector, nPfoHitsUVector, nMatchedHitsUVector, nMCHitsVVector, nPfoHitsVVector, nMatchedHitsVVector, nMCHitsWVector, 
-        nPfoHitsWVector, nMatchedHitsWVector;
+        nPfoHitsWVector, nMatchedHitsWVector, pfoVertexVector; 
     FloatVector completenessVector, purityVector, mcPxVector, mcPyVector, mcPzVector, mcThetaVector, mcEnergyVector, mcPTotVector,
-        mcVtxXPosVector, mcVtxYPosVector, mcVtxZPosVector, mcEndXPosVector, mcEndYPosVector, mcEndZPosVector;
+        mcVtxXPosVector, mcVtxYPosVector, mcVtxZPosVector, mcEndXPosVector, mcEndYPosVector, mcEndZPosVector,
+        pfoPxVector, pfoPyVector, pfoPzVector, pfoPTotVector, pfoVtxXPosVector, pfoVtxYPosVector, pfoVtxZPosVector;
 
     try
     {
@@ -121,7 +122,8 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             const int nMCHitsV(this->CountHitsByType(TPC_VIEW_V, mcHitList));
             const int nMCHitsW(this->CountHitsByType(TPC_VIEW_W, mcHitList));
 
-            int pfoPdg(0), pfoNeutrinoPdg(0), nPfoHits(0), nPfoHitsU(0), nPfoHitsV(0), nPfoHitsW(0);
+            int pfoVertex(0), pfoPdg(0), pfoNeutrinoPdg(0), nPfoHits(0), nPfoHitsU(0), nPfoHitsV(0), nPfoHitsW(0);
+            float pfoPTot(0.f), pfoPx(0.f), pfoPy(0.f), pfoPz(0.f), pfoVtxX(0.f), pfoVtxY(0.f), pfoVtxZ(0.f);
             MCToPfoMap::const_iterator pIter1 = matchedPfoMap.find(pMCParticle3D);
 
             if (matchedPfoMap.end() != pIter1)
@@ -134,6 +136,24 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
                 pfoPdg = pPfo->GetParticleId();
                 pfoNeutrinoPdg = LArPfoHelper::GetPrimaryNeutrino(pPfo);
+
+                pfoPTot = pPfo->GetMomentum().GetMagnitude();
+                pfoPx = pPfo->GetMomentum().GetX(); 
+                pfoPy = pPfo->GetMomentum().GetY(); 
+                pfoPz = pPfo->GetMomentum().GetZ(); 
+
+                if (pPfo->GetVertexList().size() > 0)
+                {
+                    if (pPfo->GetVertexList().size() != 1)
+                        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                    const Vertex *const pVertex = *(pPfo->GetVertexList().begin());
+
+                    pfoVertex = 1;
+                    pfoVtxX = pVertex->GetPosition().GetX();
+                    pfoVtxY = pVertex->GetPosition().GetY(); 
+                    pfoVtxZ = pVertex->GetPosition().GetZ();
+                }
 
                 const CaloHitList &pfoHitList(pIter2->second);
                 nPfoHits = pfoHitList.size();
@@ -154,10 +174,17 @@ StatusCode ParticleMonitoringAlgorithm::Run()
                 nMatchedHitsW = this->CountHitsByType(TPC_VIEW_W, matchedHitList);
             }
 
-            // TODO use pfo vertex list to specify pfo vertex and end positions
-
             pfoPdgVector.push_back(pfoPdg);
             pfoNeutrinoVector.push_back(pfoNeutrinoPdg);
+            pfoPxVector.push_back(pfoPx);
+            pfoPyVector.push_back(pfoPy); 
+            pfoPzVector.push_back(pfoPz); 
+            pfoPTotVector.push_back(pfoPTot); 
+            pfoVertexVector.push_back(pfoVertex);
+            pfoVtxXPosVector.push_back(pfoVtxX);
+            pfoVtxYPosVector.push_back(pfoVtxY); 
+            pfoVtxZPosVector.push_back(pfoVtxZ);
+
             purityVector.push_back((nPfoHits == 0) ? 0 : static_cast<float>(nMatchedHits) / static_cast<float>(nPfoHits));
             completenessVector.push_back((nPfoHits == 0) ? 0 : static_cast<float>(nMatchedHits) / static_cast<float>(nMCHits));
             nMCHitsVector.push_back(nMCHits);
@@ -194,15 +221,24 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPTot", &mcPTotVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEnergy", &mcEnergyVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcTheta", &mcThetaVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxXPos", &mcVtxXPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxYPos", &mcVtxYPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxZPos", &mcVtxZPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndXPos", &mcEndXPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndYPos", &mcEndYPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndZPos", &mcEndZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxX", &mcVtxXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxY", &mcVtxYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcVtxZ", &mcVtxZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndX", &mcEndXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndY", &mcEndYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEndZ", &mcEndZPosVector));
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPdg", &pfoPdgVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoNuPdg", &pfoNeutrinoVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPx", &pfoPxVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPy", &pfoPyVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPz", &pfoPzVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPTot", &pfoPTotVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVertex", &pfoVertexVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxX", &pfoVtxXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxY", &pfoVtxYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxZ", &pfoVtxZPosVector));
+
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "completeness", &completenessVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "purity", &purityVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCHits", &nMCHitsVector));
