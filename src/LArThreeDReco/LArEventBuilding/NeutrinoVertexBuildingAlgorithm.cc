@@ -21,6 +21,7 @@ namespace lar_content
 {
 
 NeutrinoVertexBuildingAlgorithm::NeutrinoVertexBuildingAlgorithm() :
+    m_useParentShowerVertex(false),
     m_halfWindowLayers(20)
 {
 }
@@ -59,7 +60,7 @@ void NeutrinoVertexBuildingAlgorithm::GetDaughterPfos(const PfoList *const pPfoL
 
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {
-      if (!LArPfoHelper::IsNeutrino(*pIter) && (*pIter)->GetVertexList().size() != 1)
+        if (!LArPfoHelper::IsNeutrino(*pIter) && (*pIter)->GetVertexList().size() != 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         LArPfoHelper::GetAllDownstreamPfos(*pIter, outputList);
@@ -122,7 +123,13 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterParticles(const LArPointingCl
         ParticleFlowObject *const pPfo = *iter;
 
         if (LArPfoHelper::IsTrack(pPfo))
+        {
             this->BuildDaughterTrack(pointingClusterMap, pPfo);
+        }
+        else
+        {
+            this->BuildDaughterShower(pPfo);
+        }
     }
 }
 
@@ -217,6 +224,69 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void NeutrinoVertexBuildingAlgorithm::BuildDaughterShower(ParticleFlowObject *const pDaughterPfo) const
+{
+    if (pDaughterPfo->GetParentPfoList().size() != 1)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const ParticleFlowObject *const pParentPfo = *(pDaughterPfo->GetParentPfoList().begin());
+
+    if (LArPfoHelper::IsNeutrino(pParentPfo) && pParentPfo->GetVertexList().size() != 1)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    ClusterList parentList, daughterList;
+    LArPfoHelper::GetClusters(pParentPfo, TPC_3D, parentList);
+    LArPfoHelper::GetClusters(pDaughterPfo, TPC_3D, daughterList);
+
+    if (daughterList.empty())
+        return;
+
+    if (LArPfoHelper::IsNeutrino(pParentPfo))
+    {
+        const Vertex *const pVertex = *(pParentPfo->GetVertexList().begin());
+        const CartesianVector vtxPosition(m_useParentShowerVertex ? pVertex->GetPosition() :
+            LArClusterHelper::GetClosestPosition(pVertex->GetPosition(), daughterList));
+
+        return this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
+    }
+
+    if (parentList.empty())
+        return;
+
+    bool foundVtx(false);
+    float vtxDistanceSquared(0.f);
+    CartesianVector vtxPosition(0.f, 0.f, 0.f);
+
+    for (ClusterList::const_iterator dIter = daughterList.begin(), dIterEnd = daughterList.end(); dIter != dIterEnd; ++dIter)
+    {
+        const Cluster *const pDaughterCluster = *dIter;
+
+        for (ClusterList::const_iterator pIter = parentList.begin(), pIterEnd = parentList.end(); pIter != pIterEnd; ++pIter)
+        {
+            const Cluster *const pParentCluster = *pIter;
+
+            CartesianVector closestDaughterPosition(0.f, 0.f, 0.f), closestParentPosition(0.f, 0.f, 0.f);
+            LArClusterHelper::GetClosestPositions(pDaughterCluster, pParentCluster, closestDaughterPosition, closestParentPosition);
+
+            const float closestDistanceSquared((closestDaughterPosition - closestParentPosition).GetMagnitudeSquared());
+
+            if (!foundVtx || closestDistanceSquared < vtxDistanceSquared)
+            {
+                foundVtx = true;
+                vtxDistanceSquared = closestDistanceSquared;
+                vtxPosition = (m_useParentShowerVertex ? closestParentPosition : closestDaughterPosition);
+            }
+        }
+    }
+
+    if (!foundVtx)
+        return;
+
+    this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void NeutrinoVertexBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
     ParticleFlowObject *const pPfo) const
 {
@@ -249,6 +319,9 @@ StatusCode NeutrinoVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseParentForShowerVertex", m_useParentShowerVertex));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));

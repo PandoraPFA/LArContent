@@ -114,6 +114,16 @@ public:
     static float GetClosestDistance(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
 
     /**
+     *  @brief  Get closest distance between a specified position and list of clusters
+     *
+     *  @param  position the position vector
+     *  @param  clusterList list of input clusters
+     *
+     *  @return the closest distance
+     */
+    static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::ClusterList &clusterList);
+
+    /**
      *  @brief  Get closest distance between a specified position vector and the hits in a specified cluster
      *
      *  @param  position the position vector
@@ -124,6 +134,16 @@ public:
     static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
 
     /**
+     *  @brief  Get closest position in a list of clusters to a specified input position vector
+     *
+     *  @param  position the position vector
+     *  @param  clusterList list of input clusters
+     *
+     *  @return the closest position
+     */
+    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::ClusterList &clusterList);
+
+    /**
      *  @brief  Get closest position on a cluster to a specified input position vector
      *
      *  @param  position the position vector
@@ -132,6 +152,17 @@ public:
      *  @return the closest position
      */
     static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Get pair of closest positions for a pair of clusters
+     *
+     *  @param  pCluster1 the address of the first cluster
+     *  @param  pCluster2 the address of the second cluster
+     *  @param  the closest position in the first cluster
+     *  @param  the closest position in the second cluster
+     */
+    static void GetClosestPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        pandora::CartesianVector &position1, pandora::CartesianVector &position2);
 
     /**
      *  @brief  Get positions of the two most distant calo hits in a cluster (ordered by Z)

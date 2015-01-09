@@ -72,6 +72,13 @@ private:
     void BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, pandora::ParticleFlowObject *const pDaughterPfo) const;
 
     /**
+     *  @brief  Reconstruct the vertex and direction of a shower-like Pfos
+     *
+     *  @param  pPfo the input Pfo
+     */
+    void BuildDaughterShower(pandora::ParticleFlowObject *const pDaughterPfo) const;
+
+    /**
      *  @brief  Set the vertex and direction of the Pfos
      *
      *  @param  vtxPosition the input vertex position
@@ -81,9 +88,10 @@ private:
     void SetParticleParameters(const pandora::CartesianVector &vtxPosition, const pandora::CartesianVector &vtxDirection,
         pandora::ParticleFlowObject *const pPfo) const;
 
-    unsigned int            m_halfWindowLayers;    ///< number of layers to use for half-window of sliding fit
-    std::string             m_neutrinoListName;    ///< The input list of pfo list names
-    std::string             m_vertexListName;      ///< The name of the output cosmic-ray vertex list
+    bool                    m_useParentShowerVertex;    ///< use the parent pfo for the shower vertices
+    unsigned int            m_halfWindowLayers;         ///< number of layers to use for half-window of sliding fit
+    std::string             m_neutrinoListName;         ///< The input list of pfo list names
+    std::string             m_vertexListName;           ///< The name of the output cosmic-ray vertex list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

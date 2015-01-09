@@ -156,39 +156,19 @@ float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const 
 
 float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
-    bool distanceFound(false);
-    float minDistanceSquared(std::numeric_limits<float>::max());
-    const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
-    const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
+    CartesianVector closestPosition1(0.f, 0.f, 0.f);
+    CartesianVector closestPosition2(0.f, 0.f, 0.f);
 
-    // Loop over hits in cluster 1
-    for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
-    {
-        for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
-        {
-            const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
+    LArClusterHelper::GetClosestPositions(pCluster1, pCluster2, closestPosition1, closestPosition2);
 
-            // For each hit in cluster 1, find closest distance to a hit in cluster 2
-            for (OrderedCaloHitList::const_iterator iter2 = orderedCaloHitList2.begin(), iter2End = orderedCaloHitList2.end(); iter2 != iter2End; ++iter2)
-            {
-                for (CaloHitList::const_iterator hitIter2 = iter2->second->begin(), hitIter2End = iter2->second->end(); hitIter2 != hitIter2End; ++hitIter2)
-                {
-                    const float distanceSquared((positionVector1 - (*hitIter2)->GetPositionVector()).GetMagnitudeSquared());
+    return (closestPosition1 - closestPosition2).GetMagnitude();
+}
 
-                    if (distanceSquared < minDistanceSquared)
-                    {
-                        minDistanceSquared = distanceSquared;
-                        distanceFound = true;
-                    }
-                }
-            }
-        }
-    }
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    if (!distanceFound)
-        return std::numeric_limits<float>::max();
-
-    return std::sqrt(minDistanceSquared);
+float LArClusterHelper::GetClosestDistance(const CartesianVector &position, const ClusterList &clusterList)
+{
+    return (position - LArClusterHelper::GetClosestPosition(position, clusterList)).GetMagnitude();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -196,6 +176,34 @@ float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster1, const
 float LArClusterHelper::GetClosestDistance(const CartesianVector &position, const Cluster *const pCluster)
 {
     return (position - LArClusterHelper::GetClosestPosition(position, pCluster)).GetMagnitude();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const ClusterList &clusterList)
+{
+    bool distanceFound(false);
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+    CartesianVector closestPosition(0.f, 0.f, 0.f);    
+
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        const Cluster *pTestCluster = *iter;
+        const CartesianVector thisPosition(LArClusterHelper::GetClosestPosition(position, pTestCluster));
+        const float thisDistanceSquared((position - thisPosition).GetMagnitudeSquared());
+
+        if (thisDistanceSquared < closestDistanceSquared)
+        {
+            distanceFound = true;
+            closestDistanceSquared = thisDistanceSquared;
+            closestPosition = thisPosition;
+        }
+    }
+
+    if (distanceFound)
+        return closestPosition;
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,6 +234,55 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
         return pClosestCaloHit->GetPositionVector();
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::GetClosestPositions(const Cluster *const pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1, 
+    CartesianVector &outputPosition2)
+{
+    bool distanceFound(false);
+    float minDistanceSquared(std::numeric_limits<float>::max());
+
+    CartesianVector closestPosition1(0.f, 0.f, 0.f);
+    CartesianVector closestPosition2(0.f, 0.f, 0.f);
+
+    const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
+    const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
+
+    // Loop over hits in cluster 1
+    for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
+    {
+        for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
+        {
+            const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
+
+            // Loop over hits in cluster 2
+            for (OrderedCaloHitList::const_iterator iter2 = orderedCaloHitList2.begin(), iter2End = orderedCaloHitList2.end(); iter2 != iter2End; ++iter2)
+            {
+                for (CaloHitList::const_iterator hitIter2 = iter2->second->begin(), hitIter2End = iter2->second->end(); hitIter2 != hitIter2End; ++hitIter2)
+                { 
+                    const CartesianVector &positionVector2((*hitIter2)->GetPositionVector());
+
+                    const float distanceSquared((positionVector1 - positionVector2).GetMagnitudeSquared());
+
+                    if (distanceSquared < minDistanceSquared)
+                    {
+                        minDistanceSquared = distanceSquared;
+                        closestPosition1 = positionVector1;
+                        closestPosition2 = positionVector2;
+                        distanceFound = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!distanceFound)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    outputPosition1 = closestPosition1;
+    outputPosition2 = closestPosition2;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
