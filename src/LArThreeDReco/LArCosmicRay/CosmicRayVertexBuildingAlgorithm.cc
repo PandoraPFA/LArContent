@@ -21,6 +21,7 @@ namespace lar_content
 {
 
 CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
+    m_useParentShowerVertex(false),
     m_halfWindowLayers(30)
 {
 }
@@ -30,7 +31,7 @@ CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
 StatusCode CosmicRayVertexBuildingAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_parentPfoListName, 
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_parentPfoListName,
         pPfoList));
 
     if (NULL == pPfoList)
@@ -47,7 +48,7 @@ StatusCode CosmicRayVertexBuildingAlgorithm::Run()
     this->GetCosmicPfos(pPfoList, pfoVector);
     this->BuildPointingClusterMap(pfoVector, pointingClusterMap);
     this->BuildCosmicRayParticles(pointingClusterMap, pfoVector);
- 
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -60,7 +61,7 @@ void CosmicRayVertexBuildingAlgorithm::GetCosmicPfos(const PfoList *const pPfoLi
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {
         if (!LArPfoHelper::IsFinalState(*pIter))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER); 
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         LArPfoHelper::GetAllDownstreamPfos(*pIter, outputList);
     }
@@ -106,7 +107,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildPointingClusterMap(const PfoVector &
             }
             catch (StatusCodeException &statusCodeException)
             {
-                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode()) 
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                     throw statusCodeException;
             }
         }
@@ -237,63 +238,39 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(ParticleFlowObject
     LArPfoHelper::GetClusters(pParentPfo, TPC_3D, parentList);
     LArPfoHelper::GetClusters(pDaughterPfo, TPC_3D, daughterList);
 
-    // Take closest extremal position to parent Pfo as vertex of daughter Pfos (TODO: Make this more sophisticated)
+    if (daughterList.empty() || parentList.empty())
+        return;
+
     bool foundVtx(false);
     float vtxDistanceSquared(0.f);
     CartesianVector vtxPosition(0.f, 0.f, 0.f);
-    CartesianVector vtxDirection(0.f, 0.f, 0.f);
 
     for (ClusterList::const_iterator dIter = daughterList.begin(), dIterEnd = daughterList.end(); dIter != dIterEnd; ++dIter)
     {
         const Cluster *const pDaughterCluster = *dIter;
 
-        try
+        for (ClusterList::const_iterator pIter = parentList.begin(), pIterEnd = parentList.end(); pIter != pIterEnd; ++pIter)
         {
-            CartesianVector minDaughterPosition(0.f, 0.f, 0.f), maxDaughterPosition(0.f, 0.f, 0.f);
-            LArClusterHelper::GetExtremalCoordinates(pDaughterCluster, minDaughterPosition, maxDaughterPosition);
+            const Cluster *const pParentCluster = *pIter;
 
-            for (ClusterList::const_iterator pIter = parentList.begin(), pIterEnd = parentList.end(); pIter != pIterEnd; ++pIter)
+            CartesianVector closestDaughterPosition(0.f, 0.f, 0.f), closestParentPosition(0.f, 0.f, 0.f);
+            LArClusterHelper::GetClosestPositions(pDaughterCluster, pParentCluster, closestDaughterPosition, closestParentPosition);
+
+            const float closestDistanceSquared((closestDaughterPosition - closestParentPosition).GetMagnitudeSquared());
+
+            if (!foundVtx || closestDistanceSquared < vtxDistanceSquared)
             {
-                const Cluster *const pParentCluster = *pIter;
-
-                const CartesianVector minParentPosition(LArClusterHelper::GetClosestPosition(minDaughterPosition, pParentCluster));
-                const CartesianVector maxParentPosition(LArClusterHelper::GetClosestPosition(maxDaughterPosition, pParentCluster));
-                const CartesianVector minParentDirection((maxDaughterPosition - minParentPosition).GetUnitVector());
-                const CartesianVector maxParentDirection((minDaughterPosition - maxParentPosition).GetUnitVector());
-
-                const float minDistanceSquared((minParentPosition - minDaughterPosition).GetMagnitudeSquared());
-                const float maxDistanceSquared((maxParentPosition - maxDaughterPosition).GetMagnitudeSquared());
-
-                if (!foundVtx || (minDistanceSquared < vtxDistanceSquared))
-                {
-                    foundVtx = true;
-                    vtxDistanceSquared = minDistanceSquared;
-                    vtxPosition = minParentPosition;
-                    vtxDirection = minParentDirection;
-                }
-
-                if (!foundVtx || (maxDistanceSquared < vtxDistanceSquared))
-                {
-                    foundVtx = true;
-                    vtxDistanceSquared = maxDistanceSquared;
-                    vtxPosition = maxParentPosition;
-                    vtxDirection = maxParentDirection;
-                }
+                foundVtx = true;
+                vtxDistanceSquared = closestDistanceSquared;
+                vtxPosition = (m_useParentShowerVertex ? closestParentPosition : closestDaughterPosition);
             }
-        }
-        catch(StatusCodeException &statusCodeException)
-        {
-            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
-
-            continue;
         }
     }
 
     if (!foundVtx)
         return;
 
-    this->SetParticleParameters(vtxPosition, vtxDirection, pDaughterPfo);
+    this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -330,6 +307,9 @@ StatusCode CosmicRayVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_parentPfoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseParentForShowerVertex", m_useParentShowerVertex));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
