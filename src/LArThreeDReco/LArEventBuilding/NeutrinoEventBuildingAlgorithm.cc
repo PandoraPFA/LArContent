@@ -30,16 +30,24 @@ StatusCode NeutrinoEventBuildingAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    // Assume there is just one neutrino!
+    // Assume there is just one neutrino! And assume that it has some daughters! (TODO: Fix these assumptions)
     ParticleFlowObject *const pNeutrinoPfo = ((1 == pPfoList->size()) ? *(pPfoList->begin()) : NULL);
 
     if ((NULL == pNeutrinoPfo) || (pNeutrinoPfo->GetVertexList().empty()))
         return STATUS_CODE_FAILURE;
 
-    PfoList daughterPfoList;
-    this->GetDaughterPfoList(daughterPfoList);
-    this->AddDaughters(pNeutrinoPfo, daughterPfoList);
-    this->SetNeutrinoId(pNeutrinoPfo);
+    try
+    {
+        PfoList daughterPfoList;
+        this->GetDaughterPfoList(daughterPfoList);
+        this->AddDaughters(pNeutrinoPfo, daughterPfoList);
+        this->SetNeutrinoId(pNeutrinoPfo);
+    }    
+    catch (StatusCodeException &statusCodeException)
+    {
+        if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+            throw statusCodeException;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -119,6 +127,7 @@ void NeutrinoEventBuildingAlgorithm::SetNeutrinoId(ParticleFlowObject *const pNe
 unsigned int NeutrinoEventBuildingAlgorithm::GetNTwoDHitsInPfo(const ParticleFlowObject *const pPfo) const
 {
     unsigned int nTwoDHits(0);
+
     const ClusterList &clusterList(pPfo->GetClusterList());
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
