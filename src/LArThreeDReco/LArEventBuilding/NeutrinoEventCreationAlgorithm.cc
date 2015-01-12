@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.cc
  * 
- *  @brief  Implementation of the neutrino building algorithm class.
+ *  @brief  Implementation of the neutrino event creation algorithm class.
  * 
  *  $Log: $
  */
