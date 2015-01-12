@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.h
  * 
- *  @brief  Header file for the neutrino creation algorithm class.
+ *  @brief  Header file for the neutrino event creation algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_NEUTRINO_CREATION_ALGORITHM_H
-#define LAR_NEUTRINO_CREATION_ALGORITHM_H 1
+#ifndef LAR_NEUTRINO_EVENT_CREATION_ALGORITHM_H
+#define LAR_NEUTRINO_EVENT_CREATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  NeutrinoCreationAlgorithm class
+ *  @brief  NeutrinoEventCreationAlgorithm class
  */
-class NeutrinoCreationAlgorithm : public pandora::Algorithm
+class NeutrinoEventCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -38,11 +38,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *NeutrinoCreationAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *NeutrinoEventCreationAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new NeutrinoCreationAlgorithm();
+    return new NeutrinoEventCreationAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_NEUTRINO_CREATION_ALGORITHM_H
+#endif // #ifndef LAR_NEUTRINO_EVENT_CREATION_ALGORITHM_H

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the neutrino building algorithm class.
  * 
@@ -10,14 +10,14 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-StatusCode NeutrinoCreationAlgorithm::Run()
+StatusCode NeutrinoEventCreationAlgorithm::Run()
 {
     const VertexList *pVertexList(NULL);
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_vertexListName, 
@@ -26,7 +26,7 @@ StatusCode NeutrinoCreationAlgorithm::Run()
     if (NULL == pVertexList)
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoCreationAlgorithm: unable to build neutrinos" << std::endl;
+            std::cout << "NeutrinoEventCreationAlgorithm: unable to build neutrinos" << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }
@@ -67,7 +67,7 @@ StatusCode NeutrinoCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutrinoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode NeutrinoEventCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_vertexListName));
 
