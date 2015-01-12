@@ -42,8 +42,8 @@ StatusCode ParticleAnalysisAlgorithm::Run()
     try
     {
         // Load List of Pfos
-        const PfoList *pPfoList = NULL;
-        PfoList pfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
+        const PfoList *pPfoList(NULL);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
         PfoVector connectedPfos;
         this->GetConnectedPfos(pPfoList, connectedPfos);
