@@ -165,13 +165,33 @@ public:
         pandora::CartesianVector &position1, pandora::CartesianVector &position2);
 
     /**
+     *  @brief  Get positions of the two most distant calo hits in a list of cluster (ordered by Z)
+     *
+     *  @param  clusterList the input cluster list
+     *  @param  the inner extremal position
+     *  @param  the outer extremal position
+     */
+    static void GetExtremalCoordinates(const pandora::ClusterList &clusterList, pandora::CartesianVector &innerCoordinate, 
+        pandora::CartesianVector &outerCoordinate);
+
+    /**
      *  @brief  Get positions of the two most distant calo hits in a cluster (ordered by Z)
      *
-     *  @param  pCluster address of the cluster
+     *  @param  pCluster the input cluster
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
     static void GetExtremalCoordinates(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, 
+        pandora::CartesianVector &outerCoordinate);
+
+    /**
+     *  @brief  Get positions of the two most distant calo hits in an ordered calo hit list (ordered by Z)
+     *
+     *  @param  orderedCaloHitList the ordered calo hit list
+     *  @param  the inner extremal position
+     *  @param  the outer extremal position
+     */
+    static void GetExtremalCoordinates(const pandora::OrderedCaloHitList &orderedCaloHitList, pandora::CartesianVector &innerCoordinate, 
         pandora::CartesianVector &outerCoordinate);
 
     /**
@@ -236,6 +256,22 @@ public:
      *  @param  pRhs address of second cluster
      */
     static bool SortByNHits(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
+     *  @brief  Sort calo hits by their position (use Z, followed by X, followed by Y)
+     *
+     *  @param  pLhs address of first calo hit
+     *  @param  pRhs address of second calo hit
+     */
+    static bool SortByPosition(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+  
+   /**
+     *  @brief  Sort calo hits by their pulse height
+     *
+     *  @param  pLhs address of first calo hit
+     *  @param  pRhs address of second calo hit
+     */
+    static bool SortByPulseHeight(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
 };
 
 } // namespace lar_content

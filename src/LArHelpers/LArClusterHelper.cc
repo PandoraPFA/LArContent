@@ -407,16 +407,40 @@ float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float x
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArClusterHelper::GetExtremalCoordinates(const ClusterList &clusterList, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
+{
+    OrderedCaloHitList orderedCaloHitList;
+
+    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        const Cluster *const pCluster = *cIter;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, orderedCaloHitList.Add(pCluster->GetOrderedCaloHitList()));
+    }
+
+    return LArClusterHelper::GetExtremalCoordinates(orderedCaloHitList, innerCoordinate, outerCoordinate);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArClusterHelper::GetExtremalCoordinates(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
 {
+    return LArClusterHelper::GetExtremalCoordinates(pCluster->GetOrderedCaloHitList(), innerCoordinate, outerCoordinate);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::GetExtremalCoordinates(const OrderedCaloHitList &orderedCaloHitList, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
+{
+    if (orderedCaloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
     // Will skip the Y coordinate in the case of 2D clusters
-    const bool is2D(LArClusterHelper::GetClusterHitType(pCluster) != TPC_3D);
-    
+    const bool is2D((*(orderedCaloHitList.begin()->second->begin()))->GetHitType() != TPC_3D);
+
     // Find the extremal hits separately for X, Y and Z coordinates
     CaloHitList candidateList;
 
     // First, find the extremal hits in Z, using the inner and outer layers 
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
     OrderedCaloHitList::const_iterator iterInner = orderedCaloHitList.begin();
     OrderedCaloHitList::const_reverse_iterator iterOuter = orderedCaloHitList.rbegin();
 
@@ -550,7 +574,7 @@ bool LArClusterHelper::SortByInnerLayer(const Cluster *const pLhs, const Cluster
       return (innerLayerLhs < innerLayerRhs);
 
     // Use SortByNOccupiedLayers method to resolve ties
-    return SortByNOccupiedLayers(pLhs,pRhs);
+    return SortByNOccupiedLayers(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -588,6 +612,33 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
     if (layerSpanLhs != layerSpanRhs)
         return (layerSpanLhs > layerSpanRhs);
 
+    return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortByPosition(const CaloHit *const pLhs, const CaloHit *const pRhs)
+{
+    const CartesianVector deltaPosition(pRhs->GetPositionVector() - pLhs->GetPositionVector());
+    
+    if (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon())
+        return true;
+
+    if (deltaPosition.GetX() > std::numeric_limits<float>::epsilon())
+        return true;
+
+    if (deltaPosition.GetY() > std::numeric_limits<float>::epsilon())
+        return true;
+
+    // Use pulse height to resolve ties
+    return SortByPulseHeight(pLhs, pRhs);
+}
+  
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortByPulseHeight(const CaloHit *const pLhs, const CaloHit *const pRhs)
+{
+    // TODO: Think about the correct energy to use here (should they ever be different)
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
 }
 
