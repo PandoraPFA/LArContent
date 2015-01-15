@@ -9,6 +9,8 @@
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 
+#include "LArObjects/LArThreeDSlidingFitResult.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -233,6 +235,103 @@ float LArPfoHelper::GetThreeDSeparation(const ParticleFlowObject *const pPfo1, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo, const unsigned int layerWindow, const float layerPitch,
+    std::vector<TrackState> &trackStateVector)
+{
+    // TODO: typedef std::vector<pandora::TrackState> TrackStateVector
+
+    // Require that Pfo has a reconstructed direction
+    if (pPfo->GetMomentum().GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    const CartesianVector pfoDirection(pPfo->GetMomentum().GetUnitVector());
+
+    // Get 3D clusters (normally there should only be one)
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
+
+    if (clusterList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // Get 3D vertex (not compulsory, but helps...)
+    CartesianVector pfoVertex(0.f, 0.f, 0.f);
+
+    if (!pPfo->GetVertexList().empty())
+    {
+        if(pPfo->GetVertexList().size() != 1)
+            throw StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+        const Vertex *const pVertex = *(pPfo->GetVertexList().begin());
+        pfoVertex = pVertex->GetPosition();
+    }
+
+    // Get seed direction from 3D clusters (bail out for single-hit clusters)
+    CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f, 0.f, 0.f);
+    LArClusterHelper::GetExtremalCoordinates(clusterList, minPosition, maxPosition);
+
+    if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // Ensure that seed direction is aligned with Pfo direction
+    const CartesianVector clusterDirection((maxPosition - minPosition).GetUnitVector());
+    const float scaleFactor((clusterDirection.GetDotProduct(pfoDirection)) < 0.f ? -1.f : +1.f);
+
+    // Apply 3D sliding linear fits
+    typedef std::map< const float, const TrackState > ThreeDTrajectoryMap;
+    ThreeDTrajectoryMap trajectoryMap;
+
+    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        const Cluster *const pCluster = *cIter;
+
+        try
+        {
+            const ThreeDSlidingFitResult slidingFitResult(pCluster, layerWindow, layerPitch);
+
+            CaloHitList caloHitList;
+            pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+
+            for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
+            {
+                const CaloHit *const pCaloHit = *hIter;
+
+                try
+                {
+                    const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit->GetPositionVector()));
+                    CartesianVector position(0.f, 0.f, 0.f), direction(0.f, 0.f, 0.f);
+                    slidingFitResult.GetGlobalFitPosition(rL, position);
+                    slidingFitResult.GetGlobalFitDirection(rL, direction);
+                    trajectoryMap.insert(std::pair<const float, const TrackState>(
+                        clusterDirection.GetDotProduct(position - pfoVertex) * scaleFactor, TrackState(position, direction * scaleFactor)));
+                }
+                catch (StatusCodeException &statusCodeException)
+                {
+                    if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                        throw statusCodeException;
+                }
+            }
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
+    }
+
+    // Require at least one trajectory point
+    if (trajectoryMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // Return trajectory points
+    for (ThreeDTrajectoryMap::const_iterator tIter = trajectoryMap.begin(), tIterEnd = trajectoryMap.end(); tIter != tIterEnd; ++tIter)
+    {
+        const TrackState &nextPoint = tIter->second;
+        trackStateVector.push_back(nextPoint);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArPfoHelper::IsTrack(const ParticleFlowObject *const pPfo)
 {
     const int pdg(pPfo->GetParticleId());
@@ -250,7 +349,7 @@ bool LArPfoHelper::IsShower(const ParticleFlowObject *const pPfo)
     // electron, photon
     return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 int LArPfoHelper::GetPrimaryNeutrino(const ParticleFlowObject *const pPfo)
@@ -265,8 +364,8 @@ int LArPfoHelper::GetPrimaryNeutrino(const ParticleFlowObject *const pPfo)
         return 0;
     }
 }
-  
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArPfoHelper::IsFinalState(const ParticleFlowObject *const pPfo)
 {
@@ -276,17 +375,17 @@ bool LArPfoHelper::IsFinalState(const ParticleFlowObject *const pPfo)
     if (LArPfoHelper::IsNeutrinoFinalState(pPfo))
         return true;
 
-    return false;   
+    return false;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArPfoHelper::IsNeutrinoFinalState(const ParticleFlowObject *const pPfo)
 {
     return ((pPfo->GetParentPfoList().size() == 1) && (LArPfoHelper::IsNeutrino(*(pPfo->GetParentPfoList().begin()))));
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
 {
@@ -298,7 +397,7 @@ bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
     return false;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 const ParticleFlowObject *LArPfoHelper::GetParentPfo(const ParticleFlowObject *const pPfo)
 {
@@ -312,11 +411,11 @@ const ParticleFlowObject *LArPfoHelper::GetParentPfo(const ParticleFlowObject *c
     return pParentPfo;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------  
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 const ParticleFlowObject *LArPfoHelper::GetParentNeutrino(const ParticleFlowObject *const pPfo)
 {
-    const ParticleFlowObject *pParentPfo = LArPfoHelper::GetParentPfo(pPfo);  
+    const ParticleFlowObject *pParentPfo = LArPfoHelper::GetParentPfo(pPfo);
 
     if(!LArPfoHelper::IsNeutrino(pParentPfo))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
