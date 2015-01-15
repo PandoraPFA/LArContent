@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArUtility/ListPreparationAlgorithm.cc
- * 
- *  @brief  Implementation of the event preparation algorithm class.
- * 
+ *
+ *  @brief  Implementation of the list preparation algorithm class.
+ *
  *  $Log: $
  */
 
@@ -50,7 +50,10 @@ StatusCode ListPreparationAlgorithm::Run()
     if (!m_currentCaloHitListReplacement.empty())
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_currentCaloHitListReplacement))
-            std::cout << "ListPreparationAlgorithm: could not replace current calo hit list with list named: " << m_currentCaloHitListReplacement << std::endl;
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPreparationAlgorithm: could not replace current calo hit list with list named: " << m_currentCaloHitListReplacement << std::endl;
+        }
     }
 
     try
@@ -64,7 +67,10 @@ StatusCode ListPreparationAlgorithm::Run()
     if (!m_currentMCParticleListReplacement.empty())
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<MCParticle>(*this, m_currentMCParticleListReplacement))
-            std::cout << "ListPreparationAlgorithm: could not replace current MC particle list with list named: " << m_currentMCParticleListReplacement << std::endl;
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPreparationAlgorithm: could not replace current MC particle list with list named: " << m_currentMCParticleListReplacement << std::endl;
+        }
     }
 
     return STATUS_CODE_SUCCESS;
@@ -104,13 +110,13 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         if (pCaloHit->GetCellLengthScale() < m_minCellLengthScale)
         {
             if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
-            {           
+            {
                 std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
             }
             else
             {
                 if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                    std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() 
+                    std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale()
                               << " (<" << m_minCellLengthScale << "), will remove it" << std::endl;
             }
             continue;
@@ -119,11 +125,11 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         if (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale)
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() 
+                std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale()
                           << " (>" << m_maxCellLengthScale << "), will remove it" << std::endl;
             continue;
         }
-  
+
         if (checkMC)
         {
             try
@@ -136,7 +142,7 @@ void ListPreparationAlgorithm::ProcessCaloHits()
             }
             catch (StatusCodeException &)
             {
-            }     
+            }
         }
 
         if (TPC_VIEW_U == (*hitIter)->GetHitType())
@@ -213,7 +219,7 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
             outputList.insert(pCaloHit1);
         }
         else
-        {   
+        {
             std::cout << "ListPreparationAlgorithm: found two hits in same location, will remove lowest pulse height" << std::endl;
         }
     }
