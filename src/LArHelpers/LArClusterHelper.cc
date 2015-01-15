@@ -621,14 +621,14 @@ bool LArClusterHelper::SortByPosition(const CaloHit *const pLhs, const CaloHit *
 {
     const CartesianVector deltaPosition(pRhs->GetPositionVector() - pLhs->GetPositionVector());
     
-    if (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon())
-        return true;
+    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
 
-    if (deltaPosition.GetX() > std::numeric_limits<float>::epsilon())
-        return true;
+    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
 
-    if (deltaPosition.GetY() > std::numeric_limits<float>::epsilon())
-        return true;
+    if (std::fabs(deltaPosition.GetY()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
 
     // Use pulse height to resolve ties
     return SortByPulseHeight(pLhs, pRhs);
