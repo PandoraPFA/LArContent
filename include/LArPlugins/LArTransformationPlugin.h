@@ -20,20 +20,6 @@ class LArTransformationPlugin
 {
 public:   
 
-    /**
-     *  @brief  Constructor
-     *
-     *  @param  wireZPitch  the wire pitch (cm)
-     */
-    LArTransformationPlugin(const float wireZPitch);
-
-    /** 
-     *  @brief  Get wire z pitch, in cm
-     * 
-     *  @return wire z pitch, in cm
-     */
-    float GetWireZPitch() const;
-
     /** 
      *  @brief  Transform from (U,V) to W position
      *
@@ -185,10 +171,7 @@ public:
      */
     virtual void GetProjectedYZ(const PositionAndType &hitPositionAndType, const PositionAndType &fitPositionAndType1,
         const PositionAndType &fitPositionAndType2, const float sigmaHit, const float sigmaFit, float &y, float &z, float &chiSquared) const = 0;
-
-private:
-
-    const float m_wireZPitch;      ///< wire z pitch (cm)
+    
 };
 
 } // namespace lar_content
