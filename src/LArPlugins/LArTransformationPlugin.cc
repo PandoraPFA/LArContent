@@ -11,20 +11,6 @@
 namespace lar_content
 {
 
-LArTransformationPlugin::LArTransformationPlugin(const float wireZPitch) :
-    m_wireZPitch(wireZPitch)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArTransformationPlugin::GetWireZPitch() const
-{
-    return m_wireZPitch;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------ 
-
 float LArTransformationPlugin::PUPVtoPW(const float pu, const float pv) const
 {
     return this->UVtoW(pu, pv); 

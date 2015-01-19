@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArGeometryHelper.h"
 
+#include "LArPlugins/LArPseudoLayerPlugin.h"
 #include "LArPlugins/LArTransformationPlugin.h"
 
 using namespace pandora;
@@ -17,6 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
+LArGeometryHelper::PseudoLayerInstanceMap LArGeometryHelper::m_pseudolayerInstanceMap;
 LArGeometryHelper::TransformationInstanceMap LArGeometryHelper::m_transformationInstanceMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -326,7 +328,19 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 
 float LArGeometryHelper::GetWireZPitch(const Pandora &pandora)
 {
-    return (LArGeometryHelper::GetLArTransformationPlugin(pandora)->GetWireZPitch());
+    return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetZPitch());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArPseudoLayerPlugin *LArGeometryHelper::GetLArPseudoLayerPlugin(const Pandora &pandora)
+{
+    PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
+
+    if (m_pseudolayerInstanceMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    return iter->second;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -339,6 +353,21 @@ const LArTransformationPlugin *LArGeometryHelper::GetLArTransformationPlugin(con
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     return iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode LArGeometryHelper::SetLArPseudoLayerPlugin(const Pandora &pandora, const LArPseudoLayerPlugin *pLArPseudoLayerPlugin)
+{
+    PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
+
+    if (m_pseudolayerInstanceMap.end() != iter)
+        return STATUS_CODE_ALREADY_INITIALIZED;
+
+    if (!m_pseudolayerInstanceMap.insert(PseudoLayerInstanceMap::value_type(&pandora, pLArPseudoLayerPlugin)).second)
+        return STATUS_CODE_FAILURE;
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -23,6 +23,7 @@
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "LArPlugins/LArParticleIdPlugins.h"
+#include "LArPlugins/LArPseudoLayerPlugin.h"
 #include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
@@ -216,7 +217,7 @@ public:
      *  @param  pandora the pandora instance with which to register content
      *  @param  pPseudoLayerPlugin the address of the pseudo layer plugin
      */
-    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, pandora::PseudoLayerPlugin *pPseudoLayerPlugin);
+    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar_content::LArPseudoLayerPlugin *pLArPseudoLayerPlugin);
 
     /**
      *  @brief  Register lar coordinate transformation plugin with pandora
@@ -248,9 +249,11 @@ inline pandora::StatusCode LArContent::RegisterBasicPlugins(const pandora::Pando
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, pandora::PseudoLayerPlugin *pPseudoLayerPlugin)
+inline pandora::StatusCode LArContent::SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar_content::LArPseudoLayerPlugin *pLArPseudoLayerPlugin)
 {
-    return PandoraApi::SetPseudoLayerPlugin(pandora, pPseudoLayerPlugin);
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, pLArPseudoLayerPlugin));
+
+    return lar_content::LArGeometryHelper::SetLArPseudoLayerPlugin(pandora, pLArPseudoLayerPlugin);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
