@@ -11,8 +11,6 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
 
 using namespace pandora;
@@ -33,7 +31,7 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
     const ClusterToListNameMap &clusterToListNameMap) const
 {
     ClusterAssociationMap clusterAssociationMap;
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {

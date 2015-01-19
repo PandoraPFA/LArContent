@@ -12,8 +12,6 @@
 
 #include "LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
 
 using namespace pandora;
@@ -65,7 +63,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
     try
     {
-        const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
         const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());

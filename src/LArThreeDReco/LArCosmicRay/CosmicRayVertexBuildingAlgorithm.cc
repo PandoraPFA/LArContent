@@ -11,7 +11,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
-#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 
@@ -82,7 +81,7 @@ void CosmicRayVertexBuildingAlgorithm::GetCosmicPfos(const PfoList *const pPfoLi
 
 void CosmicRayVertexBuildingAlgorithm::BuildPointingClusterMap(const PfoVector &pfoVector, LArPointingClusterMap &pointingClusterMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (PfoVector::const_iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
     {

@@ -11,8 +11,6 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 using namespace pandora;
@@ -35,7 +33,8 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const Cluster *const
 
     try
     {
-        const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
         const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
         CartesianVector splitPosition(0.f, 0.f, 0.f);
 

@@ -11,8 +11,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
 
 using namespace pandora;
@@ -96,7 +94,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::GetListOfCleanClusters(const C
 void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, const unsigned int halfWindowLayers,
     TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {

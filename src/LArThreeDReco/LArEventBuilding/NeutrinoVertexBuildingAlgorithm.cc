@@ -11,7 +11,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
-#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h"
 
@@ -82,7 +81,7 @@ void NeutrinoVertexBuildingAlgorithm::GetDaughterPfos(const PfoList *const pPfoL
 
 void NeutrinoVertexBuildingAlgorithm::BuildPointingClusterMap(const PfoVector &pfoList, LArPointingClusterMap &pointingClusterMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (PfoVector::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
