@@ -324,6 +324,13 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArGeometryHelper::GetWireZPitch(const Pandora &pandora)
+{
+    return (LArGeometryHelper::GetLArTransformationPlugin(pandora)->GetWireZPitch());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const LArTransformationPlugin *LArGeometryHelper::GetLArTransformationPlugin(const Pandora &pandora)
 {
     TransformationInstanceMap::const_iterator iter = m_transformationInstanceMap.find(&pandora);

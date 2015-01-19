@@ -14,7 +14,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArPlugins/LArParticleIdPlugins.h"
-#include "LArPlugins/LArTransformationPlugin.h"
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -41,7 +40,7 @@ bool LArParticleIdPlugins::LArMuonId::IsMatch(const Cluster *const pCluster) con
     if (LArClusterHelper::GetLayerOccupancy(pCluster) < m_minLayerOccupancy)
         return false;
 
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const TwoDSlidingFitResult twoDSlidingFitResult(pCluster, m_layerFitHalfWindow, slidingFitPitch);
 
     if (this->GetMuonTrackWidth(twoDSlidingFitResult) > m_maxTrackWidth)

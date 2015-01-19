@@ -169,6 +169,15 @@ public:
         const pandora::HitType view);
 
     /**
+     *  @brief  Return the wire pitch
+     *
+     *  @param  pandora the associated pandora instance
+     *
+     *  @return the wire pitch 
+     */
+    static float GetWireZPitch(const pandora::Pandora &pandora);
+
+    /**
      *  @brief  Get the LArTransformationPlugin registered with a specified pandora instance
      * 
      *  @param  pandora the associated pandora instance

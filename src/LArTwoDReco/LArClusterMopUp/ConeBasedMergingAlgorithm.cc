@@ -13,8 +13,6 @@
 
 #include "LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 
 using namespace pandora;
@@ -37,7 +35,7 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
     const ClusterToListNameMap &clusterToListNameMap) const
 {
     ClusterAssociationMap clusterAssociationMap;
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     const VertexList *pVertexList(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));

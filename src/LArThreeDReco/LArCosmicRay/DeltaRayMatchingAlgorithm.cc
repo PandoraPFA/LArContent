@@ -12,8 +12,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 
 using namespace pandora;
@@ -416,7 +414,7 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
             const float dz1(zMax1 - zMin1);
             const float dz2(zMax2 - zMin2);
             const float dz3(zMax3 - zMin3);
-            const float dz4(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+            const float dz4(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
             const float zproj1(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType2, hitType3, z2, z3));
             const float zproj2(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType3, hitType1, z3, z1));
