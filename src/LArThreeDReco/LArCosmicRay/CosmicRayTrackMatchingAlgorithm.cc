@@ -67,8 +67,9 @@ StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::stri
         inputClusterListName, pClusterList))
 
     if (NULL == pClusterList)
-    {
-        std::cout << "CosmicRayTrackMatchingAlgorithm: could not find cluster list " << inputClusterListName << std::endl;
+    { 
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CosmicRayTrackMatchingAlgorithm: could not find cluster list " << inputClusterListName << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -109,7 +110,7 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
         Cluster *pCluster = *iter1;
         const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
         CartesianVector innerVertex(0.f,0.f,0.f), outerVertex(0.f,0.f,0.f);
-        LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, innerVertex, outerVertex);
+        LArClusterHelper::GetExtremalCoordinates(pCluster, innerVertex, outerVertex);
 
         bool isDeltaRay(false);
 
@@ -173,8 +174,8 @@ bool CosmicRayTrackMatchingAlgorithm::MatchClusters(const Cluster *const pCluste
     CartesianVector innerVertex1(0.f,0.f,0.f), outerVertex1(0.f,0.f,0.f);
     CartesianVector innerVertex2(0.f,0.f,0.f), outerVertex2(0.f,0.f,0.f);
 
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster1, innerVertex1, outerVertex1);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster2, innerVertex2, outerVertex2);
+    LArClusterHelper::GetExtremalCoordinates(pCluster1, innerVertex1, outerVertex1);
+    LArClusterHelper::GetExtremalCoordinates(pCluster2, innerVertex2, outerVertex2);
 
     const float dxA(std::fabs(innerVertex2.GetX() - innerVertex1.GetX())); // inner1 <-> inner2
     const float dxB(std::fabs(outerVertex2.GetX() - outerVertex1.GetX())); // outer1 <-> outer2
@@ -360,9 +361,9 @@ bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *cons
     CartesianVector innerVertex2(0.f,0.f,0.f), outerVertex2(0.f,0.f,0.f);
     CartesianVector innerVertex3(0.f,0.f,0.f), outerVertex3(0.f,0.f,0.f);
 
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster1, innerVertex1, outerVertex1);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster2, innerVertex2, outerVertex2);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster3, innerVertex3, outerVertex3);
+    LArClusterHelper::GetExtremalCoordinates(pCluster1, innerVertex1, outerVertex1);
+    LArClusterHelper::GetExtremalCoordinates(pCluster2, innerVertex2, outerVertex2);
+    LArClusterHelper::GetExtremalCoordinates(pCluster3, innerVertex3, outerVertex3);
 
     for (unsigned int n=0; n<4; ++n)
     {

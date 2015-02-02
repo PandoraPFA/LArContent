@@ -29,7 +29,7 @@ TransverseExtensionAlgorithm::TransverseExtensionAlgorithm() :
 
 void TransverseExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-   for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         clusterVector.push_back(*iter);
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
@@ -102,7 +102,7 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
 
         CartesianVector firstCoordinate(0.f, 0.f, 0.f);
         CartesianVector secondCoordinate(0.f, 0.f, 0.f);
-        LArClusterHelper::GetExtremalCoordinatesXZ(pDaughterCluster, firstCoordinate, secondCoordinate);
+        LArClusterHelper::GetExtremalCoordinates(pDaughterCluster, firstCoordinate, secondCoordinate);
 
         float firstL(0.f), firstT(0.f), secondT(0.f), secondL(0.f);
         LArPointingClusterHelper::GetImpactParameters(pointingVertex, firstCoordinate, firstL, firstT);

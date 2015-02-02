@@ -14,8 +14,6 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 using namespace pandora;
 
 namespace lar_content
@@ -183,7 +181,7 @@ void CosmicRaySplittingAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector,
     TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
@@ -480,7 +478,7 @@ bool CosmicRaySplittingAlgorithm::IdentifyCrossedTracks(const Cluster *const pBr
     const Cluster *const pReplacementCluster2, const pandora::CartesianVector &splitPosition) const
 {
     CartesianVector branchVertex1(0.f,0.f,0.f), branchVertex2(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pBranchCluster,branchVertex1,branchVertex2);
+    LArClusterHelper::GetExtremalCoordinates(pBranchCluster,branchVertex1,branchVertex2);
 
     const CartesianVector replacementVertex1(LArClusterHelper::GetClosestPosition(splitPosition,pReplacementCluster1));
     const CartesianVector replacementVertex2(LArClusterHelper::GetClosestPosition(splitPosition,pReplacementCluster2));

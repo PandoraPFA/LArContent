@@ -114,6 +114,16 @@ public:
     static float GetClosestDistance(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
 
     /**
+     *  @brief  Get closest distance between a specified position and list of clusters
+     *
+     *  @param  position the position vector
+     *  @param  clusterList list of input clusters
+     *
+     *  @return the closest distance
+     */
+    static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::ClusterList &clusterList);
+
+    /**
      *  @brief  Get closest distance between a specified position vector and the hits in a specified cluster
      *
      *  @param  position the position vector
@@ -122,6 +132,16 @@ public:
      *  @return the closest distance
      */
     static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Get closest position in a list of clusters to a specified input position vector
+     *
+     *  @param  position the position vector
+     *  @param  clusterList list of input clusters
+     *
+     *  @return the closest position
+     */
+    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::ClusterList &clusterList);
 
     /**
      *  @brief  Get closest position on a cluster to a specified input position vector
@@ -134,27 +154,58 @@ public:
     static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Get positions of the two most distant calo hits in a 2D cluster (ordered by Z)
+     *  @brief  Get pair of closest positions for a pair of clusters
      *
-     *  @param  pCluster address of the cluster
+     *  @param  pCluster1 the address of the first cluster
+     *  @param  pCluster2 the address of the second cluster
+     *  @param  the closest position in the first cluster
+     *  @param  the closest position in the second cluster
+     */
+    static void GetClosestPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        pandora::CartesianVector &position1, pandora::CartesianVector &position2);
+
+    /**
+     *  @brief  Get positions of the two most distant calo hits in a list of cluster (ordered by Z)
+     *
+     *  @param  clusterList the input cluster list
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
-    static void GetExtremalCoordinatesXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, 
+    static void GetExtremalCoordinates(const pandora::ClusterList &clusterList, pandora::CartesianVector &innerCoordinate, 
         pandora::CartesianVector &outerCoordinate);
 
     /**
-     *  @brief  Get minimum and maximum X, Y and Z positions of the calo hits in a 2D cluster
+     *  @brief  Get positions of the two most distant calo hits in a cluster (ordered by Z)
+     *
+     *  @param  pCluster the input cluster
+     *  @param  the inner extremal position
+     *  @param  the outer extremal position
+     */
+    static void GetExtremalCoordinates(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, 
+        pandora::CartesianVector &outerCoordinate);
+
+    /**
+     *  @brief  Get positions of the two most distant calo hits in an ordered calo hit list (ordered by Z)
+     *
+     *  @param  orderedCaloHitList the ordered calo hit list
+     *  @param  the inner extremal position
+     *  @param  the outer extremal position
+     */
+    static void GetExtremalCoordinates(const pandora::OrderedCaloHitList &orderedCaloHitList, pandora::CartesianVector &innerCoordinate, 
+        pandora::CartesianVector &outerCoordinate);
+
+    /**
+     *  @brief  Get minimum and maximum X, Y and Z positions of the calo hits in a cluster
      *
      *  @param  pCluster address of the cluster
      *  @param  the minimum positions (x,y,z)
      *  @param  the maximum positions (x,y,z)
      */
-    static void GetClusterSpanXZ(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, 
+    static void GetClusterBoundingBox(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, 
         pandora::CartesianVector &maximumCoordinate);
 
     /**
-     *  @brief  Get minimum and maximum x of the calo hits in a 2D cluster
+     *  @brief  Get minimum and maximum X positions of the calo hits in a cluster
      *
      *  @param  pCluster address of the cluster
      *  @param  the minimum position of x
@@ -163,7 +214,7 @@ public:
     static void GetClusterSpanX(const pandora::Cluster *const pCluster, float &xmin, float &xmax);
 
     /**
-     *  @brief  Get upper and lower Z positions of the calo hits in a 2D cluster in range xmin to xmax
+     *  @brief  Get upper and lower Z positions of the calo hits in a cluster in range xmin to xmax
      *
      *  @param  pCluster address of the cluster
      *  @param  xmin for range in x
@@ -174,7 +225,7 @@ public:
     static void GetClusterSpanZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &zmin, float &zmax);
 
     /**
-     *  @brief  Get average Z positions of the calo hits in a 2D cluster in range xmin to xmax
+     *  @brief  Get average Z positions of the calo hits in a cluster in range xmin to xmax
      *
      *  @param  pCluster address of the cluster
      *  @param  xmin for range in x
@@ -205,6 +256,22 @@ public:
      *  @param  pRhs address of second cluster
      */
     static bool SortByNHits(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
+     *  @brief  Sort calo hits by their position (use Z, followed by X, followed by Y)
+     *
+     *  @param  pLhs address of first calo hit
+     *  @param  pRhs address of second calo hit
+     */
+    static bool SortByPosition(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+  
+   /**
+     *  @brief  Sort calo hits by their pulse height
+     *
+     *  @param  pLhs address of first calo hit
+     *  @param  pRhs address of second calo hit
+     */
+    static bool SortByPulseHeight(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
 };
 
 } // namespace lar_content

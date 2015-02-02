@@ -7,6 +7,8 @@
  */
 
 #include "Objects/MCParticle.h"
+#include "Objects/CaloHit.h"
+#include "Objects/Cluster.h"
 
 #include "LArHelpers/LArMCParticleHelper.h"
 
@@ -20,6 +22,13 @@ using namespace pandora;
 bool LArMCParticleHelper::IsNeutrinoFinalState(const MCParticle *const pMCParticle)
 {
     return ((pMCParticle->GetParentList().size() == 1) && (LArMCParticleHelper::IsNeutrino(*(pMCParticle->GetParentList().begin()))));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsNeutrinoInduced(const MCParticle *const pMCParticle)
+{
+    return (LArMCParticleHelper::GetParentNeutrinoId(pMCParticle) != 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -73,6 +82,82 @@ int LArMCParticleHelper::GetParentNeutrinoId(const MCParticle *const pMCParticle
     {
         return 0;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsNeutrinoInduced(const Cluster *const pCluster, const float minWeight)
+{
+    return (LArMCParticleHelper::GetNeutrinoWeight(pCluster) > minWeight);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsNeutrinoInduced(const CaloHit *const pCaloHit, const float minWeight)
+{
+    return (LArMCParticleHelper::GetNeutrinoWeight(pCaloHit) > minWeight);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
+{
+    float neutrinoWeight(0.f);
+    float totalWeight(0.f);
+
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+            CaloHit *pCaloHit = *hitIter;
+
+            try
+            {
+                // note: order is important here
+                neutrinoWeight += LArMCParticleHelper::GetNeutrinoWeight(pCaloHit);
+                totalWeight += 1.f;
+            }
+            catch (const StatusCodeException &)
+            {
+            }
+        }
+    }
+
+    if (totalWeight > std::numeric_limits<float>::epsilon())
+        return (neutrinoWeight/totalWeight);
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
+{
+    const MCParticleWeightMap &weights = pCaloHit->GetMCParticleWeightMap();
+
+    if (weights.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    float neutrinoWeight(0.f);
+    float totalWeight(0.f);
+
+    for (MCParticleWeightMap::const_iterator iter = weights.begin(), iterEnd = weights.end(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *pMCParticle = iter->first;
+        const float weight = iter->second;
+
+        if (LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))
+            neutrinoWeight += weight;
+        
+        totalWeight += weight;
+    }
+
+    if (totalWeight > std::numeric_limits<float>::epsilon())
+        return (neutrinoWeight/totalWeight);
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 } // namespace lar_content

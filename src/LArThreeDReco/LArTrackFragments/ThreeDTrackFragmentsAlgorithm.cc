@@ -11,8 +11,6 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 
 using namespace pandora;
@@ -287,7 +285,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const CartesianVector vtxProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtxPosition3D, hitType3));
     const CartesianVector endProjection3(LArGeometryHelper::ProjectPosition(this->GetPandora(), endPosition3D, hitType3));
 
-    const float samplingPitch(0.5f * LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float samplingPitch(0.5f * LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const float nSamplingPoints((endProjection3 - vtxProjection3).GetMagnitude() / samplingPitch);
 
     if (nSamplingPoints < 1.f)
@@ -511,7 +509,7 @@ bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointLis
         CartesianVector minPosition(0.f,0.f,0.f);
         CartesianVector maxPosition(0.f,0.f,0.f);
 
-        LArClusterHelper::GetClusterSpanXZ(pCluster, minPosition, maxPosition);
+        LArClusterHelper::GetClusterBoundingBox(pCluster, minPosition, maxPosition);
 
         minXcluster = std::min(minXcluster, minPosition.GetX());
         maxXcluster = std::max(maxXcluster, maxPosition.GetX());

@@ -74,8 +74,8 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
     // Figure of merit:    distance between parent and daughter clusters
     CartesianVector innerCoordinateP(0.f,0.f,0.f), outerCoordinateP(0.f,0.f,0.f);
     CartesianVector innerCoordinateD(0.f,0.f,0.f), outerCoordinateD(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pParentCluster, innerCoordinateP, outerCoordinateP);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pDaughterCluster, innerCoordinateD, outerCoordinateD);
+    LArClusterHelper::GetExtremalCoordinates(pParentCluster, innerCoordinateP, outerCoordinateP);
+    LArClusterHelper::GetExtremalCoordinates(pDaughterCluster, innerCoordinateD, outerCoordinateD);
 
     for (unsigned int useInnerD = 0; useInnerD < 2; ++useInnerD)
     {

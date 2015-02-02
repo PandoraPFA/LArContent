@@ -18,7 +18,8 @@ namespace lar_content
  */
 class LArTransformationPlugin
 {
-public:
+public:   
+
     /** 
      *  @brief  Transform from (U,V) to W position
      *
@@ -81,7 +82,7 @@ public:
      *  @param  pU the pU direction
      *  @param  pV the pV direction
      */
-     virtual float PUPVtoPW(const float pu, const float pv) const = 0;
+     virtual float PUPVtoPW(const float pu, const float pv) const;
 
     /** 
      *  @brief  Transform from (pV,pW) to pU direction
@@ -89,7 +90,7 @@ public:
      *  @param  pV the pV direction
      *  @param  pW the pW direction
      */
-     virtual float PVPWtoPU(const float pv, const float pw) const = 0;
+     virtual float PVPWtoPU(const float pv, const float pw) const;
 
     /** 
      *  @brief  Transform from (pW,pU) to pV direction
@@ -97,7 +98,23 @@ public:
      *  @param  pW the pW direction
      *  @param  pU the pU direction
      */
-     virtual float PWPUtoPV(const float pw, const float pu) const = 0;
+     virtual float PWPUtoPV(const float pw, const float pu) const;
+
+    /** 
+     *  @brief  Transform from (pU,pV) to pY position
+     *
+     *  @param  pU the pU position
+     *  @param  pV the pV position
+     */
+    virtual float PUPVtoPY(const float pu, const float pv)  const;
+
+    /** 
+     *  @brief  Transform from (pU,pV) to pZ position
+     *
+     *  @param  pU the pU position
+     *  @param  pV the pV position
+     */
+     virtual float PUPVtoPZ(const float pu, const float pv) const;
 
     /** 
      *  @brief  Transform from (pY,pZ) to pU direction
@@ -105,7 +122,7 @@ public:
      *  @param  pU the U component
      *  @param  pV the V component
      */
-    virtual float PYPZtoPU(const float py, const float pz) const = 0;
+    virtual float PYPZtoPU(const float py, const float pz) const;
 
     /** 
      *  @brief  Transform from (pY,pZ) to pV direction
@@ -113,7 +130,7 @@ public:
      *  @param  pU the U component
      *  @param  pV the V component
      */
-    virtual float PYPZtoPV(const float py, const float pz) const = 0;
+    virtual float PYPZtoPV(const float py, const float pz) const;
 
     /** 
      *  @brief  Get resolution, in cm, for calculation of chi2
@@ -121,13 +138,6 @@ public:
      *  @return resolution, in cm, for calculation of chi2
      */
     virtual float GetSigmaUVW() const = 0;
-
-    /** 
-     *  @brief  Get wire z pitch, in cm
-     * 
-     *  @return wire z pitch, in cm
-     */
-    virtual float GetWireZPitch() const = 0;
 
     /** 
      *  @brief  Get the y, z position that yields the minimum chi squared value with respect to specified u, v and w coordinates
@@ -161,6 +171,7 @@ public:
      */
     virtual void GetProjectedYZ(const PositionAndType &hitPositionAndType, const PositionAndType &fitPositionAndType1,
         const PositionAndType &fitPositionAndType2, const float sigmaHit, const float sigmaFit, float &y, float &z, float &chiSquared) const = 0;
+    
 };
 
 } // namespace lar_content

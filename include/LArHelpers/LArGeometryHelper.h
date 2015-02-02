@@ -15,6 +15,7 @@
 namespace lar_content
 {
 
+class LArPseudoLayerPlugin;
 class LArTransformationPlugin;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -169,6 +170,24 @@ public:
         const pandora::HitType view);
 
     /**
+     *  @brief  Return the wire pitch
+     *
+     *  @param  pandora the associated pandora instance
+     *
+     *  @return the wire pitch 
+     */
+    static float GetWireZPitch(const pandora::Pandora &pandora);
+
+    /**
+     *  @brief  Get the LArPseudoLayerPlugin registered with a specified pandora instance
+     * 
+     *  @param  pandora the associated pandora instance
+     *
+     *  @return the address of the relevant LArPseudoLayerPlugin
+     */
+    static const LArPseudoLayerPlugin *GetLArPseudoLayerPlugin(const pandora::Pandora &pandora);
+
+    /**
      *  @brief  Get the LArTransformationPlugin registered with a specified pandora instance
      * 
      *  @param  pandora the associated pandora instance
@@ -178,6 +197,14 @@ public:
     static const LArTransformationPlugin *GetLArTransformationPlugin(const pandora::Pandora &pandora);
 
     /**
+     *  @brief  Set the LArPseudoLayerPlugin for a given pandora instance
+     *
+     *  @param  pandora the pandora instance
+     *  @param  pLArPseudoLayerPlugin the address of the LArPseudoLayerPlugin
+     */
+    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, const LArPseudoLayerPlugin *pLArPseudoLayerPlugin);
+  
+    /**
      *  @brief  Set the LArTransformationPlugin for a given pandora instance
      *
      *  @param  pandora the pandora instance
@@ -186,7 +213,9 @@ public:
     static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, const LArTransformationPlugin *pLArTransformationPlugin);
 
 private:
+    typedef std::map<const pandora::Pandora*, const LArPseudoLayerPlugin*>    PseudoLayerInstanceMap;
     typedef std::map<const pandora::Pandora*, const LArTransformationPlugin*> TransformationInstanceMap;
+    static PseudoLayerInstanceMap       m_pseudolayerInstanceMap;       ///< The pseudolayer instance map 
     static TransformationInstanceMap    m_transformationInstanceMap;    ///< The transformation instance map
 };
 

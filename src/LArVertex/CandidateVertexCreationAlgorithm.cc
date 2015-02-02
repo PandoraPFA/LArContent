@@ -11,8 +11,6 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
-
 #include "LArVertex/CandidateVertexCreationAlgorithm.h"
 
 using namespace pandora;
@@ -184,7 +182,7 @@ void CandidateVertexCreationAlgorithm::SelectClusters(const ClusterList *const p
 
 void CandidateVertexCreationAlgorithm::AddToSlidingFitCache(const Cluster *const pCluster)
 {
-    const float slidingFitPitch(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetWireZPitch());
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
     if (!m_slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult)).second)

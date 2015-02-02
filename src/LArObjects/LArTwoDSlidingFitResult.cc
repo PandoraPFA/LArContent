@@ -25,13 +25,20 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
     m_axisIntercept(0.f, 0.f, 0.f),
-    m_axisDirection(0.f, 0.f, 0.f)
+    m_axisDirection(0.f, 0.f, 0.f),
+    m_orthoDirection(0.f, 0.f, 0.f)
 {
+    // Use extremal coordinates to define axis intercept and direction 
     CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, innerCoordinate, outerCoordinate);
+    LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
     m_axisIntercept = innerCoordinate;
     m_axisDirection = (outerCoordinate - innerCoordinate).GetUnitVector();
 
+    // Use y-axis to generate an orthogonal axis (assuming that cluster occupies X-Z plane)
+    CartesianVector yAxis(0.f, 1.f, 0.f);
+    m_orthoDirection = yAxis.GetCrossProduct(m_axisDirection).GetUnitVector();
+
+    // Calculate the sliding fit result
     this->FillLayerFitContributionMap();
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
@@ -40,27 +47,30 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection) :
-    m_pCluster(pCluster),
-    m_layerFitHalfWindow(layerFitHalfWindow),
-    m_layerPitch(layerPitch),
-    m_axisIntercept(axisIntercept),
-    m_axisDirection(axisDirection)
-{
-    this->FillLayerFitContributionMap();
-    this->PerformSlidingLinearFit();
-    this->FindSlidingFitSegments();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const LayerFitContributionMap &layerFitContributionMap) :
+    const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
     m_axisIntercept(axisIntercept),
     m_axisDirection(axisDirection),
+    m_orthoDirection(orthoDirection)
+{
+    this->FillLayerFitContributionMap();
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
+    const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, 
+    const LayerFitContributionMap &layerFitContributionMap) :
+    m_pCluster(pCluster),
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(axisIntercept),
+    m_axisDirection(axisDirection),
+    m_orthoDirection(orthoDirection),
     m_layerFitContributionMap(layerFitContributionMap)
 {
     this->PerformSlidingLinearFit();
@@ -116,10 +126,9 @@ float TwoDSlidingFitResult::GetL(const int layer) const
 void TwoDSlidingFitResult::GetLocalPosition(const CartesianVector &position, float &rL, float &rT) const
 {
     const CartesianVector displacement(position - m_axisIntercept);
-    const CartesianVector crossProduct(displacement.GetCrossProduct(m_axisDirection));
-
+    
     rL = displacement.GetDotProduct(m_axisDirection);
-    rT = (crossProduct.GetY() < 0.f) ? (-1.f * crossProduct.GetMagnitude()) : crossProduct.GetMagnitude();
+    rT = displacement.GetDotProduct(m_orthoDirection);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -138,9 +147,8 @@ void TwoDSlidingFitResult::GetLocalDirection(const CartesianVector &direction, f
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoDSlidingFitResult::GetGlobalPosition(const float rL, const float rT, CartesianVector &position) const
-{
-    const CartesianVector positiveTDirection(m_axisDirection.GetCrossProduct(CartesianVector(0.f, 1.f, 0.f)));
-    position = m_axisIntercept + (m_axisDirection * rL) + (positiveTDirection * rT);
+{  
+    position = m_axisIntercept + (m_axisDirection * rL) + (m_orthoDirection * rT);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -435,13 +443,8 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
     if (!m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    if ((std::fabs(m_axisIntercept.GetY()) > std::numeric_limits<float>::epsilon()) ||
-        (std::fabs(m_axisDirection.GetY()) > std::numeric_limits<float>::epsilon()) ||
-        (m_layerPitch < std::numeric_limits<float>::epsilon()) ||
-        (m_layerFitContributionMap.empty()) )
-    {
+    if ((m_layerPitch < std::numeric_limits<float>::epsilon()) || (m_layerFitContributionMap.empty()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
 
     unsigned int slidingNPoints(0);
     double slidingSumT(0.), slidingSumL(0.), slidingSumTT(0.), slidingSumLT(0.), slidingSumLL(0.);

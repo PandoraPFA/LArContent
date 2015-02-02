@@ -34,8 +34,9 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
     this->GetPfos(m_daughterPfoListName, daughterPfos);
 
     if (parentPfos.empty())
-    {
-        std::cout << "DeltaRayIdentificationAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
+    {   
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "DeltaRayIdentificationAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -235,7 +236,7 @@ void DeltaRayIdentificationAlgorithm::GetTwoDVertexList(const ParticleFlowObject
         const Cluster *pCluster = *iter;
 
         CartesianVector firstCoordinate(0.f,0.f,0.f), secondCoordinate(0.f,0.f,0.f);
-        LArClusterHelper::GetExtremalCoordinatesXZ(pCluster, firstCoordinate, secondCoordinate);
+        LArClusterHelper::GetExtremalCoordinates(pCluster, firstCoordinate, secondCoordinate);
 
         vertexList.push_back(firstCoordinate);
         vertexList.push_back(secondCoordinate);

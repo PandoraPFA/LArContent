@@ -10,6 +10,7 @@
 
 #include "Objects/Cluster.h"
 #include "Objects/ParticleFlowObject.h"
+#include "Objects/Vertex.h"
 
 namespace lar_content
 {
@@ -113,7 +114,7 @@ public:
      *  @param  pCluster the address of the input cluster
      */
     static float GetClosestDistance(const pandora::ParticleFlowObject *const pPfo, const pandora::Cluster *const pCluster);
- 
+
     /**
      *  @brief  Get distance between two Pfos using 2D clusters
      *
@@ -131,6 +132,17 @@ public:
     static float GetThreeDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
 
     /**
+     *  @brief  Apply 3D sliding fit to Pfo and return vector of track states
+     *
+     *  @param  pPfo the address of the first Pfo
+     *  @param  layerWindow the half-window used in the sliding fit
+     *  @param  layerPitch the pitch used in the sliding fit
+     *  @param  trackStateVector the output vector of track states
+     */
+    static void GetSlidingFitTrajectory(const pandora::ParticleFlowObject *const pPfo, const unsigned int layerWindow, const float layerPitch,
+        std::vector<pandora::TrackState> &trackStateVector);
+
+    /**
      *  @brief  Return track flag based on Pfo Particle ID
      *
      *  @param  pPfo the address of the Pfo
@@ -146,61 +158,61 @@ public:
 
     /**
      *  @brief  Get primary neutrino or antineutrino
-     * 
+     *
      *  @param  pPfo the address of the Pfo
-     * 
+     *
      *  @return pdg code of neutrino (or zero, otherwise)
      */
     static int GetPrimaryNeutrino(const pandora::ParticleFlowObject *const pPfo);
 
     /**
-     *  @brief  Whether a pfo is a primary parent particle 
-     * 
+     *  @brief  Whether a pfo is a primary parent particle
+     *
      *  @param  pPfo the address of the Pfo
-     * 
+     *
      *  @return boolean
      */
     static bool IsFinalState(const pandora::ParticleFlowObject *const pPfo);
 
      /**
      *  @brief  Whether a pfo is a final-state particle from a neutrino (or antineutrino) interaction
-     * 
+     *
      *  @param  pPfo the address of the Pfo
-     * 
+     *
      *  @return boolean
      */
     static bool IsNeutrinoFinalState(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Whether a pfo is a neutrino or (antineutrino)
-     * 
+     *
      *  @param  pPfo the address of the Pfo
-     * 
+     *
      *  @return boolean
      */
     static bool IsNeutrino(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Get the primary parent pfo
-     * 
-     *  @param  pPfo the address of the Pfo 
-     * 
+     *
+     *  @param  pPfo the address of the Pfo
+     *
      *  @return address of the primary parent pfo
      */
     static const pandora::ParticleFlowObject *GetParentPfo(const pandora::ParticleFlowObject *const pPfo);
 
      /**
      *  @brief  Get primary neutrino or antineutrino
-     * 
+     *
      *  @param   pPfo the address of the Pfo
-     * 
+     *
      *  @return address of primary neutrino pfo
      */
     static const pandora::ParticleFlowObject *GetParentNeutrino(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Sort pfos by number of constituent hits
-     * 
+     *
      *  @param  pLhs address of first pfo
      *  @param  pRhs address of second pfo
      */

@@ -421,11 +421,11 @@ unsigned int ShowerGrowingAlgorithm::GetNVertexConnections(const CartesianVector
 bool ShowerGrowingAlgorithm::SortClusters(const Cluster *const pLhs, const Cluster *const pRhs)
 {
     CartesianVector innerCoordinateLhs(0.f, 0.f, 0.f), outerCoordinateLhs(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pLhs, innerCoordinateLhs, outerCoordinateLhs);
+    LArClusterHelper::GetExtremalCoordinates(pLhs, innerCoordinateLhs, outerCoordinateLhs);
     const float dLhs2((outerCoordinateLhs - innerCoordinateLhs).GetMagnitudeSquared());
 
     CartesianVector innerCoordinateRhs(0.f, 0.f, 0.f), outerCoordinateRhs(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinatesXZ(pRhs, innerCoordinateRhs, outerCoordinateRhs);
+    LArClusterHelper::GetExtremalCoordinates(pRhs, innerCoordinateRhs, outerCoordinateRhs);
     const float dRhs2((outerCoordinateRhs - innerCoordinateRhs).GetMagnitudeSquared());
 
     return (dLhs2 > dRhs2);
@@ -440,8 +440,9 @@ void ShowerGrowingAlgorithm::GetInputPfoList(PfoList &pfoList) const
         const PfoList *pPfoList = NULL;
 
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
-        {
-            std::cout << "ShowerGrowingAlgorithm : pfo list " << *iter << " unavailable." << std::endl;
+        { 
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ShowerGrowingAlgorithm : pfo list " << *iter << " unavailable." << std::endl;
             continue;
         }
 
