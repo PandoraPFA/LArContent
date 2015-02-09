@@ -291,7 +291,11 @@ void VertexBasedPfoMergingAlgorithm::MergePfos(const PfoAssociation &pfoAssociat
     {
         PfoList vertexPfoList;
         vertexPfoList.insert(pVertexPfo);
-        pVertexPfo->SetParticleId(E_MINUS);
+
+        PandoraContentApi::ParticleFlowObject::Metadata metadata;
+        metadata.m_particleId = E_MINUS;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pVertexPfo, metadata));
+
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_trackPfoListName, m_showerPfoListName, vertexPfoList));
     }
 }

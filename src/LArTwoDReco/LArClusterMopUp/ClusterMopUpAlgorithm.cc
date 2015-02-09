@@ -61,7 +61,7 @@ void ClusterMopUpAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, Cluste
 
         for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
         {
-            if (m_excludePfosContainingTracks && (*cIter)->IsFixedMuon())
+            if (m_excludePfosContainingTracks && (MU_MINUS == std::abs((*cIter)->GetParticleIdFlag())))
             {
                 containsFixedTrack = true;
                 break;

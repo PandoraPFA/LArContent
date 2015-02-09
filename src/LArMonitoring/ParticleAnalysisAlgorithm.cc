@@ -146,13 +146,13 @@ void ParticleAnalysisAlgorithm::GetConnectedPfos(const PfoList *const pPfoList, 
 {
     PfoList connectedPfos;
 
-    for (PfoList::iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
+    for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {
         ParticleFlowObject *pPfo = *pIter;
         LArPfoHelper::GetAllDownstreamPfos(pPfo, connectedPfos);
     }
 
-    for (PfoList::iterator pIter = connectedPfos.begin(), pIterEnd = connectedPfos.end(); pIter != pIterEnd; ++pIter)
+    for (PfoList::const_iterator pIter = connectedPfos.begin(), pIterEnd = connectedPfos.end(); pIter != pIterEnd; ++pIter)
         pfoVector.push_back(*pIter);
 
     std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);

@@ -249,7 +249,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(Cluster *const pClust
     if (associationMap.end() == iterI)
         return;
 
-    for (ClusterList::iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterList::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
         Cluster *pClusterJ = *iterJ;
 
@@ -257,7 +257,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(Cluster *const pClust
             associatedVector.push_back(pClusterJ);
     }
 
-    for (ClusterList::iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterList::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
         Cluster *pClusterJ = *iterJ;
 
@@ -537,7 +537,7 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
         ClusterAssociationMap::const_iterator iterSecond = secondAssociationMap.find(pCluster);
 
         // Remove double-counting in forward associations
-        for (ClusterList::iterator iterOuter = iterFirst->second.m_forwardAssociations.begin(), iterEndOuter = iterFirst->second.m_forwardAssociations.end(); iterOuter != iterEndOuter; ++iterOuter)
+        for (ClusterList::const_iterator iterOuter = iterFirst->second.m_forwardAssociations.begin(), iterEndOuter = iterFirst->second.m_forwardAssociations.end(); iterOuter != iterEndOuter; ++iterOuter)
         {
             Cluster *pOuterCluster = *iterOuter;
 
@@ -545,19 +545,19 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
             if (secondAssociationMap.end() != iterSecond)
             {
-                for (ClusterList::iterator iterMiddle = iterSecond->second.m_forwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_forwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
+                for (ClusterList::const_iterator iterMiddle = iterSecond->second.m_forwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_forwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
                 {
-                     Cluster *pMiddleCluster = *iterMiddle;
+                    Cluster *pMiddleCluster = *iterMiddle;
 
-                     ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
-                     if (secondAssociationMapSwapped.end() == iterSecondCheck)
-                     continue;
+                    ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
+                    if (secondAssociationMapSwapped.end() == iterSecondCheck)
+                        continue;
 
-                     if (iterSecondCheck->second.m_forwardAssociations.count(pOuterCluster) > 0)
-                     {
-                     isNeighbouringCluster = false;
-                     break;
-                     }
+                    if (iterSecondCheck->second.m_forwardAssociations.count(pOuterCluster) > 0)
+                    {
+                        isNeighbouringCluster = false;
+                        break;
+                    }
                 }
             }
 
@@ -567,7 +567,7 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
 
         // Remove double-counting in backward associations
-        for (ClusterList::iterator iterInner = iterFirst->second.m_backwardAssociations.begin(), iterEndInner = iterFirst->second.m_backwardAssociations.end(); iterInner != iterEndInner; ++iterInner)
+        for (ClusterList::const_iterator iterInner = iterFirst->second.m_backwardAssociations.begin(), iterEndInner = iterFirst->second.m_backwardAssociations.end(); iterInner != iterEndInner; ++iterInner)
         {
             Cluster *pInnerCluster = *iterInner;
 
@@ -575,20 +575,20 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
             if (secondAssociationMap.end() != iterSecond)
             {
-                for (ClusterList::iterator iterMiddle = iterSecond->second.m_backwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_backwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
+                for (ClusterList::const_iterator iterMiddle = iterSecond->second.m_backwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_backwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
                 {
-                     Cluster *pMiddleCluster = *iterMiddle;
+                    Cluster *pMiddleCluster = *iterMiddle;
 
-                     ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
-                     if (secondAssociationMapSwapped.end() == iterSecondCheck)
-                     continue;
+                    ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
+                    if (secondAssociationMapSwapped.end() == iterSecondCheck)
+                        continue;
 
-                     if (iterSecondCheck->second.m_backwardAssociations.count(pInnerCluster) > 0)
-                     {
-                     isNeighbouringCluster = false;
-                     break;
-                     }
-                 }
+                    if (iterSecondCheck->second.m_backwardAssociations.count(pInnerCluster) > 0)
+                    {
+                        isNeighbouringCluster = false;
+                        break;
+                    }
+                }
             }
 
             if (isNeighbouringCluster)
@@ -611,7 +611,7 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
         Cluster *pCluster = iter->first;
 
         // Symmetrise forward associations
-        for (ClusterList::iterator iterForward = iter->second.m_forwardAssociations.begin(), iterEndForward = iter->second.m_forwardAssociations.end(); iterForward != iterEndForward; ++iterForward)
+        for (ClusterList::const_iterator iterForward = iter->second.m_forwardAssociations.begin(), iterEndForward = iter->second.m_forwardAssociations.end(); iterForward != iterEndForward; ++iterForward)
         {
             Cluster *pForwardCluster = *iterForward;
 
@@ -642,7 +642,7 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
         }
 
         // Symmetrise backward associations
-        for (ClusterList::iterator iterBackward = iter->second.m_backwardAssociations.begin(), iterEndBackward = iter->second.m_backwardAssociations.end(); iterBackward != iterEndBackward; ++iterBackward)
+        for (ClusterList::const_iterator iterBackward = iter->second.m_backwardAssociations.begin(), iterEndBackward = iter->second.m_backwardAssociations.end(); iterBackward != iterEndBackward; ++iterBackward)
         {
             Cluster *pBackwardCluster = *iterBackward;
 

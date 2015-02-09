@@ -109,7 +109,7 @@ bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClus
         if (usedClusters.count(pCluster))
             continue;
 
-        if (pCluster->IsFixedMuon())
+        if (MU_MINUS == std::abs(pCluster->GetParticleIdFlag()))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
@@ -139,7 +139,7 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particl
         if (seedClusters.count(pCandidateCluster))
             continue;
 
-        if (pCandidateCluster->IsFixedMuon())
+        if (MU_MINUS == std::abs(pCandidateCluster->GetParticleIdFlag()))
             continue;
 
         if (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster)

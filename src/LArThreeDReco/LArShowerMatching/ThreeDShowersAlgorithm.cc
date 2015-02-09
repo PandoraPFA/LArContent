@@ -93,7 +93,7 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
         if (m_ignoreUnavailableClusters && !pCluster->IsAvailable())
             continue;
 
-        if (m_ignoreFixedTracks && pCluster->IsFixedMuon())
+        if (m_ignoreFixedTracks && (MU_MINUS == std::abs(pCluster->GetParticleIdFlag())))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)

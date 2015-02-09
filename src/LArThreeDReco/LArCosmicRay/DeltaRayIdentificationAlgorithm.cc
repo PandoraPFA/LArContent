@@ -132,7 +132,7 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &parentP
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             // Check: get the new parent (and check there is no grand-parent)
-            PfoList::iterator pIter = pBestParentPfo->GetParentPfoList().begin();
+            PfoList::const_iterator pIter = pBestParentPfo->GetParentPfoList().begin();
             ParticleFlowObject *pReplacementParentPfo = *pIter;
             if (pReplacementParentPfo->GetParentPfoList().size() != 0)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -287,7 +287,11 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
             continue;
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
-        pDaughterPfo->SetParticleId(11);
+
+        PandoraContentApi::ParticleFlowObject::Metadata metadata;
+        metadata.m_particleId = E_MINUS;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pDaughterPfo, metadata));
+
         daughterPfoList.insert(pDaughterPfo);
     }
 }

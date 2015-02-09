@@ -220,7 +220,7 @@ bool SplitShowersTool::CheckClusterProximities(ThreeDShowersAlgorithm */*pAlgori
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const Cluster *const pCluster1(*(clusterList.begin()));
-    const Cluster *const pCluster2(*(clusterList.rbegin()));
+    const Cluster *const pCluster2(*(++(clusterList.begin())));
 
     const float outer12(LArClusterHelper::GetClosestDistance(pCluster1->GetCentroid(pCluster1->GetOuterPseudoLayer()), pCluster2));
     const float outer21(LArClusterHelper::GetClosestDistance(pCluster2->GetCentroid(pCluster2->GetOuterPseudoLayer()), pCluster1));
@@ -289,10 +289,10 @@ bool SplitShowersTool::CheckClusterSplitPositions(ThreeDShowersAlgorithm *pAlgor
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     float splitXPosition1(0.f), overlapX1(0.f);
-    this->GetSplitXDetails(pAlgorithm, *(clusterList1.begin()), *(clusterList1.rbegin()), splitXPosition1, overlapX1);
+    this->GetSplitXDetails(pAlgorithm, *(clusterList1.begin()), *(++(clusterList1.begin())), splitXPosition1, overlapX1);
 
     float splitXPosition2(0.f), overlapX2(0.f);
-    this->GetSplitXDetails(pAlgorithm, *(clusterList2.begin()), *(clusterList2.rbegin()), splitXPosition2, overlapX2);
+    this->GetSplitXDetails(pAlgorithm, *(clusterList2.begin()), *(++(clusterList2.begin())), splitXPosition2, overlapX2);
 
     if ((std::fabs(splitXPosition1 - splitXPosition2) < m_vetoMergeXDifference) && (overlapX1 < m_vetoMergeXOverlap) && (overlapX2 < m_vetoMergeXOverlap))
         return false;
@@ -337,7 +337,7 @@ void SplitShowersTool::SpecifyClusterMerges(ThreeDShowersAlgorithm *pAlgorithm, 
     if (2 != clusterList.size())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    Cluster *pClusterA(*(clusterList.begin())), *pClusterB(*(clusterList.rbegin()));
+    Cluster *pClusterA(*(clusterList.begin())), *pClusterB(*(++(clusterList.begin())));
     const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).GetShowerFitResult());
     const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).GetShowerFitResult());
 

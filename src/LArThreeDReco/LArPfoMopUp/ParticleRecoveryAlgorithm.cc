@@ -109,7 +109,7 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
         if (!pCluster->IsAvailable())
             continue;
 
-        if ((!m_includeTracks && pCluster->IsFixedMuon()) || (!m_includeShowers && !pCluster->IsFixedMuon()))
+        if ((!m_includeTracks && (MU_MINUS == std::abs(pCluster->GetParticleIdFlag()))) || (!m_includeShowers && (MU_MINUS != std::abs(pCluster->GetParticleIdFlag()))))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)

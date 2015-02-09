@@ -112,14 +112,23 @@ void NeutrinoEventBuildingAlgorithm::SetNeutrinoId(ParticleFlowObject *const pNe
     if (NULL == pPrimaryDaughter)
       throw StatusCodeException(STATUS_CODE_FAILURE);
 
+    PandoraContentApi::ParticleFlowObject::Metadata metadata;
+
     if (E_MINUS == std::abs(pPrimaryDaughter->GetParticleId()))
-        pNeutrinoPfo->SetParticleId(NU_E);
+    {
+        metadata.m_particleId = NU_E;
+    }
+    else if (MU_MINUS == std::abs(pPrimaryDaughter->GetParticleId()))
+    {
+        metadata.m_particleId = NU_MU;
+    }
 
-    if (MU_MINUS == std::abs(pPrimaryDaughter->GetParticleId()))
-        pNeutrinoPfo->SetParticleId(NU_MU);
-
-    pNeutrinoPfo->SetCharge(PdgTable::GetParticleCharge(pNeutrinoPfo->GetParticleId()));
-    pNeutrinoPfo->SetMass(PdgTable::GetParticleMass(pNeutrinoPfo->GetParticleId()));
+    if (metadata.m_particleId.IsInitialized())
+    {
+        metadata.m_charge = PdgTable::GetParticleCharge(metadata.m_particleId.Get());
+        metadata.m_mass = PdgTable::GetParticleMass(metadata.m_particleId.Get());
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pNeutrinoPfo, metadata));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
