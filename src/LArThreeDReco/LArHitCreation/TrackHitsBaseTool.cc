@@ -31,7 +31,7 @@ TrackHitsBaseTool::TrackHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
+void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
     CaloHitList &newThreeDHits)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -64,7 +64,7 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster(*iter);
+        const Cluster *const pCluster(*iter);
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if (TPC_3D == hitType)

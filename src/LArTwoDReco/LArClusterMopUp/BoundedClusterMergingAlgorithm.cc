@@ -35,7 +35,7 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
-        Cluster *pPfoCluster(*pIter);
+        const Cluster *const pPfoCluster(*pIter);
         const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
         ShowerPositionMap showerPositionMap;
@@ -44,7 +44,7 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 
         for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
         {
-            Cluster *pRemnantCluster(*rIter);
+            const Cluster *const pRemnantCluster(*rIter);
             const float boundedFraction(this->GetBoundedFraction(pRemnantCluster, xSampling, showerPositionMap));
 
             if (boundedFraction < m_minBoundedFraction)
@@ -105,7 +105,7 @@ float BoundedClusterMergingAlgorithm::GetBoundedFraction(const Cluster *const pC
     {
         for (CaloHitList::const_iterator hIter = iter->second->begin(), hIterEnd = iter->second->end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
             const float x(pCaloHit->GetPositionVector().GetX());
             const float z(pCaloHit->GetPositionVector().GetZ());
 

@@ -46,7 +46,7 @@ public:
     void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 private:
-    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
+    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
     void ExamineTensor();
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -79,7 +79,7 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDRemnantsAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

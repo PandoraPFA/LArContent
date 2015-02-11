@@ -104,7 +104,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
         // Write out reco/true information
         for (MCContributionMap::const_iterator iter = trueHitMap.begin(), iterEnd = trueHitMap.end(); iter != iterEnd; ++iter)
         {
-            const MCParticle *pMCParticle3D(iter->first);
+            const MCParticle *const pMCParticle3D(iter->first);
             const CaloHitList &mcHitList(iter->second);
 
             mcNeutrinoVector.push_back(LArMCParticleHelper::GetParentNeutrinoId(pMCParticle3D));
@@ -138,7 +138,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
             if (matchedPfoMap.end() != pIter1)
             {
-                const ParticleFlowObject *pPfo(pIter1->second);
+                const ParticleFlowObject *const pPfo(pIter1->second);
                 PfoContributionMap::const_iterator pIter2 = recoHitMap.find(pPfo);
 
                 if (recoHitMap.end() == pIter2)
@@ -335,7 +335,7 @@ void ParticleMonitoringAlgorithm::ExtractNeutrinoDaughters(PfoList &pfoList) con
 {
     for (PfoList::iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; )
     {
-        ParticleFlowObject *pPfo(*iter);
+        const ParticleFlowObject *const pPfo(*iter);
 
         if ((NU_E == std::abs(pPfo->GetParticleId())) || (NU_MU == std::abs(pPfo->GetParticleId())) || (NU_TAU == std::abs(pPfo->GetParticleId())))
         {
@@ -356,7 +356,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
 {
     for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
     {
-        const MCParticle *pMCParticle = *iter;
+        const MCParticle *const pMCParticle = *iter;
 
         if (pMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle))
         {
@@ -394,7 +394,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *c
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
-        const ParticleFlowObject *pPfo = *pIter;
+        const ParticleFlowObject *const pPfo = *pIter;
 
         CaloHitList clusterHits;
         this->CollectCaloHits(pPfo, clusterHits);
@@ -403,7 +403,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *c
 
         for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
 
             if (pCaloHitList->count(pCaloHit) == 0)
                 continue;
@@ -413,7 +413,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *c
             if (mcIter == mcHitMap.end())
                 continue;
 
-            const MCParticle *pPrimaryParticle = mcIter->second;
+            const MCParticle *const pPrimaryParticle = mcIter->second;
             truthContributionMap[pPrimaryParticle].insert(pCaloHit);
         }
 
@@ -451,15 +451,15 @@ void ParticleMonitoringAlgorithm::GetMCParticleToCaloHitMatches(const CaloHitLis
     {
         try
         {
-            CaloHit *pCaloHit = *iter;
-            const MCParticle *pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            const CaloHit *const pCaloHit = *iter;
+            const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
             MCRelationMap::const_iterator mcIter = mcPrimaryMap.find(pHitParticle);
 
             if (mcIter == mcPrimaryMap.end())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const MCParticle *pPrimaryParticle = mcIter->second;
+            const MCParticle *const pPrimaryParticle = mcIter->second;
             mcContributionMap[pPrimaryParticle].insert(pCaloHit);
             mcHitMap[pCaloHit] = pPrimaryParticle;
         }
@@ -478,7 +478,7 @@ void ParticleMonitoringAlgorithm::GetPfoToCaloHitMatches(const CaloHitList *cons
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
-        const ParticleFlowObject *pPfo = *pIter;
+        const ParticleFlowObject *const pPfo = *pIter;
         const ClusterList &pfoClusterList(pPfo->GetClusterList());
         ClusterList clusterList(pfoClusterList.begin(), pfoClusterList.end());
 
@@ -489,7 +489,7 @@ void ParticleMonitoringAlgorithm::GetPfoToCaloHitMatches(const CaloHitList *cons
 
         for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
         {
-            Cluster *pCluster = *cIter;
+            const Cluster *const pCluster = *cIter;
 
             CaloHitList clusterHits;
             pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHits);
@@ -497,7 +497,7 @@ void ParticleMonitoringAlgorithm::GetPfoToCaloHitMatches(const CaloHitList *cons
 
             for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
             {
-                CaloHit *pCaloHit = *hIter;
+                const CaloHit *const pCaloHit = *hIter;
 
                 if (pCaloHitList->count(pCaloHit) == 0)
                     continue;
@@ -524,7 +524,7 @@ void ParticleMonitoringAlgorithm::CollectCaloHits(const ParticleFlowObject *cons
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
 
         if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             continue;
@@ -541,12 +541,12 @@ void ParticleMonitoringAlgorithm::CollectDaughterClusters(const ParticleFlowObje
     const PfoList &daughterPfoList(pParentPfo->GetDaughterPfoList());
     for (PfoList::const_iterator dIter = daughterPfoList.begin(), dIterEnd = daughterPfoList.end(); dIter != dIterEnd; ++dIter)
     {
-        const ParticleFlowObject *pDaughterPfo = *dIter;
+        const ParticleFlowObject *const pDaughterPfo = *dIter;
         const ClusterList &pfoClusterList(pDaughterPfo->GetClusterList());
 
         for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
         {
-            Cluster *pCluster = *cIter;
+            const Cluster *const pCluster = *cIter;
 
             if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
                 continue;

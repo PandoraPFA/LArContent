@@ -111,7 +111,7 @@ void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inpu
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         const float clusterLengthT(this->GetTransverseSpan(pCluster));
         const float clusterLengthL(this->GetLongitudinalSpan(pCluster));
@@ -141,11 +141,11 @@ void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterVector &fir
 {
     for (ClusterVector::const_iterator iterI = firstVector.begin(), iterEndI = firstVector.end(); iterI != iterEndI; ++iterI)
     {
-        Cluster *pClusterI = *iterI;
+        const Cluster *const pClusterI = *iterI;
 
         for (ClusterVector::const_iterator iterJ = secondVector.begin(), iterEndJ = secondVector.end(); iterJ != iterEndJ; ++iterJ)
         {
-            Cluster *pClusterJ = *iterJ;
+            const Cluster *const pClusterJ = *iterJ;
 
             if (pClusterI == pClusterJ)
             continue;
@@ -187,7 +187,7 @@ void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterVect
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
         ClusterVector associatedClusters;
 
         this->GetAssociatedClusters(pCluster, inputAssociationMap, associatedClusters);
@@ -205,8 +205,8 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const Transver
 {
     for (TransverseClusterList::const_iterator iter1 = transverseClusterList.begin(), iterEnd1 = transverseClusterList.end(); iter1 != iterEnd1; ++iter1)
     {
-        LArTransverseCluster *pInnerTransverseCluster = *iter1;
-        Cluster *pInnerCluster(pInnerTransverseCluster->GetSeedCluster());
+        LArTransverseCluster *const pInnerTransverseCluster = *iter1;
+        const Cluster *const pInnerCluster(pInnerTransverseCluster->GetSeedCluster());
 
         ClusterAssociationMap::const_iterator iterInner = transverseAssociationMap.find(pInnerCluster);
         if (transverseAssociationMap.end() == iterInner)
@@ -214,8 +214,8 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const Transver
 
         for (TransverseClusterList::const_iterator iter2 = transverseClusterList.begin(), iterEnd2 = transverseClusterList.end(); iter2 != iterEnd2; ++iter2)
         {
-            LArTransverseCluster *pOuterTransverseCluster = *iter2;
-            Cluster *pOuterCluster(pOuterTransverseCluster->GetSeedCluster());
+            LArTransverseCluster *const pOuterTransverseCluster = *iter2;
+            const Cluster *const pOuterCluster(pOuterTransverseCluster->GetSeedCluster());
 
             ClusterAssociationMap::const_iterator iterOuter = transverseAssociationMap.find(pOuterCluster);
             if(transverseAssociationMap.end() == iterOuter)
@@ -243,7 +243,7 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const Transver
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::GetAssociatedClusters(Cluster *const pClusterI, const ClusterAssociationMap& associationMap, ClusterVector &associatedVector) const
+void TransverseAssociationAlgorithm::GetAssociatedClusters(const Cluster *const pClusterI, const ClusterAssociationMap& associationMap, ClusterVector &associatedVector) const
 {
     ClusterAssociationMap::const_iterator iterI = associationMap.find(pClusterI);
     if (associationMap.end() == iterI)
@@ -251,7 +251,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(Cluster *const pClust
 
     for (ClusterList::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
-        Cluster *pClusterJ = *iterJ;
+        const Cluster *const pClusterJ = *iterJ;
 
         if (this->IsTransverseAssociated(pClusterI, pClusterJ))
             associatedVector.push_back(pClusterJ);
@@ -259,7 +259,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(Cluster *const pClust
 
     for (ClusterList::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
-        Cluster *pClusterJ = *iterJ;
+        const Cluster *const pClusterJ = *iterJ;
 
         if (this->IsTransverseAssociated(pClusterJ, pClusterI))
             associatedVector.push_back(pClusterJ);
@@ -425,7 +425,7 @@ float TransverseAssociationAlgorithm::GetTransverseSpan(const Cluster *const pCe
 
     for (ClusterVector::const_iterator iter = associatedClusters.begin(), iterEnd = associatedClusters.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pAssociatedCluster = *iter;
+        const Cluster *const pAssociatedCluster = *iter;
 
         this->GetExtremalCoordinatesX(pAssociatedCluster, localMinX, localMaxX);
 
@@ -532,14 +532,14 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
     for (ClusterAssociationMap::const_iterator iterFirst = firstAssociationMap.begin(), iterEndFirst = firstAssociationMap.end(); iterFirst != iterEndFirst; ++iterFirst)
     {
-        Cluster *pCluster = iterFirst->first;
+        const Cluster *const pCluster = iterFirst->first;
 
         ClusterAssociationMap::const_iterator iterSecond = secondAssociationMap.find(pCluster);
 
         // Remove double-counting in forward associations
         for (ClusterList::const_iterator iterOuter = iterFirst->second.m_forwardAssociations.begin(), iterEndOuter = iterFirst->second.m_forwardAssociations.end(); iterOuter != iterEndOuter; ++iterOuter)
         {
-            Cluster *pOuterCluster = *iterOuter;
+            const Cluster *const pOuterCluster = *iterOuter;
 
             bool isNeighbouringCluster(true);
 
@@ -547,7 +547,7 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
             {
                 for (ClusterList::const_iterator iterMiddle = iterSecond->second.m_forwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_forwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
                 {
-                    Cluster *pMiddleCluster = *iterMiddle;
+                    const Cluster *const pMiddleCluster = *iterMiddle;
 
                     ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
                     if (secondAssociationMapSwapped.end() == iterSecondCheck)
@@ -569,7 +569,7 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
         // Remove double-counting in backward associations
         for (ClusterList::const_iterator iterInner = iterFirst->second.m_backwardAssociations.begin(), iterEndInner = iterFirst->second.m_backwardAssociations.end(); iterInner != iterEndInner; ++iterInner)
         {
-            Cluster *pInnerCluster = *iterInner;
+            const Cluster *const pInnerCluster = *iterInner;
 
             bool isNeighbouringCluster(true);
 
@@ -577,7 +577,7 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
             {
                 for (ClusterList::const_iterator iterMiddle = iterSecond->second.m_backwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_backwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
                 {
-                    Cluster *pMiddleCluster = *iterMiddle;
+                    const Cluster *const pMiddleCluster = *iterMiddle;
 
                     ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
                     if (secondAssociationMapSwapped.end() == iterSecondCheck)
@@ -608,12 +608,12 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
 
     for (ClusterAssociationMap::const_iterator iter = inputAssociationMap.begin(), iterEnd = inputAssociationMap.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = iter->first;
+        const Cluster *const pCluster = iter->first;
 
         // Symmetrise forward associations
         for (ClusterList::const_iterator iterForward = iter->second.m_forwardAssociations.begin(), iterEndForward = iter->second.m_forwardAssociations.end(); iterForward != iterEndForward; ++iterForward)
         {
-            Cluster *pForwardCluster = *iterForward;
+            const Cluster *const pForwardCluster = *iterForward;
 
             int nCounter(+1);
 
@@ -644,7 +644,7 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
         // Symmetrise backward associations
         for (ClusterList::const_iterator iterBackward = iter->second.m_backwardAssociations.begin(), iterEndBackward = iter->second.m_backwardAssociations.end(); iterBackward != iterEndBackward; ++iterBackward)
         {
-            Cluster *pBackwardCluster = *iterBackward;
+            const Cluster *const pBackwardCluster = *iterBackward;
 
             int nCounter(-1);
 
@@ -686,7 +686,7 @@ void TransverseAssociationAlgorithm::FinalizeClusterAssociationMap(const Cluster
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(Cluster *pSeedCluster, const ClusterVector &associatedClusters) :
+TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const Cluster *const pSeedCluster, const ClusterVector &associatedClusters) :
     m_pSeedCluster(pSeedCluster),
     m_associatedClusters(associatedClusters),
     m_innerVertex(0.f, 0.f, 0.f),
@@ -707,7 +707,7 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(Clust
         {
             for (CaloHitList::const_iterator iterK = iterJ->second->begin(), iterEndK = iterJ->second->end(); iterK != iterEndK; ++iterK)
             {
-            const CaloHit *pCaloHit = *iterK;
+            const CaloHit *const pCaloHit = *iterK;
 
             if (pCaloHit->GetPositionVector().GetX() < minX)
                 minX = pCaloHit->GetPositionVector().GetX();

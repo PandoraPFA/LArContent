@@ -41,7 +41,7 @@ SplitShowersTool::SplitShowersTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool SplitShowersTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -54,7 +54,7 @@ bool SplitShowersTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::FindSplitShowers(ThreeDShowersAlgorithm *pAlgorithm, const TensorType &overlapTensor, ClusterMergeMap &clusterMergeMap) const
+void SplitShowersTool::FindSplitShowers(ThreeDShowersAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterList usedClusters;
 
@@ -146,7 +146,7 @@ void SplitShowersTool::SelectTensorElements(TensorType::ElementList::const_itera
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, const IteratorList &iteratorList, ClusterList &usedClusters,
+void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ClusterList &usedClusters,
     ClusterMergeMap &clusterMergeMap) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
@@ -211,7 +211,7 @@ void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::CheckClusterProximities(ThreeDShowersAlgorithm */*pAlgorithm*/, const ClusterList &clusterList) const
+bool SplitShowersTool::CheckClusterProximities(ThreeDShowersAlgorithm */*const pAlgorithm*/, const ClusterList &clusterList) const
 {
     if (1 == clusterList.size())
         return true;
@@ -235,7 +235,7 @@ bool SplitShowersTool::CheckClusterProximities(ThreeDShowersAlgorithm */*pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::CheckClusterVertexRelations(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterList) const
+bool SplitShowersTool::CheckClusterVertexRelations(ThreeDShowersAlgorithm *const pAlgorithm, const ClusterList &clusterList) const
 {
     const VertexList *pVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList));
@@ -273,7 +273,7 @@ bool SplitShowersTool::CheckClusterVertexRelations(ThreeDShowersAlgorithm *pAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::CheckClusterSplitPositions(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterListU,
+bool SplitShowersTool::CheckClusterSplitPositions(ThreeDShowersAlgorithm *const pAlgorithm, const ClusterList &clusterListU,
     const ClusterList &clusterListV, const ClusterList &clusterListW) const
 {
     const unsigned int nClustersU(clusterListU.size()), nClustersV(clusterListV.size()), nClustersW(clusterListW.size());
@@ -302,7 +302,7 @@ bool SplitShowersTool::CheckClusterSplitPositions(ThreeDShowersAlgorithm *pAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::GetSplitXDetails(ThreeDShowersAlgorithm *pAlgorithm, Cluster *const pClusterA, Cluster *const pClusterB,
+void SplitShowersTool::GetSplitXDetails(ThreeDShowersAlgorithm *const pAlgorithm, const Cluster *const pClusterA, const Cluster *const pClusterB,
     float &splitXPosition, float &overlapX) const
 {
     const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).GetShowerFitResult());
@@ -329,7 +329,7 @@ void SplitShowersTool::GetSplitXDetails(ThreeDShowersAlgorithm *pAlgorithm, Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::SpecifyClusterMerges(ThreeDShowersAlgorithm *pAlgorithm, const ClusterList &clusterList, ClusterMergeMap &clusterMergeMap) const
+void SplitShowersTool::SpecifyClusterMerges(ThreeDShowersAlgorithm *const pAlgorithm, const ClusterList &clusterList, ClusterMergeMap &clusterMergeMap) const
 {
     if (1 == clusterList.size())
         return;
@@ -337,21 +337,21 @@ void SplitShowersTool::SpecifyClusterMerges(ThreeDShowersAlgorithm *pAlgorithm, 
     if (2 != clusterList.size())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    Cluster *pClusterA(*(clusterList.begin())), *pClusterB(*(++(clusterList.begin())));
+    const Cluster *const pClusterA(*(clusterList.begin())), *const pClusterB(*(++(clusterList.begin())));
     const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).GetShowerFitResult());
     const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).GetShowerFitResult());
 
     const float minXA(std::min(fitResultA.GetGlobalMinLayerPosition().GetX(), fitResultA.GetGlobalMaxLayerPosition().GetX()));
     const float minXB(std::min(fitResultB.GetGlobalMinLayerPosition().GetX(), fitResultB.GetGlobalMaxLayerPosition().GetX()));
 
-    Cluster *pLowXCluster((minXA < minXB) ? pClusterA : pClusterB);
-    Cluster *pHighXCluster((minXA < minXB) ? pClusterB : pClusterA);
+    const Cluster *const pLowXCluster((minXA < minXB) ? pClusterA : pClusterB);
+    const Cluster *const pHighXCluster((minXA < minXB) ? pClusterB : pClusterA);
     clusterMergeMap[pLowXCluster].insert(pHighXCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::ApplyChanges(ThreeDShowersAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const
+bool SplitShowersTool::ApplyChanges(ThreeDShowersAlgorithm *const pAlgorithm, const ClusterMergeMap &clusterMergeMap) const
 {
     ClusterMergeMap consolidatedMergeMap;
 

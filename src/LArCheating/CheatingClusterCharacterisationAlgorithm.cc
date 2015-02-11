@@ -24,7 +24,7 @@ StatusCode CheatingClusterCharacterisationAlgorithm::Run()
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
-            Cluster *const pCluster(*iter);
+            const Cluster *const pCluster(*iter);
 
             if (this->IsClearTrack(pCluster))
             {
@@ -51,7 +51,7 @@ bool CheatingClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const
     try
     {
         // ATTN Slightly curious definition of a clear track, but this is most-likely what is needed for shower-growing
-        const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+        const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
         if ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())))
             return true;

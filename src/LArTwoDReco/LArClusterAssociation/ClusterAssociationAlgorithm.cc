@@ -67,7 +67,7 @@ StatusCode ClusterAssociationAlgorithm::Run()
         // Propagation with ambiguities
         for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
         {
-            Cluster *pCluster = *iter;
+            const Cluster *const pCluster = *iter;
             ClusterAssociationMap::const_iterator mapIter = clusterAssociationMap.find(pCluster);
 
             if (clusterAssociationMap.end() == mapIter)
@@ -86,9 +86,9 @@ StatusCode ClusterAssociationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::UnambiguousPropagation(Cluster *pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const
+void ClusterAssociationAlgorithm::UnambiguousPropagation(const Cluster *const pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const
 {
-    Cluster *pClusterToEnlarge = pCluster;
+    const Cluster *const pClusterToEnlarge = pCluster;
     ClusterAssociationMap::iterator iterEnlarge = clusterAssociationMap.find(pClusterToEnlarge);
 
     if (clusterAssociationMap.end() == iterEnlarge)
@@ -99,7 +99,7 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(Cluster *pCluster, cons
     if (clusterListEnlarge.size() != 1)
         return;
 
-    Cluster *pClusterToDelete = *(clusterListEnlarge.begin());
+    const Cluster *const pClusterToDelete = *(clusterListEnlarge.begin());
     ClusterAssociationMap::iterator iterDelete = clusterAssociationMap.find(pClusterToDelete);
 
     if (clusterAssociationMap.end() == iterDelete)
@@ -120,14 +120,14 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(Cluster *pCluster, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const
+void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const
 {
     ClusterAssociationMap::iterator cIter = clusterAssociationMap.find(pCluster);
 
     if (clusterAssociationMap.end() == cIter)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    Cluster *pExtremalCluster = pCluster;
+    const Cluster *pExtremalCluster = pCluster;
 
     ClusterList firstClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pCluster, isForward, pExtremalCluster, firstClusterList);
@@ -156,7 +156,7 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(Cluster *pCluster, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(Cluster *pClusterToEnlarge, Cluster *pClusterToDelete, const bool isForwardMerge,
+void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete, const bool isForwardMerge,
     ClusterAssociationMap &clusterAssociationMap) const
 {
     ClusterAssociationMap::iterator iterEnlarge = clusterAssociationMap.find(pClusterToEnlarge);
@@ -194,7 +194,7 @@ void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(Cluster *pClusterToE
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(Cluster *pClusterToEnlarge, Cluster *pClusterToDelete, const bool isForwardMerge,
+void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete, const bool isForwardMerge,
     ClusterAssociationMap &clusterAssociationMap) const
 {
     ClusterAssociationMap::iterator iterEnlarge = clusterAssociationMap.find(pClusterToEnlarge);
@@ -261,8 +261,8 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(Cluster *pClusterToEnl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap, Cluster *pCluster,
-    const bool isForward, Cluster *&pExtremalCluster, ClusterList &clusterList) const
+void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap, const Cluster *const pCluster,
+    const bool isForward, const Cluster *&pExtremalCluster, ClusterList &clusterList) const
 {
     ClusterAssociationMap::const_iterator iterAssociation = clusterAssociationMap.find(pCluster);
 

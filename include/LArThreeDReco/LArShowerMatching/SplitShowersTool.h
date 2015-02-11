@@ -33,7 +33,7 @@ public:
      */
     SplitShowersTool();
 
-    bool Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -43,7 +43,7 @@ private:
      *  @param  overlapTensor the overlap tensor
      *  @param  clusterMergeMap to receive the list of cluster merges
      */
-    void FindSplitShowers(ThreeDShowersAlgorithm *pAlgorithm, const TensorType &overlapTensor, ClusterMergeMap &clusterMergeMap) const;
+    void FindSplitShowers(ThreeDShowersAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for undershoots identification
@@ -72,7 +72,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to be populated with cluster merges
      */
-    void FindShowerMerges(ThreeDShowersAlgorithm *pAlgorithm, const IteratorList &iteratorList, pandora::ClusterList &usedClusters,
+    void FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList, pandora::ClusterList &usedClusters,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
@@ -81,7 +81,7 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterList the cluster list
      */
-    bool CheckClusterProximities(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
+    bool CheckClusterProximities(ThreeDShowersAlgorithm *const pAlgorithm, const pandora::ClusterList &clusterList) const;
 
     /**
      *  @brief  Check the consistency of the clusters in a provided cluster list with the event vertex, if available
@@ -89,7 +89,7 @@ private:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterList the cluster list
      */
-    bool CheckClusterVertexRelations(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList) const;
+    bool CheckClusterVertexRelations(ThreeDShowersAlgorithm *const pAlgorithm, const pandora::ClusterList &clusterList) const;
 
     /**
      *  @brief  Check the consistency of the split positions in the provided u, v and w cluster lists
@@ -99,7 +99,7 @@ private:
      *  @param  clusterListV the v cluster list
      *  @param  clusterListW the w cluster list
      */
-    bool CheckClusterSplitPositions(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterListU,
+    bool CheckClusterSplitPositions(ThreeDShowersAlgorithm *const pAlgorithm, const pandora::ClusterList &clusterListU,
         const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW) const;
 
     /**
@@ -111,7 +111,7 @@ private:
      *  @param  splitXPosition to receive the split position estimate
      *  @param  overlapX to receive the overlap estimate
      */
-    void GetSplitXDetails(ThreeDShowersAlgorithm *pAlgorithm, pandora::Cluster *const pClusterA, pandora::Cluster *const pClusterB,
+    void GetSplitXDetails(ThreeDShowersAlgorithm *const pAlgorithm, const pandora::Cluster *const pClusterA, const pandora::Cluster *const pClusterB,
         float &splitXPosition, float &overlapX) const;
 
     /**
@@ -121,7 +121,7 @@ private:
      *  @param  clusterList the cluster list
      *  @param  clusterMergeMap to receive the populated cluster merge map
      */
-    void SpecifyClusterMerges(ThreeDShowersAlgorithm *pAlgorithm, const pandora::ClusterList &clusterList, ClusterMergeMap &clusterMergeMap) const;
+    void SpecifyClusterMerges(ThreeDShowersAlgorithm *const pAlgorithm, const pandora::ClusterList &clusterList, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Apply the changes cached in a cluster merge map and update the tensor accordingly
@@ -131,7 +131,7 @@ private:
      * 
      *  @return whether changes to the tensor have been made
      */
-    bool ApplyChanges(ThreeDShowersAlgorithm *pAlgorithm, const ClusterMergeMap &clusterMergeMap) const;
+    bool ApplyChanges(ThreeDShowersAlgorithm *const pAlgorithm, const ClusterMergeMap &clusterMergeMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

@@ -82,8 +82,8 @@ protected:
         AssociationType m_type;
     };
 
-    typedef std::map<pandora::Cluster*, Association> ClusterAssociationMap;
-    typedef std::map<pandora::Cluster*, ClusterAssociationMap> ClusterUsageMap;
+    typedef std::map<const pandora::Cluster*, Association> ClusterAssociationMap;
+    typedef std::map<const pandora::Cluster*, ClusterAssociationMap> ClusterUsageMap;
 
     /**
      *  @brief  Determine whether two clusters are associated
@@ -103,10 +103,10 @@ protected:
      *  @param  forwardUsageMap the particle seed usage map
      *  @param  backwardUsageMap the cluster usage map
      */
-    void FindAssociatedClusters(pandora::Cluster *const pParticleSeed, pandora::ClusterVector &candidateClusters,
+    void FindAssociatedClusters(const pandora::Cluster *const pParticleSeed, pandora::ClusterVector &candidateClusters,
         ClusterUsageMap &forwardUsageMap, ClusterUsageMap &backwardUsageMap) const;
 
-    typedef std::map<pandora::Cluster*, pandora::ClusterVector> SeedAssociationList;
+    typedef std::map<const pandora::Cluster*, pandora::ClusterVector> SeedAssociationList;
 
     /**
      *  @brief  Identify cluster merges

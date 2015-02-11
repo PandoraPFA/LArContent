@@ -49,7 +49,7 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
 
     for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
     {
-        const CaloHit* pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         Sqx += pCaloHit->GetMipEquivalentEnergy() * pCaloHit->GetPositionVector().GetX();
         Sqz += pCaloHit->GetMipEquivalentEnergy() * pCaloHit->GetPositionVector().GetZ();

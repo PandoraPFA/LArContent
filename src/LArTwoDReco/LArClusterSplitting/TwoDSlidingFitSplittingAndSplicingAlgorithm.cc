@@ -78,7 +78,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::GetListOfCleanClusters(const C
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
             continue;
@@ -125,11 +125,11 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
     // Loop over each possible pair of clusters
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterEndI = clusterVector.end(); iterI != iterEndI; ++iterI)
     {
-        Cluster* pClusterI = *iterI;
+        const Cluster *const pClusterI = *iterI;
 
         for (ClusterVector::const_iterator iterJ = iterI, iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
         {
-            Cluster* pClusterJ = *iterJ;
+            const Cluster *const pClusterJ = *iterJ;
 
             if (pClusterI == pClusterJ)
                 continue;
@@ -228,8 +228,8 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
     {
         const ClusterExtension &thisSplit = *eIter;
 
-        Cluster* pBranchCluster = thisSplit.GetBranchCluster();
-        Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
+        const Cluster *const pBranchCluster = thisSplit.GetBranchCluster();
+        const Cluster *const pReplacementCluster = thisSplit.GetReplacementCluster();
         const CartesianVector &branchVertex = thisSplit.GetBranchVertex();
         const CartesianVector &replacementVertex = thisSplit.GetReplacementVertex();
 
@@ -295,7 +295,7 @@ float TwoDSlidingFitSplittingAndSplicingAlgorithm::CalculateBranchChi2(const Clu
 
     for (CaloHitList::const_iterator iter = branchCaloHitList.begin(), iterEnd = branchCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         const CartesianVector hitPosition(pCaloHit->GetPositionVector());
         const CartesianVector projectedPosition(splitPosition + splitDirection * splitDirection.GetDotProduct(hitPosition - splitPosition));
@@ -321,7 +321,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::SplitBranchCluster(const Clust
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
         {
@@ -348,8 +348,8 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
     {
         const ClusterExtension &thisSplit = *iter;
 
-        Cluster* pBranchCluster = thisSplit.GetBranchCluster();
-        Cluster* pReplacementCluster = thisSplit.GetReplacementCluster();
+        const Cluster *const pBranchCluster = thisSplit.GetBranchCluster();
+        const Cluster *const pReplacementCluster = thisSplit.GetReplacementCluster();
         const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
         const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
 
@@ -382,7 +382,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(Cluster *const pBranchCluster, Cluster *const pReplacementCluster,
+StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster,
     const CartesianVector &branchSplitPosition, const CartesianVector &branchSplitDirection) const
 {
     ClusterList clusterList;
@@ -401,7 +401,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(Cluster *c
     PandoraContentApi::Cluster::Parameters residualParameters;
     this->SplitBranchCluster(pBranchCluster, branchSplitPosition, branchSplitDirection, principalParameters.m_caloHitList, residualParameters.m_caloHitList);
 
-    Cluster *pPrincipalCluster(NULL), *pResidualCluster(NULL);
+    const Cluster *pPrincipalCluster(NULL), *pResidualCluster(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, principalParameters, pPrincipalCluster));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, residualParameters, pResidualCluster));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));

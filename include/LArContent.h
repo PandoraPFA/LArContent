@@ -217,7 +217,7 @@ public:
      *  @param  pandora the pandora instance with which to register content
      *  @param  pPseudoLayerPlugin the address of the pseudo layer plugin
      */
-    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar_content::LArPseudoLayerPlugin *pLArPseudoLayerPlugin);
+    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar_content::LArPseudoLayerPlugin *const pLArPseudoLayerPlugin);
 
     /**
      *  @brief  Register lar coordinate transformation plugin with pandora
@@ -225,7 +225,7 @@ public:
      *  @param  pandora the pandora instance with which to register content
      *  @param  pLArTransformationPlugin the address of the lar transformation plugin
      */
-    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, lar_content::LArTransformationPlugin *pLArTransformationPlugin);
+    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, lar_content::LArTransformationPlugin *const pLArTransformationPlugin);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -249,7 +249,7 @@ inline pandora::StatusCode LArContent::RegisterBasicPlugins(const pandora::Pando
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar_content::LArPseudoLayerPlugin *pLArPseudoLayerPlugin)
+inline pandora::StatusCode LArContent::SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar_content::LArPseudoLayerPlugin *const pLArPseudoLayerPlugin)
 {
     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(pandora, pLArPseudoLayerPlugin));
 
@@ -258,7 +258,7 @@ inline pandora::StatusCode LArContent::SetLArPseudoLayerPlugin(const pandora::Pa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArContent::SetLArTransformationPlugin(const pandora::Pandora &pandora, lar_content::LArTransformationPlugin *pLArTransformationPlugin)
+inline pandora::StatusCode LArContent::SetLArTransformationPlugin(const pandora::Pandora &pandora, lar_content::LArTransformationPlugin *const pLArTransformationPlugin)
 {
     return lar_content::LArGeometryHelper::SetLArTransformationPlugin(pandora, pLArTransformationPlugin);
 }

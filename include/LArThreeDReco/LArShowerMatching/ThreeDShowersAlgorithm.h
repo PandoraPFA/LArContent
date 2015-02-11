@@ -57,10 +57,10 @@ public:
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    const TwoDSlidingShowerFitResult &GetCachedSlidingFitResult(pandora::Cluster *const pCluster) const;
+    const TwoDSlidingShowerFitResult &GetCachedSlidingFitResult(const pandora::Cluster *const pCluster) const;
 
-    void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
-    void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
+    void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
+    void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
     void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
@@ -107,16 +107,16 @@ private:
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    void AddToSlidingFitCache(pandora::Cluster *const pCluster);
+    void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Remova an existing sliding fit result, for the specified cluster, from the algorithm cache
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    void RemoveFromSlidingFitCache(pandora::Cluster *const pCluster);
+    void RemoveFromSlidingFitCache(const pandora::Cluster *const pCluster);
 
-    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
+    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
     /**
      *  @brief  Calculate the overlap result for given group of clusters
@@ -126,7 +126,7 @@ private:
      *  @param  pClusterW the cluster from the W view
      *  @param  overlapResult to receive the overlap result
      */
-    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW,
+    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         ShowerOverlapResult &overlapResult);
 
     typedef std::pair<ShowerPositionMap, ShowerPositionMap> ShowerPositionMapPair;
@@ -195,7 +195,7 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

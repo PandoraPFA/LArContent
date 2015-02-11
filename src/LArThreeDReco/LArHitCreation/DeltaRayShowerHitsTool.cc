@@ -19,7 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
+void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
     CaloHitList &newThreeDHits)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -33,7 +33,7 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const P
         if (pPfo->GetParentPfoList().size() != 1)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        const ParticleFlowObject *pParentPfo = *(pPfo->GetParentPfoList().begin());
+        const ParticleFlowObject *const pParentPfo = *(pPfo->GetParentPfoList().begin());
 
         CaloHitList caloHitList3D;
         LArPfoHelper::GetCaloHits(pParentPfo, TPC_3D, caloHitList3D);
@@ -50,14 +50,14 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const P
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits, const CaloHitList &caloHitList3D, 
+void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitList &inputTwoDHits, const CaloHitList &caloHitList3D, 
     CaloHitList &newThreeDHits) const
 {
     for (CaloHitList::const_iterator iter1 = inputTwoDHits.begin(), iterEnd1 = inputTwoDHits.end(); iter1 != iterEnd1; ++iter1)
     {
         try
         {
-            CaloHit *pCaloHit2D(*iter1);
+            const CaloHit *const pCaloHit2D(*iter1);
 
             const HitType hitType(pCaloHit2D->GetHitType());
             const HitType hitType1((TPC_VIEW_U == hitType) ? TPC_VIEW_V : (TPC_VIEW_V == hitType) ? TPC_VIEW_W : TPC_VIEW_U);
@@ -91,7 +91,7 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgor
             float chiSquared(std::numeric_limits<float>::max());
             this->GetPosition3D(pCaloHit2D, hitType1, hitType2, position1, position2, position3D, chiSquared);
 
-            CaloHit *pCaloHit3D(NULL);
+            const CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
             newThreeDHits.insert(pCaloHit3D);
         }

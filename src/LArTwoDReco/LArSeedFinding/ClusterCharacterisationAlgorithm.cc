@@ -38,7 +38,7 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
-            Cluster *const pCluster(*iter);
+            const Cluster *const pCluster(*iter);
 
             if (this->IsClearTrack(pCluster))
             {

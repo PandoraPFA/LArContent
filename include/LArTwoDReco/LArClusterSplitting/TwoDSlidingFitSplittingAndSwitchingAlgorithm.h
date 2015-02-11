@@ -68,9 +68,9 @@ private:
      *  @param  firstCaloHitList the hits to be added to the first new cluster
      *  @param  secondCaloHitList the hits to be added to the second new cluster
      */
-    void SplitCluster(pandora::Cluster *const pCluster,
-        const pandora::CartesianVector &splitPosition, const pandora::CartesianVector &splitDirection,
-        pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
+    void SplitCluster(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition,
+        const pandora::CartesianVector &splitDirection, pandora::CaloHitList &firstCaloHitList,
+        pandora::CaloHitList &secondCaloHitList) const;
 
     /**
      *  @brief  Replace crossed clusters with un-crossed clusters
@@ -81,7 +81,7 @@ private:
      *  @param  firstDirection the direction of the first new cluster
      *  @param  secondDirection the direction of the second new cluster
      */
-    pandora::StatusCode ReplaceClusters(pandora::Cluster *const pCluster1, pandora::Cluster *const pCluster2,
+    pandora::StatusCode ReplaceClusters(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         const pandora::CartesianVector &splitPosition, const pandora::CartesianVector &firstDirection,
         const pandora::CartesianVector &secondDirection) const;
 

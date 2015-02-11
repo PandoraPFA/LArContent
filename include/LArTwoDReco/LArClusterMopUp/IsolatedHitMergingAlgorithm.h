@@ -47,7 +47,7 @@ private:
      */
     void DissolveClustersToHits(const pandora::ClusterList &clusterList, const ClusterToListNameMap &clusterToListNameMap, pandora::CaloHitList &caloHitList) const;
 
-    typedef std::map<pandora::CaloHit*, pandora::Cluster*> CaloHitToClusterMap;
+    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> CaloHitToClusterMap;
 
     /**
      *  @brief  Look for isolated hit additions, considering a list of candidate hits and a list of host clusters

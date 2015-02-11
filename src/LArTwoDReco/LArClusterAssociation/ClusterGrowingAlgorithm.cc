@@ -75,7 +75,7 @@ void ClusterGrowingAlgorithm::GetListOfNonSeedClusters(const ClusterVector &inpu
 
     for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
     {
-        Cluster* pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (seedList.count(pCluster))
             continue;
@@ -91,14 +91,14 @@ void ClusterGrowingAlgorithm::PopulateClusterMergeMap(const ClusterVector &seedC
 {
     for (ClusterVector::const_iterator nIter = nonSeedClusters.begin(), nIterEnd = nonSeedClusters.end(); nIter != nIterEnd; ++nIter)
     {
-        Cluster* pNonSeedCluster = *nIter;
+        const Cluster *const pNonSeedCluster = *nIter;
 
-        Cluster* pBestSeedCluster(NULL);
+        const Cluster *pBestSeedCluster(NULL);
         float bestDistance(m_maxClusterSeparation);
 
         for (ClusterVector::const_iterator sIter = seedClusters.begin(), sIterEnd = seedClusters.end(); sIter != sIterEnd; ++sIter)
         {
-            Cluster* pThisSeedCluster = *sIter;
+            const Cluster *const pThisSeedCluster = *sIter;
             const float thisDistance(LArClusterHelper::GetClosestDistance(pNonSeedCluster, pThisSeedCluster));
 
             if (thisDistance < bestDistance)
@@ -119,17 +119,17 @@ void ClusterGrowingAlgorithm::MergeClusters(const ClusterMergeMap &clusterMergeM
 {
     for (ClusterMergeMap::const_iterator sIter = clusterMergeMap.begin(), sIterEnd = clusterMergeMap.end(); sIter != sIterEnd; ++sIter)
     {
-        const Cluster *pCluster = sIter->first;
+        const Cluster *const pCluster = sIter->first;
         const ClusterList &clusterList = sIter->second;
 
         if (clusterList.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        Cluster *pSeedCluster = const_cast<Cluster*>(pCluster);
+        const Cluster *const pSeedCluster = pCluster;
 
         for (ClusterList::const_iterator nIter = clusterList.begin(), nIterEnd = clusterList.end(); nIter != nIterEnd; ++nIter)
         {
-            Cluster* pAssociatedCluster = *nIter;
+            const Cluster *const pAssociatedCluster = *nIter;
 
             if (m_inputClusterListName.empty())
             {

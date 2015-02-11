@@ -15,7 +15,7 @@
 namespace lar_content
 {
 
-typedef std::map<pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
+typedef std::map<const pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,8 +69,8 @@ public:
      * 
      *  @return whether a cluster split occurred
      */
-    virtual bool MakeClusterSplit(const pandora::CartesianVector &splitPosition, pandora::Cluster *&pCurrentCluster,
-        pandora::Cluster *&pLowXCluster, pandora::Cluster *&pHighXCluster) const;
+    virtual bool MakeClusterSplit(const pandora::CartesianVector &splitPosition, const pandora::Cluster *&pCurrentCluster,
+        const pandora::Cluster *&pLowXCluster, const pandora::Cluster *&pHighXCluster) const;
 
     /**
      *  @brief  Sort split position cartesian vectors by increasing x coordinate
@@ -80,8 +80,8 @@ public:
      */
     static bool SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
 
-    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
-    virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
+    virtual void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
     virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 

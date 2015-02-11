@@ -29,7 +29,7 @@ OvershootTracksTool::OvershootTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const IteratorList &iteratorList,
+void OvershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
     ModificationList &modificationList) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
@@ -78,13 +78,13 @@ void OvershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlg
                 else
                 {
                     const bool vertex1AIsLowX(vertexA1.GetPosition().GetX() < vertexB1.GetPosition().GetX());
-                    Cluster *pLowXCluster1(vertex1AIsLowX ? particle.m_pClusterA1 : particle.m_pClusterB1);
-                    Cluster *pHighXCluster1(vertex1AIsLowX ? particle.m_pClusterB1 : particle.m_pClusterA1);
+                    const Cluster *const pLowXCluster1(vertex1AIsLowX ? particle.m_pClusterA1 : particle.m_pClusterB1);
+                    const Cluster *const pHighXCluster1(vertex1AIsLowX ? particle.m_pClusterB1 : particle.m_pClusterA1);
                     modification.m_clusterMergeMap[pLowXCluster1].insert(pHighXCluster1);
 
                     const bool vertex2AIsLowX(vertexA2.GetPosition().GetX() < vertexB2.GetPosition().GetX());
-                    Cluster *pLowXCluster2(vertex2AIsLowX ? particle.m_pClusterA2 : particle.m_pClusterB2);
-                    Cluster *pHighXCluster2(vertex2AIsLowX ? particle.m_pClusterB2 : particle.m_pClusterA2);
+                    const Cluster *const pLowXCluster2(vertex2AIsLowX ? particle.m_pClusterA2 : particle.m_pClusterB2);
+                    const Cluster *const pHighXCluster2(vertex2AIsLowX ? particle.m_pClusterB2 : particle.m_pClusterA2);
                     modification.m_clusterMergeMap[pLowXCluster2].insert(pHighXCluster2);
                 }
 
@@ -155,7 +155,7 @@ void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &ver
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, const bool isA1LowestInX,
+bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX,
     const bool isA2LowestInX) const
 {
     try

@@ -38,7 +38,7 @@ StatusCode NeutrinoEventCreationAlgorithm::Run()
 
     for (VertexList::const_iterator vIter = pVertexList->begin(), vIterEnd = pVertexList->end(); vIter != vIterEnd; ++vIter)
     {
-        Vertex *const pVertex = *vIter;
+        const Vertex *const pVertex = *vIter;
 
         if (VERTEX_3D != pVertex->GetVertexType())
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -52,7 +52,7 @@ StatusCode NeutrinoEventCreationAlgorithm::Run()
         pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
         pfoParameters.m_vertexList.insert(pVertex);
 
-        ParticleFlowObject *pNeutrinoPfo = NULL;
+        const ParticleFlowObject *pNeutrinoPfo = NULL;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pNeutrinoPfo));
     }
 

@@ -91,7 +91,7 @@ private:
      *  @param  forwardDirection the direction of the branch cluster just above the split position
      *  @param  backwardDirection the direction of the branch cluster just below the split position
      */
-    pandora::StatusCode PerformSingleSplit(pandora::Cluster *pBranchCluster, pandora::Cluster *pReplacementCluster,
+    pandora::StatusCode PerformSingleSplit(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster,
         const pandora::CartesianVector &splitPosition, const  pandora::CartesianVector &forwardDirection,
         const pandora::CartesianVector &backwardDirection) const;
 
@@ -105,8 +105,8 @@ private:
      *  @param  splitDirection1 the direction of the branch cluster just above the split position
      *  @param  splitDirection2 the direction of the branch cluster just below the split position
      */
-    pandora::StatusCode PerformDoubleSplit(pandora::Cluster *pBranchCluster, pandora::Cluster *pReplacementCluster1,
-        pandora::Cluster* pReplacementCluster2, const pandora::CartesianVector &splitPosition,
+    pandora::StatusCode PerformDoubleSplit(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster1,
+        const pandora::Cluster *const pReplacementCluster2, const pandora::CartesianVector &splitPosition,
         const pandora::CartesianVector &splitDirection1, const pandora::CartesianVector &splitDirection2) const;
 
     /**
@@ -165,7 +165,7 @@ private:
      *  @param  pReplacementCluster the replacement cluster
      *  @param  caloHitListToMove the list of hits to be removed from the branch cluster and added to the replacement cluster
      */
-    pandora::StatusCode SplitCluster(pandora::Cluster *pBranchCluster, pandora::Cluster* pReplacementCluster,
+    pandora::StatusCode SplitCluster(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster,
         const pandora::CaloHitList &caloHitListToMove) const;
 
     float          m_clusterMinLength;                     ///< minimum length of clusters for this algorithm

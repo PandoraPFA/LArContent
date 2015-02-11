@@ -22,7 +22,7 @@ ClearTracksTool::ClearTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -38,7 +38,7 @@ bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorTyp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList,
+void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
     bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;

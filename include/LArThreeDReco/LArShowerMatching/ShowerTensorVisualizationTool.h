@@ -33,7 +33,7 @@ public:
      */
     ShowerTensorVisualizationTool();
 
-    bool Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

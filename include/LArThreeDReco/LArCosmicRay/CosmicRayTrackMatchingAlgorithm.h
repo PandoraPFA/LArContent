@@ -51,7 +51,7 @@ private:
          *  @param  pClusterV the cluster in the V view
          *  @param  pClusterW the cluster in the W view
          */
-        Particle(const pandora::Cluster *pClusterU, const pandora::Cluster *pClusterV, const pandora::Cluster *pClusterW);
+        Particle(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
         const pandora::Cluster  *m_pClusterU;    ///< Address of cluster in U view
         const pandora::Cluster  *m_pClusterV;    ///< Address of cluster in V view

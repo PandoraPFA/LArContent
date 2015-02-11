@@ -34,7 +34,7 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
         ClusterList clusterListU, clusterListV, clusterListW;
         this->GetConnectedElements(iterU->first, ignoreUnavailable, tempElementList, clusterListU, clusterListV, clusterListW);
 
-        Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
+        const Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
         if (!this->DefaultAmbiguityFunction(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
             continue;
 
@@ -62,7 +62,7 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
 
 template <typename T>
 bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
-    Cluster *&pClusterU, Cluster *&pClusterV, Cluster *&pClusterW) const
+    const Cluster *&pClusterU, const Cluster *&pClusterV, const Cluster *&pClusterW) const
 {
     if ((1 != clusterListU.size()) || (1 != clusterListV.size()) || (1 != clusterListW.size()))
         return false;
@@ -77,7 +77,7 @@ bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
+void OverlapTensor<T>::GetConnectedElements(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
     unsigned int &nU, unsigned int &nV, unsigned int &nW) const
 {
     ClusterList clusterListU, clusterListV, clusterListW;
@@ -88,8 +88,8 @@ void OverlapTensor<T>::GetConnectedElements(pandora::Cluster *const pCluster, co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV,
-    pandora::Cluster *pClusterW, const OverlapResult &overlapResult)
+void OverlapTensor<T>::SetOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
+    const pandora::Cluster *const pClusterW, const OverlapResult &overlapResult)
 {
     OverlapList &overlapList = m_overlapTensor[pClusterU][pClusterV];
     typename OverlapList::const_iterator iter = overlapList.find(pClusterW);
@@ -108,8 +108,8 @@ void OverlapTensor<T>::SetOverlapResult(pandora::Cluster *pClusterU, pandora::Cl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::ReplaceOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV,
-    pandora::Cluster *pClusterW, const OverlapResult &overlapResult)
+void OverlapTensor<T>::ReplaceOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
+    const pandora::Cluster *const pClusterW, const OverlapResult &overlapResult)
 {
     typename TheTensor::iterator iterU = m_overlapTensor.find(pClusterU);
 
@@ -132,7 +132,7 @@ void OverlapTensor<T>::ReplaceOverlapResult(pandora::Cluster *pClusterU, pandora
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
+void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
 {
     ClusterList additionalRemovals;
 
@@ -214,7 +214,7 @@ void OverlapTensor<T>::RemoveCluster(pandora::Cluster *pCluster)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
+void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
     ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     ClusterList localClusterListU, localClusterListV, localClusterListW;
@@ -249,7 +249,7 @@ void OverlapTensor<T>::GetConnectedElements(Cluster *const pCluster, const bool 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::ExploreConnections(Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterListU,
+void OverlapTensor<T>::ExploreConnections(const Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterListU,
     ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     if (ignoreUnavailable && !pCluster->IsAvailable())

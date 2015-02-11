@@ -25,7 +25,7 @@ ShowerTensorVisualizationTool::ShowerTensorVisualizationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;

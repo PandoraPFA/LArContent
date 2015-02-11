@@ -65,7 +65,7 @@ public:
      *  @param  caloHitList the list of three dimensional hits
      *  @param  pCluster3D to receive the address of the (new) three dimensional cluster
      */
-    void AddThreeDHitsToPfo(pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList, pandora::Cluster *&pCluster3D) const;
+    void AddThreeDHitsToPfo(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList, const pandora::Cluster *&pCluster3D) const;
 
     /**
      *  @brief  Create a new three dimensional hit from a two dimensional hit
@@ -74,7 +74,7 @@ public:
      *  @param  position3D the position vector for the new three dimensional calo hit
      *  @param  pCaloHit3D to receive the address of the new three dimensional calo hit
      */
-    void CreateThreeDHit(pandora::CaloHit *pCaloHit2D, const pandora::CartesianVector &position3D, pandora::CaloHit *&pCaloHit3D) const;
+    void CreateThreeDHit(const pandora::CaloHit *const pCaloHit2D, const pandora::CartesianVector &position3D, const pandora::CaloHit *&pCaloHit3D) const;
 
     /**
      *  @brief  Check that a new three dimensional position is not unphysical
@@ -96,7 +96,7 @@ private:
      *
      *  @return the address of the three dimensional cluster
      */
-    pandora::Cluster *GetThreeDCluster(pandora::ParticleFlowObject *const pPfo) const;
+    const pandora::Cluster *GetThreeDCluster(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Create a new three dimensional cluster, using a list of provided three dimensional hits, and add it to a specified pfo
@@ -104,7 +104,7 @@ private:
      *  @param  caloHitList the list of three dimensional hits
      *  @param  pCluster to receive the address of the new cluster
      */
-    void CreateThreeDCluster(const pandora::CaloHitList &caloHitList, pandora::Cluster *&pCluster) const;
+    void CreateThreeDCluster(const pandora::CaloHitList &caloHitList, const pandora::Cluster *&pCluster) const;
 
     /**
      *  @brief  Get the list of 2D calo hits in a pfo for which 3D hits have and have not been created

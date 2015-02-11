@@ -70,7 +70,7 @@ void ParticleRecoveryAlgorithm::GetInputClusters(ClusterList &inputClusterListU,
 
         for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
         {
-            Cluster *const pCluster(*cIter);
+            const Cluster *const pCluster(*cIter);
             const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
             if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
@@ -104,7 +104,7 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
 {
     for (ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable())
             continue;
@@ -152,7 +152,7 @@ void ParticleRecoveryAlgorithm::VertexClusterSelection(const ClusterList &inputC
     {
         try
         {
-            Cluster *pCluster = *iter;
+            const Cluster *const pCluster = *iter;
 
             if (!pCluster->IsAvailable())
                 continue;
@@ -309,7 +309,7 @@ void ParticleRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterLi
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
     pfoParameters.m_clusterList = clusterList;
 
-    ParticleFlowObject *pPfo(NULL);
+    const ParticleFlowObject *pPfo(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
 
     if (!pPfoList->empty())
@@ -322,14 +322,14 @@ void ParticleRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ParticleRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(Cluster *pCluster1, Cluster *pCluster2)
+void ParticleRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
 
-    Cluster *pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : NULL);
-    Cluster *pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
-    Cluster *pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
+    const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : NULL);
+    const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
+    const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
 
     if (pClusterU && pClusterV && !pClusterW)
     {
@@ -354,7 +354,7 @@ void ParticleRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(Cluster *pCl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetConnectedElements(Cluster *const pCluster, const bool ignoreUnavailable,
+void ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetConnectedElements(const Cluster *const pCluster, const bool ignoreUnavailable,
     ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     if (ignoreUnavailable && !pCluster->IsAvailable())

@@ -50,7 +50,7 @@ bool ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
         this->SetPfoParameters(*iter, pfoParameters);
 
-        ParticleFlowObject *pPfo(NULL);
+        const ParticleFlowObject *pPfo(NULL);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
         particlesMade = true;
     }
@@ -73,7 +73,7 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
 
     for (ClusterMergeMap::const_iterator iter = clusterMergeMap.begin(), iterEnd = clusterMergeMap.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pParentCluster = iter->first;
+        const Cluster *const pParentCluster = iter->first;
 
         const HitType hitType(LArClusterHelper::GetClusterHitType(pParentCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
@@ -83,7 +83,7 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
 
         for (ClusterList::const_iterator dIter = iter->second.begin(), dIterEnd = iter->second.end(); dIter != dIterEnd; ++dIter)
         {
-            Cluster *pDaughterCluster = *dIter;
+            const Cluster *const pDaughterCluster = *dIter;
 
             if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -100,7 +100,7 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateUponMerge(Cluster *const pEnlargedCluster, Cluster *const pDeletedCluster)
+void ThreeDBaseAlgorithm<T>::UpdateUponMerge(const Cluster *const pEnlargedCluster, const Cluster *const pDeletedCluster)
 {
     this->UpdateUponDeletion(pDeletedCluster);
     this->UpdateUponDeletion(pEnlargedCluster);
@@ -110,7 +110,7 @@ void ThreeDBaseAlgorithm<T>::UpdateUponMerge(Cluster *const pEnlargedCluster, Cl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateUponSplit(Cluster *const pSplitCluster1, Cluster *const pSplitCluster2, Cluster *const pDeletedCluster)
+void ThreeDBaseAlgorithm<T>::UpdateUponSplit(const Cluster *const pSplitCluster1, const Cluster *const pSplitCluster2, const Cluster *const pDeletedCluster)
 {
     this->UpdateUponDeletion(pDeletedCluster);
     this->UpdateForNewCluster(pSplitCluster1);
@@ -120,7 +120,7 @@ void ThreeDBaseAlgorithm<T>::UpdateUponSplit(Cluster *const pSplitCluster1, Clus
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
+void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
 
@@ -158,7 +158,7 @@ void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedCluster)
+void ThreeDBaseAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     ClusterList::iterator iterU = m_clusterListU.find(pDeletedCluster);
     ClusterList::iterator iterV = m_clusterListV.find(pDeletedCluster);

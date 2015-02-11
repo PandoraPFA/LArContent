@@ -34,21 +34,21 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
     for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
     {
-        ParticleFlowObject *pPfo = *iter;
+        const ParticleFlowObject *const pPfo = *iter;
 
         bool isCosmicRay(false);
         const ClusterList &clusterList(pPfo->GetClusterList());
 
         for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
         {
-            Cluster *pCluster = *cIter;
+            const Cluster *const pCluster = *cIter;
 
             if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
                 continue;
 
             try
             {
-                const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+                const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
                 if (!LArMCParticleHelper::GetParentNeutrinoId(pMCParticle))
                     isCosmicRay = true;
@@ -67,7 +67,7 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
             for (PfoList::const_iterator dIter = daughterPfoList.begin(), dIterEnd = daughterPfoList.end(); dIter != dIterEnd; ++dIter)
             {
-                ParticleFlowObject *pDaughterPfo = *dIter;
+                const ParticleFlowObject *const pDaughterPfo = *dIter;
 
                 if (outputPfoList.count(pDaughterPfo) || !pDaughterPfo->GetDaughterPfoList().empty())
                     throw StatusCodeException(STATUS_CODE_FAILURE);

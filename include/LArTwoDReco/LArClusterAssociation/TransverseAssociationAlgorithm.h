@@ -53,14 +53,14 @@ private:
          *  @param  pSeedCluster
          *  @param  associatedClusters
          */
-        LArTransverseCluster(pandora::Cluster *pSeedCluster, const pandora::ClusterVector &associatedClusters);
+        LArTransverseCluster(const pandora::Cluster *const pSeedCluster, const pandora::ClusterVector &associatedClusters);
 
         /**
          *  @brief  Constructor
          *
          *  @return the address of the seed cluster
          */
-        pandora::Cluster *GetSeedCluster() const;
+        const pandora::Cluster *GetSeedCluster() const;
 
         /**
          *  @brief  Get the associated cluster vector
@@ -91,7 +91,7 @@ private:
         const pandora::CartesianVector &GetDirection() const;
 
     private:
-        pandora::Cluster           *m_pSeedCluster;
+        const pandora::Cluster     *m_pSeedCluster;
         pandora::ClusterVector      m_associatedClusters;
         pandora::CartesianVector    m_innerVertex;
         pandora::CartesianVector    m_outerVertex;
@@ -161,7 +161,7 @@ private:
      *  @param  inputAssociationMap the map of associations between clusters
      *  @param  outputClusters the output vector of clusters transversely associated with target cluster
      */
-    void GetAssociatedClusters(pandora::Cluster *const pCluster, const ClusterAssociationMap &inputAssociationMap,
+    void GetAssociatedClusters(const pandora::Cluster *const pCluster, const ClusterAssociationMap &inputAssociationMap,
         pandora::ClusterVector &associatedClusters) const;
 
     /**
@@ -330,7 +330,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster *TransverseAssociationAlgorithm::LArTransverseCluster::GetSeedCluster() const
+inline const pandora::Cluster *TransverseAssociationAlgorithm::LArTransverseCluster::GetSeedCluster() const
 {
     return m_pSeedCluster;
 }

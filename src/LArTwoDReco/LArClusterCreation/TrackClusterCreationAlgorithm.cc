@@ -53,13 +53,13 @@ StatusCode TrackClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCaloHitList, OrderedCaloHitList &selectedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
+StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *const pCaloHitList, OrderedCaloHitList &selectedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
 {
     CaloHitList availableHitList;
 
     for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
     {
-        CaloHit* pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
         if (PandoraContentApi::IsAvailable(*this, pCaloHit))
           availableHitList.insert(pCaloHit);
     }
@@ -71,16 +71,16 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *pCal
 
     for (OrderedCaloHitList::const_iterator iter = selectedCaloHitList.begin(), iterEnd = selectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHitList *pLayerHitList = iter->second;
+        CaloHitList *const pLayerHitList = iter->second;
 
         for (CaloHitList::const_iterator iterI = pLayerHitList->begin(), iterIEnd = pLayerHitList->end(); iterI != iterIEnd; ++iterI)
         {
-            CaloHit *pCaloHitI = *iterI;
+            const CaloHit *const pCaloHitI = *iterI;
             bool useCaloHit(true);
 
             for (CaloHitList::const_iterator iterJ = pLayerHitList->begin(), iterJEnd = pLayerHitList->end(); iterJ != iterJEnd; ++iterJ)
             {
-                CaloHit *pCaloHitJ = *iterJ;
+                const CaloHit *const pCaloHitJ = *iterJ;
 
                 if ((pCaloHitI->GetMipEquivalentEnergy() < pCaloHitJ->GetMipEquivalentEnergy()) &&
                     ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_minCaloHitSeparationSquared))
@@ -106,8 +106,7 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloH
 {
     for (OrderedCaloHitList::const_iterator iter = rejectedCaloHitList.begin(), iterEnd = rejectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHitList* pCaloHitList = NULL;
-
+        CaloHitList *pCaloHitList = NULL;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.GetCaloHitsInPseudoLayer(iter->first, pCaloHitList));
 
         CaloHitList currentAvailableHits(iter->second->begin(), iter->second->end());
@@ -123,18 +122,18 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloH
 
             for (CaloHitList::const_iterator hitIterI = currentAvailableHits.begin(), hitIterIEnd = currentAvailableHits.end(); hitIterI != hitIterIEnd; ++hitIterI)
             {
-                CaloHit *pCaloHitI = *hitIterI;
+                const CaloHit *const pCaloHitI = *hitIterI;
 
                 if (hitToClusterMap.end() != hitToClusterMap.find(pCaloHitI))
                     continue;
 
-                CaloHit *pClosestHit = NULL;
+                const CaloHit *pClosestHit = NULL;
 
                 float closestSeparationSquared(m_minCaloHitSeparationSquared);
 
                 for (CaloHitList::const_iterator hitIterJ = currentClusteredHits.begin(), hitIterJEnd = currentClusteredHits.end(); hitIterJ != hitIterJEnd; ++hitIterJ)
                 {
-                    CaloHit *pCaloHitJ = *hitIterJ;
+                    const CaloHit *const pCaloHitJ = *hitIterJ;
 
                     if (pCaloHitI->GetMipEquivalentEnergy() > pCaloHitJ->GetMipEquivalentEnergy())
                         continue;
@@ -156,7 +155,7 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloH
                 if (hitToClusterMap.end() == mapIter)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                Cluster* pCluster = mapIter->second;
+                const Cluster *const pCluster = mapIter->second;
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHitI));
                 hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
@@ -208,22 +207,22 @@ void TrackClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloH
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            CaloHit *pCaloHit = *hitIter;
+            const CaloHit *const pCaloHit = *hitIter;
 
             HitAssociationMap::const_iterator fwdIter = forwardHitAssociationMap.find(pCaloHit);
-            CaloHit *pForwardHit((forwardHitAssociationMap.end() == fwdIter) ? NULL : fwdIter->second.GetPrimaryTarget());
+            const CaloHit *const pForwardHit((forwardHitAssociationMap.end() == fwdIter) ? NULL : fwdIter->second.GetPrimaryTarget());
 
             HitAssociationMap::const_iterator fwdCheckIter = backwardHitAssociationMap.find(pForwardHit);
-            CaloHit *pForwardHitCheck((backwardHitAssociationMap.end() == fwdCheckIter) ? NULL : fwdCheckIter->second.GetPrimaryTarget());
+            const CaloHit *const pForwardHitCheck((backwardHitAssociationMap.end() == fwdCheckIter) ? NULL : fwdCheckIter->second.GetPrimaryTarget());
 
             if ((NULL != pForwardHit) && (pForwardHitCheck != pCaloHit))
                 this->CreateSecondaryAssociation(pCaloHit, pForwardHit, forwardHitAssociationMap, backwardHitAssociationMap);
 
             HitAssociationMap::const_iterator bwdIter = backwardHitAssociationMap.find(pCaloHit);
-            CaloHit *pBackwardHit((backwardHitAssociationMap.end() == bwdIter) ? NULL : bwdIter->second.GetPrimaryTarget());
+            const CaloHit *const pBackwardHit((backwardHitAssociationMap.end() == bwdIter) ? NULL : bwdIter->second.GetPrimaryTarget());
 
             HitAssociationMap::const_iterator bwdCheckIter = forwardHitAssociationMap.find(pBackwardHit);
-            CaloHit *pBackwardHitCheck((forwardHitAssociationMap.end() == bwdCheckIter) ? NULL : bwdCheckIter->second.GetPrimaryTarget());
+            const CaloHit *const pBackwardHitCheck((forwardHitAssociationMap.end() == bwdCheckIter) ? NULL : bwdCheckIter->second.GetPrimaryTarget());
 
             if ((NULL != pBackwardHit) && (pBackwardHitCheck != pCaloHit))
                 this->CreateSecondaryAssociation(pBackwardHit, pCaloHit, forwardHitAssociationMap, backwardHitAssociationMap);
@@ -240,9 +239,9 @@ void TrackClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orde
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            CaloHit *pCaloHit = *hitIter;
-            CaloHit *pForwardJoinHit = this->GetJoinHit(pCaloHit, forwardHitAssociationMap, backwardHitAssociationMap);
-            CaloHit *pBackwardJoinHit = this->GetJoinHit(pForwardJoinHit, backwardHitAssociationMap, forwardHitAssociationMap);
+            const CaloHit *const pCaloHit = *hitIter;
+            const CaloHit *const pForwardJoinHit = this->GetJoinHit(pCaloHit, forwardHitAssociationMap, backwardHitAssociationMap);
+            const CaloHit *const pBackwardJoinHit = this->GetJoinHit(pForwardJoinHit, backwardHitAssociationMap, forwardHitAssociationMap);
 
             if ((NULL == pForwardJoinHit) || (NULL == pBackwardJoinHit) || (pBackwardJoinHit != pCaloHit))
                 continue;
@@ -266,8 +265,8 @@ void TrackClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &ord
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            CaloHit *pCaloHit = *hitIter;
-            Cluster *pCluster = NULL;
+            const CaloHit *const pCaloHit = *hitIter;
+            const Cluster *pCluster = NULL;
 
             HitToClusterMap::const_iterator mapIter = hitToClusterMap.find(pCaloHit);
 
@@ -299,7 +298,7 @@ void TrackClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &ord
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(CaloHit *pCaloHitI, CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
+void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
     HitAssociationMap &backwardHitAssociationMap) const
 {
     const float distanceSquared((pCaloHitJ->GetPositionVector() - pCaloHitI->GetPositionVector()).GetMagnitudeSquared());
@@ -332,7 +331,7 @@ void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(CaloHit *pCaloHitI,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(CaloHit *pCaloHitI, CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
+void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
     HitAssociationMap &backwardHitAssociationMap) const
 {
     HitAssociationMap::iterator forwardIter = forwardHitAssociationMap.find(pCaloHitI);
@@ -365,7 +364,7 @@ void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(CaloHit *pCaloHit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI,
+const CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(const CaloHit *const pCaloHit, const HitAssociationMap &hitAssociationMapI,
     const HitAssociationMap &hitAssociationMapJ) const
 {
     HitAssociationMap::const_iterator iterI = hitAssociationMapI.find(pCaloHit);
@@ -373,15 +372,15 @@ CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(CaloHit *pCaloHit, const HitA
     if (hitAssociationMapI.end() == iterI)
         return NULL;
 
-    CaloHit *pPrimaryTarget = iterI->second.GetPrimaryTarget();
-    CaloHit *pSecondaryTarget = iterI->second.GetSecondaryTarget();
+    const CaloHit *const pPrimaryTarget = iterI->second.GetPrimaryTarget();
+    const CaloHit *const pSecondaryTarget = iterI->second.GetSecondaryTarget();
 
     if (NULL == pSecondaryTarget)
         return pPrimaryTarget;
 
     unsigned int primaryNSteps(0), secondaryNSteps(0);
-    CaloHit *pPrimaryTrace = this->TraceHitAssociation(pPrimaryTarget, hitAssociationMapI, hitAssociationMapJ, primaryNSteps);
-    CaloHit *pSecondaryTrace = this->TraceHitAssociation(pSecondaryTarget, hitAssociationMapI, hitAssociationMapJ, secondaryNSteps);
+    const CaloHit *const pPrimaryTrace = this->TraceHitAssociation(pPrimaryTarget, hitAssociationMapI, hitAssociationMapJ, primaryNSteps);
+    const CaloHit *const pSecondaryTrace = this->TraceHitAssociation(pSecondaryTarget, hitAssociationMapI, hitAssociationMapJ, secondaryNSteps);
 
     if ((pPrimaryTrace == pSecondaryTrace) || (secondaryNSteps < 5))
         return pPrimaryTarget;
@@ -391,12 +390,12 @@ CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(CaloHit *pCaloHit, const HitA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CaloHit *TrackClusterCreationAlgorithm::TraceHitAssociation(CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI,
+const CaloHit *TrackClusterCreationAlgorithm::TraceHitAssociation(const CaloHit *const pCaloHit, const HitAssociationMap &hitAssociationMapI,
     const HitAssociationMap &hitAssociationMapJ, unsigned int &nSteps) const
 {
     nSteps = 0;
-    CaloHit *pThisHit = pCaloHit;
-    CaloHit *pLastHit = pCaloHit;
+    const CaloHit *pThisHit = pCaloHit;
+    const CaloHit *pLastHit = pCaloHit;
 
     while (true)
     {

@@ -53,7 +53,7 @@ public:
     static bool SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs);
 
 private:
-    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
+    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
     /**
      *  @brief  Calculate the overlap result for given group of clusters
@@ -63,7 +63,7 @@ private:
      *  @param  pClusterW the cluster from the W view
      *  @param  overlapResult to receive the overlap result
      */
-    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW,
+    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         LongitudinalOverlapResult &overlapResult);
 
     /**
@@ -112,7 +112,7 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

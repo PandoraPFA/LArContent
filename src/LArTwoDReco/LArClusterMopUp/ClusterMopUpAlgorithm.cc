@@ -94,7 +94,7 @@ void ClusterMopUpAlgorithm::GetClusterLists(const ClusterList &inputClusterList,
 {
     for (ClusterList::const_iterator cIter = inputClusterList.begin(), cIterEnd = inputClusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster(*cIter);
+        const Cluster *const pCluster(*cIter);
 
         if (availabilityFlag != pCluster->IsAvailable())
             continue;
@@ -115,15 +115,15 @@ void ClusterMopUpAlgorithm::MakeClusterMerges(const ClusterAssociationMap &clust
 {
     for (ClusterAssociationMap::const_iterator rIter = clusterAssociationMap.begin(), rIterEnd = clusterAssociationMap.end(); rIter != rIterEnd; ++rIter)
     {
-        Cluster *pRemnantCluster(rIter->first);
+        const Cluster *const pRemnantCluster(rIter->first);
         const AssociationDetails associationDetails(rIter->second);
 
-        Cluster *pBestPfoCluster(NULL);
+        const Cluster *pBestPfoCluster(NULL);
         float bestFigureOfMerit(-std::numeric_limits<float>::max());
 
         for (AssociationDetails::const_iterator pIter = associationDetails.begin(), pIterEnd = associationDetails.end(); pIter != pIterEnd; ++pIter)
         {
-            Cluster *pPfoCluster(pIter->first);
+            const Cluster *const pPfoCluster(pIter->first);
             const float figureOfMerit(pIter->second);
 
             if (figureOfMerit > bestFigureOfMerit)

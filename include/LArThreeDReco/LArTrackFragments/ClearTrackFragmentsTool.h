@@ -33,7 +33,7 @@ public:
      */
     ClearTrackFragmentsTool();
 
-    bool Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -45,7 +45,7 @@ private:
      *
      *  @return boolean
      */
-    bool FindTrackFragments(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor) const;
+    bool FindTrackFragments(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const;
 
     /**
      *  @brief  Get the list of elements connected to a given cluster and check its suitability (no ambiguities)
@@ -56,7 +56,7 @@ private:
      *
      *  @return boolean
      */
-    bool GetAndCheckElementList(const TensorType &overlapTensor, pandora::Cluster *pCluster, TensorType::ElementList &elementList) const;
+    bool GetAndCheckElementList(const TensorType &overlapTensor, const pandora::Cluster *const pCluster, TensorType::ElementList &elementList) const;
 
     /**
      *  @brief  Check the list of hits, stored in tensor elements, for ambiguities
@@ -93,8 +93,8 @@ private:
      *  @param  deletedClusters to receive the list of deleted clusters
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
-        pandora::ClusterList &modifiedClusters, pandora::ClusterList &deletedClusters, pandora::Cluster *&pFragmentCluster) const;
+    void ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType::OverlapResult &overlapResult,
+        pandora::ClusterList &modifiedClusters, pandora::ClusterList &deletedClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
      *  @brief  Rearrange the hits in a cluster from the fragment list, using the Pandora fragmentation mechanism
@@ -106,8 +106,8 @@ private:
      *  @param  deletedClusters to receive the list of deleted clusters
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorithm, pandora::Cluster *pCluster, const pandora::CaloHitList &daughterHits,
-        const pandora::CaloHitList &separateHits, pandora::ClusterList &deletedClusters, pandora::Cluster *&pFragmentCluster) const;
+    void Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const pandora::CaloHitList &daughterHits,
+        const pandora::CaloHitList &separateHits, pandora::ClusterList &deletedClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
      *  @brief  Rebuild clusters after fragmentation
@@ -117,7 +117,7 @@ private:
      *  @param  deletedClusters the list of vetoed clusters
      *  @param  newClusters the list of new clusters
      */
-    void RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const pandora::ClusterList &modifiedClusters,
+    void RebuildClusters(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::ClusterList &modifiedClusters,
         const pandora::ClusterList &deletedClusters, pandora::ClusterList &newClusters) const;
 
     /**
@@ -128,7 +128,7 @@ private:
      *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
      *  @param  newAvailableClusters the list of clusters newly made available for future particle reconstruction
      */
-    void UpdateTensor(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor,
+    void UpdateTensor(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
         const pandora::ClusterList &unavailableClusters, const pandora::ClusterList &newAvailableClusters) const;
 
     /**

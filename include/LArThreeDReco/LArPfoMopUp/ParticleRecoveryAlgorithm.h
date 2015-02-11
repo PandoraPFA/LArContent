@@ -46,7 +46,7 @@ private:
          *  @param  pCluster1 address of cluster 1
          *  @param  pCluster2 address of cluster 2
          */
-        void AddAssociation(pandora::Cluster *pCluster1, pandora::Cluster *pCluster2);
+        void AddAssociation(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
 
         /**
          *  @brief  Get elements connected to a specified cluster
@@ -57,7 +57,7 @@ private:
          *  @param  clusterListV connected v clusters
          *  @param  clusterListW connected w clusters
          */
-        void GetConnectedElements(pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterListU,
+        void GetConnectedElements(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterListU,
             pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
         /**
@@ -68,7 +68,7 @@ private:
         const pandora::ClusterList &GetKeyClusters() const;
 
     private:
-        typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
+        typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
 
         pandora::ClusterList    m_keyClusters;                  ///< The list of key clusters
         ClusterNavigationMap    m_clusterNavigationMapUV;       ///< The cluster navigation map U->V

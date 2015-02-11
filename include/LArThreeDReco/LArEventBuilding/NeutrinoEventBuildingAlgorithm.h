@@ -36,7 +36,7 @@ private:
      *
      *  @param  pfoList to receive the list of daughter pfos
      */
-    void GetNeutrinoPfo(pandora::ParticleFlowObject *&pNeutrinoPfo) const;
+    void GetNeutrinoPfo(const pandora::ParticleFlowObject *&pNeutrinoPfo) const;
 
     /**
      *  @brief  Get the list of daughter pfos to be added to the new neutrino pfo
@@ -51,14 +51,14 @@ private:
      *  @param  pNeutrinoPfo address of the neutrino pfo
      *  @param  daughterPfoList the list of pfos to be added as daughters of the neutrino
      */
-    void AddDaughters(pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::PfoList &daughterPfoList) const;
+    void AddDaughters(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::PfoList &daughterPfoList) const;
 
     /**
      *  @brief  identifying the primary daughter of a neutrino pfo and set the particle id accordingly
      *
      *  @param  pNeutrinoPfo address of the neutrino pfo
      */
-    void SetNeutrinoId(pandora::ParticleFlowObject *const pNeutrinoPfo) const;
+    void SetNeutrinoId(const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
 
     /**
      *  @brief  Get the number of two dimensional hits (TPC_VIEW_U, V or W) contained in clusters in a pfo and all its daughters

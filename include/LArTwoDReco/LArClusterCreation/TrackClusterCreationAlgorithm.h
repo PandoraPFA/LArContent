@@ -46,7 +46,7 @@ private:
          *  @param  pPrimaryTarget address of the primary target hit
          *  @param  primaryDistanceSquared distance to the primary target hit squared
          */
-        HitAssociation(pandora::CaloHit *const pPrimaryTarget, const float primaryDistanceSquared);
+        HitAssociation(const pandora::CaloHit *const pPrimaryTarget, const float primaryDistanceSquared);
 
         /**
          *  @brief  Set secondary target
@@ -54,21 +54,21 @@ private:
          *  @param  pSecondaryTarget address of the secondary target hit
          *  @param  secondaryDistanceSquared distance to the primary target hit squared
          */
-        void SetSecondaryTarget(pandora::CaloHit *const pSecondaryTarget, const float secondaryDistanceSquared);
+        void SetSecondaryTarget(const pandora::CaloHit *const pSecondaryTarget, const float secondaryDistanceSquared);
 
         /**
          *  @brief  Get the primary target
          *
          *  @return the target distance
          */
-        pandora::CaloHit *GetPrimaryTarget() const;
+        const pandora::CaloHit *GetPrimaryTarget() const;
 
         /**
          *  @brief  Get the secondary target
          *
          *  @return the secondary target
          */
-        pandora::CaloHit *GetSecondaryTarget() const;
+        const pandora::CaloHit *GetSecondaryTarget() const;
 
         /**
          *  @brief  Get the primary distance squared
@@ -85,15 +85,15 @@ private:
         float GetSecondaryDistanceSquared() const;
 
     private:
-        pandora::CaloHit   *m_pPrimaryTarget;               ///< the primary target
-        pandora::CaloHit   *m_pSecondaryTarget;             ///< the secondary target
-        float               m_primaryDistanceSquared;       ///< the primary distance squared
-        float               m_secondaryDistanceSquared;     ///< the secondary distance squared
+        const pandora::CaloHit *m_pPrimaryTarget;               ///< the primary target
+        const pandora::CaloHit *m_pSecondaryTarget;             ///< the secondary target
+        float                   m_primaryDistanceSquared;       ///< the primary distance squared
+        float                   m_secondaryDistanceSquared;     ///< the secondary distance squared
     };
 
-    typedef std::map<pandora::CaloHit*, HitAssociation> HitAssociationMap;
-    typedef std::map<pandora::CaloHit*, pandora::CaloHit*> HitJoinMap;
-    typedef std::map<pandora::CaloHit*, pandora::Cluster*> HitToClusterMap;
+    typedef std::map<const pandora::CaloHit*, HitAssociation> HitAssociationMap;
+    typedef std::map<const pandora::CaloHit*, const pandora::CaloHit*> HitJoinMap;
+    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
 
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -105,7 +105,7 @@ private:
      *  @param  selectedCaloHitList the output selected list of selected hits
      *  @param  rejectedCaloHitList the output rejected list of rejected hits
      */
-    pandora::StatusCode FilterCaloHits(const  pandora::CaloHitList *pCaloHitList, pandora::OrderedCaloHitList &selectedCaloHitList, pandora::OrderedCaloHitList& rejectedCaloHitList) const;
+    pandora::StatusCode FilterCaloHits(const pandora::CaloHitList *const pCaloHitList, pandora::OrderedCaloHitList &selectedCaloHitList, pandora::OrderedCaloHitList& rejectedCaloHitList) const;
 
     /**
      *  @brief  Merge previously filtered hits back into their associated clusters
@@ -164,7 +164,7 @@ private:
      *  @param  forwardHitAssociationMap the forward hit association map
      *  @param  backwardHitAssociationMap the backward hit association map
      */
-    void CreatePrimaryAssociation(pandora::CaloHit *pCaloHitI, pandora::CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
+    void CreatePrimaryAssociation(const pandora::CaloHit *const pCaloHitI, const pandora::CaloHit *const pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
         HitAssociationMap &backwardHitAssociationMap) const;
 
     /**
@@ -175,7 +175,7 @@ private:
      *  @param  forwardHitAssociationMap the forward hit association map
      *  @param  backwardHitAssociationMap the backward hit association map
      */
-    void CreateSecondaryAssociation(pandora::CaloHit *pCaloHitI, pandora::CaloHit *pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
+    void CreateSecondaryAssociation(const pandora::CaloHit *const pCaloHitI, const pandora::CaloHit *const pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
         HitAssociationMap &backwardHitAssociationMap) const;
 
     /**
@@ -187,7 +187,7 @@ private:
      *
      *  @return the hit to join
      */
-    pandora::CaloHit *GetJoinHit(pandora::CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ) const;
+    const pandora::CaloHit *GetJoinHit(const pandora::CaloHit *const pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ) const;
 
     /**
      *  @brief  Get last hit obtained by tracing associations via map I, checking via map J
@@ -199,7 +199,7 @@ private:
      *
      *  @return the last hit obtained in the chain of associations
      */
-    pandora::CaloHit *TraceHitAssociation(pandora::CaloHit *pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ,
+    const pandora::CaloHit *TraceHitAssociation(const pandora::CaloHit *const pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ,
         unsigned int &nSteps) const;
 
     bool                m_mergeBackFilteredHits;        ///< Merge rejected hits into their associated clusters
@@ -219,7 +219,7 @@ inline pandora::Algorithm *TrackClusterCreationAlgorithm::Factory::CreateAlgorit
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TrackClusterCreationAlgorithm::HitAssociation::HitAssociation(pandora::CaloHit *const pPrimaryTarget, const float primaryDistanceSquared) :
+inline TrackClusterCreationAlgorithm::HitAssociation::HitAssociation(const pandora::CaloHit *const pPrimaryTarget, const float primaryDistanceSquared) :
     m_pPrimaryTarget(pPrimaryTarget),
     m_pSecondaryTarget(NULL),
     m_primaryDistanceSquared(primaryDistanceSquared),
@@ -229,7 +229,7 @@ inline TrackClusterCreationAlgorithm::HitAssociation::HitAssociation(pandora::Ca
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrackClusterCreationAlgorithm::HitAssociation::SetSecondaryTarget(pandora::CaloHit *const pSecondaryTarget, const float secondaryDistanceSquared)
+inline void TrackClusterCreationAlgorithm::HitAssociation::SetSecondaryTarget(const pandora::CaloHit *const pSecondaryTarget, const float secondaryDistanceSquared)
 {
     m_pSecondaryTarget = pSecondaryTarget;
     m_secondaryDistanceSquared = secondaryDistanceSquared;
@@ -237,14 +237,14 @@ inline void TrackClusterCreationAlgorithm::HitAssociation::SetSecondaryTarget(pa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CaloHit *TrackClusterCreationAlgorithm::HitAssociation::GetPrimaryTarget() const
+inline const pandora::CaloHit *TrackClusterCreationAlgorithm::HitAssociation::GetPrimaryTarget() const
 {
     return m_pPrimaryTarget;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CaloHit *TrackClusterCreationAlgorithm::HitAssociation::GetSecondaryTarget() const
+inline const pandora::CaloHit *TrackClusterCreationAlgorithm::HitAssociation::GetSecondaryTarget() const
 {
     return m_pSecondaryTarget;
 }

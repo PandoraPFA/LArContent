@@ -56,7 +56,7 @@ StatusCode VertexSelectionAlgorithm::Run()
     {
         try
         {
-            Vertex *const pVertex(*iter);
+            const Vertex *const pVertex(*iter);
             float figureOfMerit(this->GetFigureOfMerit(pVertex, m_maxHitVertexDisplacement,m_hitDeweightingPower));
             vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
 
@@ -298,7 +298,7 @@ bool VertexSelectionAlgorithm::AcceptVertexScore(const float score, const float 
 void VertexSelectionAlgorithm::SelectFinalVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
     VertexList &finalVertexList) const
 {
-    Vertex *pFinalVertex(NULL);
+    const Vertex *pFinalVertex(NULL);
     float bestScore(0.f), bestBeamScore(0.f);
 
     for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)

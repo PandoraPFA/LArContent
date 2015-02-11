@@ -46,11 +46,11 @@ StatusCode SimpleClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleClusterCreationAlgorithm::SelectCaloHits(const CaloHitList* pCaloHitList, CaloHitList &caloHitList) const
+void SimpleClusterCreationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitList, CaloHitList &caloHitList) const
 {
     for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
     {
-        CaloHit* pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
         if (PandoraContentApi::IsAvailable(*this, pCaloHit))
             caloHitList.insert(pCaloHit);
     }
@@ -62,11 +62,11 @@ void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitList &calo
 {
     for (CaloHitList::const_iterator iterI = caloHitList.begin(), iterEndI = caloHitList.end(); iterI != iterEndI; ++iterI)
     {
-        CaloHit* pCaloHitI = *iterI;
+        const CaloHit *const pCaloHitI = *iterI;
 
         for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = iterEndI; iterJ != iterEndJ; ++iterJ)
         {
-            CaloHit* pCaloHitJ = *iterJ;
+            const CaloHit *const pCaloHitJ = *iterJ;
 
             if (pCaloHitI == pCaloHitJ)
                 continue;
@@ -88,7 +88,7 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitLi
 
     for (CaloHitList::const_iterator iterI = caloHitList.begin(), iterEndI = caloHitList.end(); iterI != iterEndI; ++iterI)
     {
-        CaloHit* pSeedCaloHit = *iterI;
+        const CaloHit *const pSeedCaloHit = *iterI;
 
         if (vetoList.count(pSeedCaloHit))
             continue;
@@ -96,7 +96,7 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitLi
         CaloHitList mergeList;
         this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
 
-        Cluster *pCluster = NULL;
+        const Cluster *pCluster = NULL;
         PandoraContentApi::Cluster::Parameters parameters;
         parameters.m_caloHitList.insert(pSeedCaloHit);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
@@ -104,7 +104,7 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitLi
 
         for (CaloHitList::const_iterator iterJ = mergeList.begin(), iterEndJ = mergeList.end(); iterJ != iterEndJ; ++iterJ)
         {
-            CaloHit* pAssociatedCaloHit = *iterJ;
+            const CaloHit *const pAssociatedCaloHit = *iterJ;
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pAssociatedCaloHit));
             vetoList.insert(pAssociatedCaloHit);
@@ -114,7 +114,7 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleClusterCreationAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit, CaloHit *pCurrentCaloHit,
+void SimpleClusterCreationAlgorithm::CollectAssociatedHits(const CaloHit *const pSeedCaloHit, const CaloHit *const pCurrentCaloHit,
     const HitAssociationMap &hitAssociationMap, const CaloHitList &vetoList, CaloHitList &mergeList) const
 {
     if (vetoList.count(pCurrentCaloHit))
@@ -126,7 +126,7 @@ void SimpleClusterCreationAlgorithm::CollectAssociatedHits(CaloHit *pSeedCaloHit
 
     for (CaloHitList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
     {
-        CaloHit* pAssociatedCaloHit = *iter2;
+        const CaloHit *const pAssociatedCaloHit = *iter2;
 
         if (pAssociatedCaloHit == pSeedCaloHit)
             continue;

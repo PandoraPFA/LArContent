@@ -25,7 +25,7 @@ ClearTrackFragmentsTool::ClearTrackFragmentsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -35,7 +35,7 @@ bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, Ten
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor) const
+bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const
 {
     for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
     {
@@ -60,16 +60,16 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
             if (!this->CheckOverlapResult(overlapResult))
                 continue;
 
-            Cluster *pFragmentCluster(NULL);
+            const Cluster *pFragmentCluster(NULL);
             this->ProcessTensorElement(pAlgorithm, overlapResult, modifiedClusters, deletedClusters, pFragmentCluster);
 
             if (NULL == pFragmentCluster)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             const HitType fragmentHitType(overlapResult.GetFragmentHitType());
-            Cluster *pClusterU((TPC_VIEW_U == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterU());
-            Cluster *pClusterV((TPC_VIEW_V == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterV());
-            Cluster *pClusterW((TPC_VIEW_W == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterW());
+            const Cluster *const pClusterU((TPC_VIEW_U == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterU());
+            const Cluster *const pClusterV((TPC_VIEW_V == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterV());
+            const Cluster *const pClusterW((TPC_VIEW_W == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterW());
 
             unavailableClusters.insert(pClusterU);
             unavailableClusters.insert(pClusterV);
@@ -101,7 +101,7 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTensor, Cluster *pCluster, TensorType::ElementList &elementList) const
+bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTensor, const Cluster *const pCluster, TensorType::ElementList &elementList) const
 {
     // Get list of connected elements from tensor
     unsigned int nU(0), nV(0), nW(0);
@@ -217,7 +217,7 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
 // const ClusterList &clusterList(eIter1->GetOverlapResult().GetFragmentClusterList());
 // for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
 // {
-// Cluster *pCluster = *cIter;
+// Cluster *const pCluster = *cIter;
 // std::cout << "   Fragment: " << pCluster << " " << pCluster->IsAvailable() << std::endl;
 // }
 // }
@@ -230,8 +230,8 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType::OverlapResult &overlapResult,
-    ClusterList &modifiedClusters, ClusterList &deletedClusters, Cluster *&pFragmentCluster) const
+void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType::OverlapResult &overlapResult,
+    ClusterList &modifiedClusters, ClusterList &deletedClusters, const Cluster *&pFragmentCluster) const
 {
     pFragmentCluster = NULL;
 
@@ -246,7 +246,7 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
 
         if (!pCluster->IsAvailable())
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -257,7 +257,7 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
         CaloHitList daughterHits, separateHits;
         for (CaloHitList::const_iterator hIter = clusterHitList.begin(), hIterEnd = clusterHitList.end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
 
             if (caloHitList.count(pCaloHit))
             {
@@ -282,10 +282,10 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorithm, Cluster *pCluster, const CaloHitList &daughterHits,
-    const CaloHitList &separateHits, ClusterList &deletedClusters, Cluster *&pFragmentCluster) const
+void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const Cluster *const pCluster, const CaloHitList &daughterHits,
+    const CaloHitList &separateHits, ClusterList &deletedClusters, const Cluster *&pFragmentCluster) const
 {
-    Cluster *pDaughterCluster(NULL);
+    const Cluster *pDaughterCluster(NULL);
 
     if (separateHits.empty())
     {
@@ -296,7 +296,7 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorith
         // ATTN Can't delete these clusters yet
         for (CaloHitList::const_iterator hIter = daughterHits.begin(), hIterEnd = daughterHits.end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*pAlgorithm, pCluster, pCaloHit));
         }
 
@@ -329,14 +329,14 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *pAlgorith
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const ClusterList &modifiedClusters,
+void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const ClusterList &modifiedClusters,
     const ClusterList &deletedClusters, ClusterList &newClusters) const
 {
     ClusterList rebuildList;
 
     for (ClusterList::const_iterator cIter = modifiedClusters.begin(), cIterEnd = modifiedClusters.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
 
         if (deletedClusters.count(pCluster) || !pCluster->IsAvailable())
             continue;
@@ -352,7 +352,7 @@ void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *pAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::UpdateTensor(ThreeDTrackFragmentsAlgorithm *pAlgorithm, const TensorType &overlapTensor,
+void ClearTrackFragmentsTool::UpdateTensor(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
     const ClusterList &unavailableClusters, const ClusterList &newAvailableClusters) const
 {
     for (ClusterList::const_iterator iter = unavailableClusters.begin(), iterEnd = unavailableClusters.end(); iter != iterEnd; ++iter)

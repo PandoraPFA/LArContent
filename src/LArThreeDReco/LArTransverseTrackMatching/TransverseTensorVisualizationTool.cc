@@ -25,7 +25,7 @@ TransverseTensorVisualizationTool::TransverseTensorVisualizationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;

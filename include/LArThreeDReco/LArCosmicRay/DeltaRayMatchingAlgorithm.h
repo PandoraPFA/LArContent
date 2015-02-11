@@ -52,28 +52,28 @@ private:
          *  @param  pCluster3 the third cluster
          *  @param  pPfo the parent Pfo
          */
-        Particle(pandora::Cluster *const pCluster1, pandora::Cluster *const pCluster2, pandora::Cluster *const pCluster3,
-            pandora::ParticleFlowObject *const pPfo);
+        Particle(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
+            const pandora::ParticleFlowObject *const pPfo);
 
         /**
          *  @brief  Get cluster in U view
          */
-        pandora::Cluster *GetClusterU() const;
+        const pandora::Cluster *GetClusterU() const;
 
         /**
          *  @brief  Get cluster in V view
          */
-        pandora::Cluster *GetClusterV() const;
+        const pandora::Cluster *GetClusterV() const;
 
         /**
          *  @brief  Get cluster in W view
          */
-        pandora::Cluster *GetClusterW() const;
+        const pandora::Cluster *GetClusterW() const;
 
         /**
          *  @brief  Get parent Pfo
          */
-        pandora::ParticleFlowObject *GetParentPfo() const;
+        const pandora::ParticleFlowObject *GetParentPfo() const;
 
         /**
          *  @brief  Get number of views
@@ -91,10 +91,10 @@ private:
         float GetLengthSquared() const;
 
     private:
-        pandora::Cluster            *m_pClusterU;    ///< Address of cluster in U view
-        pandora::Cluster            *m_pClusterV;    ///< Address of cluster in V view
-        pandora::Cluster            *m_pClusterW;    ///< Address of cluster in W view
-        pandora::ParticleFlowObject *m_pParentPfo;   ///< Address of parent Pfo
+        const pandora::Cluster             *m_pClusterU;    ///< Address of cluster in U view
+        const pandora::Cluster             *m_pClusterV;    ///< Address of cluster in V view
+        const pandora::Cluster             *m_pClusterW;    ///< Address of cluster in W view
+        const pandora::ParticleFlowObject  *m_pParentPfo;   ///< Address of parent Pfo
     };
 
     typedef std::vector<Particle> ParticleList;
@@ -191,8 +191,8 @@ private:
      *  @param  pointer to W view cluster
      *  @param  pointer to best Pfo
      */
-    void FindBestParentPfo(pandora::Cluster *const pClusterU, pandora::Cluster *const pClusterV, pandora::Cluster *const pClusterW,
-        pandora::ParticleFlowObject *&pBestPfo) const;
+    void FindBestParentPfo(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
+        const pandora::ParticleFlowObject *&pBestPfo) const;
 
     /**
      *  @brief  Look at consistency of a combination of clusters
@@ -218,7 +218,7 @@ private:
      *  @param  clusterList the list of clusters
      *  @param  pParentPfo address of the parent pfo
      */
-    void CreateDaughterPfo(const pandora::ClusterList &clusterList, pandora::ParticleFlowObject *const pParentPfo) const;
+    void CreateDaughterPfo(const pandora::ClusterList &clusterList, const pandora::ParticleFlowObject *const pParentPfo) const;
   
     /**
      *  @brief  Merge an input cluster list with an existing daughter Pfo
@@ -226,7 +226,7 @@ private:
      *  @param  clusterList the list of clusters
      *  @param  pParentPfo address of the parent pfo
      */
-    void AddToDaughterPfo(const pandora::ClusterList &clusterList, pandora::ParticleFlowObject *const pParentPfo) const;
+    void AddToDaughterPfo(const pandora::ClusterList &clusterList, const pandora::ParticleFlowObject *const pParentPfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -246,25 +246,25 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterU() const
+inline const pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterU() const
 {
     return m_pClusterU;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-inline pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterV() const
+inline const pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterV() const
 {
     return m_pClusterV;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-inline pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterW() const
+inline const pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterW() const
 {
     return m_pClusterW;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-inline pandora::ParticleFlowObject *DeltaRayMatchingAlgorithm::Particle::GetParentPfo() const
+inline const pandora::ParticleFlowObject *DeltaRayMatchingAlgorithm::Particle::GetParentPfo() const
 {
     return m_pParentPfo;
 }

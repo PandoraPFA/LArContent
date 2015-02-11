@@ -148,7 +148,7 @@ void ParticleAnalysisAlgorithm::GetConnectedPfos(const PfoList *const pPfoList, 
 
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {
-        ParticleFlowObject *pPfo = *pIter;
+        const ParticleFlowObject *const pPfo = *pIter;
         LArPfoHelper::GetAllDownstreamPfos(pPfo, connectedPfos);
     }
 

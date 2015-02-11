@@ -61,7 +61,7 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
 
 const MCParticle *LArMCParticleHelper::GetParentNeutrino(const MCParticle *const pMCParticle)
 {
-    const MCParticle *pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);  
+    const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);  
 
     if(!LArMCParticleHelper::IsNeutrino(pParentMCParticle))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -75,7 +75,7 @@ int LArMCParticleHelper::GetParentNeutrinoId(const MCParticle *const pMCParticle
 {
     try
     {
-        const MCParticle *pParentMCParticle = LArMCParticleHelper::GetParentNeutrino(pMCParticle);
+        const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentNeutrino(pMCParticle);
         return pParentMCParticle->GetParticleId();
     }
     catch (const StatusCodeException &)
@@ -111,7 +111,7 @@ float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            CaloHit *pCaloHit = *hitIter;
+            const CaloHit *const pCaloHit = *hitIter;
 
             try
             {
@@ -145,7 +145,7 @@ float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
 
     for (MCParticleWeightMap::const_iterator iter = weights.begin(), iterEnd = weights.end(); iter != iterEnd; ++iter)
     {
-        const MCParticle *pMCParticle = iter->first;
+        const MCParticle *const pMCParticle = iter->first;
         const float weight = iter->second;
 
         if (LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))

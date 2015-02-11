@@ -75,7 +75,7 @@ StatusCode CosmicRayTrackMatchingAlgorithm::GetAvailableClusters(const std::stri
 
     for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
         if (!pCluster->IsAvailable())
             continue;
 
@@ -96,7 +96,7 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
     // Select long clusters
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_clusterMinLength * m_clusterMinLength)
             continue;
@@ -107,7 +107,7 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
     // Remove long delta rays
     for (ClusterVector::const_iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
     {
-        Cluster *pCluster = *iter1;
+        const Cluster *const pCluster = *iter1;
         const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
         CartesianVector innerVertex(0.f,0.f,0.f), outerVertex(0.f,0.f,0.f);
         LArClusterHelper::GetExtremalCoordinates(pCluster, innerVertex, outerVertex);
@@ -116,7 +116,7 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
 
         for (ClusterVector::const_iterator iter2 = clusterVector.begin(), iterEnd2 = clusterVector.end(); iter2 != iterEnd2; ++iter2)
         {
-            Cluster *pClusterCheck = *iter2;
+            const Cluster *const pClusterCheck = *iter2;
 
             if (pCluster == pClusterCheck)
                 continue;
@@ -152,11 +152,11 @@ void CosmicRayTrackMatchingAlgorithm::MatchClusters(const ClusterVector &cluster
 
     for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
     {
-        Cluster* pCluster1 = *iter1;
+        const Cluster *const pCluster1 = *iter1;
 
         for (ClusterVector::const_iterator iter2 = clusterVector2.begin(), iterEnd2 = clusterVector2.end(); iter2 != iterEnd2; ++iter2)
         {
-            Cluster* pCluster2 = *iter2;
+            const Cluster *const pCluster2 = *iter2;
 
             if (this->MatchClusters(pCluster1, pCluster2))
             {
@@ -215,12 +215,12 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
     for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12;
         ++iter12)
     {
-        const Cluster* pCluster1 = iter12->first;
+        const Cluster *const pCluster1 = iter12->first;
         const ClusterList &clusterList2 = iter12->second;
 
         for(ClusterList::const_iterator iter2 = clusterList2.begin(), iterEnd2 = clusterList2.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pCluster2 = *iter2;
+            const Cluster *const pCluster2 = *iter2;
 
             ClusterAssociationMap::const_iterator iter23 = matchedClusters23.find(pCluster2);
             if (matchedClusters23.end() == iter23)
@@ -230,14 +230,14 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
 
             for(ClusterList::const_iterator iter3 = clusterList3.begin(), iterEnd3 = clusterList3.end(); iter3 != iterEnd3; ++iter3)
             {
-                const Cluster* pCluster3 = *iter3;
+                const Cluster *const pCluster3 = *iter3;
 
                 ClusterAssociationMap::const_iterator iter31 = matchedClusters31.find(pCluster3);
                 if (matchedClusters31.end() == iter31)
                     continue;
 
                 const ClusterList &clusterList1 = iter31->second;
-                Cluster* pCluster1check = const_cast<Cluster*>(pCluster1);
+                const Cluster *const pCluster1check = pCluster1;
                 ClusterList::const_iterator iter1 = clusterList1.find(pCluster1check);
 
                 if (clusterList1.end() == iter1)
@@ -250,11 +250,11 @@ void CosmicRayTrackMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMa
                 if (!this->CheckMatchedClusters3D(pCluster1, pCluster2, pCluster3))
                     continue;
 
-                const Cluster* pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 :
+                const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 :
                                          (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
-                const Cluster* pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 :
+                const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 :
                                          (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
-                const Cluster* pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 :
+                const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 :
                                          (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
 
                 candidateParticles.push_back(Particle(pClusterU, pClusterV, pClusterW));
@@ -288,19 +288,19 @@ void CosmicRayTrackMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap 
     for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12;
         ++iter12)
     {
-        const Cluster* pCluster1 = iter12->first;
+        const Cluster *const pCluster1 = iter12->first;
         const ClusterList &clusterList2 = iter12->second;
 
         for (ClusterList::const_iterator iter2 = clusterList2.begin(), iterEnd2 = clusterList2.end() ; iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pCluster2 = *iter2;
+            const Cluster *const pCluster2 = *iter2;
 
             const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
             const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
 
-            const Cluster* pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : NULL);
-            const Cluster* pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
-            const Cluster* pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
+            const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : NULL);
+            const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : NULL);
+            const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : NULL);
 
             matchedParticles.push_back(Particle(pClusterU, pClusterV, pClusterW));
         }
@@ -432,9 +432,9 @@ void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particl
         const Particle &particle = *iter;
 
         ClusterList clusterList;
-        Cluster *pClusterU = const_cast<Cluster*>(particle.m_pClusterU);
-        Cluster *pClusterV = const_cast<Cluster*>(particle.m_pClusterV);
-        Cluster *pClusterW = const_cast<Cluster*>(particle.m_pClusterW);
+        const Cluster *const pClusterU = particle.m_pClusterU;
+        const Cluster *const pClusterV = particle.m_pClusterV;
+        const Cluster *const pClusterW = particle.m_pClusterW;
 
         const bool isAvailableU((NULL != pClusterU) ? pClusterU->IsAvailable() : true);
         const bool isAvailableV((NULL != pClusterV) ? pClusterV->IsAvailable() : true);
@@ -456,7 +456,7 @@ void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particl
         pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
         pfoParameters.m_clusterList = clusterList;
 
-        ParticleFlowObject *pPfo(NULL);
+        const ParticleFlowObject *pPfo(NULL);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
     }
 
@@ -466,7 +466,7 @@ void CosmicRayTrackMatchingAlgorithm::BuildParticles(const ParticleList &particl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CosmicRayTrackMatchingAlgorithm::Particle::Particle(const Cluster *pClusterU, const Cluster *pClusterV, const Cluster *pClusterW) :
+CosmicRayTrackMatchingAlgorithm::Particle::Particle(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) :
     m_pClusterU(pClusterU),
     m_pClusterV(pClusterV),
     m_pClusterW(pClusterW)
