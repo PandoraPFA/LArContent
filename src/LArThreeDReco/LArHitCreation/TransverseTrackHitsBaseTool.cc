@@ -18,14 +18,14 @@ using namespace pandora;
 namespace lar_content
 {
 
-void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits, 
+void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitList &inputTwoDHits, 
     const MatchedSlidingFitMap &matchedSlidingFitMap, CaloHitList &newThreeDHits) const
 {   
     for (CaloHitList::const_iterator iter = inputTwoDHits.begin(), iterEnd = inputTwoDHits.end(); iter != iterEnd; ++iter)
     {
         try
         {
-            CaloHit *pCaloHit2D(*iter);
+            const CaloHit *const pCaloHit2D(*iter);
 
             CartesianVector position3D(0.f, 0.f, 0.f);
             float chiSquared1(std::numeric_limits<float>::max()), chiSquared2(0.f);
@@ -35,7 +35,7 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *p
             if (chiSquared1 + chiSquared2 > m_chiSquaredCut)
                 throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
-            CaloHit *pCaloHit3D(NULL);
+            const CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
             newThreeDHits.insert(pCaloHit3D);
         }

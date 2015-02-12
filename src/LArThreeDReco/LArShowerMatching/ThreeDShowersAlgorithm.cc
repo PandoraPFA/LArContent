@@ -45,7 +45,7 @@ bool ThreeDShowersAlgorithm::SortByNMatchedSamplingPoints(const TensorType::Elem
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const TwoDSlidingShowerFitResult &ThreeDShowersAlgorithm::GetCachedSlidingFitResult(Cluster *const pCluster) const
+const TwoDSlidingShowerFitResult &ThreeDShowersAlgorithm::GetCachedSlidingFitResult(const Cluster *const pCluster) const
 {
     TwoDSlidingShowerFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -57,7 +57,7 @@ const TwoDSlidingShowerFitResult &ThreeDShowersAlgorithm::GetCachedSlidingFitRes
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
+void ThreeDShowersAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     try
     {
@@ -76,7 +76,7 @@ void ThreeDShowersAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::UpdateUponDeletion(Cluster *const pDeletedCluster)
+void ThreeDShowersAlgorithm::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
     ThreeDBaseAlgorithm<ShowerOverlapResult>::UpdateUponDeletion(pDeletedCluster);
@@ -88,12 +88,12 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
 {
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (m_ignoreUnavailableClusters && !pCluster->IsAvailable())
             continue;
 
-        if (m_ignoreFixedTracks && pCluster->IsFixedMuon())
+        if (m_ignoreFixedTracks && (MU_MINUS == std::abs(pCluster->GetParticleIdFlag())))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
@@ -154,7 +154,7 @@ void ThreeDShowersAlgorithm::TidyUp()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
+void ThreeDShowersAlgorithm::AddToSlidingFitCache(const Cluster *const pCluster)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const TwoDSlidingShowerFitResult slidingShowerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
@@ -165,7 +165,7 @@ void ThreeDShowersAlgorithm::AddToSlidingFitCache(Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::RemoveFromSlidingFitCache(Cluster *const pCluster)
+void ThreeDShowersAlgorithm::RemoveFromSlidingFitCache(const Cluster *const pCluster)
 {
     TwoDSlidingShowerFitResultMap::iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -175,7 +175,7 @@ void ThreeDShowersAlgorithm::RemoveFromSlidingFitCache(Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     try
     {
@@ -194,7 +194,7 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW, ShowerOverlapResult &overlapResult)
+void ThreeDShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW, ShowerOverlapResult &overlapResult)
 {
     const TwoDSlidingShowerFitResult &fitResultU(this->GetCachedSlidingFitResult(pClusterU));
     const TwoDSlidingShowerFitResult &fitResultV(this->GetCachedSlidingFitResult(pClusterV));
@@ -312,7 +312,7 @@ void ThreeDShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pClu
     {
         for (CaloHitList::const_iterator hIter = iter->second->begin(), hIterEnd = iter->second->end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
             const float x(pCaloHit->GetPositionVector().GetX());
             const float z(pCaloHit->GetPositionVector().GetZ());
 
@@ -407,7 +407,7 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        ShowerTensorTool *pShowerTensorTool(dynamic_cast<ShowerTensorTool*>(*iter));
+        ShowerTensorTool *const pShowerTensorTool(dynamic_cast<ShowerTensorTool*>(*iter));
 
         if (NULL == pShowerTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;

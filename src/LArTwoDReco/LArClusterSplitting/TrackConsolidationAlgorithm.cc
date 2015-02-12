@@ -31,12 +31,12 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultL
     {
         const TwoDSlidingFitResult &slidingFitResultI = *iterI;
 
-        const Cluster* pClusterI = slidingFitResultI.GetCluster();
+        const Cluster *const pClusterI = slidingFitResultI.GetCluster();
         const float thisLengthSquaredI(LArClusterHelper::GetLengthSquared(pClusterI));
 
         for (ClusterVector::const_iterator iterJ = showerClustersJ.begin(), iterEndJ = showerClustersJ.end(); iterJ != iterEndJ; ++iterJ)
         {
-            const Cluster* pClusterJ = *iterJ;
+            const Cluster *const pClusterJ = *iterJ;
             const float thisLengthSquaredJ(LArClusterHelper::GetLengthSquared(pClusterJ));
 
             if (pClusterI == pClusterJ)
@@ -52,10 +52,10 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult& slidingFitResultI, const Cluster* pClusterJ,
+void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult& slidingFitResultI, const Cluster *const pClusterJ,
     ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
-    const Cluster* pClusterI(slidingFitResultI.GetCluster());
+    const Cluster *const pClusterI(slidingFitResultI.GetCluster());
 
     CaloHitList associatedHits, caloHitListJ;
     pClusterJ->GetOrderedCaloHitList().GetCaloHitList(caloHitListJ);
@@ -79,7 +79,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult&
 
     for (CaloHitList::const_iterator iterJ = caloHitListJ.begin(), iterEndJ = caloHitListJ.end(); iterJ != iterEndJ; ++iterJ)
     {
-        CaloHit* pCaloHitJ = *iterJ;
+        const CaloHit *const pCaloHitJ = *iterJ;
 
         try
         {
@@ -123,7 +123,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult&
     {
         for (CaloHitList::const_iterator iterK = associatedHits.begin(), iterEndK = associatedHits.end(); iterK != iterEndK; ++iterK)
         {
-            CaloHit* pCaloHit = *iterK;
+            const CaloHit *const pCaloHit = *iterK;
 
             if (caloHitsToRemoveJ[pClusterJ].count(pCaloHit))
                 continue;

@@ -40,7 +40,7 @@ private:
      *  @param  pPfoList the address of the list containing the cosmic ray pfos
      */
     pandora::StatusCode CosmicRayShowerMatching(const pandora::StringVector &clusterListNames, const pandora::Cluster *const pPfoCluster,
-        pandora::ParticleFlowObject *pPfo) const;
+        const pandora::ParticleFlowObject *const pPfo) const;
 
     std::string             m_inputPfoListName;           ///< The input pfo list name
 

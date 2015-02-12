@@ -29,7 +29,7 @@ void SimpleClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *co
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable())
             continue;
@@ -47,11 +47,11 @@ void SimpleClusterMergingAlgorithm::PopulateClusterMergeMap(const ClusterVector 
 {
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterEndI = clusterVector.end(); iterI != iterEndI; ++iterI)
     {
-        Cluster *pClusterI = *iterI;
+        const Cluster *const pClusterI = *iterI;
 
         for (ClusterVector::const_iterator iterJ = iterI, iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
         {
-            Cluster *pClusterJ = *iterJ;
+            const Cluster *const pClusterJ = *iterJ;
 
             if (pClusterI == pClusterJ)
                 continue;

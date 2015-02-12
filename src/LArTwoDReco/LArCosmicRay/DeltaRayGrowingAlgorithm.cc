@@ -32,7 +32,7 @@ void DeltaRayGrowingAlgorithm::GetListOfCleanClusters(const ClusterList *const p
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable() || (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
             continue;
@@ -49,7 +49,7 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
         return;
 
     // Get hit type
-    const Cluster* pFirstCluster = *(inputClusters.begin());
+    const Cluster *const pFirstCluster = *(inputClusters.begin());
     const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pFirstCluster));
 
     // Get parent and daughter Pfos
@@ -69,7 +69,7 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
      // Select short parent clusters
     for (ClusterList::const_iterator cIter = parentClusters.begin(), cIterEnd = parentClusters.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) > m_maxSeedClusterLength  * m_maxSeedClusterLength)
             continue;
@@ -86,7 +86,7 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
     // Select other possible delta rays
     for (ClusterVector::const_iterator cIter = inputClusters.begin(), cIterEnd = inputClusters.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
  
         if (pCluster->GetNCaloHits() < m_minSeedClusterCaloHits)
             continue;

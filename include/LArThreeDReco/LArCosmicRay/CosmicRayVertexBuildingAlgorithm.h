@@ -68,14 +68,14 @@ private:
      *  @param  pointingClusterMap the input map of 3D pointing clusters
      *  @param  pPfo the input Pfo
      */
-    void BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, pandora::ParticleFlowObject *const pPfo) const;
+    void BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a daughter cosmic-ray Pfo
      *
      *  @param  pPfo the daughter Pfo
      */
-    void BuildCosmicRayDaughter(pandora::ParticleFlowObject *const pPfo) const;
+    void BuildCosmicRayDaughter(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
      *  @brief  Set the vertex and direction of the Pfos
@@ -85,7 +85,7 @@ private:
      *  @param  pPfo the input Pfo
      */
     void SetParticleParameters(const pandora::CartesianVector &vtxPosition, const pandora::CartesianVector &vtxDirection,
-        pandora::ParticleFlowObject *const pPfo) const;
+        const pandora::ParticleFlowObject *const pPfo) const;
 
     bool                    m_useParentShowerVertex;    ///< use the parent pfo for the shower vertices
     unsigned int            m_halfWindowLayers;         ///< number of layers to use for half-window of sliding fit

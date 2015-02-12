@@ -33,7 +33,7 @@ public:
      */
     SimpleShowersTool();
 
-    bool Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**

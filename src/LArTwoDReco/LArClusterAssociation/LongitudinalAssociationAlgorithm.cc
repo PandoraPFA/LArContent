@@ -34,7 +34,7 @@ void LongitudinalAssociationAlgorithm::GetListOfCleanClusters(const ClusterList 
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < m_minClusterLayers)
             continue;
@@ -52,11 +52,11 @@ void LongitudinalAssociationAlgorithm::PopulateClusterAssociationMap(const Clust
     // ATTN This method assumes that clusters have been sorted by layer
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
     {
-        Cluster *pInnerCluster = *iterI;
+        const Cluster *const pInnerCluster = *iterI;
 
         for (ClusterVector::const_iterator iterJ = iterI, iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
         {
-            Cluster *pOuterCluster = *iterJ;
+            const Cluster *const pOuterCluster = *iterJ;
 
             if (pInnerCluster == pOuterCluster)
                 continue;
@@ -121,7 +121,7 @@ bool LongitudinalAssociationAlgorithm::AreClustersAssociated(const Cluster *cons
     if ((innerEndCentroid-outerStartCentroid).GetMagnitudeSquared() > m_maxGapDistanceSquared)
         return false;
 
-    CaloHit *pOuterLayerHit = *(pInnerCluster->GetOrderedCaloHitList().rbegin()->second->begin());
+    const CaloHit *const pOuterLayerHit = *(pInnerCluster->GetOrderedCaloHitList().rbegin()->second->begin());
     const float hitSizeX(pOuterLayerHit->GetCellLengthScale());
     const float hitSizeZ(pOuterLayerHit->GetCellThickness());
 

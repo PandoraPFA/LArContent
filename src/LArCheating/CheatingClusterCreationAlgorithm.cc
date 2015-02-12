@@ -43,9 +43,9 @@ StatusCode CheatingClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(CaloHit *const pCaloHit, MCParticleToHitListMap &mcParticleToHitListMap) const
+void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(const CaloHit *const pCaloHit, MCParticleToHitListMap &mcParticleToHitListMap) const
 {
-    const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+    const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
     if (!this->SelectMCParticlesForClustering(pMCParticle))
         return;
@@ -76,36 +76,34 @@ void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListM
     for (MCParticleToHitListMap::const_iterator iter = mcParticleToHitListMap.begin(), iterEnd = mcParticleToHitListMap.end(); 
          iter != iterEnd; ++iter)
     {
-        const MCParticle *pMCParticle = iter->first;
+        const MCParticle *const pMCParticle = iter->first;
         const CaloHitList &caloHitList = iter->second;
 
         if (caloHitList.empty())
             continue;
 
-        Cluster *pCluster = NULL;
+        const Cluster *pCluster = NULL;
         PandoraContentApi::Cluster::Parameters parameters;
         parameters.m_caloHitList = caloHitList;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
 
+        PandoraContentApi::Cluster::Metadata metadata;
+
         switch (pMCParticle->GetParticleId())
         {
         case PHOTON:
-            pCluster->SetIsFixedPhotonFlag(true);
-            break;
-
         case E_PLUS:
         case E_MINUS:
-            pCluster->SetIsFixedElectronFlag(true);
-            break;
-
         case MU_PLUS:
         case MU_MINUS:
-            pCluster->SetIsFixedMuonFlag(true);
+            metadata.m_particleId = pMCParticle->GetParticleId();
             break;
-
         default:
             break;
         }
+
+        if (metadata.m_particleId.IsInitialized())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
     }
 }
 

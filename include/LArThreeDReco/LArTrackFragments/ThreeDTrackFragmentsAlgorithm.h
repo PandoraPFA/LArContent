@@ -42,7 +42,7 @@ public:
      */
     ThreeDTrackFragmentsAlgorithm();
 
-    void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
+    void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
 
     /**
      *  @brief  Rebuild clusters after fragmentation
@@ -54,7 +54,7 @@ public:
 
 protected:
     void PerformMainLoop();
-    void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW);
+    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
     /**
      *  @brief  Calculate overlap result for track fragment candidate consisting of two sliding fit results and a list of available clusters
@@ -66,9 +66,9 @@ protected:
      *  @param  fragmentOverlapResult to receive the populated fragment overlap result
      */
     void CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
-        const pandora::ClusterList &inputClusterList, pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
+        const pandora::ClusterList &inputClusterList, const pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
 
-    typedef std::map<const pandora::CaloHit*, pandora::Cluster*> HitToClusterMap;
+    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
     typedef std::map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
@@ -101,7 +101,7 @@ protected:
      *  @param  pBestMatchedCluster to receive the address of the single best matched cluster
      */
     void GetMatchedClusters(const pandora::CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
-        pandora::ClusterList &matchedClusters, pandora::Cluster *&pBestMatchedCluster) const;
+        pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster) const;
 
     /**
      *  @brief  Get the populated fragment overlap result
@@ -136,7 +136,7 @@ protected:
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
+    typedef std::map<const pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
 
     std::string         m_reclusteringAlgorithmName;        ///< Name of daughter algorithm to use for cluster re-building
 
@@ -171,7 +171,7 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDTrackFragmentsAlgorithm *pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

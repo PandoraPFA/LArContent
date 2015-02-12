@@ -119,7 +119,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParticles(const LArPointing
 {
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
-        ParticleFlowObject *const pPfo = *iter;
+        const ParticleFlowObject *const pPfo = *iter;
 
         if (LArPfoHelper::IsFinalState(pPfo))
         {
@@ -134,7 +134,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParticles(const LArPointing
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, ParticleFlowObject *const pPfo) const
+void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClusterMap &pointingClusterMap, const ParticleFlowObject *const pPfo) const
 {
     ClusterList clusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
@@ -226,7 +226,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(ParticleFlowObject *const pDaughterPfo) const
+void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -275,12 +275,14 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(ParticleFlowObject
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
-    ParticleFlowObject *const pPfo) const
+    const ParticleFlowObject *const pPfo) const
 {
     if (!pPfo->GetVertexList().empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    pPfo->SetMomentum(vtxDirection);
+    PandoraContentApi::ParticleFlowObject::Metadata metadata;
+    metadata.m_momentum = vtxDirection;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
 
     const VertexList *pVertexList = NULL; std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
@@ -289,7 +291,7 @@ void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVect
     parameters.m_position = vtxPosition;
     parameters.m_vertexType = VERTEX_3D;
 
-    Vertex *pVertex(NULL);
+    const Vertex *pVertex(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
 
     if (!pVertexList->empty())

@@ -45,19 +45,19 @@ protected:
          *  @param  branchVertex  the split position of the branch cluster
          *  @param  branchDirection  the split direction of the branch cluster
          */
-        ClusterExtension(pandora::Cluster *const pBranchCluster, pandora::Cluster *const pReplacementCluster,
+        ClusterExtension(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster,
             const pandora::CartesianVector &replacementVertex, const pandora::CartesianVector &branchVertex,
             const pandora::CartesianVector &branchDirection);
 
         /**
          *  @brief  return the address of the branch Cluster
          */
-        pandora::Cluster* GetBranchCluster() const;
+        const pandora::Cluster* GetBranchCluster() const;
 
         /**
          *  @brief  return the address of the replacement Cluster
          */
-        pandora::Cluster* GetReplacementCluster() const;
+        const pandora::Cluster* GetReplacementCluster() const;
 
         /**
          *  @brief  return the start position of the replacement cluster
@@ -75,8 +75,8 @@ protected:
         const pandora::CartesianVector &GetBranchDirection() const;
 
         private:
-        pandora::Cluster*           m_pBranchCluster;            ///<
-        pandora::Cluster*           m_pReplacementCluster;       ///<
+        const pandora::Cluster     *m_pBranchCluster;            ///<
+        const pandora::Cluster     *m_pReplacementCluster;       ///<
         pandora::CartesianVector    m_replacementVertex;         ///<
         pandora::CartesianVector    m_branchVertex;              ///<
         pandora::CartesianVector    m_branchDirection;           ///<
@@ -180,7 +180,7 @@ private:
      *  @param  branchSplitPosition the position at the start of the branch
      *  @param  branchSplitDirection the direction at the start of the branch
      */
-    pandora::StatusCode ReplaceBranch(pandora::Cluster *const pBranchCluster, pandora::Cluster *const pReplacementCluster,
+    pandora::StatusCode ReplaceBranch(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster,
         const pandora::CartesianVector &branchSplitPosition, const pandora::CartesianVector &branchSplitDirection) const;
 
     unsigned int  m_shortHalfWindowLayers;          ///<
@@ -193,9 +193,9 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::ClusterExtension(pandora::Cluster *const pBranchCluster,
-    pandora::Cluster *const pReplacementCluster, const pandora::CartesianVector &replacementVertex,
-    const pandora::CartesianVector &branchVertex, const pandora::CartesianVector &branchDirection) :
+inline TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::ClusterExtension(const pandora::Cluster *const pBranchCluster,
+        const pandora::Cluster *const pReplacementCluster, const pandora::CartesianVector &replacementVertex,
+        const pandora::CartesianVector &branchVertex, const pandora::CartesianVector &branchDirection) :
     m_pBranchCluster(pBranchCluster),
     m_pReplacementCluster(pReplacementCluster),
     m_replacementVertex(replacementVertex),
@@ -207,14 +207,14 @@ inline TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::ClusterExt
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster* TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::GetBranchCluster() const
+inline const pandora::Cluster *TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::GetBranchCluster() const
 {
     return m_pBranchCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster* TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::GetReplacementCluster() const
+inline const pandora::Cluster *TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::GetReplacementCluster() const
 {
     return m_pReplacementCluster;
 }

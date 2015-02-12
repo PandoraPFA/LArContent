@@ -64,7 +64,7 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
 
         for (CaloHitList::const_iterator hIter = localCaloHitList.begin(), hIterEnd = localCaloHitList.end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pTargetCaloHit = static_cast<CaloHit*>(const_cast<void*>((*hIter)->GetParentCaloHitAddress()));
+            const CaloHit *const pTargetCaloHit = static_cast<const CaloHit*>((*hIter)->GetParentCaloHitAddress());
             CaloHitList::iterator eraseIter = remainingHits.find(pTargetCaloHit);
 
             if (remainingHits.end() == eraseIter)
@@ -89,7 +89,7 @@ void ThreeDHitCreationAlgorithm::FilterCaloHitsByType(const CaloHitList &inputCa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(ParticleFlowObject *const pPfo, CaloHitList &caloHitList, Cluster *&pCluster3D) const
+void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList, const Cluster *&pCluster3D) const
 {
     try
     {
@@ -108,7 +108,7 @@ void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(ParticleFlowObject *const pP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::CreateThreeDHit(CaloHit *pCaloHit2D, const CartesianVector &position3D, CaloHit *&pCaloHit3D) const
+void ThreeDHitCreationAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHit2D, const CartesianVector &position3D, const CaloHit *&pCaloHit3D) const
 { 
     if (!this->CheckThreeDHit(position3D))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -116,7 +116,7 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHit(CaloHit *pCaloHit2D, const Cart
     PandoraContentApi::CaloHit::Parameters parameters;
     parameters.m_positionVector = position3D;
     parameters.m_hitType = TPC_3D;
-    parameters.m_pParentAddress = static_cast<void*>(pCaloHit2D);
+    parameters.m_pParentAddress = static_cast<const void*>(pCaloHit2D);
 
     // TODO Check these parameters, especially new cell dimensions
     parameters.m_cellThickness = pCaloHit2D->GetCellThickness();
@@ -169,7 +169,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {
-        ParticleFlowObject *pPfo = *pIter;
+        const ParticleFlowObject *const pPfo = *pIter;
 
         CaloHitList allNewThreeDHits;
 
@@ -185,7 +185,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
             if (!newThreeDHits.empty())
             {
-                Cluster *pCluster3D(NULL);
+                const Cluster *pCluster3D(NULL);
                 this->AddThreeDHitsToPfo(pPfo, newThreeDHits, pCluster3D);
                 allNewThreeDHits.insert(newThreeDHits.begin(), newThreeDHits.end());
             }
@@ -199,14 +199,14 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(ParticleFlowObject *const pPfo) const
+const Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(const ParticleFlowObject *const pPfo) const
 {
-    Cluster *pCluster3D(NULL);
+    const Cluster *pCluster3D(NULL);
     const ClusterList &clusterList(pPfo->GetClusterList());
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if (TPC_3D != hitType)
@@ -226,7 +226,7 @@ Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitList &caloHitList, Cluster *&pCluster) const
+void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitList &caloHitList, const Cluster *&pCluster) const
 {
     if (caloHitList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -254,7 +254,7 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        HitCreationBaseTool *pHitCreationTool(dynamic_cast<HitCreationBaseTool*>(*iter));
+        HitCreationBaseTool *const pHitCreationTool(dynamic_cast<HitCreationBaseTool*>(*iter));
 
         if (NULL == pHitCreationTool)
             return STATUS_CODE_INVALID_PARAMETER;

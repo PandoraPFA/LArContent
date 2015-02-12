@@ -44,7 +44,7 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVec
 
     for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
     {
-        Cluster* const pCluster(*iter);
+        const Cluster *const pCluster(*iter);
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength )
             continue;
@@ -65,7 +65,7 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVec
 
         for (ClusterVector::const_iterator iter2 = clusterVector.begin(), iterEnd2 = clusterVector.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pDaughterCluster(*iter2);
+            const Cluster *const pDaughterCluster(*iter2);
 
             if (parentCluster.GetCluster() == pDaughterCluster)
                 continue;
@@ -134,7 +134,7 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
     // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
     for (ClusterAssociationMatrix::const_iterator iter1 = parentToDaughterMatrix.begin(), iterEnd1 = parentToDaughterMatrix.end(); iter1 != iterEnd1; ++iter1)
     {
-        const Cluster* pParentCluster(iter1->first);
+        const Cluster *const pParentCluster(iter1->first);
         const ClusterAssociationMap &parentToDaughterMap(iter1->second);
 
         float maxDisplacementInner(std::numeric_limits<float>::max());
@@ -158,7 +158,7 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
         // Select daughter clusters that are closer than the nearest parent cluster
         for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pDaughterCluster(iter2->first);
+            const Cluster *const pDaughterCluster(iter2->first);
             const ClusterAssociation &clusterAssociation(iter2->second);
 
             if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
@@ -175,27 +175,27 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
     // Loop over daughter clusters and select the nearest parent clusters
     for (ClusterAssociationMatrix::const_iterator iter1 = daughterToParentMatrix.begin(), iterEnd1 = daughterToParentMatrix.end(); iter1 != iterEnd1; ++iter1)
     {
-        const Cluster* pDaughterCluster(iter1->first);
+        const Cluster *const pDaughterCluster(iter1->first);
         const ClusterAssociationMap &daughterToParentMap(iter1->second);
 
-        Cluster* pParentCluster = NULL;
+        const Cluster *pParentCluster = NULL;
         float minDisplacement(std::numeric_limits<float>::max());
 
         for (ClusterAssociationMap::const_iterator iter2 = daughterToParentMap.begin(), iterEnd2 = daughterToParentMap.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pCandidateCluster(iter2->first);
+            const Cluster *const pCandidateCluster(iter2->first);
             const ClusterAssociation &clusterAssociation(iter2->second);
 
             if (clusterAssociation.GetFigureOfMerit() < minDisplacement)
             {
-            minDisplacement = clusterAssociation.GetFigureOfMerit();
-            pParentCluster = (Cluster*)pCandidateCluster;
+                minDisplacement = clusterAssociation.GetFigureOfMerit();
+                pParentCluster = pCandidateCluster;
             }
         }
 
         if (pParentCluster)
         {
-            clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
+            clusterMergeMap[pParentCluster].insert(pDaughterCluster);
             clusterMergeMap[pDaughterCluster].insert(pParentCluster);
         }
     }

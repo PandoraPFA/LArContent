@@ -74,7 +74,7 @@ void DeltaRayMatchingAlgorithm::GetTrackPfos(const std::string inputPfoListName,
 
     for (PfoVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
-        ParticleFlowObject *pPfo = *iter;
+        const ParticleFlowObject *const pPfo = *iter;
 
         if (!LArPfoHelper::IsTrack(pPfo))
             continue;
@@ -96,7 +96,7 @@ void DeltaRayMatchingAlgorithm::GetClusters(const std::string &inputClusterListN
 
     for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
 
         if (!pCluster->IsAvailable() || (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
             continue;
@@ -167,15 +167,15 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
 
     for (ClusterVector::const_iterator cIter1 = clusters1.begin(), cIterEnd1 = clusters1.end(); cIter1 != cIterEnd1; ++cIter1)
     {
-        Cluster *const pCluster1 = *cIter1;
+        const Cluster *const pCluster1 = *cIter1;
 
         for (ClusterVector::const_iterator cIter2 = clusters2.begin(), cIterEnd2 = clusters2.end(); cIter2 != cIterEnd2; ++cIter2)
         {
-            Cluster *const pCluster2 = *cIter2;
+            const Cluster *const pCluster2 = *cIter2;
 
             for (ClusterVector::const_iterator cIter3 = clusters3.begin(), cIterEnd3 = clusters3.end(); cIter3 != cIterEnd3; ++cIter3)
             {
-                Cluster *const pCluster3 = *cIter3;
+                const Cluster *const pCluster3 = *cIter3;
 
                 if (!pCluster1->IsAvailable() || !pCluster2->IsAvailable() || !pCluster3->IsAvailable())
                     continue;
@@ -183,7 +183,7 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
                 if (!this->AreClustersMatched(pCluster1, pCluster2, pCluster3))
                     continue;
 
-                ParticleFlowObject *pBestPfo = NULL;
+                const ParticleFlowObject *pBestPfo = NULL;
                 this->FindBestParentPfo(pCluster1, pCluster2, pCluster3, pBestPfo);
 
                 // ATTN Need to record all matches when all three views are used
@@ -202,11 +202,11 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, 
 
     for (ClusterVector::const_iterator cIter1 = clusters1.begin(), cIterEnd1 = clusters1.end(); cIter1 != cIterEnd1; ++cIter1)
     {
-        Cluster *const pCluster1 = *cIter1;
+        const Cluster *const pCluster1 = *cIter1;
 
         for (ClusterVector::const_iterator cIter2 = clusters2.begin(), cIterEnd2 = clusters2.end(); cIter2 != cIterEnd2; ++cIter2)
         {
-            Cluster *const pCluster2 = *cIter2;
+            const Cluster *const pCluster2 = *cIter2;
 
             if (!pCluster1->IsAvailable() || !pCluster2->IsAvailable())
                 continue;
@@ -214,7 +214,7 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, 
             if (!this->AreClustersMatched(pCluster1, pCluster2, NULL))
                 continue;
 
-            ParticleFlowObject *pBestPfo = NULL;
+            const ParticleFlowObject *pBestPfo = NULL;
             this->FindBestParentPfo(pCluster1, pCluster2, NULL, pBestPfo);
 
             if (NULL == pBestPfo)
@@ -234,13 +234,12 @@ void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters, P
 
     for (ClusterVector::const_iterator cIter = clusters.begin(), cIterEnd = clusters.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *const pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
 
         if (!pCluster->IsAvailable())
             continue;
 
-        ParticleFlowObject *pBestPfo = NULL;
-
+        const ParticleFlowObject *pBestPfo = NULL;
         this->FindBestParentPfo(pCluster, NULL, NULL, pBestPfo);
 
         if (NULL == pBestPfo)
@@ -313,14 +312,14 @@ void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList
     {
         const Particle &particle = *iter;
 
-        ParticleFlowObject *pParentPfo = particle.GetParentPfo();
+        const ParticleFlowObject *const pParentPfo = particle.GetParentPfo();
 
         if (NULL == pParentPfo)
             continue;
 
-        Cluster* pClusterU = particle.GetClusterU();
-        Cluster* pClusterV = particle.GetClusterV();
-        Cluster* pClusterW = particle.GetClusterW();
+        const Cluster *const pClusterU = particle.GetClusterU();
+        const Cluster *const pClusterV = particle.GetClusterV();
+        const Cluster *const pClusterW = particle.GetClusterW();
 
         if (NULL == pClusterU && NULL == pClusterV && NULL == pClusterW)
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -439,8 +438,8 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Cluster *const pCluster2, Cluster *const pCluster3,
-    ParticleFlowObject* &pBestPfo) const
+void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3,
+    const ParticleFlowObject *&pBestPfo) const
 
 {
     PfoVector pfoVector;
@@ -475,7 +474,7 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(Cluster *const pCluster1, Clus
 
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
-        ParticleFlowObject *pPfo = *iter;
+        const ParticleFlowObject *const pPfo = *iter;
 
         if (lengthSquared > LArPfoHelper::GetTwoDLengthSquared(pPfo))
             continue;
@@ -519,7 +518,7 @@ float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList, ParticleFlowObject *const pParentPfo) const
+void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList, const ParticleFlowObject *const pParentPfo) const
 {
     const PfoList *pPfoList = NULL; std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
@@ -533,7 +532,7 @@ void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
     pfoParameters.m_clusterList = clusterList;
 
-    ParticleFlowObject *pDaughterPfo(NULL);
+    const ParticleFlowObject *pDaughterPfo(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pDaughterPfo));
 
     if (!pPfoList->empty())
@@ -545,11 +544,11 @@ void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList, ParticleFlowObject *const pParentPfo) const
+void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList, const ParticleFlowObject *const pParentPfo) const
 {
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pDaughterCluster = *cIter;
+        const Cluster *const pDaughterCluster = *cIter;
         const HitType hitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? m_inputClusterListNameU :
                                           (TPC_VIEW_V == hitType) ? m_inputClusterListNameV : m_inputClusterListNameW);
@@ -560,7 +559,7 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
         if (pfoClusters.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        Cluster *pParentCluster = *(pfoClusters.begin());
+        const Cluster *const pParentCluster = *(pfoClusters.begin());
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
             clusterListName, clusterListName));
@@ -570,8 +569,8 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DeltaRayMatchingAlgorithm::Particle::Particle(Cluster *const pCluster1, Cluster *const pCluster2, Cluster *const pCluster3,
-    ParticleFlowObject *const pPfo) :
+DeltaRayMatchingAlgorithm::Particle::Particle(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3,
+        const ParticleFlowObject *const pPfo) :
     m_pClusterU(NULL),
     m_pClusterV(NULL),
     m_pClusterW(NULL),

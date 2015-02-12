@@ -20,7 +20,7 @@ namespace lar_content
 StatusCode EventDisplayAlgorithm::Run()
 {
     const ClusterList *pClusterList = NULL;
-    const PfoList     *pPfoList = NULL;
+    const PfoList *pPfoList = NULL;
 
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_clusterListName, pClusterList));
 
@@ -44,7 +44,7 @@ StatusCode EventDisplayAlgorithm::Run()
     {
         for ( ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter )
         {
-            Cluster *pCluster = *iter;
+            const Cluster *const pCluster = *iter;
             const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pCluster));
 
             if (HIT_CUSTOM == hitType)
@@ -76,13 +76,13 @@ StatusCode EventDisplayAlgorithm::Run()
 
         for (PfoVector::iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
         {
-            ParticleFlowObject *pPfo = *pIter;
+            const ParticleFlowObject *const pPfo = *pIter;
 
             ClusterList particleClusterList;
 
             for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
             {
-                Cluster *pCluster = *cIter;
+                const Cluster *const pCluster = *cIter;
 
                 if (hitType == LArClusterHelper::GetClusterHitType(pCluster))
                     particleClusterList.insert(pCluster);
@@ -98,7 +98,7 @@ StatusCode EventDisplayAlgorithm::Run()
     {
         for( ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter )
         {
-            Cluster *pCluster = *iter;
+            const Cluster *const pCluster = *iter;
             ClusterList tempList;
             tempList.insert(pCluster);
             PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &tempList, "Clusters", GetColor(n++) ));

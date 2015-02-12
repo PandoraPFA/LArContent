@@ -31,7 +31,7 @@ public:
      *  @param  inputTwoDHits the list of input two dimensional hits
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits) = 0;
 
     /**

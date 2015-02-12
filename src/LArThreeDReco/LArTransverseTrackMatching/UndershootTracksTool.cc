@@ -32,7 +32,7 @@ UndershootTracksTool::UndershootTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *pAlgorithm, const IteratorList &iteratorList,
+void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
     ModificationList &modificationList) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
@@ -96,8 +96,8 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
                 else
                 {
                     const bool vertexAIsLowX(vertexA.GetPosition().GetX() < vertexB.GetPosition().GetX());
-                    Cluster *pLowXCluster(vertexAIsLowX ? particle.m_pClusterA : particle.m_pClusterB);
-                    Cluster *pHighXCluster(vertexAIsLowX ? particle.m_pClusterB : particle.m_pClusterA);
+                    const Cluster *const pLowXCluster(vertexAIsLowX ? particle.m_pClusterA : particle.m_pClusterB);
+                    const Cluster *const pHighXCluster(vertexAIsLowX ? particle.m_pClusterB : particle.m_pClusterA);
                     modification.m_clusterMergeMap[pLowXCluster].insert(pHighXCluster);
                 }
 
@@ -118,7 +118,7 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool UndershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, const CartesianVector &splitPosition,
+bool UndershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const CartesianVector &splitPosition,
     const bool isALowestInX) const
 {
     try

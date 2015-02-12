@@ -71,7 +71,7 @@ public:
      *  @param  pPfo the input Pfo
      *  @param  outputPfoList to receive the output pfo list
      */
-    static void GetAllConnectedPfos(pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
+    static void GetAllConnectedPfos(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
 
     /**
      *  @brief  Get a flat list of all pfos, recursively, of all daughters associated with those pfos in an input list
@@ -87,7 +87,7 @@ public:
      *  @param  pPfo the input Pfo
      *  @param  outputPfoList to receive the output pfo list
      */
-    static void GetAllDownstreamPfos(pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
+    static void GetAllDownstreamPfos(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
 
     /**
      *  @brief  Calculate length of Pfo using 2D clusters

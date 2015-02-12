@@ -27,7 +27,7 @@ protected:
      *  @param  matchedSlidingFitMap map of sliding fit results from each view
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, 
+    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitList &inputTwoDHits, 
         const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits) const;
 
     /**

@@ -46,14 +46,14 @@ private:
          *  @param  pVertex the address of the vertex
          *  @param  score the score
          */
-        VertexScore(pandora::Vertex *pVertex, const float score);
+        VertexScore(const pandora::Vertex *const pVertex, const float score);
 
         /**
          *  @brief  Get the address of the vertex
          * 
          *  @return the address of the vertex
          */
-        pandora::Vertex *GetVertex() const;
+        const pandora::Vertex *GetVertex() const;
 
         /**
          *  @brief  Get the score
@@ -72,8 +72,8 @@ private:
         bool operator< (const VertexScore &rhs) const;
 
     private:
-        pandora::Vertex    *m_pVertex;      ///< The address of the vertex
-        float               m_score;        ///< The score
+        const pandora::Vertex  *m_pVertex;      ///< The address of the vertex
+        float                   m_score;        ///< The score
     };
 
     typedef std::vector<VertexScore> VertexScoreList;
@@ -235,7 +235,7 @@ inline pandora::Algorithm *VertexSelectionAlgorithm::Factory::CreateAlgorithm() 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline VertexSelectionAlgorithm::VertexScore::VertexScore(pandora::Vertex *pVertex, const float score) :
+inline VertexSelectionAlgorithm::VertexScore::VertexScore(const pandora::Vertex *const pVertex, const float score) :
     m_pVertex(pVertex),
     m_score(score)
 {
@@ -243,7 +243,7 @@ inline VertexSelectionAlgorithm::VertexScore::VertexScore(pandora::Vertex *pVert
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Vertex *VertexSelectionAlgorithm::VertexScore::GetVertex() const
+inline const pandora::Vertex *VertexSelectionAlgorithm::VertexScore::GetVertex() const
 {
     return m_pVertex;
 }

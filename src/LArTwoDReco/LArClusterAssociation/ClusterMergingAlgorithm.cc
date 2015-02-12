@@ -63,14 +63,14 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
 
     for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
     {
-        Cluster *pSeedCluster = *iter1;
+        const Cluster *const pSeedCluster = *iter1;
 
         ClusterList mergeList;
         this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
 
         for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
         {
-            Cluster *pAssociatedCluster = *iter2;
+            const Cluster *const pAssociatedCluster = *iter2;
 
             if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -95,7 +95,7 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList& associatedClusterList) const
+void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList& associatedClusterList) const
 {
     ClusterVetoMap clusterVetoMap;
 
@@ -104,7 +104,7 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, Cluster *pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
+void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
     const ClusterVetoMap &clusterVetoMap, ClusterList &associatedClusterList) const
 {
     ClusterVetoMap::const_iterator iter0 = clusterVetoMap.find(pCurrentCluster);
@@ -119,7 +119,7 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(Cluster *pSeedCluster, C
 
     for (ClusterList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
     {
-        Cluster *pAssociatedCluster = *iter2;
+        const Cluster *const pAssociatedCluster = *iter2;
 
         if (pAssociatedCluster == pSeedCluster)
             continue;
@@ -141,7 +141,7 @@ void ClusterMergingAlgorithm::GetSortedListOfCleanClusters(const ClusterVector &
 
     for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
     {
-        Cluster* pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable())
         {

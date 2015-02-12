@@ -36,7 +36,7 @@ TrackSplittingTool::TrackSplittingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -50,7 +50,7 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, Tensor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
+void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
 {
     ClusterList usedClusters;
 
@@ -126,7 +126,7 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, const bool isMinX,
+bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool isMinX,
     ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
 {
     try

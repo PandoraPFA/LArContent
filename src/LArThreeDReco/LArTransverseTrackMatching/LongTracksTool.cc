@@ -66,7 +66,7 @@ bool LongTracksTool::IsLongerThanDirectConnections(IteratorList::const_iterator 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LongTracksTool::Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool LongTracksTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;

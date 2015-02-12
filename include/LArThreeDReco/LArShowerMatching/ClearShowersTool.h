@@ -55,7 +55,7 @@ public:
     static bool IsLargerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
         const unsigned int minMatchedSamplingPointRatio, const float minXOverlapSpanRatio, const pandora::ClusterList &usedClusters);
 
-    bool Run(ThreeDShowersAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

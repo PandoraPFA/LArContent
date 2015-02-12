@@ -36,7 +36,7 @@ bool ThreeDLongitudinalTracksAlgorithm::SortByChiSquared(const TensorType::Eleme
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     try
     {
@@ -56,7 +56,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW,
+void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
     LongitudinalOverlapResult &longitudinalOverlapResult)
 {
     const TwoDSlidingFitResult &slidingFitResultU(this->GetCachedSlidingFitResult(pClusterU));
@@ -247,7 +247,7 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        LongitudinalTensorTool *pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
+        LongitudinalTensorTool *const pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
 
         if (NULL == pLongitudinalTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;

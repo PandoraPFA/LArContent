@@ -38,7 +38,7 @@ protected:
         pandora::ClusterList    m_backwardAssociations;     ///< The list of backward associations
     };
 
-    typedef std::map<pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
+    typedef std::map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
@@ -75,7 +75,7 @@ private:
      *  @param  isForward whether propagation direction is forward
      *  @param  clusterAssociationMap the cluster association map
      */
-    void UnambiguousPropagation(pandora::Cluster *pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const;
+    void UnambiguousPropagation(const pandora::Cluster *const pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Ambiguous propagation
@@ -84,7 +84,7 @@ private:
      *  @param  isForward whether propagation direction is forward
      *  @param  clusterAssociationMap the cluster association map
      */
-    void AmbiguousPropagation(pandora::Cluster *pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const;
+    void AmbiguousPropagation(const pandora::Cluster *const pCluster, const bool isForward, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Update cluster association map to reflect an unambiguous cluster merge
@@ -94,7 +94,7 @@ private:
      *  @param  isForwardMerge whether merge is forward (pClusterToEnlarge is forward-associated with pClusterToDelete)
      *  @param  clusterAssociationMap the cluster association map
      */
-    void UpdateForUnambiguousMerge(pandora::Cluster *pClusterToEnlarge, pandora::Cluster *pClusterToDelete, const bool isForwardMerge,
+    void UpdateForUnambiguousMerge(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, const bool isForwardMerge,
         ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
@@ -105,7 +105,7 @@ private:
      *  @param  isForwardMerge whether merge is forward (pClusterToEnlarge is forward-associated with pClusterToDelete)
      *  @param  clusterAssociationMap the cluster association map
      */
-    void UpdateForAmbiguousMerge(pandora::Cluster *pClusterToEnlarge, pandora::Cluster *pClusterToDelete, const bool isForwardMerge,
+    void UpdateForAmbiguousMerge(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, const bool isForwardMerge,
         ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
@@ -117,8 +117,8 @@ private:
      *  @param  pExtremalCluster to receive the extremal cluster
      *  @param  clusterList to receive list of clusters traversed
      */
-    void NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap, pandora::Cluster *pCluster, const bool isForward,
-        pandora::Cluster *&pExtremalCluster, pandora::ClusterList &clusterList) const;
+    void NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap, const pandora::Cluster *const pCluster, const bool isForward,
+        const pandora::Cluster *&pExtremalCluster, pandora::ClusterList &clusterList) const;
 
     mutable bool m_mergeMade;
 

@@ -28,7 +28,7 @@ public:
      */
     ShowerHitsBaseTool();
 
-    virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 
 protected:
@@ -42,7 +42,7 @@ protected:
      *  @param  caloHitList2 the second
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList1,
+    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList1,
         const pandora::CaloHitList &caloHitList2, pandora::CaloHitList &newThreeDHits) const;
 
     /**

@@ -183,7 +183,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
 
     for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         if ((pCaloHit->GetElectromagneticEnergy() > m_thresholdEnergy) &&
             (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pCaloHit)))
@@ -226,7 +226,7 @@ void VisualMonitoringAlgorithm::VisualizeTrackList(const std::string &listName) 
 
     for (TrackList::const_iterator iter = pTrackList->begin(), iterEnd = pTrackList->end(); iter != iterEnd; ++iter)
     {
-        Track *pTrack = *iter;
+        const Track *const pTrack = *iter;
 
         if (!m_showOnlyAvailable || pTrack->IsAvailable())
             trackList.insert(pTrack);
@@ -265,7 +265,7 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pCluster))
             clusterList.insert(pCluster);
@@ -328,7 +328,7 @@ void VisualMonitoringAlgorithm::VisualizeVertexList(const std::string &listName)
     else
     {
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pVertexList))
-        { 
+        {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "VisualMonitoringAlgorithm: vertex list " << listName << " unavailable." << std::endl;
             return;
@@ -340,7 +340,7 @@ void VisualMonitoringAlgorithm::VisualizeVertexList(const std::string &listName)
 
     for (VertexList::const_iterator iter = pVertexList->begin(), iterEnd = pVertexList->end(); iter != iterEnd; ++iter)
     {
-        Vertex *pVertex = *iter;
+        const Vertex *const pVertex = *iter;
 
         if (!m_showOnlyAvailable || pVertex->IsAvailable())
             vertexList.insert(pVertex);

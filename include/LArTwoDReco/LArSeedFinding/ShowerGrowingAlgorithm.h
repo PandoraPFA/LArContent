@@ -50,7 +50,7 @@ private:
      *  @return whether a seed candidate has been found
      */
     bool GetNextSeedCandidate(const pandora::ClusterList *const pClusterList, const pandora::ClusterList &usedClusters,
-        pandora::Cluster *&pSeedCluster) const;
+        const pandora::Cluster *&pSeedCluster) const;
 
     /**
      *  @brief  Get the seed association list for a given vector of particle seed candidates
@@ -78,7 +78,7 @@ private:
      *  @param  listName the cluster list name
      *  @param  pfoList the input pfo list
      */
-    void ProcessBranchClusters(pandora::Cluster *const pParentCluster, const pandora::ClusterVector &branchClusters, const std::string &listName,
+    void ProcessBranchClusters(const pandora::Cluster *const pParentCluster, const pandora::ClusterVector &branchClusters, const std::string &listName,
         pandora::PfoList &pfoList) const;
 
     AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
@@ -171,7 +171,7 @@ private:
      *  @param  pfoList the list of all input pfos
      *  @param  pTargetPfo to receive the address of the target pfo
      */
-    void FindTargetPfo(pandora::Cluster *const pCluster, const pandora::PfoList &pfoList, pandora::Pfo *&pTargetPfo) const;
+    void FindTargetPfo(const pandora::Cluster *const pCluster, const pandora::PfoList &pfoList, const pandora::Pfo *&pTargetPfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

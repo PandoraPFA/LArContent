@@ -34,7 +34,7 @@ void CosmicRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster* pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
             continue;
@@ -177,12 +177,12 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
     for (ClusterAssociationMatrix::const_iterator iter1 = inputAssociationMatrix.begin(), iterEnd1 = inputAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
     {
-        const Cluster* pCluster1(iter1->first);
+        const Cluster *const pCluster1(iter1->first);
         const ClusterAssociationMap &associationMap1(iter1->second);
 
         for (ClusterAssociationMatrix::const_iterator iter2 = iter1, iterEnd2 = inputAssociationMatrix.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pCluster2(iter2->first);
+            const Cluster *const pCluster2(iter2->first);
             const ClusterAssociationMap &associationMap2(iter2->second);
 
             if (pCluster1 == pCluster2)
@@ -203,7 +203,7 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
             for (ClusterAssociationMap::const_iterator iter13 = associationMap1.begin(), iterEnd13 = associationMap1.end(); iter13 != iterEnd13; ++iter13)
             {
-                const Cluster* pCluster3(iter13->first);
+                const Cluster *const pCluster3(iter13->first);
 
                 ClusterAssociationMap::const_iterator iter23 = associationMap2.find(pCluster3);
                 if (associationMap2.end() == iter23)
@@ -235,18 +235,18 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
     for (ClusterAssociationMatrix::const_iterator iter1 = clusterAssociationMatrix.begin(), iterEnd1 = clusterAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
     {
-        const Cluster* pParentCluster(iter1->first);
+        const Cluster *const pParentCluster(iter1->first);
         const ClusterAssociationMap &clusterAssociationMap(iter1->second);
 
-        Cluster* pBestClusterInner = NULL;
+        const Cluster *pBestClusterInner = NULL;
         ClusterAssociation bestAssociationInner(ClusterAssociation::UNDEFINED, ClusterAssociation::UNDEFINED, ClusterAssociation::NONE, 0.f);
 
-        Cluster* pBestClusterOuter = NULL;
+        const Cluster *pBestClusterOuter = NULL;
         ClusterAssociation bestAssociationOuter(ClusterAssociation::UNDEFINED, ClusterAssociation::UNDEFINED, ClusterAssociation::NONE, 0.f);
 
         for (ClusterAssociationMap::const_iterator iter2 = clusterAssociationMap.begin(), iterEnd2 = clusterAssociationMap.end(); iter2 != iterEnd2; ++iter2)
         {
-            const Cluster* pDaughterCluster(iter2->first);
+            const Cluster *const pDaughterCluster(iter2->first);
             const ClusterAssociation &clusterAssociation(iter2->second);
 
             // Inner associations
@@ -255,7 +255,7 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
                 if (clusterAssociation.GetFigureOfMerit() > bestAssociationInner.GetFigureOfMerit())
                 {
                     bestAssociationInner = clusterAssociation;
-                    pBestClusterInner = (Cluster*)pDaughterCluster;
+                    pBestClusterInner = pDaughterCluster;
                 }
             }
 
@@ -265,7 +265,7 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
                 if (clusterAssociation.GetFigureOfMerit() > bestAssociationOuter.GetFigureOfMerit())
                 {
                     bestAssociationOuter = clusterAssociation;
-                    pBestClusterOuter = (Cluster*)pDaughterCluster;
+                    pBestClusterOuter = pDaughterCluster;
                 }
             }
         }
@@ -281,12 +281,12 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
     // Third step: make the merge if A -> B and B -> A are mutually the best associations
     for (ClusterAssociationMatrix::const_iterator iter3 = intermediateAssociationMatrix.begin(), iterEnd3 = intermediateAssociationMatrix.end(); iter3 != iterEnd3; ++iter3)
     {
-        const Cluster *pParentCluster(iter3->first);
+        const Cluster *const pParentCluster(iter3->first);
         const ClusterAssociationMap &parentAssociationMap(iter3->second);
 
         for (ClusterAssociationMap::const_iterator iter4 = parentAssociationMap.begin(), iterEnd4 = parentAssociationMap.end(); iter4 != iterEnd4; ++iter4)
         {
-            const Cluster *pDaughterCluster(iter4->first);
+            const Cluster *const pDaughterCluster(iter4->first);
             const ClusterAssociation &parentToDaughterAssociation(iter4->second);
 
             ClusterAssociationMatrix::const_iterator iter5 = intermediateAssociationMatrix.find(pDaughterCluster);
@@ -304,7 +304,7 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
             if (parentToDaughterAssociation.GetParent() == daughterToParentAssociation.GetDaughter() &&
                 parentToDaughterAssociation.GetDaughter() == daughterToParentAssociation.GetParent())
             {
-                clusterMergeMap[pParentCluster].insert((Cluster*)pDaughterCluster);
+                clusterMergeMap[pParentCluster].insert(pDaughterCluster);
             }
         }
     }
@@ -322,7 +322,7 @@ float CosmicRayExtensionAlgorithm::CalculateRms(const Cluster *const pCluster, c
 
     for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         const CartesianVector hitPosition(pCaloHit->GetPositionVector());
         const CartesianVector predictedPosition(position + direction * direction.GetDotProduct(hitPosition - position));

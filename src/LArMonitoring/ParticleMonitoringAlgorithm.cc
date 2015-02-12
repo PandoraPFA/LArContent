@@ -9,10 +9,13 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArMCParticleHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
+
+#include "LArObjects/LArThreeDSlidingFitResult.h"
 
 using namespace pandora;
 
@@ -41,10 +44,13 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     int nMCParticlesTotal(0), nPfosTotal(0);
     IntVector mcPdgVector, mcNeutrinoVector, nMCHitsVector, pfoPdgVector, pfoNeutrinoVector, nPfoHitsVector, nMatchedHitsVector, 
         nMCHitsUVector, nPfoHitsUVector, nMatchedHitsUVector, nMCHitsVVector, nPfoHitsVVector, nMatchedHitsVVector, nMCHitsWVector, 
-        nPfoHitsWVector, nMatchedHitsWVector, pfoVertexVector; 
+        nPfoHitsWVector, nMatchedHitsWVector, pfoVertexVector, pfoVertexDirVector;
     FloatVector completenessVector, purityVector, mcPxVector, mcPyVector, mcPzVector, mcThetaVector, mcEnergyVector, mcPTotVector,
         mcVtxXPosVector, mcVtxYPosVector, mcVtxZPosVector, mcEndXPosVector, mcEndYPosVector, mcEndZPosVector,
-        pfoPxVector, pfoPyVector, pfoPzVector, pfoPTotVector, pfoVtxXPosVector, pfoVtxYPosVector, pfoVtxZPosVector;
+        pfoPxVector, pfoPyVector, pfoPzVector, pfoPTotVector, pfoVtxXVector, pfoVtxYVector, pfoVtxZVector,
+        // QUICK AND NASTY HACK!!!
+        pfoVtxXPosVector, pfoVtxYPosVector, pfoVtxZPosVector, pfoVtxXDirVector, pfoVtxYDirVector, pfoVtxZDirVector;
+        // QUICK AND NASTY HACK!!!
 
     try
     {
@@ -98,7 +104,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
         // Write out reco/true information
         for (MCContributionMap::const_iterator iter = trueHitMap.begin(), iterEnd = trueHitMap.end(); iter != iterEnd; ++iter)
         {
-            const MCParticle *pMCParticle3D(iter->first);
+            const MCParticle *const pMCParticle3D(iter->first);
             const CaloHitList &mcHitList(iter->second);
 
             mcNeutrinoVector.push_back(LArMCParticleHelper::GetParentNeutrinoId(pMCParticle3D));
@@ -123,12 +129,16 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             const int nMCHitsW(this->CountHitsByType(TPC_VIEW_W, mcHitList));
 
             int pfoVertex(0), pfoPdg(0), pfoNeutrinoPdg(0), nPfoHits(0), nPfoHitsU(0), nPfoHitsV(0), nPfoHitsW(0);
-            float pfoPTot(0.f), pfoPx(0.f), pfoPy(0.f), pfoPz(0.f), pfoVtxX(0.f), pfoVtxY(0.f), pfoVtxZ(0.f);
+            float pfoPTot(0.f), pfoPx(0.f), pfoPy(0.f), pfoPz(0.f), pfoVtxX(0.f), pfoVtxY(0.f), pfoVtxZ(0.f),
+            // QUICK AND NASTY HACK!!!
+                pfoVtxXPos(0.f), pfoVtxYPos(0.f), pfoVtxZPos(0.f), pfoVtxXDir(0.f), pfoVtxYDir(0.f), pfoVtxZDir(0.f);
+            int pfoVertexDir(0);
+            // QUICK AND NASTY HACK!!!
             MCToPfoMap::const_iterator pIter1 = matchedPfoMap.find(pMCParticle3D);
 
             if (matchedPfoMap.end() != pIter1)
             {
-                const ParticleFlowObject *pPfo(pIter1->second);
+                const ParticleFlowObject *const pPfo(pIter1->second);
                 PfoContributionMap::const_iterator pIter2 = recoHitMap.find(pPfo);
 
                 if (recoHitMap.end() == pIter2)
@@ -153,6 +163,45 @@ StatusCode ParticleMonitoringAlgorithm::Run()
                     pfoVtxX = pVertex->GetPosition().GetX();
                     pfoVtxY = pVertex->GetPosition().GetY(); 
                     pfoVtxZ = pVertex->GetPosition().GetZ();
+
+                    // QUICK AND NASTY HACK!!!
+                    ClusterList clusterList;
+                    LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
+
+                    if (clusterList.size() > 0)
+                    {
+                        try
+                        {
+                            if (clusterList.size() != 1)
+                                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                            const Cluster *const pCluster = *(clusterList.begin());
+                            const ThreeDSlidingFitResult slidingFit(pCluster, 20, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+                            const CartesianVector vertexPos(pfoVtxX, pfoVtxY, pfoVtxZ);
+                            const CartesianVector minLayerPos(slidingFit.GetGlobalMinLayerPosition());
+                            const CartesianVector maxLayerPos(slidingFit.GetGlobalMaxLayerPosition());
+                            const CartesianVector minLayerDir(slidingFit.GetGlobalMinLayerDirection());
+                            const CartesianVector maxLayerDir(slidingFit.GetGlobalMaxLayerDirection());
+
+                            const CartesianVector &chosenPos(((vertexPos - minLayerPos).GetMagnitudeSquared() < (vertexPos - maxLayerPos).GetMagnitudeSquared()) ?
+                                minLayerPos : maxLayerPos);
+                            const CartesianVector &chosenDir(((vertexPos - minLayerPos).GetMagnitudeSquared() < (vertexPos - maxLayerPos).GetMagnitudeSquared()) ?
+                                minLayerDir : maxLayerDir);
+
+                            pfoVertexDir = 1;
+                            pfoVtxXDir = chosenDir.GetX();
+                            pfoVtxYDir = chosenDir.GetY(); 
+                            pfoVtxZDir = chosenDir.GetZ();
+                            pfoVtxXPos = chosenPos.GetX();
+                            pfoVtxYPos = chosenPos.GetY(); 
+                            pfoVtxZPos = chosenPos.GetZ();
+                        }
+                        catch (StatusCodeException &)
+                        {
+                        }
+                    }
+                    // QUICK AND NASTY HACK!!!
                 }
 
                 const CaloHitList &pfoHitList(pIter2->second);
@@ -181,9 +230,19 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             pfoPzVector.push_back(pfoPz); 
             pfoPTotVector.push_back(pfoPTot); 
             pfoVertexVector.push_back(pfoVertex);
-            pfoVtxXPosVector.push_back(pfoVtxX);
-            pfoVtxYPosVector.push_back(pfoVtxY); 
-            pfoVtxZPosVector.push_back(pfoVtxZ);
+            pfoVtxXVector.push_back(pfoVtxX);
+            pfoVtxYVector.push_back(pfoVtxY); 
+            pfoVtxZVector.push_back(pfoVtxZ);
+
+            // QUICK AND NASTY HACK!!!
+            pfoVertexDirVector.push_back(pfoVertexDir);
+            pfoVtxXPosVector.push_back(pfoVtxXPos);
+            pfoVtxYPosVector.push_back(pfoVtxYPos);
+            pfoVtxZPosVector.push_back(pfoVtxZPos);
+            pfoVtxXDirVector.push_back(pfoVtxXDir);
+            pfoVtxYDirVector.push_back(pfoVtxYDir);
+            pfoVtxZDirVector.push_back(pfoVtxZDir);
+            // QUICK AND NASTY HACK!!!
 
             purityVector.push_back((nPfoHits == 0) ? 0 : static_cast<float>(nMatchedHits) / static_cast<float>(nPfoHits));
             completenessVector.push_back((nPfoHits == 0) ? 0 : static_cast<float>(nMatchedHits) / static_cast<float>(nMCHits));
@@ -235,9 +294,19 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPz", &pfoPzVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoPTot", &pfoPTotVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVertex", &pfoVertexVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxX", &pfoVtxXPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxY", &pfoVtxYPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxZ", &pfoVtxZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxX", &pfoVtxXVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxY", &pfoVtxYVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxZ", &pfoVtxZVector));
+
+    // QUICK AND NASTY HACK!!!
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVertexDir", &pfoVertexDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxXPos", &pfoVtxXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxYPos", &pfoVtxYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxZPos", &pfoVtxZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxXDir", &pfoVtxXDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxYDir", &pfoVtxYDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoVtxZDir", &pfoVtxZDirVector));
+    // QUICK AND NASTY HACK!!!
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "completeness", &completenessVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "purity", &purityVector));
@@ -266,7 +335,7 @@ void ParticleMonitoringAlgorithm::ExtractNeutrinoDaughters(PfoList &pfoList) con
 {
     for (PfoList::iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; )
     {
-        ParticleFlowObject *pPfo(*iter);
+        const ParticleFlowObject *const pPfo(*iter);
 
         if ((NU_E == std::abs(pPfo->GetParticleId())) || (NU_MU == std::abs(pPfo->GetParticleId())) || (NU_TAU == std::abs(pPfo->GetParticleId())))
         {
@@ -287,7 +356,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const 
 {
     for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
     {
-        const MCParticle *pMCParticle = *iter;
+        const MCParticle *const pMCParticle = *iter;
 
         if (pMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle))
         {
@@ -325,7 +394,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *c
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
-        const ParticleFlowObject *pPfo = *pIter;
+        const ParticleFlowObject *const pPfo = *pIter;
 
         CaloHitList clusterHits;
         this->CollectCaloHits(pPfo, clusterHits);
@@ -334,7 +403,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *c
 
         for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
 
             if (pCaloHitList->count(pCaloHit) == 0)
                 continue;
@@ -344,7 +413,7 @@ void ParticleMonitoringAlgorithm::GetMCParticleToPfoMatches(const CaloHitList *c
             if (mcIter == mcHitMap.end())
                 continue;
 
-            const MCParticle *pPrimaryParticle = mcIter->second;
+            const MCParticle *const pPrimaryParticle = mcIter->second;
             truthContributionMap[pPrimaryParticle].insert(pCaloHit);
         }
 
@@ -382,15 +451,15 @@ void ParticleMonitoringAlgorithm::GetMCParticleToCaloHitMatches(const CaloHitLis
     {
         try
         {
-            CaloHit *pCaloHit = *iter;
-            const MCParticle *pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            const CaloHit *const pCaloHit = *iter;
+            const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
             MCRelationMap::const_iterator mcIter = mcPrimaryMap.find(pHitParticle);
 
             if (mcIter == mcPrimaryMap.end())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const MCParticle *pPrimaryParticle = mcIter->second;
+            const MCParticle *const pPrimaryParticle = mcIter->second;
             mcContributionMap[pPrimaryParticle].insert(pCaloHit);
             mcHitMap[pCaloHit] = pPrimaryParticle;
         }
@@ -409,7 +478,7 @@ void ParticleMonitoringAlgorithm::GetPfoToCaloHitMatches(const CaloHitList *cons
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
-        const ParticleFlowObject *pPfo = *pIter;
+        const ParticleFlowObject *const pPfo = *pIter;
         const ClusterList &pfoClusterList(pPfo->GetClusterList());
         ClusterList clusterList(pfoClusterList.begin(), pfoClusterList.end());
 
@@ -420,7 +489,7 @@ void ParticleMonitoringAlgorithm::GetPfoToCaloHitMatches(const CaloHitList *cons
 
         for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
         {
-            Cluster *pCluster = *cIter;
+            const Cluster *const pCluster = *cIter;
 
             CaloHitList clusterHits;
             pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHits);
@@ -428,7 +497,7 @@ void ParticleMonitoringAlgorithm::GetPfoToCaloHitMatches(const CaloHitList *cons
 
             for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
             {
-                CaloHit *pCaloHit = *hIter;
+                const CaloHit *const pCaloHit = *hIter;
 
                 if (pCaloHitList->count(pCaloHit) == 0)
                     continue;
@@ -455,7 +524,7 @@ void ParticleMonitoringAlgorithm::CollectCaloHits(const ParticleFlowObject *cons
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        Cluster *pCluster = *cIter;
+        const Cluster *const pCluster = *cIter;
 
         if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             continue;
@@ -472,12 +541,12 @@ void ParticleMonitoringAlgorithm::CollectDaughterClusters(const ParticleFlowObje
     const PfoList &daughterPfoList(pParentPfo->GetDaughterPfoList());
     for (PfoList::const_iterator dIter = daughterPfoList.begin(), dIterEnd = daughterPfoList.end(); dIter != dIterEnd; ++dIter)
     {
-        const ParticleFlowObject *pDaughterPfo = *dIter;
+        const ParticleFlowObject *const pDaughterPfo = *dIter;
         const ClusterList &pfoClusterList(pDaughterPfo->GetClusterList());
 
         for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
         {
-            Cluster *pCluster = *cIter;
+            const Cluster *const pCluster = *cIter;
 
             if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
                 continue;

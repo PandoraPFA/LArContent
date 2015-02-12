@@ -93,7 +93,7 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
     for (CaloHitList::const_iterator hitIter = pCaloHitList->begin(), hitIterEnd = pCaloHitList->end(); hitIter != hitIterEnd; ++hitIter)
     {
-        CaloHit *pCaloHit = *hitIter;
+        const CaloHit *const pCaloHit = *hitIter;
 
         if (m_onlyAvailableCaloHits && !PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
@@ -195,13 +195,13 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
     // Remove hits that are in the same physical location!
     for (CaloHitList::const_iterator hIter1 = inputList.begin(), hIterEnd1 = inputList.end(); hIter1 != hIterEnd1; ++hIter1)
     {
-        CaloHit *pCaloHit1 = *hIter1;
+        const CaloHit *const pCaloHit1 = *hIter1;
 
         bool isUnique(true);
 
         for (CaloHitList::const_iterator hIter2 = inputList.begin(), hIterEnd2 = inputList.end(); hIter2 != hIterEnd2; ++hIter2)
         {
-            CaloHit *pCaloHit2 = *hIter2;
+            const CaloHit *const pCaloHit2 = *hIter2;
 
             if (pCaloHit1 == pCaloHit2)
                 continue;

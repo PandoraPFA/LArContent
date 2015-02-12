@@ -33,7 +33,7 @@ public:
      */
     TrackSplittingTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -49,15 +49,15 @@ private:
          */
         Particle(const TensorType::Element &element);
 
-        pandora::Cluster   *m_pLongCluster;             ///< Address of the long cluster
-        pandora::Cluster   *m_pCluster1;                ///< Address of short cluster in view 1
-        pandora::Cluster   *m_pCluster2;                ///< Address of short cluster in view 2
-        float               m_longMinX;                 ///< The min x coordinate of the long cluster
-        float               m_longMaxX;                 ///< The max x coordinate of the long cluster
-        float               m_short1MinX;               ///< The min x coordinate of short cluster 1
-        float               m_short1MaxX;               ///< The max x coordinate of short cluster 1
-        float               m_short2MinX;               ///< The min x coordinate of short cluster 2
-        float               m_short2MaxX;               ///< The max x coordinate of short cluster 2
+        const pandora::Cluster *m_pLongCluster;             ///< Address of the long cluster
+        const pandora::Cluster *m_pCluster1;                ///< Address of short cluster in view 1
+        const pandora::Cluster *m_pCluster2;                ///< Address of short cluster in view 2
+        float                   m_longMinX;                 ///< The min x coordinate of the long cluster
+        float                   m_longMaxX;                 ///< The max x coordinate of the long cluster
+        float                   m_short1MinX;               ///< The min x coordinate of short cluster 1
+        float                   m_short1MaxX;               ///< The max x coordinate of short cluster 1
+        float                   m_short2MinX;               ///< The min x coordinate of short cluster 2
+        float                   m_short2MaxX;               ///< The max x coordinate of short cluster 2
     };
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -69,7 +69,7 @@ private:
      *  @param  overlapTensor the overlap tensor
      *  @param  splitPositionMap to receive the split position map
      */
-    void FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
+    void FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
 
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
@@ -89,7 +89,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  splitPositionMap to receive the split position map
      */
-    bool PassesChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, const bool isMinX, pandora::ClusterList &usedClusters,
+    bool PassesChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool isMinX, pandora::ClusterList &usedClusters,
         SplitPositionMap &splitPositionMap) const;
 
     /**

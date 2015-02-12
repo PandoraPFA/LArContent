@@ -58,7 +58,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 
     for (SplitPositionMap::const_iterator iter = splitPositionMap.begin(), iterEnd = splitPositionMap.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCurrentCluster = iter->first;
+        const Cluster *pCurrentCluster = iter->first;
         CartesianPointList splitPositions(iter->second);
         std::sort(splitPositions.begin(), splitPositions.end(), ThreeDTracksBaseAlgorithm::SortSplitPositions);
 
@@ -72,7 +72,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 
         for (CartesianPointList::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
         {
-            Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
+            const Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
 
             if (this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster))
             {
@@ -89,7 +89,8 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, Cluster *&pCurrentCluster, Cluster *&pLowXCluster, Cluster *&pHighXCluster) const
+bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
+    const Cluster *&pHighXCluster) const
 {
     pLowXCluster = NULL;
     pHighXCluster = NULL;
@@ -111,12 +112,12 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
 
     for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
     {
-        CaloHit *pCaloHit = *hIter;
+        const CaloHit *const pCaloHit = *hIter;
         const CartesianVector unitVector((pCaloHit->GetPositionVector() - splitPosition).GetUnitVector());
 
         const float dotProductLowX(unitVector.GetDotProduct(lowXUnitVector));
         const float dotProductHighX(unitVector.GetDotProduct(highXUnitVector));
-        Cluster *&pClusterToModify((dotProductLowX > dotProductHighX) ? pLowXCluster : pHighXCluster);
+        const Cluster *&pClusterToModify((dotProductLowX > dotProductHighX) ? pLowXCluster : pHighXCluster);
 
         if (NULL == pClusterToModify)
         {
@@ -151,7 +152,7 @@ bool ThreeDTracksBaseAlgorithm<T>::SortSplitPositions(const pandora::CartesianVe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluster)
+void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     try
     {
@@ -171,7 +172,7 @@ void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(Cluster *const pNewCluste
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::UpdateUponDeletion(Cluster *const pDeletedCluster)
+void ThreeDTracksBaseAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
     ThreeDBaseAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
@@ -184,7 +185,7 @@ void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const 
 {
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable())
             continue;
