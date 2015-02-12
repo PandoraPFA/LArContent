@@ -89,7 +89,16 @@ AUX_SOURCE_DIRECTORY( ./src/LArUtility LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArVertex LArContent_SRCS )
 
 # require proper C++
-ADD_DEFINITIONS( "-Wall -ansi -pedantic -std=c++0x" )
+ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+if(COMPILER_SUPPORTS_CXX11)
+    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++11 support." )
+    ADD_DEFINITIONS( "-std=c++11" )
+else()
+    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Some functionality will be limited." )
+endif()
 
 # need long long for int64 for now
 ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
