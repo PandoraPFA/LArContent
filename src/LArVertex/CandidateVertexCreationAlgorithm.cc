@@ -141,7 +141,7 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
         parameters.m_position = position3D;
         parameters.m_vertexType = VERTEX_3D;
 
-        Vertex *pVertex(NULL);
+        const Vertex *pVertex(NULL);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
     }
     catch (StatusCodeException &statusCodeException)
@@ -159,7 +159,7 @@ void CandidateVertexCreationAlgorithm::SelectClusters(const ClusterList *const p
     {
         try
         {
-            Cluster *pCluster = *iter;
+            const Cluster *const pCluster = *iter;
 
             if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
                 continue;

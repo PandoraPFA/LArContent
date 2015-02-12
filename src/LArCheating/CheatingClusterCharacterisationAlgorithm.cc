@@ -24,15 +24,19 @@ StatusCode CheatingClusterCharacterisationAlgorithm::Run()
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
-            Cluster *const pCluster(*iter);
+            const Cluster *const pCluster(*iter);
 
             if (this->IsClearTrack(pCluster))
             {
-                pCluster->SetIsFixedMuonFlag(true);
+                PandoraContentApi::Cluster::Metadata metadata;
+                metadata.m_particleId = MU_MINUS;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
             }
             else
             {
-                pCluster->SetIsFixedMuonFlag(false);
+                PandoraContentApi::Cluster::Metadata metadata;
+                metadata.m_particleId = E_MINUS;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
             }
         }
     }
@@ -47,7 +51,7 @@ bool CheatingClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const
     try
     {
         // ATTN Slightly curious definition of a clear track, but this is most-likely what is needed for shower-growing
-        const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+        const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
         if ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())))
             return true;

@@ -76,8 +76,8 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
             if (STATUS_CODE_SUCCESS != this->FindBestSplitPosition(slidingFitResult1, slidingFitResult2, splitPosition, firstDirection, secondDirection))
                 continue;
 
-            Cluster *pCluster1 = const_cast<Cluster*>(slidingFitResult1.GetCluster());
-            Cluster *pCluster2 = const_cast<Cluster*>(slidingFitResult2.GetCluster());
+            const Cluster *const pCluster1 = slidingFitResult1.GetCluster();
+            const Cluster *const pCluster2 = slidingFitResult2.GetCluster();
 
             if (STATUS_CODE_SUCCESS != this->ReplaceClusters(pCluster1, pCluster2, splitPosition, firstDirection, secondDirection))
                 continue;
@@ -101,7 +101,7 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::GetListOfCleanClusters(const 
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
             continue;
@@ -141,7 +141,7 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::BuildSlidingFitResultMap(cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitSplittingAndSwitchingAlgorithm::SplitCluster(Cluster *const pCluster, const CartesianVector &splitPosition,
+void TwoDSlidingFitSplittingAndSwitchingAlgorithm::SplitCluster(const Cluster *const pCluster, const CartesianVector &splitPosition,
     const CartesianVector &splitDirection, CaloHitList &firstCaloHitList, CaloHitList &secondCaloHitList) const
 {
     CaloHitList caloHitsToDistribute;
@@ -149,7 +149,7 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::SplitCluster(Cluster *const p
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
         {
@@ -164,7 +164,7 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::SplitCluster(Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(Cluster *const pCluster1, Cluster *const pCluster2,
+StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(const Cluster *const pCluster1, const Cluster *const pCluster2,
     const CartesianVector &splitPosition, const CartesianVector &firstDirection, const CartesianVector &secondDirection) const
 {
     // Split cluster into two hit lists (note the convention for 'firstDirection' and 'secondDirection')
@@ -186,7 +186,7 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(Cluster
         clusterListToDeleteName, clusterListToSaveName));
 
     // Create new clusters
-    Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);
+    const Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, firstParameters, pFirstCluster));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, secondParameters, pSecondCluster));
 

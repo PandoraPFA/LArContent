@@ -28,7 +28,7 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    bool Run(ThreeDRemnantsAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -40,7 +40,7 @@ private:
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(ThreeDRemnantsAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+    void CreateThreeDParticles(ThreeDRemnantsAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

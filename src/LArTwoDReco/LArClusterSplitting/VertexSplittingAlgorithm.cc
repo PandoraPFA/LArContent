@@ -38,10 +38,10 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
     if (pVertexList->size() != 1)
         return STATUS_CODE_OUT_OF_RANGE;
 
-    const Cluster *pCluster(slidingFitResult.GetCluster());
+    const Cluster *const pCluster(slidingFitResult.GetCluster());
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-    const Vertex *pSelectedVertex(*(pVertexList->begin()));
+    const Vertex *const pSelectedVertex(*(pVertexList->begin()));
 
     if (VERTEX_3D != pSelectedVertex->GetVertexType())
         return STATUS_CODE_INVALID_PARAMETER;

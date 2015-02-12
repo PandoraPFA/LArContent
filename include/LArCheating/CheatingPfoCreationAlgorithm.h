@@ -38,7 +38,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::map<int, pandora::ClusterList> IdToClusterListMap;
-    typedef std::map<int, pandora::MCParticle*> IdToMCParticleMap;
+    typedef std::map<int, const pandora::MCParticle*> IdToMCParticleMap;
 
     /**
      *  @brief  Get a map relating three dimensional mc particle ids to a list of daughter clusters

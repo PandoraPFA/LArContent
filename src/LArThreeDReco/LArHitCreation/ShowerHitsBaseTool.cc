@@ -26,7 +26,7 @@ ShowerHitsBaseTool::ShowerHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
+void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
     CaloHitList &newThreeDHits)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -53,14 +53,14 @@ void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *pAlgorithm, const Parti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits,
+void ShowerHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitList &inputTwoDHits,
     const CaloHitList &caloHitList1, const CaloHitList &caloHitList2, CaloHitList &newThreeDHits) const
 {
     for (CaloHitList::const_iterator iter = inputTwoDHits.begin(), iterEnd = inputTwoDHits.end(); iter != iterEnd; ++iter)
     {
         try
         {
-            CaloHit *pCaloHit2D(*iter);
+            const CaloHit *const pCaloHit2D(*iter);
             const float x(pCaloHit2D->GetPositionVector().GetX());
 
             CaloHitList filteredList1, filteredList2;
@@ -74,7 +74,7 @@ void ShowerHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm
             if (chiSquared > m_chiSquaredCut)
                 throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
-            CaloHit *pCaloHit3D(NULL);
+            const CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
             newThreeDHits.insert(pCaloHit3D);
         }
@@ -92,7 +92,7 @@ void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, c
 
     for (CaloHitList::const_iterator iter = inputCaloHitList.begin(), iterEnd = inputCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
         const float deltaX(pCaloHit->GetPositionVector().GetX() - x);
 
         if (std::fabs(deltaX) < xTolerance)

@@ -30,7 +30,7 @@ public:
      */
     TrackHitsBaseTool();
 
-    virtual void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 
 protected:
@@ -53,7 +53,7 @@ protected:
      *  @param  newThreeDHits  the output list of 3D hits
      *  @param  omittedTwoDHits  the output list of omitted 2D hits
      */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits,
+    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitList &inputTwoDHits,
         const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits) const = 0;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

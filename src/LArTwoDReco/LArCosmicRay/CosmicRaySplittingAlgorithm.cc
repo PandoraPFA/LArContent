@@ -111,19 +111,19 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
             }
         }
 
-        Cluster *pReplacementCluster1 = NULL;
-        Cluster *pReplacementCluster2 = NULL;
+        const Cluster *pReplacementCluster1 = NULL;
+        const Cluster *pReplacementCluster2 = NULL;
 
         if (slidingFitResultMap.end() != bestReplacementIter1)
-            pReplacementCluster1 = const_cast<Cluster*>(bestReplacementIter1->first);
+            pReplacementCluster1 = bestReplacementIter1->first;
 
         if (slidingFitResultMap.end() != bestReplacementIter2)
-            pReplacementCluster2 = const_cast<Cluster*>(bestReplacementIter2->first);
+            pReplacementCluster2 = bestReplacementIter2->first;
 
         if (NULL == pReplacementCluster1 && NULL == pReplacementCluster2)
             continue;
 
-        Cluster *pBranchCluster = const_cast<Cluster*>(branchSlidingFitResult.GetCluster());
+        const Cluster *const pBranchCluster = branchSlidingFitResult.GetCluster();
 
         // Crossed tracks
         if (pReplacementCluster1 && pReplacementCluster2)
@@ -165,7 +165,7 @@ void CosmicRaySplittingAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_clusterMinLength * m_clusterMinLength)
             continue;
@@ -355,7 +355,7 @@ StatusCode CosmicRaySplittingAlgorithm::ConfirmSplitPosition(const TwoDSlidingFi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::PerformSingleSplit(Cluster *pBranchCluster, Cluster *pReplacementCluster,
+StatusCode CosmicRaySplittingAlgorithm::PerformSingleSplit(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster,
     const CartesianVector &splitPosition, const CartesianVector &forwardDirection, const CartesianVector &backwardDirection) const
 {
     CaloHitList caloHitListToMove;
@@ -372,7 +372,7 @@ StatusCode CosmicRaySplittingAlgorithm::PerformSingleSplit(Cluster *pBranchClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::PerformDoubleSplit(Cluster *pBranchCluster, Cluster *pReplacementCluster1, Cluster *pReplacementCluster2,
+StatusCode CosmicRaySplittingAlgorithm::PerformDoubleSplit(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster1, const Cluster *const pReplacementCluster2,
     const CartesianVector &splitPosition, const CartesianVector &splitDirection1, const CartesianVector &splitDirection2) const
 {
     CaloHitList caloHitListToMove1, caloHitListToMove2;
@@ -410,7 +410,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
 
     for (CaloHitList::const_iterator iter = caloHitListToSort.begin(), iterEnd = caloHitListToSort.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         if (forwardDirection.GetDotProduct(pCaloHit->GetPositionVector() - forwardPosition) > 0.f)
         {
@@ -426,7 +426,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
 
     for (CaloHitList::const_iterator iter = caloHitListToCheck.begin(), iterEnd = caloHitListToCheck.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         if (vtxDirection.GetCrossProduct(pCaloHit->GetPositionVector() - forwardPosition).GetMagnitude() >
             backwardDirection.GetCrossProduct(pCaloHit->GetPositionVector() - forwardPosition).GetMagnitude())
@@ -440,7 +440,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
 
     for (CaloHitList::const_iterator iter = caloHitListToCheck.begin(), iterEnd = caloHitListToCheck.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         if ((pCaloHit->GetPositionVector() - vtxPosition).GetMagnitudeSquared() >= closestLengthSquared)
             caloHitListToMove.insert(pCaloHit);
@@ -457,7 +457,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListsToMove(const Cluster *const pBr
 
     for (CaloHitList::const_iterator iter = caloHitListToSort.begin(), iterEnd = caloHitListToSort.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         const float displacement1(splitDirection1.GetDotProduct(pCaloHit->GetPositionVector() - splitPosition));
         const float displacement2(splitDirection2.GetDotProduct(pCaloHit->GetPositionVector() - splitPosition));
@@ -502,7 +502,7 @@ StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(const Cluster *cons
 
     for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
 
         if (!caloHitListToMove.count(pCaloHit))
             caloHitListToKeep.insert(pCaloHit);
@@ -513,14 +513,14 @@ StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(const Cluster *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::SplitCluster(Cluster *pBranchCluster, Cluster *pReplacementCluster, const CaloHitList &caloHitListToMove) const
+StatusCode CosmicRaySplittingAlgorithm::SplitCluster(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster, const CaloHitList &caloHitListToMove) const
 {
     if (caloHitListToMove.empty())
         return STATUS_CODE_FAILURE;
 
     for (CaloHitList::const_iterator iter = caloHitListToMove.begin(), iterEnd = caloHitListToMove.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pBranchCluster, pCaloHit));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pReplacementCluster, pCaloHit));
     }

@@ -202,7 +202,7 @@ public:
      *  @param  pandora the pandora instance
      *  @param  pLArPseudoLayerPlugin the address of the LArPseudoLayerPlugin
      */
-    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, const LArPseudoLayerPlugin *pLArPseudoLayerPlugin);
+    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, const LArPseudoLayerPlugin *const pLArPseudoLayerPlugin);
   
     /**
      *  @brief  Set the LArTransformationPlugin for a given pandora instance
@@ -210,7 +210,7 @@ public:
      *  @param  pandora the pandora instance
      *  @param  pLArTransformationPlugin the address of the LArTransformationPlugin
      */
-    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, const LArTransformationPlugin *pLArTransformationPlugin);
+    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, const LArTransformationPlugin *const pLArTransformationPlugin);
 
 private:
     typedef std::map<const pandora::Pandora*, const LArPseudoLayerPlugin*>    PseudoLayerInstanceMap;

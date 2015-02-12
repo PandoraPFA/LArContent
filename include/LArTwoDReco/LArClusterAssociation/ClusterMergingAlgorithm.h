@@ -56,7 +56,7 @@ protected:
      *  @param  clusterMergeMap the map of cluster associations
      *  @param  associatedClusterList the output list of associated clusters
      */
-    void CollectAssociatedClusters(pandora::Cluster *pSeedCluster, const ClusterMergeMap &clusterMergeMap, pandora::ClusterList& associatedClusterList) const;
+    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, pandora::ClusterList& associatedClusterList) const;
 
    /**
      *  @brief  Collect up all clusters associations related to a given seed cluster
@@ -67,7 +67,7 @@ protected:
      *  @param  clusterVetoMap the map of clusters that have already been merged
      *  @param  associatedClusterList the output list of associated clusters
      */
-    void CollectAssociatedClusters(pandora::Cluster *pSeedCluster, pandora::Cluster *pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
+    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const pandora::Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
         const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
 
     /**

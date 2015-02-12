@@ -357,7 +357,7 @@ const LArTransformationPlugin *LArGeometryHelper::GetLArTransformationPlugin(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArGeometryHelper::SetLArPseudoLayerPlugin(const Pandora &pandora, const LArPseudoLayerPlugin *pLArPseudoLayerPlugin)
+StatusCode LArGeometryHelper::SetLArPseudoLayerPlugin(const Pandora &pandora, const LArPseudoLayerPlugin *const pLArPseudoLayerPlugin)
 {
     PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
 
@@ -372,7 +372,7 @@ StatusCode LArGeometryHelper::SetLArPseudoLayerPlugin(const Pandora &pandora, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArGeometryHelper::SetLArTransformationPlugin(const Pandora &pandora, const LArTransformationPlugin *pLArTransformationPlugin)
+StatusCode LArGeometryHelper::SetLArTransformationPlugin(const Pandora &pandora, const LArTransformationPlugin *const pLArTransformationPlugin)
 {
     TransformationInstanceMap::const_iterator iter = m_transformationInstanceMap.find(&pandora);
 

@@ -32,7 +32,7 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    void Run(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
+    void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
         pandora::CaloHitList &newThreeDHits);
 
 private:
@@ -44,7 +44,7 @@ private:
      *  @param  caloHitList3D the list of 3D hits from the parent particle
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    void CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList3D,
+    void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList3D,
         pandora::CaloHitList &newThreeDHits) const;
 };
 

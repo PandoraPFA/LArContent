@@ -29,7 +29,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
 
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
-        ParticleFlowObject *pPfo = *iter;
+        const ParticleFlowObject *const pPfo = *iter;
         const ClusterList &pfoClusterList(pPfo->GetClusterList());
 
         for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
@@ -59,12 +59,12 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const StringVector &clusterListNames, const Cluster *const pPfoCluster,
-    ParticleFlowObject *pPfo) const
+    const ParticleFlowObject *const pPfo) const
 {
     try
     {
-        const MCParticle *pPfoMCParticle(MCParticleHelper::GetMainMCParticle(pPfoCluster));
-        const MCParticle *pPfoParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pPfoMCParticle));
+        const MCParticle *const pPfoMCParticle(MCParticleHelper::GetMainMCParticle(pPfoCluster));
+        const MCParticle *const pPfoParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pPfoMCParticle));
 
         for (StringVector::const_iterator sIter = clusterListNames.begin(), sIterEnd = clusterListNames.end(); sIter != sIterEnd; ++sIter)
         {
@@ -73,15 +73,15 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const Str
 
             for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
             {
-                Cluster *pCluster = *cIter;
+                const Cluster *const pCluster = *cIter;
 
                 if (!pCluster->IsAvailable() || (pPfoCluster == pCluster))
                     continue;
 
                 try
                 {
-                    const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-                    const MCParticle *pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+                    const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+                    const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
 
                     if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle) && (pPfoParentMCParticle == pParentMCParticle))
                     {

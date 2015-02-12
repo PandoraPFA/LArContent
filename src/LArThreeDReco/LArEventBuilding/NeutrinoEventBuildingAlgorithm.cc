@@ -31,7 +31,7 @@ StatusCode NeutrinoEventBuildingAlgorithm::Run()
     }
 
     // Assume there is just one neutrino! And assume that it has some daughters! (TODO: Fix these assumptions)
-    ParticleFlowObject *const pNeutrinoPfo = ((1 == pPfoList->size()) ? *(pPfoList->begin()) : NULL);
+    const ParticleFlowObject *const pNeutrinoPfo = ((1 == pPfoList->size()) ? *(pPfoList->begin()) : NULL);
 
     if ((NULL == pNeutrinoPfo) || (pNeutrinoPfo->GetVertexList().empty()))
         return STATUS_CODE_FAILURE;
@@ -77,29 +77,29 @@ void NeutrinoEventBuildingAlgorithm::GetDaughterPfoList(PfoList &pfoList) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoEventBuildingAlgorithm::AddDaughters(ParticleFlowObject *const pNeutrinoPfo, const PfoList &daughterPfoList) const
+void NeutrinoEventBuildingAlgorithm::AddDaughters(const ParticleFlowObject *const pNeutrinoPfo, const PfoList &daughterPfoList) const
 {
     for (PfoList::const_iterator iter = daughterPfoList.begin(), iterEnd = daughterPfoList.end(); iter != iterEnd; ++iter)
     {
-        ParticleFlowObject *pDaughterPfo(*iter);
+        const ParticleFlowObject *const pDaughterPfo(*iter);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pDaughterPfo))
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoEventBuildingAlgorithm::SetNeutrinoId(ParticleFlowObject *const pNeutrinoPfo) const
+void NeutrinoEventBuildingAlgorithm::SetNeutrinoId(const ParticleFlowObject *const pNeutrinoPfo) const
 {
     if (pNeutrinoPfo->GetDaughterPfoList().empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     unsigned int nPrimaryTwoDHits(0);
-    ParticleFlowObject *pPrimaryDaughter(NULL);
+    const ParticleFlowObject *pPrimaryDaughter(NULL);
 
     for (PfoList::const_iterator dIter = pNeutrinoPfo->GetDaughterPfoList().begin(), dIterEnd = pNeutrinoPfo->GetDaughterPfoList().end();
         dIter != dIterEnd; ++dIter)
     {
-        ParticleFlowObject *pDaughterPfo(*dIter);
+        const ParticleFlowObject *const pDaughterPfo(*dIter);
         const unsigned int nTwoDHits(this->GetNTwoDHitsInPfo(pDaughterPfo));
 
         if (!pPrimaryDaughter || (nTwoDHits > nPrimaryTwoDHits))
@@ -112,14 +112,23 @@ void NeutrinoEventBuildingAlgorithm::SetNeutrinoId(ParticleFlowObject *const pNe
     if (NULL == pPrimaryDaughter)
       throw StatusCodeException(STATUS_CODE_FAILURE);
 
+    PandoraContentApi::ParticleFlowObject::Metadata metadata;
+
     if (E_MINUS == std::abs(pPrimaryDaughter->GetParticleId()))
-        pNeutrinoPfo->SetParticleId(NU_E);
+    {
+        metadata.m_particleId = NU_E;
+    }
+    else if (MU_MINUS == std::abs(pPrimaryDaughter->GetParticleId()))
+    {
+        metadata.m_particleId = NU_MU;
+    }
 
-    if (MU_MINUS == std::abs(pPrimaryDaughter->GetParticleId()))
-        pNeutrinoPfo->SetParticleId(NU_MU);
-
-    pNeutrinoPfo->SetCharge(PdgTable::GetParticleCharge(pNeutrinoPfo->GetParticleId()));
-    pNeutrinoPfo->SetMass(PdgTable::GetParticleMass(pNeutrinoPfo->GetParticleId()));
+    if (metadata.m_particleId.IsInitialized())
+    {
+        metadata.m_charge = PdgTable::GetParticleCharge(metadata.m_particleId.Get());
+        metadata.m_mass = PdgTable::GetParticleMass(metadata.m_particleId.Get());
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pNeutrinoPfo, metadata));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +141,7 @@ unsigned int NeutrinoEventBuildingAlgorithm::GetNTwoDHitsInPfo(const ParticleFlo
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster(*iter);
+        const Cluster *const pCluster(*iter);
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))

@@ -112,7 +112,7 @@ private:
      *
      *  @return the parent Pfo
      */
-    pandora::ParticleFlowObject *GetParent(const PfoAssociationMap &pfoAssociationMap, const pandora::ParticleFlowObject *const pPfo) const;
+    const pandora::ParticleFlowObject *GetParent(const PfoAssociationMap &pfoAssociationMap, const pandora::ParticleFlowObject *const pPfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

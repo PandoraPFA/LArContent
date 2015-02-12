@@ -49,7 +49,7 @@ private:
          *  @param  pDaughterCluster the address of the daughter cluster
          *  @param  boundedFraction the fraction of daughter hits bounded by the cone defined by the vertex cluster
          */
-        ClusterAssociation(pandora::Cluster *pVertexCluster, pandora::Cluster *pDaughterCluster, const float boundedFraction,
+        ClusterAssociation(const pandora::Cluster *const pVertexCluster, const pandora::Cluster *const pDaughterCluster, const float boundedFraction,
             const bool isConsistentDirection);
 
         /**
@@ -57,14 +57,14 @@ private:
          *
          *  @return the address of the vertex cluster
          */
-        pandora::Cluster *GetVertexCluster() const;
+        const pandora::Cluster *GetVertexCluster() const;
 
         /**
          *  @brief  Get the address of the daughter cluster
          *
          *  @return the address of the daughter cluster
          */
-        pandora::Cluster *GetDaughterCluster() const;
+        const pandora::Cluster *GetDaughterCluster() const;
 
         /**
          *  @brief  Get the fraction of daughter hits bounded by the cone defined by the vertex cluster
@@ -81,10 +81,10 @@ private:
         bool IsConsistentDirection() const;
 
     private:
-        pandora::Cluster   *m_pVertexCluster;           ///< The address of the vertex cluster
-        pandora::Cluster   *m_pDaughterCluster;         ///< The address of the daughter cluster
-        float               m_boundedFraction;          ///< The fraction of daughter hits bounded by the cone defined by the vertex cluster
-        bool                m_isConsistentDirection;    ///< Whether the vertex and daughter clusters have consistent directions
+        const pandora::Cluster *m_pVertexCluster;           ///< The address of the vertex cluster
+        const pandora::Cluster *m_pDaughterCluster;         ///< The address of the daughter cluster
+        float                   m_boundedFraction;          ///< The fraction of daughter hits bounded by the cone defined by the vertex cluster
+        bool                    m_isConsistentDirection;    ///< Whether the vertex and daughter clusters have consistent directions
     };
 
     /**
@@ -102,7 +102,7 @@ private:
          *  @param  clusterAssociationV the cluster association in the v view
          *  @param  clusterAssociationW the cluster association in the w view
          */
-        PfoAssociation(pandora::Pfo *pVertexPfo, pandora::Pfo *pDaughterPfo, const ClusterAssociation &clusterAssociationU,
+        PfoAssociation(const pandora::Pfo *const pVertexPfo, const pandora::Pfo *const pDaughterPfo, const ClusterAssociation &clusterAssociationU,
             const ClusterAssociation &clusterAssociationV, const ClusterAssociation &clusterAssociationW);
 
         /**
@@ -110,14 +110,14 @@ private:
          *
          *  @return the address of the vertex-associated pfo
          */
-        pandora::Pfo *GetVertexPfo() const;
+        const pandora::Pfo *GetVertexPfo() const;
 
         /**
          *  @brief  Get the address of the non-vertex-associated candidate daughter pfo
          *
          *  @return the address of the non-vertex-associated candidate daughter pfo
          */
-        pandora::Pfo *GetDaughterPfo() const;
+        const pandora::Pfo *GetDaughterPfo() const;
 
         /**
          *  @brief  Get the mean bounded fraction, averaging over the u, v and w views
@@ -178,12 +178,12 @@ private:
         bool operator< (const PfoAssociation &rhs) const;
 
     private:
-        pandora::Pfo       *m_pVertexPfo;               ///< The address of the vertex-associated pfo
-        pandora::Pfo       *m_pDaughterPfo;             ///< The address of the non-vertex-associated candidate daughter pfo
+        const pandora::Pfo     *m_pVertexPfo;               ///< The address of the vertex-associated pfo
+        const pandora::Pfo     *m_pDaughterPfo;             ///< The address of the non-vertex-associated candidate daughter pfo
 
-        ClusterAssociation  m_clusterAssociationU;      ///< The cluster association in the u view
-        ClusterAssociation  m_clusterAssociationV;      ///< The cluster association in the v view
-        ClusterAssociation  m_clusterAssociationW;      ///< The cluster association in the w view
+        ClusterAssociation      m_clusterAssociationU;      ///< The cluster association in the u view
+        ClusterAssociation      m_clusterAssociationV;      ///< The cluster association in the v view
+        ClusterAssociation      m_clusterAssociationW;      ///< The cluster association in the w view
     };
 
     typedef std::vector<PfoAssociation> PfoAssociationList;
@@ -296,7 +296,7 @@ private:
      * 
      *  @return the pfo association details
      */
-    PfoAssociation GetPfoAssociation(const pandora::Vertex *const pVertex, pandora::Pfo *const pVertexPfo, pandora::Pfo *const pDaughterPfo) const;
+    PfoAssociation GetPfoAssociation(const pandora::Vertex *const pVertex, const pandora::Pfo *const pVertexPfo, const pandora::Pfo *const pDaughterPfo) const;
 
     /**
      *  @brief  Get cluster association details between a vertex-associated cluster and a non-vertex associated daughter candidate cluster
@@ -307,8 +307,8 @@ private:
      * 
      *  @return the cluster association details
      */
-    ClusterAssociation GetClusterAssociation(const pandora::Vertex *const pVertex, pandora::Cluster *const pVertexCluster,
-        pandora::Cluster *const pDaughterCluster) const;
+    ClusterAssociation GetClusterAssociation(const pandora::Vertex *const pVertex, const pandora::Cluster *const pVertexCluster,
+        const pandora::Cluster *const pDaughterCluster) const;
 
     /**
      *  @brief  Merge the vertex and daughter pfos (deleting daughter pfo, merging clusters, etc.) described in the specified pfoAssociation
@@ -325,7 +325,7 @@ private:
      *  @param  pClusterV to receive the address of the cluster in the v view
      *  @param  pClusterW to receive the address of the cluster in the w view
      */
-    void Get2DClusters(const pandora::Pfo *const pPfo, pandora::Cluster *&pClusterU, pandora::Cluster *&pClusterV, pandora::Cluster *&pClusterW) const;
+    void Get2DClusters(const pandora::Pfo *const pPfo, const pandora::Cluster *&pClusterU, const pandora::Cluster *&pClusterV, const pandora::Cluster *&pClusterW) const;
 
     /**
      *  @brief  Look through cluster lists (matching input cluster list names) to find name of list containing a specified cluster
@@ -334,12 +334,12 @@ private:
      *
      *  @return the name of the list containing the specified cluster
      */
-    std::string GetClusterListName(pandora::Cluster *const pCluster) const;
+    std::string GetClusterListName(const pandora::Cluster *const pCluster) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::set<pandora::HitType> HitTypeSet;
-    typedef std::map<pandora::HitType, pandora::Cluster*> HitTypeToClusterMap;
+    typedef std::map<pandora::HitType, const pandora::Cluster*> HitTypeToClusterMap;
     typedef std::map<pandora::HitType, ClusterAssociation> HitTypeToAssociationMap;
 
     std::string             m_trackPfoListName;                 ///< The input track pfo list name
@@ -375,14 +375,14 @@ inline pandora::Algorithm *VertexBasedPfoMergingAlgorithm::Factory::CreateAlgori
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster *VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetVertexCluster() const
+inline const pandora::Cluster *VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetVertexCluster() const
 {
     return m_pVertexCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Cluster *VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetDaughterCluster() const
+inline const pandora::Cluster *VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetDaughterCluster() const
 {
     return m_pDaughterCluster;
 }
@@ -404,14 +404,14 @@ inline bool VertexBasedPfoMergingAlgorithm::ClusterAssociation::IsConsistentDire
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Pfo *VertexBasedPfoMergingAlgorithm::PfoAssociation::GetVertexPfo() const
+inline const pandora::Pfo *VertexBasedPfoMergingAlgorithm::PfoAssociation::GetVertexPfo() const
 {
     return m_pVertexPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Pfo *VertexBasedPfoMergingAlgorithm::PfoAssociation::GetDaughterPfo() const
+inline const pandora::Pfo *VertexBasedPfoMergingAlgorithm::PfoAssociation::GetDaughterPfo() const
 {
     return m_pDaughterPfo;
 }

@@ -33,7 +33,7 @@ public:
      */
     MissingTrackSegmentTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -49,16 +49,16 @@ private:
          */
         Particle(const TensorType::Element &element);
 
-        pandora::Cluster   *m_pShortCluster;            ///< Address of the short cluster
-        pandora::Cluster   *m_pCluster1;                ///< Address of long cluster in view 1
-        pandora::Cluster   *m_pCluster2;                ///< Address of long cluster in view 2
-        pandora::HitType    m_shortHitType;             ///< The hit type of the short cluster
-        pandora::HitType    m_hitType1;                 ///< The hit type of the long cluster in view 1
-        pandora::HitType    m_hitType2;                 ///< The hit type of the long cluster in view 2
-        float               m_shortMinX;                ///< The min x coordinate of the short cluster
-        float               m_shortMaxX;                ///< The max x coordinate of the short cluster
-        float               m_longMinX;                 ///< The min x coordinate of the long clusters
-        float               m_longMaxX;                 ///< The max x coordinate of the long clusters
+        const pandora::Cluster *m_pShortCluster;            ///< Address of the short cluster
+        const pandora::Cluster *m_pCluster1;                ///< Address of long cluster in view 1
+        const pandora::Cluster *m_pCluster2;                ///< Address of long cluster in view 2
+        pandora::HitType        m_shortHitType;             ///< The hit type of the short cluster
+        pandora::HitType        m_hitType1;                 ///< The hit type of the long cluster in view 1
+        pandora::HitType        m_hitType2;                 ///< The hit type of the long cluster in view 2
+        float                   m_shortMinX;                ///< The min x coordinate of the short cluster
+        float                   m_shortMaxX;                ///< The max x coordinate of the short cluster
+        float                   m_longMinX;                 ///< The min x coordinate of the long clusters
+        float                   m_longMaxX;                 ///< The max x coordinate of the long clusters
     };
 
     /**
@@ -72,18 +72,18 @@ private:
          */
         SegmentOverlap();
 
-        unsigned int        m_nSamplingPoints;          ///< The number of sampling points
-        unsigned int        m_nMatchedSamplingPoints;   ///< The number of matched sampling points
-        float               m_pseudoChi2Sum;            ///< The pseudo chi2 sum
-        float               m_matchedSamplingMinX;      ///< The min matched sampling point x coordinate
-        float               m_matchedSamplingMaxX;      ///< The max matched sampling point x coordinate
+        unsigned int            m_nSamplingPoints;          ///< The number of sampling points
+        unsigned int            m_nMatchedSamplingPoints;   ///< The number of matched sampling points
+        float                   m_pseudoChi2Sum;            ///< The pseudo chi2 sum
+        float                   m_matchedSamplingMinX;      ///< The min matched sampling point x coordinate
+        float                   m_matchedSamplingMaxX;      ///< The max matched sampling point x coordinate
     };
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<pandora::Cluster*, TwoDSlidingFitResult> SlidingFitResultMap;
-    typedef std::map<pandora::Cluster*, SegmentOverlap> SegmentOverlapMap;
-    typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+    typedef std::map<const pandora::Cluster*, TwoDSlidingFitResult> SlidingFitResultMap;
+    typedef std::map<const pandora::Cluster*, SegmentOverlap> SegmentOverlapMap;
+    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
     /**
      *  @brief  Find remaining tracks, hidden by missing track segments (and maybe other ambiguities) in the tensor
@@ -93,7 +93,7 @@ private:
      *  @param  protoParticleVector to receive the list of proto particles
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    void FindTracks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
+    void FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
@@ -113,7 +113,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    bool PassesParticleChecks(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::Element &element, pandora::ClusterList &usedClusters,
+    bool PassesParticleChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, pandora::ClusterList &usedClusters,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
@@ -123,7 +123,7 @@ private:
      *  @param  particle the particle
      *  @param  candidateClusters to receive the list of candidate clusters
      */
-    void GetCandidateClusters(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle, pandora::ClusterList &candidateClusters) const;
+    void GetCandidateClusters(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, pandora::ClusterList &candidateClusters) const;
 
     /**
      *  @brief  Get a sliding fit result map for the list of candidate clusters
@@ -132,7 +132,7 @@ private:
      *  @param  candidateClusters the list of candidate clusters
      *  @param  slidingFitResultMap to receive the sliding fit result map
      */
-    void GetSlidingFitResultMap(ThreeDTransverseTracksAlgorithm *pAlgorithm, const pandora::ClusterList &candidateClusterList,
+    void GetSlidingFitResultMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const pandora::ClusterList &candidateClusterList,
         SlidingFitResultMap &slidingFitResultMap) const;
 
     /**
@@ -143,7 +143,7 @@ private:
      *  @param  slidingFitResultMap the sliding fit result map
      *  @param  segmentOverlapMap to receive the segment overlap map
      */
-    void GetSegmentOverlapMap(ThreeDTransverseTracksAlgorithm *pAlgorithm, const Particle &particle,
+    void GetSegmentOverlapMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
         const SlidingFitResultMap &slidingFitResultMap, SegmentOverlapMap &segmentOverlapMap) const;
 
     /**
@@ -179,7 +179,7 @@ private:
      * 
      *  @return boolean
      */
-    bool IsPossibleMerge(pandora::Cluster *const pCluster, const Particle &particle, const SegmentOverlap &segmentOverlap,
+    bool IsPossibleMerge(const pandora::Cluster *const pCluster, const Particle &particle, const SegmentOverlap &segmentOverlap,
         const SlidingFitResultMap &slidingFitResultMap) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation

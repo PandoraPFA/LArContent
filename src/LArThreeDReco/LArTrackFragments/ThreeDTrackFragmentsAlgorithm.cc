@@ -30,7 +30,7 @@ ThreeDTrackFragmentsAlgorithm::ThreeDTrackFragmentsAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(Cluster *const pNewCluster)
+void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     try
     {
@@ -131,7 +131,7 @@ void ThreeDTrackFragmentsAlgorithm::PerformMainLoop()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     const HitType missingHitType(
         ((NULL != pClusterU) && (NULL != pClusterV) && (NULL == pClusterW)) ? TPC_VIEW_W :
@@ -143,7 +143,7 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
 
     // Calculate new overlap result and replace old overlap result where necessary
     FragmentOverlapResult oldOverlapResult, newOverlapResult;
-    Cluster *pMatchedClusterU(NULL), *pMatchedClusterV(NULL), *pMatchedClusterW(NULL);
+    const Cluster *pMatchedClusterU(NULL), *pMatchedClusterV(NULL), *pMatchedClusterW(NULL);
 
     try
     {
@@ -156,7 +156,7 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
         const ClusterList &inputClusterList((TPC_VIEW_U == missingHitType) ? this->GetInputClusterListU() :
             (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
 
-        Cluster *pBestMatchedCluster(NULL);
+        const Cluster *pBestMatchedCluster(NULL);
         this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult);
 
         pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
@@ -190,10 +190,10 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, C
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
-    const ClusterList &inputClusterList, Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const
+    const ClusterList &inputClusterList, const Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const
 {
-    const Cluster *pCluster1(fitResult1.GetCluster());
-    const Cluster *pCluster2(fitResult2.GetCluster());
+    const Cluster *const pCluster1(fitResult1.GetCluster());
+    const Cluster *const pCluster2(fitResult2.GetCluster());
 
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
@@ -230,8 +230,8 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitR
 void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     CartesianPointList &projectedPositions) const
 {
-    const Cluster *pCluster1(fitResult1.GetCluster());
-    const Cluster *pCluster2(fitResult2.GetCluster());
+    const Cluster *const pCluster1(fitResult1.GetCluster());
+    const Cluster *const pCluster2(fitResult2.GetCluster());
 
     // Check hit types
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
@@ -360,7 +360,7 @@ void ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClust
 
     for(ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable())
             continue;
@@ -377,11 +377,11 @@ void ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClust
     {
         const CartesianVector &projectedPosition = *iter;
         float closestDistanceSquared(std::numeric_limits<float>::max());
-        CaloHit *pClosestCaloHit(NULL);
+        const CaloHit *pClosestCaloHit(NULL);
 
         for (CaloHitList::const_iterator hIter = availableCaloHits.begin(), hIterEnd = availableCaloHits.end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
             const float distanceSquared((pCaloHit->GetPositionVector() - projectedPosition).GetMagnitudeSquared());
 
             if (distanceSquared < closestDistanceSquared)
@@ -402,13 +402,13 @@ void ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClust
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
-    ClusterList &matchedClusters, Cluster *&pBestMatchedCluster) const
+    ClusterList &matchedClusters, const Cluster *&pBestMatchedCluster) const
 {
     ClusterToMatchedHitsMap clusterToMatchedHitsMap;
 
     for (CaloHitList::const_iterator iter = matchedHits.begin(), iterEnd = matchedHits.end(); iter != iterEnd; ++iter)
     {
-        CaloHit *pCaloHit = *iter;
+        const CaloHit *const pCaloHit = *iter;
         HitToClusterMap::const_iterator cIter = hitToClusterMap.find(pCaloHit);
 
         if (hitToClusterMap.end() == cIter)
@@ -452,7 +452,7 @@ void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPoin
 
         for (CaloHitList::const_iterator hIter = matchedHits.begin(), hIterEnd = matchedHits.end(); hIter != hIterEnd; ++hIter)
         {
-            CaloHit *pCaloHit = *hIter;
+            const CaloHit *const pCaloHit = *hIter;
             const float distanceSquared((pCaloHit->GetPositionVector() - projectedPosition).GetMagnitudeSquared());
 
             if (distanceSquared < closestDistanceSquared)
@@ -504,7 +504,7 @@ bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointLis
 
     for(ClusterList::const_iterator iter = matchedClusters.begin(), iterEnd = matchedClusters.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         CartesianVector minPosition(0.f,0.f,0.f);
         CartesianVector maxPosition(0.f,0.f,0.f);
@@ -577,7 +577,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        FragmentTensorTool *pFragmentTensorTool(dynamic_cast<FragmentTensorTool*>(*iter));
+        FragmentTensorTool *const pFragmentTensorTool(dynamic_cast<FragmentTensorTool*>(*iter));
 
         if (NULL == pFragmentTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;

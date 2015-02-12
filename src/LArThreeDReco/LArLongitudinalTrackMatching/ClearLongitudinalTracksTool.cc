@@ -22,7 +22,7 @@ ClearLongitudinalTracksTool::ClearLongitudinalTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearLongitudinalTracksTool::Run(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, TensorType &overlapTensor)
+bool ClearLongitudinalTracksTool::Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -38,7 +38,7 @@ bool ClearLongitudinalTracksTool::Run(ThreeDLongitudinalTracksAlgorithm *pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearLongitudinalTracksTool::CreateThreeDParticles(ThreeDLongitudinalTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList,
+void ClearLongitudinalTracksTool::CreateThreeDParticles(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
     bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;

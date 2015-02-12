@@ -71,7 +71,7 @@ private:
      *  @param vetoList the list of used calo hits
      *  @param mergeList the list of hits associated with the seed hit
      */
-    void CollectAssociatedHits(pandora::CaloHit *pSeedCaloHit, pandora::CaloHit *pCurrentCaloHit,
+    void CollectAssociatedHits(const pandora::CaloHit *const pSeedCaloHit, const pandora::CaloHit *const pCurrentCaloHit,
         const HitAssociationMap &hitAssociationMap, const pandora::CaloHitList &vetoList,
         pandora::CaloHitList &mergeList) const;
 

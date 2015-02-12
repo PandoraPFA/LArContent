@@ -91,7 +91,7 @@ private:
     TwoDSlidingFitResult    m_positiveEdgeFitResult;        ///< The sliding fit result for the positive shower edge
 };
 
-typedef std::map<pandora::Cluster*, TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultMap;
+typedef std::map<const pandora::Cluster*, TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

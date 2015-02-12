@@ -35,7 +35,7 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
 
     for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
     {
-        const MCParticle *pMCParticle(*iter);
+        const MCParticle *const pMCParticle(*iter);
 
         if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
             continue;
@@ -47,7 +47,7 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
         parameters.m_position = pMCParticle->GetEndpoint();
         parameters.m_vertexType = VERTEX_3D;
 
-        Vertex *pVertex(NULL);
+        const Vertex *pVertex(NULL);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
     }
 

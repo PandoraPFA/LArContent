@@ -26,7 +26,7 @@ LongitudinalTrackHitsBaseTool::LongitudinalTrackHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *pAlgorithm, const CaloHitList &inputTwoDHits,
+void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitList &inputTwoDHits,
     const MatchedSlidingFitMap &inputSlidingFitMap, CaloHitList &newThreeDHits) const
 {
     MatchedSlidingFitMap matchedSlidingFitMap;
@@ -37,7 +37,7 @@ void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm 
     {
         try
         {
-            CaloHit *pCaloHit2D(*iter);
+            const CaloHit *const pCaloHit2D(*iter);
 
             CartesianVector position3D(0.f, 0.f, 0.f);
             float chiSquared(std::numeric_limits<float>::max());
@@ -46,7 +46,7 @@ void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm 
             if (chiSquared > m_chiSquaredCut)
                 throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
-            CaloHit *pCaloHit3D(NULL);
+            const CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
             newThreeDHits.insert(pCaloHit3D);
         }

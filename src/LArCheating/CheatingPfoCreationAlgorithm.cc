@@ -64,12 +64,12 @@ void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *cons
     {
         try
         {
-            Cluster *pCluster(*iter);
+            const Cluster *const pCluster(*iter);
 
             if (m_useOnlyAvailableClusters && !pCluster->IsAvailable())
                 continue;
 
-            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+            const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
             if (!m_particleIdList.empty() && !m_particleIdList.count(pMCParticle->GetParticleId()))
                 continue;
@@ -92,7 +92,7 @@ void CheatingPfoCreationAlgorithm::GetIdToMCParticleMap(IdToMCParticleMap &idToM
 
     for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
     {
-        MCParticle *pMCParticle(*iter);
+        const MCParticle *const pMCParticle(*iter);
         const int id(intptr_t(pMCParticle->GetUid()));
 
         if (!idToMCParticleMap.insert(IdToMCParticleMap::value_type(id, pMCParticle)).second)
@@ -123,7 +123,7 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const IdToClusterListMap &idToClus
         if (idToMCParticleMap.end() == mcIter)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        MCParticle *pMCParticle = mcIter->second;
+        const MCParticle *const pMCParticle = mcIter->second;
 
         try
         {
@@ -135,7 +135,7 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const IdToClusterListMap &idToClus
             pfoParameters.m_momentum = pMCParticle->GetMomentum();
             pfoParameters.m_clusterList.insert(clusterList.begin(), clusterList.end());
 
-            ParticleFlowObject *pPfo(NULL);
+            const ParticleFlowObject *pPfo(NULL);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
         }
         catch (StatusCodeException &)

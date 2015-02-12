@@ -29,7 +29,7 @@ public:
 };
 
 typedef std::vector<ProtoParticle> ProtoParticleVector;
-typedef std::map<pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -84,7 +84,7 @@ public:
      *  @param  pEnlargedCluster address of the enlarged cluster
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateUponMerge(pandora::Cluster *const pEnlargedCluster, pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateUponMerge(const pandora::Cluster *const pEnlargedCluster, const pandora::Cluster *const pDeletedCluster);
 
     /**
      *  @brief  Update to reflect a cluster split
@@ -93,22 +93,22 @@ public:
      *  @param  pSplitCluster2 address of the second cluster fragment
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateUponSplit(pandora::Cluster *const pSplitCluster1, pandora::Cluster *const pSplitCluster2,
-        pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateUponSplit(const pandora::Cluster *const pSplitCluster1, const pandora::Cluster *const pSplitCluster2,
+        const pandora::Cluster *const pDeletedCluster);
 
     /**
      *  @brief  Update to reflect addition of a new cluster to the problem space
      *
      *  @param  pNewCluster address of the new cluster
      */
-    virtual void UpdateForNewCluster(pandora::Cluster *const pNewCluster);
+    virtual void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
 
     /**
      *  @brief  Update to reflect cluster deletion
      *
      *  @param  pDeletedCluster address of the deleted cluster
      */
-    virtual void UpdateUponDeletion(pandora::Cluster *const pDeletedCluster);
+    virtual void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
 
     /**
      *  @brief  Update tensor to remove all elements that have been added to pfos and so are unavailable
@@ -193,7 +193,7 @@ protected:
      *  @param  pClusterV address of V view cluster
      *  @param  pClusterW address of W view cluster
      */
-    virtual void CalculateOverlapResult(pandora::Cluster *pClusterU, pandora::Cluster *pClusterV, pandora::Cluster *pClusterW) = 0;
+    virtual void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW) = 0;
 
     /**
      *  @brief  Examine contents of tensor, collect together best-matching 2D particles and modify clusters as required

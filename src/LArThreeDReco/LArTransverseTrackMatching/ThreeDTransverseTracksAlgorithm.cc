@@ -44,7 +44,7 @@ bool ThreeDTransverseTracksAlgorithm::SortByNMatchedSamplingPoints(const TensorT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     try
     {
@@ -63,7 +63,7 @@ void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW,
+void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
     TransverseOverlapResult &overlapResult)
 {
     const TwoDSlidingFitResult &slidingFitResultU(this->GetCachedSlidingFitResult(pClusterU));
@@ -335,7 +335,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        TransverseTensorTool *pTransverseTensorTool(dynamic_cast<TransverseTensorTool*>(*iter));
+        TransverseTensorTool *const pTransverseTensorTool(dynamic_cast<TransverseTensorTool*>(*iter));
 
         if (NULL == pTransverseTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;

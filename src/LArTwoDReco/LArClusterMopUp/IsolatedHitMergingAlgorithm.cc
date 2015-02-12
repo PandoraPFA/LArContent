@@ -48,7 +48,7 @@ void IsolatedHitMergingAlgorithm::DissolveClustersToHits(const ClusterList &clus
 {
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
-        Cluster *pRemnantCluster(*iter);
+        const Cluster *const pRemnantCluster(*iter);
 
         if (pRemnantCluster->GetNCaloHits() < m_maxCaloHitsInCluster)
         {
@@ -69,7 +69,7 @@ void IsolatedHitMergingAlgorithm::GetCaloHitToClusterMap(const CaloHitList &calo
 {
     for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
     {
-        CaloHit *pCaloHit(*hIter);
+        const CaloHit *const pCaloHit(*hIter);
 
         if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -78,7 +78,7 @@ void IsolatedHitMergingAlgorithm::GetCaloHitToClusterMap(const CaloHitList &calo
 
         for (ClusterList::const_iterator pIter = clusterList.begin(), pIterEnd = clusterList.end(); pIter != pIterEnd; ++pIter)
         {
-            Cluster *pPfoCluster(*pIter);
+            const Cluster *const pPfoCluster(*pIter);
             const float clusterDistance(this->GetDistanceToHit(pPfoCluster, pCaloHit));
             const float clusterEnergy(pPfoCluster->GetElectromagneticEnergy());
 

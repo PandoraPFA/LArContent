@@ -43,13 +43,13 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
     if ((pVertexList->size() != 1) || (VERTEX_3D != (*(pVertexList->begin()))->GetVertexType()))
         return;
 
-    const Vertex *pVertex(*(pVertexList->begin()));
+    const Vertex *const pVertex(*(pVertexList->begin()));
 
     for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
     {
         try
         {
-            Cluster *pPfoCluster(*pIter);
+            const Cluster *const pPfoCluster(*pIter);
             const TwoDSlidingShowerFitResult showerFitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
             const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
@@ -110,7 +110,7 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
             // Bounded fraction calculation
             for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
             {
-                Cluster *const pRemnantCluster(*rIter);
+                const Cluster *const pRemnantCluster(*rIter);
                 const unsigned int nHits(pRemnantCluster->GetNCaloHits());
 
                 unsigned int nMatchedHits(0);

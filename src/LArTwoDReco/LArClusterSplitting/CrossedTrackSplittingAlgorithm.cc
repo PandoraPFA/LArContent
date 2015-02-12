@@ -170,7 +170,7 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
 
     for (CaloHitList::const_iterator iter1 = caloHitList1.begin(), iterEnd1 = caloHitList1.end(); iter1 != iterEnd1; ++iter1)
     {
-        CaloHit *pCaloHit = *iter1;
+        const CaloHit *const pCaloHit = *iter1;
 
         const CartesianVector position1(pCaloHit->GetPositionVector());
         const CartesianVector position2(LArClusterHelper::GetClosestPosition(position1, pCluster2));
@@ -181,7 +181,7 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
 
     for (CaloHitList::const_iterator iter2 = caloHitList2.begin(), iterEnd2 = caloHitList2.end(); iter2 != iterEnd2; ++iter2)
     {
-        CaloHit *pCaloHit = *iter2;
+        const CaloHit *const pCaloHit = *iter2;
 
         const CartesianVector position2(pCaloHit->GetPositionVector());
         const CartesianVector position1(LArClusterHelper::GetClosestPosition(position2, pCluster1));

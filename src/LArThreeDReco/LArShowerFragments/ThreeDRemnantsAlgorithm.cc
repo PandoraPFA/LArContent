@@ -32,7 +32,7 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
 {
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
-        Cluster *pCluster = *iter;
+        const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable())
             continue;
@@ -61,7 +61,7 @@ void ThreeDRemnantsAlgorithm::SetPfoParameters(const ProtoParticle &protoParticl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::CalculateOverlapResult(Cluster *pClusterU, Cluster *pClusterV, Cluster *pClusterW)
+void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     try
     {
@@ -133,7 +133,7 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
     {
-        RemnantTensorTool *pRemnantTensorTool(dynamic_cast<RemnantTensorTool*>(*iter));
+        RemnantTensorTool *const pRemnantTensorTool(dynamic_cast<RemnantTensorTool*>(*iter));
 
         if (NULL == pRemnantTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;

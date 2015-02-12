@@ -68,14 +68,14 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVe
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
-    CaloHit *pClosestCaloHit(NULL);
+    const CaloHit *pClosestCaloHit(NULL);
     float closestDistanceSquared(std::numeric_limits<float>::max());
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            CaloHit* pCaloHit = *hitIter;
+            const CaloHit *const pCaloHit = *hitIter;
 
             const CartesianVector hitProjection(pCaloHit->GetPositionVector() - vertexPosition);
             const float distanceSquared(hitProjection.GetMagnitudeSquared());
@@ -210,8 +210,8 @@ void LArPointingClusterHelper::GetImpactParameters(const CartesianVector &initia
 void LArPointingClusterHelper::GetAverageDirection(const LArPointingCluster::Vertex &firstVertex, 
     const LArPointingCluster::Vertex &secondVertex, CartesianVector &averageDirection)
 {
-    const Cluster *pFirstCluster(firstVertex.GetCluster());
-    const Cluster *pSecondCluster(secondVertex.GetCluster());
+    const Cluster *const pFirstCluster(firstVertex.GetCluster());
+    const Cluster *const pSecondCluster(secondVertex.GetCluster());
 
     if (pFirstCluster == pSecondCluster)
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -230,8 +230,8 @@ void LArPointingClusterHelper::GetAverageDirection(const LArPointingCluster::Ver
 void LArPointingClusterHelper::GetIntersection( const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex,
     CartesianVector &intersectPosition, float &firstDisplacement, float &secondDisplacement)
 {
-    const Cluster *pFirstCluster(firstVertex.GetCluster());
-    const Cluster *pSecondCluster(secondVertex.GetCluster());
+    const Cluster *const pFirstCluster(firstVertex.GetCluster());
+    const Cluster *const pSecondCluster(secondVertex.GetCluster());
 
     if (pFirstCluster == pSecondCluster)
         throw pandora::StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -369,7 +369,7 @@ float LArPointingClusterHelper::GetAssociatedEnergy(const LArPointingCluster::Ve
     for (LArPointingClusterVertexList::const_iterator iter = associatedVertices.begin(), iterEnd = associatedVertices.end(); iter != iterEnd; ++iter)
     {
         const LArPointingCluster::Vertex &clusterVertex(*iter);
-        const Cluster *pCluster(clusterVertex.GetCluster());
+        const Cluster *const pCluster(clusterVertex.GetCluster());
 
         const float clusterEnergy(LArClusterHelper::GetEnergyFromLength(pCluster));
         const float clusterLength(LArClusterHelper::GetLength(pCluster));

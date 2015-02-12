@@ -119,7 +119,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterParticles(const LArPointingCl
 {
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
-        ParticleFlowObject *const pPfo = *iter;
+        const ParticleFlowObject *const pPfo = *iter;
 
         if (LArPfoHelper::IsTrack(pPfo))
         {
@@ -134,7 +134,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterParticles(const LArPointingCl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, ParticleFlowObject *const pDaughterPfo) const
+void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -223,7 +223,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::BuildDaughterShower(ParticleFlowObject *const pDaughterPfo) const
+void NeutrinoVertexBuildingAlgorithm::BuildDaughterShower(const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -287,12 +287,14 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterShower(ParticleFlowObject *co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void NeutrinoVertexBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
-    ParticleFlowObject *const pPfo) const
+    const ParticleFlowObject *const pPfo) const
 {
     if (!pPfo->GetVertexList().empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    pPfo->SetMomentum(vtxDirection);
+    PandoraContentApi::ParticleFlowObject::Metadata metadata;
+    metadata.m_momentum = vtxDirection;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
 
     const VertexList *pVertexList = NULL; std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
@@ -301,7 +303,7 @@ void NeutrinoVertexBuildingAlgorithm::SetParticleParameters(const CartesianVecto
     parameters.m_position = vtxPosition;
     parameters.m_vertexType = VERTEX_3D;
 
-    Vertex *pVertex(NULL);
+    const Vertex *pVertex(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
 
     if (!pVertexList->empty())

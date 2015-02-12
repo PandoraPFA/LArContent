@@ -40,7 +40,7 @@ private:
      *  @param  pCaloHit address of the calo hit
      *  @param  mcParticleToHitListMap the mc particle to hit list map
      */
-    void SimpleMCParticleCollection(pandora::CaloHit *const pCaloHit, MCParticleToHitListMap &mcParticleToHitListMap) const;
+    void SimpleMCParticleCollection(const pandora::CaloHit *const pCaloHit, MCParticleToHitListMap &mcParticleToHitListMap) const;
 
     /**
      *  @brief  Check whether mc particle is of a type specified for inclusion in cheated clustering

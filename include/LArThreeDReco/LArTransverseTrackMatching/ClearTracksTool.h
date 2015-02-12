@@ -33,7 +33,7 @@ public:
      */
     ClearTracksTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -45,7 +45,7 @@ private:
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+    void CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation

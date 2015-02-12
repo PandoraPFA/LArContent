@@ -159,7 +159,7 @@ StatusCode LayerSplittingAlgorithm::DivideCaloHits(const Cluster *const pCluster
 
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            CaloHit *pCaloHit = *hitIter;
+            const CaloHit *const pCaloHit = *hitIter;
 
             if (thisLayer < splitLayer)
             {
