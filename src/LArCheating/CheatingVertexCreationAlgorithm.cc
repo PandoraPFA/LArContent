@@ -45,6 +45,7 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
 
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = pMCParticle->GetEndpoint();
+        parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
 
         const Vertex *pVertex(NULL);

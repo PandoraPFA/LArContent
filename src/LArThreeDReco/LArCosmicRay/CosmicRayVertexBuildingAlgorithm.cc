@@ -289,6 +289,7 @@ void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVect
 
     PandoraContentApi::Vertex::Parameters parameters;
     parameters.m_position = vtxPosition;
+    parameters.m_vertexLabel = VERTEX_START;
     parameters.m_vertexType = VERTEX_3D;
 
     const Vertex *pVertex(NULL);

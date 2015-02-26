@@ -139,6 +139,7 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
 
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = position3D;
+        parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
 
         const Vertex *pVertex(NULL);
