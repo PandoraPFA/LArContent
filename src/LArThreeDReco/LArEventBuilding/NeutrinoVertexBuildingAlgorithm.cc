@@ -301,6 +301,7 @@ void NeutrinoVertexBuildingAlgorithm::SetParticleParameters(const CartesianVecto
 
     PandoraContentApi::Vertex::Parameters parameters;
     parameters.m_position = vtxPosition;
+    parameters.m_vertexLabel = VERTEX_INTERACTION;
     parameters.m_vertexType = VERTEX_3D;
 
     const Vertex *pVertex(NULL);
