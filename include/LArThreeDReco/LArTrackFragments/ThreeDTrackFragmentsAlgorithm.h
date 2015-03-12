@@ -15,6 +15,8 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -68,8 +70,8 @@ protected:
     void CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
         const pandora::ClusterList &inputClusterList, const pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
 
-    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
-    typedef std::map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
      *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results
@@ -136,7 +138,7 @@ protected:
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
+    typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
 
     std::string         m_reclusteringAlgorithmName;        ///< Name of daughter algorithm to use for cluster re-building
 

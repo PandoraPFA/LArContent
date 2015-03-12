@@ -14,6 +14,8 @@
 
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -129,7 +131,7 @@ private:
      */
     static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
-    typedef std::map<const pandora::Cluster*, unsigned int> ClusterInfoMap;
+    typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterInfoMap;
 
     /**
      *  @brief  Get the list of all input pfos (possibly from a number of separate named lists)

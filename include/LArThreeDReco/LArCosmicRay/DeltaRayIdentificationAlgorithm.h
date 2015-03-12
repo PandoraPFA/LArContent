@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -36,7 +38,7 @@ public:
 private:
     pandora::StatusCode Run();
 
-    typedef std::map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoAssociationMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoAssociationMap;
 
     /**
      *  @brief Get the list of Pfos, given the input list name

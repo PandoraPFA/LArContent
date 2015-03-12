@@ -10,6 +10,8 @@
 
 #include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -81,9 +83,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const pandora::Cluster*, TwoDSlidingFitResult> SlidingFitResultMap;
-    typedef std::map<const pandora::Cluster*, SegmentOverlap> SegmentOverlapMap;
-    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+    typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingFitResult> SlidingFitResultMap;
+    typedef std::unordered_map<const pandora::Cluster*, SegmentOverlap> SegmentOverlapMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
     /**
      *  @brief  Find remaining tracks, hidden by missing track segments (and maybe other ambiguities) in the tensor
