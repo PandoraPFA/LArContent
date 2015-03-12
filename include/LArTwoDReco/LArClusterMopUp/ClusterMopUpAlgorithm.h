@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -67,7 +69,7 @@ protected:
     virtual void GetClusterLists(const pandora::ClusterList &inputClusterList, const bool availabilityFlag, pandora::ClusterList &clusterListU,
         pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
-    typedef std::map<const pandora::Cluster*, std::string> ClusterToListNameMap;
+    typedef std::unordered_map<const pandora::Cluster*, std::string> ClusterToListNameMap;
 
     /**
      *  @brief  Get the map from cluster to cluster list name
@@ -85,8 +87,8 @@ protected:
      */
     virtual void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const = 0;
 
-    typedef std::map<const pandora::Cluster*, float> AssociationDetails;
-    typedef std::map<const pandora::Cluster*, AssociationDetails> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster*, float> AssociationDetails;
+    typedef std::unordered_map<const pandora::Cluster*, AssociationDetails> ClusterAssociationMap;
 
     /**
      *  @brief  Make the cluster merges specified in the cluster association map, using list name information in the cluster list name map

@@ -12,10 +12,12 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
-typedef std::map<const pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
+typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

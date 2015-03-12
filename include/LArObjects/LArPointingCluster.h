@@ -195,7 +195,7 @@ private:
 
 typedef std::vector<LArPointingCluster> LArPointingClusterList;
 typedef std::vector<LArPointingCluster::Vertex> LArPointingClusterVertexList;
-typedef std::map<const pandora::Cluster*, LArPointingCluster> LArPointingClusterMap;
+typedef std::unordered_map<const pandora::Cluster*, LArPointingCluster> LArPointingClusterMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -1,18 +1,18 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h
+ *  @file   LArContent/include/LArContentFast/ClusterAssociationAlgorithmFast.h
  * 
  *  @brief  Header file for the cluster association algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_CLUSTER_ASSOCIATION_ALGORITHM_H
-#define LAR_CLUSTER_ASSOCIATION_ALGORITHM_H 1
+#ifndef LAR_CLUSTER_ASSOCIATION_ALGORITHM_FAST_H
+#define LAR_CLUSTER_ASSOCIATION_ALGORITHM_FAST_H 1
 
 #include "Pandora/Algorithm.h"
 
 #include <unordered_map>
 
-namespace lar_content
+namespace lar_content_fast
 {
 
 /**
@@ -127,6 +127,6 @@ private:
     bool         m_resolveAmbiguousAssociations;        ///< Whether to resolve ambiguous associations
 };
 
-} // namespace lar_content
+} // namespace lar_content_fast
 
-#endif // #ifndef LAR_CLUSTER_ASSOCIATION_ALGORITHM_H
+#endif // #ifndef LAR_CLUSTER_ASSOCIATION_ALGORITHM_FAST_H

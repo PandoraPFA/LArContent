@@ -12,6 +12,8 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -30,8 +32,8 @@ protected:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitMap;
-    typedef std::map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitMap;
+    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
      *  @brief Get the list of hits to be added or removed from clusters

@@ -10,6 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+#include <unordered_set>
+
 namespace lar_content
 {
 
@@ -37,8 +40,8 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<int, pandora::ClusterList> IdToClusterListMap;
-    typedef std::map<int, const pandora::MCParticle*> IdToMCParticleMap;
+    typedef std::unordered_map<int, pandora::ClusterList> IdToClusterListMap;
+    typedef std::unordered_map<int, const pandora::MCParticle*> IdToMCParticleMap;
 
     /**
      *  @brief  Get a map relating three dimensional mc particle ids to a list of daughter clusters
@@ -74,8 +77,8 @@ private:
      */
     unsigned int GetNHitTypesAboveThreshold(const pandora::ClusterList &clusterList, const unsigned int nHitsThreshold) const;
 
-    typedef std::map<pandora::HitType, unsigned int> HitTypeMap;
-    typedef std::set<int> ParticleIdList;
+    typedef std::unordered_map<pandora::HitType, unsigned int, std::hash<unsigned int> > HitTypeMap;
+    typedef std::unordered_set<int> ParticleIdList;
 
     std::string     m_inputClusterListNameU;    ///< The name of the view U cluster list
     std::string     m_inputClusterListNameV;    ///< The name of the view V cluster list

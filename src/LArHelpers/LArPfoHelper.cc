@@ -277,8 +277,7 @@ void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo,
     const float scaleFactor((clusterDirection.GetDotProduct(pfoDirection)) < 0.f ? -1.f : +1.f);
 
     // Apply 3D sliding linear fits
-    typedef std::map< const float, const TrackState > ThreeDTrajectoryMap;
-    ThreeDTrajectoryMap trajectoryMap;
+    ThreeDTrajectoryList trajectoryList;
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
@@ -301,8 +300,8 @@ void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo,
                     CartesianVector position(0.f, 0.f, 0.f), direction(0.f, 0.f, 0.f);
                     slidingFitResult.GetGlobalFitPosition(rL, position);
                     slidingFitResult.GetGlobalFitDirection(rL, direction);
-                    trajectoryMap.insert(std::pair<const float, const TrackState>(
-                        clusterDirection.GetDotProduct(position - pfoVertex) * scaleFactor, TrackState(position, direction * scaleFactor)));
+                    trajectoryList.push_back(TrajectoryPoint(clusterDirection.GetDotProduct(position - pfoVertex) * scaleFactor,
+                        TrackState(position, direction * scaleFactor)));
                 }
                 catch (StatusCodeException &statusCodeException)
                 {
@@ -319,11 +318,13 @@ void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo,
     }
 
     // Require at least one trajectory point
-    if (trajectoryMap.empty())
+    if (trajectoryList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
+    std::sort(trajectoryList.begin(), trajectoryList.end(), LArPfoHelper::SortByHitProjection);
+
     // Return trajectory points
-    for (ThreeDTrajectoryMap::const_iterator tIter = trajectoryMap.begin(), tIterEnd = trajectoryMap.end(); tIter != tIterEnd; ++tIter)
+    for (ThreeDTrajectoryList::const_iterator tIter = trajectoryList.begin(), tIterEnd = trajectoryList.end(); tIter != tIterEnd; ++tIter)
     {
         const TrackState &nextPoint = tIter->second;
         trackStateVector.push_back(nextPoint);
@@ -453,6 +454,13 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
         return (nHitsLhs > nHitsRhs);
 
     return (LArPfoHelper::GetTwoDLengthSquared(pLhs) > LArPfoHelper::GetTwoDLengthSquared(pRhs));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::SortByHitProjection(const TrajectoryPoint &lhs, const TrajectoryPoint &rhs)
+{
+    return (lhs.first < rhs.first);
 }
 
 } // namespace lar_content

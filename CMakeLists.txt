@@ -66,9 +66,10 @@ include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 if(COMPILER_SUPPORTS_CXX11)
     message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++11 support." )
+    AUX_SOURCE_DIRECTORY( ./src/LArContentFast LArContent_SRCS )
     ADD_DEFINITIONS( "-std=c++11" )
 else()
-    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Some functionality will be limited." )
+    message( FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. CMake will exit." )
 endif()
 
 # need long long for int64 for now

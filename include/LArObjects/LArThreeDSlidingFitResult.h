@@ -12,6 +12,8 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -213,7 +215,7 @@ private:
 };
 
 typedef std::vector<ThreeDSlidingFitResult> ThreeDSlidingFitResultList;
-typedef std::map<const pandora::Cluster*, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
+typedef std::unordered_map<const pandora::Cluster*, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------

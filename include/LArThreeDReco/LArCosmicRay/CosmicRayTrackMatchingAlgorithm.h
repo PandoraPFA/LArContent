@@ -12,6 +12,8 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -60,7 +62,7 @@ private:
 
     typedef std::vector<Particle> ParticleList;
 
-    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
 
     /**
      *  @brief Get a vector of available clusters

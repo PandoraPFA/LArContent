@@ -12,6 +12,8 @@
 
 #include "LArObjects/LArTwoDSlidingFitObjects.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -487,7 +489,7 @@ private:
 };
 
 typedef std::vector<TwoDSlidingFitResult> TwoDSlidingFitResultList;
-typedef std::map<const pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
+typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
