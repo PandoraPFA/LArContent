@@ -428,7 +428,7 @@ const ParticleFlowObject *LArPfoHelper::GetParentNeutrino(const ParticleFlowObje
 
 bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
 {
-    unsigned int nHitsLhs(0);
+    unsigned int nHitsLhs(0); float energyLhs(0.f);
     for (ClusterList::const_iterator iter = pLhs->GetClusterList().begin(), iterEnd = pLhs->GetClusterList().end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pClusterLhs = *iter;
@@ -437,9 +437,10 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
             continue;
 
         nHitsLhs += pClusterLhs->GetNCaloHits();
+        energyLhs += pClusterLhs->GetHadronicEnergy();
     }
 
-    unsigned int nHitsRhs(0);
+    unsigned int nHitsRhs(0); float energyRhs(0.f);
     for (ClusterList::const_iterator iter = pRhs->GetClusterList().begin(), iterEnd = pRhs->GetClusterList().end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pClusterRhs = *iter;
@@ -448,12 +449,14 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
             continue;
 
         nHitsRhs += pClusterRhs->GetNCaloHits();
+        energyRhs += pClusterRhs->GetHadronicEnergy();
     }
 
     if (nHitsLhs != nHitsRhs)
         return (nHitsLhs > nHitsRhs);
 
-    return (LArPfoHelper::GetTwoDLengthSquared(pLhs) > LArPfoHelper::GetTwoDLengthSquared(pRhs));
+    // ATTN Need an efficient (balance with well-motived) tie-breaker here. Pfo length, for instance, is extremely slow.
+    return (energyLhs > energyRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
