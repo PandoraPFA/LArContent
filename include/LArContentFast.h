@@ -9,6 +9,7 @@
 #define LAR_CONTENT_FAST_H 1
 
 #include "LArContentFast/ListPreparationAlgorithmFast.h"
+#include "LArContentFast/LongitudinalAssociationAlgorithmFast.h"
 #include "LArContentFast/TransverseAssociationAlgorithmFast.h"
 #include "LArContentFast/VertexSelectionAlgorithmFast.h"
 
@@ -20,6 +21,7 @@ class LArContentFast
 public:
     #define LAR_ALGORITHM_FAST_LIST(d)                                                                                          \
         d("LArListPreparationFast",                    lar_content_fast::ListPreparationAlgorithm::Factory)                     \
+        d("LArLongitudinalAssociationFast",            lar_content_fast::LongitudinalAssociationAlgorithm::Factory)             \
         d("LArTransverseAssociationFast",              lar_content_fast::TransverseAssociationAlgorithm::Factory)               \
         d("LArVertexSelectionFast",                    lar_content_fast::VertexSelectionAlgorithm::Factory)
 
