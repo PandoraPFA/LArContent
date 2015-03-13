@@ -43,6 +43,9 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
         LArClusterHelper::GetClosestDistance(maxPosition2, slidingFitResult1.GetCluster()) < 2.f * m_maxClusterSeparation)
         return STATUS_CODE_NOT_FOUND;
 
+    if (LArClusterHelper::GetClosestDistance(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster()) > m_maxClusterSeparation)
+        return STATUS_CODE_NOT_FOUND;
+
     CartesianPointList candidateList;
     this->FindCandidateSplitPositions(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster(), candidateList);
 
