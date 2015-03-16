@@ -157,16 +157,22 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
             (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
 
         const Cluster *pBestMatchedCluster(NULL);
-        this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult);
+        const StatusCode statusCode(this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult));
 
-        pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
-        pMatchedClusterV = ((NULL != pClusterV) ? pClusterV : pBestMatchedCluster);
-        pMatchedClusterW = ((NULL != pClusterW) ? pClusterW : pBestMatchedCluster);
+        if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_FOUND != statusCode))
+            throw StatusCodeException(statusCode);
 
-        if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+        if (STATUS_CODE_SUCCESS == statusCode)
+        {
+            pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
+            pMatchedClusterV = ((NULL != pClusterV) ? pClusterV : pBestMatchedCluster);
+            pMatchedClusterW = ((NULL != pClusterW) ? pClusterW : pBestMatchedCluster);
 
-        oldOverlapResult = m_overlapTensor.GetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW);
+            if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            oldOverlapResult = m_overlapTensor.GetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW);
+        }
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -189,7 +195,7 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+StatusCode ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     const ClusterList &inputClusterList, const Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const
 {
     const Cluster *const pCluster1(fitResult1.GetCluster());
@@ -202,32 +208,43 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitR
     const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
 
     if (xOverlap < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     CartesianPointList projectedPositions;
-    this->GetProjectedPositions(fitResult1, fitResult2, projectedPositions);
+    const StatusCode statusCode1(this->GetProjectedPositions(fitResult1, fitResult2, projectedPositions));
+
+    if (STATUS_CODE_SUCCESS != statusCode1)
+        return statusCode1;
 
     CaloHitList matchedHits;
     ClusterList matchedClusters;
     HitToClusterMap hitToClusterMap;
-    this->GetMatchedHits(inputClusterList, projectedPositions, hitToClusterMap, matchedHits);
-    this->GetMatchedClusters(matchedHits, hitToClusterMap, matchedClusters, pBestMatchedCluster);
+    const StatusCode statusCode2(this->GetMatchedHits(inputClusterList, projectedPositions, hitToClusterMap, matchedHits));
+
+    if (STATUS_CODE_SUCCESS != statusCode2)
+        return statusCode2;
+
+    const StatusCode statusCode3(this->GetMatchedClusters(matchedHits, hitToClusterMap, matchedClusters, pBestMatchedCluster));
+
+    if (STATUS_CODE_SUCCESS != statusCode3)
+        return statusCode3;
 
     if (!this->CheckMatchedClusters(projectedPositions, matchedClusters))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     FragmentOverlapResult overlapResult;
     this->GetFragmentOverlapResult(projectedPositions, matchedHits, matchedClusters, overlapResult);
 
     if (!this->CheckOverlapResult(overlapResult))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     fragmentOverlapResult = overlapResult;
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+StatusCode ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     CartesianPointList &projectedPositions) const
 {
     const Cluster *const pCluster1(fitResult1.GetCluster());
@@ -241,7 +258,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
                            (TPC_VIEW_W != hitType1 && TPC_VIEW_W != hitType2) ? TPC_VIEW_W : HIT_CUSTOM);
 
     if (HIT_CUSTOM == hitType3)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        return STATUS_CODE_INVALID_PARAMETER;
 
     // Check absolute and fractional overlap in x coordinate
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
@@ -252,7 +269,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const float xSpan(std::max(xMax1, xMax2) - std::min(xMin1, xMin2));
 
     if ((xOverlap < m_minXOverlap) || (xSpan < std::numeric_limits<float>::epsilon()) || ((xOverlap / xSpan) < m_minXOverlapFraction))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     // Identify vertex and end positions (2D)
     const CartesianVector minPosition1(fitResult1.GetGlobalMinLayerPosition());
@@ -266,7 +283,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const float dx_D(std::fabs(minPosition2.GetX() - maxPosition1.GetX()));
 
     if (std::min(dx_C,dx_D) > std::max(dx_A,dx_B) && std::min(dx_A,dx_B) > std::max(dx_C,dx_D))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+       return STATUS_CODE_NOT_FOUND;
 
     const CartesianVector &vtxPosition1(minPosition1);
     const CartesianVector &endPosition1(maxPosition1);
@@ -289,7 +306,7 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
     const float nSamplingPoints((endProjection3 - vtxProjection3).GetMagnitude() / samplingPitch);
 
     if (nSamplingPoints < 1.f)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     // Loop over trajectory points
     bool foundLastPosition(false);
@@ -301,59 +318,63 @@ void ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitRe
         const CartesianVector linearPosition1(LArGeometryHelper::ProjectPosition(this->GetPandora(), linearPosition3D, hitType1));
         const CartesianVector linearPosition2(LArGeometryHelper::ProjectPosition(this->GetPandora(), linearPosition3D, hitType2));
 
-        try
+        float chi2(0.f);
+        CartesianVector fitPosition1(0.f, 0.f, 0.f), fitPosition2(0.f, 0.f, 0.f);
+
+        if ((STATUS_CODE_SUCCESS != fitResult1.GetGlobalFitProjection(linearPosition1, fitPosition1)) ||
+            (STATUS_CODE_SUCCESS != fitResult2.GetGlobalFitProjection(linearPosition2, fitPosition2)))
         {
-            float chi2(0.f);
-            CartesianVector fitPosition1(0.f, 0.f, 0.f), fitPosition2(0.f, 0.f, 0.f);
-            fitResult1.GetGlobalFitProjection(linearPosition1, fitPosition1);
-            fitResult2.GetGlobalFitProjection(linearPosition2, fitPosition2);
+            continue;
+        }
 
-            float rL1(0.f), rL2(0.f), rT1(0.f), rT2(0.f);
-            fitResult1.GetLocalPosition(fitPosition1, rL1, rT1);
-            fitResult2.GetLocalPosition(fitPosition2, rL2, rT2);
+        float rL1(0.f), rL2(0.f), rT1(0.f), rT2(0.f);
+        fitResult1.GetLocalPosition(fitPosition1, rL1, rT1);
+        fitResult2.GetLocalPosition(fitPosition2, rL2, rT2);
 
-            const FitSegment &fitSegment1 = fitResult1.GetFitSegment(rL1);
-            const FitSegment &fitSegment2 = fitResult2.GetFitSegment(rL2);
+        const FitSegment &fitSegment1 = fitResult1.GetFitSegment(rL1);
+        const FitSegment &fitSegment2 = fitResult2.GetFitSegment(rL2);
 
-            const float x(0.5 * (fitPosition1.GetX() + fitPosition2.GetX()));
-            CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);
-            fitResult1.GetTransverseProjection(x, fitSegment1, position1);
-            fitResult2.GetTransverseProjection(x, fitSegment2, position2);
-            LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, position1, position2, position3, chi2);
+        const float x(0.5 * (fitPosition1.GetX() + fitPosition2.GetX()));
+        CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);
+        if ((STATUS_CODE_SUCCESS != fitResult1.GetTransverseProjection(x, fitSegment1, position1)) ||
+            (STATUS_CODE_SUCCESS != fitResult2.GetTransverseProjection(x, fitSegment2, position2)))
+        {
+            continue;
+        }
 
-            // TODO For highly multi-valued x, projected positions can be unreliable. Need to make interpolation more robust for these cases.
-            if (foundLastPosition)
+        LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, position1, position2, position3, chi2);
+
+        // TODO For highly multi-valued x, projected positions can be unreliable. Need to make interpolation more robust for these cases.
+        if (foundLastPosition)
+        {
+            const float thisDisplacement((lastPosition - position3).GetMagnitude());
+            if (thisDisplacement > 2.f * samplingPitch)
             {
-                const float thisDisplacement((lastPosition - position3).GetMagnitude());
-                if (thisDisplacement > 2.f * samplingPitch)
+                const float nExtraPoints(thisDisplacement / samplingPitch);
+                for (float iExtra = 0.5f; iExtra < nExtraPoints; iExtra += 1.f)
                 {
-                    const float nExtraPoints(thisDisplacement / samplingPitch);
-                    for (float iExtra = 0.5f; iExtra < nExtraPoints; iExtra += 1.f)
-                    {
-                        const CartesianVector extraPosition(position3 + (lastPosition - position3) * (iExtra / nExtraPoints));
-                        projectedPositions.push_back(extraPosition);
-                    }
+                    const CartesianVector extraPosition(position3 + (lastPosition - position3) * (iExtra / nExtraPoints));
+                    projectedPositions.push_back(extraPosition);
                 }
             }
-
-            projectedPositions.push_back(position3);
-
-            lastPosition = position3;
-            foundLastPosition = true;
         }
-        catch (StatusCodeException &)
-        {
-        }
+
+        projectedPositions.push_back(position3);
+
+        lastPosition = position3;
+        foundLastPosition = true;
     }
 
     // Bail out if list of projected positions is empty
     if (projectedPositions.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointList &projectedPositions,
+StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointList &projectedPositions,
     HitToClusterMap &hitToClusterMap, CaloHitList &matchedHits) const
 {
     CaloHitList availableCaloHits;
@@ -396,12 +417,14 @@ void ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClust
     }
 
     if (matchedHits.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
+StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
     ClusterList &matchedClusters, const Cluster *&pBestMatchedCluster) const
 {
     ClusterToMatchedHitsMap clusterToMatchedHitsMap;
@@ -419,7 +442,7 @@ void ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &matche
     }
 
     if (matchedClusters.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     pBestMatchedCluster = NULL;
     unsigned int bestClusterMatchedHits(0);
@@ -434,7 +457,9 @@ void ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &matche
     }
 
     if (NULL == pBestMatchedCluster)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

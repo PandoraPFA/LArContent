@@ -274,48 +274,60 @@ public:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  position the fitted position at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
+    pandora::StatusCode GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
 
     /**
      *  @brief  Get global fit direction for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
      *  @param  direction the fitted direction at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
+    pandora::StatusCode GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
 
     /**
      *  @brief  Get global fit position for a given input x coordinate
      *
      *  @param  x the input coordinate
      *  @param  position the fitted position at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitPositionAtX(const float x, pandora::CartesianVector &position) const;
+    pandora::StatusCode GetGlobalFitPositionAtX(const float x, pandora::CartesianVector &position) const;
 
     /**
      *  @brief  Get global fit direction for a given input x coordinate
      *
      *  @param  x the input coordinate
      *  @param  direction the fitted direction at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitDirectionAtX(const float x, pandora::CartesianVector &direction) const;
+    pandora::StatusCode GetGlobalFitDirectionAtX(const float x, pandora::CartesianVector &direction) const;
 
     /**
      *  @brief  Get projected position on global fit for a given position vector
      *
      *  @param  inputPosition the input coordinate
      *  @param  projectedPosition the projected position on the global fit for these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
+    pandora::StatusCode GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
 
     /**
      *  @brief Get a list of projected positions for a given input x coordinate
      *
      *  @param x the input x coordinate
      *  @param positionList the output list of positions
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitPositionListAtX(const float x, pandora::CartesianPointList &positionList) const;
+    pandora::StatusCode GetGlobalFitPositionListAtX(const float x, pandora::CartesianPointList &positionList) const;
 
     /**
      *  @brief Get projected position for a given input x coordinate and fit segment
@@ -323,8 +335,10 @@ public:
      *  @param x the input x coordinate
      *  @param fitSegment the portion of sliding linear fit
      *  @param position the output position
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position) const;
+    pandora::StatusCode GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position) const;
 
     /**
      *  @brief Get projected position and direction for a given input x coordinate and fit segment
@@ -333,8 +347,10 @@ public:
      *  @param fitSegment the portion of sliding linear fit
      *  @param position the output position
      *  @param position the output direction
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position,
+    pandora::StatusCode GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position,
         pandora::CartesianVector &direction) const;
 
     /**
@@ -342,8 +358,10 @@ public:
      *
      *  @param  x the input coordinate
      *  @param  position the extrapolated position at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetExtrapolatedPositionAtX(const float x, pandora::CartesianVector &position) const;
+    pandora::StatusCode GetExtrapolatedPositionAtX(const float x, pandora::CartesianVector &position) const;
 
     /**
      *  @brief Get fit segment for a given longitudinal coordinate
@@ -408,28 +426,32 @@ private:
      *  @brief  Get the pair of layers surrounding a specified longitudinal position
      *
      *  @param  rL the longitudinal coordinate
-     *
-     *  @return Layer interpolation object
+     *  @param  layerInterpolation to receive the populated layer interpolation object
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    LayerInterpolation LongitudinalInterpolation(const float rL) const;
+    pandora::StatusCode LongitudinalInterpolation(const float rL, LayerInterpolation &layerInterpolation) const;
 
     /**
      *  @brief  Get the surrounding pair of layers for a specified transverse position and fit segment
      *
      *  @param  x the input coordinate
      *  @param  fitSegment the fit segment
-     *
-     *  @return Layer interpolation object
+     *  @param  layerInterpolation to receive the populated layer interpolation object
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    LayerInterpolation TransverseInterpolation(const float x, const FitSegment &fitSegment) const;
+    pandora::StatusCode TransverseInterpolation(const float x, const FitSegment &fitSegment, LayerInterpolation &layerInterpolation) const;
 
     /**
      *  @brief  Get the a list of surrounding layer pairs for a specified transverse position
      *
      *  @param  x the input coordinate
      *  @param  layerInterpolationList the output list of layer interpolation objects
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void TransverseInterpolation(const float x, LayerInterpolationList &layerInterpolationList) const;
+    pandora::StatusCode TransverseInterpolation(const float x, LayerInterpolationList &layerInterpolationList) const;
 
     /**
      *  @brief  Get iterators for layers surrounding the specified longitudinal position
@@ -437,8 +459,10 @@ private:
      *  @param  rL the longitudinal coordinate
      *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
      *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetLongitudinalSurroundingLayers(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
+    pandora::StatusCode GetLongitudinalSurroundingLayers(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
         LayerFitResultMap::const_iterator &secondLayerIter) const;
 
     /**
@@ -449,8 +473,10 @@ private:
      *  @param  maxLayer the maximum allowed layer
      *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
      *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetTransverseSurroundingLayers(const float x, const int minLayer, const int maxLayer,
+    pandora::StatusCode GetTransverseSurroundingLayers(const float x, const int minLayer, const int maxLayer,
         LayerFitResultMap::const_iterator &firstLayerIter, LayerFitResultMap::const_iterator &secondLayerIter) const;
 
     /**

@@ -227,39 +227,36 @@ StatusCode CosmicRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingF
         const float alpha((0.5f + static_cast<float>(n)) / static_cast<float>(nSamplingPoints));
         const float rL(minL + (maxL - minL) * alpha);
 
-        try
+        CartesianVector centralPosition(0.f,0.f,0.f), forwardDirection(0.f,0.f,0.f), backwardDirection(0.f,0.f,0.f);
+
+        if ((STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitPosition(rL, centralPosition)) ||
+            (STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitDirection(rL + halfWindowLength, forwardDirection)) ||
+            (STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitDirection(rL - halfWindowLength, backwardDirection)))
         {
-            CartesianVector centralPosition(0.f,0.f,0.f);
-            CartesianVector forwardDirection(0.f,0.f,0.f);
-            CartesianVector backwardDirection(0.f,0.f,0.f);
-
-            branchSlidingFitResult.GetGlobalFitPosition(rL, centralPosition);
-            branchSlidingFitResult.GetGlobalFitDirection(rL + halfWindowLength, forwardDirection);
-            branchSlidingFitResult.GetGlobalFitDirection(rL - halfWindowLength, backwardDirection);
-
-            const float cosTheta(forwardDirection.GetDotProduct(backwardDirection));
-
-            if (cosTheta < splitCosTheta)
-            {
-                CartesianVector forwardPosition(0.f,0.f,0.f);
-                CartesianVector backwardPosition(0.f,0.f,0.f);
-
-                branchSlidingFitResult.GetGlobalFitPosition(rL + halfWindowLength, forwardPosition);
-                branchSlidingFitResult.GetGlobalFitPosition(rL - halfWindowLength, backwardPosition);
-
-                CartesianVector forwardVectorOutwards(forwardPosition - centralPosition);
-                CartesianVector backwardVectorOutwards(backwardPosition - centralPosition);
-
-                splitPosition = centralPosition;
-                splitDirection1 = (forwardDirection.GetDotProduct(forwardVectorOutwards) > 0.f) ? forwardDirection : forwardDirection * -1.f;
-                splitDirection2 = (backwardDirection.GetDotProduct(backwardVectorOutwards) > 0.f) ? backwardDirection : backwardDirection * -1.f;
-                splitCosTheta = cosTheta;
-                foundSplit = true;
-            }
+            continue;
         }
-        catch (StatusCodeException &)
-        {
 
+        const float cosTheta(forwardDirection.GetDotProduct(backwardDirection));
+
+        if (cosTheta < splitCosTheta)
+        {
+            CartesianVector forwardPosition(0.f,0.f,0.f);
+            CartesianVector backwardPosition(0.f,0.f,0.f);
+
+            if ((STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitPosition(rL + halfWindowLength, forwardPosition)) ||
+                (STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitPosition(rL - halfWindowLength, backwardPosition)))
+            {
+                continue;
+            }
+
+            CartesianVector forwardVectorOutwards(forwardPosition - centralPosition);
+            CartesianVector backwardVectorOutwards(backwardPosition - centralPosition);
+
+            splitPosition = centralPosition;
+            splitDirection1 = (forwardDirection.GetDotProduct(forwardVectorOutwards) > 0.f) ? forwardDirection : forwardDirection * -1.f;
+            splitDirection2 = (backwardDirection.GetDotProduct(backwardVectorOutwards) > 0.f) ? backwardDirection : backwardDirection * -1.f;
+            splitCosTheta = cosTheta;
+            foundSplit = true;
         }
     }
 

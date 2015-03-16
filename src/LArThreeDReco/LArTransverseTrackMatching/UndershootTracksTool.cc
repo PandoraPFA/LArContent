@@ -85,12 +85,17 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
 
                 if (m_splitMode)
                 {
-                    CartesianVector splitPosition1(0.f, 0.f, 0.f);
-                    pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster1).GetGlobalFitPositionAtX(splitPosition.GetX(), splitPosition1);
-                    modification.m_splitPositionMap[particle.m_pCommonCluster1].push_back(splitPosition1);
+                    const TwoDSlidingFitResult &fitResult1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster1));
+                    const TwoDSlidingFitResult &fitResult2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster2));
 
-                    CartesianVector splitPosition2(0.f, 0.f, 0.f);
-                    pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster2).GetGlobalFitPositionAtX(splitPosition.GetX(), splitPosition2);
+                    CartesianVector splitPosition1(0.f, 0.f, 0.f), splitPosition2(0.f, 0.f, 0.f);
+                    if ((STATUS_CODE_SUCCESS != fitResult1.GetGlobalFitPositionAtX(splitPosition.GetX(), splitPosition1)) ||
+                        (STATUS_CODE_SUCCESS != fitResult2.GetGlobalFitPositionAtX(splitPosition.GetX(), splitPosition2)))
+                    {
+                        continue;
+                    }
+
+                    modification.m_splitPositionMap[particle.m_pCommonCluster1].push_back(splitPosition1);
                     modification.m_splitPositionMap[particle.m_pCommonCluster2].push_back(splitPosition2);
                 }
                 else
@@ -108,8 +113,11 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
 
                 modificationList.push_back(modification);
             }
-            catch (StatusCodeException &)
+            catch (StatusCodeException &statusCodeException)
             {
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                    throw statusCodeException;
+
                 continue;
             }
         }
@@ -133,18 +141,20 @@ bool UndershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *const p
         const float splitX(splitPosition.GetX());
 
         CartesianVector minus1(0.f, 0.f, 0.f), split1(0.f, 0.f, 0.f), plus1(0.f, 0.f, 0.f);
-        fitResultCommon1.GetGlobalFitPositionAtX(minusX, minus1);
-        fitResultCommon1.GetGlobalFitPositionAtX(splitX, split1);
-        fitResultCommon1.GetGlobalFitPositionAtX(plusX, plus1);
-
         CartesianVector minus2(0.f, 0.f, 0.f), split2(0.f, 0.f, 0.f), plus2(0.f, 0.f, 0.f);
-        fitResultCommon2.GetGlobalFitPositionAtX(minusX, minus2);
-        fitResultCommon2.GetGlobalFitPositionAtX(splitX, split2);
-        fitResultCommon2.GetGlobalFitPositionAtX(plusX, plus2);
-
         CartesianVector minus3(0.f, 0.f, 0.f), split3(splitPosition), plus3(0.f, 0.f, 0.f);
-        lowXFitResult.GetGlobalFitPositionAtX(minusX, minus3);
-        highXFitResult.GetGlobalFitPositionAtX(plusX, plus3);
+
+        if ((STATUS_CODE_SUCCESS != fitResultCommon1.GetGlobalFitPositionAtX(minusX, minus1)) ||
+            (STATUS_CODE_SUCCESS != fitResultCommon1.GetGlobalFitPositionAtX(splitX, split1)) ||
+            (STATUS_CODE_SUCCESS != fitResultCommon1.GetGlobalFitPositionAtX(plusX, plus1)) ||
+            (STATUS_CODE_SUCCESS != fitResultCommon2.GetGlobalFitPositionAtX(minusX, minus2)) ||
+            (STATUS_CODE_SUCCESS != fitResultCommon2.GetGlobalFitPositionAtX(splitX, split2)) ||
+            (STATUS_CODE_SUCCESS != fitResultCommon2.GetGlobalFitPositionAtX(plusX, plus2)) ||
+            (STATUS_CODE_SUCCESS != lowXFitResult.GetGlobalFitPositionAtX(minusX, minus3)) ||
+            (STATUS_CODE_SUCCESS != highXFitResult.GetGlobalFitPositionAtX(plusX, plus3)))
+        {
+            return false; // majority rules, by default
+        }
 
         // Extract results
         const HitType hitType1(LArClusterHelper::GetClusterHitType(particle.m_pCommonCluster1));

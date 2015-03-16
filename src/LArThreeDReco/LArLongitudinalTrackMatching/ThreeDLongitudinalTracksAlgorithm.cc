@@ -191,24 +191,21 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
         const CartesianVector linearV(vtxMergedV + (endMergedV - vtxMergedV) * alpha);
         const CartesianVector linearW(vtxMergedW + (endMergedW - vtxMergedW) * alpha);
 
-        try
+        CartesianVector posU(0.f,0.f,0.f), posV(0.f,0.f,0.f), posW(0.f,0.f,0.f);
+        if ((STATUS_CODE_SUCCESS != slidingFitResultU.GetGlobalFitProjection(linearU, posU)) ||
+            (STATUS_CODE_SUCCESS != slidingFitResultV.GetGlobalFitProjection(linearV, posV)) ||
+            (STATUS_CODE_SUCCESS != slidingFitResultW.GetGlobalFitProjection(linearW, posW)))
         {
-            CartesianVector posU(0.f,0.f,0.f), posV(0.f,0.f,0.f), posW(0.f,0.f,0.f);
-            slidingFitResultU.GetGlobalFitProjection(linearU, posU);
-            slidingFitResultV.GetGlobalFitProjection(linearV, posV);
-            slidingFitResultW.GetGlobalFitProjection(linearW, posW);
-
-            CartesianVector mergedU(0.f,0.f,0.f), mergedV(0.f,0.f,0.f), mergedW(0.f,0.f,0.f);
-            LArGeometryHelper::MergeThreePositions(this->GetPandora(), posU, posV, posW, mergedU, mergedV, mergedW, deltaChi2);
-
-            if (deltaChi2 < m_reducedChi2Cut)
-                ++nMatchedSamplingPoints;
-
-            totalChi2 += deltaChi2;
+            continue;
         }
-        catch (StatusCodeException &)
-        {
-        }
+
+        CartesianVector mergedU(0.f,0.f,0.f), mergedV(0.f,0.f,0.f), mergedW(0.f,0.f,0.f);
+        LArGeometryHelper::MergeThreePositions(this->GetPandora(), posU, posV, posW, mergedU, mergedV, mergedW, deltaChi2);
+
+        if (deltaChi2 < m_reducedChi2Cut)
+            ++nMatchedSamplingPoints;
+
+        totalChi2 += deltaChi2;
     }
 
     if (nMatchedSamplingPoints > 0)

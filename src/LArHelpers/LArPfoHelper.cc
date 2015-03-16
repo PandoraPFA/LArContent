@@ -293,20 +293,15 @@ void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo,
             for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
             {
                 const CaloHit *const pCaloHit = *hIter;
+                const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit->GetPositionVector()));
 
-                try
+                CartesianVector position(0.f, 0.f, 0.f), direction(0.f, 0.f, 0.f);
+
+                if ((STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitPosition(rL, position)) &&
+                    (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitDirection(rL, direction)))
                 {
-                    const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit->GetPositionVector()));
-                    CartesianVector position(0.f, 0.f, 0.f), direction(0.f, 0.f, 0.f);
-                    slidingFitResult.GetGlobalFitPosition(rL, position);
-                    slidingFitResult.GetGlobalFitDirection(rL, direction);
                     trajectoryList.push_back(TrajectoryPoint(clusterDirection.GetDotProduct(position - pfoVertex) * scaleFactor,
                         TrackState(position, direction * scaleFactor)));
-                }
-                catch (StatusCodeException &statusCodeException)
-                {
-                    if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                        throw statusCodeException;
                 }
             }
         }
