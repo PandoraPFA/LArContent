@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
+#include "LArContentFast/KDTreeLinkerAlgoT.h"
 #include "LArContentFast/TransverseAssociationAlgorithmFast.h"
 
 using namespace pandora;
@@ -31,7 +32,9 @@ TransverseAssociationAlgorithm::TransverseAssociationAlgorithm() :
     m_maxLongitudinalOverlap(1.5f),
     m_transverseClusterMinCosTheta(0.866f),
     m_transverseClusterMinLength(0.5f),
-    m_transverseClusterMaxDisplacement(1.5f)
+    m_transverseClusterMaxDisplacement(1.5f),
+    m_searchRegionX(3.5f),
+    m_searchRegionZ(2.f)
 {
 }
 
@@ -52,6 +55,12 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
 
     try
     {
+        ClusterToClustersMap nearbyClusters;
+        this->GetNearbyClusterMap(allClusters, nearbyClusters);
+
+        if (nearbyClusters.empty())
+            return;
+
         // Step 1: Sort the input clusters into sub-samples
         //         (a) shortClusters:  below first length cut
         //         (b) mediumClusters: between first and second length cuts (separated into transverse and longitudinal)
@@ -71,26 +80,26 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
         // Step 2: Form loose transverse associations between short clusters,
         //         without hopping over any established clusters
         ClusterAssociationMap firstAssociationMap;
-        this->FillReducedAssociationMap(shortClusters, establishedClusters, firstAssociationMap);
+        this->FillReducedAssociationMap(nearbyClusters, shortClusters, establishedClusters, firstAssociationMap);
 
         // Step 3: Form transverse cluster objects. Basically, try to assign a direction to each
         //         of the clusters in the 'transverseClusters' list. For the short clusters in
         //         this list, the direction is obtained from a straight line fit to its associated
         //         clusters as selected in the previous step.
-        this->FillTransverseClusterList(transverseClusters, firstAssociationMap, transverseClusterList);
+        this->FillTransverseClusterList(nearbyClusters, transverseClusters, firstAssociationMap, transverseClusterList);
 
         // Step 4: Form loose transverse associations between transverse clusters
         //         (First, associate medium clusters, without hopping over long clusters
         //          Next, associate all transverse clusters, without hopping over any clusters)
         ClusterAssociationMap secondAssociationMap;
-        this->FillReducedAssociationMap(transverseMediumClusters, longClusters, secondAssociationMap);
-        this->FillReducedAssociationMap(transverseClusters, allClusters, secondAssociationMap);
+        this->FillReducedAssociationMap(nearbyClusters, transverseMediumClusters, longClusters, secondAssociationMap);
+        this->FillReducedAssociationMap(nearbyClusters, transverseClusters, allClusters, secondAssociationMap);
 
         // Step 5: Form associations between transverse cluster objects
         //         (These transverse associations must already exist as loose associations
         //          between transverse clusters as identified in the previous step).
         ClusterAssociationMap transverseAssociationMap;
-        this->FillTransverseAssociationMap(transverseClusterList, secondAssociationMap, transverseAssociationMap);
+        this->FillTransverseAssociationMap(nearbyClusters, transverseClusterList, secondAssociationMap, transverseAssociationMap);
 
         // Step 6: Finalise the forward/backward transverse associations by symmetrising the
         //         transverse association map and removing any double-counting
@@ -104,6 +113,48 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
     for (TransverseClusterList::const_iterator iter = transverseClusterList.begin(), iterEnd = transverseClusterList.end(); iter != iterEnd; ++iter)
     {
         delete *iter;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::GetNearbyClusterMap(const ClusterVector &allClusters, ClusterToClustersMap &nearbyClusters) const
+{
+    HitToClusterMap hitToClusterMap;
+    CaloHitList allCaloHits;
+
+    for (const Cluster *const pCluster : allClusters)
+    {
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+
+        for (const CaloHit *const pCaloHit : daughterHits)
+            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+    }
+
+    HitKDTree2D kdTree;
+    HitKDNode2DList hitKDNode2DList;
+
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, allCaloHits, hitKDNode2DList, true);
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
+
+    for (const Cluster *const pCluster : allClusters)
+    {
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+
+        for (const CaloHit *const pCaloHit : daughterHits)
+        {
+            CaloHitList nearbyHits;
+            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegionX, m_searchRegionZ);
+
+            HitKDNode2DList found;
+            kdTree.search(searchRegionHits, found);
+
+            for (const auto &hit : found)
+                (void) nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
+        }
     }
 }
 
@@ -139,7 +190,25 @@ void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterVector &firstVector, const ClusterVector &secondVector, ClusterAssociationMap &firstAssociationMap, ClusterAssociationMap &secondAssociationMap) const
+void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterToClustersMap &nearbyClusters, const ClusterVector &firstVector,
+    const ClusterVector &secondVector, ClusterAssociationMap &clusterAssociationMap) const
+{
+    // To build a 'reduced' association map, form associations between clusters in the first cluster vector,
+    // but prevent these associations from hopping over any clusters in the second cluster vector.
+    // i.e. A->B from the first vector is forbidden if A->C->B exists with C from the second vector
+
+    ClusterAssociationMap firstAssociationMap, firstAssociationMapSwapped;
+    ClusterAssociationMap secondAssociationMap, secondAssociationMapSwapped;
+
+    this->FillAssociationMap(nearbyClusters, firstVector, firstVector, firstAssociationMap, firstAssociationMapSwapped);
+    this->FillAssociationMap(nearbyClusters, firstVector, secondVector, secondAssociationMap, secondAssociationMapSwapped);
+    this->FillReducedAssociationMap(firstAssociationMap, secondAssociationMap, secondAssociationMapSwapped, clusterAssociationMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterToClustersMap &nearbyClusters, const ClusterVector &firstVector,
+    const ClusterVector &secondVector, ClusterAssociationMap &firstAssociationMap, ClusterAssociationMap &secondAssociationMap) const
 {
     for (ClusterVector::const_iterator iterI = firstVector.begin(), iterEndI = firstVector.end(); iterI != iterEndI; ++iterI)
     {
@@ -152,13 +221,13 @@ void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterVector &fir
             if (pClusterI == pClusterJ)
             continue;
 
-            if (this->IsAssociated(true, pClusterI, pClusterJ))
+            if (this->IsAssociated(true, pClusterI, pClusterJ, nearbyClusters))
             {
                 firstAssociationMap[pClusterI].m_forwardAssociations.insert(pClusterJ);
                 secondAssociationMap[pClusterJ].m_backwardAssociations.insert(pClusterI);
             }
 
-            if (this->IsAssociated(false, pClusterI, pClusterJ))
+            if (this->IsAssociated(false, pClusterI, pClusterJ, nearbyClusters))
             {
                 firstAssociationMap[pClusterI].m_backwardAssociations.insert(pClusterJ);
                 secondAssociationMap[pClusterJ].m_forwardAssociations.insert(pClusterI);
@@ -169,30 +238,15 @@ void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterVector &fir
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterVector &firstVector, const ClusterVector &secondVector, ClusterAssociationMap &clusterAssociationMap) const
-{
-    // To build a 'reduced' association map, form associations between clusters in the first cluster vector,
-    // but prevent these associations from hopping over any clusters in the second cluster vector.
-    // i.e. A->B from the first vector is forbidden if A->C->B exists with C from the second vector
-
-    ClusterAssociationMap firstAssociationMap, firstAssociationMapSwapped;
-    ClusterAssociationMap secondAssociationMap, secondAssociationMapSwapped;
-
-    this->FillAssociationMap(firstVector, firstVector, firstAssociationMap, firstAssociationMapSwapped);
-    this->FillAssociationMap(firstVector, secondVector, secondAssociationMap, secondAssociationMapSwapped);
-    this->FillReducedAssociationMap(firstAssociationMap, secondAssociationMap, secondAssociationMapSwapped, clusterAssociationMap);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterVector &inputVector, const ClusterAssociationMap &inputAssociationMap, TransverseClusterList &transverseClusterList) const
+void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterToClustersMap &nearbyClusters, const ClusterVector &inputVector,
+    const ClusterAssociationMap &inputAssociationMap, TransverseClusterList &transverseClusterList) const
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
         ClusterVector associatedClusters;
 
-        this->GetAssociatedClusters(pCluster, inputAssociationMap, associatedClusters);
+        this->GetAssociatedClusters(nearbyClusters, pCluster, inputAssociationMap, associatedClusters);
 
         if (this->GetTransverseSpan(pCluster, associatedClusters) < m_transverseClusterMinLength)
             continue;
@@ -203,7 +257,8 @@ void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const TransverseClusterList &transverseClusterList, const ClusterAssociationMap& transverseAssociationMap, ClusterAssociationMap &clusterAssociationMap) const
+void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterToClustersMap &nearbyClusters, const TransverseClusterList &transverseClusterList,
+    const ClusterAssociationMap &transverseAssociationMap, ClusterAssociationMap &clusterAssociationMap) const
 {
     for (TransverseClusterList::const_iterator iter1 = transverseClusterList.begin(), iterEnd1 = transverseClusterList.end(); iter1 != iterEnd1; ++iter1)
     {
@@ -234,7 +289,7 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const Transver
                 !this->IsExtremalCluster(false, pOuterCluster, pInnerCluster))
                 continue;
 
-            if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster))
+            if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster, nearbyClusters))
                 continue;
 
             clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
@@ -245,7 +300,8 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const Transver
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::GetAssociatedClusters(const Cluster *const pClusterI, const ClusterAssociationMap& associationMap, ClusterVector &associatedVector) const
+void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToClustersMap &nearbyClusters, const Cluster *const pClusterI,
+    const ClusterAssociationMap &associationMap, ClusterVector &associatedVector) const
 {
     ClusterAssociationMap::const_iterator iterI = associationMap.find(pClusterI);
     if (associationMap.end() == iterI)
@@ -255,7 +311,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const Cluster *const 
     {
         const Cluster *const pClusterJ = *iterJ;
 
-        if (this->IsTransverseAssociated(pClusterI, pClusterJ))
+        if (this->IsTransverseAssociated(pClusterI, pClusterJ, nearbyClusters))
             associatedVector.push_back(pClusterJ);
     }
 
@@ -263,15 +319,19 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const Cluster *const 
     {
         const Cluster *const pClusterJ = *iterJ;
 
-        if (this->IsTransverseAssociated(pClusterJ, pClusterI))
+        if (this->IsTransverseAssociated(pClusterJ, pClusterI, nearbyClusters))
             associatedVector.push_back(pClusterJ);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseAssociationAlgorithm::IsAssociated(const bool isForward, const Cluster *const pFirstCluster, const Cluster *const pSecondCluster) const
+bool TransverseAssociationAlgorithm::IsAssociated(const bool isForward, const Cluster *const pFirstCluster, const Cluster *const pSecondCluster,
+    const ClusterToClustersMap &nearbyClusters) const
 {
+    if ((0 == nearbyClusters.at(pFirstCluster).count(pSecondCluster)) || (0 == nearbyClusters.at(pSecondCluster).count(pFirstCluster)))
+        return false;
+
     CartesianVector firstInner(0.f,0.f,0.f), firstOuter(0.f,0.f,0.f);
     CartesianVector secondInner(0.f,0.f,0.f), secondOuter(0.f,0.f,0.f);
     this->GetExtremalCoordinatesX(pFirstCluster, firstInner, firstOuter);
@@ -303,8 +363,12 @@ bool TransverseAssociationAlgorithm::IsAssociated(const bool isForward, const Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster) const
+bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster,
+    const ClusterToClustersMap &nearbyClusters) const
 {
+    if ((0 == nearbyClusters.at(pInnerCluster).count(pOuterCluster)) || (0 == nearbyClusters.at(pOuterCluster).count(pInnerCluster)))
+        return false;
+
     CartesianVector innerInner(0.f,0.f,0.f), innerOuter(0.f,0.f,0.f);
     CartesianVector outerInner(0.f,0.f,0.f), outerOuter(0.f,0.f,0.f);
     this->GetExtremalCoordinatesX(pInnerCluster, innerInner, innerOuter);
@@ -325,7 +389,7 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const
     const CartesianVector outerProjection(LArClusterHelper::GetClosestPosition(innerOuter, pOuterCluster));
 
     if (innerOuter.GetX() > innerProjection.GetX() + m_maxTransverseOverlap ||
-    outerInner.GetX() < outerProjection.GetX() - m_maxTransverseOverlap)
+        outerInner.GetX() < outerProjection.GetX() - m_maxTransverseOverlap)
         return false;
 
     return true;
@@ -334,7 +398,7 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseCluster *const pInnerTransverseCluster,
-    const LArTransverseCluster *const pOuterTransverseCluster) const
+    const LArTransverseCluster *const pOuterTransverseCluster, const ClusterToClustersMap &nearbyClusters) const
 {
     if (pInnerTransverseCluster->GetDirection().GetDotProduct(pOuterTransverseCluster->GetDirection()) < m_transverseClusterMinCosTheta)
         return false;
@@ -345,10 +409,10 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseC
     if (!this->IsTransverseAssociated(pOuterTransverseCluster, pInnerTransverseCluster->GetOuterVertex()))
         return false;
 
-    if (!this->IsTransverseAssociated(pInnerTransverseCluster->GetSeedCluster(),pOuterTransverseCluster->GetSeedCluster()))
+    if (!this->IsTransverseAssociated(pInnerTransverseCluster->GetSeedCluster(), pOuterTransverseCluster->GetSeedCluster(), nearbyClusters))
         return false;
 
-    if (this->IsOverlapping(pInnerTransverseCluster->GetSeedCluster(),pOuterTransverseCluster->GetSeedCluster()))
+    if (this->IsOverlapping(pInnerTransverseCluster->GetSeedCluster(), pOuterTransverseCluster->GetSeedCluster()))
         return false;
 
     return true;
@@ -356,7 +420,7 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const CartesianVector& testVertex) const
+bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster, const CartesianVector &testVertex) const
 {
     const CartesianVector &innerVertex(pTransverseCluster->GetInnerVertex());
     const CartesianVector &outerVertex(pTransverseCluster->GetOuterVertex());
@@ -514,7 +578,6 @@ void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(const Cluster *cons
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
 {
@@ -523,7 +586,8 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap, const ClusterAssociationMap &secondAssociationMap, const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const
+void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap, const ClusterAssociationMap &secondAssociationMap,
+    const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const
 {
     // Remove associations A->B from the first association map
     // if A->C exists in the second map and C->B exists in the reversed second map
