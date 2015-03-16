@@ -188,19 +188,14 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *const pAl
 
 bool TrackSplittingTool::CheckSplitPosition(const CartesianVector &splitPosition, const float splitX, const TwoDSlidingFitResult &longFitResult) const
 {
-    try
-    {
-        CartesianPointList fitPositionList;
-        longFitResult.GetGlobalFitPositionListAtX(splitX, fitPositionList);
+    CartesianPointList fitPositionList;
+    if (STATUS_CODE_SUCCESS != longFitResult.GetGlobalFitPositionListAtX(splitX, fitPositionList))
+        return false;
 
-        for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
-        {
-            if ((splitPosition - *iter).GetMagnitude() < m_maxSplitVsFitPositionDistance)
-                return true;
-        }
-    }
-    catch (StatusCodeException &)
+    for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
     {
+        if ((splitPosition - *iter).GetMagnitude() < m_maxSplitVsFitPositionDistance)
+            return true;
     }
 
     return false;

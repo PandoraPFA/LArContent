@@ -164,6 +164,11 @@ class LayerInterpolation
 {
 public:
     /**
+     *  @brief  Default constructor
+     */
+    LayerInterpolation();
+
+    /**
      *  @brief  Constructor
      *
      *  @param firstayerIter  the iterator for the upstream layer
@@ -384,6 +389,12 @@ inline unsigned int LayerFitContribution::GetNPoints() const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LayerInterpolation::LayerInterpolation()
+{
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LayerInterpolation::LayerInterpolation(const LayerFitResultMap::const_iterator &startLayerIter,

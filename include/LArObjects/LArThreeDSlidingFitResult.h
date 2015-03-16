@@ -138,16 +138,20 @@ public:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  position the fitted position at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
+    pandora::StatusCode GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
 
     /**
      *  @brief  Get global fit direction for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
      *  @param  direction the fitted direction at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    void GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
+    pandora::StatusCode GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
 
     /**
      *  @brief  Get longitudinal projection onto primary axis
@@ -177,7 +181,6 @@ public:
     static pandora::CartesianVector GetSeedDirection(const pandora::CartesianVector &axisDirection);
 
 private:
-
     /**
      *  @brief  Get global coordinates for a given pair of sliding linear fit coordinates
      *

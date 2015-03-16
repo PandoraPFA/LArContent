@@ -239,42 +239,39 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
         if ((x > particle.m_shortMinX) && (x < particle.m_shortMaxX))
             continue;
 
-        try
+        CartesianVector fitVector1(0.f, 0.f, 0.f), fitVector2(0.f, 0.f, 0.f);
+
+        if ((STATUS_CODE_SUCCESS != fitResult1.GetGlobalFitPositionAtX(x, fitVector1)) ||
+            (STATUS_CODE_SUCCESS != fitResult2.GetGlobalFitPositionAtX(x, fitVector2)))
         {
-            CartesianVector fitVector1(0.f, 0.f, 0.f), fitVector2(0.f, 0.f, 0.f);
-            fitResult1.GetGlobalFitPositionAtX(x, fitVector1);
-            fitResult2.GetGlobalFitPositionAtX(x, fitVector2);
-            const float prediction(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
-
-            for (SlidingFitResultMap::const_iterator iter = slidingFitResultMap.begin(), iterEnd = slidingFitResultMap.end(); iter != iterEnd; ++iter)
-            {
-                try
-                {
-                    CartesianVector fitVector(0.f, 0.f, 0.f), fitDirection(0.f, 0.f, 0.f);
-                    iter->second.GetGlobalFitPositionAtX(x, fitVector);
-                    iter->second.GetGlobalFitDirectionAtX(x, fitDirection);
-
-                    const float delta((prediction - fitVector.GetZ()) * fitDirection.GetX());
-                    const float pseudoChi2(delta * delta);
-
-                    SegmentOverlap &segmentOverlap(segmentOverlapMap[iter->first]);
-                    ++segmentOverlap.m_nSamplingPoints;
-                    segmentOverlap.m_pseudoChi2Sum += pseudoChi2;
-
-                    if (pseudoChi2 < m_pseudoChi2Cut)
-                    {
-                        ++segmentOverlap.m_nMatchedSamplingPoints;
-                        segmentOverlap.m_matchedSamplingMinX = std::min(x, segmentOverlap.m_matchedSamplingMinX);
-                        segmentOverlap.m_matchedSamplingMaxX = std::max(x, segmentOverlap.m_matchedSamplingMaxX);
-                    }
-                }
-                catch (StatusCodeException &)
-                {
-                }
-            }
+            continue;
         }
-        catch (StatusCodeException &)
+
+        const float prediction(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
+
+        for (SlidingFitResultMap::const_iterator iter = slidingFitResultMap.begin(), iterEnd = slidingFitResultMap.end(); iter != iterEnd; ++iter)
         {
+            CartesianVector fitVector(0.f, 0.f, 0.f), fitDirection(0.f, 0.f, 0.f);
+
+            if ((STATUS_CODE_SUCCESS != iter->second.GetGlobalFitPositionAtX(x, fitVector)) ||
+                (STATUS_CODE_SUCCESS != iter->second.GetGlobalFitDirectionAtX(x, fitDirection)))
+            {
+                continue;
+            }
+
+            const float delta((prediction - fitVector.GetZ()) * fitDirection.GetX());
+            const float pseudoChi2(delta * delta);
+
+            SegmentOverlap &segmentOverlap(segmentOverlapMap[iter->first]);
+            ++segmentOverlap.m_nSamplingPoints;
+            segmentOverlap.m_pseudoChi2Sum += pseudoChi2;
+
+            if (pseudoChi2 < m_pseudoChi2Cut)
+            {
+                ++segmentOverlap.m_nMatchedSamplingPoints;
+                segmentOverlap.m_matchedSamplingMinX = std::min(x, segmentOverlap.m_matchedSamplingMinX);
+                segmentOverlap.m_matchedSamplingMaxX = std::max(x, segmentOverlap.m_matchedSamplingMaxX);
+            }
         }
     }
 }
