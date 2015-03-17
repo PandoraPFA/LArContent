@@ -77,9 +77,14 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClust
         return;
 
     // Requirements on 3D matching
-    const float u(LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax));
-    const float v(LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax));
-    const float w(LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax));
+    float u(std::numeric_limits<float>::max()), v(std::numeric_limits<float>::max()), w(std::numeric_limits<float>::max());
+
+    if ((STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax, u)) ||
+        (STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax, v)) ||
+        (STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax, w)))
+    {
+        return;
+    }
 
     const float uv2w(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, u, v));
     const float vw2u(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, v, w));

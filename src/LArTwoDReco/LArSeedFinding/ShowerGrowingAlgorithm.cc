@@ -54,7 +54,16 @@ StatusCode ShowerGrowingAlgorithm::Run()
     for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
         const ClusterList *pClusterList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
+        const StatusCode statusCode(PandoraContentApi::GetList(*this, *listIter, pClusterList));
+
+        if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+        {
+            std::cout << "ShowerGrowingAlgorithm: cluster list not found " << *listIter << std::endl;
+            continue;
+        }
+
+        if (STATUS_CODE_SUCCESS != statusCode)
+            return statusCode;
 
         ClusterList usedClusters;
         const Cluster *pSeedCluster(NULL);
@@ -85,7 +94,7 @@ StatusCode ShowerGrowingAlgorithm::Run()
         }
     }
 
-    if (m_shouldRemoveShowerPfos)
+    if (m_shouldRemoveShowerPfos && !nCaloHitsPerCluster.empty() && !nBranchesPerCluster.empty())
         this->RemoveShowerPfos(nCaloHitsPerCluster, nBranchesPerCluster, pfoList);
 
     return STATUS_CODE_SUCCESS;
