@@ -89,8 +89,16 @@ public:
 
 protected:
     virtual void PreparationStep();
+
+    /**
+     *  @brief  Preparation step for a specific cluster list
+     * 
+     *  @param  clusterList the cluster list
+     */
+    virtual void PreparationStep(pandora::ClusterList &clusterList);
+
     virtual void TidyUp();
-  
+
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
      * 
