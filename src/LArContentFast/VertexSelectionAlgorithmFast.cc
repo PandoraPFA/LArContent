@@ -115,7 +115,16 @@ void VertexSelectionAlgorithm::InitializeKDTree(const std::string &clusterListNa
 {
     // TODO Decide whether to find vertices using either i) all hits, or ii) all hits in existing clusters, as below.
     const ClusterList *pClusterList = NULL;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+    const StatusCode statusCode(PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+    {
+        std::cout << "VertexSelectionAlgorithm: cluster list not found " << clusterListName << std::endl;
+        return;
+    }
+
+    if (STATUS_CODE_SUCCESS != statusCode)
+        throw StatusCodeException(statusCode);
 
     CaloHitList caloHitList;
 

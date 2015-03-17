@@ -160,6 +160,9 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
     if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_FOUND != statusCode))
         throw StatusCodeException(statusCode);
 
+    if (!newOverlapResult.IsInitialized())
+        return;
+
     if (STATUS_CODE_SUCCESS == statusCode)
     {
         pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
@@ -177,9 +180,6 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
         {
         }
     }
-
-    if (!newOverlapResult.IsInitialized())
-        return;
 
     if (!oldOverlapResult.IsInitialized())
     {
