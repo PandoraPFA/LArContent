@@ -38,20 +38,11 @@ bool ThreeDLongitudinalTracksAlgorithm::SortByChiSquared(const TensorType::Eleme
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
-    try
-    {
-        LongitudinalOverlapResult overlapResult;
-        this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+    LongitudinalOverlapResult overlapResult;
+    this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 
-        if (overlapResult.IsInitialized())
-            m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
-    }
-    catch (StatusCodeException &statusCodeException)
-    {
-        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || 
-              STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
-            throw statusCodeException;
-    }
+    if (overlapResult.IsInitialized())
+        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -151,7 +142,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *co
                 this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, 
                     vtxMerged3D, endMerged3D, overlapResult);
 
-                if (overlapResult.GetNMatchedSamplingPoints() > 0 && overlapResult > bestOverlapResult)
+                if (overlapResult.IsInitialized() && (overlapResult.GetNMatchedSamplingPoints() > 0) && (overlapResult > bestOverlapResult))
                 {
                     bestOverlapResult = overlapResult;
                     longitudinalOverlapResult = LongitudinalOverlapResult(overlapResult, vtxChi2, endChi2);

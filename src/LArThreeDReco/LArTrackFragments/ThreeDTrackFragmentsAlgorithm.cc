@@ -145,39 +145,37 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
     FragmentOverlapResult oldOverlapResult, newOverlapResult;
     const Cluster *pMatchedClusterU(NULL), *pMatchedClusterV(NULL), *pMatchedClusterW(NULL);
 
-    try
+    const TwoDSlidingFitResult &fitResult1((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterV) :
+        (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterU) : this->GetCachedSlidingFitResult(pClusterU));
+
+    const TwoDSlidingFitResult &fitResult2((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) :
+        (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) : this->GetCachedSlidingFitResult(pClusterV));
+
+    const ClusterList &inputClusterList((TPC_VIEW_U == missingHitType) ? this->GetInputClusterListU() :
+        (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
+
+    const Cluster *pBestMatchedCluster(NULL);
+    const StatusCode statusCode(this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult));
+
+    if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_FOUND != statusCode))
+        throw StatusCodeException(statusCode);
+
+    if (STATUS_CODE_SUCCESS == statusCode)
     {
-        const TwoDSlidingFitResult &fitResult1((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterV) :
-            (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterU) : this->GetCachedSlidingFitResult(pClusterU));
+        pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
+        pMatchedClusterV = ((NULL != pClusterV) ? pClusterV : pBestMatchedCluster);
+        pMatchedClusterW = ((NULL != pClusterW) ? pClusterW : pBestMatchedCluster);
 
-        const TwoDSlidingFitResult &fitResult2((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) :
-            (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) : this->GetCachedSlidingFitResult(pClusterV));
+        if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        const ClusterList &inputClusterList((TPC_VIEW_U == missingHitType) ? this->GetInputClusterListU() :
-            (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
-
-        const Cluster *pBestMatchedCluster(NULL);
-        const StatusCode statusCode(this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult));
-
-        if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_FOUND != statusCode))
-            throw StatusCodeException(statusCode);
-
-        if (STATUS_CODE_SUCCESS == statusCode)
+        try
         {
-            pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
-            pMatchedClusterV = ((NULL != pClusterV) ? pClusterV : pBestMatchedCluster);
-            pMatchedClusterW = ((NULL != pClusterW) ? pClusterW : pBestMatchedCluster);
-
-            if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
             oldOverlapResult = m_overlapTensor.GetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW);
         }
-    }
-    catch (StatusCodeException &statusCodeException)
-    {
-        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
-            throw statusCodeException;
+        catch (StatusCodeException &)
+        {
+        }
     }
 
     if (!newOverlapResult.IsInitialized())
@@ -331,14 +329,25 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidin
         fitResult1.GetLocalPosition(fitPosition1, rL1, rT1);
         fitResult2.GetLocalPosition(fitPosition2, rL2, rT2);
 
-        const FitSegment &fitSegment1 = fitResult1.GetFitSegment(rL1);
-        const FitSegment &fitSegment2 = fitResult2.GetFitSegment(rL2);
-
         const float x(0.5 * (fitPosition1.GetX() + fitPosition2.GetX()));
         CartesianVector position1(0.f, 0.f, 0.f), position2(0.f, 0.f, 0.f), position3(0.f, 0.f, 0.f);
-        if ((STATUS_CODE_SUCCESS != fitResult1.GetTransverseProjection(x, fitSegment1, position1)) ||
-            (STATUS_CODE_SUCCESS != fitResult2.GetTransverseProjection(x, fitSegment2, position2)))
+
+        try
         {
+            const FitSegment &fitSegment1 = fitResult1.GetFitSegment(rL1);
+            const FitSegment &fitSegment2 = fitResult2.GetFitSegment(rL2);
+
+            if ((STATUS_CODE_SUCCESS != fitResult1.GetTransverseProjection(x, fitSegment1, position1)) ||
+                (STATUS_CODE_SUCCESS != fitResult2.GetTransverseProjection(x, fitSegment2, position2)))
+            {
+                continue;
+            }
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+
             continue;
         }
 
