@@ -8,6 +8,8 @@
 #ifndef LAR_CONTENT_FAST_H
 #define LAR_CONTENT_FAST_H 1
 
+#include "LArContentFast/CrossedTrackSplittingAlgorithmFast.h"
+#include "LArContentFast/DeltaRayMatchingAlgorithmFast.h"
 #include "LArContentFast/ListPreparationAlgorithmFast.h"
 #include "LArContentFast/LongitudinalAssociationAlgorithmFast.h"
 #include "LArContentFast/TransverseAssociationAlgorithmFast.h"
@@ -20,6 +22,8 @@ class LArContentFast
 {
 public:
     #define LAR_ALGORITHM_FAST_LIST(d)                                                                                          \
+        d("LArCrossedTrackSplittingFast",              lar_content_fast::CrossedTrackSplittingAlgorithm::Factory)               \
+        d("LArDeltaRayMatchingFast",                   lar_content_fast::DeltaRayMatchingAlgorithm::Factory)                    \
         d("LArListPreparationFast",                    lar_content_fast::ListPreparationAlgorithm::Factory)                     \
         d("LArLongitudinalAssociationFast",            lar_content_fast::LongitudinalAssociationAlgorithm::Factory)             \
         d("LArTransverseAssociationFast",              lar_content_fast::TransverseAssociationAlgorithm::Factory)               \
