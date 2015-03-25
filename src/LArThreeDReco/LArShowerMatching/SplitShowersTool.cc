@@ -252,7 +252,7 @@ bool SplitShowersTool::CheckClusterVertexRelations(ThreeDShowersAlgorithm *const
         {
             const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
             const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-            const LArPointingCluster pointingCluster(*iter);
+            const LArPointingCluster pointingCluster(pAlgorithm->GetCachedSlidingFitResult(*iter).GetShowerFitResult());
 
             if (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
                 LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||

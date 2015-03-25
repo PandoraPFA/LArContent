@@ -50,8 +50,8 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
                 IteratorList::const_iterator iIterB((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter2 : iIter1);
 
                 Particle particle(*(*iIterA), *(*iIterB));
-                const LArPointingCluster pointingClusterA(particle.m_pClusterA);
-                const LArPointingCluster pointingClusterB(particle.m_pClusterB);
+                const LArPointingCluster pointingClusterA(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA));
+                const LArPointingCluster pointingClusterB(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB));
 
                 LArPointingCluster::Vertex vertexA, vertexB;
                 LArPointingClusterHelper::GetClosestVertices(pointingClusterA, pointingClusterB, vertexA, vertexB);

@@ -47,10 +47,10 @@ void OvershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlg
                 IteratorList::const_iterator iIterB((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter2 : iIter1);
 
                 Particle particle(*(*iIterA), *(*iIterB));
-                const LArPointingCluster pointingClusterA1(particle.m_pClusterA1);
-                const LArPointingCluster pointingClusterB1(particle.m_pClusterB1);
-                const LArPointingCluster pointingClusterA2(particle.m_pClusterA2);
-                const LArPointingCluster pointingClusterB2(particle.m_pClusterB2);
+                const LArPointingCluster pointingClusterA1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1));
+                const LArPointingCluster pointingClusterB1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1));
+                const LArPointingCluster pointingClusterA2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2));
+                const LArPointingCluster pointingClusterB2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
 
                 LArPointingCluster::Vertex vertexA1, vertexB1, vertexA2, vertexB2;
                 LArPointingClusterHelper::GetClosestVerticesInX(pointingClusterA1, pointingClusterB1, vertexA1, vertexB1);
