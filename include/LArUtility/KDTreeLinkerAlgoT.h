@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArContentFast/KDTreeLinkerAlgoT.h
+ *  @file   LArContent/include/LArUtility/KDTreeLinkerAlgoT.h
  * 
  *  @brief  Header file for the kd tree linker algo template class
  * 
@@ -12,7 +12,7 @@
 
 #include <vector>
 
-namespace lar_content_fast
+namespace lar_content
 {
 
 /**
@@ -546,6 +546,6 @@ inline KDTreeNodeT<DATA, DIM> *KDTreeLinkerAlgo<DATA, DIM>::recBuild(int low, in
     }
 }
 
-} // namespace lar_content_fast
+} // namespace lar_content
 
 #endif // LAR_KD_TREE_LINKER_ALGO_TEMPLATED_H

@@ -1,14 +1,14 @@
 /**
- *  @file   LArContent/src/LArContentFast/KDTreeLinkerToolsT.cc
+ *  @file   LArContent/src/LArUtility/KDTreeLinkerToolsT.cc
  * 
  *  @brief  Implementation of the kd tree linker tools template class
  * 
  *  $Log: $
  */
 
-#include "LArContentFast/KDTreeLinkerToolsT.h"
+#include "LArUtility/KDTreeLinkerToolsT.h"
 
-namespace lar_content_fast
+namespace lar_content
 {
 
 std::pair<float, float> minmax(const float a, const float b)
@@ -152,4 +152,4 @@ KDTreeTesseract build_4d_kd_search_region(const pandora::CartesianVector &pos, c
     return KDTreeTesseract(x_side.first, x_side.second, y_side.first, y_side.second, z_side.first, z_side.second, layer_side.first, layer_side.second);
 }
 
-} // namespace lar_content_fast
+} // namespace lar_content

@@ -13,6 +13,11 @@
 namespace lar_content
 {
 
+template<typename, unsigned int> class KDTreeLinkerAlgo;
+template<typename, unsigned int> class KDTreeNodeInfoT;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  ListPreparationAlgorithm class
  */
@@ -34,6 +39,10 @@ public:
     ListPreparationAlgorithm();
 
 private:
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef std::vector<HitKDNode2D> HitKDNode2DList;
+
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -58,6 +67,7 @@ private:
     float           m_mipEquivalentCut;                 ///< Minimum mip equivalent energy for calo hit
     float           m_minCellLengthScale;               ///< The minimum length scale for calo hit
     float           m_maxCellLengthScale;               ///< The maximum length scale for calo hit
+    float           m_searchRegion1D;                   ///< Search region, applied to each dimension, for look-up from kd-trees
 
     bool            m_onlyAvailableCaloHits;            ///< Whether to only include available calo hits
     std::string     m_inputCaloHitListName;             ///< The input calo hit list name
@@ -87,4 +97,4 @@ inline pandora::Algorithm *ListPreparationAlgorithm::Factory::CreateAlgorithm() 
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_LIST_PREPARATION_ALGORITHM_H
+#endif // #ifndef LAR_LIST_PREPARATION_ALGORITHM_FAST_H
