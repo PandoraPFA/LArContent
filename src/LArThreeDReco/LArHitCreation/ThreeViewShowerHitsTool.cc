@@ -18,7 +18,7 @@ namespace lar_content
 {
 
 ThreeViewShowerHitsTool::ThreeViewShowerHitsTool() :
-    m_zTolerance(4.f)
+    m_zTolerance(1.f)
 {
 }
 
