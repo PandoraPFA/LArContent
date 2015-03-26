@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArContentFast/KDTreeLinkerToolsT.h
+ *  @file   LArContent/include/LArUtility/KDTreeLinkerToolsT.h
  * 
  *  @brief  Header file for the kd tree linker tools template class
  * 
@@ -20,7 +20,7 @@ namespace pandora { class Algorithm; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-namespace lar_content_fast
+namespace lar_content
 {
 
 /**
@@ -561,6 +561,6 @@ KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, con
     return KDTreeCube(minpos[0], maxpos[0], minpos[1], maxpos[1], minpos[2], maxpos[2]);
 }
 
-} // namespace lar_content_fast
+} // namespace lar_content
 
 #endif // LAR_KD_TREE_LINKER_TOOLS_TEMPLATED_H

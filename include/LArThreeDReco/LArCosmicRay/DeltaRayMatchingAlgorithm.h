@@ -15,6 +15,11 @@
 namespace lar_content
 {
 
+template<typename, unsigned int> class KDTreeLinkerAlgo;
+template<typename, unsigned int> class KDTreeNodeInfoT;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  DeltaRayMatchingAlgorithm class
  */
@@ -98,6 +103,31 @@ private:
     };
 
     typedef std::vector<Particle> ParticleList;
+
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef std::vector<HitKDNode2D> HitKDNode2DList;
+
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterToClustersMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+
+    /**
+     *  @brief  Initialize nearby cluster maps
+     */
+    void InitializeNearbyClusterMaps();
+
+    /**
+     *  @brief  Initialize a nearby cluster map with details relating to a specific cluster list
+     * 
+     *  @param  clusterListName the cluster list name
+     *  @param  nearbyClustersMap to receive the nearby clusters map
+     */
+    void InitializeNearbyClusterMap(const std::string &clusterListName, ClusterToClustersMap &nearbyClusters);
+
+    /**
+     *  @brief  Clear nearby cluster maps
+     */
+    void ClearNearbyClusterMaps();
 
     /**
      *  @brief  Get a vector of all Pfos in the provided input Pfo lists
@@ -241,6 +271,11 @@ private:
     float                   m_xOverlapWindow;             ///< The maximum allowed displacement in x position
     float                   m_distanceForMatching;        ///< The maximum allowed distance between tracks and delta rays
     float                   m_pseudoChi2Cut;              ///< Pseudo chi2 cut for three view matching
+
+    float                   m_searchRegion1D;             ///< Search region, applied to each dimension, for look-up from kd-trees
+    ClusterToClustersMap    m_nearbyClustersU;            ///< The nearby clusters map for the u view
+    ClusterToClustersMap    m_nearbyClustersV;            ///< The nearby clusters map for the v view
+    ClusterToClustersMap    m_nearbyClustersW;            ///< The nearby clusters map for the w view
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

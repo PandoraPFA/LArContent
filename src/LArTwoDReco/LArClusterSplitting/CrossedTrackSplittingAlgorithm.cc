@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CrossedTrackSplittingAlgorithm.cc
+ *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the crossed track splitting algorithm class.
  *
@@ -8,10 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
-
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
+
+#include "LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
+
+#include "LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
 
@@ -21,8 +23,63 @@ namespace lar_content
 CrossedTrackSplittingAlgorithm::CrossedTrackSplittingAlgorithm() :
     m_maxClusterSeparation(2.f),
     m_maxClusterSeparationSquared(m_maxClusterSeparation * m_maxClusterSeparation),
-    m_minCosRelativeAngle(0.966f)
+    m_minCosRelativeAngle(0.966f),
+    m_searchRegion1D(2.f)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &clusterVector)
+{
+    // ATTN Don't need to update nearby cluster map after cluster merges because algorithm does not revisit processed clusters
+    HitToClusterMap hitToClusterMap;
+    CaloHitList allCaloHits;
+
+    for (const Cluster *const pCluster : clusterVector)
+    {
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+
+        for (const CaloHit *const pCaloHit : daughterHits)
+            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+    }
+
+    HitKDTree2D kdTree;
+    HitKDNode2DList hitKDNode2DList;
+
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, allCaloHits, hitKDNode2DList, true);
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
+
+    for (const Cluster *const pCluster : clusterVector)
+    {
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+
+        for (const CaloHit *const pCaloHit : daughterHits)
+        {
+            CaloHitList nearbyHits;
+            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D);
+
+            HitKDNode2DList found;
+            kdTree.search(searchRegionHits, found);
+
+            for (const auto &hit : found)
+                (void) m_nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CrossedTrackSplittingAlgorithm::TidyUpStep()
+{
+    m_nearbyClusters.clear();
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,6 +87,15 @@ CrossedTrackSplittingAlgorithm::CrossedTrackSplittingAlgorithm() :
 StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
     CartesianVector &splitPosition, CartesianVector &firstDirection, CartesianVector &secondDirection) const
 {
+    // Use cached results from kd-tree to avoid expensive calculations
+    if (!m_nearbyClusters.count(slidingFitResult1.GetCluster()) ||
+        !m_nearbyClusters.count(slidingFitResult2.GetCluster()) ||
+        !m_nearbyClusters.at(slidingFitResult1.GetCluster()).count(slidingFitResult2.GetCluster()) ||
+        !m_nearbyClusters.at(slidingFitResult2.GetCluster()).count(slidingFitResult1.GetCluster()))
+    {
+        return STATUS_CODE_NOT_FOUND;
+    }
+
     // Identify crossed-track topology and find candidate intersection positions
     const CartesianVector& minPosition1(slidingFitResult1.GetGlobalMinLayerPosition());
     const CartesianVector& maxPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
@@ -41,10 +107,9 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
         LArClusterHelper::GetClosestDistance(maxPosition1, slidingFitResult2.GetCluster()) < 2.f * m_maxClusterSeparation ||
         LArClusterHelper::GetClosestDistance(minPosition2, slidingFitResult1.GetCluster()) < 2.f * m_maxClusterSeparation ||
         LArClusterHelper::GetClosestDistance(maxPosition2, slidingFitResult1.GetCluster()) < 2.f * m_maxClusterSeparation)
+    {
         return STATUS_CODE_NOT_FOUND;
-
-    if (LArClusterHelper::GetClosestDistance(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster()) > m_maxClusterSeparation)
-        return STATUS_CODE_NOT_FOUND;
+    }
 
     CartesianPointList candidateList;
     this->FindCandidateSplitPositions(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster(), candidateList);
@@ -207,6 +272,9 @@ StatusCode CrossedTrackSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SearchRegion1D", m_searchRegion1D));
 
     return TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReadSettings(xmlHandle);
 }
