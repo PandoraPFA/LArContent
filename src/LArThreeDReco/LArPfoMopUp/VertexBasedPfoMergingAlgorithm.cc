@@ -45,9 +45,9 @@ StatusCode VertexBasedPfoMergingAlgorithm::Run()
 {
     const VertexList *pVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex((1 == pVertexList->size()) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
 
-    if ((NULL == pVertex) || (VERTEX_3D != pVertex->GetVertexType()))
+    if (NULL == pVertex)
         return STATUS_CODE_SUCCESS;
 
     while (true)
