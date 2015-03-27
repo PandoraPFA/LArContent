@@ -28,7 +28,7 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_histogramPhiMin(-1.1f * M_PI),
     m_histogramPhiMax(+1.1f * M_PI),
     m_maxOnHitDisplacement(1.f),
-    m_maxHitVertexDisplacement1D(25.f),
+    m_maxHitVertexDisplacement1D(100.f),
     m_maxTopScoreCandidates(50),
     m_maxTopScoreSelections(3),
     m_maxBeamTopScoreCandidates(50),
@@ -144,12 +144,12 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, Hi
     Histogram histogramV(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
     Histogram histogramW(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
 
-    const bool isVertexOnHitU(this->FillHistogram(pVertex, TPC_VIEW_U, kdTreeU, histogramU));
-    const bool isVertexOnHitV(this->FillHistogram(pVertex, TPC_VIEW_V, kdTreeV, histogramV));
-    const bool isVertexOnHitW(this->FillHistogram(pVertex, TPC_VIEW_W, kdTreeW, histogramW));
-
-    if (!isVertexOnHitU || !isVertexOnHitV || !isVertexOnHitW)
+    if (!this->FillHistogram(pVertex, TPC_VIEW_U, kdTreeU, histogramU) ||
+        !this->FillHistogram(pVertex, TPC_VIEW_V, kdTreeV, histogramV) ||
+        !this->FillHistogram(pVertex, TPC_VIEW_W, kdTreeW, histogramW))
+    {
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+    }
 
     return this->GetFigureOfMerit(histogramU, histogramV, histogramW);
 }
@@ -185,8 +185,17 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogram) con
 
 bool VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree, Histogram &histogram) const
 {
-    bool isVertexOnHit(false);
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+
+    // Get overlapping hits from kd tree
+    CaloHitList overlappingHits;
+    KDTreeBox overlapRegionHits = build_2d_kd_search_region(vertexPosition2D, m_maxOnHitDisplacement, m_maxOnHitDisplacement);
+
+    HitKDNode2DList overlap;
+    kdTree.search(overlapRegionHits, overlap);
+
+    if (overlap.empty())
+        return false;
 
     // Get nearby hits from kd tree
     CaloHitList nearbyHits;
@@ -196,17 +205,12 @@ bool VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const 
     kdTree.search(searchRegionHits, found);
 
     for (const auto &hit : found)
-    {
         nearbyHits.insert(hit.data);
-    }
 
     for (const CaloHit *const pCaloHit : nearbyHits)
     {
         const CartesianVector displacement(pCaloHit->GetPositionVector() - vertexPosition2D);
         const float magnitude(displacement.GetMagnitude());
-
-        if (magnitude < m_maxOnHitDisplacement)
-            isVertexOnHit = true;
 
         if (magnitude < std::numeric_limits<float>::epsilon())
             continue;
@@ -216,7 +220,7 @@ bool VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const 
         histogram.Fill(phi, weight);
     }
 
-    return isVertexOnHit;
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
