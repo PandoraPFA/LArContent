@@ -183,8 +183,14 @@ void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
             continue;
 
-        if (this->IsVertexAssociated(LArPointingCluster(pCluster), vertexPosition2D))
-            seedClusters.push_back(pCluster);
+        try
+        {
+            if (this->IsVertexAssociated(LArPointingCluster(pCluster), vertexPosition2D))
+                seedClusters.push_back(pCluster);
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 }
 
@@ -193,6 +199,9 @@ void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const
 void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particleSeedVector, const ClusterList *const pClusterList,
     SeedAssociationList &seedAssociationList) const
 {
+    if (particleSeedVector.empty())
+        return;
+
     ClusterVector candidateClusters;
     ClusterList seedClusters(particleSeedVector.begin(), particleSeedVector.end());
 
