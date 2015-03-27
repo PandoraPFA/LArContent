@@ -139,16 +139,25 @@ private:
     float GetFigureOfMerit(const pandora::Histogram &histogram) const;
 
     /**
+     *  @brief  Whether the vertex lies on a hit in the specified view
+     * 
+     *  @param  pVertex the address of the vertex
+     *  @param  hitType the relevant hit type
+     *  @param  kdTree the relevant kd tree
+     * 
+     *  @return boolean
+     */
+    bool IsVertexOnHit(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
+
+    /**
      *  @brief  Use hits in clusters (in the provided kd tree) to fill a provided histogram with hit-vertex relationship information
      * 
      *  @param  pVertex the address of the vertex
      *  @param  hitType the relevant hit type
      *  @param  kdTree the relevant kd tree
      *  @param  histogram to receive the populated histogram
-     * 
-     *  @return whether the vertex projection lies on a hit in the provided cluster list
      */
-    bool FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, pandora::Histogram &histogram) const;
+    void FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, pandora::Histogram &histogram) const;
 
     /**
      *  @brief  From the top-scoring candidate vertices, select a subset for further investigation
