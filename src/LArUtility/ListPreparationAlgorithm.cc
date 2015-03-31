@@ -214,11 +214,8 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
 
         for (const auto &hit : found)
         {
-            nearbyHits.insert(hit.data);
-        }
+            const CaloHit *const pCaloHit2 = hit.data;
 
-        for (const CaloHit *const pCaloHit2 : nearbyHits)
-        {
             if (pCaloHit1 == pCaloHit2)
                 continue;
 
