@@ -105,7 +105,8 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
         if (pCaloHit->GetInputEnergy() < std::numeric_limits<float>::epsilon())
         {
-            std::cout << "ListPreparationAlgorithm: found a hit with zero energy, will remove it" << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPreparationAlgorithm: found a hit with zero energy, will remove it" << std::endl;
             continue;
         }
 
@@ -113,7 +114,8 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         {
             if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
             {
-                std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
+                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
             }
             else
             {
@@ -233,7 +235,8 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
         }
         else
         {
-            std::cout << "ListPreparationAlgorithm: found two hits in same location, will remove lowest pulse height" << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPreparationAlgorithm: found two hits in same location, will remove lowest pulse height" << std::endl;
         }
     }
 

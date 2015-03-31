@@ -220,7 +220,7 @@ void VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const 
         if (magnitude < std::numeric_limits<float>::epsilon())
             continue;
 
-        const float phi(std::atan2(displacement.GetZ(), displacement.GetX()));
+        const float phi(this->atan2Fast(displacement.GetZ(), displacement.GetX()));
         const float weight(1.f / std::sqrt(magnitude));
         histogram.Fill(phi, weight);
     }
@@ -358,6 +358,22 @@ void VertexSelectionAlgorithm::SelectFinalVertices(const VertexScoreList &vertex
 
     if (m_selectSingleVertex && (NULL != pFinalVertex))
         finalVertexList.insert(pFinalVertex);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::atan2Fast(const float y, const float x) const
+{
+    const float ONE_QTR_PI(0.25f * M_PI);
+    const float THR_QTR_PI(0.75f * M_PI);
+
+    const float abs_y(std::max(std::fabs(y), std::numeric_limits<float>::epsilon()));
+    const float abs_x(std::fabs(x));
+
+    const float r((x < 0.f) ? (x + abs_y) / (abs_y + abs_x) : (abs_x - abs_y) / (abs_x + abs_y));
+    const float angle(((x < 0.f) ? THR_QTR_PI : ONE_QTR_PI) + (0.1963f * r * r - 0.9817f) * r);
+
+    return ((y < 0.f) ? -angle : angle); // negate if in quad III or IV
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
