@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArVertexHelper.h"
+
 #include "LArObjects/LArPointingCluster.h"
 
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
@@ -234,29 +236,32 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
-    pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfo lists
+    typedef std::unordered_map<const pandora::Cluster*, LArVertexHelper::ClusterDirection> ClusterDirectionMap;
+    mutable ClusterDirectionMap m_clusterDirectionMap;          ///< The cluster direction map
 
-    unsigned int            m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
-    float                   m_nearbyTrackDistance;          ///< Prevent track-track associations where the end-to-end separation is smaller than this distance
-    float                   m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
-    float                   m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
+    pandora::StringVector       m_inputClusterListNames;        ///< The names of the input cluster lists
+    pandora::StringVector       m_inputPfoListNames;            ///< The names of the input pfo lists
 
-    float                   m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
-    float                   m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    unsigned int                m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
+    float                       m_nearbyTrackDistance;          ///< Prevent track-track associations where the end-to-end separation is smaller than this distance
+    float                       m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
+    float                       m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
 
-    bool                    m_recursiveMode;                ///< Whether to run in recursive shower-growing and checking mode (rather than a simple one-pass mode)
-    bool                    m_useFirstImprovedSeed;         ///< Recursive mode only: use the first daughter seed (from an ordered list) that offers an improved figure of merit
-    bool                    m_useMCFigureOfMerit;           ///< Recursive mode only: use a figure of merit based on mc particle information
+    float                       m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    float                       m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
 
-    bool                    m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added
-    unsigned int            m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
-    float                   m_showerLikeCaloHitRatio;       ///< The minimum ratio of final to original calo hits before cluster is declared shower like
+    bool                        m_recursiveMode;                ///< Whether to run in recursive shower-growing and checking mode (rather than a simple one-pass mode)
+    bool                        m_useFirstImprovedSeed;         ///< Recursive mode only: use the first daughter seed (from an ordered list) that offers an improved figure of merit
+    bool                        m_useMCFigureOfMerit;           ///< Recursive mode only: use a figure of merit based on mc particle information
 
-    float                   m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
-    float                   m_maxVertexLongitudinalDistance;///< Vertex association check: max longitudinal distance cut
-    float                   m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
-    float                   m_vertexAngularAllowance;       ///< Vertex association check: pointing angular allowance in degrees
+    bool                        m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added
+    unsigned int                m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
+    float                       m_showerLikeCaloHitRatio;       ///< The minimum ratio of final to original calo hits before cluster is declared shower like
+
+    float                       m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
+    float                       m_maxVertexLongitudinalDistance;///< Vertex association check: max longitudinal distance cut
+    float                       m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
+    float                       m_vertexAngularAllowance;       ///< Vertex association check: pointing angular allowance in degrees
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -11,7 +11,6 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
 
@@ -52,25 +51,37 @@ StatusCode ShowerGrowingAlgorithm::Run()
 
     for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
-        const ClusterList *pClusterList = NULL;
-        const StatusCode listStatusCode(PandoraContentApi::GetList(*this, *listIter, pClusterList));
-
-        if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
+        try
         {
-            std::cout << "ShowerGrowingAlgorithm: cluster list not found " << *listIter << std::endl;
-            continue;
+            const ClusterList *pClusterList = NULL;
+            const StatusCode listStatusCode(PandoraContentApi::GetList(*this, *listIter, pClusterList));
+
+            if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
+            {
+                std::cout << "ShowerGrowingAlgorithm: cluster list not found " << *listIter << std::endl;
+                continue;
+            }
+
+            if (STATUS_CODE_SUCCESS != listStatusCode)
+                return listStatusCode;
+
+            m_clusterDirectionMap.clear();
+
+            if (!m_recursiveMode)
+            {
+                this->SimpleModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
+            }
+            else
+            {
+                this->RecursiveModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
+            }
+
+            m_clusterDirectionMap.clear();
         }
-
-        if (STATUS_CODE_SUCCESS != listStatusCode)
-            return listStatusCode;
-
-        if (!m_recursiveMode)
+        catch (StatusCodeException &statusCodeException)
         {
-            this->SimpleModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
-        }
-        else
-        {
-            this->RecursiveModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
+            m_clusterDirectionMap.clear();
+            throw statusCodeException;
         }
     }
 
@@ -292,6 +303,8 @@ void ShowerGrowingAlgorithm::CheckSeedAssociationList(SeedAssociationList::const
 void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentCluster, const ClusterVector &branchClusters, const std::string &listName,
     PfoList &pfoList) const
 {
+    m_clusterDirectionMap.erase(pParentCluster);
+
     for (ClusterVector::const_iterator iter = branchClusters.begin(), iterEnd = branchClusters.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pBranchCluster(*iter);
@@ -308,6 +321,8 @@ void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentC
         {
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pBranchCluster, listName, listName));
         }
+
+        m_clusterDirectionMap.erase(pBranchCluster);
     }
 }
 
@@ -319,15 +334,31 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
     const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
 
-    // Direction of seed cluster
-    const LArVertexHelper::ClusterDirection seedDirection((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
-        LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pClusterSeed, m_directionTanAngle, m_directionApexShift));
+    // Direction of seed cluster (cache for efficiency)
+    ClusterDirectionMap::const_iterator seedIter = m_clusterDirectionMap.find(pClusterSeed);
+
+    if (m_clusterDirectionMap.end() == seedIter)
+    {
+        const LArVertexHelper::ClusterDirection direction((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
+            LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pClusterSeed, m_directionTanAngle, m_directionApexShift));
+        seedIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pClusterSeed, direction)).first;
+    }
+
+    const LArVertexHelper::ClusterDirection seedDirection(seedIter->second);
     const bool checkSeedForward(seedDirection != LArVertexHelper::DIRECTION_BACKWARD_IN_Z);
     const bool checkSeedBackward(seedDirection != LArVertexHelper::DIRECTION_FORWARD_IN_Z);
 
-    // Direction of candidate cluster
-    const LArVertexHelper::ClusterDirection candidateDirection((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
-        LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pCluster, m_directionTanAngle, m_directionApexShift));
+    // Direction of candidate cluster (cache for efficiency)
+    ClusterDirectionMap::const_iterator candIter = m_clusterDirectionMap.find(pCluster);
+
+    if (m_clusterDirectionMap.end() == candIter)
+    {
+        const LArVertexHelper::ClusterDirection direction((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
+            LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pCluster, m_directionTanAngle, m_directionApexShift));
+        candIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pCluster, direction)).first;
+    }
+
+    const LArVertexHelper::ClusterDirection candidateDirection(candIter->second);
     const bool checkCandidateForward(candidateDirection != LArVertexHelper::DIRECTION_BACKWARD_IN_Z);
     const bool checkCandidateBackward(candidateDirection != LArVertexHelper::DIRECTION_FORWARD_IN_Z);
 
