@@ -213,11 +213,8 @@ void VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const 
     kdTree.search(searchRegionHits, found);
 
     for (const auto &hit : found)
-        nearbyHits.insert(hit.data);
-
-    for (const CaloHit *const pCaloHit : nearbyHits)
     {
-        const CartesianVector displacement(pCaloHit->GetPositionVector() - vertexPosition2D);
+        const CartesianVector displacement(hit.data->GetPositionVector() - vertexPosition2D);
         const float magnitude(displacement.GetMagnitude());
 
         if (magnitude < std::numeric_limits<float>::epsilon())
