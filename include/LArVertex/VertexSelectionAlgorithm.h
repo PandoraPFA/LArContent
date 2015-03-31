@@ -210,6 +210,16 @@ private:
     void SelectFinalVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
         pandora::VertexList &finalVertexList) const;
 
+    /**
+     *  @brief  Fast estimate of std::atan2 function. Rather coarse (max |error| > 0.01) but should suffice for this use-case.
+     * 
+     *  @param  y the y coordinate
+     *  @param  x the x coordinate
+     * 
+     *  @return estimate of std::atan2
+     */
+    float atan2Fast(const float y, const float x) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
