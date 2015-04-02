@@ -11,7 +11,6 @@
 #include "Api/PandoraContentApi.h"
 
 #include "Objects/CaloHit.h"
-#include "Objects/Track.h"
 #include "Objects/CartesianVector.h"
 
 #include <array>
@@ -368,12 +367,6 @@ template<typename T>
 inline const pandora::CartesianVector &kdtree_type_adaptor<T>::position(const T *const t)
 {
     return t->GetPosition();
-}
-
-template<>
-inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::Track>::position(const pandora::Track *const t)
-{
-    return t->GetTrackStateAtCalorimeter().GetPosition();
 }
 
 template<>

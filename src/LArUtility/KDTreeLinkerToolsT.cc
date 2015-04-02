@@ -18,45 +18,6 @@ std::pair<float, float> minmax(const float a, const float b)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<>
-KDTreeCube fill_and_bound_3d_kd_tree<const pandora::Track>(const pandora::Algorithm *const /*caller*/, const pandora::TrackList &points,
-    std::vector<KDTreeNodeInfoT<const pandora::Track*, 3> > &nodes, bool passthru)
-{
-    std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
-
-    unsigned i = 0;
-
-    for (const pandora::Track *const point : points)
-    {
-        if (!passthru && !point->CanFormPfo())
-            continue;
-
-        const pandora::CartesianVector &pos = kdtree_type_adaptor<const pandora::Track>::position(point);
-        nodes.emplace_back(point, pos.GetX(), pos.GetY(), pos.GetZ());
-
-        if (0 == i)
-        {
-            minpos[0] = pos.GetX(); minpos[1] = pos.GetY(); minpos[2] = pos.GetZ();
-            maxpos[0] = pos.GetX(); maxpos[1] = pos.GetY(); maxpos[2] = pos.GetZ();
-        }
-        else
-        {
-            minpos[0] = std::min(pos.GetX(), minpos[0]);
-            minpos[1] = std::min(pos.GetY(), minpos[1]);
-            minpos[2] = std::min(pos.GetZ(), minpos[2]);
-            maxpos[0] = std::max(pos.GetX(), maxpos[0]);
-            maxpos[1] = std::max(pos.GetY(), maxpos[1]);
-            maxpos[2] = std::max(pos.GetZ(), maxpos[2]);
-        }
-
-        ++i;
-    }
-
-    return KDTreeCube(minpos[0], maxpos[0], minpos[1], maxpos[1], minpos[2],maxpos[2]);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 KDTreeTesseract fill_and_bound_4d_kd_tree(const pandora::Algorithm *const caller, const pandora::CaloHitList &points,
     std::vector<KDTreeNodeInfoT<const pandora::CaloHit*, 4> > &nodes, bool passthru)
 {
