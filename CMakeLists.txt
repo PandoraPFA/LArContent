@@ -34,6 +34,7 @@ INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
 
 AUX_SOURCE_DIRECTORY( ./src/ LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArCheating LArContent_SRCS )
+AUX_SOURCE_DIRECTORY( ./src/LArContentFast LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArHelpers LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArMonitoring LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArObjects LArContent_SRCS )
