@@ -59,31 +59,19 @@ AUX_SOURCE_DIRECTORY( ./src/LArTwoDReco/LArSeedFinding LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArUtility LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArVertex LArContent_SRCS )
 
-# require proper C++
-ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
-
-# need long long for int64 for now
-ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
-
-INCLUDE( CheckCXXCompilerFlag )
 IF( NOT CMAKE_CXX_FLAGS )
     SET( CMAKE_CXX_FLAGS "-std=c++11" )
-    SET( PROCEED_WITHOUT_CXX_FLAGS OFF )
 ENDIF()
-UNSET( COMPILER_SUPPORTS_FLAGS CACHE )
-CHECK_CXX_COMPILER_FLAG( ${CMAKE_CXX_FLAGS} COMPILER_SUPPORTS_FLAGS )
-IF( COMPILER_SUPPORTS_FLAGS )
-    MESSAGE( STATUS "The compiler ${CMAKE_CXX_COMPILER} supports user-provided flags ${CMAKE_CXX_FLAGS}" )
-    ADD_DEFINITIONS( ${CMAKE_CXX_FLAGS} )
-ELSE()
-    MESSAGE( STATUS "The compiler ${CMAKE_CXX_COMPILER} does not support user-provided flags ${CMAKE_CXX_FLAGS}" )
-    IF( PROCEED_WITHOUT_CXX_FLAGS )
-        MESSAGE( STATUS "Proceed without user-provided flags ${CMAKE_CXX_FLAGS}" )
-        UNSET( CMAKE_CXX_FLAGS )
-    ELSE()
-        MESSAGE( FATAL_ERROR "CMake abort." )
-    ENDIF()
+
+INCLUDE( CheckCXXCompilerFlag )
+
+UNSET( COMPILER_SUPPORTS_CXX_FLAGS CACHE )
+CHECK_CXX_COMPILER_FLAG( ${CMAKE_CXX_FLAGS} COMPILER_SUPPORTS_CXX_FLAGS )
+IF( NOT COMPILER_SUPPORTS_CXX_FLAGS )
+    MESSAGE( FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}" )
 ENDIF()
+
+SET( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
 
 
 ### DEPENDENCIES ############################################################
