@@ -120,8 +120,9 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHit2D
 
     // TODO Check these parameters, especially new cell dimensions
     parameters.m_cellThickness = pCaloHit2D->GetCellThickness();
-    parameters.m_cellSizeU = pCaloHit2D->GetCellLengthScale();
-    parameters.m_cellSizeV = pCaloHit2D->GetCellLengthScale();
+    parameters.m_cellGeometry = RECTANGULAR;
+    parameters.m_cellSize0 = pCaloHit2D->GetCellLengthScale();
+    parameters.m_cellSize1 = pCaloHit2D->GetCellLengthScale();
     parameters.m_cellNormalVector = pCaloHit2D->GetCellNormalVector();
     parameters.m_expectedDirection = pCaloHit2D->GetExpectedDirection();
     parameters.m_nCellRadiationLengths = pCaloHit2D->GetNCellRadiationLengths();
