@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Pandora/PdgTable.h"
+
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 
