@@ -10,6 +10,8 @@
 #include "Objects/CaloHit.h"
 #include "Objects/Cluster.h"
 
+#include "Pandora/PdgTable.h"
+
 #include "LArHelpers/LArMCParticleHelper.h"
 
 #include <cstdlib>
