@@ -10,8 +10,8 @@ PROJECT( LArContent )
 
 
 # project version
-SET( LArContent_VERSION_MAJOR 01 )
-SET( LArContent_VERSION_MINOR 01 )
+SET( LArContent_VERSION_MAJOR 02 )
+SET( LArContent_VERSION_MINOR 00 )
 SET( LArContent_VERSION_PATCH 00 )
 
 
@@ -71,12 +71,16 @@ IF( NOT COMPILER_SUPPORTS_CXX_FLAGS )
     MESSAGE( FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}" )
 ENDIF()
 
-SET( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
+if( APPLE )
+    SET( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
+else()
+    SET( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
+endif()
 
 
 ### DEPENDENCIES ############################################################
 
-FIND_PACKAGE( PandoraSDK 01.00.00 REQUIRED )
+FIND_PACKAGE( PandoraSDK 02.00.00 REQUIRED )
 FOREACH( pkg PandoraSDK )
     IF( ${pkg}_FOUND )
         INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
@@ -86,7 +90,7 @@ FOREACH( pkg PandoraSDK )
 ENDFOREACH()
 
 IF( PANDORA_MONITORING )
-    FIND_PACKAGE( PandoraMonitoring 01.00.00 REQUIRED )
+    FIND_PACKAGE( PandoraMonitoring 02.00.00 REQUIRED )
     IF( PandoraMonitoring_FOUND )
         INCLUDE_DIRECTORIES( ${PandoraMonitoring_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${PandoraMonitoring_LIBRARIES} )
