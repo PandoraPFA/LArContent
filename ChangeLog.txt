@@ -4,6 +4,7 @@ TAG v02-00-00
 Update to reflect API change for calo hit creation.
 Exception-handling change in ParticleMonitoring algorithm.
 Update a few header file include paths.
+Fixed CXX_FLAGS for clang 6.0 on APPLE.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------------------
