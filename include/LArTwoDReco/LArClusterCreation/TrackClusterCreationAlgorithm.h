@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -91,9 +93,9 @@ private:
         float                   m_secondaryDistanceSquared;     ///< the secondary distance squared
     };
 
-    typedef std::map<const pandora::CaloHit*, HitAssociation> HitAssociationMap;
-    typedef std::map<const pandora::CaloHit*, const pandora::CaloHit*> HitJoinMap;
-    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::unordered_map<const pandora::CaloHit*, HitAssociation> HitAssociationMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::CaloHit*> HitJoinMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
 
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

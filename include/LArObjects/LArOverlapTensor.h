@@ -10,7 +10,7 @@
 
 #include "Pandora/PandoraInternal.h"
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace lar_content
@@ -134,10 +134,10 @@ public:
     void GetConnectedElements(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList, unsigned int &nU,
         unsigned int &nV, unsigned int &nW) const;
 
-    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
-    typedef std::map<const pandora::Cluster*, OverlapResult> OverlapList;
-    typedef std::map<const pandora::Cluster*, OverlapList> OverlapMatrix;
-    typedef std::map<const pandora::Cluster*, OverlapMatrix> TheTensor;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
+    typedef std::unordered_map<const pandora::Cluster*, OverlapResult> OverlapList;
+    typedef std::unordered_map<const pandora::Cluster*, OverlapList> OverlapMatrix;
+    typedef std::unordered_map<const pandora::Cluster*, OverlapMatrix> TheTensor;
 
     typedef typename TheTensor::const_iterator const_iterator;
 

@@ -14,6 +14,8 @@
 
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 
+#include "LArUtility/KDTreeLinkerAlgoT.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -23,7 +25,8 @@ DeltaRayMatchingAlgorithm::DeltaRayMatchingAlgorithm() :
     m_minCaloHitsPerCluster(3),
     m_xOverlapWindow(1.f),
     m_distanceForMatching(5.f),
-    m_pseudoChi2Cut(3.f)
+    m_pseudoChi2Cut(3.f),
+    m_searchRegion1D(5.f)
 {
 }
 
@@ -38,14 +41,85 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "DeltaRayMatchingAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
+
         return STATUS_CODE_SUCCESS;
     }
 
+    this->InitializeNearbyClusterMaps();
     this->ThreeViewMatching();
     this->TwoViewMatching();
     this->OneViewMatching();
+    this->ClearNearbyClusterMaps();
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMaps()
+{
+    this->ClearNearbyClusterMaps();
+    this->InitializeNearbyClusterMap(m_inputClusterListNameU, m_nearbyClustersU);
+    this->InitializeNearbyClusterMap(m_inputClusterListNameV, m_nearbyClustersV);
+    this->InitializeNearbyClusterMap(m_inputClusterListNameW, m_nearbyClustersW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMap(const std::string &clusterListName, ClusterToClustersMap &nearbyClusters)
+{
+    const ClusterList *pClusterList = NULL;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        clusterListName, pClusterList))
+
+    if ((NULL == pClusterList) || pClusterList->empty())
+        return;
+
+    HitToClusterMap hitToClusterMap;
+    CaloHitList allCaloHits;
+
+    for (const Cluster *const pCluster : *pClusterList)
+    {
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+
+        for (const CaloHit *const pCaloHit : daughterHits)
+            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+    }
+
+    HitKDTree2D kdTree;
+    HitKDNode2DList hitKDNode2DList;
+
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, allCaloHits, hitKDNode2DList, true);
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
+
+    for (const Cluster *const pCluster : *pClusterList)
+    {
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+
+        for (const CaloHit *const pCaloHit : daughterHits)
+        {
+            CaloHitList nearbyHits;
+            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D);
+
+            HitKDNode2DList found;
+            kdTree.search(searchRegionHits, found);
+
+            for (const auto &hit : found)
+                (void) nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeltaRayMatchingAlgorithm::ClearNearbyClusterMaps()
+{
+    m_nearbyClustersU.clear();
+    m_nearbyClustersV.clear();
+    m_nearbyClustersW.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,8 +177,6 @@ void DeltaRayMatchingAlgorithm::GetClusters(const std::string &inputClusterListN
 
         clusterVector.push_back(pCluster);
     }
-
-    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -115,6 +187,10 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching() const
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
     this->GetClusters(m_inputClusterListNameW, clustersW);
+
+    std::sort(clustersU.begin(), clustersU.end(), LArClusterHelper::SortByNHits);
+    std::sort(clustersV.begin(), clustersV.end(), LArClusterHelper::SortByNHits);
+    std::sort(clustersW.begin(), clustersW.end(), LArClusterHelper::SortByNHits);
 
     ParticleList initialParticleList, finalParticleList;
     this->ThreeViewMatching(clustersU, clustersV, clustersW, initialParticleList);
@@ -130,6 +206,10 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching() const
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
     this->GetClusters(m_inputClusterListNameW, clustersW);
+
+    std::sort(clustersU.begin(), clustersU.end(), LArClusterHelper::SortByNHits);
+    std::sort(clustersV.begin(), clustersV.end(), LArClusterHelper::SortByNHits);
+    std::sort(clustersW.begin(), clustersW.end(), LArClusterHelper::SortByNHits);
 
     ParticleList initialParticleList, finalParticleList;
     this->TwoViewMatching(clustersU, clustersV, initialParticleList);
@@ -147,6 +227,10 @@ void DeltaRayMatchingAlgorithm::OneViewMatching() const
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
     this->GetClusters(m_inputClusterListNameW, clustersW);
+
+    std::sort(clustersU.begin(), clustersU.end(), LArClusterHelper::SortByNHits);
+    std::sort(clustersV.begin(), clustersV.end(), LArClusterHelper::SortByNHits);
+    std::sort(clustersW.begin(), clustersW.end(), LArClusterHelper::SortByNHits);
 
     ParticleList initialParticleList, finalParticleList;
     this->ThreeViewMatching(clustersU, clustersV, clustersW, initialParticleList);
@@ -510,10 +594,27 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1
 
 float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pCluster, const ParticleFlowObject *const pPfo) const
 {
-    ClusterList pfoClusterList;
-    LArPfoHelper::GetClusters(pPfo, LArClusterHelper::GetClusterHitType(pCluster), pfoClusterList);
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-    return LArClusterHelper::GetClosestDistance(pCluster, pfoClusterList);
+    if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    ClusterList pfoClusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, pfoClusterList);
+
+    ClusterList comparisonList;
+    const ClusterToClustersMap &nearbyClusters((TPC_VIEW_U == hitType) ? m_nearbyClustersU : (TPC_VIEW_V == hitType) ? m_nearbyClustersV : m_nearbyClustersW);
+
+    for (const Cluster *const pPfoCluster : pfoClusterList)
+    {
+        if (nearbyClusters.count(pCluster) && nearbyClusters.at(pCluster).count(pPfoCluster))
+            comparisonList.insert(pPfoCluster);
+    }
+
+    if (comparisonList.empty())
+        return std::numeric_limits<float>::max();
+
+    return LArClusterHelper::GetClosestDistance(pCluster, comparisonList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -665,6 +766,9 @@ StatusCode DeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SearchRegion1D", m_searchRegion1D));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -33,8 +33,8 @@ void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, const bool widenI
 {
     edgePositions.clear();
     CartesianPointList fitPositionList;
-    try {this->GetNegativeEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
-    try {this->GetPositiveEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList);} catch (StatusCodeException &) {}
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->GetNegativeEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->GetPositiveEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList));
 
     if (fitPositionList.size() < 2)
     {
@@ -104,23 +104,16 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
             fullShowerFit.GetLocalPosition((*hitIter)->GetPositionVector(), rL, rT);
             rT *= showerEdgeMultiplier;
 
-            try
-            {
-                CartesianVector fullShowerFitPosition(0.f, 0.f, 0.f);
-                fullShowerFit.GetGlobalFitPosition(rL, fullShowerFitPosition);
-
-                float rLFit(0.f), rTFit(0.f);
-                fullShowerFit.GetLocalPosition(fullShowerFitPosition, rLFit, rTFit);
-
-                const float rTDiff(rT - rTFit);
-
-                if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rTDiff < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rTDiff > 0.f)))
-                    rT = rTFit;
-            }
-            catch (StatusCodeException &)
-            {
+            CartesianVector fullShowerFitPosition(0.f, 0.f, 0.f);
+            if (STATUS_CODE_SUCCESS != fullShowerFit.GetGlobalFitPosition(rL, fullShowerFitPosition))
                 continue;
-            }
+
+            float rLFit(0.f), rTFit(0.f);
+            fullShowerFit.GetLocalPosition(fullShowerFitPosition, rLFit, rTFit);
+
+            const float rTDiff(rT - rTFit);
+            if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rTDiff < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rTDiff > 0.f)))
+                rT = rTFit;
 
             const int layer(fullShowerFit.GetLayer(rL));
             fitCoordinateMap[layer].push_back(FitCoordinate(rL, rT));

@@ -47,10 +47,10 @@ void OvershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlg
                 IteratorList::const_iterator iIterB((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter2 : iIter1);
 
                 Particle particle(*(*iIterA), *(*iIterB));
-                const LArPointingCluster pointingClusterA1(particle.m_pClusterA1);
-                const LArPointingCluster pointingClusterB1(particle.m_pClusterB1);
-                const LArPointingCluster pointingClusterA2(particle.m_pClusterA2);
-                const LArPointingCluster pointingClusterB2(particle.m_pClusterB2);
+                const LArPointingCluster pointingClusterA1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1));
+                const LArPointingCluster pointingClusterB1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1));
+                const LArPointingCluster pointingClusterA2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2));
+                const LArPointingCluster pointingClusterB2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
 
                 LArPointingCluster::Vertex vertexA1, vertexB1, vertexA2, vertexB2;
                 LArPointingClusterHelper::GetClosestVerticesInX(pointingClusterA1, pointingClusterB1, vertexA1, vertexB1);
@@ -170,16 +170,18 @@ bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pA
         const float plusX(this->GetXSamplingPoint(particle.m_splitPosition, true, fitResultCommon3, highXFitResult1, highXFitResult2));
 
         CartesianVector minus1(0.f, 0.f, 0.f), split1(particle.m_splitPosition1), plus1(0.f, 0.f, 0.f);
-        lowXFitResult1.GetGlobalFitPositionAtX(minusX, minus1);
-        highXFitResult1.GetGlobalFitPositionAtX(plusX, plus1);
-
         CartesianVector minus2(0.f, 0.f, 0.f), split2(particle.m_splitPosition2), plus2(0.f, 0.f, 0.f);
-        lowXFitResult2.GetGlobalFitPositionAtX(minusX, minus2);
-        highXFitResult2.GetGlobalFitPositionAtX(plusX, plus2);
-
         CartesianVector minus3(0.f, 0.f, 0.f), split3(particle.m_splitPosition), plus3(0.f, 0.f, 0.f);
-        fitResultCommon3.GetGlobalFitPositionAtX(minusX, minus3);
-        fitResultCommon3.GetGlobalFitPositionAtX(plusX, plus3);
+
+        if ((STATUS_CODE_SUCCESS != lowXFitResult1.GetGlobalFitPositionAtX(minusX, minus1)) ||
+            (STATUS_CODE_SUCCESS != highXFitResult1.GetGlobalFitPositionAtX(plusX, plus1)) ||
+            (STATUS_CODE_SUCCESS != lowXFitResult2.GetGlobalFitPositionAtX(minusX, minus2)) ||
+            (STATUS_CODE_SUCCESS != highXFitResult2.GetGlobalFitPositionAtX(plusX, plus2)) ||
+            (STATUS_CODE_SUCCESS != fitResultCommon3.GetGlobalFitPositionAtX(minusX, minus3)) ||
+            (STATUS_CODE_SUCCESS != fitResultCommon3.GetGlobalFitPositionAtX(plusX, plus3)))
+        {
+            return true; // majority rules, by default
+        }
 
         // Extract results
         const HitType hitType1(LArClusterHelper::GetClusterHitType(particle.m_pClusterA1));
@@ -200,7 +202,7 @@ bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pA
         if (dotProduct > m_cosThetaCutForKinkSearch)
             return false;
     }
-    catch (StatusCodeException &s)
+    catch (StatusCodeException &)
     {
     }
 

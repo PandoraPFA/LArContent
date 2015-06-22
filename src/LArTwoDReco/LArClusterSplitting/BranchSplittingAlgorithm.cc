@@ -91,41 +91,37 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
             const float halfWindowLength(branchSlidingFit.GetLayerFitHalfWindowLength());
             const float deltaL(1==branchForward ? +halfWindowLength : -halfWindowLength);
 
+            float localL(0.f), localT(0.f);
+            CartesianVector forwardDirection(0.f,0.f,0.f);
+            branchSlidingFit.GetLocalPosition(projectedBranchPosition, localL, localT);
+
+            if (STATUS_CODE_SUCCESS != branchSlidingFit.GetGlobalFitDirection(localL + deltaL, forwardDirection))
+                continue;
+
+            CartesianVector projectedBranchDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
+            const float cosTheta(-projectedBranchDirection.GetDotProduct(principalVertexDirection));
+
             try
             {
-                float localL(0.f), localT(0.f);
-                CartesianVector forwardDirection(0.f,0.f,0.f);
-                branchSlidingFit.GetLocalPosition(projectedBranchPosition, localL, localT);
-                branchSlidingFit.GetGlobalFitDirection(localL + deltaL, forwardDirection);
+                const float currentCosTheta(branchSlidingFit.GetCosScatteringAngle(localL)); 
 
-                CartesianVector projectedBranchDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
-                const float cosTheta(-projectedBranchDirection.GetDotProduct(principalVertexDirection));
-
-                try
-                {
-                    const float currentCosTheta(branchSlidingFit.GetCosScatteringAngle(localL)); 
-
-                    if (cosTheta < currentCosTheta)
-                        continue;
-                }
-                catch (StatusCodeException &)
-                {
-                }
-
-                float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-                LArPointingClusterHelper::GetImpactParameters(projectedBranchPosition, projectedBranchDirection, principalVertexPosition, rL1, rT1);
-                LArPointingClusterHelper::GetImpactParameters(principalVertexPosition, principalVertexDirection, projectedBranchPosition, rL2, rT2);
-
-                if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
-                {
-                    foundSplit = true;
-                    principalStartPosition = principalVertexPosition;
-                    branchSplitPosition = projectedBranchPosition;
-                    branchSplitDirection = projectedBranchDirection * -1.f;
-                }
+                if (cosTheta < currentCosTheta)
+                    continue;
             }
             catch (StatusCodeException &)
             {
+            }
+
+            float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
+            LArPointingClusterHelper::GetImpactParameters(projectedBranchPosition, projectedBranchDirection, principalVertexPosition, rL1, rT1);
+            LArPointingClusterHelper::GetImpactParameters(principalVertexPosition, principalVertexDirection, projectedBranchPosition, rL2, rT2);
+
+            if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
+            {
+                foundSplit = true;
+                principalStartPosition = principalVertexPosition;
+                branchSplitPosition = projectedBranchPosition;
+                branchSplitDirection = projectedBranchDirection * -1.f;
             }
 
             if (foundSplit)

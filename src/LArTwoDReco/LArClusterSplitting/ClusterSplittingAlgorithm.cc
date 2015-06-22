@@ -21,7 +21,18 @@ StatusCode ClusterSplittingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, originalListName));
 
     if (!m_inputClusterList.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_inputClusterList));
+    {
+        const StatusCode statusCode(PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_inputClusterList));
+
+        if (STATUS_CODE_NOT_FOUND == statusCode)
+        {
+            std::cout << "ClusterSplittingAlgorithm: cluster list not found " << m_inputClusterList << std::endl;
+            return STATUS_CODE_SUCCESS;
+        }
+
+        if (STATUS_CODE_SUCCESS != statusCode)
+            return statusCode;
+    }
 
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));

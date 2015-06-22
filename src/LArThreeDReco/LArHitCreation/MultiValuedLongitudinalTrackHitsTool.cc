@@ -35,38 +35,36 @@ void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *cons
 
     CartesianPointList fitPositionList1, fitPositionList2;
 
-    try
+    MatchedSlidingFitMap::const_iterator fIter1 = matchedSlidingFitMap.find(hitType1);
+    if (matchedSlidingFitMap.end() != fIter1)
     {
-        MatchedSlidingFitMap::const_iterator fIter1 = matchedSlidingFitMap.find(hitType1);
-        if (matchedSlidingFitMap.end() == fIter1)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
         const TwoDSlidingFitResult &fitResult1 = fIter1->second;
         const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), projection3D, hitType1));
 
         CartesianVector position1(0.f, 0.f, 0.f);
-        fitResult1.GetGlobalFitProjection(position2D, position1);
-        fitPositionList1.push_back(position1);
-    }
-    catch (StatusCodeException &)
-    {
+        const StatusCode statusCode(fitResult1.GetGlobalFitProjection(position2D, position1));
+
+        if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_FOUND != statusCode))
+            throw StatusCodeException(statusCode);
+
+        if (STATUS_CODE_SUCCESS == statusCode)
+            fitPositionList1.push_back(position1);
     }
 
-    try
+    MatchedSlidingFitMap::const_iterator fIter2 = matchedSlidingFitMap.find(hitType2);
+    if (matchedSlidingFitMap.end() != fIter2)
     {
-        MatchedSlidingFitMap::const_iterator fIter2 = matchedSlidingFitMap.find(hitType2);
-        if (matchedSlidingFitMap.end() == fIter2)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
         const TwoDSlidingFitResult &fitResult2 = fIter2->second;
         const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), projection3D, hitType2));
 
         CartesianVector position2(0.f, 0.f, 0.f);
-        fitResult2.GetGlobalFitProjection(position2D, position2);
-        fitPositionList2.push_back(position2);
-    }
-    catch (StatusCodeException &)
-    {
+        const StatusCode statusCode(fitResult2.GetGlobalFitProjection(position2D, position2));
+
+        if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_FOUND != statusCode))
+            throw StatusCodeException(statusCode);
+
+        if (STATUS_CODE_SUCCESS == statusCode)
+            fitPositionList2.push_back(position2);
     }
 
     unsigned int nViews(1);

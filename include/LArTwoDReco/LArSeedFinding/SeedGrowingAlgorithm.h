@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -82,8 +84,8 @@ protected:
         AssociationType m_type;
     };
 
-    typedef std::map<const pandora::Cluster*, Association> ClusterAssociationMap;
-    typedef std::map<const pandora::Cluster*, ClusterAssociationMap> ClusterUsageMap;
+    typedef std::unordered_map<const pandora::Cluster*, Association> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster*, ClusterAssociationMap> ClusterUsageMap;
 
     /**
      *  @brief  Determine whether two clusters are associated
@@ -106,7 +108,7 @@ protected:
     void FindAssociatedClusters(const pandora::Cluster *const pParticleSeed, pandora::ClusterVector &candidateClusters,
         ClusterUsageMap &forwardUsageMap, ClusterUsageMap &backwardUsageMap) const;
 
-    typedef std::map<const pandora::Cluster*, pandora::ClusterVector> SeedAssociationList;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterVector> SeedAssociationList;
 
     /**
      *  @brief  Identify cluster merges

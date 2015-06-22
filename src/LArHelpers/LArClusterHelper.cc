@@ -374,16 +374,18 @@ void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const floa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax)
+StatusCode LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax, float &averageZ)
 {
+    averageZ = std::numeric_limits<float>::max();
+
     if (xmin > xmax)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        return STATUS_CODE_INVALID_PARAMETER;
 
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     float zsum(0.f);
     int count(0);
-    
+
     for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
     {
         for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
@@ -400,9 +402,10 @@ float LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float x
     }
 
     if (count == 0)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
-    return zsum / static_cast<float>(count);
+    averageZ = zsum / static_cast<float>(count);
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
