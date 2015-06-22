@@ -81,15 +81,17 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
     {
         const CartesianVector daughterVertex(useInnerD == 1 ? innerCoordinateD : outerCoordinateD);
         const CartesianVector daughterEnd(useInnerD == 1 ? outerCoordinateD : innerCoordinateD);
-        const CartesianVector projectedVertex(LArClusterHelper::GetClosestPosition(daughterVertex, pParentCluster));
 
-        const float daughterVertexDistanceSquared((projectedVertex - daughterVertex).GetMagnitudeSquared());
-        const float daughterEndDistanceSquared((projectedVertex - daughterEnd).GetMagnitudeSquared());
         const float daughterLengthSquared((daughterEnd - daughterVertex).GetMagnitudeSquared());
 
         // Daughter cluster must be available and below a length cut for any association
         if (!pDaughterCluster->IsAvailable() || daughterLengthSquared > m_maxClusterLength * m_maxClusterLength)
             continue;
+
+        const CartesianVector projectedVertex(LArClusterHelper::GetClosestPosition(daughterVertex, pParentCluster));
+
+        const float daughterVertexDistanceSquared((projectedVertex - daughterVertex).GetMagnitudeSquared());
+        const float daughterEndDistanceSquared((projectedVertex - daughterEnd).GetMagnitudeSquared());
 
         // Cut on proximity of daughter cluster to parent cluster
         if (daughterVertexDistanceSquared > std::min(m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement,

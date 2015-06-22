@@ -8,6 +8,8 @@
 #ifndef LAR_TWO_D_SLIDING_FIT_OBJECTS_H
 #define LAR_TWO_D_SLIDING_FIT_OBJECTS_H 1
 
+#include "Pandora/StatusCodes.h"
+
 #include <cmath>
 #include <map>
 #include <vector>
@@ -164,6 +166,11 @@ class LayerInterpolation
 {
 public:
     /**
+     *  @brief  Default constructor
+     */
+    LayerInterpolation();
+
+    /**
      *  @brief  Constructor
      *
      *  @param firstayerIter  the iterator for the upstream layer
@@ -173,6 +180,13 @@ public:
      */
     LayerInterpolation(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter,
         const float firstWeight, const float secondWeight);
+
+    /**
+     *  @brief  Whether the object is initialized
+     * 
+     *  @return boolean
+     */
+    bool IsInitialized() const;
 
     /**
      *  @brief  Get the start layer iterator
@@ -203,10 +217,11 @@ public:
     float GetEndLayerWeight() const;
 
 private:
-    LayerFitResultMap::const_iterator m_startLayerIter;     ///< The start layer iterator
-    LayerFitResultMap::const_iterator m_endLayerIter;       ///< The end layer iterator
-    float                             m_startLayerWeight;   ///< The start layer weight
-    float                             m_endLayerWeight;     ///< The end layer weight
+    bool                                m_isInitialized;    ///< Whether the object is initialized
+    LayerFitResultMap::const_iterator   m_startLayerIter;   ///< The start layer iterator
+    LayerFitResultMap::const_iterator   m_endLayerIter;     ///< The end layer iterator
+    float                               m_startLayerWeight; ///< The start layer weight
+    float                               m_endLayerWeight;   ///< The end layer weight
 };
 
 typedef std::vector<LayerInterpolation> LayerInterpolationList;
@@ -386,8 +401,18 @@ inline unsigned int LayerFitContribution::GetNPoints() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline LayerInterpolation::LayerInterpolation() :
+    m_isInitialized(false),
+    m_startLayerWeight(0.f),
+    m_endLayerWeight(0.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline LayerInterpolation::LayerInterpolation(const LayerFitResultMap::const_iterator &startLayerIter,
         const LayerFitResultMap::const_iterator &endLayerIter, const float startLayerWeight, const float endLayerWeight) :
+    m_isInitialized(true),
     m_startLayerIter(startLayerIter),
     m_endLayerIter(endLayerIter),
     m_startLayerWeight(startLayerWeight),
@@ -397,8 +422,18 @@ inline LayerInterpolation::LayerInterpolation(const LayerFitResultMap::const_ite
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline bool LayerInterpolation::IsInitialized() const
+{
+    return m_isInitialized;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline LayerFitResultMap::const_iterator LayerInterpolation::GetStartLayerIter() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_startLayerIter;
 }
 
@@ -406,6 +441,9 @@ inline LayerFitResultMap::const_iterator LayerInterpolation::GetStartLayerIter()
 
 inline LayerFitResultMap::const_iterator LayerInterpolation::GetEndLayerIter() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_endLayerIter;
 }
 
@@ -413,6 +451,9 @@ inline LayerFitResultMap::const_iterator LayerInterpolation::GetEndLayerIter() c
 
 inline float LayerInterpolation::GetStartLayerWeight() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_startLayerWeight;
 }
 
@@ -420,6 +461,9 @@ inline float LayerInterpolation::GetStartLayerWeight() const
 
 inline float LayerInterpolation::GetEndLayerWeight() const
 {
+    if (!m_isInitialized)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     return m_endLayerWeight;
 }
 

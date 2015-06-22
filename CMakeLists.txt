@@ -10,48 +10,19 @@ PROJECT( LArContent )
 
 
 # project version
-SET( LArContent_VERSION_MAJOR 0 )
-SET( LArContent_VERSION_MINOR 17 )
-SET( LArContent_VERSION_PATCH 0 )
+SET( LArContent_VERSION_MAJOR 02 )
+SET( LArContent_VERSION_MINOR 00 )
+SET( LArContent_VERSION_PATCH 00 )
 
 
-### DEPENDENCIES ############################################################
+### CMAKE ###################################################################
+
 FIND_PACKAGE( ILCUTIL COMPONENTS ILCSOFT_CMAKE_MODULES QUIET )
 
 IF( ILCUTIL_FOUND )
     INCLUDE( ilcsoft_default_settings )
 ELSE()
     INCLUDE( Default_settings )
-ENDIF()
-
-FIND_PACKAGE( PandoraSDK 0.17 REQUIRED )
-FOREACH( pkg PandoraSDK )
-    IF( ${pkg}_FOUND )
-        INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
-        LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
-        ADD_DEFINITIONS ( ${${pkg}_DEFINITIONS} )
-    ENDIF()
-ENDFOREACH()
-
-IF( PANDORA_MONITORING )
-    FIND_PACKAGE( PandoraMonitoring 0.17 REQUIRED )
-    IF( PandoraMonitoring_FOUND )
-        INCLUDE_DIRECTORIES( ${PandoraMonitoring_INCLUDE_DIRS} )
-        LINK_LIBRARIES( ${PandoraMonitoring_LIBRARIES} )
-        ADD_DEFINITIONS ( ${PandoraMonitoring_DEFINITIONS} )
-        ADD_DEFINITIONS( "-DMONITORING" )
-    ENDIF()
-ENDIF()
-
-
-### DOCUMENTATION ############################################################
-OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF )
-
-IF( INSTALL_DOC AND EXISTS "${PROJECT_SOURCE_DIR}/doc/CMakeLists.txt" )
-    ADD_SUBDIRECTORY( ./doc )
-ELSE()
-    MESSAGE( STATUS "INSTALL_DOC set to OFF" )
-    SET( INSTALL_DOC OFF )
 ENDIF()
 
 
@@ -88,26 +59,65 @@ AUX_SOURCE_DIRECTORY( ./src/LArTwoDReco/LArSeedFinding LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArUtility LArContent_SRCS )
 AUX_SOURCE_DIRECTORY( ./src/LArVertex LArContent_SRCS )
 
-# require proper C++
-ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
+IF( NOT CMAKE_CXX_FLAGS )
+    SET( CMAKE_CXX_FLAGS "-std=c++11" )
+ENDIF()
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-if(COMPILER_SUPPORTS_CXX11)
-    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++11 support." )
-    ADD_DEFINITIONS( "-std=c++11" )
+INCLUDE( CheckCXXCompilerFlag )
+
+UNSET( COMPILER_SUPPORTS_CXX_FLAGS CACHE )
+CHECK_CXX_COMPILER_FLAG( ${CMAKE_CXX_FLAGS} COMPILER_SUPPORTS_CXX_FLAGS )
+IF( NOT COMPILER_SUPPORTS_CXX_FLAGS )
+    MESSAGE( FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}" )
+ENDIF()
+
+if( APPLE )
+    SET( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
 else()
-    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Some functionality will be limited." )
+    SET( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
 endif()
 
-# need long long for int64 for now
-ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
+
+### DEPENDENCIES ############################################################
+
+FIND_PACKAGE( PandoraSDK 02.00.00 REQUIRED )
+FOREACH( pkg PandoraSDK )
+    IF( ${pkg}_FOUND )
+        INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
+        LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
+        ADD_DEFINITIONS ( ${${pkg}_DEFINITIONS} )
+    ENDIF()
+ENDFOREACH()
+
+IF( PANDORA_MONITORING )
+    FIND_PACKAGE( PandoraMonitoring 02.00.00 REQUIRED )
+    IF( PandoraMonitoring_FOUND )
+        INCLUDE_DIRECTORIES( ${PandoraMonitoring_INCLUDE_DIRS} )
+        LINK_LIBRARIES( ${PandoraMonitoring_LIBRARIES} )
+        ADD_DEFINITIONS ( ${PandoraMonitoring_DEFINITIONS} )
+        ADD_DEFINITIONS( "-DMONITORING" )
+    ENDIF()
+ENDIF()
+
+
+### DOCUMENTATION ###########################################################
+OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF )
+
+IF( INSTALL_DOC AND EXISTS "${PROJECT_SOURCE_DIR}/doc/CMakeLists.txt" )
+    ADD_SUBDIRECTORY( ./doc )
+ELSE()
+    MESSAGE( STATUS "INSTALL_DOC set to OFF" )
+    SET( INSTALL_DOC OFF )
+ENDIF()
 
 
 ### LIBRARY #################################################################
 
 # add library
 ADD_SHARED_LIBRARY( LArContent ${LArContent_SRCS} )
+
+
+### INSTALL #################################################################
 
 # install library
 INSTALL_SHARED_LIBRARY( LArContent DESTINATION lib )

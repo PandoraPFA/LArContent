@@ -125,19 +125,27 @@ void ThreeDShowersAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle
 
 void ThreeDShowersAlgorithm::PreparationStep()
 {
-    ClusterList allClustersList;
-    allClustersList.insert(this->m_clusterListU.begin(), this->m_clusterListU.end());
-    allClustersList.insert(this->m_clusterListV.begin(), this->m_clusterListV.end());
-    allClustersList.insert(this->m_clusterListW.begin(), this->m_clusterListW.end());
+    this->PreparationStep(this->m_clusterListU);
+    this->PreparationStep(this->m_clusterListV);
+    this->PreparationStep(this->m_clusterListW);
+}
 
-    for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDShowersAlgorithm::PreparationStep(ClusterList &clusterList)
+{
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
     {
+        const Cluster *const pCluster = *(iter++);
+
         try
         {
-            this->AddToSlidingFitCache(*iter);
+            this->AddToSlidingFitCache(pCluster);
         }
         catch (StatusCodeException &statusCodeException)
         {
+            clusterList.erase(pCluster);
+
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
         }
@@ -177,30 +185,25 @@ void ThreeDShowersAlgorithm::RemoveFromSlidingFitCache(const Cluster *const pClu
 
 void ThreeDShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
-    try
-    {
-        ShowerOverlapResult overlapResult;
-        this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+    ShowerOverlapResult overlapResult;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
-        if (overlapResult.IsInitialized())
-            m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
-    }
-    catch (StatusCodeException &statusCodeException)
-    {
-        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
-            throw statusCodeException;
-    }
+    if (overlapResult.IsInitialized())
+        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW, ShowerOverlapResult &overlapResult)
+StatusCode ThreeDShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW, ShowerOverlapResult &overlapResult)
 {
     const TwoDSlidingShowerFitResult &fitResultU(this->GetCachedSlidingFitResult(pClusterU));
     const TwoDSlidingShowerFitResult &fitResultV(this->GetCachedSlidingFitResult(pClusterV));
     const TwoDSlidingShowerFitResult &fitResultW(this->GetCachedSlidingFitResult(pClusterW));
 
     const XSampling xSampling(fitResultU.GetShowerFitResult(), fitResultV.GetShowerFitResult(), fitResultW.GetShowerFitResult());
+
+    if (xSampling.m_xOverlapSpan < std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_NOT_FOUND;
 
     ShowerPositionMapPair positionMapsU, positionMapsV, positionMapsW;
     this->GetShowerPositionMaps(fitResultU, fitResultV, fitResultW, xSampling, positionMapsU, positionMapsV, positionMapsW);
@@ -218,15 +221,16 @@ void ThreeDShowersAlgorithm::CalculateOverlapResult(const Cluster *const pCluste
     const unsigned int nSampledHits(nSampledHitsU + nSampledHitsV + nSampledHitsW);
 
     if (0 == nSampledHits)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     const XOverlap xOverlapObject(xSampling.m_uMinX, xSampling.m_uMaxX, xSampling.m_vMinX, xSampling.m_vMaxX, xSampling.m_wMinX, xSampling.m_wMaxX, xSampling.m_xOverlapSpan);
     const ShowerOverlapResult showerOverlapResult(nMatchedHits, nSampledHits, xOverlapObject);
 
     if ((showerOverlapResult.GetMatchedFraction() < m_minShowerMatchedFraction) || (showerOverlapResult.GetNMatchedSamplingPoints() < m_minShowerMatchedPoints))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
     overlapResult = showerOverlapResult;
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -236,62 +240,58 @@ void ThreeDShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitRes
     ShowerPositionMapPair &positionMapsW) const
 {
     const unsigned int nPoints(static_cast<unsigned int>(xSampling.m_nPoints));
-    
+
     for (unsigned n = 0; n <= nPoints; ++n)
     {
         const float x(xSampling.m_minX + (xSampling.m_maxX - xSampling.m_minX) * static_cast<float>(n) / static_cast<float>(nPoints));
 
-        try
+        int xBin(-1);
+        if (STATUS_CODE_SUCCESS != xSampling.GetBin(x, xBin))
+            continue;
+
+        FloatVector uValues, vValues, wValues;
+        fitResultU.GetShowerEdges(x, true, uValues);
+        fitResultV.GetShowerEdges(x, true, vValues);
+        fitResultW.GetShowerEdges(x, true, wValues);
+
+        std::sort(uValues.begin(), uValues.end());
+        std::sort(vValues.begin(), vValues.end());
+        std::sort(wValues.begin(), wValues.end());
+
+        if ((uValues.size() > 1) && (vValues.size() > 1))
         {
-            const int xBin(xSampling.GetBin(x));
-
-            FloatVector uValues, vValues, wValues;
-            fitResultU.GetShowerEdges(x, true, uValues);
-            fitResultV.GetShowerEdges(x, true, vValues);
-            fitResultW.GetShowerEdges(x, true, wValues);
-
-            std::sort(uValues.begin(), uValues.end());
-            std::sort(vValues.begin(), vValues.end());
-            std::sort(wValues.begin(), wValues.end());
-
-            if ((uValues.size() > 1) && (vValues.size() > 1))
-            {
-                const float uMin(uValues.front()), uMax(uValues.back());
-                const float vMin(vValues.front()), vMax(vValues.back());
-                const float uv2wMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMin, vMin));
-                const float uv2wMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMax, vMax));
-                const float uv2wMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMin, vMax));
-                const float uv2wMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMax, vMin));
-                positionMapsW.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uv2wMinMin, uv2wMaxMax)));
-                positionMapsW.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uv2wMinMax, uv2wMaxMin)));
-            }
-
-            if ((uValues.size() > 1) && (wValues.size() > 1))
-            {
-                const float uMin(uValues.front()), uMax(uValues.back());
-                const float wMin(wValues.front()), wMax(wValues.back());
-                const float uw2vMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMin, wMin));
-                const float uw2vMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMax, wMax));
-                const float uw2vMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMin, wMax));
-                const float uw2vMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMax, wMin));
-                positionMapsV.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uw2vMinMin, uw2vMaxMax)));
-                positionMapsV.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uw2vMinMax, uw2vMaxMin)));
-            }
-
-            if ((vValues.size() > 1) && (wValues.size() > 1))
-            {
-                const float vMin(vValues.front()), vMax(vValues.back());
-                const float wMin(wValues.front()), wMax(wValues.back());
-                const float vw2uMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMin, wMin));
-                const float vw2uMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMax, wMax));
-                const float vw2uMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMin, wMax));
-                const float vw2uMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMax, wMin));
-                positionMapsU.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, vw2uMinMin, vw2uMaxMax)));
-                positionMapsU.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, vw2uMinMax, vw2uMaxMin)));
-            }
+            const float uMin(uValues.front()), uMax(uValues.back());
+            const float vMin(vValues.front()), vMax(vValues.back());
+            const float uv2wMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMin, vMin));
+            const float uv2wMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMax, vMax));
+            const float uv2wMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMin, vMax));
+            const float uv2wMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uMax, vMin));
+            positionMapsW.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uv2wMinMin, uv2wMaxMax)));
+            positionMapsW.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uv2wMinMax, uv2wMaxMin)));
         }
-        catch (StatusCodeException &)
+
+        if ((uValues.size() > 1) && (wValues.size() > 1))
         {
+            const float uMin(uValues.front()), uMax(uValues.back());
+            const float wMin(wValues.front()), wMax(wValues.back());
+            const float uw2vMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMin, wMin));
+            const float uw2vMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMax, wMax));
+            const float uw2vMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMin, wMax));
+            const float uw2vMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, uMax, wMin));
+            positionMapsV.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uw2vMinMin, uw2vMaxMax)));
+            positionMapsV.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, uw2vMinMax, uw2vMaxMin)));
+        }
+
+        if ((vValues.size() > 1) && (wValues.size() > 1))
+        {
+            const float vMin(vValues.front()), vMax(vValues.back());
+            const float wMin(wValues.front()), wMax(wValues.back());
+            const float vw2uMinMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMin, wMin));
+            const float vw2uMaxMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMax, wMax));
+            const float vw2uMinMax(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMin, wMax));
+            const float vw2uMaxMin(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vMax, wMin));
+            positionMapsU.first.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, vw2uMinMin, vw2uMaxMax)));
+            positionMapsU.second.insert(ShowerPositionMap::value_type(xBin, ShowerExtent(x, vw2uMinMax, vw2uMaxMin)));
         }
     }
 }
@@ -316,24 +316,20 @@ void ThreeDShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pClu
             const float x(pCaloHit->GetPositionVector().GetX());
             const float z(pCaloHit->GetPositionVector().GetZ());
 
-            try
-            {
-                const int xBin(xSampling.GetBin(x));
+            int xBin(-1);
+            if (STATUS_CODE_SUCCESS != xSampling.GetBin(x, xBin))
+                continue;
 
-                ++nSampledHits;
+            ++nSampledHits;
 
-                ShowerPositionMap::const_iterator positionIter1 = positionMaps.first.find(xBin);
-                ShowerPositionMap::const_iterator positionIter2 = positionMaps.second.find(xBin);
+            ShowerPositionMap::const_iterator positionIter1 = positionMaps.first.find(xBin);
+            ShowerPositionMap::const_iterator positionIter2 = positionMaps.second.find(xBin);
 
-                if ((positionMaps.first.end() != positionIter1) && (z > positionIter1->second.GetLowEdgeZ()) && (z < positionIter1->second.GetHighEdgeZ()))
-                    ++nMatchedHits1;
+            if ((positionMaps.first.end() != positionIter1) && (z > positionIter1->second.GetLowEdgeZ()) && (z < positionIter1->second.GetHighEdgeZ()))
+                ++nMatchedHits1;
 
-                if ((positionMaps.second.end() != positionIter2) && (z > positionIter2->second.GetLowEdgeZ()) && (z < positionIter2->second.GetHighEdgeZ()))
-                    ++nMatchedHits2;
-            }
-            catch (StatusCodeException &)
-            {
-            }
+            if ((positionMaps.second.end() != positionIter2) && (z > positionIter2->second.GetLowEdgeZ()) && (z < positionIter2->second.GetHighEdgeZ()))
+                ++nMatchedHits2;
         }
     }
 
@@ -376,24 +372,24 @@ ThreeDShowersAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitResu
     m_xOverlapSpan = (m_maxX - m_minX);
     m_nPoints = 1.f;
 
-    if (m_xOverlapSpan < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    const float nPointsU(std::fabs((m_xOverlapSpan / (m_uMaxX - m_uMinX)) * static_cast<float>(fitResultU.GetMaxLayer() - fitResultU.GetMinLayer())));
-    const float nPointsV(std::fabs((m_xOverlapSpan / (m_vMaxX - m_vMinX)) * static_cast<float>(fitResultV.GetMaxLayer() - fitResultV.GetMinLayer())));
-    const float nPointsW(std::fabs((m_xOverlapSpan / (m_wMaxX - m_wMinX)) * static_cast<float>(fitResultW.GetMaxLayer() - fitResultW.GetMinLayer())));
-
-    m_nPoints = 1.f + ((nPointsU + nPointsV + nPointsW) / 3.f);
+    if (m_xOverlapSpan > std::numeric_limits<float>::epsilon())
+    {
+        const float nPointsU(std::fabs((m_xOverlapSpan / (m_uMaxX - m_uMinX)) * static_cast<float>(fitResultU.GetMaxLayer() - fitResultU.GetMinLayer())));
+        const float nPointsV(std::fabs((m_xOverlapSpan / (m_vMaxX - m_vMinX)) * static_cast<float>(fitResultV.GetMaxLayer() - fitResultV.GetMinLayer())));
+        const float nPointsW(std::fabs((m_xOverlapSpan / (m_wMaxX - m_wMinX)) * static_cast<float>(fitResultW.GetMaxLayer() - fitResultW.GetMinLayer())));
+        m_nPoints = 1.f + ((nPointsU + nPointsV + nPointsW) / 3.f);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int ThreeDShowersAlgorithm::XSampling::GetBin(const float x) const
+StatusCode ThreeDShowersAlgorithm::XSampling::GetBin(const float x, int &xBin) const
 {
     if (((x - m_minX) < -std::numeric_limits<float>::epsilon()) || ((x - m_maxX) > +std::numeric_limits<float>::epsilon()))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
-    return static_cast<int>(0.5f + m_nPoints * (x - m_minX) / (m_maxX - m_minX));
+    xBin = static_cast<int>(0.5f + m_nPoints * (x - m_minX) / (m_maxX - m_minX));
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

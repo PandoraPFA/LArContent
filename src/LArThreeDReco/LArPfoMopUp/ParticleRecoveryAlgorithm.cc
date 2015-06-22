@@ -252,42 +252,39 @@ void ParticleRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlap
 
 bool ParticleRecoveryAlgorithm::CheckConsistency(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) const
 {
-    try
+    // Requirements on X matching
+    float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
+    LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
+    LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
+    LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
+
+    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)));
+    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)));
+    const float xOverlap(xMax - xMin);
+
+    if (xOverlap < std::numeric_limits<float>::epsilon())
+        return false;
+
+    // Requirements on 3D matching
+    float u(std::numeric_limits<float>::max()), v(std::numeric_limits<float>::max()), w(std::numeric_limits<float>::max());
+
+    if ((STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax, u)) ||
+        (STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax, v)) ||
+        (STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax, w)))
     {
-        // Requirements on X matching
-        float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
-        LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
-        LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
-        LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
-
-        const float xMin(std::max(xMinU, std::max(xMinV, xMinW)));
-        const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)));
-        const float xOverlap(xMax - xMin);
-
-        if (xOverlap < std::numeric_limits<float>::epsilon())
-            return false;
-
-        // Requirements on 3D matching
-        const float u(LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax));
-        const float v(LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax));
-        const float w(LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax));
-
-        const float uv2w(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, u, v));
-        const float vw2u(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, v, w));
-        const float wu2v(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, w, u));
-
-        const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
-
-        if (pseudoChi2 > m_pseudoChi2Cut)
-            return false;
-
-        return true;
-    }
-    catch(StatusCodeException &)
-    {
+        return false;
     }
 
-    return false;
+    const float uv2w(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, u, v));
+    const float vw2u(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, v, w));
+    const float wu2v(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, w, u));
+
+    const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
+
+    if (pseudoChi2 > m_pseudoChi2Cut)
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

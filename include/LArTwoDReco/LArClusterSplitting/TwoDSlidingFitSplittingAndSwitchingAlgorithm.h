@@ -31,13 +31,25 @@ protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief Find the best split position and direction for a pair of clusters
+     *  @brief  Perform any preparatory actions, such as caching information for subsequent expensive calculations
      *
-     *  @param slidingFit1 the sliding linear fit to the first cluster
-     *  @param slidingFit2 the sliding linear fit to the second cluster
-     *  @param splitPosition the output split position
-     *  @param direction1 the output direction of the first new cluster
-     *  @param direction2 the output direction of the second new cluster
+     *  @param  clusterVector the cluster vector
+     */
+    virtual pandora::StatusCode PreparationStep(const pandora::ClusterVector &clusterVector);
+
+    /**
+     *  @brief  Tidy up any information cached in e.g. the preparation step
+     */
+    virtual pandora::StatusCode TidyUpStep();
+
+    /**
+     *  @brief  Find the best split position and direction for a pair of clusters
+     *
+     *  @param  slidingFit1 the sliding linear fit to the first cluster
+     *  @param  slidingFit2 the sliding linear fit to the second cluster
+     *  @param  splitPosition the output split position
+     *  @param  direction1 the output direction of the first new cluster
+     *  @param  direction2 the output direction of the second new cluster
      */
     virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFit1, const TwoDSlidingFitResult &slidingFit2,
         pandora::CartesianVector &splitPosition, pandora::CartesianVector &direction1, pandora::CartesianVector &direction2) const = 0;

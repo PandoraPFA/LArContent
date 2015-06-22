@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArMCParticleHelper.h"
 
+#include "LArUtility/KDTreeLinkerAlgoT.h"
 #include "LArUtility/ListPreparationAlgorithm.h"
 
 using namespace pandora;
@@ -21,6 +22,7 @@ ListPreparationAlgorithm::ListPreparationAlgorithm() :
     m_mipEquivalentCut(std::numeric_limits<float>::epsilon()),
     m_minCellLengthScale(std::numeric_limits<float>::epsilon()),
     m_maxCellLengthScale(2.f),
+    m_searchRegion1D(0.1f),
     m_onlyAvailableCaloHits(true),
     m_inputCaloHitListName("Input"),
     m_inputMCParticleListName("Input"),
@@ -103,7 +105,8 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
         if (pCaloHit->GetInputEnergy() < std::numeric_limits<float>::epsilon())
         {
-            std::cout << "ListPreparationAlgorithm: found a hit with zero energy, will remove it" << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPreparationAlgorithm: found a hit with zero energy, will remove it" << std::endl;
             continue;
         }
 
@@ -111,7 +114,8 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         {
             if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
             {
-                std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
+                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
             }
             else
             {
@@ -192,16 +196,27 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
 void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputList, CaloHitList &outputList)
 {
-    // Remove hits that are in the same physical location!
-    for (CaloHitList::const_iterator hIter1 = inputList.begin(), hIterEnd1 = inputList.end(); hIter1 != hIterEnd1; ++hIter1)
-    {
-        const CaloHit *const pCaloHit1 = *hIter1;
+    // Initialize kd tree
+    HitKDTree2D kdTree;
+    HitKDNode2DList hitKDNode2DList;
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, inputList, hitKDNode2DList, true);
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
+    // Remove hits that are in the same physical location!
+    for (const CaloHit *const pCaloHit1 : inputList)
+    {
         bool isUnique(true);
 
-        for (CaloHitList::const_iterator hIter2 = inputList.begin(), hIterEnd2 = inputList.end(); hIter2 != hIterEnd2; ++hIter2)
+        // Get nearby hits from kd tree
+        CaloHitList nearbyHits;
+        KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit1, m_searchRegion1D, m_searchRegion1D);
+
+        HitKDNode2DList found;
+        kdTree.search(searchRegionHits, found);
+
+        for (const auto &hit : found)
         {
-            const CaloHit *const pCaloHit2 = *hIter2;
+            const CaloHit *const pCaloHit2 = hit.data;
 
             if (pCaloHit1 == pCaloHit2)
                 continue;
@@ -220,7 +235,8 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
         }
         else
         {
-            std::cout << "ListPreparationAlgorithm: found two hits in same location, will remove lowest pulse height" << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPreparationAlgorithm: found two hits in same location, will remove lowest pulse height" << std::endl;
         }
     }
 
@@ -301,6 +317,9 @@ StatusCode ListPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxCellLengthScale", m_maxCellLengthScale));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SearchRegion1D", m_searchRegion1D));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OnlyAvailableCaloHits", m_onlyAvailableCaloHits));

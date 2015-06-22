@@ -15,6 +15,8 @@
 
 #include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -64,12 +66,14 @@ protected:
      *  @param  inputClusterList the input cluster list
      *  @param  pBestMatchedCluster to receive the address of the best matched cluster
      *  @param  fragmentOverlapResult to receive the populated fragment overlap result
+     * 
+     *  @return statusCode, faster than throwing in regular use-cases
      */
-    void CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+    pandora::StatusCode CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
         const pandora::ClusterList &inputClusterList, const pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
 
-    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
-    typedef std::map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
      *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results
@@ -77,8 +81,10 @@ protected:
      *  @param  fitResult1 the first sliding fit result
      *  @param  fitResult2 the second sliding fit result
      *  @param  projectedPositions to receive the list of projected positions
+     * 
+     *  @return statusCode, faster than throwing in regular use-cases
      */
-    void GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+    pandora::StatusCode GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
         pandora::CartesianPointList &projectedPositions) const;
 
     /**
@@ -88,8 +94,10 @@ protected:
      *  @param  projectedPositions the list of projected positions
      *  @param  hitToClusterMap to receive the hit to cluster map
      *  @param  matchedCaloHits to receive the list of associated calo hits
+     * 
+     *  @return statusCode, faster than throwing in regular use-cases
      */
-    void GetMatchedHits(const pandora::ClusterList &inputClusterList, const pandora::CartesianPointList &projectedPositions,
+    pandora::StatusCode GetMatchedHits(const pandora::ClusterList &inputClusterList, const pandora::CartesianPointList &projectedPositions,
         HitToClusterMap &hitToClusterMap, pandora::CaloHitList &matchedCaloHits) const;
 
     /**
@@ -99,8 +107,10 @@ protected:
      *  @param  hitToClusterMap the hit to cluster map
      *  @param  matchedClusters to receive the list of matched clusters
      *  @param  pBestMatchedCluster to receive the address of the single best matched cluster
+     * 
+     *  @return statusCode, faster than throwing in regular use-cases
      */
-    void GetMatchedClusters(const pandora::CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
+    pandora::StatusCode GetMatchedClusters(const pandora::CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
         pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster) const;
 
     /**
@@ -136,7 +146,7 @@ protected:
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
+    typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;
 
     std::string         m_reclusteringAlgorithmName;        ///< Name of daughter algorithm to use for cluster re-building
 

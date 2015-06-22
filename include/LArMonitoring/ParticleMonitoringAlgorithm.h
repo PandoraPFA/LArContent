@@ -42,13 +42,13 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
-    typedef std::map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCToPfoMap;
-    typedef std::map<const pandora::ParticleFlowObject*, const pandora::MCParticle*> PfoToMCMap;
-    typedef std::map<const pandora::CaloHit*, const pandora::MCParticle*> CaloHitToMCMap;
-    typedef std::map<const pandora::CaloHit*, const pandora::ParticleFlowObject*> CaloHitToPfoMap;
-    typedef std::map<const pandora::ParticleFlowObject*, pandora::CaloHitList> PfoContributionMap;
-    typedef std::map<const pandora::MCParticle*, pandora::CaloHitList> MCContributionMap;
+    typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
+    typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCToPfoMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::MCParticle*> PfoToMCMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::MCParticle*> CaloHitToMCMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::ParticleFlowObject*> CaloHitToPfoMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, pandora::CaloHitList> PfoContributionMap;
+    typedef std::unordered_map<const pandora::MCParticle*, pandora::CaloHitList> MCContributionMap;
 
     /**
      *  @brief  Modify a pfo list, recursively removing top-level neutrinos and replacing them with their daughter pfos

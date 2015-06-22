@@ -24,30 +24,20 @@ void MultiValuedTransverseTrackHitsTool::GetThreeDPosition(const CaloHit *const 
 
     CartesianPointList fitPositionList1, fitPositionList2;
 
-    try
-    {
-        MatchedSlidingFitMap::const_iterator iter1 = matchedSlidingFitMap.find(hitType1);
-        if (matchedSlidingFitMap.end() == iter1)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    MatchedSlidingFitMap::const_iterator iter1 = matchedSlidingFitMap.find(hitType1);
 
+    if (matchedSlidingFitMap.end() != iter1)
+    {
         const TwoDSlidingFitResult &fitResult1 = iter1->second;
-        fitResult1.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositionList1);
-    }
-    catch (StatusCodeException &)
-    {
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, fitResult1.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositionList1));
     }
 
-    try
-    {
-        MatchedSlidingFitMap::const_iterator iter2 = matchedSlidingFitMap.find(hitType2);
-        if (matchedSlidingFitMap.end() == iter2)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    MatchedSlidingFitMap::const_iterator iter2 = matchedSlidingFitMap.find(hitType2);
 
+    if (matchedSlidingFitMap.end() != iter2)
+    {
         const TwoDSlidingFitResult &fitResult2 = iter2->second;
-        fitResult2.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositionList2); 
-    }
-    catch (StatusCodeException &)
-    {
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, fitResult2.GetGlobalFitPositionListAtX(pCaloHit2D->GetPositionVector().GetX(), fitPositionList2));
     }
 
     unsigned int nViews(1);

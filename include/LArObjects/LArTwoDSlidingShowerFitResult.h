@@ -12,6 +12,8 @@
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -91,7 +93,7 @@ private:
     TwoDSlidingFitResult    m_positiveEdgeFitResult;        ///< The sliding fit result for the positive shower edge
 };
 
-typedef std::map<const pandora::Cluster*, TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultMap;
+typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

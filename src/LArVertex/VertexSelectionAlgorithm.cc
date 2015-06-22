@@ -11,6 +11,8 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
+#include "LArUtility/KDTreeLinkerAlgoT.h"
+
 #include "LArVertex/VertexSelectionAlgorithm.h"
 
 using namespace pandora;
@@ -26,8 +28,7 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_histogramPhiMin(-1.1f * M_PI),
     m_histogramPhiMax(+1.1f * M_PI),
     m_maxOnHitDisplacement(1.f),
-    m_maxHitVertexDisplacement(std::numeric_limits<float>::max()),
-    m_hitDeweightingPower(-0.5f),
+    m_maxHitVertexDisplacement1D(100.f),
     m_maxTopScoreCandidates(50),
     m_maxTopScoreSelections(3),
     m_maxBeamTopScoreCandidates(50),
@@ -49,15 +50,17 @@ StatusCode VertexSelectionAlgorithm::Run()
     const VertexList *pInputVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
 
+    HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
+    this->InitializeKDTrees(kdTreeU, kdTreeV, kdTreeW);
+
     VertexScoreList vertexScoreList;
     float minZCoordinate(std::numeric_limits<float>::max()), maxZCoordinate(-std::numeric_limits<float>::max());
 
-    for (VertexList::const_iterator iter = pInputVertexList->begin(), iterEnd = pInputVertexList->end(); iter != iterEnd; ++iter)
+    for (const Vertex *const pVertex : *pInputVertexList)
     {
         try
         {
-            const Vertex *const pVertex(*iter);
-            float figureOfMerit(this->GetFigureOfMerit(pVertex, m_maxHitVertexDisplacement,m_hitDeweightingPower));
+            float figureOfMerit(this->GetFigureOfMerit(pVertex, kdTreeU, kdTreeV, kdTreeW));
             vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
 
             if (pVertex->GetPosition().GetZ() < minZCoordinate)
@@ -97,18 +100,60 @@ StatusCode VertexSelectionAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, const float maxHitVertexDisplacement, const float hitDeweightingPower) const
+void VertexSelectionAlgorithm::InitializeKDTrees(HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const
+{
+    this->InitializeKDTree(m_inputClusterListNameU, kdTreeU);
+    this->InitializeKDTree(m_inputClusterListNameV, kdTreeV);
+    this->InitializeKDTree(m_inputClusterListNameW, kdTreeW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionAlgorithm::InitializeKDTree(const std::string &clusterListName, HitKDTree2D &kdTree) const
+{
+    // TODO Decide whether to find vertices using either i) all hits, or ii) all hits in existing clusters, as below.
+    const ClusterList *pClusterList = NULL;
+    const StatusCode statusCode(PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+    if (STATUS_CODE_NOT_INITIALIZED == statusCode)
+    {
+        std::cout << "VertexSelectionAlgorithm: cluster list not found " << clusterListName << std::endl;
+        return;
+    }
+
+    if (STATUS_CODE_SUCCESS != statusCode)
+        throw StatusCodeException(statusCode);
+
+    CaloHitList caloHitList;
+
+    for (const Cluster *const pCluster : *pClusterList)
+    {
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+    }
+
+    HitKDNode2DList hitKDNode2DList;
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, caloHitList, hitKDNode2DList, true);
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const
 {
     Histogram histogramU(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
     Histogram histogramV(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
     Histogram histogramW(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
 
-    const bool isVertexOnHitU(this->FillHistogram(pVertex, TPC_VIEW_U, m_inputClusterListNameU, maxHitVertexDisplacement, hitDeweightingPower, histogramU));
-    const bool isVertexOnHitV(this->FillHistogram(pVertex, TPC_VIEW_V, m_inputClusterListNameV, maxHitVertexDisplacement, hitDeweightingPower, histogramV));
-    const bool isVertexOnHitW(this->FillHistogram(pVertex, TPC_VIEW_W, m_inputClusterListNameW, maxHitVertexDisplacement, hitDeweightingPower, histogramW));
-
-    if (!isVertexOnHitU || !isVertexOnHitV || !isVertexOnHitW)
+    if (!this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU) ||
+        !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV) ||
+        !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW))
+    {
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+    }
+
+    this->FillHistogram(pVertex, TPC_VIEW_U, kdTreeU, histogramU);
+    this->FillHistogram(pVertex, TPC_VIEW_V, kdTreeV, histogramV);
+    this->FillHistogram(pVertex, TPC_VIEW_W, kdTreeW, histogramW);
 
     return this->GetFigureOfMerit(histogramU, histogramV, histogramW);
 }
@@ -142,57 +187,43 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogram) con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const HitType hitType, const std::string &clusterListName,
-    const float maxHitVertexDisplacement, const float hitDeweightingPower, Histogram &histogram) const
+bool VertexSelectionAlgorithm::IsVertexOnHit(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree) const
 {
-    bool isVertexOnHit(false);
-    const ClusterList *pClusterList = NULL;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
-    for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
-    {
-        const Cluster *const pCluster(*cIter);
-        const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pCluster));
+    CaloHitList nearbyHits;
+    KDTreeBox searchRegionHits = build_2d_kd_search_region(vertexPosition2D, m_maxOnHitDisplacement, m_maxOnHitDisplacement);
 
-        if (hitType != clusterHitType)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    HitKDNode2DList found;
+    kdTree.search(searchRegionHits, found);
 
-        const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-        isVertexOnHit |= this->FillHistogram(vertexPosition2D, pCluster, maxHitVertexDisplacement, hitDeweightingPower, histogram);
-    }
-
-    return isVertexOnHit;
+    return (!found.empty());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool VertexSelectionAlgorithm::FillHistogram(const CartesianVector &vertexPosition2D, const Cluster *const pCluster,
-    const float maxHitVertexDisplacement, const float hitDeweightingPower, Histogram &histogram) const
+void VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree, Histogram &histogram) const
 {
-    bool isVertexOnHit(false);
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    CaloHitList nearbyHits;
+    KDTreeBox searchRegionHits = build_2d_kd_search_region(vertexPosition2D, m_maxHitVertexDisplacement1D, m_maxHitVertexDisplacement1D);
+
+    HitKDNode2DList found;
+    kdTree.search(searchRegionHits, found);
+
+    for (const auto &hit : found)
     {
-        for (CaloHitList::const_iterator hIter = iter->second->begin(), hIterEnd = iter->second->end(); hIter != hIterEnd; ++hIter)
-        {
-            const CaloHit *const pCaloHit(*hIter);
+        const CartesianVector displacement(hit.data->GetPositionVector() - vertexPosition2D);
+        const float magnitude(displacement.GetMagnitude());
 
-            const CartesianVector displacement(pCaloHit->GetPositionVector() - vertexPosition2D);
-            const float magnitude(displacement.GetMagnitude());
+        if (magnitude < std::numeric_limits<float>::epsilon())
+            continue;
 
-            if (magnitude < m_maxOnHitDisplacement)
-                isVertexOnHit = true;
-
-            if (magnitude > maxHitVertexDisplacement)
-                continue;
-
-            const float phi(std::atan2(displacement.GetZ(), displacement.GetX()));
-            histogram.Fill(phi, std::pow(magnitude, hitDeweightingPower));
-        }
+        const float phi(this->atan2Fast(displacement.GetZ(), displacement.GetX()));
+        const float weight(1.f / std::sqrt(magnitude));
+        histogram.Fill(phi, weight);
     }
-
-    return isVertexOnHit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -331,6 +362,22 @@ void VertexSelectionAlgorithm::SelectFinalVertices(const VertexScoreList &vertex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float VertexSelectionAlgorithm::atan2Fast(const float y, const float x) const
+{
+    const float ONE_QTR_PI(0.25f * M_PI);
+    const float THR_QTR_PI(0.75f * M_PI);
+
+    const float abs_y(std::max(std::fabs(y), std::numeric_limits<float>::epsilon()));
+    const float abs_x(std::fabs(x));
+
+    const float r((x < 0.f) ? (x + abs_y) / (abs_y + abs_x) : (abs_x - abs_y) / (abs_x + abs_y));
+    const float angle(((x < 0.f) ? THR_QTR_PI : ONE_QTR_PI) + (0.1963f * r * r - 0.9817f) * r);
+
+    return ((y < 0.f) ? -angle : angle); // negate if in quad III or IV
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
@@ -360,10 +407,7 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "MaxOnHitDisplacement", m_maxOnHitDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxHitVertexDisplacement", m_maxHitVertexDisplacement));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HitDeweightingPower", m_hitDeweightingPower));
+        "MaxHitVertexDisplacement1D", m_maxHitVertexDisplacement1D));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTopScoreCandidates", m_maxTopScoreCandidates));

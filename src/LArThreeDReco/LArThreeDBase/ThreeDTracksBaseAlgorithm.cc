@@ -203,21 +203,47 @@ void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
+void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+{
+    // TODO Correct these placeholder parameters
+    pfoParameters.m_particleId = MU_MINUS; // Track
+    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
+    pfoParameters.m_energy = 0.f;
+    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
 {
-    ClusterList allClustersList;
-    allClustersList.insert(this->m_clusterListU.begin(), this->m_clusterListU.end());
-    allClustersList.insert(this->m_clusterListV.begin(), this->m_clusterListV.end());
-    allClustersList.insert(this->m_clusterListW.begin(), this->m_clusterListW.end());
+    this->PreparationStep(this->m_clusterListU);
+    this->PreparationStep(this->m_clusterListV);
+    this->PreparationStep(this->m_clusterListW);
+}
 
-    for (ClusterList::const_iterator iter = allClustersList.begin(), iterEnd = allClustersList.end(); iter != iterEnd; ++iter)
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void ThreeDTracksBaseAlgorithm<T>::PreparationStep(ClusterList &clusterList)
+{
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
     {
+        const Cluster *const pCluster = *(iter++);
+
         try
         {
-            this->AddToSlidingFitCache(*iter);
+            this->AddToSlidingFitCache(pCluster);
         }
         catch (StatusCodeException &statusCodeException)
         {
+            clusterList.erase(pCluster);
+
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
         }
@@ -231,22 +257,6 @@ void ThreeDTracksBaseAlgorithm<T>::TidyUp()
 {
     m_slidingFitResultMap.clear();
     return ThreeDBaseAlgorithm<T>::TidyUp();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
-{
-    // TODO Correct these placeholder parameters
-    pfoParameters.m_particleId = MU_MINUS; // Track
-    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -41,6 +41,9 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
     TwoDSlidingFitResultMap slidingFitResultMap;
     this->BuildSlidingFitResultMap(clusterVector, slidingFitResultMap);
 
+    // May choose to cache information here, for subsequent expensive calculations
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->PreparationStep(clusterVector));
+
     // Loop over clusters, identify split positions, perform splits
     for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
     {
@@ -92,6 +95,20 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
         }
     }
 
+    return this->TidyUpStep();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::PreparationStep(const ClusterVector &/*clusterVector*/)
+{
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::TidyUpStep()
+{
     return STATUS_CODE_SUCCESS;
 }
 

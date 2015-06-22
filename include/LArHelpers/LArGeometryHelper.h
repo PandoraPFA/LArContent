@@ -12,6 +12,8 @@
 
 #include "Objects/CartesianVector.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -213,8 +215,8 @@ public:
     static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, const LArTransformationPlugin *const pLArTransformationPlugin);
 
 private:
-    typedef std::map<const pandora::Pandora*, const LArPseudoLayerPlugin*>    PseudoLayerInstanceMap;
-    typedef std::map<const pandora::Pandora*, const LArTransformationPlugin*> TransformationInstanceMap;
+    typedef std::unordered_map<const pandora::Pandora*, const LArPseudoLayerPlugin*>    PseudoLayerInstanceMap;
+    typedef std::unordered_map<const pandora::Pandora*, const LArTransformationPlugin*> TransformationInstanceMap;
     static PseudoLayerInstanceMap       m_pseudolayerInstanceMap;       ///< The pseudolayer instance map 
     static TransformationInstanceMap    m_transformationInstanceMap;    ///< The transformation instance map
 };

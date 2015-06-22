@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArUtility/VertexSelectionAlgorithm.h
+ *  @file   LArContent/include/LArVertex/VertexSelectionAlgorithm.h
  * 
  *  @brief  Header file for the vertex selection algorithm class.
  * 
@@ -12,6 +12,11 @@
 
 namespace lar_content
 {
+
+template<typename, unsigned int> class KDTreeLinkerAlgo;
+template<typename, unsigned int> class KDTreeNodeInfoT;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  VertexSelectionAlgorithm::Algorithm class
@@ -78,18 +83,40 @@ private:
 
     typedef std::vector<VertexScore> VertexScoreList;
 
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef std::vector<HitKDNode2D> HitKDNode2DList;
+
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Initialize kd trees with details of hits in algorithm-configured cluster lists
+     * 
+     *  @param  kdTreeU the kd tree for u hits
+     *  @param  kdTreeV the kd tree for v hits
+     *  @param  kdTreeW the kd tree for w hits
+     */
+    void InitializeKDTrees(HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const;
+
+    /**
+     *  @brief  Initialize a kd trees with details of hits in clusters in a named list
+     * 
+     *  @param  clusterListName the cluster list name
+     *  @param  kdTree the kd tree
+     */
+    void InitializeKDTree(const std::string &clusterListName, HitKDTree2D &kdTree) const;
 
     /**
      *  @brief  Get the figure of merit for a candidate vertex, using the provided parameters
      * 
      *  @param  pVertex the address of the vertex
-     *  @param  maxHitVertexDisplacement the max hit to vertex displacement to consider hit contribution to histogram
-     *  @param  hitDeweightingPower the hit power used for distance-weighting hit contributions to histograms
+     *  @param  kdTreeU the kd tree for u hits
+     *  @param  kdTreeV the kd tree for v hits
+     *  @param  kdTreeW the kd tree for w hits
      * 
      *  @return the figure of merit
      */
-    float GetFigureOfMerit(const pandora::Vertex *const pVertex, const float maxHitVertexDisplacement, const float hitDeweightingPower) const;
+    float GetFigureOfMerit(const pandora::Vertex *const pVertex, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const;
 
     /**
      *  @brief  Get the figure of merit for a trio of histograms
@@ -112,33 +139,25 @@ private:
     float GetFigureOfMerit(const pandora::Histogram &histogram) const;
 
     /**
-     *  @brief  Use hits in clusters (in the provided named list) to fill a provided histogram with hit-vertex relationship information
+     *  @brief  Whether the vertex lies on a hit in the specified view
      * 
      *  @param  pVertex the address of the vertex
      *  @param  hitType the relevant hit type
-     *  @param  clusterListName the cluster list name
-     *  @param  maxHitVertexDisplacement the max hit to vertex displacement to consider hit contribution to histogram
-     *  @param  hitDeweightingPower the hit power used for distance-weighting hit contributions to histograms
-     *  @param  histogram to receive the populated histogram
+     *  @param  kdTree the relevant kd tree
      * 
-     *  @return whether the vertex projection lies on a hit in the provided cluster list
+     *  @return boolean
      */
-    bool FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, const std::string &clusterListName,
-        const float maxHitVertexDisplacement, const float hitDeweightingPower, pandora::Histogram &histogram) const;
+    bool IsVertexOnHit(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
 
     /**
-     *  @brief  Use a provided vertex position and cluster to fill a provided histogram with hit-vertex relationship information
+     *  @brief  Use hits in clusters (in the provided kd tree) to fill a provided histogram with hit-vertex relationship information
      * 
-     *  @param  vertexPosition2D the projected vertex position
-     *  @param  pCluster the address of the cluster
-     *  @param  maxHitVertexDisplacement the max hit to vertex displacement to consider hit contribution to histogram
-     *  @param  hitDeweightingPower the hit power used for distance-weighting hit contributions to histograms
+     *  @param  pVertex the address of the vertex
+     *  @param  hitType the relevant hit type
+     *  @param  kdTree the relevant kd tree
      *  @param  histogram to receive the populated histogram
-     * 
-     *  @return whether the vertex projection lies on a hit in the provided cluster list
      */
-    bool FillHistogram(const pandora::CartesianVector &vertexPosition2D, const pandora::Cluster *const pCluster,
-        const float maxHitVertexDisplacement, const float hitDeweightingPower, pandora::Histogram &histogram) const;
+    void FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, pandora::Histogram &histogram) const;
 
     /**
      *  @brief  From the top-scoring candidate vertices, select a subset for further investigation
@@ -191,6 +210,16 @@ private:
     void SelectFinalVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
         pandora::VertexList &finalVertexList) const;
 
+    /**
+     *  @brief  Fast estimate of std::atan2 function. Rather coarse (max |error| > 0.01) but should suffice for this use-case.
+     * 
+     *  @param  y the y coordinate
+     *  @param  x the x coordinate
+     * 
+     *  @return estimate of std::atan2
+     */
+    float atan2Fast(const float y, const float x) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
@@ -207,8 +236,7 @@ private:
     float           m_histogramPhiMax;              ///< The histogram upper phi bound
 
     float           m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
-    float           m_maxHitVertexDisplacement;     ///< Max hit-vertex displacement for contribution to histograms
-    float           m_hitDeweightingPower;          ///< The hit power used for distance-weighting hit contributions to histograms
+    float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to histograms
 
     unsigned int    m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for final selection
     unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for final investigation

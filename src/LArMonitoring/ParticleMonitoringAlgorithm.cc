@@ -165,41 +165,38 @@ StatusCode ParticleMonitoringAlgorithm::Run()
                     pfoVtxZ = pVertex->GetPosition().GetZ();
 
                     // QUICK AND NASTY HACK!!!
-                    ClusterList clusterList;
-                    LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
-
-                    if (clusterList.size() > 0)
+                    try
                     {
-                        try
-                        {
-                            if (clusterList.size() != 1)
-                                throw StatusCodeException(STATUS_CODE_FAILURE);
+                        ClusterList clusterList;
+                        LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
 
-                            const Cluster *const pCluster = *(clusterList.begin());
-                            const ThreeDSlidingFitResult slidingFit(pCluster, 20, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+                        if (clusterList.size() != 1)
+                            throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                            const CartesianVector vertexPos(pfoVtxX, pfoVtxY, pfoVtxZ);
-                            const CartesianVector minLayerPos(slidingFit.GetGlobalMinLayerPosition());
-                            const CartesianVector maxLayerPos(slidingFit.GetGlobalMaxLayerPosition());
-                            const CartesianVector minLayerDir(slidingFit.GetGlobalMinLayerDirection());
-                            const CartesianVector maxLayerDir(slidingFit.GetGlobalMaxLayerDirection());
+                        const Cluster *const pCluster = *(clusterList.begin());
+                        const ThreeDSlidingFitResult slidingFit(pCluster, 20, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
-                            const CartesianVector &chosenPos(((vertexPos - minLayerPos).GetMagnitudeSquared() < (vertexPos - maxLayerPos).GetMagnitudeSquared()) ?
-                                minLayerPos : maxLayerPos);
-                            const CartesianVector &chosenDir(((vertexPos - minLayerPos).GetMagnitudeSquared() < (vertexPos - maxLayerPos).GetMagnitudeSquared()) ?
-                                minLayerDir : maxLayerDir);
+                        const CartesianVector vertexPos(pfoVtxX, pfoVtxY, pfoVtxZ);
+                        const CartesianVector minLayerPos(slidingFit.GetGlobalMinLayerPosition());
+                        const CartesianVector maxLayerPos(slidingFit.GetGlobalMaxLayerPosition());
+                        const CartesianVector minLayerDir(slidingFit.GetGlobalMinLayerDirection());
+                        const CartesianVector maxLayerDir(slidingFit.GetGlobalMaxLayerDirection());
 
-                            pfoVertexDir = 1;
-                            pfoVtxXDir = chosenDir.GetX();
-                            pfoVtxYDir = chosenDir.GetY(); 
-                            pfoVtxZDir = chosenDir.GetZ();
-                            pfoVtxXPos = chosenPos.GetX();
-                            pfoVtxYPos = chosenPos.GetY(); 
-                            pfoVtxZPos = chosenPos.GetZ();
-                        }
-                        catch (StatusCodeException &)
-                        {
-                        }
+                        const CartesianVector &chosenPos(((vertexPos - minLayerPos).GetMagnitudeSquared() < (vertexPos - maxLayerPos).GetMagnitudeSquared()) ?
+                            minLayerPos : maxLayerPos);
+                        const CartesianVector &chosenDir(((vertexPos - minLayerPos).GetMagnitudeSquared() < (vertexPos - maxLayerPos).GetMagnitudeSquared()) ?
+                            minLayerDir : maxLayerDir);
+
+                        pfoVertexDir = 1;
+                        pfoVtxXDir = chosenDir.GetX();
+                        pfoVtxYDir = chosenDir.GetY(); 
+                        pfoVtxZDir = chosenDir.GetZ();
+                        pfoVtxXPos = chosenPos.GetX();
+                        pfoVtxYPos = chosenPos.GetY(); 
+                        pfoVtxZPos = chosenPos.GetZ();
+                    }
+                    catch (StatusCodeException &)
+                    {
                     }
                     // QUICK AND NASTY HACK!!!
                 }

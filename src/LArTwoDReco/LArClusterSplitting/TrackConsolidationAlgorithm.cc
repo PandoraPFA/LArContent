@@ -81,38 +81,35 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult&
     {
         const CaloHit *const pCaloHitJ = *iterJ;
 
-        try
+        const CartesianVector positionJ(pCaloHitJ->GetPositionVector());
+        const CartesianVector positionI(LArClusterHelper::GetClosestPosition(positionJ, pClusterI));
+
+        float rL(0.f), rT(0.f);
+        CartesianVector positionK(0.f, 0.f, 0.f);
+
+        if (STATUS_CODE_SUCCESS != slidingFitResultI.GetGlobalFitProjection(positionJ, positionK))
+            continue;
+
+        slidingFitResultI.GetLocalPosition(positionK, rL, rT);
+
+        const float rsqIJ((positionI - positionJ).GetMagnitudeSquared());
+        const float rsqJK((positionJ - positionK).GetMagnitudeSquared());
+        const float rsqKI((positionK - positionI).GetMagnitudeSquared());
+
+        if (rsqJK < std::min(m_maxTransverseDisplacement * m_maxTransverseDisplacement, std::min(rsqIJ, rsqKI)))
         {
-            const CartesianVector positionJ(pCaloHitJ->GetPositionVector());
-            const CartesianVector positionI(LArClusterHelper::GetClosestPosition(positionJ, pClusterI));
-
-            float rL(0.f), rT(0.f);
-            CartesianVector positionK(0.f, 0.f, 0.f);
-            slidingFitResultI.GetGlobalFitProjection(positionJ, positionK);
-            slidingFitResultI.GetLocalPosition(positionK, rL, rT);
-
-            const float rsqIJ((positionI - positionJ).GetMagnitudeSquared());
-            const float rsqJK((positionJ - positionK).GetMagnitudeSquared());
-            const float rsqKI((positionK - positionI).GetMagnitudeSquared());
-
-            if (rsqJK < std::min(m_maxTransverseDisplacement * m_maxTransverseDisplacement, std::min(rsqIJ, rsqKI)))
+            if (associatedHits.empty())
             {
-                if (associatedHits.empty())
-                {
-                    minL = rL;
-                    maxL = rL;
-                }
-                else
-                {
-                    minL = std::min(minL, rL);
-                    maxL = std::max(maxL, rL);
-                }
-
-                associatedHits.insert(pCaloHitJ);
+                minL = rL;
+                maxL = rL;
             }
-        }
-        catch (StatusCodeException &)
-        {
+            else
+            {
+                minL = std::min(minL, rL);
+                maxL = std::max(maxL, rL);
+            }
+
+            associatedHits.insert(pCaloHitJ);
         }
     }
 
