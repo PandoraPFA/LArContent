@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -68,7 +70,7 @@ private:
         const pandora::ClusterList &GetKeyClusters() const;
 
     private:
-        typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
+        typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
 
         pandora::ClusterList    m_keyClusters;                  ///< The list of key clusters
         ClusterNavigationMap    m_clusterNavigationMapUV;       ///< The cluster navigation map U->V

@@ -31,7 +31,16 @@ StatusCode ClusteringParentAlgorithm::Run()
     if (!m_inputCaloHitListName.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<CaloHit>(*this, originalCaloHitListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_inputCaloHitListName));
+        const StatusCode statusCode(PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_inputCaloHitListName));
+
+        if (STATUS_CODE_NOT_FOUND == statusCode)
+        {
+            std::cout << "ClusteringParentAlgorithm: calohit list not found " << m_inputCaloHitListName << std::endl;
+            return STATUS_CODE_SUCCESS;
+        }
+
+        if (STATUS_CODE_SUCCESS != statusCode)
+            return statusCode;
     }
 
     // Run the initial cluster formation algorithm

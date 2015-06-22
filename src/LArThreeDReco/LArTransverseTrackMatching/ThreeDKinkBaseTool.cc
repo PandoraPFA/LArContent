@@ -84,8 +84,8 @@ float ThreeDKinkBaseTool::GetXSamplingPoint(const CartesianVector &splitPosition
     const int highLayer(std::max(fitResult1.GetMinLayer(), std::min(fitResult1.GetMaxLayer(), splitLayer + m_nLayersForKinkSearch)));
 
     CartesianVector minus(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
-    fitResult1.GetGlobalFitPosition(fitResult1.GetL(lowLayer), minus);
-    fitResult1.GetGlobalFitPosition(fitResult1.GetL(highLayer), plus);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, fitResult1.GetGlobalFitPosition(fitResult1.GetL(lowLayer), minus));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, fitResult1.GetGlobalFitPosition(fitResult1.GetL(highLayer), plus));
 
     if (minus.GetX() > plus.GetX()) 
     {

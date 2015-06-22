@@ -38,20 +38,11 @@ bool ThreeDLongitudinalTracksAlgorithm::SortByChiSquared(const TensorType::Eleme
 
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
-    try
-    {
-        LongitudinalOverlapResult overlapResult;
-        this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+    LongitudinalOverlapResult overlapResult;
+    this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 
-        if (overlapResult.IsInitialized())
-            m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
-    }
-    catch (StatusCodeException &statusCodeException)
-    {
-        if (!(STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode() || 
-              STATUS_CODE_NOT_INITIALIZED == statusCodeException.GetStatusCode()))
-            throw statusCodeException;
-    }
+    if (overlapResult.IsInitialized())
+        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -151,7 +142,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *co
                 this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, 
                     vtxMerged3D, endMerged3D, overlapResult);
 
-                if (overlapResult.GetNMatchedSamplingPoints() > 0 && overlapResult > bestOverlapResult)
+                if (overlapResult.IsInitialized() && (overlapResult.GetNMatchedSamplingPoints() > 0) && (overlapResult > bestOverlapResult))
                 {
                     bestOverlapResult = overlapResult;
                     longitudinalOverlapResult = LongitudinalOverlapResult(overlapResult, vtxChi2, endChi2);
@@ -191,24 +182,21 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
         const CartesianVector linearV(vtxMergedV + (endMergedV - vtxMergedV) * alpha);
         const CartesianVector linearW(vtxMergedW + (endMergedW - vtxMergedW) * alpha);
 
-        try
+        CartesianVector posU(0.f,0.f,0.f), posV(0.f,0.f,0.f), posW(0.f,0.f,0.f);
+        if ((STATUS_CODE_SUCCESS != slidingFitResultU.GetGlobalFitProjection(linearU, posU)) ||
+            (STATUS_CODE_SUCCESS != slidingFitResultV.GetGlobalFitProjection(linearV, posV)) ||
+            (STATUS_CODE_SUCCESS != slidingFitResultW.GetGlobalFitProjection(linearW, posW)))
         {
-            CartesianVector posU(0.f,0.f,0.f), posV(0.f,0.f,0.f), posW(0.f,0.f,0.f);
-            slidingFitResultU.GetGlobalFitProjection(linearU, posU);
-            slidingFitResultV.GetGlobalFitProjection(linearV, posV);
-            slidingFitResultW.GetGlobalFitProjection(linearW, posW);
-
-            CartesianVector mergedU(0.f,0.f,0.f), mergedV(0.f,0.f,0.f), mergedW(0.f,0.f,0.f);
-            LArGeometryHelper::MergeThreePositions(this->GetPandora(), posU, posV, posW, mergedU, mergedV, mergedW, deltaChi2);
-
-            if (deltaChi2 < m_reducedChi2Cut)
-                ++nMatchedSamplingPoints;
-
-            totalChi2 += deltaChi2;
+            continue;
         }
-        catch (StatusCodeException &)
-        {
-        }
+
+        CartesianVector mergedU(0.f,0.f,0.f), mergedV(0.f,0.f,0.f), mergedW(0.f,0.f,0.f);
+        LArGeometryHelper::MergeThreePositions(this->GetPandora(), posU, posV, posW, mergedU, mergedV, mergedW, deltaChi2);
+
+        if (deltaChi2 < m_reducedChi2Cut)
+            ++nMatchedSamplingPoints;
+
+        totalChi2 += deltaChi2;
     }
 
     if (nMatchedSamplingPoints > 0)

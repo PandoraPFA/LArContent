@@ -83,9 +83,12 @@ private:
         /**
          *  @brief  Convert an x position into a sampling bin
          *
-         *  @param  x  the input x coordinate
+         *  @param  x the input x coordinate
+         *  @param  xBin to receive the x bin
+         * 
+         *  @return status code, faster than throwing in regular use-cases
          */
-        int GetBin(const float x) const; 
+        pandora::StatusCode GetBin(const float x, int &xBin) const;
 
         float       m_uMinX;         ///< The min x value in the u view
         float       m_uMaxX;         ///< The max x value in the u view
@@ -100,6 +103,14 @@ private:
     };
 
     void PreparationStep();
+
+    /**
+     *  @brief  Preparation step for a specific cluster list
+     * 
+     *  @param  clusterList the cluster list
+     */
+    void PreparationStep(pandora::ClusterList &clusterList);
+
     void TidyUp();
 
     /**
@@ -126,7 +137,7 @@ private:
      *  @param  pClusterW the cluster from the W view
      *  @param  overlapResult to receive the overlap result
      */
-    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
+    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         ShowerOverlapResult &overlapResult);
 
     typedef std::pair<ShowerPositionMap, ShowerPositionMap> ShowerPositionMapPair;

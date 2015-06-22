@@ -43,10 +43,10 @@ ThreeDSlidingFitResult::ThreeDSlidingFitResult(const Cluster *const pCluster, co
     const float minL(m_firstFitResult.GetL(m_minLayer));
     const float maxL(m_firstFitResult.GetL(m_maxLayer));
 
-    this->GetGlobalFitPosition(minL, m_minLayerPosition);
-    this->GetGlobalFitPosition(maxL, m_maxLayerPosition);
-    this->GetGlobalFitDirection(minL, m_minLayerDirection);
-    this->GetGlobalFitDirection(maxL, m_maxLayerDirection);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetGlobalFitPosition(minL, m_minLayerPosition));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetGlobalFitPosition(maxL, m_maxLayerPosition));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetGlobalFitDirection(minL, m_minLayerDirection));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetGlobalFitDirection(maxL, m_maxLayerDirection));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ float ThreeDSlidingFitResult::GetFitRms(const float rL) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDSlidingFitResult::GetGlobalFitPosition(const float rL, CartesianVector &position) const
+StatusCode ThreeDSlidingFitResult::GetGlobalFitPosition(const float rL, CartesianVector &position) const
 {
     // Check that input coordinates are between first and last layers
     const int layer1(m_firstFitResult.GetLayer(rL));
@@ -112,8 +112,15 @@ void ThreeDSlidingFitResult::GetGlobalFitPosition(const float rL, CartesianVecto
 
     // Get local positions from each sliding fit (TODO: Make this more efficient)
     CartesianVector firstPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
-    m_firstFitResult.GetGlobalFitPosition(rL, firstPosition);
-    m_secondFitResult.GetGlobalFitPosition(rL, secondPosition);
+    const StatusCode statusCode1(m_firstFitResult.GetGlobalFitPosition(rL, firstPosition));
+
+    if (STATUS_CODE_SUCCESS != statusCode1)
+        return statusCode1;
+
+    const StatusCode statusCode2(m_secondFitResult.GetGlobalFitPosition(rL, secondPosition));
+
+    if (STATUS_CODE_SUCCESS != statusCode2)
+        return statusCode2;
 
     float rL1(0.f), rT1(0.f), rL2(0.f), rT2(0.f);
     m_firstFitResult.GetLocalPosition(firstPosition, rL1, rT1);
@@ -121,11 +128,13 @@ void ThreeDSlidingFitResult::GetGlobalFitPosition(const float rL, CartesianVecto
 
     // Combine local positions to give an overall global direction
     this->GetGlobalPosition(rL, rT1, rT2, position);
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDSlidingFitResult::GetGlobalFitDirection(const float rL, CartesianVector &direction) const
+StatusCode ThreeDSlidingFitResult::GetGlobalFitDirection(const float rL, CartesianVector &direction) const
 {
     // Check that input coordinates are between first and last layers
     const int layer1(m_firstFitResult.GetLayer(rL));
@@ -136,8 +145,15 @@ void ThreeDSlidingFitResult::GetGlobalFitDirection(const float rL, CartesianVect
 
     // Get local directions from each sliding fit (TODO: Make this more efficient)
     CartesianVector firstDirection(0.f, 0.f, 0.f), secondDirection(0.f, 0.f, 0.f);
-    m_firstFitResult.GetGlobalFitDirection(rL, firstDirection);
-    m_secondFitResult.GetGlobalFitDirection(rL, secondDirection);
+    const StatusCode statusCode1(m_firstFitResult.GetGlobalFitDirection(rL, firstDirection));
+
+    if (STATUS_CODE_SUCCESS != statusCode1)
+        return statusCode1;
+
+    const StatusCode statusCode2(m_secondFitResult.GetGlobalFitDirection(rL, secondDirection));
+
+    if (STATUS_CODE_SUCCESS != statusCode2)
+        return statusCode2;
 
     float dTdL1(0.f), dTdL2(0.f);
     m_firstFitResult.GetLocalDirection(firstDirection, dTdL1);
@@ -145,6 +161,8 @@ void ThreeDSlidingFitResult::GetGlobalFitDirection(const float rL, CartesianVect
 
     // Combine local directions to give an overall global direction
     this->GetGlobalDirection(dTdL1, dTdL2, direction);
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

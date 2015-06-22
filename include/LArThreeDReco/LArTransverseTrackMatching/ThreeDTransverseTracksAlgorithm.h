@@ -66,8 +66,10 @@ private:
      *  @param  pClusterV the cluster from the V view
      *  @param  pClusterW the cluster from the W view
      *  @param  overlapResult to receive the overlap result
+     * 
+     *  @return statusCode, faster than throwing in regular use-cases
      */
-    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
+    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         TransverseOverlapResult &overlapResult);
 
     /**
@@ -90,20 +92,21 @@ private:
      *  @param  slidingFitResultU sliding fit result for u cluster
      *  @param  slidingFitResultV sliding fit result for v cluster
      *  @param  slidingFitResultW sliding fit result for w cluster
-     *
-     *  @return the overlap result
+     *  @param  transverseOverlapResult to receive the transverse overlap result
+     * 
+     *  @return statusCode, faster than throwing in regular use-cases
      */
-    TransverseOverlapResult GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
-        const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW) const;
+    pandora::StatusCode GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
+        const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW,
+        TransverseOverlapResult &transverseOverlapResult) const;
 
     /**
      *  @brief  Get the best overlap result, by examining the fit segment tensor
      *
      *  @param  fitSegmentTensor the fit segment tensor
-     *
-     *  @return the best overlap result
+     *  @param  bestTransverseOverlapResult to receive the best transverse overlap result
      */
-    TransverseOverlapResult GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor) const;
+    void GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor, TransverseOverlapResult &bestTransverseOverlapResult) const;
 
     /**
      *  @brief  Get track overlap results for possible connected segments

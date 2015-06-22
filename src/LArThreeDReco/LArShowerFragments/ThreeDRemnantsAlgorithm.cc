@@ -63,42 +63,39 @@ void ThreeDRemnantsAlgorithm::SetPfoParameters(const ProtoParticle &protoParticl
 
 void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
-    try
+    // Requirements on X matching
+    float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
+    LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
+    LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
+    LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
+
+    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - m_xOverlapWindow);
+    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + m_xOverlapWindow);
+    const float xOverlap(xMax - xMin);
+
+    if (xOverlap < std::numeric_limits<float>::epsilon())
+        return;
+
+    // Requirements on 3D matching
+    float u(std::numeric_limits<float>::max()), v(std::numeric_limits<float>::max()), w(std::numeric_limits<float>::max());
+
+    if ((STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax, u)) ||
+        (STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax, v)) ||
+        (STATUS_CODE_SUCCESS != LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax, w)))
     {
-        // Requirements on X matching
-        float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
-        LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
-        LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
-        LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
-
-        const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - m_xOverlapWindow);
-        const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + m_xOverlapWindow);
-        const float xOverlap(xMax - xMin);
-
-        if (xOverlap < std::numeric_limits<float>::epsilon())
-            return;
-
-        // Requirements on 3D matching
-        const float u(LArClusterHelper::GetAverageZ(pClusterU, xMin, xMax));
-        const float v(LArClusterHelper::GetAverageZ(pClusterV, xMin, xMax));
-        const float w(LArClusterHelper::GetAverageZ(pClusterW, xMin, xMax));
-
-        const float uv2w(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, u, v));
-        const float vw2u(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, v, w));
-        const float wu2v(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, w, u));
-
-        const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
-
-        if (pseudoChi2 > m_pseudoChi2Cut)
-            return;
-
-        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, true);
+        return;
     }
-    catch(StatusCodeException &statusCodeException)
-    {
-        if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
-            throw statusCodeException;
-    }
+
+    const float uv2w(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, u, v));
+    const float vw2u(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, v, w));
+    const float wu2v(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, w, u));
+
+    const float pseudoChi2(((u - vw2u) * (u - vw2u) + (v - wu2v) * (v - wu2v) + (w - uv2w) * (w - uv2w)) / 3.f);
+
+    if (pseudoChi2 > m_pseudoChi2Cut)
+        return;
+
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, true);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

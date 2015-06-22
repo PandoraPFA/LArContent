@@ -14,6 +14,8 @@
 
 #include "LArObjects/LArOverlapTensor.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -29,7 +31,7 @@ public:
 };
 
 typedef std::vector<ProtoParticle> ProtoParticleVector;
-typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

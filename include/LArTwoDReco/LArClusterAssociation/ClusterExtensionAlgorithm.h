@@ -10,6 +10,8 @@
 
 #include "LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -92,8 +94,8 @@ protected:
         float           m_fom;              ///<
     };
 
-    typedef std::map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
-    typedef std::map<const pandora::Cluster*, ClusterAssociationMap> ClusterAssociationMatrix;
+    typedef std::unordered_map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster*, ClusterAssociationMap> ClusterAssociationMatrix;
 
     /**
      *  @brief  Fill the cluster association matrix

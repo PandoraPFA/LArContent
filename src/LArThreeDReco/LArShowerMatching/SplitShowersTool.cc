@@ -239,9 +239,9 @@ bool SplitShowersTool::CheckClusterVertexRelations(ThreeDShowersAlgorithm *const
 {
     const VertexList *pVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList));
-    const Vertex *const pVertex((1 == pVertexList->size()) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
 
-    if ((NULL == pVertex) || (VERTEX_3D != pVertex->GetVertexType()))
+    if (NULL == pVertex)
         return true;
 
     unsigned int nVertexAssociations(0);
@@ -252,7 +252,7 @@ bool SplitShowersTool::CheckClusterVertexRelations(ThreeDShowersAlgorithm *const
         {
             const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
             const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-            const LArPointingCluster pointingCluster(*iter);
+            const LArPointingCluster pointingCluster(pAlgorithm->GetCachedSlidingFitResult(*iter).GetShowerFitResult());
 
             if (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
                 LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||

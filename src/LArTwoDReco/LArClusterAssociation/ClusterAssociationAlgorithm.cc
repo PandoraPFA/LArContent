@@ -30,8 +30,13 @@ StatusCode ClusterAssociationAlgorithm::Run()
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
-    m_mergeMade = true;
+    ClusterVector clusterVector;
+    this->GetListOfCleanClusters(pClusterList, clusterVector);
+
     ClusterAssociationMap clusterAssociationMap;
+    this->PopulateClusterAssociationMap(clusterVector, clusterAssociationMap);
+
+    m_mergeMade = true;
 
     while (m_mergeMade)
     {
@@ -40,34 +45,24 @@ StatusCode ClusterAssociationAlgorithm::Run()
         {
             m_mergeMade = false;
 
-            ClusterVector clusterVector;
-            this->GetListOfCleanClusters(pClusterList, clusterVector);
-
-            clusterAssociationMap.clear();
-            this->PopulateClusterAssociationMap(clusterVector, clusterAssociationMap);
-
-            for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+            for (const Cluster *const pCluster : clusterVector)
             {
-                if (pClusterList->end() == pClusterList->find(*iter))
+                // ATTN The clusterVector may end up with dangling pointers; only protected by this check against managed cluster list
+                if (pClusterList->end() == pClusterList->find(pCluster))
                     continue;
 
-                this->UnambiguousPropagation(*iter, true,  clusterAssociationMap);
-                this->UnambiguousPropagation(*iter, false, clusterAssociationMap);
+                this->UnambiguousPropagation(pCluster, true,  clusterAssociationMap);
+                this->UnambiguousPropagation(pCluster, false, clusterAssociationMap);
             }
         }
 
         if (!m_resolveAmbiguousAssociations)
             continue;
 
-        ClusterVector clusterVector;
-        this->GetListOfCleanClusters(pClusterList, clusterVector);
-        std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNOccupiedLayers);
-
-
         // Propagation with ambiguities
-        for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+        for (const Cluster *const pCluster : clusterVector)
         {
-            const Cluster *const pCluster = *iter;
+            // ATTN The clusterVector may end up with dangling pointers; only protected by this check against up-to-date association list
             ClusterAssociationMap::const_iterator mapIter = clusterAssociationMap.find(pCluster);
 
             if (clusterAssociationMap.end() == mapIter)

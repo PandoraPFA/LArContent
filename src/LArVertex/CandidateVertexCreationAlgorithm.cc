@@ -113,43 +113,37 @@ void CandidateVertexCreationAlgorithm::ClusterEndPointComparison(const ClusterLi
 
 void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &position1, const HitType hitType1, const TwoDSlidingFitResult &fitResult2) const
 {
-    try
+    const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
+    const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
+
+    if ((((position1.GetX() < minLayerPosition2.GetX()) && (position1.GetX() < maxLayerPosition2.GetX())) ||
+        ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
+        (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxClusterXDiscrepancy) &&
+        (std::fabs(position1.GetX() - maxLayerPosition2.GetX()) > m_maxClusterXDiscrepancy))
     {
-        const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
-        const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
-
-        if ((((position1.GetX() < minLayerPosition2.GetX()) && (position1.GetX() < maxLayerPosition2.GetX())) ||
-            ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
-            (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxClusterXDiscrepancy) &&
-            (std::fabs(position1.GetX() - maxLayerPosition2.GetX()) > m_maxClusterXDiscrepancy))
-        {
-            return;
-        }
-
-        CartesianVector position2(0.f, 0.f, 0.f);
-        fitResult2.GetExtrapolatedPositionAtX(position1.GetX(), position2);
-        const HitType hitType2(LArClusterHelper::GetClusterHitType(fitResult2.GetCluster()));
-
-        float chiSquared(0.f);
-        CartesianVector position3D(0.f, 0.f, 0.f);
-        LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
-
-        if (chiSquared > m_chiSquaredCut)
-            return;
-
-        PandoraContentApi::Vertex::Parameters parameters;
-        parameters.m_position = position3D;
-        parameters.m_vertexLabel = VERTEX_INTERACTION;
-        parameters.m_vertexType = VERTEX_3D;
-
-        const Vertex *pVertex(NULL);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+        return;
     }
-    catch (StatusCodeException &statusCodeException)
-    {
-        if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-            throw statusCodeException;
-    }
+
+    CartesianVector position2(0.f, 0.f, 0.f);
+    if (STATUS_CODE_SUCCESS != fitResult2.GetExtrapolatedPositionAtX(position1.GetX(), position2))
+        return;
+
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(fitResult2.GetCluster()));
+
+    float chiSquared(0.f);
+    CartesianVector position3D(0.f, 0.f, 0.f);
+    LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
+
+    if (chiSquared > m_chiSquaredCut)
+        return;
+
+    PandoraContentApi::Vertex::Parameters parameters;
+    parameters.m_position = position3D;
+    parameters.m_vertexLabel = VERTEX_INTERACTION;
+    parameters.m_vertexType = VERTEX_3D;
+
+    const Vertex *pVertex(NULL);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

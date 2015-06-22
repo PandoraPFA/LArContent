@@ -217,6 +217,17 @@ public:
      *  @param  pRhs address of second pfo
      */
     static bool SortByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
+
+    typedef std::pair<float, pandora::TrackState> TrajectoryPoint;
+    typedef std::vector<TrajectoryPoint> ThreeDTrajectoryList;
+
+    /**
+     *  @brief  Sort pfos by number of constituent hits
+     *
+     *  @param  pLhs address of first pfo
+     *  @param  pRhs address of second pfo
+     */
+    static bool SortByHitProjection(const TrajectoryPoint &lhs, const TrajectoryPoint &rhs);
 };
 
 } // namespace lar_content

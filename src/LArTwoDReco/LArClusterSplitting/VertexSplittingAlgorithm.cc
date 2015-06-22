@@ -55,22 +55,18 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
         return STATUS_CODE_NOT_FOUND;
 
     bool foundSplit(false);
+    const StatusCode statusCode(slidingFitResult.GetGlobalFitProjection(theVertex2D, splitPosition));
 
-    try
+    if (STATUS_CODE_SUCCESS != statusCode)
+        return statusCode;
+
+    const float splitDisplacementSquared((splitPosition - theVertex2D).GetMagnitudeSquared());
+    const float vertexDisplacementSquared(std::min((splitPosition - innerVertex2D).GetMagnitudeSquared(), (splitPosition - outerVertex2D).GetMagnitudeSquared()));
+
+    if ((splitDisplacementSquared < m_splitDisplacementSquared) && (vertexDisplacementSquared > m_vertexDisplacementSquared) &&
+        (splitDisplacementSquared < vertexDisplacementSquared))
     {
-        slidingFitResult.GetGlobalFitProjection(theVertex2D, splitPosition); 
-
-        const float splitDisplacementSquared((splitPosition - theVertex2D).GetMagnitudeSquared());
-        const float vertexDisplacementSquared(std::min((splitPosition - innerVertex2D).GetMagnitudeSquared(), (splitPosition - outerVertex2D).GetMagnitudeSquared()));
-
-        if ((splitDisplacementSquared < m_splitDisplacementSquared) && (vertexDisplacementSquared > m_vertexDisplacementSquared) &&
-            (splitDisplacementSquared < vertexDisplacementSquared))
-        {
-            foundSplit = true;
-        }
-    }
-    catch (StatusCodeException &)
-    {
+        foundSplit = true;
     }
 
     if (!foundSplit)

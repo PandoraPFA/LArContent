@@ -1,4 +1,51 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-00-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Update to reflect API change for calo hit creation.
+Exception-handling change in ParticleMonitoring algorithm.
+Update a few header file include paths.
+Fixed CXX_FLAGS for clang 6.0 on APPLE.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v01-01-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Efficiency improvements addressing hotspots identified by extensive algorithm profiling. Frequently use kd-trees to avoid expensive calculations.
+Improve specification of CMAKE_CXX_FLAGS.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v01-00-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Milestone v01 release.
+Update to reflect recent changes to PandoraSDK.
+Improved const-correctness. Algorithms are now only exposed to pointers to const managed-objects. Access to managed-object non-const functionality is now only via Pandora APIs.
+Added concrete implementation of LArTransformationPlugin; hard-coded detector height no longer required.
+Moved wire pitch from LArTransformationPlugin to LArPseudoLayerPlugin.
+Generalised 'GetExtremalCoordinatesXZ(...)' method so that it works in both 2D and 3D, and rename it 'GetExtremalCoordinates(...)'.
+Added a 3D sliding linear fit, made up of two 2D sliding linear fits.
+Upgraded pointing clusters to work in 3D as well as 2D.
+Added configurable parameters to reject input hits based on cell length scales.
+Added methods for relating hits to MC particles.
+Added CheatingClusterCharacterisation algorithm.
+Added CheatingVertexCreation algorithm.
+Added CosmicRayBuilding algorithm.
+Added NeutrinoVertexCreation algorithm.
+Added ParticleAnalysis algorithm.
+Added ProximityBasedMerging algorithm.
+Added TrackRecovery algorithm.
+Added VertexBasedPfoMerging algorithm.
+Added track/shower discrimination; clusters flagged as tracks do not, by default, contribute to the shower tensor or feature in mop-up algorithms.
+Improved version of ConeBasedMerging algorithm, using shower edge fits to create and extrapolate a shower area in each view.
+Added candidate vertex creation and selection framework.
+Introduced beam-mode vertex selection, reliably reduces input list of candidate vertices down to just two or three possibilities, for further investigation.
+Restructured shower-growing, splitting into two algorithms and using vertex, if available, to make shower-growing decisions.
+Quietened routine print statements.
+Tuning and improved exception handling.
+Address issues highlighted by coverity.
+Makefile and CMakeLists overhaul.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v00-06
 --------------------------------------------------------------------------------------------------------------------------------------------
 Update to reflect recent changes to PandoraSDK.

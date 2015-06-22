@@ -93,32 +93,30 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResul
                 if ((linearProjection - branchVertex).GetMagnitudeSquared() > (linearProjection - branchEnd).GetMagnitudeSquared())
                     break;
 
-                try
+                float localL(0.f), localT(0.f);
+                CartesianVector truncatedPosition(0.f,0.f,0.f);
+                CartesianVector forwardDirection(0.f,0.f,0.f);
+                branchSlidingFit.GetLocalPosition(linearProjection, localL, localT);
+
+                if ((STATUS_CODE_SUCCESS != branchSlidingFit.GetGlobalFitPosition(localL, truncatedPosition)) ||
+                    (STATUS_CODE_SUCCESS != branchSlidingFit.GetGlobalFitDirection(localL + deltaL, forwardDirection)))
                 {
-                    float localL(0.f), localT(0.f);
-                    CartesianVector truncatedPosition(0.f,0.f,0.f);
-                    CartesianVector forwardDirection(0.f,0.f,0.f);
-                    branchSlidingFit.GetLocalPosition(linearProjection, localL, localT);
-                    branchSlidingFit.GetGlobalFitPosition(localL, truncatedPosition);
-                    branchSlidingFit.GetGlobalFitDirection(localL + deltaL, forwardDirection);
-
-                    CartesianVector truncatedDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
-                    const float cosTheta(-truncatedDirection.GetDotProduct(principalDirection));
-
-                    float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
-                    LArPointingClusterHelper::GetImpactParameters(truncatedPosition, truncatedDirection, principalVertex, rL1, rT1);
-                    LArPointingClusterHelper::GetImpactParameters(principalVertex, principalDirection, truncatedPosition, rL2, rT2);
-
-                    if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
-                    {
-                        foundSplit = true;
-                        principalStartPosition = principalVertex;
-                        branchSplitPosition = truncatedPosition;
-                        branchSplitDirection = truncatedDirection * -1.f;
-                    }
+                    continue;
                 }
-                catch (StatusCodeException &)
+
+                CartesianVector truncatedDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
+                const float cosTheta(-truncatedDirection.GetDotProduct(principalDirection));
+
+                float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
+                LArPointingClusterHelper::GetImpactParameters(truncatedPosition, truncatedDirection, principalVertex, rL1, rT1);
+                LArPointingClusterHelper::GetImpactParameters(principalVertex, principalDirection, truncatedPosition, rL2, rT2);
+
+                if ((cosTheta > m_minCosRelativeAngle) && (rT1 < m_maxTransverseDisplacement) && (rT2 < m_maxTransverseDisplacement))
                 {
+                    foundSplit = true;
+                    principalStartPosition = principalVertex;
+                    branchSplitPosition = truncatedPosition;
+                    branchSplitDirection = truncatedDirection * -1.f;
                 }
             }
 

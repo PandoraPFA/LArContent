@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -36,7 +38,7 @@ public:
 private:
     pandora::StatusCode Run();
 
-    typedef std::map<const pandora::CaloHit*, pandora::CaloHitList> HitAssociationMap;
+    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitAssociationMap;
 
     /**
      *  @brief Select calo hits for clustering
