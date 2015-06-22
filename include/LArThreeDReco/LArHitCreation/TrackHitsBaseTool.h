@@ -12,6 +12,8 @@
 
 #include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -34,7 +36,7 @@ public:
         pandora::CaloHitList &newThreeDHits);
 
 protected:
-    typedef std::map<pandora::HitType, TwoDSlidingFitResult> MatchedSlidingFitMap;
+    typedef std::unordered_map<pandora::HitType, TwoDSlidingFitResult, std::hash<unsigned int> > MatchedSlidingFitMap;
 
     /**
      *  @brief  Calculate sliding fit results for clusters from each view

@@ -10,9 +10,13 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArVertexHelper.h"
+
 #include "LArObjects/LArPointingCluster.h"
 
 #include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
+
+#include <unordered_map>
 
 namespace lar_content
 {
@@ -40,6 +44,32 @@ public:
 private:
     pandora::StatusCode Run();
 
+    typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterInfoMap;
+
+    /**
+     *  @brief  Simple single-pass shower growing mode
+     * 
+     *  @param  pClusterList the list of clusters
+     *  @param  clusterListName the cluster list name
+     *  @param  pfoList the pfo list
+     *  @param  nCaloHitsPerCluster the cluster info map
+     *  @param  nBranchesPerCluster the cluster info map
+     */
+    void SimpleModeShowerGrowing(const pandora::ClusterList *const pClusterList, const std::string &clusterListName, pandora::PfoList &pfoList,
+        ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
+
+    /**
+     *  @brief  Detailed recursive shower-growing and checking mode
+     * 
+     *  @param  pClusterList the list of clusters
+     *  @param  clusterListName the cluster list name
+     *  @param  pfoList the pfo list
+     *  @param  nCaloHitsPerCluster the cluster info map
+     *  @param  nBranchesPerCluster the cluster info map
+     */
+    void RecursiveModeShowerGrowing(const pandora::ClusterList *const pClusterList, const std::string &clusterListName, pandora::PfoList &pfoList,
+        ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
+
     /**
      *  @brief  Get the next seed candidate, using a list of available candidates and a list of those already used
      * 
@@ -51,6 +81,16 @@ private:
      */
     bool GetNextSeedCandidate(const pandora::ClusterList *const pClusterList, const pandora::ClusterList &usedClusters,
         const pandora::Cluster *&pSeedCluster) const;
+
+    /**
+     *  @brief  Get all seed candidates associated with a provided vertex
+     * 
+     *  @param  pClusterList the list of available seed candidates
+     *  @param  pVertex the address of the vertex
+     *  @param  seedClusters to receive the list of vertex seed candidates
+     */
+    void GetAllVertexSeedCandidates(const pandora::ClusterList *const pClusterList, const pandora::Vertex *const pVertex,
+        pandora::ClusterVector &seedClusters) const;
 
     /**
      *  @brief  Get the seed association list for a given vector of particle seed candidates
@@ -117,19 +157,27 @@ private:
      *  @param  vertexPosition2D the projected vertex position
      *  @param  pointingClusterList the list of relevant pointing clusters
      * 
-     *  @return the number of clusters nodally associated with the best-guess vertex
+     *  @return the number of clusters associated with the vertex
      */
     unsigned int GetNVertexConnections(const pandora::CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const;
 
     /**
-     *  @brief  HIT_CUSTOM sorting for clusters to determine order in which seeds are considered
+     *  @brief  Whether a pointing cluster is assciated with a provided 2D vertex projection
+     * 
+     *  @param  pointingCluster the pointing cluster
+     *  @param  vertexPosition2D the projected vertex position
+     * 
+     *  @return boolean
+     */
+    bool IsVertexAssociated(const LArPointingCluster &pointingCluster, const pandora::CartesianVector &vertexPosition2D) const;
+
+    /**
+     *  @brief  Sorting for clusters to determine order in which seeds are considered
      *
      *  @param  pLhs address of first cluster
      *  @param  pRhs address of second cluster
      */
     static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
-
-    typedef std::map<const pandora::Cluster*, unsigned int> ClusterInfoMap;
 
     /**
      *  @brief  Get the list of all input pfos (possibly from a number of separate named lists)
@@ -137,6 +185,19 @@ private:
      *  @param  pfoList to receive the input pfo list
      */
     void GetInputPfoList(pandora::PfoList &pfoList) const;
+
+    /**
+     *  @brief  Process the details stored in a specified seed association list
+     *
+     *  @param  seedAssociationList the seed association list
+     *  @param  clusterListName the cluster list name
+     *  @param  pfoList the pfo list
+     *  @param  usedClusters the list of candidates already considered
+     *  @param  nCaloHitsPerCluster the cluster info map
+     *  @param  nBranchesPerCluster the cluster info map
+     */
+    void ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
+        pandora::PfoList &pfoList, pandora::ClusterList &usedClusters, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
 
     /**
      *  @brief  Store the number of calo hits per cluster in a cluster info map
@@ -175,31 +236,32 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
-    pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfo lists
+    typedef std::unordered_map<const pandora::Cluster*, LArVertexHelper::ClusterDirection> ClusterDirectionMap;
+    mutable ClusterDirectionMap m_clusterDirectionMap;          ///< The cluster direction map
 
-    unsigned int            m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
-    float                   m_nearbyTrackDistance;          ///< Prevent track-track associations where the end-to-end separation is smaller than this distance
-    float                   m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
-    float                   m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
+    pandora::StringVector       m_inputClusterListNames;        ///< The names of the input cluster lists
+    pandora::StringVector       m_inputPfoListNames;            ///< The names of the input pfo lists
 
-    bool                    m_useExistingPfosAsSeeds;       ///< Whether to use clusters in existing pfos as seed clusters
-    bool                    m_useExistingPfosAsBranches;    ///< Whether to use clusters in existing pfos as branch clusters
+    unsigned int                m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
+    float                       m_nearbyTrackDistance;          ///< Prevent track-track associations where the end-to-end separation is smaller than this distance
+    float                       m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
+    float                       m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
 
-    float                   m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
-    float                   m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    float                       m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    float                       m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
 
-    bool                    m_useMCFigureOfMerit;           ///< Whether to use a figure of merit based on mc particle information
-    bool                    m_useFirstImprovedSeed;         ///< Whether to use the first daughter seed (from an ordered list) that offers an improved figure of merit
+    bool                        m_recursiveMode;                ///< Whether to run in recursive shower-growing and checking mode (rather than a simple one-pass mode)
+    bool                        m_useFirstImprovedSeed;         ///< Recursive mode only: use the first daughter seed (from an ordered list) that offers an improved figure of merit
+    bool                        m_useMCFigureOfMerit;           ///< Recursive mode only: use a figure of merit based on mc particle information
 
-    bool                    m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added
-    unsigned int            m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
-    float                   m_showerLikeCaloHitRatio;       ///< The minimum ratio of final to original calo hits before cluster is declared shower like
+    bool                        m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added
+    unsigned int                m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
+    float                       m_showerLikeCaloHitRatio;       ///< The minimum ratio of final to original calo hits before cluster is declared shower like
 
-    float                   m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
-    float                   m_maxVertexLongitudinalDistance;///< Vertex association check: max longitudinal distance cut
-    float                   m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
-    float                   m_vertexAngularAllowance;       ///< Vertex association check: pointing angular allowance in degrees
+    float                       m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
+    float                       m_maxVertexLongitudinalDistance;///< Vertex association check: max longitudinal distance cut
+    float                       m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
+    float                       m_vertexAngularAllowance;       ///< Vertex association check: pointing angular allowance in degrees
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

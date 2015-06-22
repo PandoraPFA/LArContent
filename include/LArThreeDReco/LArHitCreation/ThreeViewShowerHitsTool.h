@@ -28,9 +28,18 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    ThreeViewShowerHitsTool();
+
 private:
     void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitList &caloHitList1, const pandora::CaloHitList &caloHitList2,
         pandora::CartesianVector &position3D, float &chiSquared) const;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float     m_zTolerance;          ///< The z tolerance to use when looking for associated calo hits between views
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

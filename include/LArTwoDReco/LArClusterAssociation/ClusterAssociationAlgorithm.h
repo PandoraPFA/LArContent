@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -38,7 +40,7 @@ protected:
         pandora::ClusterList    m_backwardAssociations;     ///< The list of backward associations
     };
 
-    typedef std::map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean

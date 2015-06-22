@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -22,8 +24,8 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const pandora::Cluster*, bool> ClusterVetoMap;
-    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+    typedef std::unordered_map<const pandora::Cluster*, bool> ClusterVetoMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean

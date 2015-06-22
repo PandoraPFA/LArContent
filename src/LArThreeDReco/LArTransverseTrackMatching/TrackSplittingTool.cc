@@ -151,9 +151,9 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *const pAl
             return false;
         }
 
-        const LArPointingCluster pointingCluster1(particle.m_pCluster1);
-        const LArPointingCluster pointingCluster2(particle.m_pCluster2);
-        const LArPointingCluster longPointingCluster(particle.m_pLongCluster);
+        const LArPointingCluster pointingCluster1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster1));
+        const LArPointingCluster pointingCluster2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster2));
+        const LArPointingCluster longPointingCluster(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
 
         const CartesianVector &position1(pointingCluster1.GetInnerVertex().GetPosition().GetX() < pointingCluster1.GetOuterVertex().GetPosition().GetX() ? pointingCluster1.GetInnerVertex().GetPosition() : pointingCluster1.GetOuterVertex().GetPosition());
         const CartesianVector &position2(pointingCluster2.GetInnerVertex().GetPosition().GetX() < pointingCluster2.GetOuterVertex().GetPosition().GetX() ? pointingCluster2.GetInnerVertex().GetPosition() : pointingCluster2.GetOuterVertex().GetPosition());
@@ -188,19 +188,14 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *const pAl
 
 bool TrackSplittingTool::CheckSplitPosition(const CartesianVector &splitPosition, const float splitX, const TwoDSlidingFitResult &longFitResult) const
 {
-    try
-    {
-        CartesianPointList fitPositionList;
-        longFitResult.GetGlobalFitPositionListAtX(splitX, fitPositionList);
+    CartesianPointList fitPositionList;
+    if (STATUS_CODE_SUCCESS != longFitResult.GetGlobalFitPositionListAtX(splitX, fitPositionList))
+        return false;
 
-        for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
-        {
-            if ((splitPosition - *iter).GetMagnitude() < m_maxSplitVsFitPositionDistance)
-                return true;
-        }
-    }
-    catch (StatusCodeException &)
+    for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
     {
+        if ((splitPosition - *iter).GetMagnitude() < m_maxSplitVsFitPositionDistance)
+            return true;
     }
 
     return false;

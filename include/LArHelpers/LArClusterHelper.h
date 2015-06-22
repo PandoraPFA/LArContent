@@ -230,8 +230,11 @@ public:
      *  @param  pCluster address of the cluster
      *  @param  xmin for range in x
      *  @param  xmax for range in x
+     *  @param  averageZ to receive the average Z position
+     * 
+     *  @return status code, faster than throwing in regular use-cases
      */
-    static float GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax);
+    static pandora::StatusCode GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &averageZ);
 
     /**
      *  @brief  Sort clusters by inner layer (then use SortByNOccupiedLayers method in event of a tie)
