@@ -788,11 +788,21 @@ StatusCode TwoDSlidingFitResult::GetLongitudinalSurroundingLayers(const float rL
     if (m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
+    // Get minimum, maximum and input layers
     const int minLayer(m_layerFitResultMap.begin()->first), maxLayer(m_layerFitResultMap.rbegin()->first);
     const int thisLayer(this->GetLayer(rL));
+
+    // Allow special case of single-layer sliding fit result
+    if (minLayer == thisLayer && thisLayer == maxLayer)
+    {
+        firstLayerIter = m_layerFitResultMap.find(minLayer);
+        secondLayerIter = m_layerFitResultMap.find(maxLayer);
+        return STATUS_CODE_SUCCESS;
+    }
+
+    // For multi-layer sliding fit result, set start layer and bail out if out of range
     const int startLayer((thisLayer >= maxLayer) ? thisLayer - 1 : thisLayer);
 
-    // Bail out if the layer is out of range
     if ((startLayer < minLayer) || (startLayer >= maxLayer))
         return STATUS_CODE_NOT_FOUND;
 
