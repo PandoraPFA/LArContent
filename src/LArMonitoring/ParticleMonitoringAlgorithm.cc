@@ -48,7 +48,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     FloatVector completenessVector, purityVector, mcPxVector, mcPyVector, mcPzVector, mcThetaVector, mcEnergyVector, mcPTotVector,
         mcVtxXPosVector, mcVtxYPosVector, mcVtxZPosVector, mcEndXPosVector, mcEndYPosVector, mcEndZPosVector,
         pfoPxVector, pfoPyVector, pfoPzVector, pfoPTotVector, pfoVtxXVector, pfoVtxYVector, pfoVtxZVector,
-        // QUICK AND NASTY HACK!!!
+        // QUICK AND NASTY HACK!!! (TODO: FIX THE QUICK AND NASTY HACK)
         pfoVtxXPosVector, pfoVtxYPosVector, pfoVtxZPosVector, pfoVtxXDirVector, pfoVtxYDirVector, pfoVtxZDirVector;
         // QUICK AND NASTY HACK!!!
 
