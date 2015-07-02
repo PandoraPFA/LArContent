@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArMCParticleHelper.h"
+
 #include <unordered_map>
 #include <unordered_set>
 
@@ -47,17 +49,20 @@ private:
      *  @brief  Get a map relating three dimensional mc particle ids to a list of daughter clusters
      * 
      *  @param  pClusterList address of a cluster list
+     *  @param  mcPrimaryMap the mapping between mc particles and their parents
      *  @param  idOffset the offset between two dimensional cluster mc particle ids and the three dimensional mc particle id
      *  @param  idToClusterListMap to receive the populated id to cluster list map
      */
-    void GetIdToClusterListMap(const pandora::ClusterList *const pClusterList, const int idOffset, IdToClusterListMap &idToClusterListMap) const;
+    void GetIdToClusterListMap(const pandora::ClusterList *const pClusterList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+        const int idOffset, IdToClusterListMap &idToClusterListMap) const;
 
     /**
      *  @brief  Get a map relating three dimensional mc particle ids to the three dimensional mc particles
      * 
+     *  @param  pMCParticleList the address of the three dimensional mc particle list
      *  @param  idToMCParticleMap to receive the populated id to mc particle map
      */
-    void GetIdToMCParticleMap(IdToMCParticleMap &idToMCParticleMap) const;
+    void GetIdToMCParticleMap(const pandora::MCParticleList *const pMCParticleList, IdToMCParticleMap &idToMCParticleMap) const;
 
     /**
      *  @brief  Create pfos corresponding to the details in a provided id to cluster list map
@@ -80,20 +85,22 @@ private:
     typedef std::unordered_map<pandora::HitType, unsigned int, std::hash<unsigned int> > HitTypeMap;
     typedef std::unordered_set<int> ParticleIdList;
 
-    std::string     m_inputClusterListNameU;    ///< The name of the view U cluster list
-    std::string     m_inputClusterListNameV;    ///< The name of the view V cluster list
-    std::string     m_inputClusterListNameW;    ///< The name of the view W cluster list
-    std::string     m_outputPfoListName;        ///< The output pfo list name
+    std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
+    std::string     m_inputClusterListNameV;        ///< The name of the view V cluster list
+    std::string     m_inputClusterListNameW;        ///< The name of the view W cluster list
+    std::string     m_outputPfoListName;            ///< The output pfo list name
 
-    int             m_idOffsetU;                ///< The mc particle parent address offset for u clusters
-    int             m_idOffsetV;                ///< The mc particle parent address offset for v clusters
-    int             m_idOffsetW;                ///< The mc particle parent address offset for w clusters
-    std::string     m_mcParticle3DListName;     ///< The name of the three d mc particle list name
+    int             m_idOffsetU;                    ///< The mc particle parent address offset for u clusters
+    int             m_idOffsetV;                    ///< The mc particle parent address offset for v clusters
+    int             m_idOffsetW;                    ///< The mc particle parent address offset for w clusters
 
-    bool            m_useOnlyAvailableClusters; ///< Whether to consider unavailable clusters when identifying cheated pfos
-    unsigned int    m_minGoodHitTypes;          ///< The min number of good hit types in the clusters collected for a given mc particle
-    unsigned int    m_nHitsForGoodHitType;      ///< The min number of hits of a particular hit type in order to declare the hit type is good
-    ParticleIdList  m_particleIdList;           ///< The list of particle ids to consider for pfo creation; will consider all ids if empty
+    bool            m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
+    std::string     m_mcParticle3DListName;         ///< The name of the three d mc particle list name
+
+    bool            m_useOnlyAvailableClusters;     ///< Whether to consider unavailable clusters when identifying cheated pfos
+    unsigned int    m_minGoodHitTypes;              ///< The min number of good hit types in the clusters collected for a given mc particle
+    unsigned int    m_nHitsForGoodHitType;          ///< The min number of hits of a particular hit type in order to declare the hit type is good
+    ParticleIdList  m_particleIdList;               ///< The list of particle ids to consider for pfo creation; will consider all ids if empty
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

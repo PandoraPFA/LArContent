@@ -12,8 +12,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "LArObjects/LAr3DTrackPfo.h"
-
 using namespace pandora;
 
 namespace lar_content
@@ -23,6 +21,7 @@ CheatingPfoCreationAlgorithm::CheatingPfoCreationAlgorithm() :
     m_idOffsetU(0),
     m_idOffsetV(0),
     m_idOffsetW(0),
+    m_collapseToPrimaryMCParticles(false),
     m_useOnlyAvailableClusters(true),
     m_minGoodHitTypes(0),
     m_nHitsForGoodHitType(10)
@@ -41,13 +40,19 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
         m_inputClusterListNameW, pInputClusterListW));
 
+    const MCParticleList *pMCParticleList = NULL;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticle3DListName, pMCParticleList));
+
+    LArMCParticleHelper::MCRelationMap mcPrimaryMap;
+    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+
     IdToClusterListMap idToClusterListMap;
-    this->GetIdToClusterListMap(pInputClusterListU, m_idOffsetU, idToClusterListMap);
-    this->GetIdToClusterListMap(pInputClusterListV, m_idOffsetV, idToClusterListMap);
-    this->GetIdToClusterListMap(pInputClusterListW, m_idOffsetW, idToClusterListMap);
+    this->GetIdToClusterListMap(pInputClusterListU, mcPrimaryMap, m_idOffsetU, idToClusterListMap);
+    this->GetIdToClusterListMap(pInputClusterListV, mcPrimaryMap, m_idOffsetV, idToClusterListMap);
+    this->GetIdToClusterListMap(pInputClusterListW, mcPrimaryMap, m_idOffsetW, idToClusterListMap);
 
     IdToMCParticleMap idToMCParticleMap;
-    this->GetIdToMCParticleMap(idToMCParticleMap);
+    this->GetIdToMCParticleMap(pMCParticleList, idToMCParticleMap);
 
     this->CreatePfos(idToClusterListMap, idToMCParticleMap);
 
@@ -56,8 +61,8 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *const pClusterList, const int idOffset,
-    IdToClusterListMap &idToClusterListMap) const
+void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *const pClusterList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+    const int idOffset, IdToClusterListMap &idToClusterListMap) const
 {
     if (NULL == pClusterList)
         return;
@@ -71,7 +76,17 @@ void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *cons
             if (m_useOnlyAvailableClusters && !pCluster->IsAvailable())
                 continue;
 
-            const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+
+            if (m_collapseToPrimaryMCParticles)
+            {
+                LArMCParticleHelper::MCRelationMap::const_iterator primaryIter = mcPrimaryMap.find(pMCParticle);
+
+                if (mcPrimaryMap.end() == primaryIter)
+                    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+                pMCParticle = primaryIter->second;
+            }
 
             if (!m_particleIdList.empty() && !m_particleIdList.count(pMCParticle->GetParticleId()))
                 continue;
@@ -87,11 +102,8 @@ void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingPfoCreationAlgorithm::GetIdToMCParticleMap(IdToMCParticleMap &idToMCParticleMap) const
+void CheatingPfoCreationAlgorithm::GetIdToMCParticleMap(const MCParticleList *const pMCParticleList, IdToMCParticleMap &idToMCParticleMap) const
 {
-    const MCParticleList *pMCParticleList = NULL;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticle3DListName, pMCParticleList));
-
     for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
     {
         const MCParticle *const pMCParticle(*iter);
@@ -187,6 +199,10 @@ StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "IdOffsetU", m_idOffsetU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "IdOffsetV", m_idOffsetV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "IdOffsetW", m_idOffsetW));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticle3DListName", m_mcParticle3DListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
