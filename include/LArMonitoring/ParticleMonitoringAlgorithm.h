@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArMCParticleHelper.h"
+
 namespace lar_content
 {
 
@@ -68,14 +70,6 @@ private:
     void ExtractNeutrinoDaughters(pandora::PfoList &pfoList) const;
 
     /**
-     *  @brief  Create map between each MC particle and its primary parent MC particle
-     *
-     *  @param  pMCParticleList the input MC particle list
-     *  @param  mcPrimaryMap the output mapping between particles and their parents
-     */
-    void GetMCParticleMaps(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap) const;
-
-    /**
      *  @brief  Create map from true neutrinos to reconstructed neutrinos
      *
      *  @param  pCaloHitList the input list of calo hits
@@ -94,7 +88,7 @@ private:
      *  @param  mcHitMap the output mapping between calo hits and their main MC particles
      *  @param  mcContributionMap the output mapping between MC particles and their number of associated hits
      */
-    void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcPrimaryMap,
+    void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
         CaloHitToMCMap &mcHitMap, MCContributionMap &mcContributionMap) const;
 
     /**
