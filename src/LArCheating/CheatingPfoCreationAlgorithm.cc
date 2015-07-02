@@ -12,6 +12,8 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
+#include "LArObjects/LAr3DTrackPfo.h"
+
 using namespace pandora;
 
 namespace lar_content

@@ -152,7 +152,7 @@ float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
 
         if (LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))
             neutrinoWeight += weight;
-        
+
         totalWeight += weight;
     }
 
@@ -160,6 +160,57 @@ float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
         return (neutrinoWeight/totalWeight);
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
+{
+    // TODO This will require careful thought and modification as the use-case is clarified
+    return (LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle) ||
+        (pMCParticle->GetParentList().empty() && (PI_ZERO != pMCParticle->GetParticleId())) ||
+        ((1 == pMCParticle->GetParentList().size()) && (PI_ZERO == (*(pMCParticle->GetParentList().begin()))->GetParticleId())) );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap)
+{
+    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *const pMCParticle = *iter;
+
+        if (LArMCParticleHelper::IsPrimary(pMCParticle))
+        {
+            if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
+                mcPrimaryMap[pMCParticle] = pMCParticle;
+        }
+        else if (pMCParticle->GetParentList().empty())
+        {
+            // ATTN Protect against case where a parentless particle is denied primary status
+            continue;
+        }
+        else
+        {
+            const MCParticle *pParentMCParticle = pMCParticle;
+
+            while (true)
+            {
+                pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
+
+                if (mcPrimaryMap.find(pParentMCParticle) != mcPrimaryMap.end())
+                {
+                    mcPrimaryMap[pMCParticle] = mcPrimaryMap[pParentMCParticle];
+                    break;
+                }
+                else if (LArMCParticleHelper::IsPrimary(pParentMCParticle))
+                {
+                    mcPrimaryMap[pMCParticle] = pParentMCParticle;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 } // namespace lar_content

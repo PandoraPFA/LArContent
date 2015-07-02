@@ -15,26 +15,30 @@ using namespace pandora;
 namespace lar_content
 {
 
+CheatingClusterCreationAlgorithm::CheatingClusterCreationAlgorithm() :
+    m_collapseToPrimaryMCParticles(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingClusterCreationAlgorithm::Run()
 {
+    LArMCParticleHelper::MCRelationMap mcPrimaryMap;
+
+    if (m_collapseToPrimaryMCParticles)
+    {
+        const MCParticleList *pMCParticleList = NULL;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+    }
+
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
     MCParticleToHitListMap mcParticleToHitListMap;
-
-    for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
-    {
-        try
-        {
-            if (!PandoraContentApi::IsAvailable(*this, *iter))
-                continue;
-
-            this->SimpleMCParticleCollection(*iter, mcParticleToHitListMap);
-        }
-        catch (StatusCodeException &)
-        {
-        }
-    }
+    this->GetMCParticleToHitListMap(pCaloHitList, mcPrimaryMap, mcParticleToHitListMap);
 
     this->CreateClusters(mcParticleToHitListMap);
 
@@ -43,12 +47,43 @@ StatusCode CheatingClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(const CaloHit *const pCaloHit, MCParticleToHitListMap &mcParticleToHitListMap) const
+void CheatingClusterCreationAlgorithm::GetMCParticleToHitListMap(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+    MCParticleToHitListMap &mcParticleToHitListMap) const
 {
-    const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+    for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            if (!PandoraContentApi::IsAvailable(*this, *iter))
+                continue;
+
+            this->SimpleMCParticleCollection(*iter, mcPrimaryMap, mcParticleToHitListMap);
+        }
+        catch (StatusCodeException &)
+        {
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(const CaloHit *const pCaloHit, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+    MCParticleToHitListMap &mcParticleToHitListMap) const
+{
+    const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
     if (!this->SelectMCParticlesForClustering(pMCParticle))
         return;
+
+    if (m_collapseToPrimaryMCParticles)
+    {
+        LArMCParticleHelper::MCRelationMap::const_iterator iter = mcPrimaryMap.find(pMCParticle);
+
+        if (mcPrimaryMap.end() == iter)
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        pMCParticle = iter->second;
+    }
 
     mcParticleToHitListMap[pMCParticle].insert(pCaloHit);
 }
@@ -111,6 +146,15 @@ void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListM
 
 StatusCode CheatingClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
+
+    if (m_collapseToPrimaryMCParticles)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "MCParticleListName", m_mcParticleListName));
+    }
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "ParticleIdList", m_particleIdList));
 
