@@ -77,12 +77,12 @@ void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(const CaloHit 
 
     if (m_collapseToPrimaryMCParticles)
     {
-        LArMCParticleHelper::MCRelationMap::const_iterator iter = mcPrimaryMap.find(pMCParticle);
+        LArMCParticleHelper::MCRelationMap::const_iterator primaryIter = mcPrimaryMap.find(pMCParticle);
 
-        if (mcPrimaryMap.end() == iter)
+        if (mcPrimaryMap.end() == primaryIter)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        pMCParticle = iter->second;
+        pMCParticle = primaryIter->second;
     }
 
     mcParticleToHitListMap[pMCParticle].insert(pCaloHit);
