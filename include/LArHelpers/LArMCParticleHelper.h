@@ -10,6 +10,8 @@
 
 #include "Pandora/PandoraInternal.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -110,6 +112,25 @@ public:
      *  @return the combined weight of neutrino-induced particles associated with the calo hit
      */
     static float GetNeutrinoWeight(const pandora::CaloHit *const pCaloHit);
+
+    typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
+
+    /**
+     *  @brief  Whether a provided mc particle matches the implemented definition of being primary
+     * 
+     *  @param  pMCParticle the address of the mc particle
+     * 
+     *  @return boolean
+     */
+    static bool IsPrimary(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get mapping from individual mc particles (in a provided list) and their primary parent mc particles
+     * 
+     *  @param  pMCParticleList the input mc particle list
+     *  @param  mcPrimaryMap the output mapping between mc particles and their parents
+     */
+    static void GetMCPrimaryMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap);
 };
 
 } // namespace lar_content

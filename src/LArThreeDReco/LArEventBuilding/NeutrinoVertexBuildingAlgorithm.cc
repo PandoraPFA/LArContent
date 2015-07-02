@@ -159,6 +159,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingCluste
 
         CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f,0.f,0.f);
         CartesianVector minDirection(0.f, 0.f, 0.f), maxDirection(0.f,0.f,0.f);
+        bool foundDirection(false);
 
         LArPointingClusterMap::const_iterator cIter = pointingClusterMap.find(pDaughterCluster);
 
@@ -170,16 +171,21 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingCluste
             maxPosition = pointingCluster.GetOuterVertex().GetPosition();
             minDirection = pointingCluster.GetInnerVertex().GetDirection();
             maxDirection = pointingCluster.GetOuterVertex().GetDirection();
+            foundDirection = true;
         }
         else
         {
             LArClusterHelper::GetExtremalCoordinates(pDaughterCluster, minPosition, maxPosition);
-            minDirection = (maxPosition - minPosition).GetUnitVector();
-            maxDirection = (minPosition - maxPosition).GetUnitVector();
         }
 
         if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
             continue;
+
+        if (!foundDirection)
+        {
+            minDirection = (maxPosition - minPosition).GetUnitVector();
+            maxDirection = (minPosition - maxPosition).GetUnitVector();
+        }
 
         float minDistance(std::numeric_limits<float>::max());
         float maxDistance(std::numeric_limits<float>::max());
