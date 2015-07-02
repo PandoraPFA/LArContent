@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArMCParticleHelper.h"
+
 #include <unordered_map>
 
 namespace lar_content
@@ -30,6 +32,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    CheatingClusterCreationAlgorithm();
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -37,12 +44,24 @@ private:
     typedef std::unordered_map<const pandora::MCParticle*, pandora::CaloHitList> MCParticleToHitListMap;
 
     /**
+     *  @brief  Create map between each (primary) MC particle and associated calo hits
+     *
+     *  @param  pCaloHitList the input calo hit list
+     *  @param  mcPrimaryMap the mapping between mc particles and their parents
+     *  @param  mcParticleToHitListMap to receive the mc particle to hit list map
+     */
+    void GetMCParticleToHitListMap(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+        MCParticleToHitListMap &mcParticleToHitListMap) const;
+
+    /**
      *  @brief  Simple mc particle collection, using main mc particle associated with each calo hit
      * 
      *  @param  pCaloHit address of the calo hit
+     *  @param  mcPrimaryMap the mapping between mc particles and their parents
      *  @param  mcParticleToHitListMap the mc particle to hit list map
      */
-    void SimpleMCParticleCollection(const pandora::CaloHit *const pCaloHit, MCParticleToHitListMap &mcParticleToHitListMap) const;
+    void SimpleMCParticleCollection(const pandora::CaloHit *const pCaloHit, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+        MCParticleToHitListMap &mcParticleToHitListMap) const;
 
     /**
      *  @brief  Check whether mc particle is of a type specified for inclusion in cheated clustering
@@ -59,6 +78,9 @@ private:
      *  @param  mcParticleToHitListMap the mc particle to hit list map
      */
     void CreateClusters(const MCParticleToHitListMap &mcParticleToHitListMap) const;
+
+    bool                m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
+    std::string         m_mcParticleListName;           ///< The mc particle list name, required if want to collapse mc particle hierarchy
 
     pandora::IntVector  m_particleIdList;               ///< list of particle ids of MCPFOs to be selected
 };

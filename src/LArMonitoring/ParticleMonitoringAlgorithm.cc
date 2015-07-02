@@ -10,7 +10,6 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArMCParticleHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
@@ -88,8 +87,8 @@ StatusCode ParticleMonitoringAlgorithm::Run()
         this->GetRecoNeutrinos(pPfoList, recoNeutrinos);
 
         // Match Pfos and MC Particles
-        MCRelationMap mcPrimaryMap;      // [particles -> primary particle]
-        this->GetMCParticleMaps(pMCParticleList, mcPrimaryMap);
+        LArMCParticleHelper::MCRelationMap mcPrimaryMap;    // [particles -> primary particle]
+        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
 
         MCContributionMap trueHitMap;    // [primary particle -> true hit list]
         CaloHitToMCMap mcHitMap;         // [hit -> parent primary]
@@ -401,43 +400,6 @@ void ParticleMonitoringAlgorithm::ExtractNeutrinoDaughters(PfoList &pfoList) con
         else
         {
             ++iter;
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParticleMonitoringAlgorithm::GetMCParticleMaps(const MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap) const
-{
-    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
-    {
-        const MCParticle *const pMCParticle = *iter;
-
-        if (pMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle))
-        {
-            if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
-                mcPrimaryMap[pMCParticle] = pMCParticle;
-        }
-
-        else
-        {
-            const MCParticle *pParentMCParticle = pMCParticle;
-
-            while (true)
-            {
-                pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
-
-                if (mcPrimaryMap.find(pParentMCParticle) != mcPrimaryMap.end())
-                {
-                    mcPrimaryMap[pMCParticle] = mcPrimaryMap[pParentMCParticle];
-                    break;
-                }
-                else if (pParentMCParticle->GetParentList().empty() || LArMCParticleHelper::IsNeutrinoFinalState(pParentMCParticle))
-                {
-                    mcPrimaryMap[pMCParticle] = pParentMCParticle;
-                    break;
-                }
-            }
         }
     }
 }
