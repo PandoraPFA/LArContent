@@ -175,10 +175,24 @@ public:
      *  @brief  Return the wire pitch
      *
      *  @param  pandora the associated pandora instance
-     *
-     *  @return the wire pitch 
      */
     static float GetWireZPitch(const pandora::Pandora &pandora);
+
+    /**
+     *  @brief  Return the wire pitch
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  view the 2D projection
+     */
+    static float GetWirePitch(const pandora::Pandora &pandora, const pandora::HitType view);
+
+    /**
+     *  @brief  Return the wire axis (vector perpendicular to the wire direction and drift direction)
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  view the 2D projection
+     */
+    static pandora::CartesianVector GetWireAxis(const pandora::Pandora &pandora, const pandora::HitType view);
 
     /**
      *  @brief  Get the LArPseudoLayerPlugin registered with a specified pandora instance

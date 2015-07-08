@@ -71,6 +71,36 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitTy
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
+{
+    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
+    {
+        const Cluster *const pCluster = *cIter;
+
+        if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
+            continue;
+
+        clusterList.insert(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetThreeDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
+{
+    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
+    {
+        const Cluster *const pCluster = *cIter;
+
+        if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
+            continue;
+
+        clusterList.insert(pCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetAllConnectedPfos(const PfoList &inputPfoList, PfoList &outputPfoList)
 {
     for (PfoList::const_iterator pIter = inputPfoList.begin(), pIterEnd = inputPfoList.end(); pIter != pIterEnd; ++pIter)
@@ -116,6 +146,9 @@ void LArPfoHelper::GetAllDownstreamPfos(const ParticleFlowObject *const pPfo, Pf
 
 float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
 {
+    if (!LArPfoHelper::IsTwoD(pPfo))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
     float lengthSquared(0.f);
 
     const ClusterList &pfoClusterList = pPfo->GetClusterList();
@@ -136,6 +169,9 @@ float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
 
 float LArPfoHelper::GetThreeDLengthSquared(const ParticleFlowObject *const pPfo)
 {
+    if (!LArPfoHelper::IsThreeD(pPfo))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
     float lengthSquared(0.f);
 
     const ClusterList &pfoClusterList = pPfo->GetClusterList();
@@ -237,95 +273,32 @@ float LArPfoHelper::GetThreeDSeparation(const ParticleFlowObject *const pPfo1, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo, const unsigned int layerWindow, const float layerPitch,
-    std::vector<TrackState> &trackStateVector)
+bool LArPfoHelper::IsTwoD(const ParticleFlowObject *const pPfo)
 {
-    // TODO: typedef std::vector<pandora::TrackState> TrackStateVector
-
-    // Require that Pfo has a reconstructed direction
-    if (pPfo->GetMomentum().GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    const CartesianVector pfoDirection(pPfo->GetMomentum().GetUnitVector());
-
-    // Get 3D clusters (normally there should only be one)
-    ClusterList clusterList;
-    LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
-
-    if (clusterList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    // Get 3D vertex (not compulsory, but helps...)
-    CartesianVector pfoVertex(0.f, 0.f, 0.f);
-
-    if (!pPfo->GetVertexList().empty())
+    for (ClusterList::const_iterator iter = pPfo->GetClusterList().begin(), iterEnd = pPfo->GetClusterList().end(); iter != iterEnd; ++iter)
     {
-        if(pPfo->GetVertexList().size() != 1)
-            throw StatusCodeException(pandora::STATUS_CODE_FAILURE);
+        const Cluster *const pCluster = *iter;
 
-        const Vertex *const pVertex = *(pPfo->GetVertexList().begin());
-        pfoVertex = pVertex->GetPosition();
+        if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
+            return true;
     }
 
-    // Get seed direction from 3D clusters (bail out for single-hit clusters)
-    CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(clusterList, minPosition, maxPosition);
+    return false;
+}
 
-    if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    // Ensure that seed direction is aligned with Pfo direction
-    const CartesianVector clusterDirection((maxPosition - minPosition).GetUnitVector());
-    const float scaleFactor((clusterDirection.GetDotProduct(pfoDirection)) < 0.f ? -1.f : +1.f);
-
-    // Apply 3D sliding linear fits
-    ThreeDTrajectoryList trajectoryList;
-
-    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+bool LArPfoHelper::IsThreeD(const ParticleFlowObject *const pPfo)
+{
+    for (ClusterList::const_iterator iter = pPfo->GetClusterList().begin(), iterEnd = pPfo->GetClusterList().end(); iter != iterEnd; ++iter)
     {
-        const Cluster *const pCluster = *cIter;
+        const Cluster *const pCluster = *iter;
 
-        try
-        {
-            const ThreeDSlidingFitResult slidingFitResult(pCluster, layerWindow, layerPitch);
-
-            CaloHitList caloHitList;
-            pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-
-            for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
-            {
-                const CaloHit *const pCaloHit = *hIter;
-                const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit->GetPositionVector()));
-
-                CartesianVector position(0.f, 0.f, 0.f), direction(0.f, 0.f, 0.f);
-
-                if ((STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitPosition(rL, position)) &&
-                    (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitDirection(rL, direction)))
-                {
-                    trajectoryList.push_back(TrajectoryPoint(clusterDirection.GetDotProduct(position - pfoVertex) * scaleFactor,
-                        TrackState(position, direction * scaleFactor)));
-                }
-            }
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
-        }
+        if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
+            return true;
     }
 
-    // Require at least one trajectory point
-    if (trajectoryList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    std::sort(trajectoryList.begin(), trajectoryList.end(), LArPfoHelper::SortByHitProjection);
-
-    // Return trajectory points
-    for (ThreeDTrajectoryList::const_iterator tIter = trajectoryList.begin(), tIterEnd = trajectoryList.end(); tIter != tIterEnd; ++tIter)
-    {
-        const TrackState &nextPoint = tIter->second;
-        trackStateVector.push_back(nextPoint);
-    }
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -423,44 +396,57 @@ const ParticleFlowObject *LArPfoHelper::GetParentNeutrino(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
+{
+    if (pPfo->GetVertexList().empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    if (pPfo->GetVertexList().size() != 1)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const Vertex *const pVertex = *(pPfo->GetVertexList().begin());
+
+    return pVertex;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
 {
-    unsigned int nHitsLhs(0); float energyLhs(0.f);
+    unsigned int nTwoDHitsLhs(0), nThreeDHitsLhs(0); float energyLhs(0.f);
     for (ClusterList::const_iterator iter = pLhs->GetClusterList().begin(), iterEnd = pLhs->GetClusterList().end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pClusterLhs = *iter;
 
         if (TPC_3D != LArClusterHelper::GetClusterHitType(pClusterLhs))
-            continue;
+            nTwoDHitsLhs += pClusterLhs->GetNCaloHits();
+        else
+            nThreeDHitsLhs += pClusterLhs->GetNCaloHits();
 
-        nHitsLhs += pClusterLhs->GetNCaloHits();
         energyLhs += pClusterLhs->GetHadronicEnergy();
     }
 
-    unsigned int nHitsRhs(0); float energyRhs(0.f);
+    unsigned int nTwoDHitsRhs(0), nThreeDHitsRhs(0); float energyRhs(0.f);
     for (ClusterList::const_iterator iter = pRhs->GetClusterList().begin(), iterEnd = pRhs->GetClusterList().end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pClusterRhs = *iter;
 
         if (TPC_3D != LArClusterHelper::GetClusterHitType(pClusterRhs))
-            continue;
+            nTwoDHitsRhs += pClusterRhs->GetNCaloHits();
+        else
+            nThreeDHitsRhs += pClusterRhs->GetNCaloHits();
 
-        nHitsRhs += pClusterRhs->GetNCaloHits();
         energyRhs += pClusterRhs->GetHadronicEnergy();
     }
 
-    if (nHitsLhs != nHitsRhs)
-        return (nHitsLhs > nHitsRhs);
+    if (nTwoDHitsLhs != nTwoDHitsRhs)
+        return (nTwoDHitsLhs > nTwoDHitsRhs);
 
-    // ATTN Need an efficient (balance with well-motived) tie-breaker here. Pfo length, for instance, is extremely slow.
+    if (nThreeDHitsLhs != nThreeDHitsRhs)
+        return (nThreeDHitsLhs > nThreeDHitsRhs);
+
+    // ATTN Need an efficient (balance with well-motivated) tie-breaker here. Pfo length, for instance, is extremely slow.
     return (energyLhs > energyRhs);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArPfoHelper::SortByHitProjection(const TrajectoryPoint &lhs, const TrajectoryPoint &rhs)
-{
-    return (lhs.first < rhs.first);
 }
 
 } // namespace lar_content

@@ -35,6 +35,8 @@
 #include "LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoVertexCreationAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/ShowerParticleBuildingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/TrackParticleBuildingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
@@ -126,6 +128,8 @@ public:
         d("LArNeutrinoEventCreation",               lar_content::NeutrinoEventCreationAlgorithm::Factory)                       \
         d("LArNeutrinoVertexBuilding",              lar_content::NeutrinoVertexBuildingAlgorithm::Factory)                      \
         d("LArNeutrinoVertexCreation",              lar_content::NeutrinoVertexCreationAlgorithm::Factory)                      \
+        d("LArShowerParticleBuilding",              lar_content::ShowerParticleBuildingAlgorithm::Factory)                      \
+        d("LArTrackParticleBuilding",               lar_content::TrackParticleBuildingAlgorithm::Factory)                       \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
         d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \

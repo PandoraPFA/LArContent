@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArEventBuilding/NeutrinoEventBuildingAlgorithm.h"
 
@@ -137,15 +138,16 @@ unsigned int NeutrinoEventBuildingAlgorithm::GetNTwoDHitsInPfo(const ParticleFlo
 {
     unsigned int nTwoDHits(0);
 
-    const ClusterList &clusterList(pPfo->GetClusterList());
+    const ClusterList &pfoClusterList(pPfo->GetClusterList());
 
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster(*iter);
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-        if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
-            nTwoDHits += pCluster->GetNCaloHits();
+        if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
+            continue;
+
+        nTwoDHits += pCluster->GetNCaloHits();
     }
 
     const PfoList &daughterList(pPfo->GetDaughterPfoList());

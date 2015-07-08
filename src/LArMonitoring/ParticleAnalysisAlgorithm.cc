@@ -10,6 +10,9 @@
 
 #include "LArHelpers/LArPfoHelper.h"
 
+#include "LArObjects/LArTrackPfo.h"
+#include "LArObjects/LArShowerPfo.h"
+
 #include "LArMonitoring/ParticleAnalysisAlgorithm.h"
 
 using namespace pandora;
@@ -35,9 +38,12 @@ StatusCode ParticleAnalysisAlgorithm::Run()
 #ifdef MONITORING
     // Tree elements
     IntVector indexVector;
-    IntVector pdgCodeVector, primaryVector, neutrinoVector, finalStateVector, foundVertexVector;
+    IntVector pdgCodeVector, primaryVector, neutrinoVector, finalStateVector;
+    IntVector foundVertexVector, foundTrackVector, foundShowerVector;
     IntVector nClustersVector, nSpacePointsVector;
-    FloatVector vtxXPosVector, vtxYPosVector, vtxZPosVector, vtxPxVector, vtxPyVector, vtxPzVector, vtxPTotVector;
+    FloatVector pfoVtxXPosVector, pfoVtxYPosVector, pfoVtxZPosVector, pfoVtxXDirVector, pfoVtxYDirVector, pfoVtxZDirVector;
+    FloatVector trkVtxXPosVector, trkVtxYPosVector, trkVtxZPosVector, trkVtxXDirVector, trkVtxYDirVector, trkVtxZDirVector;
+    FloatVector trkEndXPosVector, trkEndYPosVector, trkEndZPosVector, trkEndXDirVector, trkEndYDirVector, trkEndZDirVector;
 
     try
     {
@@ -58,43 +64,68 @@ StatusCode ParticleAnalysisAlgorithm::Run()
         {
             const ParticleFlowObject *const pPfo = *pIter;
 
-            int pdgCode(0), primary(0), neutrino(0), finalState(0), foundVertex(0);
+            int pdgCode(0), primary(0), neutrino(0), finalState(0);
+            int foundVertex(0), foundTrack(0), foundShower(0);
             int nClusters(0), nSpacePoints(0);
-            float vtxXPos(0.f), vtxYPos(0.f), vtxZPos(0.f), vtxPx(0.f), vtxPy(0.f), vtxPz(0.f), vtxPTot(0.f);
+            float pfoVtxXPos(0.f), pfoVtxYPos(0.f), pfoVtxZPos(0.f), pfoVtxXDir(0.f), pfoVtxYDir(0.f), pfoVtxZDir(0.f);
+            float trkVtxXPos(0.f), trkVtxYPos(0.f), trkVtxZPos(0.f), trkVtxXDir(0.f), trkVtxYDir(0.f), trkVtxZDir(0.f);
+            float trkEndXPos(0.f), trkEndYPos(0.f), trkEndZPos(0.f), trkEndXDir(0.f), trkEndYDir(0.f), trkEndZDir(0.f);
 
             pdgCode = pPfo->GetParticleId();
             primary = (pPfo->GetParentPfoList().empty() ? 1 : 0);
             neutrino = LArPfoHelper::IsNeutrino(pPfo);
             finalState = LArPfoHelper::IsFinalState(pPfo);
 
-            vtxPx = pPfo->GetMomentum().GetX();
-            vtxPy = pPfo->GetMomentum().GetY();
-            vtxPz = pPfo->GetMomentum().GetZ();
-            vtxPTot = pPfo->GetMomentum().GetMagnitude();
+            const float pTot(pPfo->GetMomentum().GetMagnitude());
 
-            if (pPfo->GetVertexList().size() > 0)
+            if (pTot > std::numeric_limits<float>::epsilon())
             {
-                if (pPfo->GetVertexList().size() != 1)
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                const Vertex *const pVertex = *(pPfo->GetVertexList().begin());
-
-                foundVertex = 1;
-                vtxXPos = pVertex->GetPosition().GetX();
-                vtxYPos = pVertex->GetPosition().GetY();
-                vtxZPos = pVertex->GetPosition().GetZ();
+                pfoVtxXDir = pPfo->GetMomentum().GetX() / pTot;
+                pfoVtxYDir = pPfo->GetMomentum().GetY() / pTot;
+                pfoVtxZDir = pPfo->GetMomentum().GetZ() / pTot;
             }
 
-            ClusterList clusterList2D;
-            CaloHitList caloHitList3D;
+            if (!pPfo->GetVertexList().empty())
+            {
+                const Vertex *const pVertex = LArPfoHelper::GetVertex(pPfo);
+                foundVertex = 1;
+                pfoVtxXPos = pVertex->GetPosition().GetX();
+                pfoVtxYPos = pVertex->GetPosition().GetY();
+                pfoVtxZPos = pVertex->GetPosition().GetZ();
+            }
 
-            LArPfoHelper::GetClusters(pPfo, TPC_VIEW_U, clusterList2D);
-            LArPfoHelper::GetClusters(pPfo, TPC_VIEW_V, clusterList2D);
-            LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, clusterList2D);
+            CaloHitList caloHitList3D;
             LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList3D);
+
+            ClusterList clusterList2D;
+            LArPfoHelper::GetTwoDClusterList(pPfo, clusterList2D);
 
             nClusters = clusterList2D.size();
             nSpacePoints = caloHitList3D.size();
+
+            const LArTrackPfo *const pLArTrackPfo = dynamic_cast<const LArTrackPfo*>(pPfo);
+            if (NULL != pLArTrackPfo)
+            {
+                foundTrack = 1;
+                trkVtxXPos = pLArTrackPfo->GetVertexPosition().GetX();
+                trkVtxYPos = pLArTrackPfo->GetVertexPosition().GetY();
+                trkVtxZPos = pLArTrackPfo->GetVertexPosition().GetZ();
+                trkVtxXDir = pLArTrackPfo->GetVertexDirection().GetX();
+                trkVtxYDir = pLArTrackPfo->GetVertexDirection().GetY();
+                trkVtxZDir = pLArTrackPfo->GetVertexDirection().GetZ();
+                trkEndXPos = pLArTrackPfo->GetEndPosition().GetX();
+                trkEndYPos = pLArTrackPfo->GetEndPosition().GetY();
+                trkEndZPos = pLArTrackPfo->GetEndPosition().GetZ();
+                trkEndXDir = pLArTrackPfo->GetEndDirection().GetX();
+                trkEndYDir = pLArTrackPfo->GetEndDirection().GetY();
+                trkEndZDir = pLArTrackPfo->GetEndDirection().GetZ();
+            }
+
+            const LArShowerPfo *const pLArShowerPfo = dynamic_cast<const LArShowerPfo*>(pPfo);
+            if (NULL != pLArShowerPfo)
+            {
+                foundShower = 1;
+            }
 
             indexVector.push_back(index++);
             pdgCodeVector.push_back(pdgCode);
@@ -102,15 +133,28 @@ StatusCode ParticleAnalysisAlgorithm::Run()
             neutrinoVector.push_back(neutrino);
             finalStateVector.push_back(finalState);
             foundVertexVector.push_back(foundVertex);
+            foundTrackVector.push_back(foundTrack);
+            foundShowerVector.push_back(foundShower);
             nClustersVector.push_back(nClusters);
             nSpacePointsVector.push_back(nSpacePoints);
-            vtxXPosVector.push_back(vtxXPos);
-            vtxYPosVector.push_back(vtxYPos);
-            vtxZPosVector.push_back(vtxZPos);
-            vtxPxVector.push_back(vtxPx);
-            vtxPyVector.push_back(vtxPy);
-            vtxPzVector.push_back(vtxPz);
-            vtxPTotVector.push_back(vtxPTot);
+            pfoVtxXPosVector.push_back(pfoVtxXPos);
+            pfoVtxYPosVector.push_back(pfoVtxYPos);
+            pfoVtxZPosVector.push_back(pfoVtxZPos);
+            pfoVtxXDirVector.push_back(pfoVtxXDir);
+            pfoVtxYDirVector.push_back(pfoVtxYDir);
+            pfoVtxZDirVector.push_back(pfoVtxZDir);
+            trkVtxXPosVector.push_back(trkVtxXPos);
+            trkVtxYPosVector.push_back(trkVtxYPos);
+            trkVtxZPosVector.push_back(trkVtxZPos);
+            trkVtxXDirVector.push_back(trkVtxXDir);
+            trkVtxYDirVector.push_back(trkVtxYDir);
+            trkVtxZDirVector.push_back(trkVtxZDir);
+            trkEndXPosVector.push_back(trkEndXPos);
+            trkEndYPosVector.push_back(trkEndYPos);
+            trkEndZPosVector.push_back(trkEndZPos);
+            trkEndXDirVector.push_back(trkEndXDir);
+            trkEndYDirVector.push_back(trkEndYDir);
+            trkEndZDirVector.push_back(trkEndZDir);
         }
     }
     catch (StatusCodeException &statusCodeException)
@@ -125,15 +169,28 @@ StatusCode ParticleAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "neutrino", &neutrinoVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "finalstate", &finalStateVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vertex", &foundVertexVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "track", &foundTrackVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "shower", &foundShowerVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "clusters", &nClustersVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "spacepoints", &nSpacePointsVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxx", &vtxXPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxy", &vtxYPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxz", &vtxZPosVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfopx", &vtxPxVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfopy", &vtxPyVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfopz", &vtxPzVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfoptot", &vtxPTotVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxx", &pfoVtxXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxy", &pfoVtxYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxz", &pfoVtxZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfodirx", &pfoVtxXDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfodiry", &pfoVtxYDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfodirz", &pfoVtxZDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkvtxx", &trkVtxXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkvtxy", &trkVtxYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkvtxz", &trkVtxZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkvtxdirx", &trkVtxXDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkvtxdiry", &trkVtxYDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkvtxdirz", &trkVtxZDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkendx", &trkEndXPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkendy", &trkEndYPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkendz", &trkEndZPosVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkenddirx", &trkEndXDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkenddiry", &trkEndYDirVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trkenddirz", &trkEndZDirVector));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 #endif

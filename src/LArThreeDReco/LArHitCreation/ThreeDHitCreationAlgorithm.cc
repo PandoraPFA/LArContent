@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 #include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
@@ -36,25 +37,16 @@ void ThreeDHitCreationAlgorithm::GetUsedTwoDHits(const ParticleFlowObject *const
 
 void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &usedHits, CaloHitList &remainingHits) const
 {
-    ClusterList threeDClusterList;
-    const ClusterList &pfoClusterList(pPfo->GetClusterList());
+    ClusterList twoDClusterList, threeDClusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
+    LArPfoHelper::GetThreeDClusterList(pPfo, threeDClusterList);
 
-    for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = twoDClusterList.begin(), iterEnd = twoDClusterList.end(); iter != iterEnd; ++iter)
     {
-        const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
+        if (TPC_3D == LArClusterHelper::GetClusterHitType(*iter))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
-        {
-            (*iter)->GetOrderedCaloHitList().GetCaloHitList(remainingHits);
-        }
-        else if (TPC_3D == hitType)
-        {
-            threeDClusterList.insert(*iter);
-        }
-        else
-        {
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-        }
+        (*iter)->GetOrderedCaloHitList().GetCaloHitList(remainingHits);
     }
 
     for (ClusterList::const_iterator iter = threeDClusterList.begin(), iterEnd = threeDClusterList.end(); iter != iterEnd; ++iter)
@@ -200,19 +192,18 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(const ParticleFlowObject *const pPfo) const
+const Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(const ParticleFlowObject *const pThreeDPfo) const
 {
     const Cluster *pCluster3D(NULL);
-    const ClusterList &clusterList(pPfo->GetClusterList());
+    const ClusterList &clusterList(pThreeDPfo->GetClusterList());
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-        if (TPC_3D != hitType)
+        if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
             continue;
-
+        
         if (NULL != pCluster3D)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
