@@ -57,6 +57,23 @@ public:
      */
     static void GetClusters(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::ClusterList &clusterList);
 
+
+    /**
+     *  @brief Get the list of 2D clusters from an input pfo
+     *
+     *  @param  pPfo the input Pfo
+     *  @param  clusterList the output list of clusters
+     */
+    static void GetTwoDClusterList(const pandora::ParticleFlowObject *const pPfo, pandora::ClusterList &clusterList); 
+
+    /**
+     *  @brief Get the list of 3D clusters from an input pfo
+     *
+     *  @param  pPfo the input Pfo
+     *  @param  clusterList the output list of clusters
+     */
+    static void GetThreeDClusterList(const pandora::ParticleFlowObject *const pPfo, pandora::ClusterList &clusterList);
+
     /**
      *  @brief  Get a flat list of all pfos, recursively including all daughters and parents associated with those pfos in an input list
      *
@@ -99,7 +116,7 @@ public:
     static float GetTwoDLengthSquared(const pandora::ParticleFlowObject *const pPfo);
 
     /**
-     *  @brief  Calculate length of Pfo using 2D clusters
+     *  @brief  Calculate length of Pfo using 3D clusters
      *
      *  @param  pPfo the input Pfo
      *
@@ -132,15 +149,18 @@ public:
     static float GetThreeDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
 
     /**
-     *  @brief  Apply 3D sliding fit to Pfo and return vector of track states
+     *  @brief  Does Pfo contain 2D clusters
      *
-     *  @param  pPfo the address of the first Pfo
-     *  @param  layerWindow the half-window used in the sliding fit
-     *  @param  layerPitch the pitch used in the sliding fit
-     *  @param  trackStateVector the output vector of track states
+     *  @param  pPfo the address of the Pfo
      */
-    static void GetSlidingFitTrajectory(const pandora::ParticleFlowObject *const pPfo, const unsigned int layerWindow, const float layerPitch,
-        std::vector<pandora::TrackState> &trackStateVector);
+    static bool IsTwoD(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Does Pfo contain 3D clusters
+     *
+     *  @param  pPfo the address of the Pfo
+     */
+    static bool IsThreeD(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Return track flag based on Pfo Particle ID
@@ -201,14 +221,23 @@ public:
      */
     static const pandora::ParticleFlowObject *GetParentPfo(const pandora::ParticleFlowObject *const pPfo);
 
-     /**
+    /**
      *  @brief  Get primary neutrino or antineutrino
      *
-     *  @param   pPfo the address of the Pfo
+     *  @param  pPfo the address of the Pfo
      *
      *  @return address of primary neutrino pfo
      */
     static const pandora::ParticleFlowObject *GetParentNeutrino(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Get the pfo vertex
+     *
+     *  @param  pPfo the address of the Pfo
+     *
+     *  @return address of pfo vertex
+     */
+    static const pandora::Vertex *GetVertex(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Sort pfos by number of constituent hits
@@ -217,17 +246,6 @@ public:
      *  @param  pRhs address of second pfo
      */
     static bool SortByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
-
-    typedef std::pair<float, pandora::TrackState> TrajectoryPoint;
-    typedef std::vector<TrajectoryPoint> ThreeDTrajectoryList;
-
-    /**
-     *  @brief  Sort pfos by number of constituent hits
-     *
-     *  @param  pLhs address of first pfo
-     *  @param  pRhs address of second pfo
-     */
-    static bool SortByHitProjection(const TrajectoryPoint &lhs, const TrajectoryPoint &rhs);
 };
 
 } // namespace lar_content
