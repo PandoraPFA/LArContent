@@ -90,6 +90,7 @@
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
@@ -161,6 +162,7 @@ public:
         d("LArDeltaRaySplitting",                   lar_content::DeltaRaySplittingAlgorithm::Factory)                           \
         d("LArKinkSplitting",                       lar_content::KinkSplittingAlgorithm::Factory)                               \
         d("LArLayerSplitting",                      lar_content::LayerSplittingAlgorithm::Factory)                              \
+        d("LArOvershootSplitting",                  lar_content::OvershootSplittingAlgorithm::Factory)                          \
         d("LArTrackConsolidation",                  lar_content::TrackConsolidationAlgorithm::Factory)                          \
         d("LArVertexSplitting",                     lar_content::VertexSplittingAlgorithm::Factory)                             \
         d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \

@@ -387,6 +387,64 @@ StatusCode TwoDSlidingFitResult::GetTransverseProjection(const float x, const Fi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode TwoDSlidingFitResult::GetExtrapolatedPosition(const float rL, CartesianVector &position) const
+{
+    const StatusCode statusCode(this->GetGlobalFitPosition(rL, position));
+
+    if (STATUS_CODE_NOT_FOUND != statusCode)
+        return statusCode;
+
+    const int thisLayer(this->GetLayer(rL));
+    const int minLayer(this->GetMinLayer());
+    const int maxLayer(this->GetMaxLayer());
+
+    if (thisLayer <= minLayer)
+    {
+        position = (this->GetGlobalMinLayerPosition() + this->GetGlobalMinLayerDirection() * (rL - this->GetL(minLayer)));
+    }
+    else if (thisLayer >= maxLayer)
+    {
+        position = (this->GetGlobalMaxLayerPosition() + this->GetGlobalMaxLayerDirection() * (rL - this->GetL(maxLayer)));
+    }
+    else
+    {
+        return STATUS_CODE_FAILURE;
+    }
+
+    return STATUS_CODE_SUCCESS;
+}   
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TwoDSlidingFitResult::GetExtrapolatedDirection(const float rL, CartesianVector &direction) const
+{
+    const StatusCode statusCode(this->GetGlobalFitDirection(rL, direction));
+
+    if (STATUS_CODE_NOT_FOUND != statusCode)
+        return statusCode;  
+
+    const int thisLayer(this->GetLayer(rL));
+    const int minLayer(this->GetMinLayer());
+    const int maxLayer(this->GetMaxLayer());
+
+    if (thisLayer <= minLayer)
+    {
+        direction = this->GetGlobalMinLayerDirection();
+    }
+    else if (thisLayer >= maxLayer)
+    {
+        direction = this->GetGlobalMaxLayerDirection();
+    }
+    else
+    {
+        return STATUS_CODE_FAILURE;
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TwoDSlidingFitResult::GetExtrapolatedPositionAtX(const float x, CartesianVector &position) const
 {
     const StatusCode statusCode(this->GetGlobalFitPositionAtX(x, position));
@@ -430,7 +488,7 @@ StatusCode TwoDSlidingFitResult::GetExtrapolatedPositionAtX(const float x, Carte
     // TODO How to assign an uncertainty on the extrapolated position?
     return STATUS_CODE_SUCCESS;
 }
-
+  
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const FitSegment &TwoDSlidingFitResult::GetFitSegment(const float rL) const
