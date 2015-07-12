@@ -354,6 +354,26 @@ public:
         pandora::CartesianVector &direction) const;
 
     /**
+     *  @brief  Get extrapolated position (beyond span) for a given input coordinate
+     *
+     *  @param  rL the input coordinate
+     *  @param  position the extrapolated position at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
+     */
+    pandora::StatusCode GetExtrapolatedPosition(const float rL, pandora::CartesianVector &position) const;    
+
+    /**
+     *  @brief  Get extrapolated direction (beyond span) for a given input coordinate
+     *
+     *  @param  rL the input coordinate
+     *  @param  position the extrapolated direction at these coordinates
+     * 
+     *  @return status code, faster than throwing in regular use-cases
+     */
+    pandora::StatusCode GetExtrapolatedDirection(const float rL, pandora::CartesianVector &direction) const;
+
+    /**
      *  @brief  Get extrapolated position (beyond span) for a given input x coordinate
      *
      *  @param  x the input coordinate
