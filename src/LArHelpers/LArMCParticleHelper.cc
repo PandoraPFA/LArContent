@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/src/LArHelpers/LArMCParticleHelper.cc
- * 
+ *
  *  @brief  Implementation of the lar monte carlo particle helper class.
- * 
+ *
  *  $Log: $
  */
 
@@ -47,6 +47,23 @@ bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
+{
+    const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
+
+    if ((E_MINUS == absoluteParticleId) || (MU_MINUS == absoluteParticleId) ||
+        (PI_PLUS == absoluteParticleId) || (K_PLUS == absoluteParticleId) ||
+        (SIGMA_MINUS == absoluteParticleId) || (SIGMA_PLUS == absoluteParticleId) || (HYPERON_MINUS == absoluteParticleId) ||
+        (PROTON == absoluteParticleId) || (PHOTON == absoluteParticleId))
+        return true;
+
+    // TODO: What about ions or neutrons?
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *const pMCParticle)
 {
     const MCParticle *pParentMCParticle = pMCParticle;
@@ -61,9 +78,37 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *const pMCParticle)
+{
+    // Navigate upward through MC daughter/parent links - collect this particle and all its parents
+    MCParticleVector mcVector;
+
+    const MCParticle *pParentMCParticle = pMCParticle;
+    mcVector.push_back(pParentMCParticle);
+
+    while (!pParentMCParticle->GetParentList().empty())
+    {
+        pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
+        mcVector.push_back(pParentMCParticle);
+    }
+
+    // Navigate downward through MC parent/daughter links - return the first long-lived charged particle
+    for (MCParticleVector::const_reverse_iterator iter = mcVector.rbegin(), iterEnd = mcVector.rend(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *const pNextParticle = *iter;
+
+        if (LArMCParticleHelper::IsVisible(pNextParticle))
+            return pNextParticle;
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const MCParticle *LArMCParticleHelper::GetParentNeutrino(const MCParticle *const pMCParticle)
 {
-    const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);  
+    const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
 
     if(!LArMCParticleHelper::IsNeutrino(pParentMCParticle))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -166,10 +211,15 @@ float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
 
 bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
 {
-    // TODO This will require careful thought and modification as the use-case is clarified
-    return (LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle) ||
-        (pMCParticle->GetParentList().empty() && (PI_ZERO != pMCParticle->GetParticleId())) ||
-        ((1 == pMCParticle->GetParentList().size()) && (PI_ZERO == (*(pMCParticle->GetParentList().begin()))->GetParticleId())) );
+    try
+    {
+        const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
+        return (pPrimaryMCParticle == pMCParticle);
+    }
+    catch (const StatusCodeException &)
+    {
+        return 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -180,37 +230,81 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
     {
         const MCParticle *const pMCParticle = *iter;
 
-        if (LArMCParticleHelper::IsPrimary(pMCParticle))
+        try
         {
-            if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
-                mcPrimaryMap[pMCParticle] = pMCParticle;
+            const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
+            mcPrimaryMap[pMCParticle] = pPrimaryMCParticle;
         }
-        else if (pMCParticle->GetParentList().empty())
+        catch (const StatusCodeException &)
         {
-            // ATTN Protect against case where a parentless particle is denied primary status
-            continue;
-        }
-        else
-        {
-            const MCParticle *pParentMCParticle = pMCParticle;
-
-            while (true)
-            {
-                pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
-
-                if (mcPrimaryMap.find(pParentMCParticle) != mcPrimaryMap.end())
-                {
-                    mcPrimaryMap[pMCParticle] = mcPrimaryMap[pParentMCParticle];
-                    break;
-                }
-                else if (LArMCParticleHelper::IsPrimary(pParentMCParticle))
-                {
-                    mcPrimaryMap[pMCParticle] = pParentMCParticle;
-                    break;
-                }
-            }
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcPrimaryVector)
+{
+    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *const pMCParticle = *iter;
+
+        if (LArMCParticleHelper::IsPrimary(pMCParticle))
+            mcPrimaryVector.push_back(pMCParticle);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetNeutrinoMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcNeutrinoVector)
+{
+    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *const pMCParticle = *iter;
+
+        if (LArMCParticleHelper::IsNeutrino(pMCParticle) && pMCParticle->GetParentList().empty())
+            mcNeutrinoVector.push_back(pMCParticle);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::SortBySource(const MCParticle *const pLhs, const MCParticle *const pRhs)
+{
+    // Put neutrino-induced particles first
+    const int parentLhs(LArMCParticleHelper::GetParentNeutrinoId(pLhs));
+    const int parentRhs(LArMCParticleHelper::GetParentNeutrinoId(pRhs));
+
+    if (parentLhs != parentRhs)
+        return (parentLhs > parentRhs);
+
+    return LArMCParticleHelper::SortByMomentum(pLhs, pRhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::SortByMomentum(const MCParticle *const pLhs, const MCParticle *const pRhs)
+{
+    // Sort by momentum (prefer higher momentum)
+    const float momentumLhs(pLhs->GetMomentum().GetMagnitudeSquared());
+    const float momentumRhs(pRhs->GetMomentum().GetMagnitudeSquared());
+
+    if (momentumLhs != momentumRhs)
+        return (momentumLhs > momentumRhs);
+
+    // Sort by energy (prefer lighter particles)
+    if (pLhs->GetEnergy() != pRhs->GetEnergy())
+        return (pLhs->GetEnergy() < pRhs->GetEnergy());
+
+    // Sort by PDG code (prefer smaller numbers)
+    if (pLhs->GetParticleId() != pRhs->GetParticleId())
+        return (pLhs->GetParticleId() < pRhs->GetParticleId());
+
+    // Sort by vertex position (tie-breaker)
+    const float positionLhs(pLhs->GetVertex().GetMagnitudeSquared());
+    const float positionRhs(pRhs->GetVertex().GetMagnitudeSquared());
+
+    return (positionLhs < positionRhs);
 }
 
 } // namespace lar_content
