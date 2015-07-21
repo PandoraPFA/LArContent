@@ -333,6 +333,56 @@ float LArGeometryHelper::GetWireZPitch(const Pandora &pandora)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view)
+{
+    if (view == TPC_VIEW_U)
+    {
+        return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetUPitch());
+    }
+
+    else if (view == TPC_VIEW_V)
+    {
+        return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetVPitch());
+    }
+
+    else if (view == TPC_VIEW_W)
+    {
+        return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetWPitch());
+    }
+
+    throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const HitType view)
+{
+    if (view == TPC_VIEW_U)
+    {
+        // CartesianVector(0.f, -m_sinU, m_cosU)
+        return CartesianVector(0.f,
+            LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPU(1.f, 0.f),
+            LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPU(0.f, 1.f));
+    }
+
+    else if (view == TPC_VIEW_V)
+    {
+       // CartesianVector(0.f, +m_sinV, m_cosV)
+       return CartesianVector(0.f,
+            LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPV(1.f, 0.f),
+            LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPV(0.f, 1.f)); 
+    }
+
+    else if (view == TPC_VIEW_W)
+    {
+        return CartesianVector(0.f, 0.f, 1.f);
+    }
+
+    throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const LArPseudoLayerPlugin *LArGeometryHelper::GetLArPseudoLayerPlugin(const Pandora &pandora)
 {
     PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
