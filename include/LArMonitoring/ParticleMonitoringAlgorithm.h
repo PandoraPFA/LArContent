@@ -108,11 +108,13 @@ private:
      *  @param  pCaloHitList the input list of calo hits
      *  @param  pfoList the input list of Pfos
      *  @param  mcHitMap the input mapping between calo hits and their parent Pfos
-     *  @param  outputPrimaryMap the output mapping between MC particles to their best matched Pfo
-     *  @param  outputContributionMap the output mapping between MC particles and their number of matched hits
+     *  @param  matchedPrimaryMap the output mapping between MC particles to their best matched Pfo
+     *  @param  matchedContributionMap the output mapping between MC particles and their number of matched hits
+     *  @param  fullContributionMap the output mapping between MC particles and any pfo hits
      */
     void GetMCParticleToPfoMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &pfoList,
-        const CaloHitToMCMap &mcHitMap, MCToPfoMap &outputPrimaryMap, MCContributionMap &outputContributionMap) const;
+        const CaloHitToMCMap &mcHitMap, MCToPfoMap &matchedPrimaryMap, MCContributionMap &matchedContributionMap,
+        MCContributionMap &fullContributionMap) const;
 
     /**
      *  @brief  Collect up all calo hits associated with a Pfo and its daughters

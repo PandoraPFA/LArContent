@@ -35,6 +35,8 @@
 #include "LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoVertexCreationAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/ShowerParticleBuildingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/TrackParticleBuildingAlgorithm.h"
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
@@ -88,6 +90,7 @@
 #include "LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
+#include "LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 #include "LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
 #include "LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
@@ -126,6 +129,8 @@ public:
         d("LArNeutrinoEventCreation",               lar_content::NeutrinoEventCreationAlgorithm::Factory)                       \
         d("LArNeutrinoVertexBuilding",              lar_content::NeutrinoVertexBuildingAlgorithm::Factory)                      \
         d("LArNeutrinoVertexCreation",              lar_content::NeutrinoVertexCreationAlgorithm::Factory)                      \
+        d("LArShowerParticleBuilding",              lar_content::ShowerParticleBuildingAlgorithm::Factory)                      \
+        d("LArTrackParticleBuilding",               lar_content::TrackParticleBuildingAlgorithm::Factory)                       \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
         d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \
@@ -157,6 +162,7 @@ public:
         d("LArDeltaRaySplitting",                   lar_content::DeltaRaySplittingAlgorithm::Factory)                           \
         d("LArKinkSplitting",                       lar_content::KinkSplittingAlgorithm::Factory)                               \
         d("LArLayerSplitting",                      lar_content::LayerSplittingAlgorithm::Factory)                              \
+        d("LArOvershootSplitting",                  lar_content::OvershootSplittingAlgorithm::Factory)                          \
         d("LArTrackConsolidation",                  lar_content::TrackConsolidationAlgorithm::Factory)                          \
         d("LArVertexSplitting",                     lar_content::VertexSplittingAlgorithm::Factory)                             \
         d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \

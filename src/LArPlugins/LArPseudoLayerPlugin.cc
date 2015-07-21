@@ -20,6 +20,9 @@ namespace lar_content
 using namespace pandora;
 
 LArPseudoLayerPlugin::LArPseudoLayerPlugin(const float zPitch) :
+    m_uPitch(zPitch),
+    m_vPitch(zPitch),
+    m_wPitch(zPitch),
     m_zPitch(zPitch),
     m_zOffset(0.01f),
     m_zerothLayer(5000)
@@ -27,6 +30,17 @@ LArPseudoLayerPlugin::LArPseudoLayerPlugin(const float zPitch) :
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+LArPseudoLayerPlugin::LArPseudoLayerPlugin(const float uPitch, const float vPitch, const float wPitch) :
+    m_uPitch(uPitch),
+    m_vPitch(vPitch),
+    m_wPitch(wPitch),
+    m_zPitch(wPitch),
+    m_zOffset(0.01f),
+    m_zerothLayer(5000)
+{
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 unsigned int LArPseudoLayerPlugin::GetPseudoLayer(const float zCoordinate) const
 {
