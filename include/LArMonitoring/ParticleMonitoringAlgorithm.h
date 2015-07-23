@@ -124,9 +124,13 @@ private:
      */
     void CollectCaloHits(const pandora::ParticleFlowObject *const pParentPfo, pandora::CaloHitList &caloHitList) const;
 
-
+    /**
+     *  @brief  Collect up all calo hits associated with a list of Pfos and their daughters
+     *
+     *  @param  pfoList the input Pfo list
+     *  @param  caloHitList the output calo hit list
+     */
     void CollectCaloHits(const pandora::PfoList &pfoList, pandora::CaloHitList &caloHitList) const;
-
 
     /**
      *  @brief  Collect up all daughter clusters of a Pfo
@@ -153,6 +157,7 @@ private:
     std::string     m_treeName;                 ///< Name of output tree
 
     bool            m_useDaughterPfos;          ///< Whether to include daughter pfos in performance metrics
+    bool            m_useIsolatedCaloHits;      ///< Whether to include isolated hits in performance metrics
     bool            m_extractNeutrinoDaughters; ///< Whether to treat each neutrino pfo daughter as a standalone top-level pfo
 };
 

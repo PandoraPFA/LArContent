@@ -24,6 +24,7 @@ namespace lar_content
 
 ParticleMonitoringAlgorithm::ParticleMonitoringAlgorithm() :
     m_useDaughterPfos(false),
+    m_useIsolatedCaloHits(true),
     m_extractNeutrinoDaughters(true)
 {
 }
@@ -689,7 +690,9 @@ void ParticleMonitoringAlgorithm::GetPfoToCaloHitMatches(const CaloHitList *cons
 
             CaloHitList clusterHits;
             pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHits);
-            clusterHits.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+
+            if (m_useIsolatedCaloHits)
+                clusterHits.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
 
             for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
             {
@@ -728,7 +731,9 @@ void ParticleMonitoringAlgorithm::CollectCaloHits(const ParticleFlowObject *cons
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        caloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+
+        if (m_useIsolatedCaloHits)
+            caloHitList.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
     }
 }
 
@@ -797,6 +802,9 @@ StatusCode ParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseDaughterPfos", m_useDaughterPfos));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseIsolatedCaloHits", m_useIsolatedCaloHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ExtractNeutrinoDaughters", m_extractNeutrinoDaughters));
