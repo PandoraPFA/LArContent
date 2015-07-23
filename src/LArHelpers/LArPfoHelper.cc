@@ -45,6 +45,19 @@ void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitTy
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetIsolatedCaloHits(const ParticleFlowObject *const pPfo, const HitType &hitType, CaloHitList &caloHitList)
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
+
+    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+    {
+        caloHitList.insert((*cIter)->GetIsolatedCaloHitList().begin(), (*cIter)->GetIsolatedCaloHitList().end());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, ClusterList &clusterList)
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
@@ -73,7 +86,8 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitTy
 
 void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
+    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); 
+        cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = *cIter;
 
@@ -88,7 +102,8 @@ void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, Clus
 
 void LArPfoHelper::GetThreeDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); cIter != cIterEnd; ++cIter)
+    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); 
+        cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = *cIter;
 

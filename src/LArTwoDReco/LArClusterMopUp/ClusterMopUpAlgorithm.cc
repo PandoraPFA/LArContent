@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
 
@@ -46,30 +47,21 @@ StatusCode ClusterMopUpAlgorithm::Run()
 
 void ClusterMopUpAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
-    const PfoList *pPfoList = NULL;
-    if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_pfoListName, pPfoList))
+    for (StringVector::const_iterator sIter = m_pfoListNames.begin(), sIterEnd = m_pfoListNames.end(); sIter != sIterEnd; ++sIter)
     {
-        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "ClusterMopUpAlgorithm: pfo list " << m_pfoListName << " unavailable." << std::endl;
-        return;
-    }
+        const PfoList *pPfoList = NULL;
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *sIter, pPfoList))
+            continue;
 
-    for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
-    {
-        bool containsFixedTrack(false);
-        const ClusterList &clusterList((*pIter)->GetClusterList());
-
-        for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+        for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
         {
-            if (m_excludePfosContainingTracks && (MU_MINUS == std::abs((*cIter)->GetParticleIdFlag())))
-            {
-                containsFixedTrack = true;
-                break;
-            }
-        }
+            const ParticleFlowObject *const pPfo = *pIter;
 
-        if (!containsFixedTrack)
-            this->GetClusterLists(clusterList, false, clusterListU, clusterListV, clusterListW);
+            if (m_excludePfosContainingTracks && LArPfoHelper::IsTrack(pPfo))
+                continue;
+
+            this->GetClusterLists(pPfo->GetClusterList(), false, clusterListU, clusterListV, clusterListW);
+        }
     }
 }
 
@@ -153,7 +145,6 @@ void ClusterMopUpAlgorithm::GetClusterToListNameMap(ClusterToListNameMap &cluste
 {
     StringSet stringSet;
     stringSet.insert(m_remnantClusterListNames.begin(), m_remnantClusterListNames.end());
-    stringSet.insert(m_additionalClusterListNames.begin(), m_additionalClusterListNames.end());
 
     for (StringSet::const_iterator sIter = stringSet.begin(), sIterEnd = stringSet.end(); sIter != sIterEnd; ++sIter)
     {
@@ -173,11 +164,8 @@ void ClusterMopUpAlgorithm::GetClusterToListNameMap(ClusterToListNameMap &cluste
 
 StatusCode ClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "RemnantClusterListNames", m_remnantClusterListNames));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "AdditionalClusterListNames", m_additionalClusterListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ExcludePfosContainingTracks", m_excludePfosContainingTracks));

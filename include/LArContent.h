@@ -53,6 +53,7 @@
 #include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoRecoveryAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
+#include "LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
 #include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
@@ -193,6 +194,7 @@ public:
         d("LArClearLongitudinalTracks",             lar_content::ClearLongitudinalTracksTool::Factory)                          \
         d("LArMatchedEndPoints",                    lar_content::MatchedEndPointsTool::Factory)                                 \
         d("LArClearRemnants",                       lar_content::ClearRemnantsTool::Factory)                                    \
+        d("LArConnectedRemnants",                   lar_content::ConnectedRemnantsTool::Factory)                                \
         d("LArClearTracks",                         lar_content::ClearTracksTool::Factory)                                      \
         d("LArLongTracks",                          lar_content::LongTracksTool::Factory)                                       \
         d("LArMissingTrack",                        lar_content::MissingTrackTool::Factory)                                     \

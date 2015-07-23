@@ -40,7 +40,7 @@ StatusCode ParticleAnalysisAlgorithm::Run()
     IntVector indexVector;
     IntVector pdgCodeVector, primaryVector, neutrinoVector, finalStateVector;
     IntVector foundVertexVector, foundTrackVector, foundShowerVector;
-    IntVector nClustersVector, nSpacePointsVector;
+    IntVector nClustersVector, nSpacePointsVector, nCaloHitsVector, nIsolatedHitsVector;
     FloatVector pfoVtxXPosVector, pfoVtxYPosVector, pfoVtxZPosVector, pfoVtxXDirVector, pfoVtxYDirVector, pfoVtxZDirVector;
     FloatVector trkVtxXPosVector, trkVtxYPosVector, trkVtxZPosVector, trkVtxXDirVector, trkVtxYDirVector, trkVtxZDirVector;
     FloatVector trkEndXPosVector, trkEndYPosVector, trkEndZPosVector, trkEndXDirVector, trkEndYDirVector, trkEndZDirVector;
@@ -66,7 +66,7 @@ StatusCode ParticleAnalysisAlgorithm::Run()
 
             int pdgCode(0), primary(0), neutrino(0), finalState(0);
             int foundVertex(0), foundTrack(0), foundShower(0);
-            int nClusters(0), nSpacePoints(0);
+            int nClusters(0), nSpacePoints(0), nCaloHits(0), nIsolatedHits(0);
             float pfoVtxXPos(0.f), pfoVtxYPos(0.f), pfoVtxZPos(0.f), pfoVtxXDir(0.f), pfoVtxYDir(0.f), pfoVtxZDir(0.f);
             float trkVtxXPos(0.f), trkVtxYPos(0.f), trkVtxZPos(0.f), trkVtxXDir(0.f), trkVtxYDir(0.f), trkVtxZDir(0.f);
             float trkEndXPos(0.f), trkEndYPos(0.f), trkEndZPos(0.f), trkEndXDir(0.f), trkEndYDir(0.f), trkEndZDir(0.f);
@@ -94,14 +94,22 @@ StatusCode ParticleAnalysisAlgorithm::Run()
                 pfoVtxZPos = pVertex->GetPosition().GetZ();
             }
 
-            CaloHitList caloHitList3D;
+            CaloHitList caloHitList2D, caloHitList3D, isolatedHitList2D;
             LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList3D);
+            LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList2D);
+            LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitList2D);
+            LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitList2D);
+            LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_U, isolatedHitList2D);
+            LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_V, isolatedHitList2D);
+            LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_W, isolatedHitList2D);
 
             ClusterList clusterList2D;
             LArPfoHelper::GetTwoDClusterList(pPfo, clusterList2D);
 
-            nClusters = clusterList2D.size();
-            nSpacePoints = caloHitList3D.size();
+            nClusters     = clusterList2D.size();
+            nSpacePoints  = caloHitList3D.size();
+            nCaloHits     = caloHitList2D.size();
+            nIsolatedHits = isolatedHitList2D.size();
 
             const LArTrackPfo *const pLArTrackPfo = dynamic_cast<const LArTrackPfo*>(pPfo);
             if (NULL != pLArTrackPfo)
@@ -137,6 +145,8 @@ StatusCode ParticleAnalysisAlgorithm::Run()
             foundShowerVector.push_back(foundShower);
             nClustersVector.push_back(nClusters);
             nSpacePointsVector.push_back(nSpacePoints);
+            nCaloHitsVector.push_back(nCaloHits);
+            nIsolatedHitsVector.push_back(nIsolatedHits);
             pfoVtxXPosVector.push_back(pfoVtxXPos);
             pfoVtxYPosVector.push_back(pfoVtxYPos);
             pfoVtxZPosVector.push_back(pfoVtxZPos);
@@ -173,6 +183,8 @@ StatusCode ParticleAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "shower", &foundShowerVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "clusters", &nClustersVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "spacepoints", &nSpacePointsVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "calohits", &nCaloHitsVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isolatedhits", &nIsolatedHitsVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxx", &pfoVtxXPosVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxy", &pfoVtxYPosVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pfovtxz", &pfoVtxZPosVector));
