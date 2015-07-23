@@ -50,8 +50,10 @@
 #include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 #include "LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h"
 #include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
+#include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoRecoveryAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
+#include "LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
 #include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
@@ -137,6 +139,7 @@ public:
         d("LArThreeDLongitudinalTracks",            lar_content::ThreeDLongitudinalTracksAlgorithm::Factory)                    \
         d("LArParticleRecovery",                    lar_content::ParticleRecoveryAlgorithm::Factory)                            \
         d("LArVertexBasedPfoMerging",               lar_content::VertexBasedPfoMergingAlgorithm::Factory)                       \
+        d("LArVertexBasedPfoRecovery",              lar_content::VertexBasedPfoRecoveryAlgorithm::Factory)                      \
         d("LArThreeDRemnants",                      lar_content::ThreeDRemnantsAlgorithm::Factory)                              \
         d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
@@ -191,6 +194,7 @@ public:
         d("LArClearLongitudinalTracks",             lar_content::ClearLongitudinalTracksTool::Factory)                          \
         d("LArMatchedEndPoints",                    lar_content::MatchedEndPointsTool::Factory)                                 \
         d("LArClearRemnants",                       lar_content::ClearRemnantsTool::Factory)                                    \
+        d("LArConnectedRemnants",                   lar_content::ConnectedRemnantsTool::Factory)                                \
         d("LArClearTracks",                         lar_content::ClearTracksTool::Factory)                                      \
         d("LArLongTracks",                          lar_content::LongTracksTool::Factory)                                       \
         d("LArMissingTrack",                        lar_content::MissingTrackTool::Factory)                                     \
