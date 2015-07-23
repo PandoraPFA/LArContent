@@ -22,6 +22,9 @@
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
 
+#include "LArPersistency/EventReadingAlgorithm.h"
+#include "LArPersistency/EventWritingAlgorithm.h"
+
 #include "LArPlugins/LArParticleIdPlugins.h"
 #include "LArPlugins/LArPseudoLayerPlugin.h"
 #include "LArPlugins/LArTransformationPlugin.h"
@@ -121,6 +124,8 @@ public:
         d("LArParticleAnalysis",                    lar_content::ParticleAnalysisAlgorithm::Factory)                            \
         d("LArParticleMonitoring",                  lar_content::ParticleMonitoringAlgorithm::Factory)                          \
         d("LArVisualMonitoring",                    lar_content::VisualMonitoringAlgorithm::Factory)                            \
+        d("LArEventReading",                        lar_content::EventReadingAlgorithm::Factory)                                \
+        d("LArEventWriting",                        lar_content::EventWritingAlgorithm::Factory)                                \
         d("LArCheatingClusterCharacterisation",     lar_content::CheatingClusterCharacterisationAlgorithm::Factory)             \
         d("LArCheatingClusterCreation",             lar_content::CheatingClusterCreationAlgorithm::Factory)                     \
         d("LArCheatingCosmicRayIdentification",     lar_content::CheatingCosmicRayIdentificationAlg::Factory)                   \
