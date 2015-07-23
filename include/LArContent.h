@@ -29,6 +29,7 @@
 #include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoEventBuildingAlgorithm.h"
@@ -54,6 +55,7 @@
 #include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h"
+#include "LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h"
 #include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
 #include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
@@ -73,6 +75,7 @@
 
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
@@ -125,6 +128,7 @@ public:
         d("LArCheatingPfoCreation",                 lar_content::CheatingPfoCreationAlgorithm::Factory)                         \
         d("LArCheatingVertexCreation",              lar_content::CheatingVertexCreationAlgorithm::Factory)                      \
         d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
+        d("LArCosmicRayShowerMatching",             lar_content::CosmicRayShowerMatchingAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
         d("LArCosmicRayVertexBuilding",             lar_content::CosmicRayVertexBuildingAlgorithm::Factory)                     \
         d("LArNeutrinoEventBuilding",               lar_content::NeutrinoEventBuildingAlgorithm::Factory)                       \
@@ -146,6 +150,7 @@ public:
         d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
         d("LArLongitudinalAssociation",             lar_content::LongitudinalAssociationAlgorithm::Factory)                     \
         d("LArLongitudinalExtension",               lar_content::LongitudinalExtensionAlgorithm::Factory)                       \
+        d("LArSimpleClusterGrowing",                lar_content::SimpleClusterGrowingAlgorithm::Factory)                        \
         d("LArSimpleClusterMerging",                lar_content::SimpleClusterMergingAlgorithm::Factory)                        \
         d("LArTransverseAssociation",               lar_content::TransverseAssociationAlgorithm::Factory)                       \
         d("LArTransverseExtension",                 lar_content::TransverseExtensionAlgorithm::Factory)                         \
@@ -195,6 +200,7 @@ public:
         d("LArMatchedEndPoints",                    lar_content::MatchedEndPointsTool::Factory)                                 \
         d("LArClearRemnants",                       lar_content::ClearRemnantsTool::Factory)                                    \
         d("LArConnectedRemnants",                   lar_content::ConnectedRemnantsTool::Factory)                                \
+        d("LArMopUpRemnants",                       lar_content::MopUpRemnantsTool::Factory)                                    \
         d("LArClearTracks",                         lar_content::ClearTracksTool::Factory)                                      \
         d("LArLongTracks",                          lar_content::LongTracksTool::Factory)                                       \
         d("LArMissingTrack",                        lar_content::MissingTrackTool::Factory)                                     \
