@@ -8,8 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArMCParticleHelper.h"
 #include "LArHelpers/LArMonitoringHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
@@ -43,9 +41,11 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 #ifdef MONITORING
     // Tree elements
     int nMCParticlesTotal(0), nPfosTotal(0);
+
     IntVector mcPdgVector, mcNuPdgVector, nMCHitsVector, pfoPdgVector, pfoNuPdgVector, nPfoHitsVector, nMatchedHitsVector,
         nMCHitsUVector, nPfoHitsUVector, nMatchedHitsUVector, nMCHitsVVector, nPfoHitsVVector, nMatchedHitsVVector, nMCHitsWVector,
         nPfoHitsWVector, nMatchedHitsWVector, nAvailableHitsVector, pfoVertexVector, pfoTrackVector, pfoShowerVector;
+
     FloatVector completenessVector, purityVector, mcPxVector, mcPyVector, mcPzVector, mcThetaVector, mcEnergyVector, mcPTotVector,
         mcVtxXVector, mcVtxYVector, mcVtxZVector, mcEndXVector, mcEndYVector, mcEndZVector,
         pfoPxVector, pfoPyVector, pfoPzVector, pfoPTotVector, pfoVtxXVector, pfoVtxYVector, pfoVtxZVector,
@@ -79,43 +79,39 @@ StatusCode ParticleMonitoringAlgorithm::Run()
         PfoList pfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
 
         if (m_extractNeutrinoDaughters)
-            this->ExtractNeutrinoDaughters(pfoList);
+            LArMonitoringHelper::ExtractNeutrinoDaughters(pfoList);
 
         nPfosTotal = pfoList.size();
 
-        // Extract Reco Neutrinos
-        PfoList recoNeutrinos;
+        PfoList recoNeutrinos;                                          // reco neutrinos
         LArMonitoringHelper::GetRecoNeutrinos(pPfoList, recoNeutrinos);
 
-        // Extract True Neutrinos
-        MCParticleVector mcNeutrinoList;
+        MCParticleVector mcNeutrinoList;                                // true neutrinos
         LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
 
-        // Extract Primary MC Particles
-        MCParticleVector mcPrimaryList;
+        MCParticleVector mcPrimaryList;                                 // primary mc particles
         LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryList);
 
-        // Match Pfos to Primary MC Particles
-        LArMCParticleHelper::MCRelationMap mcPrimaryMap;      // [particles -> primary particle]
-        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+        LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;            // [mc particles -> primary mc particle]
+        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
 
-        LArMonitoringHelper::MCContributionMap trueHitMap;    // [primary particle -> true hit list]
-        LArMonitoringHelper::CaloHitToMCMap mcHitMap;         // [hit -> parent primary]
-        LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcPrimaryMap, mcHitMap, trueHitMap);
+        LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
+        LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
+        LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
 
-        LArMonitoringHelper::PfoContributionMap recoHitMap;   // [pfo -> reco hit list]
-        LArMonitoringHelper::CaloHitToPfoMap pfoHitMap;       // [hit -> parent pfo]
-        LArMonitoringHelper::GetPfoToCaloHitMatches(pCaloHitList, pfoList, pfoHitMap, recoHitMap);
+        LArMonitoringHelper::CaloHitToPfoMap hitToPfoMap;               // [hit -> pfo]
+        LArMonitoringHelper::PfoContributionMap pfoToHitListMap;        // [pfo -> reco hit list]
+        LArMonitoringHelper::GetPfoToCaloHitMatches(pCaloHitList, pfoList, hitToPfoMap, pfoToHitListMap);
 
-        LArMonitoringHelper::MCContributionMap fullHitMap;    // [particle -> list of matched hits with any pfo]
-        LArMonitoringHelper::MCContributionMap matchedHitMap; // [particle -> list of matched hits with best pfo]
-        LArMonitoringHelper::MCToPfoMap matchedPfoMap;        // [particle -> best pfo]
-        LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoList, mcHitMap, matchedPfoMap, matchedHitMap, fullHitMap);
+        LArMonitoringHelper::MCToPfoMap mcToBestPfoMap;                 // [mc particle -> best matched pfo]
+        LArMonitoringHelper::MCContributionMap mcToBestPfoHitsMap;      // [mc particle -> list of hits included in best pfo]
+        LArMonitoringHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap; // [mc particle -> all matched pfos (and matched hits)]
+        LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoList, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
-        LArMonitoringHelper::MCToPfoMap matchedNeutrinoMap;   // [neutrino particle -> neutrino pfo]
-        LArMonitoringHelper::GetNeutrinoMatches(pCaloHitList, recoNeutrinos, mcHitMap, matchedNeutrinoMap);
+        LArMonitoringHelper::MCToPfoMap matchedNeutrinoMap;             // [neutrino mc particle -> neutrino pfo]
+        LArMonitoringHelper::GetNeutrinoMatches(pCaloHitList, recoNeutrinos, hitToPrimaryMCMap, matchedNeutrinoMap);
 
-        nMCParticlesTotal = trueHitMap.size();
+        nMCParticlesTotal = mcToTrueHitListMap.size();
 
         // Write out reco/true neutrino information
         std::sort(mcNeutrinoList.begin(), mcNeutrinoList.end(), LArMCParticleHelper::SortByMomentum);
@@ -222,8 +218,8 @@ StatusCode ParticleMonitoringAlgorithm::Run()
         {
             const MCParticle *const pMCParticle3D = *iter1;
 
-            LArMonitoringHelper::MCContributionMap::const_iterator iter2 = trueHitMap.find(pMCParticle3D);
-            if (trueHitMap.end() == iter2)
+            LArMonitoringHelper::MCContributionMap::const_iterator iter2 = mcToTrueHitListMap.find(pMCParticle3D);
+            if (mcToTrueHitListMap.end() == iter2)
                 continue;
 
             const CaloHitList &mcHitList(iter2->second);
@@ -255,14 +251,14 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             float trkVtxX(0.f), trkVtxY(0.f), trkVtxZ(0.f), trkVtxDirX(0.f), trkVtxDirY(0.f), trkVtxDirZ(0.f);
             float trkEndX(0.f), trkEndY(0.f), trkEndZ(0.f), trkEndDirX(0.f), trkEndDirY(0.f), trkEndDirZ(0.f);
 
-            LArMonitoringHelper::MCToPfoMap::const_iterator pIter1 = matchedPfoMap.find(pMCParticle3D);
+            LArMonitoringHelper::MCToPfoMap::const_iterator pIter1 = mcToBestPfoMap.find(pMCParticle3D);
 
-            if (matchedPfoMap.end() != pIter1)
+            if (mcToBestPfoMap.end() != pIter1)
             {
                 const ParticleFlowObject *const pPfo(pIter1->second);
-                LArMonitoringHelper::PfoContributionMap::const_iterator pIter2 = recoHitMap.find(pPfo);
+                LArMonitoringHelper::PfoContributionMap::const_iterator pIter2 = pfoToHitListMap.find(pPfo);
 
-                if (recoHitMap.end() == pIter2)
+                if (pfoToHitListMap.end() == pIter2)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
                 pfoPdg = pPfo->GetParticleId();
@@ -318,9 +314,9 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             }
 
             int nMatchedHits(0), nMatchedHitsU(0), nMatchedHitsV(0), nMatchedHitsW(0);
-            LArMonitoringHelper::MCContributionMap::const_iterator mIter = matchedHitMap.find(pMCParticle3D);
+            LArMonitoringHelper::MCContributionMap::const_iterator mIter = mcToBestPfoHitsMap.find(pMCParticle3D);
 
-            if (matchedHitMap.end() != mIter)
+            if (mcToBestPfoHitsMap.end() != mIter)
             {
                 const CaloHitList &matchedHitList(mIter->second);
                 nMatchedHits = matchedHitList.size();
@@ -330,12 +326,13 @@ StatusCode ParticleMonitoringAlgorithm::Run()
             }
 
             int nRecoHits(0), nAvailableHits(nMCHits);
-            LArMonitoringHelper::MCContributionMap::const_iterator fIter = fullHitMap.find(pMCParticle3D);
+            LArMonitoringHelper::MCToPfoMatchingMap::const_iterator fIter = mcToFullPfoMatchingMap.find(pMCParticle3D);
 
-            if (fullHitMap.end() != fIter)
+            if (mcToFullPfoMatchingMap.end() != fIter)
             {
-                const CaloHitList &fullHitList(fIter->second);
-                nRecoHits = fullHitList.size();
+                for (const LArMonitoringHelper::PfoContributionMap::value_type contribution : fIter->second)
+                    nRecoHits += contribution.second.size();
+
                 nAvailableHits = nMCHits - nRecoHits;
             }
 
@@ -458,27 +455,6 @@ StatusCode ParticleMonitoringAlgorithm::Run()
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 #endif
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParticleMonitoringAlgorithm::ExtractNeutrinoDaughters(PfoList &pfoList) const
-{
-    for (PfoList::iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; )
-    {
-        const ParticleFlowObject *const pPfo(*iter);
-
-        if (LArPfoHelper::IsNeutrino(pPfo))
-        {
-            pfoList.insert(pPfo->GetDaughterPfoList().begin(), pPfo->GetDaughterPfoList().end());
-            pfoList.erase(iter);
-            iter = pfoList.begin();
-        }
-        else
-        {
-            ++iter;
-        }
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
