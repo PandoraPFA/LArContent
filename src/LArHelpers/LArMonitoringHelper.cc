@@ -55,8 +55,29 @@ void LArMonitoringHelper::GetRecoNeutrinos(const PfoList *pPfoList, PfoList &rec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArMonitoringHelper::ExtractNeutrinoDaughters(PfoList &pfoList)
+{
+    for (PfoList::iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; )
+    {
+        const ParticleFlowObject *const pPfo(*iter);
+
+        if (LArPfoHelper::IsNeutrino(pPfo))
+        {
+            pfoList.insert(pPfo->GetDaughterPfoList().begin(), pPfo->GetDaughterPfoList().end());
+            pfoList.erase(iter);
+            iter = pfoList.begin();
+        }
+        else
+        {
+            ++iter;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitList, const PfoList &recoNeutrinos,
-    const CaloHitToMCMap &mcHitMap, MCToPfoMap &outputPrimaryMap)
+    const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &outputPrimaryMap)
 {
     for (PfoList::const_iterator pIter = recoNeutrinos.begin(), pIterEnd = recoNeutrinos.end(); pIter != pIterEnd; ++pIter)
     {
@@ -80,9 +101,9 @@ void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitLi
             if (pCaloHitList->count(pCaloHit) == 0)
                 continue;
 
-            CaloHitToMCMap::const_iterator mcIter = mcHitMap.find(pCaloHit);
+            CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
 
-            if (mcIter == mcHitMap.end())
+            if (mcIter == hitToPrimaryMCMap.end())
                 continue;
 
             const MCParticle *const pFinalStateParticle = mcIter->second;
@@ -113,67 +134,8 @@ void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList,
-    const CaloHitToMCMap &mcHitMap, MCToPfoMap &matchedPrimaryMap, MCContributionMap &matchedContributionMap,
-    MCContributionMap &fullContributionMap)
-{
-    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
-    {
-        const ParticleFlowObject *const pPfo = *pIter;
-
-        CaloHitList clusterHits;
-        LArMonitoringHelper::CollectCaloHits(pPfo, clusterHits);
-
-        MCContributionMap mcContributionMap;
-        for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
-        {
-            const CaloHit *const pCaloHit = *hIter;
-
-            if (TPC_3D == pCaloHit->GetHitType())
-                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-            if (pCaloHitList->count(pCaloHit) == 0)
-                continue;
-
-            CaloHitToMCMap::const_iterator mcIter = mcHitMap.find(pCaloHit);
-
-            if (mcIter == mcHitMap.end())
-                continue;
-
-            const MCParticle *const pPrimaryParticle = mcIter->second;
-            mcContributionMap[pPrimaryParticle].insert(pCaloHit);
-            fullContributionMap[pPrimaryParticle].insert(pCaloHit);
-        }
-
-        CaloHitList biggestHitList;
-        const MCParticle *biggestContributor = NULL;
-
-        for (MCContributionMap::const_iterator cIter = mcContributionMap.begin(), cIterEnd = mcContributionMap.end(); cIter != cIterEnd; ++cIter)
-        {
-            if (cIter->second.size() > biggestHitList.size())
-            {
-                biggestHitList = cIter->second;
-                biggestContributor = cIter->first;
-            }
-        }
-
-        if (biggestContributor)
-        {
-            MCContributionMap::const_iterator cIter = matchedContributionMap.find(biggestContributor);
-
-            if ((matchedContributionMap.end() == cIter) || (biggestHitList.size() > cIter->second.size()))
-            {
-                matchedPrimaryMap[biggestContributor] = pPfo;
-                matchedContributionMap[biggestContributor] = biggestHitList;
-            }
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const pCaloHitList, const MCRelationMap &mcPrimaryMap,
-    CaloHitToMCMap &mcHitMap, MCContributionMap &mcContributionMap)
+void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
+    CaloHitToMCMap &hitToPrimaryMCMap, MCContributionMap &mcToTrueHitListMap)
 {
     for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
     {
@@ -182,14 +144,14 @@ void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
             const CaloHit *const pCaloHit = *iter;
             const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
-            MCRelationMap::const_iterator mcIter = mcPrimaryMap.find(pHitParticle);
+            MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
 
-            if (mcPrimaryMap.end() == mcIter)
+            if (mcToPrimaryMCMap.end() == mcIter)
                 continue;
 
             const MCParticle *const pPrimaryParticle = mcIter->second;
-            mcContributionMap[pPrimaryParticle].insert(pCaloHit);
-            mcHitMap[pCaloHit] = pPrimaryParticle;
+            mcToTrueHitListMap[pPrimaryParticle].insert(pCaloHit);
+            hitToPrimaryMCMap[pCaloHit] = pPrimaryParticle;
         }
         catch (StatusCodeException &statusCodeException)
         {
@@ -202,7 +164,7 @@ void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList,
-    CaloHitToPfoMap &pfoHitMap, PfoContributionMap &pfoContributionMap)
+    CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap)
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
@@ -231,12 +193,70 @@ void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloH
                 if (pCaloHitList->count(pCaloHit) == 0)
                     continue;
 
-                pfoHitMap[pCaloHit] = pPfo;
+                hitToPfoMap[pCaloHit] = pPfo;
                 pfoHitList.insert(pCaloHit);
             }
         }
 
-        pfoContributionMap[pPfo] = pfoHitList;
+        pfoToHitListMap[pPfo] = pfoHitList;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList,
+    const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &mcToBestPfoMap, MCContributionMap &mcToBestPfoHitsMap,
+    MCToPfoMatchingMap &mcToFullPfoMatchingMap)
+{
+    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
+    {
+        const ParticleFlowObject *const pPfo = *pIter;
+
+        CaloHitList clusterHits;
+        LArMonitoringHelper::CollectCaloHits(pPfo, clusterHits);
+
+        for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
+        {
+            const CaloHit *const pCaloHit = *hIter;
+
+            if (TPC_3D == pCaloHit->GetHitType())
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            if (pCaloHitList->count(pCaloHit) == 0)
+                continue;
+
+            CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
+
+            if (mcIter == hitToPrimaryMCMap.end())
+                continue;
+
+            const MCParticle *const pPrimaryParticle = mcIter->second;
+            mcToFullPfoMatchingMap[pPrimaryParticle][pPfo].insert(pCaloHit);
+        }
+    }
+
+    for (MCToPfoMatchingMap::const_iterator iter = mcToFullPfoMatchingMap.begin(), iterEnd = mcToFullPfoMatchingMap.end(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *const pPrimaryParticle = iter->first;
+        const PfoContributionMap &pfoContributionMap = iter->second;
+
+        const ParticleFlowObject *pBestMatchPfo(NULL);
+        CaloHitList bestMatchCaloHitList;
+
+        for (PfoContributionMap::const_iterator pIter = pfoContributionMap.begin(), pIterEnd = pfoContributionMap.end(); pIter != pIterEnd; ++pIter)
+        {
+            if (pIter->second.size() > bestMatchCaloHitList.size())
+            {
+                pBestMatchPfo = pIter->first;
+                bestMatchCaloHitList = pIter->second;
+            }
+        }
+
+        if (pBestMatchPfo)
+        {
+            mcToBestPfoMap[pPrimaryParticle] = pBestMatchPfo;
+            mcToBestPfoHitsMap[pPrimaryParticle] = bestMatchCaloHitList;
+        }
     }
 }
 

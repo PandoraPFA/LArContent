@@ -32,6 +32,8 @@ public:
     typedef std::unordered_map<const pandora::MCParticle*, pandora::CaloHitList> MCContributionMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject*, pandora::CaloHitList> PfoContributionMap;
 
+    typedef std::unordered_map<const pandora::MCParticle*, PfoContributionMap> MCToPfoMatchingMap;
+
     /**
      *  @brief  Get neutrino MC particles from an input MC particle list
      * 
@@ -49,51 +51,58 @@ public:
     static void GetRecoNeutrinos(const pandora::PfoList *pPfoList, pandora::PfoList &recoNeutrinos);
 
     /**
+     *  @brief  Modify a pfo list, recursively removing top-level neutrinos and replacing them with their daughter pfos
+     *
+     *  @param  pfoList the pfo list, which may be modified
+     */
+    static void ExtractNeutrinoDaughters(pandora::PfoList &pfoList);
+
+    /**
      *  @brief  Create map from true neutrinos to reconstructed neutrinos
      *
      *  @param  pCaloHitList the input list of calo hits
      *  @param  recoNeutrinos the input list of reconstructed neutrinos
-     *  @param  mcHitMap the input mapping between calo hits and their main MC particles
-     *  @param  outputPrimaryMap the ouput mapping between from true to reconstructed neutrinos
+     *  @param  hitToPrimaryMCMap input mapping between calo hits and their main primary MC particle
+     *  @param  outputPrimaryMap ouput mapping between from true to reconstructed neutrinos
      */
     static void GetNeutrinoMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &recoNeutrinos,
-        const CaloHitToMCMap &mcHitMap, MCToPfoMap &outputNeutrinoMap);
+        const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &outputNeutrinoMap);
 
     /**
      *  @brief  Match calo hits to their parent particles
      *
      *  @param  pCaloHitList the input list of calo hits
-     *  @param  mcPrimaryMap the input map between particles and their primaries
-     *  @param  mcHitMap the output mapping between calo hits and their main MC particles
-     *  @param  mcContributionMap the output mapping between MC particles and their number of associated hits
+     *  @param  mcToPrimaryMCMap input mapping between mc particles and their primaries
+     *  @param  hitToPrimaryMCMap output mapping between calo hits and their main primary MC particle
+     *  @param  mcToTrueHitListMap output mapping between MC particles and their associated hits
      */
-    static void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcPrimaryMap,
-        CaloHitToMCMap &mcHitMap, MCContributionMap &mcContributionMap);
+    static void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
+        CaloHitToMCMap &hitToPrimaryMCMap, MCContributionMap &mcToTrueHitListMap);
 
     /**
      *  @brief  Match calo hits to their parent Pfos
      *
      *  @param  pCaloHitList the input list of calo hits
      *  @param  pfoList the input list of Pfos
-     *  @param  pfoHitMap the output mapping between calo hits and their parent Pfos
-     *  @param  pfoContributionMap the output mapping between Pfos and their number of associated hits
+     *  @param  hitToPfoMap output mapping between calo hits and parent Pfo
+     *  @param  pfoToHitListMap output mapping between Pfos and associated hits
      */
     static void GetPfoToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &pfoList,
-        CaloHitToPfoMap &pfoHitMap, PfoContributionMap &pfoContributionMap);
+        CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap);
 
     /**
      *  @brief  Match MC particle and Pfos
      *
      *  @param  pCaloHitList the input list of calo hits
      *  @param  pfoList the input list of Pfos
-     *  @param  mcHitMap the input mapping between calo hits and their parent Pfos
-     *  @param  matchedPrimaryMap the output mapping between MC particles to their best matched Pfo
-     *  @param  matchedContributionMap the output mapping between MC particles and their number of matched hits
-     *  @param  fullContributionMap the output mapping between MC particles and any pfo hits
+     *  @param  hitToPrimaryMCMap input mapping between calo hits and primary mc particles
+     *  @param  mcToBestPfoMap output mapping between MC particles and best matched Pfo
+     *  @param  mcToBestPfoHitsMap output mapping between MC particles and list of matched hits in best pfo
+     *  @param  mcToFullPfoMatchingMap output mapping between MC particles and all matched pfos (and matched hits)
      */
     static void GetMCParticleToPfoMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &pfoList,
-        const CaloHitToMCMap &mcHitMap, MCToPfoMap &matchedPrimaryMap, MCContributionMap &matchedContributionMap,
-        MCContributionMap &fullContributionMap);
+        const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &mcToBestPfoMap, MCContributionMap &mcToBestPfoHitsMap,
+        MCToPfoMatchingMap &mcToFullPfoMatchingMap);
 
     /**
      *  @brief  Collect up all calo hits associated with a Pfo and its daughters

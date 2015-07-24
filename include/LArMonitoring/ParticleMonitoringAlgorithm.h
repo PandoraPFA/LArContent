@@ -44,13 +44,6 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    /**
-     *  @brief  Modify a pfo list, recursively removing top-level neutrinos and replacing them with their daughter pfos
-     *
-     *  @param  pfoList the pfo list, which may be modified
-     */
-    void ExtractNeutrinoDaughters(pandora::PfoList &pfoList) const;
-
     std::string     m_caloHitListName;          ///< Name of input calo hit list
     std::string     m_mcParticleListName;       ///< Name of input MC particle list
     std::string     m_pfoListName;              ///< Name of input Pfo list
