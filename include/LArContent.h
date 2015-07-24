@@ -18,6 +18,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArMonitoring/EventDisplayAlgorithm.h"
+#include "LArMonitoring/EventValidationAlgorithm.h"
 #include "LArMonitoring/ParticleAnalysisAlgorithm.h"
 #include "LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "LArMonitoring/VisualMonitoringAlgorithm.h"
@@ -121,6 +122,7 @@ class LArContent
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
         d("LArEventDisplay",                        lar_content::EventDisplayAlgorithm::Factory)                                \
+        d("LArEventValidation",                     lar_content::EventValidationAlgorithm::Factory)                             \
         d("LArParticleAnalysis",                    lar_content::ParticleAnalysisAlgorithm::Factory)                            \
         d("LArParticleMonitoring",                  lar_content::ParticleMonitoringAlgorithm::Factory)                          \
         d("LArVisualMonitoring",                    lar_content::VisualMonitoringAlgorithm::Factory)                            \
