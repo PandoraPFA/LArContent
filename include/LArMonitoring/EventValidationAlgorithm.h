@@ -1,24 +1,22 @@
 /**
- *  @file   LArContent/include/LArMonitoring/ParticleMonitoringAlgorithm.h
+ *  @file   LArContent/include/LArMonitoring/EventValidationAlgorithm.h
  *
- *  @brief  Header file for the particle monitoring algorithm.
+ *  @brief  Header file for the event validation algorithm.
  *
  *  $Log: $
  */
-#ifndef LAR_PARTICLE_MONITORING_ALGORITHM_H
-#define LAR_PARTICLE_MONITORING_ALGORITHM_H 1
+#ifndef LAR_EVENT_VALIDATION_ALGORITHM_H
+#define LAR_EVENT_VALIDATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
-
-#include "LArHelpers/LArMCParticleHelper.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  ParticleMonitoringAlgorithm class
+ *  @brief  EventValidationAlgorithm class
  */
-class ParticleMonitoringAlgorithm: public pandora::Algorithm
+class EventValidationAlgorithm: public pandora::Algorithm
 {
 public:
     /**
@@ -33,12 +31,12 @@ public:
     /**
      *  @brief  Default constructor
      */
-    ParticleMonitoringAlgorithm();
+    EventValidationAlgorithm();
 
     /**
      *  @brief  Destructor
      */
-    ~ParticleMonitoringAlgorithm();
+    ~EventValidationAlgorithm();
 
 private:
     pandora::StatusCode Run();
@@ -55,11 +53,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ParticleMonitoringAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *EventValidationAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ParticleMonitoringAlgorithm();
+    return new EventValidationAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // LAR_PARTICLE_MONITORING_ALGORITHM_H
+#endif // LAR_EVENT_VALIDATION_ALGORITHM_H
