@@ -84,37 +84,60 @@ StatusCode EventValidationAlgorithm::Run()
         std::cout << "MCNeutrino " << pLArMCNeutrino << ", PDG " << pLArMCNeutrino->GetParticleId() << ", Nuance " << pLArMCNeutrino->GetNuanceCode() << std::endl;
     }
 
+    SimpleMCPrimaryList simpleMCPrimaryList;
+
     for (const MCParticle *const pMCPrimary : mcPrimaryList)
     {
-        std::cout << "-Primary " << pMCPrimary << ", PDG " << pMCPrimary->GetParticleId() << std::endl;
+        SimpleMCPrimary simpleMCPrimary;
+        simpleMCPrimary.m_pPandoraAddress = pMCPrimary;
+        simpleMCPrimary.m_pdgCode = pMCPrimary->GetParticleId();
 
         LArMonitoringHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
 
-        if (mcToTrueHitListMap.end() == trueHitsIter)
-        {
-            std::cout << "--No true hits " << std::endl;
-        }
-        else 
+        if (mcToTrueHitListMap.end() != trueHitsIter)
         {
             const CaloHitList &caloHitList(trueHitsIter->second);
-            std::cout << "--True hits " << caloHitList.size()
-                      << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList)
-                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList)
-                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) << ") " << std::endl;
+            simpleMCPrimary.m_nMCHitsTotal = caloHitList.size();
+            simpleMCPrimary.m_nMCHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList);
+            simpleMCPrimary.m_nMCHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList);
+            simpleMCPrimary.m_nMCHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList);
         }
 
         LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(pMCPrimary);
 
-        if ((mcToFullPfoMatchingMap.end() == matchedPfoIter) || matchedPfoIter->second.empty())
-        {
-            std::cout << "--No matched pfo " << std::endl;
-        }
-        else
+        if (mcToFullPfoMatchingMap.end() != matchedPfoIter)
+            simpleMCPrimary.m_nMatchedPfos = matchedPfoIter->second.size();
+
+        simpleMCPrimaryList.push_back(simpleMCPrimary);
+    }
+
+    std::sort(simpleMCPrimaryList.begin(), simpleMCPrimaryList.end(), EventValidationAlgorithm::SortSimpleMCPrimaries);
+
+    unsigned int primaryCounter(0);
+
+    for (const SimpleMCPrimary simpleMCPrimary : simpleMCPrimaryList)
+    {
+        std::cout << "*Primary " << primaryCounter++ << ", PDG " << simpleMCPrimary.m_pdgCode
+                  << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
+
+        SimpleMatchedPfoList simpleMatchedPfoList;
+        LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(simpleMCPrimary.m_pPandoraAddress);
+
+        if (mcToFullPfoMatchingMap.end() != matchedPfoIter)
         {
             for (const LArMonitoringHelper::PfoContributionMap::value_type contribution : matchedPfoIter->second)
             {
                 const ParticleFlowObject *const pMatchedPfo(contribution.first);
                 const CaloHitList &matchedCaloHitList(contribution.second);
+
+                SimpleMatchedPfo simpleMatchedPfo;
+                simpleMatchedPfo.m_pPandoraAddress = pMatchedPfo;
+                simpleMatchedPfo.m_pdgCode = pMatchedPfo->GetParticleId();
+
+                simpleMatchedPfo.m_nMatchedHitsTotal = matchedCaloHitList.size();
+                simpleMatchedPfo.m_nMatchedHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, matchedCaloHitList);
+                simpleMatchedPfo.m_nMatchedHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, matchedCaloHitList);
+                simpleMatchedPfo.m_nMatchedHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, matchedCaloHitList);
 
                 LArMonitoringHelper::PfoContributionMap::const_iterator pfoHitsIter = pfoToHitListMap.find(pMatchedPfo);
 
@@ -123,16 +146,24 @@ StatusCode EventValidationAlgorithm::Run()
 
                 const CaloHitList &pfoCaloHitList(pfoHitsIter->second);
 
-                std::cout << "--MatchedPfo " << pMatchedPfo << ", PDG " << pMatchedPfo->GetParticleId()
-                          << ", pfo hits " << pfoCaloHitList.size()
-                          << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoCaloHitList)
-                          << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoCaloHitList)
-                          << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoCaloHitList) << ") "
-                          << ", matched hits " << matchedCaloHitList.size()
-                          << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, matchedCaloHitList)
-                          << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, matchedCaloHitList)
-                          << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, matchedCaloHitList) << ") " << std::endl;
+                simpleMatchedPfo.m_nPfoHitsTotal = pfoCaloHitList.size();
+                simpleMatchedPfo.m_nPfoHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoCaloHitList);
+                simpleMatchedPfo.m_nPfoHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoCaloHitList);
+                simpleMatchedPfo.m_nPfoHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoCaloHitList);
+
+                simpleMatchedPfoList.push_back(simpleMatchedPfo);
             }
+        }
+
+        std::sort(simpleMatchedPfoList.begin(), simpleMatchedPfoList.end(), EventValidationAlgorithm::SortSimpleMatchedPfos);
+
+        unsigned int matchedPfoCounter(0);
+
+        for (const SimpleMatchedPfo simpleMatchedPfo : simpleMatchedPfoList)
+        {
+            std::cout << "-->MatchedPfo " << matchedPfoCounter++ << ", " << simpleMatchedPfo.m_pPandoraAddress << ", PDG " << simpleMatchedPfo.m_pdgCode
+                      << ", pfo hits " << simpleMatchedPfo.m_nPfoHitsTotal << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", " << simpleMatchedPfo.m_nPfoHitsW << ")"
+                      << ", matched hits " << simpleMatchedPfo.m_nMatchedHitsTotal << " (" << simpleMatchedPfo.m_nMatchedHitsU << ", " << simpleMatchedPfo.m_nMatchedHitsV << ", " << simpleMatchedPfo.m_nMatchedHitsW << ")" << std::endl;
         }
     }
 
@@ -143,6 +174,52 @@ StatusCode EventValidationAlgorithm::Run()
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 #endif
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+EventValidationAlgorithm::SimpleMCPrimary::SimpleMCPrimary() :
+    m_pdgCode(0),
+    m_nMCHitsTotal(0),  
+    m_nMCHitsU(0),
+    m_nMCHitsV(0),
+    m_nMCHitsW(0),
+    m_nMatchedPfos(0),
+    m_pPandoraAddress(NULL)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+EventValidationAlgorithm::SimpleMatchedPfo::SimpleMatchedPfo() :
+    m_pdgCode(0), 
+    m_nPfoHitsTotal(0),
+    m_nPfoHitsU(0),
+    m_nPfoHitsV(0),
+    m_nPfoHitsW(0),
+    m_nMatchedHitsTotal(0),
+    m_nMatchedHitsU(0),
+    m_nMatchedHitsV(0),
+    m_nMatchedHitsW(0),
+    m_pPandoraAddress(NULL)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::SortSimpleMCPrimaries(const SimpleMCPrimary &lhs, const SimpleMCPrimary &rhs)
+{
+    return (lhs.m_nMCHitsTotal > rhs.m_nMCHitsTotal);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs)
+{
+    return (lhs.m_nMatchedHitsTotal > rhs.m_nMatchedHitsTotal);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
