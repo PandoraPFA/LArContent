@@ -131,6 +131,10 @@ void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVect
             try
             {
                 const TwoDSlidingFitResult slidingFitResult(*iter, m_slidingFitHalfWindow, slidingFitPitch);
+                const LArPointingCluster pointingCluster(slidingFitResult);
+
+                if (pointingCluster.GetLengthSquared() < std::numeric_limits<float>::epsilon())
+                    continue;
 
                 if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
