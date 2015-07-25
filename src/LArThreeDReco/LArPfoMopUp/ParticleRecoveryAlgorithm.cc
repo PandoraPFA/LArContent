@@ -299,7 +299,7 @@ void ParticleRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterLi
 
     // TODO Correct these placeholder parameters
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-    pfoParameters.m_particleId = MU_MINUS; // Track
+    pfoParameters.m_particleId = (m_includeTracks ? MU_MINUS : E_MINUS); // ATTN : Need to ensure that PFO code matches PFO list name
     pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
