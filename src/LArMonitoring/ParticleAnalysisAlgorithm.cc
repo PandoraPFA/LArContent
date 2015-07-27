@@ -49,10 +49,13 @@ StatusCode ParticleAnalysisAlgorithm::Run()
     {
         // Load List of Pfos
         const PfoList *pPfoList(NULL);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_pfoListName, 
+            pPfoList));
 
         PfoVector connectedPfos;
-        this->GetConnectedPfos(pPfoList, connectedPfos);
+
+        if (NULL != pPfoList)
+            this->GetConnectedPfos(pPfoList, connectedPfos);
 
         if (connectedPfos.empty())
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
