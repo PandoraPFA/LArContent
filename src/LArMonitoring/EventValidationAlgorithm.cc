@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArMCParticleHelper.h"
 #include "LArHelpers/LArMonitoringHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/EventValidationAlgorithm.h"
 
@@ -51,6 +52,9 @@ StatusCode EventValidationAlgorithm::Run()
         LArMonitoringHelper::ExtractNeutrinoDaughters(pfoList);
 
     // Extract monitoring information
+    PfoIdMap pfoIdMap;                                              // pfo -> unique identifier
+    this->GetPfoIdMap(pfoList, pfoIdMap);
+
     MCParticleVector mcNeutrinoList;                                // true neutrinos
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
 
@@ -74,6 +78,8 @@ StatusCode EventValidationAlgorithm::Run()
     LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoList, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
     // Use monitoring information
+    std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
+
     for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
         const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
@@ -81,7 +87,7 @@ StatusCode EventValidationAlgorithm::Run()
         if (!pLArMCNeutrino)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        std::cout << "MCNeutrino " << pLArMCNeutrino << ", PDG " << pLArMCNeutrino->GetParticleId() << ", Nuance " << pLArMCNeutrino->GetNuanceCode() << std::endl;
+        std::cout << "MCNeutrino, PDG " << pLArMCNeutrino->GetParticleId() << ", Nuance " << pLArMCNeutrino->GetNuanceCode() << std::endl;
     }
 
     SimpleMCPrimaryList simpleMCPrimaryList;
@@ -111,14 +117,14 @@ StatusCode EventValidationAlgorithm::Run()
         simpleMCPrimaryList.push_back(simpleMCPrimary);
     }
 
+    int primaryId(0);
     std::sort(simpleMCPrimaryList.begin(), simpleMCPrimaryList.end(), EventValidationAlgorithm::SortSimpleMCPrimaries);
 
-    unsigned int primaryCounter(0);
-
-    for (const SimpleMCPrimary simpleMCPrimary : simpleMCPrimaryList)
+    for (const SimpleMCPrimary &simpleMCPrimary : simpleMCPrimaryList)
     {
-        std::cout << "*Primary " << primaryCounter++ << ", PDG " << simpleMCPrimary.m_pdgCode
-                  << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
+        std::cout << std::endl << "Primary " << primaryId++ << ", PDG " << simpleMCPrimary.m_pdgCode
+                  << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")"
+                  << std::endl;
 
         SimpleMatchedPfoList simpleMatchedPfoList;
         LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(simpleMCPrimary.m_pPandoraAddress);
@@ -132,6 +138,7 @@ StatusCode EventValidationAlgorithm::Run()
 
                 SimpleMatchedPfo simpleMatchedPfo;
                 simpleMatchedPfo.m_pPandoraAddress = pMatchedPfo;
+                simpleMatchedPfo.m_id = pfoIdMap.at(pMatchedPfo);
                 simpleMatchedPfo.m_pdgCode = pMatchedPfo->GetParticleId();
 
                 simpleMatchedPfo.m_nMatchedHitsTotal = matchedCaloHitList.size();
@@ -157,15 +164,16 @@ StatusCode EventValidationAlgorithm::Run()
 
         std::sort(simpleMatchedPfoList.begin(), simpleMatchedPfoList.end(), EventValidationAlgorithm::SortSimpleMatchedPfos);
 
-        unsigned int matchedPfoCounter(0);
-
         for (const SimpleMatchedPfo simpleMatchedPfo : simpleMatchedPfoList)
         {
-            std::cout << "-->MatchedPfo " << matchedPfoCounter++ << ", " << simpleMatchedPfo.m_pPandoraAddress << ", PDG " << simpleMatchedPfo.m_pdgCode
-                      << ", pfo hits " << simpleMatchedPfo.m_nPfoHitsTotal << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", " << simpleMatchedPfo.m_nPfoHitsW << ")"
-                      << ", matched hits " << simpleMatchedPfo.m_nMatchedHitsTotal << " (" << simpleMatchedPfo.m_nMatchedHitsU << ", " << simpleMatchedPfo.m_nMatchedHitsV << ", " << simpleMatchedPfo.m_nMatchedHitsW << ")" << std::endl;
+            std::cout << "-MatchedPfo " << simpleMatchedPfo.m_id << ", PDG " << simpleMatchedPfo.m_pdgCode
+                      << ", nMatchedHits " << simpleMatchedPfo.m_nMatchedHitsTotal << " (" << simpleMatchedPfo.m_nMatchedHitsU << ", " << simpleMatchedPfo.m_nMatchedHitsV << ", " << simpleMatchedPfo.m_nMatchedHitsW << ")"
+                      << ", nPfoHits " << simpleMatchedPfo.m_nPfoHitsTotal << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", " << simpleMatchedPfo.m_nPfoHitsW << ")"
+                      << std::endl;
         }
     }
+
+    std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
 
     // Write monitoring tree
     IntVector nMatchedHitsWVector;
@@ -174,6 +182,33 @@ StatusCode EventValidationAlgorithm::Run()
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 #endif
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::GetPfoIdMap(const pandora::PfoList &pfoList, PfoIdMap &pfoIdMap) const
+{
+    PfoVector pfoVector(pfoList.begin(), pfoList.end());
+    std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
+
+    int id(0);
+
+    for (const ParticleFlowObject *const pPfo : pfoVector)
+        (void) pfoIdMap.insert(PfoIdMap::value_type(pPfo, id++));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::SortSimpleMCPrimaries(const SimpleMCPrimary &lhs, const SimpleMCPrimary &rhs)
+{
+    return (lhs.m_nMCHitsTotal > rhs.m_nMCHitsTotal);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs)
+{
+    return (lhs.m_nMatchedHitsTotal > rhs.m_nMatchedHitsTotal);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -194,6 +229,7 @@ EventValidationAlgorithm::SimpleMCPrimary::SimpleMCPrimary() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 EventValidationAlgorithm::SimpleMatchedPfo::SimpleMatchedPfo() :
+    m_id(-1),
     m_pdgCode(0), 
     m_nPfoHitsTotal(0),
     m_nPfoHitsU(0),
@@ -208,20 +244,6 @@ EventValidationAlgorithm::SimpleMatchedPfo::SimpleMatchedPfo() :
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventValidationAlgorithm::SortSimpleMCPrimaries(const SimpleMCPrimary &lhs, const SimpleMCPrimary &rhs)
-{
-    return (lhs.m_nMCHitsTotal > rhs.m_nMCHitsTotal);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventValidationAlgorithm::SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs)
-{
-    return (lhs.m_nMatchedHitsTotal > rhs.m_nMatchedHitsTotal);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
