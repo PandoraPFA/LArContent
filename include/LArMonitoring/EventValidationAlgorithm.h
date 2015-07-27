@@ -55,9 +55,12 @@ private:
         int                                 m_nMCHitsU;                 ///< The number of u mc hits
         int                                 m_nMCHitsV;                 ///< The number of v mc hits
         int                                 m_nMCHitsW;                 ///< The number of w mc hits
+        float                               m_energy;                   ///< The energy
+        pandora::CartesianVector            m_momentum;                 ///< The momentum (presumably at the vertex)
+        pandora::CartesianVector            m_vertex;                   ///< The vertex
+        pandora::CartesianVector            m_endpoint;                 ///< The endpoint
         int                                 m_nMatchedPfos;             ///< The number of matched pfos
         const pandora::MCParticle          *m_pPandoraAddress;          ///< The address of the Pandora mc primary
-        // TODO other properties
     };
 
     typedef std::vector<SimpleMCPrimary> SimpleMCPrimaryList;
@@ -83,8 +86,11 @@ private:
         int                                 m_nMatchedHitsU;            ///< The number of u matched hits
         int                                 m_nMatchedHitsV;            ///< The number of v matched hits
         int                                 m_nMatchedHitsW;            ///< The number of w matched hits
+        pandora::CartesianVector            m_vertex;                   ///< The vertex (currently only filled for track pfos)
+        pandora::CartesianVector            m_endpoint;                 ///< The endpoint (currently only filled for track pfos)
+        pandora::CartesianVector            m_vertexDirection;          ///< The vertex direction (currently only filled for track pfos)
+        pandora::CartesianVector            m_endDirection;             ///< The endpoint direction (currently only filled for track pfos)
         const pandora::ParticleFlowObject  *m_pPandoraAddress;          ///< The address of the Pandora mc primary
-        // TODO other properties
     };
 
     typedef std::vector<SimpleMatchedPfo> SimpleMatchedPfoList;
@@ -125,10 +131,14 @@ private:
     std::string         m_caloHitListName;          ///< Name of input calo hit list
     std::string         m_mcParticleListName;       ///< Name of input MC particle list
     std::string         m_pfoListName;              ///< Name of input Pfo list
-    std::string         m_fileName;                 ///< Name of output file
-    std::string         m_treeName;                 ///< Name of output tree
 
     bool                m_printToScreen;            ///< Whether to print output to screen
+    bool                m_writeToTree;              ///< Whether to write output to tree
+
+    int                 m_minHitsToPrintPrimary;    ///< The minimum number of mc primary hits in order to warrant display
+
+    std::string         m_treeName;                 ///< Name of output tree
+    std::string         m_fileName;                 ///< Name of output file
 
     int                 m_fileIdentifier;           ///< The input file identifier
     int                 m_eventNumber;              ///< The event number
