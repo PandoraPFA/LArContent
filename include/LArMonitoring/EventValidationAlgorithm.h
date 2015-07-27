@@ -73,6 +73,7 @@ private:
          */
         SimpleMatchedPfo();
 
+        int                                 m_id;                       ///< The unique identifier
         int                                 m_pdgCode;                  ///< The pdg code
         unsigned int                        m_nPfoHitsTotal;            ///< The total number of pfo hits
         unsigned int                        m_nPfoHitsU;                ///< The number of u pfo hits
@@ -87,6 +88,19 @@ private:
     };
 
     typedef std::vector<SimpleMatchedPfo> SimpleMatchedPfoList;
+
+    pandora::StatusCode Run();
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    typedef std::map<const pandora::ParticleFlowObject*, int> PfoIdMap;
+
+    /**
+     *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
+     * 
+     *  @param  pfoList the input pfo list
+     *  @param  pfoIdMap to receive the pfo id map
+     */
+    void GetPfoIdMap(const pandora::PfoList &pfoList, PfoIdMap &pfoIdMap) const;
 
     /**
      *  @brief  Sort simple mc primaries by number of mc hits
@@ -107,9 +121,6 @@ private:
      *  @return boolean
      */
     static bool SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs);
-
-    pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string         m_caloHitListName;          ///< Name of input calo hit list
     std::string         m_mcParticleListName;       ///< Name of input MC particle list
