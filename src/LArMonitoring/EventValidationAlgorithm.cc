@@ -22,7 +22,9 @@ namespace lar_content
 {
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
-    m_extractNeutrinoDaughters(true)
+    m_printToScreen(true),
+    m_fileIdentifier(0),
+    m_eventNumber(0)
 {
 }
 
@@ -47,9 +49,7 @@ StatusCode EventValidationAlgorithm::Run()
 
     const PfoList *pPfoList = NULL;
     PfoList pfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
-
-    if (m_extractNeutrinoDaughters)
-        LArMonitoringHelper::ExtractNeutrinoDaughters(pfoList);
+    LArMonitoringHelper::ExtractNeutrinoDaughters(pfoList);
 
     // Extract monitoring information
     PfoIdMap pfoIdMap;                                              // pfo -> unique identifier
@@ -57,6 +57,9 @@ StatusCode EventValidationAlgorithm::Run()
 
     MCParticleVector mcNeutrinoList;                                // true neutrinos
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
+
+    PfoList recoNeutrinoList;                                       // reco neutrinos
+    LArMonitoringHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
 
     MCParticleVector mcPrimaryList;                                 // primary mc particles
     LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryList);
@@ -78,7 +81,13 @@ StatusCode EventValidationAlgorithm::Run()
     LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoList, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
     // Use monitoring information
-    std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
+    if (m_printToScreen)
+        std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
+
+    int mcNeutrinoNuance(0), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
+    float mcNeutrinoVtxX(-1.f), mcNeutrinoVtxY(-1.f), mcNeutrinoVtxZ(-1.f);
+    float recoNeutrinoVtxX(-1.f), recoNeutrinoVtxY(-1.f), recoNeutrinoVtxZ(-1.f);
+    const int nMCNeutrinos(mcNeutrinoList.size()), nRecoNeutrinos(recoNeutrinoList.size()), nMCPrimaries(mcPrimaryList.size());
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
@@ -87,8 +96,42 @@ StatusCode EventValidationAlgorithm::Run()
         if (!pLArMCNeutrino)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        std::cout << "MCNeutrino, PDG " << pLArMCNeutrino->GetParticleId() << ", Nuance " << pLArMCNeutrino->GetNuanceCode() << std::endl;
+        mcNeutrinoPdg = pLArMCNeutrino->GetParticleId();
+        mcNeutrinoNuance = pLArMCNeutrino->GetNuanceCode();
+        mcNeutrinoVtxX = pLArMCNeutrino->GetEndpoint().GetX();
+        mcNeutrinoVtxY = pLArMCNeutrino->GetEndpoint().GetY();
+        mcNeutrinoVtxZ = pLArMCNeutrino->GetEndpoint().GetZ();
+        
+        if (m_printToScreen)
+            std::cout << "MCNeutrino, PDG " << mcNeutrinoPdg << ", Nuance " << mcNeutrinoNuance << std::endl;
     }
+
+    for (const ParticleFlowObject *const pPfo : recoNeutrinoList)
+    {
+        recoNeutrinoPdg = pPfo->GetParticleId();
+        const Vertex *const pVertex(pPfo->GetVertexList().empty() ? NULL : *(pPfo->GetVertexList().begin()));
+        recoNeutrinoVtxX = pVertex->GetPosition().GetX();
+        recoNeutrinoVtxY = pVertex->GetPosition().GetY();
+        recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
+
+        if (m_printToScreen)
+            std::cout << "RecoNeutrino, PDG " << recoNeutrinoPdg << std::endl;
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCNeutrinos", nMCNeutrinos));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPdg", mcNeutrinoPdg));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoNuance", mcNeutrinoNuance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nRecoNeutrinos", nRecoNeutrinos));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoPdg", recoNeutrinoPdg));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxX", mcNeutrinoVtxX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxY", mcNeutrinoVtxY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxZ", mcNeutrinoVtxZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxX", recoNeutrinoVtxX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxY", recoNeutrinoVtxY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxZ", recoNeutrinoVtxZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCPrimaries", nMCPrimaries));
 
     SimpleMCPrimaryList simpleMCPrimaryList;
 
@@ -117,14 +160,23 @@ StatusCode EventValidationAlgorithm::Run()
         simpleMCPrimaryList.push_back(simpleMCPrimary);
     }
 
-    int primaryId(0);
+    int mcPrimaryId(0);
     std::sort(simpleMCPrimaryList.begin(), simpleMCPrimaryList.end(), EventValidationAlgorithm::SortSimpleMCPrimaries);
 
     for (const SimpleMCPrimary &simpleMCPrimary : simpleMCPrimaryList)
     {
-        std::cout << std::endl << "Primary " << primaryId++ << ", PDG " << simpleMCPrimary.m_pdgCode
-                  << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")"
-                  << std::endl;
+        if (m_printToScreen)
+        {
+            std::cout << std::endl << "Primary " << mcPrimaryId << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
+                      << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
+        }
+
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryId", mcPrimaryId));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPdg", simpleMCPrimary.m_pdgCode));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsTotal", simpleMCPrimary.m_nMCHitsTotal));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsU", simpleMCPrimary.m_nMCHitsU));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsV", simpleMCPrimary.m_nMCHitsV));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsW", simpleMCPrimary.m_nMCHitsW));
 
         SimpleMatchedPfoList simpleMatchedPfoList;
         LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(simpleMCPrimary.m_pPandoraAddress);
@@ -160,26 +212,59 @@ StatusCode EventValidationAlgorithm::Run()
 
                 simpleMatchedPfoList.push_back(simpleMatchedPfo);
             }
+
+            ++mcPrimaryId;
         }
+
+        const int mcPrimaryNMatchedPfos(simpleMatchedPfoList.size());
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNMatchedPfos", mcPrimaryNMatchedPfos));
+
+        IntVector pfoIdVector, pfoPdgVector, pfoNHitsTotalVector, pfoNHitsUVector, pfoNHitsVVector, pfoNHitsWVector,
+            pfoNMatchedHitsTotalVector, pfoNMatchedHitsUVector, pfoNMatchedHitsVVector, pfoNMatchedHitsWVector;
 
         std::sort(simpleMatchedPfoList.begin(), simpleMatchedPfoList.end(), EventValidationAlgorithm::SortSimpleMatchedPfos);
 
         for (const SimpleMatchedPfo simpleMatchedPfo : simpleMatchedPfoList)
         {
-            std::cout << "-MatchedPfo " << simpleMatchedPfo.m_id << ", PDG " << simpleMatchedPfo.m_pdgCode
-                      << ", nMatchedHits " << simpleMatchedPfo.m_nMatchedHitsTotal << " (" << simpleMatchedPfo.m_nMatchedHitsU << ", " << simpleMatchedPfo.m_nMatchedHitsV << ", " << simpleMatchedPfo.m_nMatchedHitsW << ")"
-                      << ", nPfoHits " << simpleMatchedPfo.m_nPfoHitsTotal << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", " << simpleMatchedPfo.m_nPfoHitsW << ")"
-                      << std::endl;
+            pfoIdVector.push_back(simpleMatchedPfo.m_id);
+            pfoPdgVector.push_back(simpleMatchedPfo.m_pdgCode);
+            pfoNHitsTotalVector.push_back(simpleMatchedPfo.m_nPfoHitsTotal);
+            pfoNHitsUVector.push_back(simpleMatchedPfo.m_nPfoHitsU);
+            pfoNHitsVVector.push_back(simpleMatchedPfo.m_nPfoHitsV);
+            pfoNHitsWVector.push_back(simpleMatchedPfo.m_nPfoHitsW);
+            pfoNMatchedHitsTotalVector.push_back(simpleMatchedPfo.m_nMatchedHitsTotal);
+            pfoNMatchedHitsUVector.push_back(simpleMatchedPfo.m_nMatchedHitsU);
+            pfoNMatchedHitsVVector.push_back(simpleMatchedPfo.m_nMatchedHitsV);
+            pfoNMatchedHitsWVector.push_back(simpleMatchedPfo.m_nMatchedHitsW);
+
+            if (m_printToScreen)
+            {
+                std::cout << "-MatchedPfo " << simpleMatchedPfo.m_id << ", PDG " << simpleMatchedPfo.m_pdgCode << ", nMatchedHits " << simpleMatchedPfo.m_nMatchedHitsTotal
+                          << " (" << simpleMatchedPfo.m_nMatchedHitsU << ", " << simpleMatchedPfo.m_nMatchedHitsV << ", " << simpleMatchedPfo.m_nMatchedHitsW << ")"
+                          << ", nPfoHits " << simpleMatchedPfo.m_nPfoHitsTotal << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", "
+                          << simpleMatchedPfo.m_nPfoHitsW << ")" << std::endl;
+            }
         }
+
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoId", &pfoIdVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoPdgCode", &pfoPdgVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsTotal", &pfoNHitsTotalVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsU", &pfoNHitsUVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsV", &pfoNHitsVVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsW", &pfoNHitsWVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsTotal", &pfoNMatchedHitsTotalVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsU", &pfoNMatchedHitsUVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsV", &pfoNMatchedHitsVVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsW", &pfoNMatchedHitsWVector));
+
+        // Write the monitoring tree
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
     }
 
-    std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
-
-    // Write monitoring tree
-    IntVector nMatchedHitsWVector;
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMatchedHitsW", &nMatchedHitsWVector));
-
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
+    ++m_eventNumber;
+    
+    if (m_printToScreen)
+        std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
 #endif
     return STATUS_CODE_SUCCESS;
 }
@@ -255,7 +340,10 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ExtractNeutrinoDaughters", m_extractNeutrinoDaughters));
+        "PrintToScreen", m_printToScreen));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FileIdentifier", m_fileIdentifier));
 
     return STATUS_CODE_SUCCESS;
 }

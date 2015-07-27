@@ -51,11 +51,11 @@ private:
         SimpleMCPrimary();
 
         int                                 m_pdgCode;                  ///< The pdg code
-        unsigned int                        m_nMCHitsTotal;             ///< The total number of mc hits
-        unsigned int                        m_nMCHitsU;                 ///< The number of u mc hits
-        unsigned int                        m_nMCHitsV;                 ///< The number of v mc hits
-        unsigned int                        m_nMCHitsW;                 ///< The number of w mc hits
-        unsigned int                        m_nMatchedPfos;             ///< The number of matched pfos
+        int                                 m_nMCHitsTotal;             ///< The total number of mc hits
+        int                                 m_nMCHitsU;                 ///< The number of u mc hits
+        int                                 m_nMCHitsV;                 ///< The number of v mc hits
+        int                                 m_nMCHitsW;                 ///< The number of w mc hits
+        int                                 m_nMatchedPfos;             ///< The number of matched pfos
         const pandora::MCParticle          *m_pPandoraAddress;          ///< The address of the Pandora mc primary
         // TODO other properties
     };
@@ -75,14 +75,14 @@ private:
 
         int                                 m_id;                       ///< The unique identifier
         int                                 m_pdgCode;                  ///< The pdg code
-        unsigned int                        m_nPfoHitsTotal;            ///< The total number of pfo hits
-        unsigned int                        m_nPfoHitsU;                ///< The number of u pfo hits
-        unsigned int                        m_nPfoHitsV;                ///< The number of v pfo hits
-        unsigned int                        m_nPfoHitsW;                ///< The number of w pfo hits
-        unsigned int                        m_nMatchedHitsTotal;        ///< The total number of matched hits
-        unsigned int                        m_nMatchedHitsU;            ///< The number of u matched hits
-        unsigned int                        m_nMatchedHitsV;            ///< The number of v matched hits
-        unsigned int                        m_nMatchedHitsW;            ///< The number of w matched hits
+        int                                 m_nPfoHitsTotal;            ///< The total number of pfo hits
+        int                                 m_nPfoHitsU;                ///< The number of u pfo hits
+        int                                 m_nPfoHitsV;                ///< The number of v pfo hits
+        int                                 m_nPfoHitsW;                ///< The number of w pfo hits
+        int                                 m_nMatchedHitsTotal;        ///< The total number of matched hits
+        int                                 m_nMatchedHitsU;            ///< The number of u matched hits
+        int                                 m_nMatchedHitsV;            ///< The number of v matched hits
+        int                                 m_nMatchedHitsW;            ///< The number of w matched hits
         const pandora::ParticleFlowObject  *m_pPandoraAddress;          ///< The address of the Pandora mc primary
         // TODO other properties
     };
@@ -128,7 +128,10 @@ private:
     std::string         m_fileName;                 ///< Name of output file
     std::string         m_treeName;                 ///< Name of output tree
 
-    bool                m_extractNeutrinoDaughters; ///< Whether to treat each neutrino pfo daughter as a standalone top-level pfo
+    bool                m_printToScreen;            ///< Whether to print output to screen
+
+    int                 m_fileIdentifier;           ///< The input file identifier
+    int                 m_eventNumber;              ///< The event number
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
