@@ -54,10 +54,11 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
     if ((E_MINUS == absoluteParticleId) || (MU_MINUS == absoluteParticleId) ||
         (PI_PLUS == absoluteParticleId) || (K_PLUS == absoluteParticleId) ||
         (SIGMA_MINUS == absoluteParticleId) || (SIGMA_PLUS == absoluteParticleId) || (HYPERON_MINUS == absoluteParticleId) ||
-        (PROTON == absoluteParticleId) || (PHOTON == absoluteParticleId))
+        (PROTON == absoluteParticleId) || (PHOTON == absoluteParticleId) ||
+        (NEUTRON == absoluteParticleId))
         return true;
 
-    // TODO: What about ions or neutrons?
+    // TODO: What about ions or neutrons? Neutrons currently included - they are parents of what would otherwise be large numbers of primary photons
 
     return false;
 }
