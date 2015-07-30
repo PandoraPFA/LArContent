@@ -44,6 +44,8 @@ EventValidationAlgorithm::~EventValidationAlgorithm()
 StatusCode EventValidationAlgorithm::Run()
 {
 #ifdef MONITORING
+    const int thisEventNumber(m_eventNumber++);
+
     // Input collections
     const MCParticleList *pMCParticleList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
@@ -124,7 +126,7 @@ StatusCode EventValidationAlgorithm::Run()
     if (m_writeToTree)
     {
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", thisEventNumber));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCNeutrinos", nMCNeutrinos));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPdg", mcNeutrinoPdg));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoNuance", mcNeutrinoNuance));
@@ -329,8 +331,6 @@ StatusCode EventValidationAlgorithm::Run()
 
         ++mcPrimaryId;
     }
-
-    ++m_eventNumber;
     
     if (m_printToScreen)
         std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
