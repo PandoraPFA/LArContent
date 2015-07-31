@@ -1,0 +1,248 @@
+/**
+ *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/PfoHierarchyAlgorithm.h
+ * 
+ *  @brief  Header file for the pfo hierarchy algorithm class.
+ * 
+ *  $Log: $
+ */
+#ifndef LAR_PFO_HIERARCHY_ALGORITHM_H
+#define LAR_PFO_HIERARCHY_ALGORITHM_H 1
+
+#include "Pandora/Algorithm.h"
+
+#include "LArObjects/LArThreeDSlidingFitResult.h"
+
+#include <unordered_map>
+
+namespace lar_content
+{
+
+class PfoRelationTool;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  PfoHierarchyAlgorithm class
+ */
+class PfoHierarchyAlgorithm : public pandora::Algorithm
+{
+public:
+    /**
+     *  @brief  Factory class for instantiating algorithm
+     */
+    class Factory : public pandora::AlgorithmFactory
+    {
+    public:
+        pandora::Algorithm *CreateAlgorithm() const;
+    };
+
+    /**
+     *  @brief  Default constructor
+     */
+    PfoHierarchyAlgorithm();
+
+    /**
+     *  @brief  PfoInfo class
+     */
+    class PfoInfo
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  pPfo the address of the pfo
+         *  @param  halfWindowLayers the number of layers to use for half-window of sliding fit
+         *  @param  layerPitch the sliding fit z pitch, units cm
+         */
+        PfoInfo(const pandora::ParticleFlowObject *const pPfo, const unsigned int halfWindowLayers, const float layerPitch);
+
+        /**
+         *  @brief  Destructor
+         */
+        ~PfoInfo();
+
+        /**
+         *  @brief  Get the address of the pfo
+         * 
+         *  @return the address of the pfo
+         */
+        const pandora::ParticleFlowObject *GetThisPfo() const;
+
+        /**
+         *  @brief  Get the address of the three dimensional cluster
+         * 
+         *  @return the address of the three dimensional cluster
+         */
+        const pandora::Cluster *GetCluster3D() const;
+
+        /**
+         *  @brief  Get the address of the three dimensional vertex
+         * 
+         *  @return the address of the three dimensional vertex
+         */
+        const pandora::Vertex *GetVertex3D() const;
+
+        /**
+         *  @brief  Get the address of the three dimensional sliding fit result
+         * 
+         *  @return the address of the three dimensional sliding fit result
+         */
+        const ThreeDSlidingFitResult *GetSlidingFitResult3D() const;
+
+        /**
+         *  @brief  Whether the pfo is associated with the neutrino vertex
+         * 
+         *  @return boolean
+         */
+        bool IsNeutrinoVertexAssociated() const;
+
+        /**
+         *  @brief  Get the address of the parent pfo
+         * 
+         *  @return the address of the parent pfo
+         */
+        const pandora::ParticleFlowObject *GetParentPfo() const;
+
+        /**
+         *  @brief  Get the daughter pfo list
+         * 
+         *  @return the daughter pfo list
+         */
+        const pandora::PfoList &GetDaughterPfoList() const;
+
+        /**
+         *  @brief  Set the neutrino vertex association flag
+         * 
+         *  @param  isNeutrinoVertexAssociated the neutrino vertex association flag
+         */
+        void SetNeutrinoVertexAssociation(const bool isNeutrinoVertexAssociated);
+
+        /**
+         *  @brief  Set the parent pfo
+         * 
+         *  @param  pParentPfo the address of the parent pfo
+         */
+        void SetParentPfo(const pandora::ParticleFlowObject *const pParentPfo);
+
+        /**
+         *  @brief  Remove the parent pfo
+         */
+        void RemoveParentPfo();
+
+        /**
+         *  @brief  Add a daughter pfo
+         * 
+         *  @param  pDaughterPfo the address of the daughter pfo to add
+         */
+        void AddDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo);
+
+        /**
+         *  @brief  Remove a daughter pfo
+         * 
+         *  @param  pDaughterPfo the address of the daughter pfo to remove
+         */
+        void RemoveDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo);
+
+    private:
+        const pandora::ParticleFlowObject  *m_pThisPfo;                     ///< The address of the pfo
+        const pandora::Cluster             *m_pCluster3D;                   ///< The address of the three dimensional cluster
+        const pandora::Vertex              *m_pVertex3D;                    ///< The address of the three dimensional vertex
+        ThreeDSlidingFitResult             *m_pSlidingFitResult3D;          ///< The three dimensional sliding fit result
+
+        bool                                m_isNeutrinoVertexAssociated;   ///< Whether the pfo is associated with the neutrino vertex
+        const pandora::ParticleFlowObject  *m_pParentPfo;                   ///< The address of the parent pfo
+        pandora::PfoList                    m_daughterPfoList;              ///< The daughter pfo list
+    };
+
+    typedef std::unordered_map<pandora::ParticleFlowObject*, PfoInfo> PfoInfoMap;
+
+private:
+    pandora::StatusCode Run();
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    typedef std::vector<PfoRelationTool*> PfoRelationToolList;
+    PfoRelationToolList             m_algorithmToolList;        ///< The algorithm tool list
+
+    unsigned int                    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
+    std::string                     m_neutrinoListName;         ///< The input list of pfo list names
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  PfoRelationTool class
+ */
+class PfoRelationTool : public pandora::AlgorithmTool
+{
+public:
+    /**
+     *  @brief  Run the algorithm tool
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  pNeutrinoVertex the address of the three dimensional neutrino interaction vertex
+     *  @param  pfoInfoMap mapping from pfos to three dimensional clusters, sliding fits, vertices, etc.
+     */
+    virtual void Run(PfoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, PfoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::Algorithm *PfoHierarchyAlgorithm::Factory::CreateAlgorithm() const
+{
+    return new PfoHierarchyAlgorithm();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ParticleFlowObject *PfoHierarchyAlgorithm::PfoInfo::GetThisPfo() const
+{
+    return m_pThisPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Cluster *PfoHierarchyAlgorithm::PfoInfo::GetCluster3D() const
+{
+    return m_pCluster3D;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Vertex *PfoHierarchyAlgorithm::PfoInfo::GetVertex3D() const
+{
+    return m_pVertex3D;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const ThreeDSlidingFitResult *PfoHierarchyAlgorithm::PfoInfo::GetSlidingFitResult3D() const
+{
+    return m_pSlidingFitResult3D;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool PfoHierarchyAlgorithm::PfoInfo::IsNeutrinoVertexAssociated() const
+{
+    return m_isNeutrinoVertexAssociated;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ParticleFlowObject *PfoHierarchyAlgorithm::PfoInfo::GetParentPfo() const
+{
+    return m_pParentPfo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::PfoList &PfoHierarchyAlgorithm::PfoInfo::GetDaughterPfoList() const
+{
+    return m_daughterPfoList;
+}
+
+} // namespace lar_content
+
+#endif // #ifndef LAR_PFO_HIERARCHY_ALGORITHM_H
