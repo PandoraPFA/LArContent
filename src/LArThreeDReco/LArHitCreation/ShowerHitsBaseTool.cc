@@ -19,7 +19,7 @@ namespace lar_content
 {
 
 ShowerHitsBaseTool::ShowerHitsBaseTool() :
-    m_xTolerance(0.5f),
+    m_xTolerance(1.f),
     m_chiSquaredCut(1.f)
 {
 }

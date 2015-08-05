@@ -22,7 +22,7 @@ ThreeDRemnantsAlgorithm::ThreeDRemnantsAlgorithm() :
     m_nMaxTensorToolRepeats(5000),
     m_minClusterCaloHits(5),
     m_xOverlapWindow(2.f),
-    m_pseudoChi2Cut(20.f)
+    m_pseudoChi2Cut(10.f)
 {
 }
 
