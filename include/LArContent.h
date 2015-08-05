@@ -36,12 +36,16 @@
 #include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h"
+#include "LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoEventBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoVertexCreationAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/PfoHierarchyAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/ShowerParticleBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/TrackParticleBuildingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
 #include "LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
@@ -142,6 +146,7 @@ public:
         d("LArNeutrinoEventCreation",               lar_content::NeutrinoEventCreationAlgorithm::Factory)                       \
         d("LArNeutrinoVertexBuilding",              lar_content::NeutrinoVertexBuildingAlgorithm::Factory)                      \
         d("LArNeutrinoVertexCreation",              lar_content::NeutrinoVertexCreationAlgorithm::Factory)                      \
+        d("LArPfoHierarchy",                        lar_content::PfoHierarchyAlgorithm::Factory)                                \
         d("LArShowerParticleBuilding",              lar_content::ShowerParticleBuildingAlgorithm::Factory)                      \
         d("LArTrackParticleBuilding",               lar_content::TrackParticleBuildingAlgorithm::Factory)                       \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
@@ -191,6 +196,9 @@ public:
         d("LArVertexSelection",                     lar_content::VertexSelectionAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArBranchAssociatedPfos",                lar_content::BranchAssociatedPfosTool::Factory)                             \
+        d("LArEndAssociatedPfos",                   lar_content::EndAssociatedPfosTool::Factory)                                \
+        d("LArVertexAssociatedPfos",                lar_content::VertexAssociatedPfosTool::Factory)                             \
         d("LArClearShowers",                        lar_content::ClearShowersTool::Factory)                                     \
         d("LArShowerTensorVisualization",           lar_content::ShowerTensorVisualizationTool::Factory)                        \
         d("LArSimpleShowers",                       lar_content::SimpleShowersTool::Factory)                                    \
