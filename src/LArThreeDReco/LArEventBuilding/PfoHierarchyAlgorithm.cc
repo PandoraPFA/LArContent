@@ -124,6 +124,32 @@ void PfoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pN
 
     if (display)
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    display = false;
+
+    for (const PfoInfoMap::value_type &iter : pfoInfoMap)
+    {
+        const PfoInfo *const pPfoInfo(iter.second);
+
+        if (pPfoInfo->GetParentPfo())
+        {
+            display = true;
+            PfoList tempPfoList, tempPfoList2; tempPfoList2.insert(pPfoInfo->GetParentPfo()); tempPfoList.insert(pPfoInfo->GetThisPfo());
+            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList2, "parent", RED, true, false);
+            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "daughter", BLUE, true, false);
+        }
+
+        if (!pPfoInfo->GetDaughterPfoList().empty())
+        {
+            display = true;
+            PfoList tempPfoList; tempPfoList.insert(pPfoInfo->GetThisPfo());
+            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "parent", RED, true, false);
+            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &(pPfoInfo->GetDaughterPfoList()), "daughters", BLUE, true, false);
+        }
+    }
+
+    if (display)
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,6 +162,7 @@ PfoHierarchyAlgorithm::PfoInfo::PfoInfo(const pandora::ParticleFlowObject *const
     m_pVertex3D(LArPfoHelper::GetVertex(pPfo)),
     m_pSlidingFitResult3D(NULL),
     m_isNeutrinoVertexAssociated(false),
+    m_isInnerLayerAssociated(false),
     m_pParentPfo(NULL)
 {
     ClusterList clusterList3D;
@@ -156,6 +183,7 @@ PfoHierarchyAlgorithm::PfoInfo::PfoInfo(const PfoInfo &rhs) :
     m_pVertex3D(rhs.m_pVertex3D),
     m_pSlidingFitResult3D(NULL),
     m_isNeutrinoVertexAssociated(rhs.m_isNeutrinoVertexAssociated),
+    m_isInnerLayerAssociated(rhs.m_isInnerLayerAssociated),
     m_pParentPfo(rhs.m_pParentPfo),
     m_daughterPfoList(rhs.m_daughterPfoList)
 {
@@ -179,6 +207,7 @@ PfoHierarchyAlgorithm::PfoInfo &PfoHierarchyAlgorithm::PfoInfo::operator=(const 
         m_pCluster3D = rhs.m_pCluster3D;
         m_pVertex3D = rhs.m_pVertex3D;
         m_isNeutrinoVertexAssociated = rhs.m_isNeutrinoVertexAssociated;
+        m_isInnerLayerAssociated = rhs.m_isInnerLayerAssociated;
         m_pParentPfo = rhs.m_pParentPfo;
         m_daughterPfoList = rhs.m_daughterPfoList;
 
@@ -202,6 +231,13 @@ PfoHierarchyAlgorithm::PfoInfo::~PfoInfo()
 void PfoHierarchyAlgorithm::PfoInfo::SetNeutrinoVertexAssociation(const bool isNeutrinoVertexAssociated)
 {
     m_isNeutrinoVertexAssociated = isNeutrinoVertexAssociated;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PfoHierarchyAlgorithm::PfoInfo::SetInnerLayerAssociation(const bool isInnerLayerAssociated)
+{
+    m_isInnerLayerAssociated = isInnerLayerAssociated;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -111,6 +111,13 @@ public:
         bool IsNeutrinoVertexAssociated() const;
 
         /**
+         *  @brief  If associated (to a vtx or pfo), is association at sliding fit inner layer?
+         * 
+         *  @return boolean
+         */
+        bool IsInnerLayerAssociated() const;
+
+        /**
          *  @brief  Get the address of the parent pfo
          * 
          *  @return the address of the parent pfo
@@ -130,6 +137,13 @@ public:
          *  @param  isNeutrinoVertexAssociated the neutrino vertex association flag
          */
         void SetNeutrinoVertexAssociation(const bool isNeutrinoVertexAssociated);
+
+        /**
+         *  @brief  Set the inner layer association flag
+         * 
+         *  @param  isInnerLayerAssociated the inner layer association flag
+         */
+        void SetInnerLayerAssociation(const bool isInnerLayerAssociated);
 
         /**
          *  @brief  Set the parent pfo
@@ -164,6 +178,7 @@ public:
         ThreeDSlidingFitResult             *m_pSlidingFitResult3D;          ///< The three dimensional sliding fit result
 
         bool                                m_isNeutrinoVertexAssociated;   ///< Whether the pfo is associated with the neutrino vertex
+        bool                                m_isInnerLayerAssociated;       ///< If associated (to a vtx or pfo), is association at sliding fit inner layer?
         const pandora::ParticleFlowObject  *m_pParentPfo;                   ///< The address of the parent pfo
         pandora::PfoList                    m_daughterPfoList;              ///< The daughter pfo list
     };
@@ -258,6 +273,13 @@ inline const ThreeDSlidingFitResult *PfoHierarchyAlgorithm::PfoInfo::GetSlidingF
 inline bool PfoHierarchyAlgorithm::PfoInfo::IsNeutrinoVertexAssociated() const
 {
     return m_isNeutrinoVertexAssociated;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool PfoHierarchyAlgorithm::PfoInfo::IsInnerLayerAssociated() const
+{
+    return m_isInnerLayerAssociated;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
