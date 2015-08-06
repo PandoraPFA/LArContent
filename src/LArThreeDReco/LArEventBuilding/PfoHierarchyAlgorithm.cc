@@ -87,7 +87,6 @@ void PfoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, PfoInfo
         {
             pPfoInfo = new PfoInfo(pPfo, m_halfWindowLayers, layerPitch);
             (void) pfoInfoMap.insert(PfoInfoMap::value_type(pPfo, pPfoInfo));
-            std::cout << "Calculated pfo information " << pPfo << std::endl;
         }
         catch (StatusCodeException &)
         {
@@ -102,6 +101,7 @@ void PfoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, PfoInfo
 void PfoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const
 {
     std::cout << "NeutrinoPfo " << pNeutrinoPfo << ", nDaughters " << pNeutrinoPfo->GetDaughterPfoList().size() << std::endl;
+    bool display(false);
 
     for (const PfoInfoMap::value_type &iter : pfoInfoMap)
     {
@@ -109,12 +109,21 @@ void PfoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pN
 
         std::cout << "Pfo " << pPfoInfo->GetThisPfo() << ", vtxAssoc " << pPfoInfo->IsNeutrinoVertexAssociated()
                   << ", parent " << pPfoInfo->GetParentPfo() << ", nDaughters " << pPfoInfo->GetDaughterPfoList().size() << " (";
-
         for (const ParticleFlowObject *const pDaughterPfo : pPfoInfo->GetDaughterPfoList())
             std::cout << pDaughterPfo << " ";
-
         std::cout << ") " << std::endl;
+
+        if (pPfoInfo->IsNeutrinoVertexAssociated())
+        {
+            display = true;
+            PfoList tempPfoList; tempPfoList.insert(pPfoInfo->GetThisPfo());
+            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "VertexAssoc", RED, true, false);
+            PandoraMonitoringApi::VisualizeVertices(this->GetPandora(), &(pNeutrinoPfo->GetVertexList()), "NeutrinoVertex", ORANGE);
+        }
     }
+
+    if (display)
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
