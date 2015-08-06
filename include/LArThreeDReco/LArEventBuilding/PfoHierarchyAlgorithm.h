@@ -57,6 +57,20 @@ public:
         PfoInfo(const pandora::ParticleFlowObject *const pPfo, const unsigned int halfWindowLayers, const float layerPitch);
 
         /**
+         *  @brief  Copy constructor
+         * 
+         *  @param  rhs the pfo info to copy
+         */
+        PfoInfo(const PfoInfo &rhs);
+
+        /**
+         *  @brief  Assignment operator
+         * 
+         *  @param  rhs the pfo info to assign
+         */
+        PfoInfo &operator=(const PfoInfo &rhs);
+
+        /**
          *  @brief  Destructor
          */
         ~PfoInfo();
@@ -154,10 +168,27 @@ public:
         pandora::PfoList                    m_daughterPfoList;              ///< The daughter pfo list
     };
 
-    typedef std::unordered_map<pandora::ParticleFlowObject*, PfoInfo> PfoInfoMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, PfoInfo*> PfoInfoMap;
 
 private:
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Process a provided pfo list and populate an initial pfo info map
+     * 
+     *  @param  pfoList the provided pfo list
+     *  @param  pfoInfoMap to receive the initial pfo info map
+     */
+    void GetInitialPfoInfoMap(const pandora::PfoList &pfoList, PfoInfoMap &pfoInfoMap) const;
+
+    /**
+     *  @brief  Process the information in a pfo info map, creating pfo parent/daughter links
+     * 
+     *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
+     *  @param  pfoInfoMap the pfo info map
+     */
+    void ProcessPfoInfoMap(const pandora::ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<PfoRelationTool*> PfoRelationToolList;
