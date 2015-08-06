@@ -20,6 +20,8 @@ void VertexAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, cons
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+
+    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

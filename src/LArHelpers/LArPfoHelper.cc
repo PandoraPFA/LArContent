@@ -421,6 +421,9 @@ const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
 
     const Vertex *const pVertex = *(pPfo->GetVertexList().begin());
 
+    if (VERTEX_3D != pVertex->GetVertexType())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
     return pVertex;
 }
 

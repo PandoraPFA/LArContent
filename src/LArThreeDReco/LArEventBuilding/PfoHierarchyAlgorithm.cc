@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 
 #include "LArThreeDReco/LArEventBuilding/PfoHierarchyAlgorithm.h"
@@ -33,21 +34,87 @@ StatusCode PfoHierarchyAlgorithm::Run()
     if (NULL == pPfoList)
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoVertexBuildingAlgorithm: pfo list unavailable." << std::endl;
+            std::cout << "PfoHierarchyAlgorithm: pfo list unavailable." << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }
 
-    // TODO
-    const Vertex *pNeutrinoVertex(NULL);
-    PfoInfoMap pfoInfoMap;
-
-    for (PfoRelationToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (const ParticleFlowObject *const pNeutrinoPfo : *pPfoList)
     {
-        (*iter)->Run(this, pNeutrinoVertex, pfoInfoMap);
+        if (!LArPfoHelper::IsNeutrino(pNeutrinoPfo))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+
+        PfoList daughterPfoList;
+        LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, daughterPfoList);
+        daughterPfoList.erase(pNeutrinoPfo);
+
+        PfoInfoMap pfoInfoMap;
+
+        try
+        {
+            this->GetInitialPfoInfoMap(daughterPfoList, pfoInfoMap);
+
+            for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolList)
+                pPfoRelationTool->Run(this, pNeutrinoVertex, pfoInfoMap);
+
+            this->ProcessPfoInfoMap(pNeutrinoPfo, pfoInfoMap);
+            for (auto mapIter : pfoInfoMap) delete mapIter.second;
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            std::cout << "PfoHierarchyAlgorithm: unable to process input pfo, " << statusCodeException.ToString() << std::endl;
+            for (auto mapIter : pfoInfoMap) delete mapIter.second;
+            throw statusCodeException;
+        }
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PfoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, PfoInfoMap &pfoInfoMap) const
+{
+    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+    for (const ParticleFlowObject *const pPfo : pfoList)
+    {
+        PfoInfo *pPfoInfo(NULL);
+
+        try
+        {
+            pPfoInfo = new PfoInfo(pPfo, m_halfWindowLayers, layerPitch);
+            (void) pfoInfoMap.insert(PfoInfoMap::value_type(pPfo, pPfoInfo));
+            std::cout << "Calculated pfo information " << pPfo << std::endl;
+        }
+        catch (StatusCodeException &)
+        {
+            delete pPfoInfo;
+            std::cout << "Unable to calculate pfo information " << std::endl;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PfoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const
+{
+    std::cout << "NeutrinoPfo " << pNeutrinoPfo << ", nDaughters " << pNeutrinoPfo->GetDaughterPfoList().size() << std::endl;
+
+    for (const PfoInfoMap::value_type &iter : pfoInfoMap)
+    {
+        const PfoInfo *const pPfoInfo(iter.second);
+
+        std::cout << "Pfo " << pPfoInfo->GetThisPfo() << ", vtxAssoc " << pPfoInfo->IsNeutrinoVertexAssociated()
+                  << ", parent " << pPfoInfo->GetParentPfo() << ", nDaughters " << pPfoInfo->GetDaughterPfoList().size() << " (";
+
+        for (const ParticleFlowObject *const pDaughterPfo : pPfoInfo->GetDaughterPfoList())
+            std::cout << pDaughterPfo << " ";
+
+        std::cout << ") " << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -70,6 +137,48 @@ PfoHierarchyAlgorithm::PfoInfo::PfoInfo(const pandora::ParticleFlowObject *const
 
     m_pCluster3D = *(clusterList3D.begin());
     m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, halfWindowLayers, layerPitch);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+PfoHierarchyAlgorithm::PfoInfo::PfoInfo(const PfoInfo &rhs) :
+    m_pThisPfo(rhs.m_pThisPfo),
+    m_pCluster3D(rhs.m_pCluster3D),
+    m_pVertex3D(rhs.m_pVertex3D),
+    m_pSlidingFitResult3D(NULL),
+    m_isNeutrinoVertexAssociated(rhs.m_isNeutrinoVertexAssociated),
+    m_pParentPfo(rhs.m_pParentPfo),
+    m_daughterPfoList(rhs.m_daughterPfoList)
+{
+    if (!rhs.m_pSlidingFitResult3D)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerFitHalfWindow(), 
+        rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerPitch());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+PfoHierarchyAlgorithm::PfoInfo &PfoHierarchyAlgorithm::PfoInfo::operator=(const PfoInfo &rhs)
+{
+    if (this != &rhs)
+    {
+        if (!rhs.m_pSlidingFitResult3D)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        m_pThisPfo = rhs.m_pThisPfo;
+        m_pCluster3D = rhs.m_pCluster3D;
+        m_pVertex3D = rhs.m_pVertex3D;
+        m_isNeutrinoVertexAssociated = rhs.m_isNeutrinoVertexAssociated;
+        m_pParentPfo = rhs.m_pParentPfo;
+        m_daughterPfoList = rhs.m_daughterPfoList;
+
+        delete m_pSlidingFitResult3D;
+        m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerFitHalfWindow(), 
+            rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerPitch());
+    }
+
+    return *this;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -138,7 +247,8 @@ StatusCode PfoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         m_algorithmToolList.push_back(pPfoRelationTool);
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NeutrinoPfoListName", m_neutrinoListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
