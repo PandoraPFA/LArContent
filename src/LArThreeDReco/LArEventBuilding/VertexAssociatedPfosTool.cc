@@ -44,7 +44,7 @@ void VertexAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, cons
     {
         PfoInfo *const pPfoInfo(mapIter.second);
 
-        if (pPfoInfo->GetParentPfo())
+        if (pPfoInfo->IsNeutrinoVertexAssociated() || pPfoInfo->GetParentPfo())
             continue;
 
         const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
@@ -57,14 +57,7 @@ void VertexAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, cons
             LArPointingClusterHelper::IsEmission(neutrinoVertex, daughterVertex,  m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance))
         {
             pPfoInfo->SetNeutrinoVertexAssociation(true);
-            //float rT(std::numeric_limits<float>::max()), rL(std::numeric_limits<float>::max());
-            //LArPointingClusterHelper::GetImpactParameters(daughterVertex.GetPosition(), daughterVertex.GetDirection(), neutrinoVertex, rL, rT);
-            //std::cout << " rT " << rT << " rL " << rL << std::endl;
-            //PfoList tempPfoList; tempPfoList.insert(pPfoInfo->GetThisPfo());
-            //VertexList tempVertexList; tempVertexList.insert(pNeutrinoVertex);
-            //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "VertexAssoc", RED, true, false);
-            //PandoraMonitoringApi::VisualizeVertices(this->GetPandora(), &tempVertexList, "NeutrinoVertex", ORANGE);
-            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            pPfoInfo->SetInnerLayerAssociation(useInner);
         }
     }
 }
