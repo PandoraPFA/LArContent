@@ -213,13 +213,23 @@ private:
      */
     void ProcessPfoInfoMap(const pandora::ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const;
 
+    /**
+     *  @brief  Display the information in a pfo info map, visualising pfo parent/daughter links
+     * 
+     *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
+     *  @param  pfoInfoMap the pfo info map
+     */
+    void DisplayPfoInfoMap(const pandora::ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<PfoRelationTool*> PfoRelationToolList;
     PfoRelationToolList             m_algorithmToolList;        ///< The algorithm tool list
 
-    unsigned int                    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
     std::string                     m_neutrinoListName;         ///< The input list of pfo list names
+
+    unsigned int                    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
+    bool                            m_displayPfoInfoMap;        ///< Whether to display the pfo info map (if monitoring is enabled)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
