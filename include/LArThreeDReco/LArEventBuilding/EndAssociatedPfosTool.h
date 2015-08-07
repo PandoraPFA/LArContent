@@ -28,10 +28,20 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    EndAssociatedPfosTool();
+
     void Run(PfoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, PfoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float       m_minVertexLongitudinalDistance;        ///< Vertex association check: min longitudinal distance cut
+    float       m_maxVertexLongitudinalDistance;        ///< Vertex association check: max longitudinal distance cut
+    float       m_maxVertexTransverseDistance;          ///< Vertex association check: max transverse distance cut
+    float       m_vertexAngularAllowance;               ///< Vertex association check: pointing angular allowance in degrees
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
