@@ -51,23 +51,13 @@ void EndAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, const V
 
         for (const ParticleFlowObject *const pParentPfo : assignedPfos)
         {
-            PfoInfoMap::iterator parentMapIter(pfoInfoMap.find(pParentPfo));
-
-            if (pfoInfoMap.end() == parentMapIter)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            PfoInfo *const pParentPfoInfo(parentMapIter->second);
+            PfoInfo *const pParentPfoInfo(pfoInfoMap.at(pParentPfo));
             const LArPointingCluster parentPointingCluster(*(pParentPfoInfo->GetSlidingFitResult3D()));
             const LArPointingCluster::Vertex &parentVertex(pParentPfoInfo->IsInnerLayerAssociated() ? parentPointingCluster.GetOuterVertex() : parentPointingCluster.GetInnerVertex());
 
             for (const ParticleFlowObject *const pPfo : unassignedPfos)
             {
-                PfoInfoMap::iterator mapIter(pfoInfoMap.find(pPfo));
-
-                if (pfoInfoMap.end() == mapIter)
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                PfoInfo *const pPfoInfo(mapIter->second);
+                PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
                 const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
                 const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - parentVertex.GetPosition()).GetMagnitudeSquared() <

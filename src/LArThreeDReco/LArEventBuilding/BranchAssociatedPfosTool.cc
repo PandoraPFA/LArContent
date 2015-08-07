@@ -49,24 +49,13 @@ void BranchAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, cons
 
         for (const ParticleFlowObject *const pParentPfo : assignedPfos)
         {
-            PfoInfoMap::iterator parentMapIter(pfoInfoMap.find(pParentPfo));
-
-            if (pfoInfoMap.end() == parentMapIter)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            PfoInfo *const pParentPfoInfo(parentMapIter->second);
+            PfoInfo *const pParentPfoInfo(pfoInfoMap.at(pParentPfo));
             const Cluster *const pParentCluster3D(pParentPfoInfo->GetCluster3D());
 
             for (const ParticleFlowObject *const pPfo : unassignedPfos)
             {
-                PfoInfoMap::iterator mapIter(pfoInfoMap.find(pPfo));
-
-                if (pfoInfoMap.end() == mapIter)
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                PfoInfo *const pPfoInfo(mapIter->second);
+                PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
                 const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
-
                 const float dNeutrinoVertex(LArClusterHelper::GetClosestDistance(pNeutrinoVertex->GetPosition(), pPfoInfo->GetCluster3D()));
 
                 if (dNeutrinoVertex < m_minNeutrinoVertexDistance)

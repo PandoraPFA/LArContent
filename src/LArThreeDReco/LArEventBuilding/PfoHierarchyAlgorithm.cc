@@ -124,11 +124,34 @@ void PfoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, PfoInfo
 
 void PfoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const
 {
+    // Remove original neutrino->daughter links, where necessary
+    const PfoList originalDaughters(pNeutrinoPfo->GetDaughterPfoList());
+
+    for (const ParticleFlowObject *const pDaughterPfo : originalDaughters)
+    {
+        PfoInfoMap::const_iterator iter = pfoInfoMap.find(pDaughterPfo);
+
+        if ((pfoInfoMap.end() == iter) || !(iter->second->IsNeutrinoVertexAssociated()))
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemovePfoParentDaughterRelationship(*this, pNeutrinoPfo, pDaughterPfo));
+    }
+
+    // Add new parent->daughter links
     for (const PfoInfoMap::value_type &iter : pfoInfoMap)
     {
         const PfoInfo *const pPfoInfo(iter.second);
 
-        std::cout << pNeutrinoPfo << ", " << pPfoInfo << std::endl;
+        for (const ParticleFlowObject *const pDaughterPfo : pPfoInfo->GetDaughterPfoList())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoInfo->GetThisPfo(), pDaughterPfo));
+    }
+
+    // Deal with any remaining parent-less pfos
+    for (const ParticleFlowObject *const pPfo : originalDaughters)
+    {
+        if (!pPfo->GetParentPfoList().empty())
+            continue;
+
+        // TODO Most appropriate decision - add as daughter of either i) nearest pfo, or ii) the neutrino (current approach)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pPfo));
     }
 }
 
