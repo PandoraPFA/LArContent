@@ -25,6 +25,25 @@ PfoHierarchyAlgorithm::PfoHierarchyAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void PfoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoList &assignedPfos, PfoList &unassignedPfos) const
+{
+    for (const PfoInfoMap::value_type mapIter : pfoInfoMap)
+    {
+        const PfoInfo *const pPfoInfo(mapIter.second);
+
+        if (pPfoInfo->IsNeutrinoVertexAssociated() || pPfoInfo->GetParentPfo())
+        {
+            assignedPfos.insert(pPfoInfo->GetThisPfo());
+        }
+        else
+        {
+            unassignedPfos.insert(pPfoInfo->GetThisPfo());
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode PfoHierarchyAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;

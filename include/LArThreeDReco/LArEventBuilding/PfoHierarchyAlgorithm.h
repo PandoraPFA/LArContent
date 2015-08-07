@@ -185,6 +185,15 @@ public:
 
     typedef std::unordered_map<const pandora::ParticleFlowObject*, PfoInfo*> PfoInfoMap;
 
+    /**
+     *  @brief  Query the pfo info map and separate/extract pfos currently either acting as parents or associated with the neutrino vertex
+     * 
+     *  @param  pfoInfoMap the pfo info map
+     *  @param  assignedPfos to receive the list of assigned pfos
+     *  @param  unassignedPfos to receive the list of unassigned pfos
+     */
+    void SeparatePfos(const PfoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap, pandora::PfoList &assignedPfos, pandora::PfoList &unassignedPfos) const;
+
 private:
     pandora::StatusCode Run();
 
