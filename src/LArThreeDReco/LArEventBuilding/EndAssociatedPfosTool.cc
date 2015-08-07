@@ -26,7 +26,7 @@ typedef PfoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 EndAssociatedPfosTool::EndAssociatedPfosTool() :
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
-    m_maxVertexTransverseDistance(3.5f),//TODO
+    m_maxVertexTransverseDistance(3.5f),
     m_vertexAngularAllowance(3.f)
 {
 }

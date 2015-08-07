@@ -111,7 +111,7 @@ public:
         bool IsNeutrinoVertexAssociated() const;
 
         /**
-         *  @brief  If associated (to a vtx or pfo), is association at sliding fit inner layer?
+         *  @brief  If associated, whether association to parent (vtx or pfo) is at sliding fit inner layer
          * 
          *  @return boolean
          */
@@ -178,7 +178,7 @@ public:
         ThreeDSlidingFitResult             *m_pSlidingFitResult3D;          ///< The three dimensional sliding fit result
 
         bool                                m_isNeutrinoVertexAssociated;   ///< Whether the pfo is associated with the neutrino vertex
-        bool                                m_isInnerLayerAssociated;       ///< If associated (to a vtx or pfo), is association at sliding fit inner layer?
+        bool                                m_isInnerLayerAssociated;       ///< If associated, whether association to parent (vtx or pfo) is at sliding fit inner layer
         const pandora::ParticleFlowObject  *m_pParentPfo;                   ///< The address of the parent pfo
         pandora::PfoList                    m_daughterPfoList;              ///< The daughter pfo list
     };

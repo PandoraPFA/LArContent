@@ -28,10 +28,18 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    BranchAssociatedPfosTool();
+
     void Run(PfoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, PfoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float       m_minNeutrinoVertexDistance;        ///< Branch association: min distance from branch vertex to neutrino vertex
+    float       m_maxParentClusterDistance;         ///< Branch association: max distance from branch vertex to a hit in parent 3D cluster
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
