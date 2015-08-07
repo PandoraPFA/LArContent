@@ -26,7 +26,7 @@ typedef PfoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 EndAssociatedPfosTool::EndAssociatedPfosTool() :
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
-    m_maxVertexTransverseDistance(1.5f),
+    m_maxVertexTransverseDistance(3.5f),//TODO
     m_vertexAngularAllowance(3.f)
 {
 }
@@ -44,7 +44,7 @@ void EndAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, const V
     {
         associationsMade = false;
         PfoList assignedPfos, unassignedPfos;
-        this->SeparatePfos(pfoInfoMap, assignedPfos, unassignedPfos);
+        pAlgorithm->SeparatePfos(pfoInfoMap, assignedPfos, unassignedPfos);
 
         if (unassignedPfos.empty())
             break;
@@ -58,38 +58,34 @@ void EndAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, const V
 
             PfoInfo *const pParentPfoInfo(parentMapIter->second);
             const LArPointingCluster parentPointingCluster(*(pParentPfoInfo->GetSlidingFitResult3D()));
-            const LArPointingCluster::Vertex &parentVertex(pParentPfoInfo->IsInnerLayerAssociated() ? parentPointingCluster.GetInnerVertex() : parentPointingCluster.GetOuterVertex());
+            const LArPointingCluster::Vertex &parentVertex(pParentPfoInfo->IsInnerLayerAssociated() ? parentPointingCluster.GetOuterVertex() : parentPointingCluster.GetInnerVertex());
 
-            for (const ParticleFlowObject *const pDaughterPfo : unassignedPfos)
+            for (const ParticleFlowObject *const pPfo : unassignedPfos)
             {
-                PfoInfoMap::iterator daughterMapIter(pfoInfoMap.find(pDaughterPfo));
+                PfoInfoMap::iterator mapIter(pfoInfoMap.find(pPfo));
 
-                if (pfoInfoMap.end() == daughterMapIter)
+                if (pfoInfoMap.end() == mapIter)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                PfoInfo *const pDaughterPfoInfo(daughterMapIter->second);
-                // TODO, proceed as for vertex associated pfos
-                std::cout << " pDaughterPfoInfo " << pDaughterPfoInfo << std::endl;
+                PfoInfo *const pPfoInfo(mapIter->second);
+
+                const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
+                const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - parentVertex.GetPosition()).GetMagnitudeSquared() <
+                    (pointingCluster.GetOuterVertex().GetPosition() - parentVertex.GetPosition()).GetMagnitudeSquared());
+
+                const LArPointingCluster::Vertex &daughterVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
+
+                if (LArPointingClusterHelper::IsNode(parentVertex.GetPosition(), daughterVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+                    LArPointingClusterHelper::IsNode(daughterVertex.GetPosition(), parentVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+                    LArPointingClusterHelper::IsEmission(parentVertex.GetPosition(), daughterVertex,  m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+                    LArPointingClusterHelper::IsEmission(daughterVertex.GetPosition(), parentVertex,  m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance))
+                {
+                    associationsMade = true;
+                    pParentPfoInfo->AddDaughterPfo(pPfoInfo->GetThisPfo());
+                    pPfoInfo->SetParentPfo(pParentPfoInfo->GetThisPfo());
+                    pPfoInfo->SetInnerLayerAssociation(useInner);
+                }
             }
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EndAssociatedPfosTool::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoList &assignedPfos, PfoList &unassignedPfos) const
-{
-    for (const PfoInfoMap::value_type mapIter : pfoInfoMap)
-    {
-        const PfoInfo *const pPfoInfo(mapIter.second);
-
-        if (pPfoInfo->IsNeutrinoVertexAssociated() || pPfoInfo->GetParentPfo())
-        {
-            assignedPfos.insert(pPfoInfo->GetThisPfo());
-        }
-        else
-        {
-            unassignedPfos.insert(pPfoInfo->GetThisPfo());
         }
     }
 }
