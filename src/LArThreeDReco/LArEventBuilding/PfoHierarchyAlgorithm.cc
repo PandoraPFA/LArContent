@@ -19,7 +19,8 @@ namespace lar_content
 {
 
 PfoHierarchyAlgorithm::PfoHierarchyAlgorithm() :
-    m_halfWindowLayers(20)
+    m_halfWindowLayers(20),
+    m_displayPfoInfoMap(false)
 {
 }
 
@@ -79,6 +80,10 @@ StatusCode PfoHierarchyAlgorithm::Run()
                 pPfoRelationTool->Run(this, pNeutrinoVertex, pfoInfoMap);
 
             this->ProcessPfoInfoMap(pNeutrinoPfo, pfoInfoMap);
+
+            if (m_displayPfoInfoMap)
+                this->DisplayPfoInfoMap(pNeutrinoPfo, pfoInfoMap);
+
             for (auto mapIter : pfoInfoMap) delete mapIter.second;
         }
         catch (StatusCodeException &statusCodeException)
@@ -119,8 +124,20 @@ void PfoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, PfoInfo
 
 void PfoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const
 {
-    std::cout << "NeutrinoPfo " << pNeutrinoPfo << ", nDaughters " << pNeutrinoPfo->GetDaughterPfoList().size() << std::endl;
+    for (const PfoInfoMap::value_type &iter : pfoInfoMap)
+    {
+        const PfoInfo *const pPfoInfo(iter.second);
+
+        std::cout << pNeutrinoPfo << ", " << pPfoInfo << std::endl;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PfoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *const pNeutrinoPfo, const PfoInfoMap &pfoInfoMap) const
+{
     bool display(false);
+    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ));
 
     for (const PfoInfoMap::value_type &iter : pfoInfoMap)
     {
@@ -128,47 +145,38 @@ void PfoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pN
 
         std::cout << "Pfo " << pPfoInfo->GetThisPfo() << ", vtxAssoc " << pPfoInfo->IsNeutrinoVertexAssociated()
                   << ", parent " << pPfoInfo->GetParentPfo() << ", nDaughters " << pPfoInfo->GetDaughterPfoList().size() << " (";
-        for (const ParticleFlowObject *const pDaughterPfo : pPfoInfo->GetDaughterPfoList())
-            std::cout << pDaughterPfo << " ";
+
+        for (const ParticleFlowObject *const pDaughterPfo : pPfoInfo->GetDaughterPfoList()) std::cout << pDaughterPfo << " ";
         std::cout << ") " << std::endl;
 
         if (pPfoInfo->IsNeutrinoVertexAssociated())
         {
             display = true;
             PfoList tempPfoList; tempPfoList.insert(pPfoInfo->GetThisPfo());
-            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "VertexAssoc", RED, true, false);
-            PandoraMonitoringApi::VisualizeVertices(this->GetPandora(), &(pNeutrinoPfo->GetVertexList()), "NeutrinoVertex", ORANGE);
+            PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "VertexPfo", RED, true, false));
         }
     }
 
     if (display)
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-    display = false;
+    {
+        PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), &(pNeutrinoPfo->GetVertexList()), "NeutrinoVertex", ORANGE));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        display = false;
+    }
 
     for (const PfoInfoMap::value_type &iter : pfoInfoMap)
     {
         const PfoInfo *const pPfoInfo(iter.second);
 
-        if (pPfoInfo->GetParentPfo())
-        {
-            display = true;
-            PfoList tempPfoList, tempPfoList2; tempPfoList2.insert(pPfoInfo->GetParentPfo()); tempPfoList.insert(pPfoInfo->GetThisPfo());
-            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList2, "parent", RED, true, false);
-            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "daughter", BLUE, true, false);
-        }
-
         if (!pPfoInfo->GetDaughterPfoList().empty())
         {
             display = true;
             PfoList tempPfoList; tempPfoList.insert(pPfoInfo->GetThisPfo());
-            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "parent", RED, true, false);
-            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &(pPfoInfo->GetDaughterPfoList()), "daughters", BLUE, true, false);
+            PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "ParentPfo", RED, true, false));
+            PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &(pPfoInfo->GetDaughterPfoList()), "DaughterPfos", BLUE, true, false));
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
     }
-
-    if (display)
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -316,6 +324,9 @@ StatusCode PfoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DisplayPfoInfoMap", m_displayPfoInfoMap));
 
     return STATUS_CODE_SUCCESS;
 }
