@@ -161,6 +161,7 @@ void PfoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *const pN
 {
     bool display(false);
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ));
+    std::cout << "-Neutrino Pfo, nDaughters " << pNeutrinoPfo->GetDaughterPfoList().size() << ", nVertices " << pNeutrinoPfo->GetVertexList().size() << std::endl;
 
     for (const PfoInfoMap::value_type &iter : pfoInfoMap)
     {
