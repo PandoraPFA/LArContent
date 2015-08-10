@@ -36,7 +36,9 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
 EventValidationAlgorithm::~EventValidationAlgorithm()
 {
     if (m_writeToTree)
+    {
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
