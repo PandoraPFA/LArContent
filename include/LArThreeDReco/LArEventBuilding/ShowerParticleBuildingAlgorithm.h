@@ -22,6 +22,11 @@ class ShowerParticleBuildingAlgorithm : public CustomParticleCreationAlgorithm
 {
 public:
     /**
+     *  @brief  Default constructor
+     */
+    ShowerParticleBuildingAlgorithm();
+
+    /**
      *  @brief  Factory class for instantiating algorithm
      */
     class Factory : public pandora::AlgorithmFactory
@@ -34,6 +39,8 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject*& pOutputPfo) const;
+
+    bool            m_cosmicMode;             ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
