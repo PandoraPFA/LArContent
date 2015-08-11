@@ -57,6 +57,7 @@ private:
      */
     static bool SortByHitProjection(const LArTrackTrajectoryPoint &lhs, const LArTrackTrajectoryPoint &rhs);
 
+    bool            m_cosmicMode;             ///<
     unsigned int    m_slidingFitHalfWindow;   ///<
 };
 
