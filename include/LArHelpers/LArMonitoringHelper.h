@@ -51,11 +51,14 @@ public:
     static void GetRecoNeutrinos(const pandora::PfoList *pPfoList, pandora::PfoList &recoNeutrinos);
 
     /**
-     *  @brief  Modify a pfo list, recursively removing top-level neutrinos and replacing them with their daughter pfos
+     *  @brief  Extract a list of target pfos consisting of either i) primary/final-state pfos only, or ii) a full list of all
+     *          non-neutrino pfos and their daughters
      *
-     *  @param  pfoList the pfo list, which may be modified
+     *  @param  inputPfoList the input pfo list
+     *  @param  primaryPfosOnly whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
+     *  @param  pfoList the receive the output pfo list
      */
-    static void ExtractNeutrinoDaughters(pandora::PfoList &pfoList);
+    static void ExtractTargetPfos(const pandora::PfoList &inputPfoList, const bool primaryPfosOnly, pandora::PfoList &outputPfoList);
 
     /**
      *  @brief  Create map from true neutrinos to reconstructed neutrinos
@@ -84,23 +87,24 @@ public:
      *
      *  @param  pCaloHitList the input list of calo hits
      *  @param  pfoList the input list of Pfos
+     *  @param  collapseToPrimaryPfos whether to collapse hits associated with daughter pfos back to the primary pfo
      *  @param  hitToPfoMap output mapping between calo hits and parent Pfo
      *  @param  pfoToHitListMap output mapping between Pfos and associated hits
      */
     static void GetPfoToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &pfoList,
-        CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap);
+        const bool collapseToPrimaryPfos, CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap);
 
     /**
      *  @brief  Match MC particle and Pfos
      *
      *  @param  pCaloHitList the input list of calo hits
-     *  @param  pfoList the input list of Pfos
+     *  @param  pfoToHitListMap the mapping between Pfos and associated hits
      *  @param  hitToPrimaryMCMap input mapping between calo hits and primary mc particles
      *  @param  mcToBestPfoMap output mapping between MC particles and best matched Pfo
      *  @param  mcToBestPfoHitsMap output mapping between MC particles and list of matched hits in best pfo
      *  @param  mcToFullPfoMatchingMap output mapping between MC particles and all matched pfos (and matched hits)
      */
-    static void GetMCParticleToPfoMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &pfoList,
+    static void GetMCParticleToPfoMatches(const pandora::CaloHitList *const pCaloHitList, const PfoContributionMap &pfoToHitListMap,
         const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &mcToBestPfoMap, MCContributionMap &mcToBestPfoHitsMap,
         MCToPfoMatchingMap &mcToFullPfoMatchingMap);
 

@@ -23,6 +23,7 @@ namespace lar_content
 {
 
 TrackParticleBuildingAlgorithm::TrackParticleBuildingAlgorithm() :
+    m_cosmicMode(false),
     m_slidingFitHalfWindow(20)
 {
 
@@ -37,23 +38,32 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         // Need an input vertex to provide a track propagation direction
         const Vertex *const pInputVertex = LArPfoHelper::GetVertex(pInputPfo);
 
-        // Calculate a track trajectory if pfo is track-like
-        if (!LArPfoHelper::IsTrack(pInputPfo))
-            return;
+        // In cosmic mode, build tracks from all parent pfos, otherwise require that pfo is track-like
+        if (m_cosmicMode)
+	{
+	    if(!LArPfoHelper::IsFinalState(pInputPfo))
+	        return;
+	}
+        else 
+	{
+            if (!LArPfoHelper::IsTrack(pInputPfo))
+                return;
+	}
 
+        // Calculate sliding fit trajectory
         LArTrackStateVector trackStateVector;
         this->GetSlidingFitTrajectory(pInputPfo, pInputVertex, trackStateVector);
 
         if (trackStateVector.empty())
             return;
 
-        // Build track-like pfo from calculated track trajectory
+        // Build track-like pfo from track trajectory (TODO Correct these placeholder parameters)
         LArTrackPfoFactory trackFactory;
         LArTrackPfoParameters pfoParameters;
-        pfoParameters.m_particleId = pInputPfo->GetParticleId();
-        pfoParameters.m_charge = pInputPfo->GetCharge();
-        pfoParameters.m_mass = pInputPfo->GetMass();
-        pfoParameters.m_energy = pInputPfo->GetEnergy();
+        pfoParameters.m_particleId = (LArPfoHelper::IsTrack(pInputPfo) ? pInputPfo->GetParticleId() : MU_MINUS);
+        pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+        pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
+        pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = pInputPfo->GetMomentum();
         pfoParameters.m_trackStateVector = trackStateVector;
 
@@ -198,6 +208,9 @@ bool TrackParticleBuildingAlgorithm::SortByHitProjection(const LArTrackTrajector
 
 StatusCode TrackParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CosmicMode", m_cosmicMode));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
