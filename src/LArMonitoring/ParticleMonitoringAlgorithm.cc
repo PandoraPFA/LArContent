@@ -23,7 +23,8 @@ namespace lar_content
 {
 
 ParticleMonitoringAlgorithm::ParticleMonitoringAlgorithm() :
-    m_extractNeutrinoDaughters(true)
+    m_primaryPfosOnly(true),
+    m_collapseToPrimaryPfos(true)
 {
 }
 
@@ -76,10 +77,10 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
         // Load List of Pfos
         const PfoList *pPfoList = NULL;
-        PfoList pfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
+        PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
 
-        if (m_extractNeutrinoDaughters)
-            LArMonitoringHelper::ExtractNeutrinoDaughters(pfoList);
+        PfoList pfoList;
+        LArMonitoringHelper::ExtractTargetPfos(inputPfoList, m_primaryPfosOnly, pfoList);
 
         nPfosTotal = pfoList.size();
 
@@ -101,12 +102,12 @@ StatusCode ParticleMonitoringAlgorithm::Run()
 
         LArMonitoringHelper::CaloHitToPfoMap hitToPfoMap;               // [hit -> pfo]
         LArMonitoringHelper::PfoContributionMap pfoToHitListMap;        // [pfo -> reco hit list]
-        LArMonitoringHelper::GetPfoToCaloHitMatches(pCaloHitList, pfoList, hitToPfoMap, pfoToHitListMap);
+        LArMonitoringHelper::GetPfoToCaloHitMatches(pCaloHitList, pfoList, m_collapseToPrimaryPfos, hitToPfoMap, pfoToHitListMap);
 
         LArMonitoringHelper::MCToPfoMap mcToBestPfoMap;                 // [mc particle -> best matched pfo]
         LArMonitoringHelper::MCContributionMap mcToBestPfoHitsMap;      // [mc particle -> list of hits included in best pfo]
         LArMonitoringHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap; // [mc particle -> all matched pfos (and matched hits)]
-        LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoList, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
+        LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
         LArMonitoringHelper::MCToPfoMap matchedNeutrinoMap;             // [neutrino mc particle -> neutrino pfo]
         LArMonitoringHelper::GetNeutrinoMatches(pCaloHitList, recoNeutrinos, hitToPrimaryMCMap, matchedNeutrinoMap);
@@ -468,7 +469,10 @@ StatusCode ParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ExtractNeutrinoDaughters", m_extractNeutrinoDaughters));
+        "PrimaryPfosOnly", m_primaryPfosOnly));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CollapseToPrimaryPfos", m_collapseToPrimaryPfos));
 
     return STATUS_CODE_SUCCESS;
 }

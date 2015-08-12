@@ -19,6 +19,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+ShowerParticleBuildingAlgorithm::ShowerParticleBuildingAlgorithm() :
+    m_cosmicMode(false)
+{
+
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject*& pOutputPfo) const
 {
     try
@@ -26,17 +34,25 @@ void ShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const 
         // Need an input vertex to provide a shower propagation direction
         const Vertex *const pInputVertex = LArPfoHelper::GetVertex(pInputPfo);
 
-        // Calculate shower variables if pfo is shower-like
-        if (!LArPfoHelper::IsShower(pInputPfo))
-            return;
+        // In cosmic mode, build showers from all daughter pfos, otherwise require that pfo is shower-like
+        if (m_cosmicMode)
+	{
+	    if (LArPfoHelper::IsFinalState(pInputPfo))
+	        return;
+	}
+        else
+	{
+            if (!LArPfoHelper::IsShower(pInputPfo))
+                return;
+	}
 
         // Build a new pfo
         LArShowerPfoFactory pfoFactory;
         LArShowerPfoParameters pfoParameters;
-        pfoParameters.m_particleId = pInputPfo->GetParticleId();
-        pfoParameters.m_charge = pInputPfo->GetCharge();
-        pfoParameters.m_mass = pInputPfo->GetMass();
-        pfoParameters.m_energy = pInputPfo->GetEnergy();
+        pfoParameters.m_particleId = (LArPfoHelper::IsShower(pInputPfo) ? pInputPfo->GetParticleId() : E_MINUS);
+        pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+        pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
+        pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = pInputPfo->GetMomentum();
         pfoParameters.m_additionalProperty = "HelloWorld";
 
@@ -69,6 +85,9 @@ void ShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const 
 
 StatusCode ShowerParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CosmicMode", m_cosmicMode));
+
     return CustomParticleCreationAlgorithm::ReadSettings(xmlHandle);
 }
 

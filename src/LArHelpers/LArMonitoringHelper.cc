@@ -55,21 +55,34 @@ void LArMonitoringHelper::GetRecoNeutrinos(const PfoList *pPfoList, PfoList &rec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::ExtractNeutrinoDaughters(PfoList &pfoList)
+void LArMonitoringHelper::ExtractTargetPfos(const PfoList &inputPfoList, const bool primaryPfosOnly, PfoList &outputPfoList)
 {
-    for (PfoList::iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; )
+    if (primaryPfosOnly)
     {
-        const ParticleFlowObject *const pPfo(*iter);
+        for (PfoList::const_iterator iter = inputPfoList.begin(), iterEnd = inputPfoList.end(); iter != iterEnd; ++iter)
+        {
+            const ParticleFlowObject *const pPfo(*iter);
 
-        if (LArPfoHelper::IsNeutrino(pPfo))
-        {
-            pfoList.insert(pPfo->GetDaughterPfoList().begin(), pPfo->GetDaughterPfoList().end());
-            pfoList.erase(iter);
-            iter = pfoList.begin();
+            if (LArPfoHelper::IsFinalState(pPfo))
+            {
+                outputPfoList.insert(pPfo);
+            }
+            else if (pPfo->GetParentPfoList().empty() && LArPfoHelper::IsNeutrino(pPfo))
+            {
+                outputPfoList.insert(pPfo->GetDaughterPfoList().begin(), pPfo->GetDaughterPfoList().end());
+            }
         }
-        else
+    }
+    else
+    {
+        LArPfoHelper::GetAllDownstreamPfos(inputPfoList, outputPfoList);
+
+        for (PfoList::const_iterator iter = inputPfoList.begin(), iterEnd = inputPfoList.end(); iter != iterEnd; ++iter)
         {
-            ++iter;
+            const ParticleFlowObject *const pPfo(*iter);
+
+            if (LArPfoHelper::IsNeutrino(pPfo))
+                outputPfoList.erase(pPfo);
         }
     }
 }
@@ -163,15 +176,29 @@ void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList,
+void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList, const bool collapseToPrimaryPfos,
     CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap)
 {
     for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
     {
         const ParticleFlowObject *const pPfo = *pIter;
-
         ClusterList clusterList;
-        LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+
+        if (!collapseToPrimaryPfos)
+        {
+            LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+        }
+        else
+        {
+            if (!LArPfoHelper::IsFinalState(pPfo))
+                continue;
+
+            PfoList downstreamPfoList;
+            LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfoList);
+
+            for (PfoList::const_iterator dIter = downstreamPfoList.begin(), dIterEnd = downstreamPfoList.end(); dIter != dIterEnd; ++dIter)
+                LArPfoHelper::GetTwoDClusterList(*dIter, clusterList);
+        }
 
         CaloHitList pfoHitList;
 
@@ -204,18 +231,16 @@ void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloH
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList,
+void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCaloHitList, const PfoContributionMap &pfoToHitListMap,
     const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &mcToBestPfoMap, MCContributionMap &mcToBestPfoHitsMap,
     MCToPfoMatchingMap &mcToFullPfoMatchingMap)
 {
-    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
+    for (PfoContributionMap::const_iterator iter = pfoToHitListMap.begin(), iterEnd = pfoToHitListMap.end(); iter != iterEnd; ++iter)
     {
-        const ParticleFlowObject *const pPfo = *pIter;
+        const ParticleFlowObject *const pPfo(iter->first);
+        const CaloHitList &pfoHits(iter->second);
 
-        CaloHitList clusterHits;
-        LArMonitoringHelper::CollectCaloHits(pPfo, clusterHits);
-
-        for (CaloHitList::const_iterator hIter = clusterHits.begin(), hIterEnd = clusterHits.end(); hIter != hIterEnd; ++hIter)
+        for (CaloHitList::const_iterator hIter = pfoHits.begin(), hIterEnd = pfoHits.end(); hIter != hIterEnd; ++hIter)
         {
             const CaloHit *const pCaloHit = *hIter;
 

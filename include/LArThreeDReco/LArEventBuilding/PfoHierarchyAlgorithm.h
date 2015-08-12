@@ -90,13 +90,6 @@ public:
         const pandora::Cluster *GetCluster3D() const;
 
         /**
-         *  @brief  Get the address of the three dimensional vertex
-         * 
-         *  @return the address of the three dimensional vertex
-         */
-        const pandora::Vertex *GetVertex3D() const;
-
-        /**
          *  @brief  Get the address of the three dimensional sliding fit result
          * 
          *  @return the address of the three dimensional sliding fit result
@@ -271,13 +264,6 @@ inline const pandora::ParticleFlowObject *PfoHierarchyAlgorithm::PfoInfo::GetThi
 inline const pandora::Cluster *PfoHierarchyAlgorithm::PfoInfo::GetCluster3D() const
 {
     return m_pCluster3D;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Vertex *PfoHierarchyAlgorithm::PfoInfo::GetVertex3D() const
-{
-    return m_pVertex3D;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
