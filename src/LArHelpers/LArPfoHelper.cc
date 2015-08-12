@@ -355,7 +355,7 @@ int LArPfoHelper::GetPrimaryNeutrino(const ParticleFlowObject *const pPfo)
 
 bool LArPfoHelper::IsFinalState(const ParticleFlowObject *const pPfo)
 {
-    if (pPfo->GetParentPfoList().size() == 0 && !LArPfoHelper::IsNeutrino(pPfo))
+    if (pPfo->GetParentPfoList().empty() && !LArPfoHelper::IsNeutrino(pPfo))
         return true;
 
     if (LArPfoHelper::IsNeutrinoFinalState(pPfo))

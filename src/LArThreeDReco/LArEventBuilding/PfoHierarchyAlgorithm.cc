@@ -210,7 +210,6 @@ PfoHierarchyAlgorithm::PfoInfo::PfoInfo(const pandora::ParticleFlowObject *const
         const float layerPitch) :
     m_pThisPfo(pPfo),
     m_pCluster3D(NULL),
-    m_pVertex3D(LArPfoHelper::GetVertex(pPfo)),
     m_pSlidingFitResult3D(NULL),
     m_isNeutrinoVertexAssociated(false),
     m_isInnerLayerAssociated(false),
