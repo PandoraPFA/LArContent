@@ -77,6 +77,7 @@ private:
         SimpleMatchedPfo();
 
         int                                 m_id;                       ///< The unique identifier
+        int                                 m_parentId;                 ///< The unique identifier of the parent pfo (-1 if no parent set)
         int                                 m_pdgCode;                  ///< The pdg code
         int                                 m_nPfoHitsTotal;            ///< The total number of pfo hits
         int                                 m_nPfoHitsU;                ///< The number of u pfo hits
@@ -132,10 +133,14 @@ private:
     std::string         m_mcParticleListName;       ///< Name of input MC particle list
     std::string         m_pfoListName;              ///< Name of input Pfo list
 
+    bool                m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
+    bool                m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
+
     bool                m_printToScreen;            ///< Whether to print output to screen
     bool                m_writeToTree;              ///< Whether to write output to tree
 
     int                 m_minHitsToPrintPrimary;    ///< The minimum number of mc primary hits in order to warrant display
+    int                 m_minMatchedHitsToPrintPfo; ///< The minimum number of matched hits in order to warrant pfo display
 
     std::string         m_treeName;                 ///< Name of output tree
     std::string         m_fileName;                 ///< Name of output file

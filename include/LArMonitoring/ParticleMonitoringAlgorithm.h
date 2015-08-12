@@ -50,7 +50,8 @@ private:
     std::string     m_fileName;                 ///< Name of output file
     std::string     m_treeName;                 ///< Name of output tree
 
-    bool            m_extractNeutrinoDaughters; ///< Whether to treat each neutrino pfo daughter as a standalone top-level pfo
+    bool            m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
+    bool            m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
