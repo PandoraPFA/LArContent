@@ -20,8 +20,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-typedef PfoHierarchyAlgorithm::PfoInfo PfoInfo;
-typedef PfoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
+typedef NeutrinoHierarchyAlgorithm::PfoInfo PfoInfo;
+typedef NeutrinoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 
 VertexAssociatedPfosTool::VertexAssociatedPfosTool() :
     m_minVertexLongitudinalDistance(-2.5f),
@@ -33,7 +33,7 @@ VertexAssociatedPfosTool::VertexAssociatedPfosTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexAssociatedPfosTool::Run(PfoHierarchyAlgorithm *const pAlgorithm, const Vertex *const pNeutrinoVertex, PfoInfoMap &pfoInfoMap)
+void VertexAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const Vertex *const pNeutrinoVertex, PfoInfoMap &pfoInfoMap)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;

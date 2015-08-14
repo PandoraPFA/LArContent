@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoEventBuildingAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h
  *
- *  @brief  Header file for the neutrino event building algorithm class.
+ *  @brief  Header file for the neutrino properties algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_NEUTRINO_EVENT_BUILDING_ALGORITHM_H
-#define LAR_NEUTRINO_EVENT_BUILDING_ALGORITHM_H 1
+#ifndef LAR_NEUTRINO_PROPERTIES_ALGORITHM_H
+#define LAR_NEUTRINO_PROPERTIES_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  NeutrinoEventBuildingAlgorithm class
+ *  @brief  NeutrinoPropertiesAlgorithm class
  */
-class NeutrinoEventBuildingAlgorithm : public pandora::Algorithm
+class NeutrinoPropertiesAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -71,17 +71,16 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_daughterPfoListNames;   ///< The list of daughter pfo list names
     std::string             m_neutrinoPfoListName;    ///< The name of the output neutrino pfo list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *NeutrinoEventBuildingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *NeutrinoPropertiesAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new NeutrinoEventBuildingAlgorithm();
+    return new NeutrinoPropertiesAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_NEUTRINO_EVENT_BUILDING_ALGORITHM_H
+#endif // #ifndef LAR_NEUTRINO_PROPERTIES_ALGORITHM_H
