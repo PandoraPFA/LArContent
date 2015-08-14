@@ -12,6 +12,8 @@
 #include "LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
+#include "LArCheating/CheatingNeutrinoCreationAlgorithm.h"
+#include "LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
 #include "LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "LArCheating/CheatingVertexCreationAlgorithm.h"
 
@@ -135,6 +137,8 @@ public:
         d("LArCheatingClusterCreation",             lar_content::CheatingClusterCreationAlgorithm::Factory)                     \
         d("LArCheatingCosmicRayIdentification",     lar_content::CheatingCosmicRayIdentificationAlg::Factory)                   \
         d("LArCheatingCosmicRayShowerMatching",     lar_content::CheatingCosmicRayShowerMatchingAlg::Factory)                   \
+        d("LArCheatingNeutrinoCreation",            lar_content::CheatingNeutrinoCreationAlgorithm::Factory)                    \
+        d("LArCheatingNeutrinoDaughterVertices",    lar_content::CheatingNeutrinoDaughterVerticesAlgorithm::Factory)            \
         d("LArCheatingPfoCreation",                 lar_content::CheatingPfoCreationAlgorithm::Factory)                         \
         d("LArCheatingVertexCreation",              lar_content::CheatingVertexCreationAlgorithm::Factory)                      \
         d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
