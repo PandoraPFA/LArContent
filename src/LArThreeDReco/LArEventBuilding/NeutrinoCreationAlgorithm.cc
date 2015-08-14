@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.cc
  * 
- *  @brief  Implementation of the neutrino event creation algorithm class.
+ *  @brief  Implementation of the neutrino creation algorithm class.
  * 
  *  $Log: $
  */
@@ -10,14 +10,14 @@
 
 #include "LArHelpers/LArClusterHelper.h"
 
-#include "LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-StatusCode NeutrinoEventCreationAlgorithm::Run()
+StatusCode NeutrinoCreationAlgorithm::Run()
 {
     const VertexList *pVertexList(NULL);
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_vertexListName, 
@@ -26,7 +26,7 @@ StatusCode NeutrinoEventCreationAlgorithm::Run()
     if (NULL == pVertexList)
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoEventCreationAlgorithm: unable to build neutrinos" << std::endl;
+            std::cout << "NeutrinoCreationAlgorithm: unable to build neutrinos" << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }
@@ -43,7 +43,7 @@ StatusCode NeutrinoEventCreationAlgorithm::Run()
         if (VERTEX_3D != pVertex->GetVertexType())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        // TODO Correct these placeholder parameters
+        // ATTN Placeholder properties to be set by a later neutrino properties algorithm
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
         pfoParameters.m_particleId = NU_MU;
         pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
@@ -67,10 +67,9 @@ StatusCode NeutrinoEventCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutrinoEventCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode NeutrinoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_vertexListName));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
 
     return STATUS_CODE_SUCCESS;

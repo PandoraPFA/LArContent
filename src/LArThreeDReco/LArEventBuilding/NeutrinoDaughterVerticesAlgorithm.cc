@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.cc
+ *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.cc
  *
- *  @brief  Implementation of the cosmic-ray building algorithm class.
+ *  @brief  Implementation of the neutrino daughter vertices algorithm class.
  *
  *  $Log: $
  */
@@ -12,14 +12,14 @@
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-NeutrinoVertexBuildingAlgorithm::NeutrinoVertexBuildingAlgorithm() :
+NeutrinoDaughterVerticesAlgorithm::NeutrinoDaughterVerticesAlgorithm() :
     m_useParentShowerVertex(false),
     m_halfWindowLayers(20)
 {
@@ -27,7 +27,7 @@ NeutrinoVertexBuildingAlgorithm::NeutrinoVertexBuildingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutrinoVertexBuildingAlgorithm::Run()
+StatusCode NeutrinoDaughterVerticesAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoListName,
@@ -36,7 +36,7 @@ StatusCode NeutrinoVertexBuildingAlgorithm::Run()
     if (NULL == pPfoList)
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoVertexBuildingAlgorithm: pfo list unavailable." << std::endl;
+            std::cout << "NeutrinoDaughterVerticesAlgorithm: pfo list unavailable." << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }
@@ -53,7 +53,7 @@ StatusCode NeutrinoVertexBuildingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::GetDaughterPfos(const PfoList *const pPfoList, PfoVector &pfoVector) const
+void NeutrinoDaughterVerticesAlgorithm::GetDaughterPfos(const PfoList *const pPfoList, PfoVector &pfoVector) const
 {
     PfoList outputList;
 
@@ -79,7 +79,7 @@ void NeutrinoVertexBuildingAlgorithm::GetDaughterPfos(const PfoList *const pPfoL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::BuildPointingClusterMap(const PfoVector &pfoList, LArPointingClusterMap &pointingClusterMap) const
+void NeutrinoDaughterVerticesAlgorithm::BuildPointingClusterMap(const PfoVector &pfoList, LArPointingClusterMap &pointingClusterMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -115,7 +115,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildPointingClusterMap(const PfoVector &p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::BuildDaughterParticles(const LArPointingClusterMap &pointingClusterMap, const PfoVector &pfoVector) const
+void NeutrinoDaughterVerticesAlgorithm::BuildDaughterParticles(const LArPointingClusterMap &pointingClusterMap, const PfoVector &pfoVector) const
 {
     for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
     {
@@ -134,7 +134,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterParticles(const LArPointingCl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, const ParticleFlowObject *const pDaughterPfo) const
+void NeutrinoDaughterVerticesAlgorithm::BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -229,7 +229,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterTrack(const LArPointingCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::BuildDaughterShower(const ParticleFlowObject *const pDaughterPfo) const
+void NeutrinoDaughterVerticesAlgorithm::BuildDaughterShower(const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -292,7 +292,7 @@ void NeutrinoVertexBuildingAlgorithm::BuildDaughterShower(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoVertexBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
+void NeutrinoDaughterVerticesAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
     const ParticleFlowObject *const pPfo) const
 {
     if (!pPfo->GetVertexList().empty())
@@ -322,11 +322,13 @@ void NeutrinoVertexBuildingAlgorithm::SetParticleParameters(const CartesianVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutrinoVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode NeutrinoDaughterVerticesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NeutrinoPfoListName", m_neutrinoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputVertexListName", m_vertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseParentForShowerVertex", m_useParentShowerVertex));

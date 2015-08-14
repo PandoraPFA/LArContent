@@ -8,7 +8,7 @@
 #ifndef LAR_BRANCH_ASSOCIATED_PFOS_TOOL_H
 #define LAR_BRANCH_ASSOCIATED_PFOS_TOOL_H 1
 
-#include "LArThreeDReco/LArEventBuilding/PfoHierarchyAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 
 namespace lar_content
 {
@@ -33,7 +33,7 @@ public:
      */
     BranchAssociatedPfosTool();
 
-    void Run(PfoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, PfoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
+    void Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
