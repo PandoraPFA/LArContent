@@ -38,11 +38,10 @@
 #include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h"
 #include "LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
-#include "LArThreeDReco/LArEventBuilding/NeutrinoEventBuildingAlgorithm.h"
-#include "LArThreeDReco/LArEventBuilding/NeutrinoEventCreationAlgorithm.h"
-#include "LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h"
-#include "LArThreeDReco/LArEventBuilding/NeutrinoVertexCreationAlgorithm.h"
-#include "LArThreeDReco/LArEventBuilding/PfoHierarchyAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
+#include "LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/ShowerParticleBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/TrackParticleBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
@@ -142,11 +141,10 @@ public:
         d("LArCosmicRayShowerMatching",             lar_content::CosmicRayShowerMatchingAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
         d("LArCosmicRayVertexBuilding",             lar_content::CosmicRayVertexBuildingAlgorithm::Factory)                     \
-        d("LArNeutrinoEventBuilding",               lar_content::NeutrinoEventBuildingAlgorithm::Factory)                       \
-        d("LArNeutrinoEventCreation",               lar_content::NeutrinoEventCreationAlgorithm::Factory)                       \
-        d("LArNeutrinoVertexBuilding",              lar_content::NeutrinoVertexBuildingAlgorithm::Factory)                      \
-        d("LArNeutrinoVertexCreation",              lar_content::NeutrinoVertexCreationAlgorithm::Factory)                      \
-        d("LArPfoHierarchy",                        lar_content::PfoHierarchyAlgorithm::Factory)                                \
+        d("LArNeutrinoCreation",                    lar_content::NeutrinoCreationAlgorithm::Factory)                            \
+        d("LArNeutrinoDaughterVertices",            lar_content::NeutrinoDaughterVerticesAlgorithm::Factory)                    \
+        d("LArNeutrinoHierarchy",                   lar_content::NeutrinoHierarchyAlgorithm::Factory)                           \
+        d("LArNeutrinoProperties",                  lar_content::NeutrinoPropertiesAlgorithm::Factory)                          \
         d("LArShowerParticleBuilding",              lar_content::ShowerParticleBuildingAlgorithm::Factory)                      \
         d("LArTrackParticleBuilding",               lar_content::TrackParticleBuildingAlgorithm::Factory)                       \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
