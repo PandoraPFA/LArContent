@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoVertexBuildingAlgorithm.h
+ *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h
  *
- *  @brief  Header file for the neutrino vertex building algorithm class.
+ *  @brief  Header file for the neutrino daughter vertices algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_NEUTRINO_VERTEX_BUILDING_ALGORITHM_H
-#define LAR_NEUTRINO_VERTEX_BUILDING_ALGORITHM_H 1
+#ifndef LAR_NEUTRINO_DAUGHTER_VERTICES_ALGORITHM_H
+#define LAR_NEUTRINO_DAUGHTER_VERTICES_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -16,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  NeutrinoVertexBuildingAlgorithm class
+ *  @brief  NeutrinoDaughterVerticesAlgorithm class
  */
-class NeutrinoVertexBuildingAlgorithm : public pandora::Algorithm
+class NeutrinoDaughterVerticesAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -33,7 +33,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    NeutrinoVertexBuildingAlgorithm();
+    NeutrinoDaughterVerticesAlgorithm();
 
 private:
     pandora::StatusCode Run();
@@ -96,11 +96,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *NeutrinoVertexBuildingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *NeutrinoDaughterVerticesAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new NeutrinoVertexBuildingAlgorithm();
+    return new NeutrinoDaughterVerticesAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_NEUTRINO_VERTEX_BUILDING_ALGORITHM_H
+#endif // #ifndef LAR_NEUTRINO_DAUGHTER_VERTICES_ALGORITHM_H
