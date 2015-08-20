@@ -222,6 +222,14 @@ public:
     static bool IsNeutrino(const pandora::ParticleFlowObject *const pPfo);
 
     /**
+     *  @brief  Get neutrino pfos from an input pfo list
+     * 
+     *  @param  pPfoList the input pfo list
+     *  @param  recoNeutrinos to receive the list of neutrino pfos
+     */
+    static void GetRecoNeutrinos(const pandora::PfoList *const pPfoList, pandora::PfoList &recoNeutrinos);
+
+    /**
      *  @brief  Get the primary parent pfo
      *
      *  @param  pPfo the address of the Pfo

@@ -35,22 +35,6 @@ public:
     typedef std::unordered_map<const pandora::MCParticle*, PfoContributionMap> MCToPfoMatchingMap;
 
     /**
-     *  @brief  Get neutrino MC particles from an input MC particle list
-     * 
-     *  @param  pMCParticleList the input MC particle list
-     *  @param  trueNeutrinos to receive the list of neutrino MC particles
-     */
-    static void GetTrueNeutrinos(const pandora::MCParticleList *pMCParticleList, pandora::MCParticleList &trueNeutrinos);
-
-    /**
-     *  @brief  Get neutrino pfos from an input pfo list
-     * 
-     *  @param  pPfoList the input pfo list
-     *  @param  recoNeutrinos to receive the list of neutrino pfos
-     */
-    static void GetRecoNeutrinos(const pandora::PfoList *pPfoList, pandora::PfoList &recoNeutrinos);
-
-    /**
      *  @brief  Extract a list of target pfos consisting of either i) primary/final-state pfos only, or ii) a full list of all
      *          non-neutrino pfos and their daughters
      *
