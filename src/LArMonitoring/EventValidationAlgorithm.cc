@@ -72,7 +72,7 @@ StatusCode EventValidationAlgorithm::Run()
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
 
     PfoList recoNeutrinoList;                                       // reco neutrinos
-    LArMonitoringHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
+    LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
 
     MCParticleVector mcPrimaryList;                                 // primary mc particles
     LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryList);
