@@ -72,7 +72,7 @@ StatusCode EventValidationAlgorithm::Run()
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
 
     PfoList recoNeutrinoList;                                       // reco neutrinos
-    LArMonitoringHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
+    LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
 
     MCParticleVector mcPrimaryList;                                 // primary mc particles
     LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryList);
@@ -100,6 +100,7 @@ StatusCode EventValidationAlgorithm::Run()
     int mcNeutrinoNuance(-1), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
     float mcNeutrinoVtxX(-1.f), mcNeutrinoVtxY(-1.f), mcNeutrinoVtxZ(-1.f);
     float recoNeutrinoVtxX(-1.f), recoNeutrinoVtxY(-1.f), recoNeutrinoVtxZ(-1.f);
+    float mcNeutrinoE(0.f), mcNeutrinoPX(0.f), mcNeutrinoPY(0.f), mcNeutrinoPZ(0.f);
     const int nMCNeutrinos(mcNeutrinoList.size()), nRecoNeutrinos(recoNeutrinoList.size()), nMCPrimaries(mcPrimaryList.size());
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
@@ -108,6 +109,11 @@ StatusCode EventValidationAlgorithm::Run()
         mcNeutrinoVtxX = pMCNeutrino->GetEndpoint().GetX();
         mcNeutrinoVtxY = pMCNeutrino->GetEndpoint().GetY();
         mcNeutrinoVtxZ = pMCNeutrino->GetEndpoint().GetZ();
+
+        mcNeutrinoE = pMCNeutrino->GetEnergy();
+        mcNeutrinoPX = pMCNeutrino->GetMomentum().GetX();
+        mcNeutrinoPY = pMCNeutrino->GetMomentum().GetY();
+        mcNeutrinoPZ = pMCNeutrino->GetMomentum().GetZ();
 
         const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
 
@@ -142,6 +148,10 @@ StatusCode EventValidationAlgorithm::Run()
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxX", mcNeutrinoVtxX));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxY", mcNeutrinoVtxY));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxZ", mcNeutrinoVtxZ));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoE", mcNeutrinoE));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPX", mcNeutrinoPX));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPY", mcNeutrinoPY));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPZ", mcNeutrinoPZ));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxX", recoNeutrinoVtxX));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxY", recoNeutrinoVtxY));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxZ", recoNeutrinoVtxZ));

@@ -58,6 +58,14 @@ public:
     static bool IsVisible(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Get neutrino MC particles from an input MC particle list
+     * 
+     *  @param  pMCParticleList the input MC particle list
+     *  @param  trueNeutrinos to receive the list of neutrino MC particles
+     */
+    static void GetTrueNeutrinos(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleList &trueNeutrinos);
+
+    /**
      *  @brief  Get the primary parent mc particle
      *
      *  @param  pMCParticle the input mc particle
@@ -165,6 +173,25 @@ public:
      *  @param  mcNeutrinoVector the output mc particle vector
      */
     static void GetNeutrinoMCParticleList(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &mcNeutrinoVector);
+
+    /**
+     *  @brief  Find the mc particle making the largest contribution to 2D clusters in a specified pfo
+     *
+     *  @param  pT address of the pfo to examine
+     * 
+     *  @return address of the main mc particle
+     */
+    static const pandora::MCParticle *GetMainMCParticle(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Find the primary mc particle making the largest contribution to 2D clusters in a specified pfo
+     *
+     *  @param  pT address of the pfo to examine
+     *  @param  mcPrimaryMap the provided mapping between mc particles and their parents
+     * 
+     *  @return address of the main mc primary
+     */
+    static const pandora::MCParticle *GetMainMCPrimary(const pandora::ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap);
 
     /**
      *  @brief  Sort mc particles by their source
