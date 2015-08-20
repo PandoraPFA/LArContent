@@ -10,6 +10,10 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArMCParticleHelper.h"
+
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -60,23 +64,43 @@ private:
     void AddNeutrinoVertex(const pandora::MCParticle *const pMCNeutrino, const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
 
     /**
-     *  @brief  Extract candidate daughter pfos from external lists, use mc information to decided whether to add as top-level daughters of neutrino
-     *          ATTN No hierarchy of the daughter pfos is currently supported (doesn't matter if collapsed to mc primaries during clustering anyway)
+     *  @brief  Get the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
      * 
-     *  @param  pMCNeutrino the address of the mc neutrino
-     *  @param  pNeutrinoPfo the address of the neutrino pfo
+     *  @param  mcPrimaryMap to receive the mapping from mc particle to primary
      */
-    void AddDaughterPfos(const pandora::MCParticle *const pMCNeutrino, const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
+    void GetMCPrimaryMap(LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const;
+
+    typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCParticleToPfoMap;
+
+    /**
+     *  @brief  Extract candidate daughter pfos from external lists and populate a map from main mc particle (or primary) to pfo
+     * 
+     *  @param  mcPrimaryMap the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
+     *  @param  mcParticleToPfoMap to receive the mc particle to pfo map
+     */
+    void GetMCParticleToDaughterPfoMap(const LArMCParticleHelper::MCRelationMap &mcPrimaryMap, MCParticleToPfoMap &mcParticleToPfoMap) const;
+
+    /**
+     *  @brief  Use information from mc particles and the mc particle to pfo map to fully-reconstruct the daughter pfo hierarchy
+     * 
+     *  @param  pParentMCParticle the address of the (current) parent mc particle
+     *  @param  pParentPfo the address of the (current) parent pfo 
+     *  @param  mcParticleToPfoMap the mc particle to pfo map
+     */
+    void CreatePfoHierarchy(const pandora::MCParticle *const pParentMCParticle, const pandora::ParticleFlowObject *const pParentPfo,
+        const MCParticleToPfoMap &mcParticleToPfoMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_mcParticleListName;       ///< The name of the three d mc particle list name
-    std::string             m_neutrinoPfoListName;      ///< The name of the neutrino pfo list
+    bool                    m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
 
-    std::string             m_vertexListName;           ///< The name of the neutrino vertex list
-    pandora::StringVector   m_daughterPfoListNames;     ///< The list of daughter pfo list names
+    std::string             m_mcParticleListName;           ///< The name of the three d mc particle list name
+    std::string             m_neutrinoPfoListName;          ///< The name of the neutrino pfo list
 
-    float                   m_vertexTolerance;          ///< Tolerance, 3d displacement, allowed between reco neutrino vertex and mc neutrino endpoint
+    std::string             m_vertexListName;               ///< The name of the neutrino vertex list
+    pandora::StringVector   m_daughterPfoListNames;         ///< The list of daughter pfo list names
+
+    float                   m_vertexTolerance;              ///< Tolerance, 3d displacement, allowed between reco neutrino vertex and mc neutrino endpoint
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -23,38 +23,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-void LArMonitoringHelper::GetTrueNeutrinos(const MCParticleList *pMCParticleList, MCParticleList &trueNeutrinos)
-{
-    if (NULL == pMCParticleList)
-        return;
-
-    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
-    {
-        const MCParticle *const pMCParticle = *iter;
-
-        if (pMCParticle->GetParentList().empty() && LArMCParticleHelper::IsNeutrino(pMCParticle))
-            trueNeutrinos.insert(pMCParticle);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMonitoringHelper::GetRecoNeutrinos(const PfoList *pPfoList, PfoList &recoNeutrinos)
-{
-    if (NULL == pPfoList)
-        return;
-
-    for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
-    {
-        const ParticleFlowObject *const pPfo(*iter);
-
-        if (LArPfoHelper::IsNeutrino(pPfo))
-            recoNeutrinos.insert(pPfo);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArMonitoringHelper::ExtractTargetPfos(const PfoList &inputPfoList, const bool primaryPfosOnly, PfoList &outputPfoList)
 {
     if (primaryPfosOnly)
