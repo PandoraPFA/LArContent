@@ -19,6 +19,7 @@ namespace lar_content
 {
 
 CheatingNeutrinoCreationAlgorithm::CheatingNeutrinoCreationAlgorithm() :
+    m_collapseToPrimaryMCParticles(false),
     m_vertexTolerance(0.5f)
 {
 }
@@ -34,7 +35,14 @@ StatusCode CheatingNeutrinoCreationAlgorithm::Run()
     this->CreateAndSaveNeutrinoPfo(pMCNeutrino, pNeutrinoPfo);
 
     this->AddNeutrinoVertex(pMCNeutrino, pNeutrinoPfo);
-    this->AddDaughterPfos(pMCNeutrino, pNeutrinoPfo);
+
+    LArMCParticleHelper::MCRelationMap mcPrimaryMap;
+    this->GetMCPrimaryMap(mcPrimaryMap);
+
+    MCParticleToPfoMap mcParticleToPfoMap;
+    this->GetMCParticleToDaughterPfoMap(mcPrimaryMap, mcParticleToPfoMap);
+
+    this->CreatePfoHierarchy(pMCNeutrino, pNeutrinoPfo, mcParticleToPfoMap);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -97,7 +105,21 @@ void CheatingNeutrinoCreationAlgorithm::AddNeutrinoVertex(const MCParticle *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoCreationAlgorithm::AddDaughterPfos(const MCParticle *const pMCNeutrino, const ParticleFlowObject *const pNeutrinoPfo) const
+void CheatingNeutrinoCreationAlgorithm::GetMCPrimaryMap(LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const
+{
+    if (m_collapseToPrimaryMCParticles)
+    {
+        const MCParticleList *pMCParticleList = NULL;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CheatingNeutrinoCreationAlgorithm::GetMCParticleToDaughterPfoMap(const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+    MCParticleToPfoMap &mcParticleToPfoMap) const
 {
     for (const std::string &daughterPfoListName : m_daughterPfoListNames)
     {
@@ -107,26 +129,11 @@ void CheatingNeutrinoCreationAlgorithm::AddDaughterPfos(const MCParticle *const 
         {
             for (const ParticleFlowObject *const pDaughterPfo : *pDaughterPfoList)
             {
-                bool isDaughter(true);
-                ClusterList twoDClusterList;
-                LArPfoHelper::GetTwoDClusterList(pDaughterPfo, twoDClusterList);
+                const MCParticle *const pMCParticle(!m_collapseToPrimaryMCParticles ? LArMCParticleHelper::GetMainMCParticle(pDaughterPfo) :
+                    LArMCParticleHelper::GetMainMCPrimary(pDaughterPfo, mcPrimaryMap));
 
-                for (const Cluster *const pTwoDCluster : twoDClusterList)
-                {
-                    try
-                    {
-                        // TODO consider hierarchy of daughter particles if clustering hasn't already collapsed to mc primaries
-                        if (pMCNeutrino != LArMCParticleHelper::GetParentNeutrino(MCParticleHelper::GetMainMCParticle(pTwoDCluster)))
-                            isDaughter = false;
-                    }
-                    catch (StatusCodeException &)
-                    {
-                        isDaughter = false;
-                    }
-                }
-
-                if (isDaughter)
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pDaughterPfo));
+                if (!mcParticleToPfoMap.insert(MCParticleToPfoMap::value_type(pMCParticle, pDaughterPfo)).second)
+                    throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
             }
         }
         else if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
@@ -138,8 +145,32 @@ void CheatingNeutrinoCreationAlgorithm::AddDaughterPfos(const MCParticle *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void CheatingNeutrinoCreationAlgorithm::CreatePfoHierarchy(const MCParticle *const pParentMCParticle, const ParticleFlowObject *const pParentPfo,
+    const MCParticleToPfoMap &mcParticleToPfoMap) const
+{
+    for (const MCParticle *const pDaughterMCParticle : pParentMCParticle->GetDaughterList())
+    {
+        MCParticleToPfoMap::const_iterator mapIter = mcParticleToPfoMap.find(pDaughterMCParticle);
+
+        if (mcParticleToPfoMap.end() == mapIter)
+        {
+            this->CreatePfoHierarchy(pDaughterMCParticle, pParentPfo, mcParticleToPfoMap);
+            continue;
+        }
+
+        const ParticleFlowObject *const pDaughterPfo(mapIter->second);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
+        this->CreatePfoHierarchy(pDaughterMCParticle, pDaughterPfo, mcParticleToPfoMap);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingNeutrinoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "MCParticleListName", m_mcParticleListName));
 
