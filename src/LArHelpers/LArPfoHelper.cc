@@ -385,6 +385,22 @@ bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetRecoNeutrinos(const PfoList *const pPfoList, PfoList &recoNeutrinos)
+{
+    if (!pPfoList)
+        return;
+
+    for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
+    {
+        const ParticleFlowObject *const pPfo(*iter);
+
+        if (LArPfoHelper::IsNeutrino(pPfo))
+            recoNeutrinos.insert(pPfo);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const ParticleFlowObject *LArPfoHelper::GetParentPfo(const ParticleFlowObject *const pPfo)
 {
     const ParticleFlowObject *pParentPfo = pPfo;

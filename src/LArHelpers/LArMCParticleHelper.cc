@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Helpers/MCParticleHelper.h"
+
 #include "Objects/MCParticle.h"
 #include "Objects/CaloHit.h"
 #include "Objects/Cluster.h"
@@ -13,6 +15,7 @@
 #include "Pandora/PdgTable.h"
 
 #include "LArHelpers/LArMCParticleHelper.h"
+#include "LArHelpers/LArPfoHelper.h"
 
 #include <cstdlib>
 
@@ -61,6 +64,22 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
     // TODO: What about ions or neutrons? Neutrons currently included - they are parents of what would otherwise be large numbers of primary photons
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCParticleList, MCParticleList &trueNeutrinos)
+{
+    if (!pMCParticleList)
+        return;
+
+    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *const pMCParticle = *iter;
+
+        if (pMCParticle->GetParentList().empty() && LArMCParticleHelper::IsNeutrino(pMCParticle))
+            trueNeutrinos.insert(pMCParticle);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -266,6 +285,61 @@ void LArMCParticleHelper::GetNeutrinoMCParticleList(const MCParticleList *const 
         if (LArMCParticleHelper::IsNeutrino(pMCParticle) && pMCParticle->GetParentList().empty())
             mcNeutrinoVector.push_back(pMCParticle);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArMCParticleHelper::GetMainMCParticle(const ParticleFlowObject *const pPfo)
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+    const MCParticle *pMainMCParticle(NULL);
+
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        const MCParticle *const pThisMainMCParticle(MCParticleHelper::GetMainMCParticle(*iter));
+
+        if (pMainMCParticle && (pThisMainMCParticle != pMainMCParticle))
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        if (!pMainMCParticle)
+            pMainMCParticle = pThisMainMCParticle;
+    }
+
+    if (!pMainMCParticle)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return pMainMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArMCParticleHelper::GetMainMCPrimary(const ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap)
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+    const MCParticle *pMainMCPrimary(NULL);
+
+    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    {
+        MCRelationMap::const_iterator primaryIter(mcPrimaryMap.find(MCParticleHelper::GetMainMCParticle(*iter)));
+
+        if (mcPrimaryMap.end() == primaryIter)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        const MCParticle *const pThisMainMCPrimary(primaryIter->second);
+
+        if (pMainMCPrimary && (pThisMainMCPrimary != pMainMCPrimary))
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        if (!pMainMCPrimary)
+            pMainMCPrimary = pThisMainMCPrimary;
+    }
+
+    if (!pMainMCPrimary)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return pMainMCPrimary;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

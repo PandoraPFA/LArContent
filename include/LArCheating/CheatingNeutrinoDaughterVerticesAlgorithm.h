@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArMCParticleHelper.h"
+
 namespace lar_content
 {
 
@@ -28,9 +30,44 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    CheatingNeutrinoDaughterVerticesAlgorithm();
+
 private:
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Get the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
+     * 
+     *  @param  mcPrimaryMap to receive the mapping from mc particle to primary
+     */
+    void GetMCPrimaryMap(LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const;
+
+    /**
+     *  @brief  Process the list of reconstructed neutrinos
+     * 
+     *  @param  neutrinoPfos the list of neutrino pfos
+     *  @param  mcPrimaryMap the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
+     */
+    void ProcessRecoNeutrinos(const pandora::PfoList &neutrinoPfos, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const;
+
+    /**
+     *  @brief  Process a daughter pfo
+     * 
+     *  @param  pDaughterPfo the address of a daughter pfo
+     *  @param  mcPrimaryMap the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
+     */
+    void ProcessDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    bool                m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
+    std::string         m_mcParticleListName;           ///< The mc particle list name, required if want to collapse mc particle hierarchy
+
+    std::string         m_neutrinoListName;             ///< The input list of pfo list names
+    std::string         m_vertexListName;               ///< The name of the output cosmic-ray vertex list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

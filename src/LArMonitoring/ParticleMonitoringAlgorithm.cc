@@ -85,7 +85,7 @@ StatusCode ParticleMonitoringAlgorithm::Run()
         nPfosTotal = pfoList.size();
 
         PfoList recoNeutrinos;                                          // reco neutrinos
-        LArMonitoringHelper::GetRecoNeutrinos(pPfoList, recoNeutrinos);
+        LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinos);
 
         MCParticleVector mcNeutrinoList;                                // true neutrinos
         LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
