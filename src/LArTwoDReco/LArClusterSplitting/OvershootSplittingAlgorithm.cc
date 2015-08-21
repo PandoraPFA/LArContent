@@ -109,8 +109,8 @@ void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResul
                 float rL1(0.f), rT1(0.f);
                 CartesianVector projectedPosition1(0.f, 0.f, 0.f), projectedDirection1(0.f, 0.f, 0.f);
                 slidingFitResult1.GetLocalPosition(intersectPosition2, rL1, rT1);
-                slidingFitResult1.GetGlobalFitPosition(rL1, projectedPosition1);
-                slidingFitResult1.GetGlobalFitDirection(rL1, projectedDirection1);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, slidingFitResult1.GetGlobalFitPosition(rL1, projectedPosition1));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, slidingFitResult1.GetGlobalFitDirection(rL1, projectedDirection1));
 
                 const CartesianVector projectedPosition2(clusterVertex.GetPosition());
                 const CartesianVector projectedDirection2(clusterVertex.GetDirection());
