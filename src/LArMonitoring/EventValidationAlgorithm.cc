@@ -365,6 +365,8 @@ StatusCode EventValidationAlgorithm::Run()
     
     if (m_printToScreen)
         std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
+#else
+    m_eventNumber++;
 #endif
     return STATUS_CODE_SUCCESS;
 }
