@@ -195,12 +195,8 @@ void VertexBasedPfoRecoveryAlgorithm::SelectVertexClusters(const Vertex *const p
 void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
     const ClusterVector &inputClusters, ClusterList &vetoList, ParticleList &particleList) const
 {
-    bool carryOn(true);
-
-    while (carryOn)
+    while (true)
     {
-        carryOn = false;
-
         ClusterVector availableClusters, clustersU, clustersV, clustersW;
         this->SelectAvailableClusters(vetoList, inputClusters, availableClusters);
         this->SelectClusters(TPC_VIEW_U, availableClusters, clustersU);
@@ -233,7 +229,6 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
         vetoList.insert(pCluster1);
         vetoList.insert(pCluster2);
         vetoList.insert(pCluster3);
-        carryOn = true;
     }
 }
 
@@ -242,12 +237,8 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
 void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
     const ClusterVector &inputClusters, ClusterList &vetoList, ParticleList &particleList) const
 {
-    bool carryOn(true);
-
-    while (carryOn)
+    while (true)
     {
-        carryOn = false;
-
         ClusterVector availableClusters, clustersU, clustersV, clustersW;
         this->SelectAvailableClusters(vetoList, inputClusters, availableClusters);
         this->SelectClusters(TPC_VIEW_U, availableClusters, clustersU);
@@ -276,7 +267,6 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
 
         vetoList.insert(pCluster1);
         vetoList.insert(pCluster2);
-        carryOn = true;
     }
 }
 
