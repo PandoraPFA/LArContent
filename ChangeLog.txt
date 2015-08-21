@@ -1,4 +1,22 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-01-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+New algorithms and tools for reconstruction of neutrinos and their hierarchy of daughter particles.
+New cheated reconstruction for neutrinos and their hierarchy of daughter particles.
+All cheating algorithms now have option to collapse mc hierarchy back to primary particles.
+New EventValidation algorithm, which produces detailed ntuple for standalone analysis.
+Monitoring functionality overhaul, improving selection of primary mc particles and matching of reconstructed particles to primaries.
+Decorated objects in the Pandora EDM to provide value-added LArMCParticle, LArTrackPfo and LArShowerPfo.
+ParticleMonitoring and ParticleAnalysis algorithms now handle isolated hits.
+Improving consistency between Pfo particle ID and Pfo list names in ParticleRecoveryAlgorithm.
+ClusterMopUp algorithm can now read multiple lists of particle flow objects.
+Address errors from single-layer sliding fits.
+New algorithms to improve reconstruction of short cosmic muons.
+Added ConnectedRemnants tool to handle ambiguities between views for shower remnants.
+Added VertexBasedPfoRecovery algorithm, to pick up residual tracks around reconstructed neutrino interaction vertex.
+Added OvershootSplitting algorithm to fix obvious vertex overshoots, particularly in 5 GeV neutrinos.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-00-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Update to reflect API change for calo hit creation.
