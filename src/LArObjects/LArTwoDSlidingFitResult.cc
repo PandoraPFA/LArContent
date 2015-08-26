@@ -258,9 +258,8 @@ float TwoDSlidingFitResult::GetCosScatteringAngle(const float rL) const
 
     CartesianVector firstDirection(0.f,0.f,0.f);
     CartesianVector secondDirection(0.f,0.f,0.f);
-
-    this->GetGlobalFitDirection(rL - halfWindowLength, firstDirection);
-    this->GetGlobalFitDirection(rL + halfWindowLength, secondDirection);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetGlobalFitDirection(rL - halfWindowLength, firstDirection));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetGlobalFitDirection(rL + halfWindowLength, secondDirection));
 
     return firstDirection.GetDotProduct(secondDirection);
 }
