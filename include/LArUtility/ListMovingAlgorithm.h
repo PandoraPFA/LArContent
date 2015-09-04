@@ -32,9 +32,11 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    pandora::StringVector   m_pfoListNames;         ///< The list of pfo list names
     pandora::StringVector   m_clusterListNames;     ///< The list of cluster list names
     pandora::StringVector   m_vertexListNames;      ///< The list of vertex list names
-    pandora::StringVector   m_pfoListNames;         ///< The list of pfo list names
+
+    std::string             m_prefix;               ///< The prefix to add to the list names, in order to yield the output list names
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
