@@ -15,6 +15,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+NeutrinoParentAlgorithm::NeutrinoParentAlgorithm() :
+    m_pSlicingTool(nullptr)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode NeutrinoParentAlgorithm::Initialize()
 {
     m_hitTypeList.push_back(TPC_VIEW_U);
@@ -62,9 +69,9 @@ StatusCode NeutrinoParentAlgorithm::Run()
     for (const std::string &algorithmName : preSlicingAlgorithms)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
 
-    // Slicing - TODO: work out interface
+    // Slicing the three dimensional clusters into separate, distinct interactions for reprocessing
     SliceList sliceList;
-    // PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_slicingAlgorithm));
+    m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
 
 // Temporary hack
 sliceList.push_back(Slice());
@@ -148,8 +155,14 @@ StatusCode NeutrinoParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "TwoDClustering", m_clusteringAlgorithm));
 
-    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-    //    "Slicing", m_slicingAlgorithm));
+    AlgorithmTool *pAlgorithmTool(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
+        "Slicing", pAlgorithmTool));
+
+    m_pSlicingTool = dynamic_cast<SlicingTool*>(pAlgorithmTool);
+
+    if (!m_pSlicingTool)
+        return STATUS_CODE_INVALID_PARAMETER;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "ListDeletion", m_listDeletionAlgorithm));

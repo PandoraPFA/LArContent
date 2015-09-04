@@ -118,6 +118,7 @@
 #include "LArUtility/ListMovingAlgorithm.h"
 #include "LArUtility/ListPreparationAlgorithm.h"
 #include "LArUtility/NeutrinoParentAlgorithm.h"
+#include "LArUtility/EventSlicingTool.h"
 
 #include "LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "LArVertex/VertexSelectionAlgorithm.h"
@@ -231,7 +232,8 @@ public:
         d("LArOvershootTracks",                     lar_content::OvershootTracksTool::Factory)                                  \
         d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
         d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
-        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)
+        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)                                 \
+        d("LArEventSlicing",                        lar_content::EventSlicingTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
         d("LArMuonId",                              lar_content::LArParticleIdPlugins::LArMuonId)
