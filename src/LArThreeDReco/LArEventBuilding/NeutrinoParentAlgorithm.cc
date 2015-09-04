@@ -15,43 +15,109 @@ using namespace pandora;
 namespace lar_content
 {
 
+StatusCode NeutrinoParentAlgorithm::Initialize()
+{
+    m_hitTypeList.push_back(TPC_VIEW_U);
+    m_hitTypeList.push_back(TPC_VIEW_V);
+    m_hitTypeList.push_back(TPC_VIEW_W);
+
+    m_caloHitListNames[TPC_VIEW_U] = m_caloHitListNameU;
+    m_caloHitListNames[TPC_VIEW_V] = m_caloHitListNameV;
+    m_caloHitListNames[TPC_VIEW_W] = m_caloHitListNameW;
+
+    m_clusterListNames[TPC_VIEW_U] = m_clusterListNameU;
+    m_clusterListNames[TPC_VIEW_V] = m_clusterListNameV;
+    m_clusterListNames[TPC_VIEW_W] = m_clusterListNameW;
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode NeutrinoParentAlgorithm::Run()
 {
-    for (const std::string &inputClusterListName : m_inputClusterListNames)
+    // Initial reconstruction pass
+    for (const HitType hitType : m_hitTypeList)
     {
-        const StatusCode statusCode(PandoraContentApi::SaveList<Cluster>(*this, inputClusterListName, m_outputClusterListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
 
-        if (STATUS_CODE_SUCCESS != statusCode)
-            std::cout << "NeutrinoParentAlgorithm: input cluster list not available " << inputClusterListName << std::endl;
+        std::string clusterListName;
+        const ClusterList *pClusterList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithm, pClusterList, clusterListName));
+
+        if (pClusterList->empty())
+            continue;
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
+
+        for (const std::string &algorithmName : m_twoDAlgorithms)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_outputClusterListName));
+    StringVector preSlicingAlgorithms;
+    preSlicingAlgorithms.insert(preSlicingAlgorithms.end(), m_threeDAlgorithms.begin(), m_threeDAlgorithms.end());
+    preSlicingAlgorithms.insert(preSlicingAlgorithms.end(), m_threeDHitAlgorithms.begin(), m_threeDHitAlgorithms.end());
 
-    // TODO - run algorithm to collect together separate cluster lists for each neutrino interaction
-    // TODO - consider the precise interface for this
-    const ClusterList *pAllClusterList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pAllClusterList));
+    for (const std::string &algorithmName : preSlicingAlgorithms)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
 
-    if (!pAllClusterList || pAllClusterList->empty())
+    // Slicing - TODO: work out interface
+    SliceList sliceList;
+    // PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_slicingAlgorithm));
+
+// Temporary hack
+sliceList.push_back(Slice());
+Slice &sliceHack(sliceList.at(0));
+const CaloHitList *pTempListU(nullptr);
+PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameU, pTempListU));
+sliceHack.m_caloHitListU = *pTempListU;
+const CaloHitList *pTempListV(nullptr);
+PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameV, pTempListV));
+sliceHack.m_caloHitListV = *pTempListV;
+const CaloHitList *pTempListW(nullptr);
+PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameW, pTempListW));
+sliceHack.m_caloHitListW = *pTempListW;
+
+    // Delete all existing algorithm objects and process each slice separately
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_listDeletionAlgorithm));
+
+    unsigned int sliceCounter(0);
+
+    for (const Slice &slice : sliceList)
     {
-        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoParentAlgorithm: no input clusters available " << std::endl;
+        for (const HitType hitType : m_hitTypeList)
+        {
+            const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+            const std::string workingCaloHitListName(m_caloHitListNames.at(hitType) + TypeToString(sliceCounter++));
 
-        return STATUS_CODE_SUCCESS;
-    }
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, caloHitList, workingCaloHitListName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, workingCaloHitListName));
 
-    ClusterCollectionList clusterCollectionList;
-    clusterCollectionList.push_back(*pAllClusterList);
+            std::string clusterListName;
+            const ClusterList *pClusterList(nullptr);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithm, pClusterList, clusterListName));
 
-    for (const ClusterList &singleNeutrinoClusters : clusterCollectionList)
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputClusterListName, m_workingClusterListName, singleNeutrinoClusters));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_workingClusterListName));
+            if (pClusterList->empty())
+                continue;
 
-        for (const std::string &reconstructionAlgName : m_reconstructionAlgNames)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, reconstructionAlgName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_listManagementAlgName));
+            for (const std::string &algorithmName : m_twoDAlgorithms)
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+        }
+
+        StringVector algorithms;
+        algorithms.insert(algorithms.end(), m_vertexAlgorithms.begin(), m_vertexAlgorithms.end());
+        algorithms.insert(algorithms.end(), m_threeDAlgorithms.begin(), m_threeDAlgorithms.end());
+        algorithms.insert(algorithms.end(), m_mopUpAlgorithms.begin(), m_mopUpAlgorithms.end());
+        algorithms.insert(algorithms.end(), m_threeDHitAlgorithms.begin(), m_threeDHitAlgorithms.end());
+        algorithms.insert(algorithms.end(), m_neutrinoAlgorithms.begin(), m_neutrinoAlgorithms.end());
+        algorithms.insert(algorithms.end(), m_listMovingAlgorithm);
+
+        for (const std::string &algorithmName : algorithms)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -61,20 +127,53 @@ StatusCode NeutrinoParentAlgorithm::Run()
 
 StatusCode NeutrinoParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "CaloHitListNameU", m_caloHitListNameU));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputClusterListName", m_outputClusterListName));
+        "CaloHitListNameV", m_caloHitListNameV));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "WorkingClusterListName", m_workingClusterListName));
+        "CaloHitListNameW", m_caloHitListNameW));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
-        "ReconstructionAlgorithms", m_reconstructionAlgNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterListNameU", m_clusterListNameU));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterListNameV", m_clusterListNameV));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterListNameW", m_clusterListNameW));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ListManagement", m_listManagementAlgName));
+        "TwoDClustering", m_clusteringAlgorithm));
+
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+    //    "Slicing", m_slicingAlgorithm));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ListDeletion", m_listDeletionAlgorithm));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ListMoving", m_listMovingAlgorithm));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "TwoDAlgorithms", m_twoDAlgorithms));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "ThreeDAlgorithms", m_threeDAlgorithms));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "ThreeDHitAlgorithms", m_threeDHitAlgorithms));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "VertexAlgorithms", m_vertexAlgorithms));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "MopUpAlgorithms", m_mopUpAlgorithms));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "NeutrinoAlgorithms", m_neutrinoAlgorithms));
 
     return STATUS_CODE_SUCCESS;
 }

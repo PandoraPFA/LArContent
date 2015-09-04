@@ -29,17 +29,48 @@ public:
     };
 
 private:
+    pandora::StatusCode Initialize();
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<pandora::ClusterList> ClusterCollectionList;
+    /**
+     *  @brief  Slice class
+     */
+    class Slice
+    {
+    public:
+        pandora::CaloHitList    m_caloHitListU;                     ///< The u calo hit list
+        pandora::CaloHitList    m_caloHitListV;                     ///< The v calo hit list
+        pandora::CaloHitList    m_caloHitListW;                     ///< The w calo hit list
+    };
 
-    pandora::StringVector       m_inputClusterListNames;        ///< The names of the input cluster lists
-    std::string                 m_outputClusterListName;        ///< The name of the final output 2D cluster list
-    std::string                 m_workingClusterListName;       ///< The name of the working cluster list (current list for daughter algs)
+    typedef std::vector<Slice> SliceList;
 
-    pandora::StringVector       m_reconstructionAlgNames;       ///< The name of the algorithms to run for each neutrino interaction
-    std::string                 m_listManagementAlgName;        ///< The name of the algorithm to perform list management operations
+    typedef std::vector<pandora::HitType> HitTypeList;
+    typedef std::map<pandora::HitType, std::string> HitTypeToNameMap;
+
+    HitTypeList                 m_hitTypeList;                      ///< The hit type list
+    HitTypeToNameMap            m_caloHitListNames;                 ///< The hit type to calo hit list name map
+    HitTypeToNameMap            m_clusterListNames;                 ///< The hit type to cluster list name map
+
+    std::string                 m_caloHitListNameU;                 ///< The name of the u input calo hit list
+    std::string                 m_caloHitListNameV;                 ///< The name of the v input calo hit list
+    std::string                 m_caloHitListNameW;                 ///< The name of the w input calo hit list
+        
+    std::string                 m_clusterListNameU;                 ///< The name of the u working cluster list
+    std::string                 m_clusterListNameV;                 ///< The name of the v working cluster list
+    std::string                 m_clusterListNameW;                 ///< The name of the w working cluster list
+        
+    std::string                 m_clusteringAlgorithm;              ///< The name of the two dimensional clustering algorithm
+    std::string                 m_listDeletionAlgorithm;            ///< The name of the list deletion algorithm
+    std::string                 m_listMovingAlgorithm;              ///< The name of the list moving algorithm
+
+    pandora::StringVector       m_twoDAlgorithms;                   ///< The names of the two dimensional reconstruction algorithms
+    pandora::StringVector       m_threeDAlgorithms;                 ///< The names of the three dimensional reconstruction algorithms
+    pandora::StringVector       m_threeDHitAlgorithms;              ///< The names of the three dimensional hit creation algorithms
+    pandora::StringVector       m_vertexAlgorithms;                 ///< The names of the vertex reconstruction algorithms
+    pandora::StringVector       m_mopUpAlgorithms;                  ///< The names of the mop-up algorithms
+    pandora::StringVector       m_neutrinoAlgorithms;               ///< The names of the neutrino building algorithms
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
