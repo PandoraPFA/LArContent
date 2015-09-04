@@ -73,19 +73,6 @@ StatusCode NeutrinoParentAlgorithm::Run()
     SliceList sliceList;
     m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
 
-// Temporary hack
-sliceList.push_back(Slice());
-Slice &sliceHack(sliceList.at(0));
-const CaloHitList *pTempListU(nullptr);
-PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameU, pTempListU));
-sliceHack.m_caloHitListU = *pTempListU;
-const CaloHitList *pTempListV(nullptr);
-PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameV, pTempListV));
-sliceHack.m_caloHitListV = *pTempListV;
-const CaloHitList *pTempListW(nullptr);
-PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameW, pTempListW));
-sliceHack.m_caloHitListW = *pTempListW;
-
     // Delete all existing algorithm objects and process each slice separately
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_listDeletionAlgorithm));
 
