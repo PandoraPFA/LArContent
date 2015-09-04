@@ -54,16 +54,15 @@ StatusCode ShowerGrowingAlgorithm::Run()
         try
         {
             const ClusterList *pClusterList = NULL;
-            const StatusCode listStatusCode(PandoraContentApi::GetList(*this, *listIter, pClusterList));
+            PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
 
-            if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
+            if (!pClusterList || pClusterList->empty())
             {
-                std::cout << "ShowerGrowingAlgorithm: cluster list not found " << *listIter << std::endl;
+                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ShowerGrowingAlgorithm: unable to find cluster list " << *listIter << std::endl;
+
                 continue;
             }
-
-            if (STATUS_CODE_SUCCESS != listStatusCode)
-                return listStatusCode;
 
             m_clusterDirectionMap.clear();
 

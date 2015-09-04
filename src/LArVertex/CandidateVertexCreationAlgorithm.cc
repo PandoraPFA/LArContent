@@ -67,16 +67,9 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 
 void CandidateVertexCreationAlgorithm::SelectClusters(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW)
 {
-    const ClusterList *pInputClusterListU(NULL), *pInputClusterListV(NULL), *pInputClusterListW(NULL);
-
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_inputClusterListNameU, pInputClusterListU))
-        this->SelectClusters(pInputClusterListU, clusterListU);
-
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_inputClusterListNameV, pInputClusterListV))
-        this->SelectClusters(pInputClusterListV, clusterListV);
-
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_inputClusterListNameW, pInputClusterListW))
-        this->SelectClusters(pInputClusterListW, clusterListW);
+    this->SelectClusters(m_inputClusterListNameU, clusterListU);
+    this->SelectClusters(m_inputClusterListNameV, clusterListV);
+    this->SelectClusters(m_inputClusterListNameW, clusterListW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,8 +141,19 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::SelectClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList)
+void CandidateVertexCreationAlgorithm::SelectClusters(const std::string &clusterListName, ClusterList &selectedClusterList)
 {
+    const ClusterList *pInputClusterList(NULL);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pInputClusterList));
+
+    if (!pInputClusterList || pInputClusterList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "CandidateVertexCreationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
+
+        return;
+    }
+
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
         try

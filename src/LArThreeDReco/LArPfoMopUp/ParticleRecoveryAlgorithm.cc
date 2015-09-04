@@ -65,8 +65,13 @@ void ParticleRecoveryAlgorithm::GetInputClusters(ClusterList &inputClusterListU,
         const ClusterList *pClusterList(NULL);
         PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *iter, pClusterList));
 
-        if (!pClusterList)
+        if (!pClusterList || pClusterList->empty())
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ParticleRecoveryAlgorithm: unable to find cluster list " << *iter << std::endl;
+
             continue;
+        }
 
         for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
         {

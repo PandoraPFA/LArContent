@@ -43,20 +43,26 @@ VertexBasedPfoMergingAlgorithm::VertexBasedPfoMergingAlgorithm() :
 
 StatusCode VertexBasedPfoMergingAlgorithm::Run()
 {
-    const VertexList *pVertexList(NULL);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+    const VertexList *pVertexList = NULL;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList))
 
-    if (NULL == pVertex)
+    const Vertex *const pSelectedVertex((pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+
+    if (!pSelectedVertex)
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "VertexBasedPfoMergingAlgorithm: unable to find vertex in list " << m_inputVertexListName << std::endl;
+
         return STATUS_CODE_SUCCESS;
+    }
 
     while (true)
     {
         PfoList vertexPfos, nonVertexPfos;
-        this->GetInputPfos(pVertex, vertexPfos, nonVertexPfos);
+        this->GetInputPfos(pSelectedVertex, vertexPfos, nonVertexPfos);
 
         PfoAssociationList pfoAssociationList;
-        this->GetPfoAssociations(pVertex, vertexPfos, nonVertexPfos, pfoAssociationList);
+        this->GetPfoAssociations(pSelectedVertex, vertexPfos, nonVertexPfos, pfoAssociationList);
 
         std::sort(pfoAssociationList.begin(), pfoAssociationList.end());
         const bool pfoMergeMade(this->ProcessPfoAssociations(pfoAssociationList));
@@ -83,13 +89,13 @@ void VertexBasedPfoMergingAlgorithm::GetInputPfos(const Vertex *const pVertex, P
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
             continue;
 
-        for (PfoList::const_iterator pfoIter = pPfoList->begin(), pfoIterEnd = pPfoList->end(); pfoIter != pfoIterEnd; ++pfoIter)
-        {
-            const Pfo *const pPfo(*pfoIter);
-            PfoList &pfoTargetList(this->IsVertexAssociated(pPfo, pVertex) ? vertexPfos : nonVertexPfos);
-            pfoTargetList.insert(pPfo);
-        }
+    for (PfoList::const_iterator pfoIter = pPfoList->begin(), pfoIterEnd = pPfoList->end(); pfoIter != pfoIterEnd; ++pfoIter)
+    {
+        const Pfo *const pPfo(*pfoIter);
+        PfoList &pfoTargetList(this->IsVertexAssociated(pPfo, pVertex) ? vertexPfos : nonVertexPfos);
+        pfoTargetList.insert(pPfo);
     }
+}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -542,6 +548,9 @@ float VertexBasedPfoMergingAlgorithm::ConeParameters::GetCosHalfAngleEstimate(co
 
 StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputVertexListName", m_inputVertexListName));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrackPfoListName", m_trackPfoListName));
 
