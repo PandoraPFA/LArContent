@@ -23,10 +23,10 @@ StatusCode NeutrinoCreationAlgorithm::Run()
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_vertexListName, 
         pVertexList));
 
-    if (NULL == pVertexList)
+    if (!pVertexList || pVertexList->empty())
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoCreationAlgorithm: unable to build neutrinos" << std::endl;
+            std::cout << "NeutrinoCreationAlgorithm: unable to find vertex list " << m_vertexListName << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }

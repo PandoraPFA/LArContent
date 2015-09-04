@@ -67,10 +67,10 @@ private:
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
      *
-     *  @param  pInputClusterList address of an input cluster list
+     *  @param  clusterListName the cluster list name
      *  @param  selectedClusterList to receive the selected cluster list
      */
-    void SelectClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList);
+    void SelectClusters(const std::string &clusterListName, pandora::ClusterList &selectedClusterList);
 
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache

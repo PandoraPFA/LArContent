@@ -33,10 +33,10 @@ StatusCode NeutrinoDaughterVerticesAlgorithm::Run()
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoListName,
         pPfoList));
 
-    if (NULL == pPfoList)
+    if (!pPfoList || pPfoList->empty())
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoDaughterVerticesAlgorithm: pfo list unavailable." << std::endl;
+            std::cout << "NeutrinoDaughterVerticesAlgorithm: unable to find pfo list " << m_neutrinoListName << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }

@@ -43,11 +43,14 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
     while (associationsMade)
     {
         associationsMade = false;
-        PfoList assignedPfos, unassignedPfos;
+        PfoVector assignedPfos, unassignedPfos;
         pAlgorithm->SeparatePfos(pfoInfoMap, assignedPfos, unassignedPfos);
 
         if (unassignedPfos.empty())
             break;
+
+        // ATTN May want to reconsider precise association mechanics for complex situations
+        PfoList recentlyAssigned;
 
         for (const ParticleFlowObject *const pParentPfo : assignedPfos)
         {
@@ -57,6 +60,9 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
 
             for (const ParticleFlowObject *const pPfo : unassignedPfos)
             {
+                if (recentlyAssigned.count(pPfo))
+                    continue;
+
                 PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
                 const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
@@ -74,6 +80,7 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
                     pParentPfoInfo->AddDaughterPfo(pPfoInfo->GetThisPfo());
                     pPfoInfo->SetParentPfo(pParentPfoInfo->GetThisPfo());
                     pPfoInfo->SetInnerLayerAssociation(useInner);
+                    recentlyAssigned.insert(pPfoInfo->GetThisPfo());
                 }
             }
         }

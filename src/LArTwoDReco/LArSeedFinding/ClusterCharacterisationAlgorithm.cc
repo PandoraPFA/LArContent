@@ -34,16 +34,15 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
     for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
         const ClusterList *pClusterList = NULL;
-        const StatusCode listStatusCode(PandoraContentApi::GetList(*this, *listIter, pClusterList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
 
-        if (STATUS_CODE_NOT_INITIALIZED == listStatusCode)
+        if (!pClusterList || pClusterList->empty())
         {
-            std::cout << "ClusterCharacterisationAlgorithm: cluster list not found " << *listIter << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ClusterCharacterisationAlgorithm: unable to find cluster list " << *listIter << std::endl;
+
             continue;
         }
-
-        if (STATUS_CODE_SUCCESS != listStatusCode)
-            return listStatusCode;
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
