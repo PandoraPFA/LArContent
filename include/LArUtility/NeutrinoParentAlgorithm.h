@@ -13,6 +13,10 @@
 namespace lar_content
 {
 
+class SlicingTool;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  NeutrinoParentAlgorithm class
  */
@@ -28,10 +32,10 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-private:
-    pandora::StatusCode Initialize();
-    pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    /**
+     *  @brief  Default constructor
+     */
+    NeutrinoParentAlgorithm();
 
     /**
      *  @brief  Slice class
@@ -49,6 +53,11 @@ private:
     typedef std::vector<pandora::HitType> HitTypeList;
     typedef std::map<pandora::HitType, std::string> HitTypeToNameMap;
 
+private:
+    pandora::StatusCode Initialize();
+    pandora::StatusCode Run();
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
     HitTypeList                 m_hitTypeList;                      ///< The hit type list
     HitTypeToNameMap            m_caloHitListNames;                 ///< The hit type to calo hit list name map
     HitTypeToNameMap            m_clusterListNames;                 ///< The hit type to cluster list name map
@@ -65,6 +74,8 @@ private:
     std::string                 m_listDeletionAlgorithm;            ///< The name of the list deletion algorithm
     std::string                 m_listMovingAlgorithm;              ///< The name of the list moving algorithm
 
+    SlicingTool                *m_pSlicingTool;                     ///< The address of the slicing tool
+
     pandora::StringVector       m_twoDAlgorithms;                   ///< The names of the two dimensional reconstruction algorithms
     pandora::StringVector       m_threeDAlgorithms;                 ///< The names of the three dimensional reconstruction algorithms
     pandora::StringVector       m_threeDHitAlgorithms;              ///< The names of the three dimensional hit creation algorithms
@@ -73,6 +84,27 @@ private:
     pandora::StringVector       m_neutrinoAlgorithms;               ///< The names of the neutrino building algorithms
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  SlicingTool class
+ */
+class SlicingTool : public pandora::AlgorithmTool
+{
+public:
+    /**
+     *  @brief  Run the algorithm tool
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  caloHitListNames the hit type to calo hit list name map
+     *  @param  clusterListNames the hit type to cluster list name map
+     *  @param  sliceList to receive the populated slice list
+     */
+    virtual void Slice(NeutrinoParentAlgorithm *const pAlgorithm, const NeutrinoParentAlgorithm::HitTypeToNameMap &caloHitListNames,
+        const NeutrinoParentAlgorithm::HitTypeToNameMap &clusterListNames, NeutrinoParentAlgorithm::SliceList &sliceList) = 0;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline pandora::Algorithm *NeutrinoParentAlgorithm::Factory::CreateAlgorithm() const
