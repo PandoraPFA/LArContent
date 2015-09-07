@@ -113,8 +113,12 @@
 
 #include "LArUtility/ListChangingAlgorithm.h"
 #include "LArUtility/ListDissolutionAlgorithm.h"
+#include "LArUtility/ListDeletionAlgorithm.h"
 #include "LArUtility/ListMergingAlgorithm.h"
+#include "LArUtility/ListMovingAlgorithm.h"
 #include "LArUtility/ListPreparationAlgorithm.h"
+#include "LArUtility/NeutrinoParentAlgorithm.h"
+#include "LArUtility/EventSlicingTool.h"
 
 #include "LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "LArVertex/VertexSelectionAlgorithm.h"
@@ -191,9 +195,12 @@ public:
         d("LArShowerGrowing",                       lar_content::ShowerGrowingAlgorithm::Factory)                               \
         d("LArTwoDParticleCreationAlgorithm",       lar_content::TwoDParticleCreationAlgorithm::Factory)                        \
         d("LArListChanging",                        lar_content::ListChangingAlgorithm::Factory)                                \
+        d("LArListDeletion",                        lar_content::ListDeletionAlgorithm::Factory)                                \
         d("LArListDissolution",                     lar_content::ListDissolutionAlgorithm::Factory)                             \
         d("LArListMerging",                         lar_content::ListMergingAlgorithm::Factory)                                 \
+        d("LArListMoving",                          lar_content::ListMovingAlgorithm::Factory)                                  \
         d("LArListPreparation",                     lar_content::ListPreparationAlgorithm::Factory)                             \
+        d("LArNeutrinoParent",                      lar_content::NeutrinoParentAlgorithm::Factory)                              \
         d("LArCandidateVertexCreation",             lar_content::CandidateVertexCreationAlgorithm::Factory)                     \
         d("LArVertexSelection",                     lar_content::VertexSelectionAlgorithm::Factory)
 
@@ -225,7 +232,8 @@ public:
         d("LArOvershootTracks",                     lar_content::OvershootTracksTool::Factory)                                  \
         d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
         d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
-        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)
+        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)                                 \
+        d("LArEventSlicing",                        lar_content::EventSlicingTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
         d("LArMuonId",                              lar_content::LArParticleIdPlugins::LArMuonId)

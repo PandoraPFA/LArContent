@@ -29,6 +29,27 @@ public:
     static pandora::HitType GetClusterHitType(const pandora::Cluster *const pCluster);
 
     /**
+     *  @brief  Divide an input cluster list into separate u, v and w lists (exception raised if alternative hit type encountered)
+     *
+     *  @param  inputClusters the input cluster list
+     *  @param  clusterListU to receive the u clusters
+     *  @param  clusterListV to receive the v clusters
+     *  @param  clusterListW to receive the w clusters
+     */
+    static void GetClustersUVW(const pandora::ClusterList &inputClusters, pandora::ClusterList &clusterListU,
+        pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW);
+
+    /**
+     *  @brief  Get the subset of clusters, from a provided list, that match the specified hit type
+     *
+     *  @param  inputClusters the input cluster list
+     *  @param  hitType the specified hit type
+     *  @param  clusterList to receive the clusters
+     */
+    static void GetClustersByHitType(const pandora::ClusterList &inputClusters, const pandora::HitType hitType,
+        pandora::ClusterList &clusterList);
+
+    /**
      *  @brief  Get length squared of cluster
      *
      *  @param  pCluster address of the cluster
