@@ -54,10 +54,11 @@ StatusCode CosmicRayBaseMatchingAlgorithm::GetAvailableClusters(const std::strin
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
         inputClusterListName, pClusterList))
 
-    if (NULL == pClusterList)
+    if (!pClusterList || pClusterList->empty())
     { 
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "CosmicRayBaseMatchingAlgorithm: could not find cluster list " << inputClusterListName << std::endl;
+            std::cout << "CosmicRayBaseMatchingAlgorithm: unable to find cluster list " << inputClusterListName << std::endl;
+
         return STATUS_CODE_SUCCESS;
     }
 

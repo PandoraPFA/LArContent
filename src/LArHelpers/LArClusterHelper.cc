@@ -31,6 +31,32 @@ HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArClusterHelper::GetClustersUVW(const ClusterList &inputClusters, ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW)
+{
+    for (ClusterList::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
+    {
+        const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
+
+        if (TPC_VIEW_U == hitType) clusterListU.insert(*iter);
+        else if (TPC_VIEW_V == hitType) clusterListV.insert(*iter);
+        else if (TPC_VIEW_W == hitType) clusterListW.insert(*iter);
+        else throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::GetClustersByHitType(const ClusterList &inputClusters, const HitType hitType, ClusterList &clusterList)
+{
+    for (ClusterList::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
+    {
+        if (hitType == LArClusterHelper::GetClusterHitType(*iter))
+            clusterList.insert(*iter);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArClusterHelper::GetLengthSquared(const Cluster *const pCluster)
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());

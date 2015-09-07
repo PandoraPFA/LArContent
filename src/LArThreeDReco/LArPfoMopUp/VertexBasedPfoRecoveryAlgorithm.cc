@@ -32,29 +32,18 @@ VertexBasedPfoRecoveryAlgorithm::VertexBasedPfoRecoveryAlgorithm() :
 
 StatusCode VertexBasedPfoRecoveryAlgorithm::Run()
 {
-    // Get reconstructed vertex (assume there is only one)
     const VertexList *pVertexList = NULL;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        m_inputVertexListName, pVertexList))
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList))
 
-    if (NULL == pVertexList)
+    const Vertex *const pSelectedVertex((pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+
+    if (!pSelectedVertex)
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "VertexBasedPfoRecoveryAlgorithm: could not find vertex list " << m_inputVertexListName << std::endl;
+            std::cout << "VertexBasedPfoRecoveryAlgorithm: unable to find vertex in list " << m_inputVertexListName << std::endl;
+
         return STATUS_CODE_SUCCESS;
     }
-
-    if (pVertexList->empty())
-        return STATUS_CODE_NOT_INITIALIZED;
-
-    if (pVertexList->size() != 1)
-        return STATUS_CODE_OUT_OF_RANGE;
-
-    const Vertex *const pSelectedVertex(*(pVertexList->begin()));
-
-    if (VERTEX_3D != pSelectedVertex->GetVertexType())
-        return STATUS_CODE_INVALID_PARAMETER;
-
 
     // Get the available clusters from each view
     ClusterVector availableClusters;

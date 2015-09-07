@@ -157,8 +157,13 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     const PfoList *pPfoList = NULL;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
-    if (NULL == pPfoList)
+    if (!pPfoList || pPfoList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ThreeDHitCreationAlgorithm: unable to find pfo list " << m_inputPfoListName << std::endl;
+
         return STATUS_CODE_SUCCESS;
+    }
 
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
     {

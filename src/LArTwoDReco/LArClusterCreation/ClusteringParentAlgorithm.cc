@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 ClusteringParentAlgorithm::ClusteringParentAlgorithm() :
-    m_restoreOriginalCaloHitList(false),
+    m_replaceCurrentCaloHitList(false),
     m_replaceCurrentClusterList(true)
 {
 }
@@ -63,7 +63,7 @@ StatusCode ClusteringParentAlgorithm::Run()
     }
 
     // Unless specified, return current calo hit list to that when algorithm started
-    if (m_restoreOriginalCaloHitList && !m_inputCaloHitListName.empty())
+    if (!m_replaceCurrentCaloHitList && !m_inputCaloHitListName.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, originalCaloHitListName));
     }
@@ -86,15 +86,14 @@ StatusCode ClusteringParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InputCaloHitListName", m_inputCaloHitListName));
 
-    m_restoreOriginalCaloHitList = !m_inputCaloHitListName.empty();
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RestoreOriginalCaloHitList", m_restoreOriginalCaloHitList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ReplaceCurrentCaloHitList", m_replaceCurrentCaloHitList));
 
     // Output parameters: name of output cluster list and whether it should subsequently be used as the current list
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterListName", m_clusterListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentClusterList", m_replaceCurrentClusterList));
 
     return STATUS_CODE_SUCCESS;

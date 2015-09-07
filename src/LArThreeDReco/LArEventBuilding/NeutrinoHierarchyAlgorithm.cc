@@ -26,7 +26,7 @@ NeutrinoHierarchyAlgorithm::NeutrinoHierarchyAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoList &assignedPfos, PfoList &unassignedPfos) const
+void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoVector &assignedPfos, PfoVector &unassignedPfos) const
 {
     for (const PfoInfoMap::value_type mapIter : pfoInfoMap)
     {
@@ -34,13 +34,16 @@ void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoL
 
         if (pPfoInfo->IsNeutrinoVertexAssociated() || pPfoInfo->GetParentPfo())
         {
-            assignedPfos.insert(pPfoInfo->GetThisPfo());
+            assignedPfos.push_back(pPfoInfo->GetThisPfo());
         }
         else
         {
-            unassignedPfos.insert(pPfoInfo->GetThisPfo());
+            unassignedPfos.push_back(pPfoInfo->GetThisPfo());
         }
     }
+
+    std::sort(assignedPfos.begin(), assignedPfos.end(), LArPfoHelper::SortByNHits);
+    std::sort(unassignedPfos.begin(), unassignedPfos.end(), LArPfoHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -62,6 +65,8 @@ StatusCode NeutrinoHierarchyAlgorithm::Run()
 
         if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
             throw statusCodeException;
+
+        return STATUS_CODE_SUCCESS;
     }
 
     PfoInfoMap pfoInfoMap;
@@ -102,8 +107,13 @@ void NeutrinoHierarchyAlgorithm::GetNeutrinoPfo(const ParticleFlowObject *&pNeut
     const PfoList *pPfoList = NULL;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoPfoListName, pPfoList));
 
-    if (!pPfoList)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    if (!pPfoList || pPfoList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "NeutrinoHierarchyAlgorithm: unable to find pfo list " << m_neutrinoPfoListName << std::endl;
+
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
 
     // ATTN Enforces that only one pfo, of neutrino-type, be in the specified input list
     pNeutrinoPfo = ((1 == pPfoList->size()) ? *(pPfoList->begin()) : NULL);
@@ -124,15 +134,14 @@ void NeutrinoHierarchyAlgorithm::GetCandidateDaughterPfoList(PfoList &candidateD
         {
             candidateDaughterPfoList.insert(pCandidatePfoList->begin(), pCandidatePfoList->end());
         }
-        else
+        else if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "NeutrinoHierarchyAlgorithm: pfo list " << daughterPfoListName << " unavailable." << std::endl;
+            std::cout << "NeutrinoHierarchyAlgorithm: unable to find pfo list " << daughterPfoListName << std::endl;
         }
     }
 
     if (candidateDaughterPfoList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

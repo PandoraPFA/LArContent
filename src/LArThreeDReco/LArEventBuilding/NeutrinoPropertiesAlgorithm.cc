@@ -23,10 +23,10 @@ StatusCode NeutrinoPropertiesAlgorithm::Run()
     const PfoList *pPfoList(NULL);
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoPfoListName, pPfoList));
 
-    if (!pPfoList)
+    if (!pPfoList || pPfoList->empty())
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "NeutrinoPropertiesAlgorithm: required input pfos unavailable." << std::endl;
+            std::cout << "NeutrinoPropertiesAlgorithm: unable to find pfo list " << m_neutrinoPfoListName << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }

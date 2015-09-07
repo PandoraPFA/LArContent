@@ -182,10 +182,10 @@ public:
      *  @brief  Query the pfo info map and separate/extract pfos currently either acting as parents or associated with the neutrino vertex
      * 
      *  @param  pfoInfoMap the pfo info map
-     *  @param  assignedPfos to receive the list of assigned pfos
-     *  @param  unassignedPfos to receive the list of unassigned pfos
+     *  @param  assignedPfos to receive the sorted vector of assigned pfos
+     *  @param  unassignedPfos to receive the sorted vector of unassigned pfos
      */
-    void SeparatePfos(const NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap, pandora::PfoList &assignedPfos, pandora::PfoList &unassignedPfos) const;
+    void SeparatePfos(const NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap, pandora::PfoVector &assignedPfos, pandora::PfoVector &unassignedPfos) const;
 
 private:
     pandora::StatusCode Run();
