@@ -62,7 +62,11 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
     const ClusterList &pfoClusterList(pPfo->GetClusterList());
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
-    for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
+    ClusterVector pfoClusterVector;
+    pfoClusterVector.insert(pfoClusterVector.end(), pfoClusterList.begin(), pfoClusterList.end());
+    std::sort(pfoClusterVector.begin(), pfoClusterVector.end(), LArClusterHelper::SortByNHits);
+
+    for (ClusterVector::const_iterator iter = pfoClusterVector.begin(), iterEnd = pfoClusterVector.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster(*iter);
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
@@ -71,7 +75,7 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
             continue;
 
         if (matchedSlidingFitMap.end() != matchedSlidingFitMap.find(hitType))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+            continue;
 
         try
         {
