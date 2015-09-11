@@ -213,7 +213,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector m_inputClusterListNames;        ///< The list of input cluster list names
-    std::string           m_inputVertexListName;          ///< The name of the input vertex list
     std::string           m_outputPfoListName;            ///< The name of the output pfo list
 
     unsigned int          m_slidingFitHalfWindow;         ///<
