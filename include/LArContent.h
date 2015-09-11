@@ -12,6 +12,7 @@
 #include "LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
+#include "LArCheating/CheatingEventSlicingTool.h"
 #include "LArCheating/CheatingNeutrinoCreationAlgorithm.h"
 #include "LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
 #include "LArCheating/CheatingPfoCreationAlgorithm.h"
@@ -40,6 +41,7 @@
 #include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h"
 #include "LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
+#include "LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
@@ -118,7 +120,6 @@
 #include "LArUtility/ListMovingAlgorithm.h"
 #include "LArUtility/ListPreparationAlgorithm.h"
 #include "LArUtility/NeutrinoParentAlgorithm.h"
-#include "LArUtility/EventSlicingTool.h"
 
 #include "LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "LArVertex/VertexSelectionAlgorithm.h"
@@ -205,8 +206,10 @@ public:
         d("LArVertexSelection",                     lar_content::VertexSelectionAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArCheatingEventSlicing",                lar_content::CheatingEventSlicingTool::Factory)                             \
         d("LArBranchAssociatedPfos",                lar_content::BranchAssociatedPfosTool::Factory)                             \
         d("LArEndAssociatedPfos",                   lar_content::EndAssociatedPfosTool::Factory)                                \
+        d("LArEventSlicing",                        lar_content::EventSlicingTool::Factory)                                     \
         d("LArVertexAssociatedPfos",                lar_content::VertexAssociatedPfosTool::Factory)                             \
         d("LArClearShowers",                        lar_content::ClearShowersTool::Factory)                                     \
         d("LArShowerTensorVisualization",           lar_content::ShowerTensorVisualizationTool::Factory)                        \
@@ -232,8 +235,7 @@ public:
         d("LArOvershootTracks",                     lar_content::OvershootTracksTool::Factory)                                  \
         d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
         d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
-        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)                                 \
-        d("LArEventSlicing",                        lar_content::EventSlicingTool::Factory)
+        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
         d("LArMuonId",                              lar_content::LArParticleIdPlugins::LArMuonId)
