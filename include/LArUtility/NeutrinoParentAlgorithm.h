@@ -9,6 +9,7 @@
 #define LAR_NEUTRINO_PARENT_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
+#include "Pandora/AlgorithmTool.h"
 
 namespace lar_content
 {

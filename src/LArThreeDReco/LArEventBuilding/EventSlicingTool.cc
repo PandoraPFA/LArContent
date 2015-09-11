@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/EventSlicingTool.cc
+ *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/EventSlicingTool.cc
  * 
  *  @brief  Implementation of the event slicing tool class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/EventSlicingTool.h"
+#include "LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 
 using namespace pandora;
 
