@@ -344,7 +344,6 @@ private:
     typedef std::unordered_map<pandora::HitType, const pandora::Cluster*, std::hash<unsigned int> > HitTypeToClusterMap;
     typedef std::unordered_map<pandora::HitType, ClusterAssociation, std::hash<unsigned int> > HitTypeToAssociationMap;
 
-    std::string             m_inputVertexListName;          ///< The name of the input vertex list
     std::string             m_trackPfoListName;                 ///< The input track pfo list name
     std::string             m_showerPfoListName;                ///< The input shower pfo list name
     pandora::StringVector   m_clusterListNames;                 ///< The list of underlying cluster list names
