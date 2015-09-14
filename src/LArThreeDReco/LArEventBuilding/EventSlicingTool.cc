@@ -9,7 +9,10 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
+
+#include "LArObjects/LArThreeDSlidingFitResult.h"
 
 #include "LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 
@@ -17,6 +20,13 @@ using namespace pandora;
 
 namespace lar_content
 {
+
+EventSlicingTool::EventSlicingTool() :
+    m_halfWindowLayers(20)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventSlicingTool::Slice(NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
     const HitTypeToNameMap &clusterListNames, SliceList &sliceList)
@@ -90,16 +100,99 @@ void EventSlicingTool::GetThreeDClusters(const Algorithm *const pAlgorithm, cons
 void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, const ClusterList &showerClusters3D,
     ClusterSliceList &clusterSliceList) const
 {
-    // TODO Group 3D clusters into slices
+    ClusterVector sortedTrackClusters3D(trackClusters3D.begin(), trackClusters3D.end());
+    std::sort(sortedTrackClusters3D.begin(), sortedTrackClusters3D.end(), LArClusterHelper::SortByNHits);
 
-    
+    ThreeDSlidingFitResultMap slidingFitResultMap;
+    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
-    ClusterList allClusters;
-    allClusters.insert(trackClusters3D.begin(), trackClusters3D.end());
-    allClusters.insert(showerClusters3D.begin(), showerClusters3D.end());
+    for (const Cluster *const pCluster3D : sortedTrackClusters3D)
+    {
+        try {slidingFitResultMap.insert(ThreeDSlidingFitResultMap::value_type(pCluster3D, ThreeDSlidingFitResult(pCluster3D, m_halfWindowLayers, layerPitch)));}
+        catch (StatusCodeException &) {std::cout << "EventSlicingTool: ThreeDSlidingFitResult failure for track cluster." << std::endl;}
+    }
 
-    if (!allClusters.empty())
-        clusterSliceList.push_back(allClusters);
+    ClusterVector sortedShowerClusters3D(showerClusters3D.begin(), showerClusters3D.end());
+    std::sort(sortedShowerClusters3D.begin(), sortedShowerClusters3D.end(), LArClusterHelper::SortByNHits);
+
+    ClusterVector sortedClusters3D;
+    sortedClusters3D.insert(sortedClusters3D.end(), sortedTrackClusters3D.begin(), sortedTrackClusters3D.end());
+    sortedClusters3D.insert(sortedClusters3D.end(), sortedShowerClusters3D.begin(), sortedShowerClusters3D.end());
+
+    ClusterList usedClusters;
+
+    for (const Cluster *const pCluster3D : sortedClusters3D)
+    {
+        if (usedClusters.count(pCluster3D))
+            continue;
+
+        clusterSliceList.push_back(ClusterVector(1, pCluster3D));
+        ClusterVector &clusterSlice(clusterSliceList.back());
+        usedClusters.insert(pCluster3D);
+
+        while (this->AddNextTrack(sortedTrackClusters3D, slidingFitResultMap, clusterSlice, usedClusters) ||
+            this->AddNextShower(sortedClusters3D, clusterSlice, usedClusters)) { /* Deliberately empty */ }
+    }
+
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &trackClusters3D, "trackClusters3D", RED);
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &showerClusters3D, "showerClusters3D", BLUE);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::AddNextTrack(const ClusterVector &trackCandidates, const ThreeDSlidingFitResultMap &slidingFitResultMap,
+    ClusterVector &clusterSlice, ClusterList &usedClusters) const
+{
+    if (clusterSlice.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    for (const Cluster *const pCandidateCluster : trackCandidates)
+    {
+        if (usedClusters.count(pCandidateCluster))
+            continue;
+
+        ThreeDSlidingFitResultMap::const_iterator candidateIter = slidingFitResultMap.find(pCandidateCluster);
+
+        if (slidingFitResultMap.end() == candidateIter)
+            continue;
+
+        for (const Cluster *const pClusterInSlice : clusterSlice)
+        {
+            ThreeDSlidingFitResultMap::const_iterator inSliceIter = slidingFitResultMap.find(pClusterInSlice);
+
+            if (slidingFitResultMap.end() == inSliceIter)
+                continue;
+
+            // TODO - precise logic here!
+            const ThreeDSlidingFitResult &candidateFitResult(candidateIter->second);
+            const ThreeDSlidingFitResult &inSliceFitResult(inSliceIter->second);
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::AddNextShower(const ClusterVector &clusterCandidates, ClusterVector &clusterSlice, ClusterList &usedClusters) const
+{
+    if (clusterSlice.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    for (const Cluster *const pCandidateCluster : clusterCandidates)
+    {
+        if (usedClusters.count(pCandidateCluster))
+            continue;
+
+        for (const Cluster *const pClusterInSlice : clusterSlice)
+        {
+            // TODO - precise logic here!
+            if (false) std::cout << pClusterInSlice << std::endl;
+        }
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,7 +232,7 @@ void EventSlicingTool::CreateSlices(const ClusterSliceList &clusterSliceList, Sl
 {
     unsigned int index(0);
 
-    for (const ClusterList &clusterList : clusterSliceList)
+    for (const ClusterVector &clusterList : clusterSliceList)
     {
         for (const Cluster *const pCluster3D : clusterList)
         {
@@ -250,7 +343,8 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
 
             // TODO associate pCluster2D to pCluster3D using some metrics
             // Could work using 3D clusters, or could use existing contents of slice associated with pCluster3D
-            if (false) std::cout << pCluster3D << std::endl;
+            if (false)
+                pBestCluster3D = pCluster3D;
         }
 
         if (pBestCluster3D)
@@ -274,6 +368,9 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerPfoListName", m_showerPfoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitHalfWindow", m_halfWindowLayers));
 
     return STATUS_CODE_SUCCESS;
 }
