@@ -88,14 +88,13 @@ private:
      *  @brief  Use 3D clusters in the cluster slice list, find their parent pfos and assign all hits in all 2D clusters in the pfos
      *          to the relevant slice in the output slice list
      *
-     *  @param  clusterSliceList the list of 3D clusters, divided into slices (one 3D cluster list per slice)
      *  @param  clusterToSliceIndexMap the mapping from 3D clusters to index in the slice list
      *  @param  clusterToPfoMap the mapping from 3D clusters to parent pfos
      *  @param  sliceList the list containing slices to be populated with 2D hits
      *  @param  assignedClusters to receive the list of 2D clusters with hits assigned to slices
      */
-    void CopyPfoHitsToSlices(const ClusterSliceList &clusterSliceList, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
-        const ClusterToPfoMap &clusterToPfoMap, SliceList &sliceList, pandora::ClusterList &assignedClusters) const;
+    void CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap, SliceList &sliceList,
+        pandora::ClusterList &assignedClusters) const;
 
     /**
      *  @brief  Get the list of 2D clusters with hits yets to be assigned to slices
@@ -106,6 +105,17 @@ private:
      *  @param  remainingClusters to receive the list of 2D clusters with hits yet to be assigned to slices
      */
     void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &clusterListNames,
+        const pandora::ClusterList &assignedClusters, pandora::ClusterList &remainingClusters) const;
+
+    /**
+     *  @brief  Get the list of 2D clusters (from a named 2D cluster list) with hits yets to be assigned to slices
+     *
+     *  @param  pAlgorithm the address of the parent algorithm
+     *  @param  clusterListName the cluster list name
+     *  @param  assignedClusters the list of 2D clusters with hits assigned to slices
+     *  @param  remainingClusters to receive the list of 2D clusters with hits yet to be assigned to slices
+     */
+    void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const std::string &clusterListName,
         const pandora::ClusterList &assignedClusters, pandora::ClusterList &remainingClusters) const;
 
     /**
