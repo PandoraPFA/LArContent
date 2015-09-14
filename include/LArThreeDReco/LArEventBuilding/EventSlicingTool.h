@@ -30,6 +30,11 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    EventSlicingTool();
+
     typedef NeutrinoParentAlgorithm::SliceList SliceList;
     typedef NeutrinoParentAlgorithm::HitTypeToNameMap HitTypeToNameMap;
 
@@ -51,7 +56,7 @@ private:
     void GetThreeDClusters(const pandora::Algorithm *const pAlgorithm, const std::string &pfoListName, pandora::ClusterList &clusters3D,
         ClusterToPfoMap &clusterToPfoMap) const;
 
-    typedef std::vector<pandora::ClusterList> ClusterSliceList;
+    typedef std::vector<pandora::ClusterVector> ClusterSliceList;
 
     /**
      *  @brief  Divide the provided lists of 3D track and shower clusters into slices
@@ -62,6 +67,31 @@ private:
      */
     void GetClusterSliceList(const pandora::ClusterList &trackClusters3D, const pandora::ClusterList &showerClusters3D,
         ClusterSliceList &clusterSliceList) const;
+
+    /**
+     *  @brief  Compare the provided cluster slice and list of 3D track clusters. Add next appropriate track cluster to the slice.
+     *
+     *  @param  trackCandidates the sorted list of 3D candidate track clusters
+     *  @param  slidingFitResultMap the map from 3D track clusters to 3D sliding fit results
+     *  @param  clusterSlice the cluster slice
+     *  @param  usedClusters the list of clusters already added to slices
+     * 
+     *  @return whether an addition to the cluster slice has been made
+     */
+    bool AddNextTrack(const pandora::ClusterVector &trackCandidates, const ThreeDSlidingFitResultMap &slidingFitResultMap,
+        pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
+
+    /**
+     *  @brief  Compare the provided cluster slice and list of 3D clusters. Add next appropriate cluster to the slice.
+     *
+     *  @param  clusterCandidates the sorted list of 3D candidate clusters
+     *  @param  clusterSlice the cluster slice
+     *  @param  usedClusters the list of clusters already added to slices
+     * 
+     *  @return whether an addition to the cluster slice has been made
+     */
+    bool AddNextShower(const pandora::ClusterVector &clusterCandidates, pandora::ClusterVector &clusterSlice,
+        pandora::ClusterList &usedClusters) const;
 
     /**
      *  @brief  Copy all the input hits in an event into a single slice
@@ -132,6 +162,8 @@ private:
 
     std::string     m_trackPfoListName;         ///< The name of the input track pfo list
     std::string     m_showerPfoListName;        ///< The name of the input shower pfo list
+
+    unsigned int    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
