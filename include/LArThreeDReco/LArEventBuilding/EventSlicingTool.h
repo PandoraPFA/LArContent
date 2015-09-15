@@ -209,6 +209,9 @@ private:
     float           m_maxVertexLongitudinalDistance;    ///< Pointing association check: max longitudinal distance cut
     float           m_maxVertexTransverseDistance;      ///< Pointing association check: max transverse distance cut
     float           m_vertexAngularAllowance;           ///< Pointing association check: pointing angular allowance in degrees
+
+    float           m_maxClosestApproach;               ///< Pointing association: max distance of closest approach between straight line fits
+    float           m_maxInterceptDistance;             ///< Pointing association: max distance from cluster vertex to point of closest approach
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
