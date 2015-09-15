@@ -27,7 +27,9 @@ EventSlicingTool::EventSlicingTool() :
     m_minVertexLongitudinalDistance(-7.5f),
     m_maxVertexLongitudinalDistance(60.f),
     m_maxVertexTransverseDistance(10.5f),
-    m_vertexAngularAllowance(9.f)
+    m_vertexAngularAllowance(9.f),
+    m_maxClosestApproach(15.f),
+    m_maxInterceptDistance(60.f)
 {
 }
 
@@ -138,10 +140,6 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
         while (this->AddNextPointing(sortedTrackClusters3D, slidingFitResultMap, clusterSlice, usedClusters) ||
             this->AddNextProximity(sortedClusters3D, clusterSlice, usedClusters)) { /* Deliberately empty */ }
     }
-
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &trackClusters3D, "trackClusters3D", RED);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &showerClusters3D, "showerClusters3D", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -169,11 +167,6 @@ bool EventSlicingTool::AddNextPointing(const ClusterVector &trackCandidates, con
                 continue;
 
             const LArPointingCluster inSlicePointingCluster(inSliceIter->second);
-ClusterList temp1, temp2;
-temp1.insert(pClusterInSlice);
-temp2.insert(pCandidateCluster);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp1, "cluster1", RED);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp2, "cluster2", BLUE);
 
             if (this->CheckClosestApproach(inSlicePointingCluster, candidatePointingCluster) ||
                 this->IsEmission(inSlicePointingCluster, candidatePointingCluster) ||
@@ -213,13 +206,8 @@ bool EventSlicingTool::CheckClosestApproach(const LArPointingCluster::Vertex &ve
     const CartesianVector approach1(vertex1.GetPosition() + vertex1.GetDirection() * displacement1);
     const CartesianVector approach2(vertex2.GetPosition() + vertex2.GetDirection() * displacement2);
     const float closestApproach((approach1 - approach2).GetMagnitude());
-    std::cout << " dca " << closestApproach << " displacement1 " << displacement1 << " displacement2 " << displacement2 << std::endl;
 
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &intersectionPoint, "intersectionPoint", GREEN, 1);
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &approach1, "approach1", CYAN, 1);
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &approach2, "approach2", MAGENTA, 1);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    return ((closestApproach < 50.f) && (std::fabs(displacement1) < 100.f) && (std::fabs(displacement2) < 100.f)); // TODO
+    return ((closestApproach < m_maxClosestApproach) && (std::fabs(displacement1) < m_maxInterceptDistance) && (std::fabs(displacement2) < m_maxInterceptDistance));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -457,6 +445,12 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexAngularAllowance", m_vertexAngularAllowance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "maxClosestApproach", m_maxClosestApproach));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "maxInterceptDistance", m_maxInterceptDistance));
 
     return STATUS_CODE_SUCCESS;
 }
