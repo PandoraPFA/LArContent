@@ -69,7 +69,7 @@ private:
         ClusterSliceList &clusterSliceList) const;
 
     /**
-     *  @brief  Compare the provided cluster slice and list of 3D track clusters. Add next appropriate track cluster to the slice.
+     *  @brief  Compare the provided cluster slice and list of 3D track clusters. Add next appropriate (pointing) cluster to the slice.
      *
      *  @param  trackCandidates the sorted list of 3D candidate track clusters
      *  @param  slidingFitResultMap the map from 3D track clusters to 3D sliding fit results
@@ -78,11 +78,51 @@ private:
      * 
      *  @return whether an addition to the cluster slice has been made
      */
-    bool AddNextTrack(const pandora::ClusterVector &trackCandidates, const ThreeDSlidingFitResultMap &slidingFitResultMap,
+    bool AddNextPointing(const pandora::ClusterVector &trackCandidates, const ThreeDSlidingFitResultMap &slidingFitResultMap,
         pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
 
     /**
-     *  @brief  Compare the provided cluster slice and list of 3D clusters. Add next appropriate cluster to the slice.
+     *  @brief  Check closest approach metrics for a pair of pointing clusters
+     *
+     *  @param  cluster1 the first pointing cluster
+     *  @param  cluster2 the second pointing cluster
+     * 
+     *  @return whether the pointing clusters are declared to be in the same slice
+     */
+    bool CheckClosestApproach(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
+
+    /**
+     *  @brief  Check closest approach metrics for a pair of pointing cluster vertices
+     *
+     *  @param  vertex1 the first pointing cluster vertex
+     *  @param  vertex2 the second pointing cluster vertex
+     * 
+     *  @return whether the pointing clusters are declared to be in the same slice
+     */
+    bool CheckClosestApproach(const LArPointingCluster::Vertex &vertex1, const LArPointingCluster::Vertex &vertex2) const;
+
+    /**
+     *  @brief  Check whether a pair of pointing clusters are nodally associated
+     *
+     *  @param  cluster1 the first pointing cluster
+     *  @param  cluster2 the second pointing cluster
+     * 
+     *  @return whether the pointing clusters are declared to be in the same slice
+     */
+    bool IsNode(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
+
+    /**
+     *  @brief  Check whether a pair of pointing clusters are consistent with an emission
+     *
+     *  @param  cluster1 the first pointing cluster
+     *  @param  cluster2 the second pointing cluster
+     * 
+     *  @return whether the pointing clusters are declared to be in the same slice
+     */
+    bool IsEmission(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
+
+    /**
+     *  @brief  Compare the provided cluster slice and list of 3D clusters. Add next appropriate (nearby) cluster to the slice.
      *
      *  @param  clusterCandidates the sorted list of 3D candidate clusters
      *  @param  clusterSlice the cluster slice
@@ -90,7 +130,7 @@ private:
      * 
      *  @return whether an addition to the cluster slice has been made
      */
-    bool AddNextShower(const pandora::ClusterVector &clusterCandidates, pandora::ClusterVector &clusterSlice,
+    bool AddNextProximity(const pandora::ClusterVector &clusterCandidates, pandora::ClusterVector &clusterSlice,
         pandora::ClusterList &usedClusters) const;
 
     /**
@@ -160,10 +200,15 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_trackPfoListName;         ///< The name of the input track pfo list
-    std::string     m_showerPfoListName;        ///< The name of the input shower pfo list
+    std::string     m_trackPfoListName;                 ///< The name of the input track pfo list
+    std::string     m_showerPfoListName;                ///< The name of the input shower pfo list
 
-    unsigned int    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
+    unsigned int    m_halfWindowLayers;                 ///< The number of layers to use for half-window of sliding fit
+
+    float           m_minVertexLongitudinalDistance;    ///< Pointing association check: min longitudinal distance cut
+    float           m_maxVertexLongitudinalDistance;    ///< Pointing association check: max longitudinal distance cut
+    float           m_maxVertexTransverseDistance;      ///< Pointing association check: max transverse distance cut
+    float           m_vertexAngularAllowance;           ///< Pointing association check: pointing angular allowance in degrees
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
