@@ -65,7 +65,7 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *cons
     }
 
     if (availableHitList.empty())
-        return STATUS_CODE_NOT_FOUND;
+        return STATUS_CODE_SUCCESS;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.Add(availableHitList));
 
