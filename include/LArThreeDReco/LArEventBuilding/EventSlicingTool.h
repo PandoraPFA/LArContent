@@ -134,6 +134,16 @@ private:
         pandora::ClusterList &usedClusters) const;
 
     /**
+     *  @brief  Check separation of hits in two 3D clusters
+     *
+     *  @param  pCluster1 the address of the first cluster
+     *  @param  pCluster2 the address of the second cluster
+     * 
+     *  @return whether the clusters are declared to be in the same slice
+     */
+    bool CheckHitSeparation(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
+
+    /**
      *  @brief  Copy all the input hits in an event into a single slice
      *
      *  @param  pAlgorithm the address of the parent algorithm
@@ -198,6 +208,16 @@ private:
     void AssignRemainingHitsToSlices(const pandora::ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
         SliceList &sliceList) const;
 
+    /**
+     *  @brief  Get the slicelist index for the slice containing hits closest to a specified 2D cluster
+     *
+     *  @param  pCluster the address of the 2D cluster
+     *  @param  sliceList the slice list
+     * 
+     *  @return the index of the closest slice
+     */
+    unsigned int GetClosestSliceIndex(const pandora::Cluster *const pCluster2D, const SliceList &sliceList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_trackPfoListName;                 ///< The name of the input track pfo list
@@ -212,6 +232,8 @@ private:
 
     float           m_maxClosestApproach;               ///< Pointing association: max distance of closest approach between straight line fits
     float           m_maxInterceptDistance;             ///< Pointing association: max distance from cluster vertex to point of closest approach
+
+    float           m_maxHitSeparationSquared;          ///< Proximity association: max distance allowed between the closest pair of hits
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

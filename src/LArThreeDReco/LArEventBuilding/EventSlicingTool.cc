@@ -29,7 +29,8 @@ EventSlicingTool::EventSlicingTool() :
     m_maxVertexTransverseDistance(10.5f),
     m_vertexAngularAllowance(9.f),
     m_maxClosestApproach(15.f),
-    m_maxInterceptDistance(60.f)
+    m_maxInterceptDistance(60.f),
+    m_maxHitSeparationSquared(30.f * 30.f)
 {
 }
 
@@ -249,8 +250,41 @@ bool EventSlicingTool::AddNextProximity(const ClusterVector &clusterCandidates, 
 
         for (const Cluster *const pClusterInSlice : clusterSlice)
         {
-            // TODO - precise logic here!
-            if (false) std::cout << pClusterInSlice << std::endl;
+            if (this->CheckHitSeparation(pCandidateCluster, pClusterInSlice))
+            {
+                if (!usedClusters.insert(pCandidateCluster).second)
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                // ATTN Must return here, as have invalidated clusterSlice iterators
+                clusterSlice.push_back(pCandidateCluster);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::CheckHitSeparation(const Cluster *const pCluster1, const Cluster *const pCluster2) const
+{
+    for (const auto &orderedList1 : pCluster1->GetOrderedCaloHitList())
+    {
+        for (const CaloHit *const pCaloHit1 : *(orderedList1.second))
+        {
+            const CartesianVector &positionVector1(pCaloHit1->GetPositionVector());
+
+            for (const auto &orderedList2 : pCluster2->GetOrderedCaloHitList())
+            {
+                for (const CaloHit *const pCaloHit2 : *(orderedList2.second))
+                {
+                    const CartesianVector &positionVector2(pCaloHit2->GetPositionVector());
+
+                    if ((positionVector1 - positionVector2).GetMagnitudeSquared() < m_maxHitSeparationSquared)
+                        return true;
+                }
+            }
         }
     }
 
@@ -387,9 +421,10 @@ void EventSlicingTool::GetRemainingClusters(const Algorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
+void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingClusters, const ClusterToSliceIndexMap &/*clusterToSliceIndexMap*/,
     SliceList &sliceList) const
 {
+    // ATTN May want to also consider 3D hit projections here, in case no hits in a given view of a slice
     for (const Cluster *const pCluster2D : remainingClusters)
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
@@ -397,28 +432,57 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
         if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        const Cluster *pBestCluster3D(nullptr);
+        const unsigned int closestSliceIndex(this->GetClosestSliceIndex(pCluster2D, sliceList));
 
-        for (const ClusterToSliceIndexMap::value_type &mapValue : clusterToSliceIndexMap)
+        if (closestSliceIndex >= sliceList.size())
+            continue;
+
+        NeutrinoParentAlgorithm::Slice &slice(sliceList.at(closestSliceIndex));
+        CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+
+        pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
+        targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int EventSlicingTool::GetClosestSliceIndex(const Cluster *const pCluster2D, const SliceList &sliceList) const
+{
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
+
+    if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    CartesianPointList pointList;
+    pointList.push_back(pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer()));
+    pointList.push_back(pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer()));
+    pointList.push_back((pointList.at(0) + pointList.at(1)) * 0.5f);
+
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+    unsigned int bestIndex(std::numeric_limits<unsigned int>::max());
+
+    for (unsigned int index = 0, indexEnd = sliceList.size(); index < indexEnd; ++index)
+    {
+        const NeutrinoParentAlgorithm::Slice &slice(sliceList.at(index));
+        const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+
+        for (const CaloHit *const pCaloHit : caloHitList)
         {
-            const Cluster *const pCluster3D(mapValue.first);
+            for (const CartesianVector &position : pointList)
+            {
+                const float distanceSquared((position - pCaloHit->GetPositionVector()).GetMagnitudeSquared());
 
-            // TODO associate pCluster2D to pCluster3D using some metrics
-            // Could work using 3D clusters, or could use existing contents of slice associated with pCluster3D
-            if (false)
-                pBestCluster3D = pCluster3D;
-        }
-
-        if (pBestCluster3D)
-        {
-            const unsigned int index(clusterToSliceIndexMap.at(pBestCluster3D));
-            NeutrinoParentAlgorithm::Slice &slice(sliceList.at(index));
-            CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-
-            pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
-            targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+                if (distanceSquared < closestDistanceSquared)
+                {
+                    closestDistanceSquared = distanceSquared;
+                    bestIndex = index;
+                }
+            }
         }
     }
+
+    return bestIndex;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -447,10 +511,15 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
         "VertexAngularAllowance", m_vertexAngularAllowance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "maxClosestApproach", m_maxClosestApproach));
+        "MaxClosestApproach", m_maxClosestApproach));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "maxInterceptDistance", m_maxInterceptDistance));
+        "MaxInterceptDistance", m_maxInterceptDistance));
+
+    float maxHitSeparation = std::sqrt(m_maxHitSeparationSquared);
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxHitSeparation", maxHitSeparation));
+    m_maxHitSeparationSquared = maxHitSeparation * maxHitSeparation;
 
     return STATUS_CODE_SUCCESS;
 }

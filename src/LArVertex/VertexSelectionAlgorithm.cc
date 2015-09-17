@@ -143,9 +143,9 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, Hi
     Histogram histogramV(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
     Histogram histogramW(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
 
-    if (!this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU) ||
-        !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV) ||
-        !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW))
+    if ((!kdTreeU.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU)) ||
+        (!kdTreeV.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV)) ||
+        (!kdTreeW.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW)))
     {
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
     }
