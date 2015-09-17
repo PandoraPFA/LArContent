@@ -26,11 +26,11 @@ EventSlicingTool::EventSlicingTool() :
     m_halfWindowLayers(20),
     m_minVertexLongitudinalDistance(-7.5f),
     m_maxVertexLongitudinalDistance(60.f),
-    m_maxVertexTransverseDistance(10.f),
+    m_maxVertexTransverseDistance(10.5f),
     m_vertexAngularAllowance(9.f),
-    m_maxClosestApproach(10.f),
+    m_maxClosestApproach(15.f),
     m_maxInterceptDistance(60.f),
-    m_maxHitSeparationSquared(10.f * 10.f)
+    m_maxHitSeparationSquared(30.f * 30.f)
 {
 }
 
