@@ -26,10 +26,11 @@ EventSlicingTool::EventSlicingTool() :
     m_halfWindowLayers(20),
     m_minVertexLongitudinalDistance(-7.5f),
     m_maxVertexLongitudinalDistance(60.f),
-    m_maxVertexTransverseDistance(10.5f),
+    m_maxVertexTransverseDistance(10.f),
     m_vertexAngularAllowance(9.f),
-    m_maxClosestApproach(15.f),
-    m_maxInterceptDistance(60.f)
+    m_maxClosestApproach(10.f),
+    m_maxInterceptDistance(60.f),
+    m_maxHitSeparationSquared(10.f * 10.f)
 {
 }
 
@@ -249,8 +250,41 @@ bool EventSlicingTool::AddNextProximity(const ClusterVector &clusterCandidates, 
 
         for (const Cluster *const pClusterInSlice : clusterSlice)
         {
-            // TODO - precise logic here!
-            if (false) std::cout << pClusterInSlice << std::endl;
+            if (this->CheckHitSeparation(pCandidateCluster, pClusterInSlice))
+            {
+                if (!usedClusters.insert(pCandidateCluster).second)
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                // ATTN Must return here, as have invalidated clusterSlice iterators
+                clusterSlice.push_back(pCandidateCluster);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::CheckHitSeparation(const Cluster *const pCluster1, const Cluster *const pCluster2) const
+{
+    for (const auto &orderedList1 : pCluster1->GetOrderedCaloHitList())
+    {
+        for (const CaloHit *const pCaloHit1 : *(orderedList1.second))
+        {
+            const CartesianVector &positionVector1(pCaloHit1->GetPositionVector());
+
+            for (const auto &orderedList2 : pCluster2->GetOrderedCaloHitList())
+            {
+                for (const CaloHit *const pCaloHit2 : *(orderedList2.second))
+                {
+                    const CartesianVector &positionVector2(pCaloHit2->GetPositionVector());
+
+                    if ((positionVector1 - positionVector2).GetMagnitudeSquared() < m_maxHitSeparationSquared)
+                        return true;
+                }
+            }
         }
     }
 
@@ -447,10 +481,15 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
         "VertexAngularAllowance", m_vertexAngularAllowance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "maxClosestApproach", m_maxClosestApproach));
+        "MaxClosestApproach", m_maxClosestApproach));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "maxInterceptDistance", m_maxInterceptDistance));
+        "MaxInterceptDistance", m_maxInterceptDistance));
+
+    float maxHitSeparation = std::sqrt(m_maxHitSeparationSquared);
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxHitSeparation", maxHitSeparation));
+    m_maxHitSeparationSquared = maxHitSeparation * maxHitSeparation;
 
     return STATUS_CODE_SUCCESS;
 }
