@@ -208,6 +208,16 @@ private:
     void AssignRemainingHitsToSlices(const pandora::ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
         SliceList &sliceList) const;
 
+    /**
+     *  @brief  Get the slicelist index for the slice containing hits closest to a specified 2D cluster
+     *
+     *  @param  pCluster the address of the 2D cluster
+     *  @param  sliceList the slice list
+     * 
+     *  @return the index of the closest slice
+     */
+    unsigned int GetClosestSliceIndex(const pandora::Cluster *const pCluster2D, const SliceList &sliceList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_trackPfoListName;                 ///< The name of the input track pfo list

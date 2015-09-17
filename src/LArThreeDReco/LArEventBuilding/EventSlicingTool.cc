@@ -421,9 +421,10 @@ void EventSlicingTool::GetRemainingClusters(const Algorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
+void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingClusters, const ClusterToSliceIndexMap &/*clusterToSliceIndexMap*/,
     SliceList &sliceList) const
 {
+    // ATTN May want to also consider 3D hit projections here, in case no hits in a given view of a slice
     for (const Cluster *const pCluster2D : remainingClusters)
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
@@ -431,28 +432,57 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
         if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        const Cluster *pBestCluster3D(nullptr);
+        const unsigned int closestSliceIndex(this->GetClosestSliceIndex(pCluster2D, sliceList));
 
-        for (const ClusterToSliceIndexMap::value_type &mapValue : clusterToSliceIndexMap)
+        if (closestSliceIndex >= sliceList.size())
+            continue;
+
+        NeutrinoParentAlgorithm::Slice &slice(sliceList.at(closestSliceIndex));
+        CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+
+        pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
+        targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int EventSlicingTool::GetClosestSliceIndex(const Cluster *const pCluster2D, const SliceList &sliceList) const
+{
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
+
+    if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    CartesianPointList pointList;
+    pointList.push_back(pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer()));
+    pointList.push_back(pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer()));
+    pointList.push_back((pointList.at(0) + pointList.at(1)) * 0.5f);
+
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+    unsigned int bestIndex(std::numeric_limits<unsigned int>::max());
+
+    for (unsigned int index = 0, indexEnd = sliceList.size(); index < indexEnd; ++index)
+    {
+        const NeutrinoParentAlgorithm::Slice &slice(sliceList.at(index));
+        const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+
+        for (const CaloHit *const pCaloHit : caloHitList)
         {
-            const Cluster *const pCluster3D(mapValue.first);
+            for (const CartesianVector &position : pointList)
+            {
+                const float distanceSquared((position - pCaloHit->GetPositionVector()).GetMagnitudeSquared());
 
-            // TODO associate pCluster2D to pCluster3D using some metrics
-            // Could work using 3D clusters, or could use existing contents of slice associated with pCluster3D
-            if (false)
-                pBestCluster3D = pCluster3D;
-        }
-
-        if (pBestCluster3D)
-        {
-            const unsigned int index(clusterToSliceIndexMap.at(pBestCluster3D));
-            NeutrinoParentAlgorithm::Slice &slice(sliceList.at(index));
-            CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-
-            pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
-            targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+                if (distanceSquared < closestDistanceSquared)
+                {
+                    closestDistanceSquared = distanceSquared;
+                    bestIndex = index;
+                }
+            }
         }
     }
+
+    return bestIndex;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
