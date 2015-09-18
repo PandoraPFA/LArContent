@@ -15,6 +15,11 @@
 namespace lar_content
 {
 
+template<typename, unsigned int> class KDTreeLinkerAlgo;
+template<typename, unsigned int> class KDTreeNodeInfoT;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  EventSlicingTool class
  */
@@ -208,15 +213,46 @@ private:
     void AssignRemainingHitsToSlices(const pandora::ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
         SliceList &sliceList) const;
 
+    typedef KDTreeLinkerAlgo<const pandora::CartesianVector*, 2> PointKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CartesianVector*, 2> PointKDNode2D;
+    typedef std::vector<PointKDNode2D> PointKDNode2DList;
+
+    typedef std::unordered_set<const pandora::CartesianVector*> PointList;
+    typedef std::unordered_map<const pandora::CartesianVector*, unsigned int> PointToSliceIndexMap;
+
     /**
-     *  @brief  Get the slicelist index for the slice containing hits closest to a specified 2D cluster
+     *  @brief  Use projections of 3D hits already assigned to slices to populate kd trees to aid assignment of remaining clusters
      *
-     *  @param  pCluster the address of the 2D cluster
      *  @param  sliceList the slice list
-     * 
-     *  @return the index of the closest slice
+     *  @param  pointsU to receive the points in the u view
+     *  @param  pointsV to receive the points in the v view
+     *  @param  pointsW to receive the points in the w view
+     *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
      */
-    unsigned int GetClosestSliceIndex(const pandora::Cluster *const pCluster2D, const SliceList &sliceList) const;
+    void GetKDTreeEntries2D(const SliceList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
+        PointToSliceIndexMap &pointToSliceIndexMap) const;
+
+    /**
+     *  @brief  Use 2D hits already assigned to slices to populate kd trees to aid assignment of remaining clusters
+     *
+     *  @param  clusterToSliceIndexMap the 3D cluster to slice index map
+     *  @param  pointsU to receive the points in the u view
+     *  @param  pointsV to receive the points in the v view
+     *  @param  pointsW to receive the points in the w view
+     *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
+     */
+    void GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointList &pointsU, PointList &pointsV,
+        PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const;
+
+    /**
+     *  @brief  Use the provided kd tree to efficiently identify the most appropriate slice for the provided 2D cluster
+     *
+     *  @param  pCluster2D the address of the 2D cluster
+     *  @param  kdTree the kd tree
+     * 
+     *  @return the nearest-neighbour point identified by the kd tree
+     */
+    const PointKDNode2D *MatchClusterToSlice(const pandora::Cluster *const pCluster2D, PointKDTree2D &kdTree) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -234,6 +270,8 @@ private:
     float           m_maxInterceptDistance;             ///< Pointing association: max distance from cluster vertex to point of closest approach
 
     float           m_maxHitSeparationSquared;          ///< Proximity association: max distance allowed between the closest pair of hits
+
+    bool            m_use3DProjectionsInHitPickUp;      ///< Whether to include 3D cluster projections when assigning remaining clusters to slices
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
