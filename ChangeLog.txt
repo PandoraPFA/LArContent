@@ -1,4 +1,14 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-02-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added neutrino parent reconstruction algorithm and event slicing tools, enabling reconstruction of multiple interactions in a single event.
+Added cheated event slicing tool, for testing/development.
+Enabled use of KD-tree findNearestNeighbour functionality.
+List management and error-reporting changes in cases where lists are not present or are empty.
+Overhauled vertex list access strategy.
+Addressed issues highlighted by Coverity.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-01-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 New algorithms and tools for reconstruction of neutrinos and their hierarchy of daughter particles.
