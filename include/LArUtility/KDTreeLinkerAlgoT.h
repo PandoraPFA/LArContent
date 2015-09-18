@@ -122,7 +122,7 @@ private:
      *  @param  best_dist
      */
     void recNearestNeighbour(unsigned depth, const KDTreeNodeT<DATA, DIM> *current, const KDTreeNodeInfoT<DATA, DIM> &point,
-          const KDTreeNodeT<DATA, DIM> *best_match, float &best_dist);
+          const KDTreeNodeT<DATA, DIM> *&best_match, float &best_dist);
 
     /**
      *  @brief  Add all elements of an subtree to the closest elements. Used during the recSearch().
@@ -354,7 +354,7 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::findNearestNeighbour(const KDTreeNodeIn
 
 template <typename DATA, unsigned DIM>
 inline void KDTreeLinkerAlgo<DATA, DIM>::recNearestNeighbour(unsigned int depth, const KDTreeNodeT<DATA, DIM> *current,
-    const KDTreeNodeInfoT<DATA, DIM> &point, const KDTreeNodeT<DATA, DIM> *best_match, float &best_dist)
+    const KDTreeNodeInfoT<DATA, DIM> &point, const KDTreeNodeT<DATA, DIM> *&best_match, float &best_dist)
 {
     const unsigned int current_dim = depth % DIM;
 

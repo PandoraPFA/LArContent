@@ -17,6 +17,8 @@
 
 #include "LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 
+#include "LArUtility/KDTreeLinkerAlgoT.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -30,7 +32,8 @@ EventSlicingTool::EventSlicingTool() :
     m_vertexAngularAllowance(9.f),
     m_maxClosestApproach(15.f),
     m_maxInterceptDistance(60.f),
-    m_maxHitSeparationSquared(30.f * 30.f)
+    m_maxHitSeparationSquared(30.f * 30.f),
+    m_use3DProjectionsInHitPickUp(true)
 {
 }
 
@@ -421,68 +424,166 @@ void EventSlicingTool::GetRemainingClusters(const Algorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingClusters, const ClusterToSliceIndexMap &/*clusterToSliceIndexMap*/,
+void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
     SliceList &sliceList) const
 {
-    // ATTN May want to also consider 3D hit projections here, in case no hits in a given view of a slice
-    for (const Cluster *const pCluster2D : remainingClusters)
+    PointToSliceIndexMap pointToSliceIndexMap;
+
+    try
     {
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
+        PointList pointsU, pointsV, pointsW;
+        this->GetKDTreeEntries2D(sliceList, pointsU, pointsV, pointsW, pointToSliceIndexMap);
 
-        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        if (m_use3DProjectionsInHitPickUp)
+            this->GetKDTreeEntries3D(clusterToSliceIndexMap, pointsU, pointsV, pointsW, pointToSliceIndexMap);
 
-        const unsigned int closestSliceIndex(this->GetClosestSliceIndex(pCluster2D, sliceList));
+        PointKDNode2DList kDNode2DListU, kDNode2DListV, kDNode2DListW;
+        KDTreeBox boundingRegionU = fill_and_bound_2d_kd_tree(pointsU, kDNode2DListU);
+        KDTreeBox boundingRegionV = fill_and_bound_2d_kd_tree(pointsV, kDNode2DListV);
+        KDTreeBox boundingRegionW = fill_and_bound_2d_kd_tree(pointsW, kDNode2DListW);
 
-        if (closestSliceIndex >= sliceList.size())
-            continue;
+        PointKDTree2D kdTreeU, kdTreeV, kdTreeW;
+        kdTreeU.build(kDNode2DListU, boundingRegionU);
+        kdTreeV.build(kDNode2DListV, boundingRegionV);
+        kdTreeW.build(kDNode2DListW, boundingRegionW);
 
-        NeutrinoParentAlgorithm::Slice &slice(sliceList.at(closestSliceIndex));
-        CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+        for (const Cluster *const pCluster2D : remainingClusters)
+        {
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
 
-        pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
-        targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+            if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            PointKDTree2D &kdTree((TPC_VIEW_U == hitType) ? kdTreeU : (TPC_VIEW_V == hitType) ? kdTreeV : kdTreeW);
+            const PointKDNode2D *pBestResultPoint(this->MatchClusterToSlice(pCluster2D, kdTree));
+
+            if (!pBestResultPoint)
+                continue;
+
+            NeutrinoParentAlgorithm::Slice &slice(sliceList.at(pointToSliceIndexMap.at(pBestResultPoint->data)));
+            CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+
+            pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
+            targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+        }
+    }
+    catch (...)
+    {
+        std::cout << "EventSlicingTool::AssignRemainingHitsToSlices - exception " << std::endl;
+        for (const auto &pointMap : pointToSliceIndexMap) delete pointMap.first;
+        throw;
+    }
+
+    for (const auto &pointMap : pointToSliceIndexMap) delete pointMap.first;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventSlicingTool::GetKDTreeEntries2D(const SliceList &sliceList, PointList &pointsU, PointList &pointsV,
+    PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
+{
+    unsigned int sliceIndex(0);
+
+    for (const NeutrinoParentAlgorithm::Slice &slice : sliceList)
+    {
+        for (const CaloHit *const pCaloHit : slice.m_caloHitListU)
+        {
+            const CartesianVector *const pPoint(new CartesianVector(pCaloHit->GetPositionVector()));
+            pointToSliceIndexMap.insert(PointToSliceIndexMap::value_type(pPoint, sliceIndex));
+            pointsU.insert(pPoint);
+        }
+
+        for (const CaloHit *const pCaloHit : slice.m_caloHitListV)
+        {
+            const CartesianVector *const pPoint(new CartesianVector(pCaloHit->GetPositionVector()));
+            pointToSliceIndexMap.insert(PointToSliceIndexMap::value_type(pPoint, sliceIndex));
+            pointsV.insert(pPoint);
+        }
+
+        for (const CaloHit *const pCaloHit : slice.m_caloHitListW)
+        {
+            const CartesianVector *const pPoint(new CartesianVector(pCaloHit->GetPositionVector()));
+            pointToSliceIndexMap.insert(PointToSliceIndexMap::value_type(pPoint, sliceIndex));
+            pointsW.insert(pPoint);
+        }
+
+        ++sliceIndex;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int EventSlicingTool::GetClosestSliceIndex(const Cluster *const pCluster2D, const SliceList &sliceList) const
+void EventSlicingTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointList &pointsU, PointList &pointsV,
+    PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
 {
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster2D));
-
-    if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    CartesianPointList pointList;
-    pointList.push_back(pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer()));
-    pointList.push_back(pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer()));
-    pointList.push_back((pointList.at(0) + pointList.at(1)) * 0.5f);
-
-    float closestDistanceSquared(std::numeric_limits<float>::max());
-    unsigned int bestIndex(std::numeric_limits<unsigned int>::max());
-
-    for (unsigned int index = 0, indexEnd = sliceList.size(); index < indexEnd; ++index)
+    for (const ClusterToSliceIndexMap::value_type &mapValue : clusterToSliceIndexMap)
     {
-        const NeutrinoParentAlgorithm::Slice &slice(sliceList.at(index));
-        const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+        const Cluster *const pCluster3D(mapValue.first);
+        const unsigned int sliceIndex(mapValue.second);
 
-        for (const CaloHit *const pCaloHit : caloHitList)
+        CaloHitList caloHitList;
+        pCluster3D->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+
+        for (const CaloHit *const pCaloHit3D : caloHitList)
         {
-            for (const CartesianVector &position : pointList)
-            {
-                const float distanceSquared((position - pCaloHit->GetPositionVector()).GetMagnitudeSquared());
+            if (TPC_3D != pCaloHit3D->GetHitType())
+                throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                if (distanceSquared < closestDistanceSquared)
-                {
-                    closestDistanceSquared = distanceSquared;
-                    bestIndex = index;
-                }
+            const CartesianVector &position3D(pCaloHit3D->GetPositionVector());
+
+            const CartesianVector *const pProjectionU(new CartesianVector(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U)));
+            const CartesianVector *const pProjectionV(new CartesianVector(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V)));
+            const CartesianVector *const pProjectionW(new CartesianVector(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W)));
+
+            pointsU.insert(pProjectionU);
+            pointsV.insert(pProjectionV);
+            pointsW.insert(pProjectionW);
+
+            pointToSliceIndexMap.insert(PointToSliceIndexMap::value_type(pProjectionU, sliceIndex));
+            pointToSliceIndexMap.insert(PointToSliceIndexMap::value_type(pProjectionV, sliceIndex));
+            pointToSliceIndexMap.insert(PointToSliceIndexMap::value_type(pProjectionW, sliceIndex));
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const EventSlicingTool::PointKDNode2D *EventSlicingTool::MatchClusterToSlice(const Cluster *const pCluster2D, PointKDTree2D &kdTree) const
+{
+    PointList clusterPointList;
+    const PointKDNode2D *pBestResultPoint(nullptr);
+
+    try
+    {
+        clusterPointList.insert(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer())));
+        clusterPointList.insert(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())));
+        clusterPointList.insert(new CartesianVector((pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer()) + pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())) * 0.5f));
+        float bestDistance(std::numeric_limits<float>::max());
+
+        for (const CartesianVector *const pClusterPoint : clusterPointList)
+        {
+            const PointKDNode2D *pResultPoint(nullptr);
+            float resultDistance(std::numeric_limits<float>::max());
+            const PointKDNode2D targetPoint(pClusterPoint, pClusterPoint->GetX(), pClusterPoint->GetZ());
+            kdTree.findNearestNeighbour(targetPoint, pResultPoint, resultDistance);
+
+            if (pResultPoint && (resultDistance < bestDistance))
+            {
+                pBestResultPoint = pResultPoint;
+                bestDistance = resultDistance;
             }
         }
     }
+    catch (...)
+    {
+        std::cout << "EventSlicingTool::MatchClusterToSlice - exception " << std::endl;
+        for (const CartesianVector *const pPoint : clusterPointList) delete pPoint;
+        throw;
+    }
 
-    return bestIndex;
+    for (const CartesianVector *const pPoint : clusterPointList) delete pPoint;
+
+    return pBestResultPoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -520,6 +621,9 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxHitSeparation", maxHitSeparation));
     m_maxHitSeparationSquared = maxHitSeparation * maxHitSeparation;
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Use3DProjectionsInHitPickUp", m_use3DProjectionsInHitPickUp));
 
     return STATUS_CODE_SUCCESS;
 }
