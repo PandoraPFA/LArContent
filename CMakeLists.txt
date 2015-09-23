@@ -6,13 +6,15 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.2 FATAL_ERROR)
 
 
 # project name
-PROJECT( LArContent )
+OPTION( LAR_CONTENT_LIBRARY_NAME "LArContent" )
+PROJECT( ${LAR_CONTENT_LIBRARY_NAME} )
+MESSAGE( STATUS "Chosen project name: " ${PROJECT_NAME} )
 
 
 # project version
-SET( LArContent_VERSION_MAJOR 02 )
-SET( LArContent_VERSION_MINOR 02 )
-SET( LArContent_VERSION_PATCH 00 )
+SET( ${PROJECT_NAME}_VERSION_MAJOR 02 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 02 )
+SET( ${PROJECT_NAME}_VERSION_PATCH 01 )
 
 
 ### CMAKE ###################################################################
@@ -115,13 +117,13 @@ ENDIF()
 ### LIBRARY #################################################################
 
 # add library
-ADD_SHARED_LIBRARY( LArContent ${LArContent_SRCS} )
+ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${LArContent_SRCS} )
 
 
 ### INSTALL #################################################################
 
 # install library
-INSTALL_SHARED_LIBRARY( LArContent DESTINATION lib )
+INSTALL_SHARED_LIBRARY( ${PROJECT_NAME} DESTINATION lib )
 
 # install header files
 INSTALL_DIRECTORY( ./include DESTINATION . )
@@ -130,4 +132,4 @@ INSTALL_DIRECTORY( ./include DESTINATION . )
 DISPLAY_STD_VARIABLES()
 
 # generate and install cmake configuration files
-GENERATE_PACKAGE_CONFIGURATION_FILES( LArContentConfig.cmake LArContentConfigVersion.cmake LArContentLibDeps.cmake )
+GENERATE_PACKAGE_CONFIGURATION_FILES( ${PROJECT_NAME}Config.cmake ${PROJECT_NAME}ConfigVersion.cmake ${PROJECT_NAME}LibDeps.cmake )
