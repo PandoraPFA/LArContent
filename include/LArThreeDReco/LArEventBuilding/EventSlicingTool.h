@@ -43,7 +43,7 @@ public:
     typedef NeutrinoParentAlgorithm::SliceList SliceList;
     typedef NeutrinoParentAlgorithm::HitTypeToNameMap HitTypeToNameMap;
 
-    void Slice(NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, const HitTypeToNameMap &clusterListNames,
+    void Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, const HitTypeToNameMap &clusterListNames,
         SliceList &sliceList);
 
 private:
@@ -147,16 +147,6 @@ private:
      *  @return whether the clusters are declared to be in the same slice
      */
     bool CheckHitSeparation(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
-
-    /**
-     *  @brief  Copy all the input hits in an event into a single slice
-     *
-     *  @param  pAlgorithm the address of the parent algorithm
-     *  @param  caloHitListNames the hit type to calo hit list name map
-     *  @param  sliceList the slice list to receive the single new slice
-     */
-    void CopyAllHitsToSingleSlice(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
-        SliceList &sliceList) const;
 
     typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterToSliceIndexMap;
 
