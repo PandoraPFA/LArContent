@@ -54,9 +54,24 @@ public:
     typedef std::vector<pandora::HitType> HitTypeList;
     typedef std::map<pandora::HitType, std::string> HitTypeToNameMap;
 
+    /**
+     *  @brief  Copy all the input hits in an event into a single slice
+     *
+     *  @param  sliceList the slice list to receive the single new slice
+     */
+    void CopyAllHitsToSingleSlice(SliceList &sliceList) const;
+
 private:
     pandora::StatusCode Initialize();
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Use first-pass 3D event reconstruction to slice events into separate, distinct interactions for processing
+     *
+     *  @param  sliceList the slice list to receive the slice list
+     */
+    void PerformSlicing(SliceList &sliceList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     HitTypeList                 m_hitTypeList;                      ///< The hit type list
@@ -70,12 +85,13 @@ private:
     std::string                 m_clusterListNameU;                 ///< The name of the u working cluster list
     std::string                 m_clusterListNameV;                 ///< The name of the v working cluster list
     std::string                 m_clusterListNameW;                 ///< The name of the w working cluster list
+
+    bool                        m_shouldPerformSlicing;             ///< Whether to slice events into separate, distinct interactions for processing
+    SlicingTool                *m_pSlicingTool;                     ///< The address of the slicing tool
+    std::string                 m_listDeletionAlgorithm;            ///< The name of the list deletion algorithm
         
     std::string                 m_clusteringAlgorithm;              ///< The name of the two dimensional clustering algorithm
-    std::string                 m_listDeletionAlgorithm;            ///< The name of the list deletion algorithm
     std::string                 m_listMovingAlgorithm;              ///< The name of the list moving algorithm
-
-    SlicingTool                *m_pSlicingTool;                     ///< The address of the slicing tool
 
     pandora::StringVector       m_twoDAlgorithms;                   ///< The names of the two dimensional reconstruction algorithms
     pandora::StringVector       m_threeDAlgorithms;                 ///< The names of the three dimensional reconstruction algorithms
@@ -101,7 +117,7 @@ public:
      *  @param  clusterListNames the hit type to cluster list name map
      *  @param  sliceList to receive the populated slice list
      */
-    virtual void Slice(NeutrinoParentAlgorithm *const pAlgorithm, const NeutrinoParentAlgorithm::HitTypeToNameMap &caloHitListNames,
+    virtual void Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const NeutrinoParentAlgorithm::HitTypeToNameMap &caloHitListNames,
         const NeutrinoParentAlgorithm::HitTypeToNameMap &clusterListNames, NeutrinoParentAlgorithm::SliceList &sliceList) = 0;
 };
 

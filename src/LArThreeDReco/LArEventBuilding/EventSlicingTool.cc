@@ -39,7 +39,7 @@ EventSlicingTool::EventSlicingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingTool::Slice(NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
+void EventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &/*caloHitListNames*/,
     const HitTypeToNameMap &clusterListNames, SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -58,7 +58,7 @@ void EventSlicingTool::Slice(NeutrinoParentAlgorithm *const pAlgorithm, const Hi
 
     if (clusterSliceList.size() < 2)
     {
-        this->CopyAllHitsToSingleSlice(pAlgorithm, caloHitListNames, sliceList);
+        return pAlgorithm->CopyAllHitsToSingleSlice(sliceList);
     }
     else
     {
@@ -292,37 +292,6 @@ bool EventSlicingTool::CheckHitSeparation(const Cluster *const pCluster1, const 
     }
 
     return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EventSlicingTool::CopyAllHitsToSingleSlice(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
-    SliceList &sliceList) const
-{
-    if (!sliceList.empty())
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    const CaloHitList *pCaloHitListU(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm,
-        caloHitListNames.at(TPC_VIEW_U), pCaloHitListU));
-
-    const CaloHitList *pCaloHitListV(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm,
-        caloHitListNames.at(TPC_VIEW_V), pCaloHitListV));
-
-    const CaloHitList *pCaloHitListW(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm,
-        caloHitListNames.at(TPC_VIEW_W), pCaloHitListW));
-
-    if (pCaloHitListU || pCaloHitListV || pCaloHitListW)
-    {
-        sliceList.push_back(NeutrinoParentAlgorithm::Slice());
-        NeutrinoParentAlgorithm::Slice &slice(sliceList.at(0));
-
-        if (pCaloHitListU) slice.m_caloHitListU = *pCaloHitListU;
-        if (pCaloHitListV) slice.m_caloHitListV = *pCaloHitListV;
-        if (pCaloHitListW) slice.m_caloHitListW = *pCaloHitListW;
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -16,6 +16,7 @@ namespace lar_content
 {
 
 NeutrinoParentAlgorithm::NeutrinoParentAlgorithm() :
+    m_shouldPerformSlicing(true),
     m_pSlicingTool(nullptr)
 {
 }
@@ -43,41 +44,16 @@ StatusCode NeutrinoParentAlgorithm::Initialize()
 
 StatusCode NeutrinoParentAlgorithm::Run()
 {
-    // Initial reconstruction pass
-    for (const HitType hitType : m_hitTypeList)
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
-
-        std::string clusterListName;
-        const ClusterList *pClusterList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithm, pClusterList, clusterListName));
-
-        if (pClusterList->empty())
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Cluster>(*this));
-            continue;
-        }
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
-
-        for (const std::string &algorithmName : m_twoDAlgorithms)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
-    }
-
-    StringVector preSlicingAlgorithms;
-    preSlicingAlgorithms.insert(preSlicingAlgorithms.end(), m_threeDAlgorithms.begin(), m_threeDAlgorithms.end());
-    preSlicingAlgorithms.insert(preSlicingAlgorithms.end(), m_threeDHitAlgorithms.begin(), m_threeDHitAlgorithms.end());
-
-    for (const std::string &algorithmName : preSlicingAlgorithms)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
-
-    // Slicing the three dimensional clusters into separate, distinct interactions for reprocessing
     SliceList sliceList;
-    m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
 
-    // Delete all existing algorithm objects and process each slice separately
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_listDeletionAlgorithm));
+    if (m_shouldPerformSlicing)
+    {
+        this->PerformSlicing(sliceList);
+    }
+    else
+    {
+        this->CopyAllHitsToSingleSlice(sliceList);
+    }
 
     unsigned int sliceCounter(0);
 
@@ -125,6 +101,75 @@ StatusCode NeutrinoParentAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void NeutrinoParentAlgorithm::PerformSlicing(SliceList &sliceList) const
+{
+    for (const HitType hitType : m_hitTypeList)
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
+
+        std::string clusterListName;
+        const ClusterList *pClusterList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithm, pClusterList, clusterListName));
+
+        if (pClusterList->empty())
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Cluster>(*this));
+            continue;
+        }
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
+
+        for (const std::string &algorithmName : m_twoDAlgorithms)
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+    }
+
+    StringVector preSlicingAlgorithms;
+    preSlicingAlgorithms.insert(preSlicingAlgorithms.end(), m_threeDAlgorithms.begin(), m_threeDAlgorithms.end());
+    preSlicingAlgorithms.insert(preSlicingAlgorithms.end(), m_threeDHitAlgorithms.begin(), m_threeDHitAlgorithms.end());
+
+    for (const std::string &algorithmName : preSlicingAlgorithms)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+
+    // Slice the three dimensional clusters into separate, distinct interactions for reprocessing
+    m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
+
+    // Delete all existing algorithm objects and process each slice separately
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_listDeletionAlgorithm));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoParentAlgorithm::CopyAllHitsToSingleSlice(SliceList &sliceList) const
+{
+    if (!sliceList.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const CaloHitList *pCaloHitListU(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        m_caloHitListNames.at(TPC_VIEW_U), pCaloHitListU));
+
+    const CaloHitList *pCaloHitListV(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        m_caloHitListNames.at(TPC_VIEW_V), pCaloHitListV));
+
+    const CaloHitList *pCaloHitListW(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        m_caloHitListNames.at(TPC_VIEW_W), pCaloHitListW));
+
+    if (pCaloHitListU || pCaloHitListV || pCaloHitListW)
+    {
+        sliceList.push_back(Slice());
+        Slice &slice(sliceList.at(0));
+
+        if (pCaloHitListU) slice.m_caloHitListU = *pCaloHitListU;
+        if (pCaloHitListV) slice.m_caloHitListV = *pCaloHitListV;
+        if (pCaloHitListW) slice.m_caloHitListW = *pCaloHitListW;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode NeutrinoParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
@@ -148,17 +193,23 @@ StatusCode NeutrinoParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "TwoDClustering", m_clusteringAlgorithm));
 
-    AlgorithmTool *pAlgorithmTool(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-        "Slicing", pAlgorithmTool));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldPerformSlicing", m_shouldPerformSlicing));
 
-    m_pSlicingTool = dynamic_cast<SlicingTool*>(pAlgorithmTool);
+    if (m_shouldPerformSlicing)
+    {
+        AlgorithmTool *pAlgorithmTool(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
+            "Slicing", pAlgorithmTool));
 
-    if (!m_pSlicingTool)
-        return STATUS_CODE_INVALID_PARAMETER;
+        m_pSlicingTool = dynamic_cast<SlicingTool*>(pAlgorithmTool);
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ListDeletion", m_listDeletionAlgorithm));
+        if (!m_pSlicingTool)
+            return STATUS_CODE_INVALID_PARAMETER;
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+            "ListDeletion", m_listDeletionAlgorithm));
+    }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "ListMoving", m_listMovingAlgorithm));

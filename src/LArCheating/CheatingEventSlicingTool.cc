@@ -19,7 +19,7 @@ namespace lar_content
 
 typedef NeutrinoParentAlgorithm::HitTypeToNameMap HitTypeToNameMap;
 
-void CheatingEventSlicingTool::Slice(NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
+void CheatingEventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
     const HitTypeToNameMap &/*clusterListNames*/, NeutrinoParentAlgorithm::SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -56,7 +56,7 @@ void CheatingEventSlicingTool::Slice(NeutrinoParentAlgorithm *const pAlgorithm, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingEventSlicingTool::FillSlices(NeutrinoParentAlgorithm *const pAlgorithm, const HitType hitType, const HitTypeToNameMap &caloHitListNames,
+void CheatingEventSlicingTool::FillSlices(const NeutrinoParentAlgorithm *const pAlgorithm, const HitType hitType, const HitTypeToNameMap &caloHitListNames,
     MCParticleToSliceMap &mcParticleToSliceMap) const
 {
     if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
