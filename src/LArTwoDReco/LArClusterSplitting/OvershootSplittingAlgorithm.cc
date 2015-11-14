@@ -112,11 +112,11 @@ void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResul
 
                 const StatusCode statusCodePosition(slidingFitResult1.GetGlobalFitPosition(rL1, projectedPosition1));
                 if (STATUS_CODE_SUCCESS != statusCodePosition)
-                    throw statusCodePosition;
+		    throw pandora::StatusCodeException(statusCodePosition);
 
                 const StatusCode statusCodeDirection(slidingFitResult1.GetGlobalFitDirection(rL1, projectedDirection1));
                 if (STATUS_CODE_SUCCESS != statusCodeDirection)
-                    throw statusCodeDirection;
+		    throw pandora::StatusCodeException(statusCodeDirection);
 
                 const CartesianVector projectedPosition2(clusterVertex.GetPosition());
                 const CartesianVector projectedDirection2(clusterVertex.GetDirection());
