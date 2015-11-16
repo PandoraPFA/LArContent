@@ -99,12 +99,12 @@ private:
     void InitializeKDTrees(HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const;
 
     /**
-     *  @brief  Initialize a kd trees with details of hits in clusters in a named list
+     *  @brief  Initialize a kd trees with details of hits in a named list
      * 
-     *  @param  clusterListName the cluster list name
+     *  @param  caloHitListName the calo hit list name
      *  @param  kdTree the kd tree
      */
-    void InitializeKDTree(const std::string &clusterListName, HitKDTree2D &kdTree) const;
+    void InitializeKDTree(const std::string &caloHitListName, HitKDTree2D &kdTree) const;
 
     /**
      *  @brief  Get the figure of merit for a candidate vertex, using the provided parameters
@@ -222,9 +222,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string     m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string     m_inputClusterListNameW;        ///< The name of the view W cluster list
+    std::string     m_inputCaloHitListNameU;        ///< The name of the view U calo hit list
+    std::string     m_inputCaloHitListNameV;        ///< The name of the view V calo hit list
+    std::string     m_inputCaloHitListNameW;        ///< The name of the view W calo hit list
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 

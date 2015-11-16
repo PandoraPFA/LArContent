@@ -102,36 +102,28 @@ StatusCode VertexSelectionAlgorithm::Run()
 
 void VertexSelectionAlgorithm::InitializeKDTrees(HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const
 {
-    this->InitializeKDTree(m_inputClusterListNameU, kdTreeU);
-    this->InitializeKDTree(m_inputClusterListNameV, kdTreeV);
-    this->InitializeKDTree(m_inputClusterListNameW, kdTreeW);
+    this->InitializeKDTree(m_inputCaloHitListNameU, kdTreeU);
+    this->InitializeKDTree(m_inputCaloHitListNameV, kdTreeV);
+    this->InitializeKDTree(m_inputCaloHitListNameW, kdTreeW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::InitializeKDTree(const std::string &clusterListName, HitKDTree2D &kdTree) const
+void VertexSelectionAlgorithm::InitializeKDTree(const std::string &caloHitListName, HitKDTree2D &kdTree) const
 {
-    // TODO Decide whether to find vertices using either i) all hits, or ii) all hits in existing clusters, as below.
-    const ClusterList *pClusterList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+    const CaloHitList *pCaloHitList = NULL;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, caloHitListName, pCaloHitList));
 
-    if (!pClusterList || pClusterList->empty())
+    if (!pCaloHitList || pCaloHitList->empty())
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "VertexSelectionAlgorithm: unable to find cluster list " << clusterListName << std::endl;
+            std::cout << "VertexSelectionAlgorithm: unable to find calo hit list " << caloHitListName << std::endl;
 
         return;
     }
 
-    CaloHitList caloHitList;
-
-    for (const Cluster *const pCluster : *pClusterList)
-    {
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-    }
-
     HitKDNode2DList hitKDNode2DList;
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, caloHitList, hitKDNode2DList, true);
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, *pCaloHitList, hitKDNode2DList, true);
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 }
 
@@ -379,9 +371,9 @@ float VertexSelectionAlgorithm::atan2Fast(const float y, const float x) const
 
 StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameU", m_inputCaloHitListNameU));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameV", m_inputCaloHitListNameV));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameW", m_inputCaloHitListNameW));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
