@@ -5,6 +5,9 @@
  * 
  *  $Log: $
  */
+        #include "TH1F.h"
+        #include "TGraph.h"
+        #include "TCanvas.h"
 
 #include "Pandora/AlgorithmHeaders.h"
 
@@ -24,9 +27,7 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_replaceCurrentVertexList(true),
     m_beamMode(false),
     m_selectSingleVertex(true),
-    m_histogramNPhiBins(200),
-    m_histogramPhiMin(-1.1f * M_PI),
-    m_histogramPhiMax(+1.1f * M_PI),
+    m_kernelEstimateSigma(0.026f),
     m_maxOnHitDisplacement(1.f),
     m_maxHitVertexDisplacement1D(100.f),
     m_maxTopScoreCandidates(50),
@@ -131,9 +132,9 @@ void VertexSelectionAlgorithm::InitializeKDTree(const std::string &caloHitListNa
 
 float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const
 {
-    Histogram histogramU(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
-    Histogram histogramV(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
-    Histogram histogramW(m_histogramNPhiBins, m_histogramPhiMin, m_histogramPhiMax);
+    KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
+    KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
+    KernelEstimate kernelEstimateW(m_kernelEstimateSigma);
 
     if ((!kdTreeU.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU)) ||
         (!kdTreeV.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV)) ||
@@ -142,38 +143,95 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, Hi
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
     }
 
-    this->FillHistogram(pVertex, TPC_VIEW_U, kdTreeU, histogramU);
-    this->FillHistogram(pVertex, TPC_VIEW_V, kdTreeV, histogramV);
-    this->FillHistogram(pVertex, TPC_VIEW_W, kdTreeW, histogramW);
+    this->FillKernelEstimate(pVertex, TPC_VIEW_U, kdTreeU, kernelEstimateU);
+    this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
+    this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
 
-    return this->GetFigureOfMerit(histogramU, histogramV, histogramW);
+    return this->GetFigureOfMerit(kernelEstimateU, kernelEstimateV, kernelEstimateW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogramU, const Histogram &histogramV, const Histogram &histogramW) const
+float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
+    const KernelEstimate &kernelEstimateW) const
 {
     float figureOfMerit(0.f);
-    figureOfMerit += this->GetFigureOfMerit(histogramU);
-    figureOfMerit += this->GetFigureOfMerit(histogramV);
-    figureOfMerit += this->GetFigureOfMerit(histogramW);
+    figureOfMerit += this->GetFigureOfMerit(kernelEstimateU);
+    figureOfMerit += this->GetFigureOfMerit(kernelEstimateV);
+    figureOfMerit += this->GetFigureOfMerit(kernelEstimateW);
 
     return figureOfMerit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::GetFigureOfMerit(const Histogram &histogram) const
+float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEstimate) const
 {
-    float sumSquaredEntries(0.f);
+//std::cout << "TEST" << std::endl;
+//KernelEstimate ke(1.5);
+//ke.AddContribution(-2.1, 1);
+//ke.AddContribution(-1.3, 1);
+//ke.AddContribution(-0.4, 1);
+//ke.AddContribution(1.9, 1);
+//ke.AddContribution(5.1, 1);
+//ke.AddContribution(6.2, 1);
+//TH1F *pHist1 = new TH1F("TestHist1", "TestHist1", 8, -6, 10);
+//for (const KernelEstimate::ContributionList::value_type &contribution : ke.GetContributionList())
+//{
+//    pHist1->Fill(contribution.first, contribution.second);
+//}
+//pHist1->Scale(1.f / pHist1->Integral());
+//pHist1->Scale(1.f / 2.f);
+//FloatVector graphX3, graphY3;
+//for (float iSample = -6; iSample < 10; iSample += 0.001f)
+//{
+//    graphX3.push_back(iSample);
+//    graphY3.push_back(ke.Sample(iSample));
+//}
+//TGraph *pGraph3 = new TGraph(graphX3.size(), graphX3.data(), graphY3.data());
+//TCanvas *pCanvas1 = new TCanvas;
+//pCanvas1->Draw();
+//pHist1->Draw();
+//pGraph3->Draw("lp,same");
+//pCanvas1->Update();
+//PandoraMonitoringApi::Pause(this->GetPandora());
+//delete pHist1;
+//delete pGraph3;
+//delete pCanvas1;
 
-    for (int xBin = 0; xBin < histogram.GetNBinsX(); ++xBin)
+    float figureOfMerit(0.f);
+    const KernelEstimate::ContributionList &contributionList(kernelEstimate.GetContributionList());
+//TH1F *pHist = new TH1F("TestHist", "TestHist", 200, -1.1 * M_PI, 1.1 * M_PI);
+//FloatVector graphX, graphY;
+//float maxSample(0.f);
+    for (const KernelEstimate::ContributionList::value_type &contribution : contributionList)
     {
-        const float binContent(histogram.GetBinContent(xBin));
-        sumSquaredEntries += binContent * binContent;
+        // TODO Work out whether need to turn from density function back to full histogram -> multiply by number of contributions, and maybe sigma?
+        figureOfMerit += contribution.second * kernelEstimate.Sample(contribution.first);
+//pHist->Fill(contribution.first, contribution.second);
     }
+//pHist->Scale(1.f / pHist->Integral());
+//pHist->Scale(1.f / 0.034557f);
+//    for (float iSample = -1.1 * M_PI; iSample < 1.1 * M_PI; iSample += 0.001f)
+//    {
+//graphX.push_back(iSample);
+//graphY.push_back(kernelEstimate.Sample(iSample));
+//if (kernelEstimate.Sample(iSample) > maxSample) maxSample = kernelEstimate.Sample(iSample);
+//    }
+//TGraph *pGraph = new TGraph(graphX.size(), graphX.data(), graphY.data());
+//TCanvas *pCanvas = new TCanvas;
+//pCanvas->Draw();
+//pHist->Draw();
+//pHist->GetYaxis()->SetRangeUser(0.f, maxSample + 10);
+//pGraph->Draw("lp,same");
+//pCanvas->Update();
+//PandoraMonitoringApi::Pause(this->GetPandora());
+//
+//delete pHist;
+//delete pGraph;
+//delete pCanvas;
 
-    return sumSquaredEntries;
+    return figureOfMerit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -193,7 +251,7 @@ bool VertexSelectionAlgorithm::IsVertexOnHit(const Vertex *const pVertex, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree, Histogram &histogram) const
+void VertexSelectionAlgorithm::FillKernelEstimate(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree, KernelEstimate &kernelEstimate) const
 {
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
@@ -213,7 +271,7 @@ void VertexSelectionAlgorithm::FillHistogram(const Vertex *const pVertex, const 
 
         const float phi(this->atan2Fast(displacement.GetZ(), displacement.GetX()));
         const float weight(1.f / std::sqrt(magnitude));
-        histogram.Fill(phi, weight);
+        kernelEstimate.AddContribution(phi, weight);
     }
 }
 
@@ -368,6 +426,60 @@ float VertexSelectionAlgorithm::atan2Fast(const float y, const float x) const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
+{
+    const float bandwidth(this->GetBandwidth());
+    const float weightSum(this->GetWeightSum());
+
+    if ((bandwidth < std::numeric_limits<float>::epsilon()) || (weightSum < std::numeric_limits<float>::epsilon()))
+        return 0.f;
+
+    const float gaussConstant(1.f / std::sqrt(2.f * M_PI * bandwidth * bandwidth));
+
+    float sample(0.f);
+    const ContributionList &contributionList(this->GetContributionList());
+
+    for (const ContributionList::value_type &contribution : contributionList)
+    {
+        const float deltaSigma((x - contribution.first) / bandwidth);
+
+        if (deltaSigma > 4.f)
+            continue;
+
+        if (deltaSigma < -4.f)
+            break;
+
+        const float gaussian(gaussConstant * std::exp(-0.5f * deltaSigma * deltaSigma));
+        sample += contribution.second * gaussian;
+    }
+
+    sample /= weightSum;// * bandwidth;
+    return sample;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::KernelEstimate::GetBandwidth() const
+{
+    if (!m_bandWidth.IsInitialized())
+        m_bandWidth = 1.06f * m_sigma * std::pow(m_weightSum, -0.2f);
+
+    return m_bandWidth.Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionAlgorithm::KernelEstimate::AddContribution(const float x, const float weight)
+{
+    m_contributionList.insert(ContributionList::value_type(x, weight));
+    m_weightSum += weight;
+    m_bandWidth.Reset();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -386,13 +498,7 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "SelectSingleVertex", m_selectSingleVertex));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HistogramNPhiBins", m_histogramNPhiBins));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HistogramPhiMin", m_histogramPhiMin));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HistogramPhiMax", m_histogramPhiMax));
+        "KernelEstimateSigma", m_kernelEstimateSigma));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxOnHitDisplacement", m_maxOnHitDisplacement));

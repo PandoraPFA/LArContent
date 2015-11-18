@@ -83,6 +83,73 @@ private:
 
     typedef std::vector<VertexScore> VertexScoreList;
 
+    /**
+     *  @brief Kernel estimate class
+     */
+    class KernelEstimate
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  sigma the width associated with the kernel estimate
+         */
+        KernelEstimate(const float sigma);
+
+        /**
+         *  @brief  Sample the parameterised distribution at a specified x coordinate
+         * 
+         *  @param  x the position at which to sample
+         * 
+         *  @return the sample value
+         */
+        float Sample(const float x) const;
+
+        typedef std::multimap<float, float> ContributionList;   ///< Map from x coord to weight, ATTN avoid map.find, etc. with float key
+
+        /**
+         *  @brief  Get the contribution list
+         * 
+         *  @return the contribution list
+         */
+        const ContributionList &GetContributionList() const;
+
+        /**
+         *  @brief  Get the assigned width
+         * 
+         *  @return the assigned width
+         */
+        float GetSigma() const;
+
+        /**
+         *  @brief  Get the sum of the contribution weights
+         * 
+         *  @return the sum of the contribution weights
+         */
+        float GetWeightSum() const;
+
+        /**
+         *  @brief  Get the bandwidth
+         * 
+         *  @return the bandwidth
+         */
+        float GetBandwidth() const;
+
+        /**
+         *  @brief  Add a contribution to the distribution
+         * 
+         *  @param  x the position
+         *  @param  weight the weight
+         */
+        void AddContribution(const float x, const float weight);
+
+    private:
+        ContributionList            m_contributionList;         ///< The contribution list
+        const float                 m_sigma;                    ///< The assigned width
+        float                       m_weightSum;                ///< The sum of the contribution weights
+        mutable pandora::InputFloat m_bandWidth;                ///< The bandwidth
+    };
+
     typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
@@ -119,24 +186,24 @@ private:
     float GetFigureOfMerit(const pandora::Vertex *const pVertex, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const;
 
     /**
-     *  @brief  Get the figure of merit for a trio of histograms
+     *  @brief  Get the figure of merit for a trio of kernel estimations
      * 
-     *  @param  histogramU the histogram for the u view
-     *  @param  histogramV the histogram for the v view
-     *  @param  histogramW the histogram for the w view
+     *  @param  kernelEstimateU the kernel estimate for the u view
+     *  @param  kernelEstimateV the kernel estimate for the v view
+     *  @param  kernelEstimateW the kernel estimate for the w view
      * 
      *  @return the figure of merit
      */
-    float GetFigureOfMerit(const pandora::Histogram &histogramU, const pandora::Histogram &histogramV, const pandora::Histogram &histogramW) const;
+    float GetFigureOfMerit(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
 
     /**
-     *  @brief  Get the figure of merit contribution for a single histogram
+     *  @brief  Get the figure of merit contribution for a single kernelEstimate
      * 
-     *  @param  histogram the histogram
+     *  @param  kernelEstimate the kernel estimate
      * 
      *  @return the figure of merit
      */
-    float GetFigureOfMerit(const pandora::Histogram &histogram) const;
+    float GetFigureOfMerit(const KernelEstimate &kernelEstimate) const;
 
     /**
      *  @brief  Whether the vertex lies on a hit in the specified view
@@ -150,14 +217,14 @@ private:
     bool IsVertexOnHit(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
 
     /**
-     *  @brief  Use hits in clusters (in the provided kd tree) to fill a provided histogram with hit-vertex relationship information
+     *  @brief  Use hits in clusters (in the provided kd tree) to fill a provided kernel estimate with hit-vertex relationship information
      * 
      *  @param  pVertex the address of the vertex
      *  @param  hitType the relevant hit type
      *  @param  kdTree the relevant kd tree
-     *  @param  histogram to receive the populated histogram
+     *  @param  kernelEstimate to receive the populated kernel estimate
      */
-    void FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, pandora::Histogram &histogram) const;
+    void FillKernelEstimate(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, KernelEstimate &kernelEstimate) const;
 
     /**
      *  @brief  From the top-scoring candidate vertices, select a subset for further investigation
@@ -231,12 +298,10 @@ private:
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
     bool            m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
 
-    unsigned int    m_histogramNPhiBins;            ///< The number of histogram bins in phi
-    float           m_histogramPhiMin;              ///< The histogram lower phi bound
-    float           m_histogramPhiMax;              ///< The histogram upper phi bound
+    float           m_kernelEstimateSigma;          ///< The Gaussian width to use for kernel estimation
 
     float           m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
-    float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to histograms
+    float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to kernel estimation
 
     unsigned int    m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for final selection
     unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for final investigation
@@ -288,6 +353,38 @@ inline float VertexSelectionAlgorithm::VertexScore::GetScore() const
 inline bool VertexSelectionAlgorithm::VertexScore::operator< (const VertexScore &rhs) const
 {
     return (this->GetScore() > rhs.GetScore());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline VertexSelectionAlgorithm::KernelEstimate::KernelEstimate(const float sigma) :
+    m_sigma(sigma),
+    m_weightSum(0.f)
+{
+    if (m_sigma < std::numeric_limits<float>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const VertexSelectionAlgorithm::KernelEstimate::ContributionList &VertexSelectionAlgorithm::KernelEstimate::GetContributionList() const
+{
+    return m_contributionList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float VertexSelectionAlgorithm::KernelEstimate::GetSigma() const
+{
+    return m_sigma;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float VertexSelectionAlgorithm::KernelEstimate::GetWeightSum() const
+{
+    return m_weightSum;
 }
 
 } // namespace lar_content
