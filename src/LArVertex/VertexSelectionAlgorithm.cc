@@ -5,10 +5,6 @@
  * 
  *  $Log: $
  */
-        #include "TH1F.h"
-        #include "TGraph.h"
-        #include "TCanvas.h"
-
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArClusterHelper.h"
@@ -167,69 +163,13 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEst
 
 float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEstimate) const
 {
-//std::cout << "TEST" << std::endl;
-//KernelEstimate ke(1.5);
-//ke.AddContribution(-2.1, 1);
-//ke.AddContribution(-1.3, 1);
-//ke.AddContribution(-0.4, 1);
-//ke.AddContribution(1.9, 1);
-//ke.AddContribution(5.1, 1);
-//ke.AddContribution(6.2, 1);
-//TH1F *pHist1 = new TH1F("TestHist1", "TestHist1", 8, -6, 10);
-//for (const KernelEstimate::ContributionList::value_type &contribution : ke.GetContributionList())
-//{
-//    pHist1->Fill(contribution.first, contribution.second);
-//}
-//pHist1->Scale(1.f / pHist1->Integral());
-//pHist1->Scale(1.f / 2.f);
-//FloatVector graphX3, graphY3;
-//for (float iSample = -6; iSample < 10; iSample += 0.001f)
-//{
-//    graphX3.push_back(iSample);
-//    graphY3.push_back(ke.Sample(iSample));
-//}
-//TGraph *pGraph3 = new TGraph(graphX3.size(), graphX3.data(), graphY3.data());
-//TCanvas *pCanvas1 = new TCanvas;
-//pCanvas1->Draw();
-//pHist1->Draw();
-//pGraph3->Draw("lp,same");
-//pCanvas1->Update();
-//PandoraMonitoringApi::Pause(this->GetPandora());
-//delete pHist1;
-//delete pGraph3;
-//delete pCanvas1;
-
     float figureOfMerit(0.f);
     const KernelEstimate::ContributionList &contributionList(kernelEstimate.GetContributionList());
-//TH1F *pHist = new TH1F("TestHist", "TestHist", 200, -1.1 * M_PI, 1.1 * M_PI);
-//FloatVector graphX, graphY;
-//float maxSample(0.f);
+
     for (const KernelEstimate::ContributionList::value_type &contribution : contributionList)
     {
-        // TODO Work out whether need to turn from density function back to full histogram -> multiply by number of contributions, and maybe sigma?
         figureOfMerit += contribution.second * kernelEstimate.Sample(contribution.first);
-//pHist->Fill(contribution.first, contribution.second);
     }
-//pHist->Scale(1.f / pHist->Integral());
-//pHist->Scale(1.f / 0.034557f);
-//    for (float iSample = -1.1 * M_PI; iSample < 1.1 * M_PI; iSample += 0.001f)
-//    {
-//graphX.push_back(iSample);
-//graphY.push_back(kernelEstimate.Sample(iSample));
-//if (kernelEstimate.Sample(iSample) > maxSample) maxSample = kernelEstimate.Sample(iSample);
-//    }
-//TGraph *pGraph = new TGraph(graphX.size(), graphX.data(), graphY.data());
-//TCanvas *pCanvas = new TCanvas;
-//pCanvas->Draw();
-//pHist->Draw();
-//pHist->GetYaxis()->SetRangeUser(0.f, maxSample + 10);
-//pGraph->Draw("lp,same");
-//pCanvas->Update();
-//PandoraMonitoringApi::Pause(this->GetPandora());
-//
-//delete pHist;
-//delete pGraph;
-//delete pCanvas;
 
     return figureOfMerit;
 }
@@ -436,27 +376,21 @@ float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
     if ((bandwidth < std::numeric_limits<float>::epsilon()) || (weightSum < std::numeric_limits<float>::epsilon()))
         return 0.f;
 
-    const float gaussConstant(1.f / std::sqrt(2.f * M_PI * bandwidth * bandwidth));
+    const ContributionList &contributionList(this->GetContributionList());
+    ContributionList::const_iterator lowerIter(contributionList.lower_bound(x - 3.f * bandwidth));
+    ContributionList::const_iterator upperIter(contributionList.upper_bound(x + 3.f * bandwidth));
 
     float sample(0.f);
-    const ContributionList &contributionList(this->GetContributionList());
+    const float gaussConstant(1.f / std::sqrt(2.f * M_PI * bandwidth * bandwidth));
 
-    for (const ContributionList::value_type &contribution : contributionList)
+    for (ContributionList::const_iterator iter = lowerIter; iter != upperIter; ++iter)
     {
-        const float deltaSigma((x - contribution.first) / bandwidth);
-
-        if (deltaSigma > 4.f)
-            continue;
-
-        if (deltaSigma < -4.f)
-            break;
-
+        const float deltaSigma((x - iter->first) / bandwidth);
         const float gaussian(gaussConstant * std::exp(-0.5f * deltaSigma * deltaSigma));
-        sample += contribution.second * gaussian;
+        sample += iter->second * gaussian;
     }
 
-    sample /= weightSum;// * bandwidth;
-    return sample;
+    return (sample / weightSum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
