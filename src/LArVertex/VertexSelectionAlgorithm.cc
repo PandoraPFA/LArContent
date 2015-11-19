@@ -22,21 +22,14 @@ namespace lar_content
 VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_replaceCurrentVertexList(true),
     m_beamMode(false),
+    m_nDecayLengthsInZSpan(2.f),
     m_selectSingleVertex(true),
+    m_maxTopScoreSelections(3),
     m_kernelEstimateSigma(0.026f),
     m_maxOnHitDisplacement(1.f),
     m_maxHitVertexDisplacement1D(100.f),
-    m_maxTopScoreCandidates(50),
-    m_maxTopScoreSelections(3),
-    m_maxBeamTopScoreCandidates(50),
-    m_maxBeamTopScoreSelections(3),
     m_minCandidateDisplacement(2.f),
-    m_minCandidateScoreFraction(0.5f),
-    m_minBeamCandidateScoreFraction(0.5f),
-    m_nDecayLengthsInZSpan(2.f),
-    m_bestScoreMultiplier(0.75f),
-    m_bestBeamScoreMultiplier(1.1f),
-    m_mustUseBeamScoreMultiplier(1.5f)
+    m_minCandidateScoreFraction(0.5f)
 {
 }
 
@@ -50,43 +43,21 @@ StatusCode VertexSelectionAlgorithm::Run()
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(kdTreeU, kdTreeV, kdTreeW);
 
+    VertexList filteredVertexList;
+    this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
+
+    BeamConstants beamConstants;
+    this->GetBeamConstants(filteredVertexList, beamConstants);
+
     VertexScoreList vertexScoreList;
-    float minZCoordinate(std::numeric_limits<float>::max()), maxZCoordinate(-std::numeric_limits<float>::max());
+    this->GetVertexScoreList(filteredVertexList, beamConstants, kdTreeU, kdTreeV, kdTreeW, vertexScoreList);
 
-    for (const Vertex *const pVertex : *pInputVertexList)
+    VertexList selectedVertexList;
+    this->SelectTopScoreVertices(vertexScoreList, selectedVertexList);
+
+    if (!selectedVertexList.empty())
     {
-        try
-        {
-            float figureOfMerit(this->GetFigureOfMerit(pVertex, kdTreeU, kdTreeV, kdTreeW));
-            vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
-
-            if (pVertex->GetPosition().GetZ() < minZCoordinate)
-                minZCoordinate = pVertex->GetPosition().GetZ();
-
-            if (pVertex->GetPosition().GetZ() > maxZCoordinate)
-                maxZCoordinate = pVertex->GetPosition().GetZ();
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
-        }
-    }
-
-    std::sort(vertexScoreList.begin(), vertexScoreList.end());
-    const float zSpan(maxZCoordinate - minZCoordinate);
-    const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
-
-    VertexScoreList selectedVertexScoreList;
-    this->SelectTopScoreVertices(vertexScoreList, selectedVertexScoreList);
-    this->SelectTopScoreBeamVertices(vertexScoreList, minZCoordinate, decayConstant, selectedVertexScoreList);
-
-    VertexList finalVertexList;
-    this->SelectFinalVertices(selectedVertexScoreList, minZCoordinate, decayConstant, finalVertexList);
-
-    if (!finalVertexList.empty())
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, finalVertexList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
 
         if (m_replaceCurrentVertexList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
@@ -126,24 +97,73 @@ void VertexSelectionAlgorithm::InitializeKDTree(const std::string &caloHitListNa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::GetFigureOfMerit(const Vertex *const pVertex, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const
+void VertexSelectionAlgorithm::FilterVertexList(const VertexList *const pInputVertexList, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV,
+    HitKDTree2D &kdTreeW, VertexList &filteredVertexList) const
 {
-    KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
-    KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
-    KernelEstimate kernelEstimateW(m_kernelEstimateSigma);
-
-    if ((!kdTreeU.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU)) ||
-        (!kdTreeV.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV)) ||
-        (!kdTreeW.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW)))
+    for (const Vertex *const pVertex : *pInputVertexList)
     {
-        throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+        if ((!kdTreeU.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU)) ||
+            (!kdTreeV.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV)) ||
+            (!kdTreeW.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW)))
+        {
+            continue;
+        }
+
+        (void) filteredVertexList.insert(pVertex);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, BeamConstants &beamConstants) const
+{
+    if (!m_beamMode)
+        return;
+
+    if (vertexList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    float minZCoordinate(std::numeric_limits<float>::max()), maxZCoordinate(-std::numeric_limits<float>::max());
+
+    for (const Vertex *const pVertex : vertexList)
+    {
+        if (pVertex->GetPosition().GetZ() < minZCoordinate)
+            minZCoordinate = pVertex->GetPosition().GetZ();
+
+        if (pVertex->GetPosition().GetZ() > maxZCoordinate)
+            maxZCoordinate = pVertex->GetPosition().GetZ();
     }
 
-    this->FillKernelEstimate(pVertex, TPC_VIEW_U, kdTreeU, kernelEstimateU);
-    this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
-    this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
+    const float zSpan(maxZCoordinate - minZCoordinate);
+    const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
 
-    return this->GetFigureOfMerit(kernelEstimateU, kernelEstimateV, kernelEstimateW);
+    beamConstants.SetConstants(minZCoordinate, decayConstant);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
+    HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
+{
+    for (const Vertex *const pVertex : vertexList)
+    {
+        KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
+        KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
+        KernelEstimate kernelEstimateW(m_kernelEstimateSigma);
+
+        this->FillKernelEstimate(pVertex, TPC_VIEW_U, kdTreeU, kernelEstimateU);
+        this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
+        this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
+
+        // TODO fast score, best score, etc.
+
+        float figureOfMerit(this->GetFigureOfMerit(kernelEstimateU, kernelEstimateV, kernelEstimateW));
+
+        if (m_beamMode)
+            figureOfMerit *= std::exp(-(pVertex->GetPosition().GetZ() - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant());
+
+        vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -152,24 +172,15 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEst
     const KernelEstimate &kernelEstimateW) const
 {
     float figureOfMerit(0.f);
-    figureOfMerit += this->GetFigureOfMerit(kernelEstimateU);
-    figureOfMerit += this->GetFigureOfMerit(kernelEstimateV);
-    figureOfMerit += this->GetFigureOfMerit(kernelEstimateW);
 
-    return figureOfMerit;
-}
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateU.GetContributionList())
+        figureOfMerit += contribution.second * kernelEstimateU.Sample(contribution.first);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateV.GetContributionList())
+        figureOfMerit += contribution.second * kernelEstimateV.Sample(contribution.first);
 
-float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEstimate) const
-{
-    float figureOfMerit(0.f);
-    const KernelEstimate::ContributionList &contributionList(kernelEstimate.GetContributionList());
-
-    for (const KernelEstimate::ContributionList::value_type &contribution : contributionList)
-    {
-        figureOfMerit += contribution.second * kernelEstimate.Sample(contribution.first);
-    }
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateW.GetContributionList())
+        figureOfMerit += contribution.second * kernelEstimateW.Sample(contribution.first);
 
     return figureOfMerit;
 }
@@ -179,8 +190,6 @@ float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEst
 bool VertexSelectionAlgorithm::IsVertexOnHit(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree) const
 {
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-
-    CaloHitList nearbyHits;
     KDTreeBox searchRegionHits = build_2d_kd_search_region(vertexPosition2D, m_maxOnHitDisplacement, m_maxOnHitDisplacement);
 
     HitKDNode2DList found;
@@ -194,8 +203,6 @@ bool VertexSelectionAlgorithm::IsVertexOnHit(const Vertex *const pVertex, const 
 void VertexSelectionAlgorithm::FillKernelEstimate(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree, KernelEstimate &kernelEstimate) const
 {
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-
-    CaloHitList nearbyHits;
     KDTreeBox searchRegionHits = build_2d_kd_search_region(vertexPosition2D, m_maxHitVertexDisplacement1D, m_maxHitVertexDisplacement1D);
 
     HitKDNode2DList found;
@@ -217,136 +224,49 @@ void VertexSelectionAlgorithm::FillKernelEstimate(const Vertex *const pVertex, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::SelectTopScoreVertices(const VertexScoreList &vertexScoreList, VertexScoreList &selectedVertexScoreList) const
+void VertexSelectionAlgorithm::SelectTopScoreVertices(VertexScoreList &vertexScoreList, VertexList &selectedVertexList) const
 {
-    // ATTN Assumes sorted vertex score list
-    unsigned int nVerticesConsidered(0);
+    float bestScore(0.f);
+    std::sort(vertexScoreList.begin(), vertexScoreList.end());
 
-    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
+    for (const VertexScore &vertexScore : vertexScoreList)
     {
-        if (++nVerticesConsidered > m_maxTopScoreCandidates)
+        if (selectedVertexList.size() >= m_maxTopScoreSelections)
             break;
 
-        if (selectedVertexScoreList.size() >= m_maxTopScoreSelections)
-            break;
-
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexLocation(iter->GetVertex(), selectedVertexScoreList))
+        if (!selectedVertexList.empty() && !this->AcceptVertexLocation(vertexScore.GetVertex(), selectedVertexList))
             continue;
 
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(iter->GetScore(), m_minCandidateScoreFraction, selectedVertexScoreList))
+        if (!selectedVertexList.empty() && (vertexScore.GetScore() < m_minCandidateScoreFraction * bestScore))
             continue;
 
-        selectedVertexScoreList.push_back(*iter);
+        selectedVertexList.insert(vertexScore.GetVertex());
+
+        if (m_selectSingleVertex)
+            return;
+
+        if (vertexScore.GetScore() > bestScore)
+            bestScore = vertexScore.GetScore();
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::SelectTopScoreBeamVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate,
-    const float decayConstant, VertexScoreList &selectedVertexScoreList) const
+bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex, const VertexList &selectedVertexList) const
 {
-    if (!m_beamMode)
-        return;
+    const CartesianVector &position(pVertex->GetPosition());
+    const float minCandidateDisplacementSquared(m_minCandidateDisplacement * m_minCandidateDisplacement);
 
-    VertexScoreList beamVertexScoreList;
-
-    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
+    for (const Vertex *const pSelectedVertex : selectedVertexList)
     {
-        const float beamScore(iter->GetScore() * std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * decayConstant));
-        beamVertexScoreList.push_back(VertexScore(iter->GetVertex(), beamScore));
-    }
-
-    unsigned int nVerticesConsidered(0), nVerticesAdded(0);
-    std::sort(beamVertexScoreList.begin(), beamVertexScoreList.end());
-
-    for (VertexScoreList::const_iterator iter = beamVertexScoreList.begin(), iterEnd = beamVertexScoreList.end(); iter != iterEnd; ++iter)
-    {
-        if (++nVerticesConsidered > m_maxBeamTopScoreCandidates)
-            break;
-
-        if (nVerticesAdded >= m_maxBeamTopScoreSelections)
-            break;
-
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexLocation(iter->GetVertex(), selectedVertexScoreList))
-            continue;
-
-        const float nonBeamScore(iter->GetScore() / std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * decayConstant));
-
-        if (!selectedVertexScoreList.empty() && !this->AcceptVertexScore(nonBeamScore, m_minBeamCandidateScoreFraction, selectedVertexScoreList))
-            continue;
-
-        ++nVerticesAdded;
-        selectedVertexScoreList.push_back(VertexScore(iter->GetVertex(), nonBeamScore));
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex, const VertexScoreList &vertexScoreList) const
-{
-    const CartesianVector position(pVertex->GetPosition());
-
-    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
-    {
-        if (iter->GetVertex() == pVertex)
+        if (pVertex == pSelectedVertex)
             return false;
 
-        const float displacement3D((position - iter->GetVertex()->GetPosition()).GetMagnitude());
-
-        if (displacement3D < m_minCandidateDisplacement)
+        if ((position - pSelectedVertex->GetPosition()).GetMagnitudeSquared() < minCandidateDisplacementSquared)
             return false;
     }
 
     return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool VertexSelectionAlgorithm::AcceptVertexScore(const float score, const float minScoreFraction, const VertexScoreList &vertexScoreList) const
-{
-    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
-    {
-        if (score < minScoreFraction * iter->GetScore())
-            return false;
-    }
-
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void VertexSelectionAlgorithm::SelectFinalVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
-    VertexList &finalVertexList) const
-{
-    const Vertex *pFinalVertex(NULL);
-    float bestScore(0.f), bestBeamScore(0.f);
-
-    for (VertexScoreList::const_iterator iter = vertexScoreList.begin(), iterEnd = vertexScoreList.end(); iter != iterEnd; ++iter)
-    {
-        if (!m_selectSingleVertex)
-        {
-            finalVertexList.insert(iter->GetVertex());
-            continue;
-        }
-
-        if (!m_beamMode && (iter->GetScore() < bestScore))
-            continue;
-
-        const float beamScore(iter->GetScore() * std::exp(-(iter->GetVertex()->GetPosition().GetZ() - minZCoordinate) * decayConstant));
-
-        if (m_beamMode && (beamScore < m_bestBeamScoreMultiplier * bestBeamScore))
-            continue;
-
-        if (m_beamMode && (iter->GetScore() < m_bestScoreMultiplier * bestScore) && (beamScore < m_mustUseBeamScoreMultiplier * bestBeamScore))
-            continue;
-
-        pFinalVertex = iter->GetVertex();
-        bestScore = iter->GetScore();
-        bestBeamScore = beamScore;
-    }
-
-    if (m_selectSingleVertex && (NULL != pFinalVertex))
-        finalVertexList.insert(pFinalVertex);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -429,7 +349,13 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "BeamMode", m_beamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectSingleVertex", m_selectSingleVertex));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxTopScoreSelections", m_maxTopScoreSelections));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KernelEstimateSigma", m_kernelEstimateSigma));
@@ -441,37 +367,10 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "MaxHitVertexDisplacement1D", m_maxHitVertexDisplacement1D));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTopScoreCandidates", m_maxTopScoreCandidates));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTopScoreSelections", m_maxTopScoreSelections));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxBeamTopScoreCandidates", m_maxBeamTopScoreCandidates));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxBeamTopScoreSelections", m_maxBeamTopScoreSelections));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCandidateDisplacement", m_minCandidateDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCandidateScoreFraction", m_minCandidateScoreFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinBeamCandidateScoreFraction", m_minBeamCandidateScoreFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BestScoreMultiplier", m_bestScoreMultiplier));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BestBeamScoreMultiplier", m_bestBeamScoreMultiplier));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MustUseBeamScoreMultiplier", m_mustUseBeamScoreMultiplier));
 
     return STATUS_CODE_SUCCESS;
 }
