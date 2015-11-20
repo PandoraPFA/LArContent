@@ -240,15 +240,26 @@ private:
         HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const;
 
     /**
-     *  @brief  Get the figure of merit for a trio of kernel estimations
+     *  @brief  Get the score for a trio of kernel estimations, using fast histogram approach
      * 
      *  @param  kernelEstimateU the kernel estimate for the u view
      *  @param  kernelEstimateV the kernel estimate for the v view
      *  @param  kernelEstimateW the kernel estimate for the w view
      * 
-     *  @return the figure of merit
+     *  @return the fast score
      */
-    float GetFigureOfMerit(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
+    float GetFastScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
+
+    /**
+     *  @brief  Get the score for a trio of kernel estimations, using full kernel density estimation
+     * 
+     *  @param  kernelEstimateU the kernel estimate for the u view
+     *  @param  kernelEstimateV the kernel estimate for the v view
+     *  @param  kernelEstimateW the kernel estimate for the w view
+     * 
+     *  @return the full score
+     */
+    float GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
 
     /**
      *  @brief  Whether the vertex lies on a hit in the specified view
@@ -314,6 +325,11 @@ private:
     unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertex candidate to select for output
 
     float           m_kernelEstimateSigma;          ///< The Gaussian width to use for kernel estimation
+
+    float           m_minFastScoreFraction;         ///< Fast score must be at least this fraction of best fast score to calculate full score
+    unsigned int    m_fastHistogramNPhiBins;        ///< Number of bins to use for fast score histograms
+    float           m_fastHistogramPhiMin;          ///< Min value for fast score histograms
+    float           m_fastHistogramPhiMax;          ///< Max value for fast score histograms
 
     float           m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
     float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to kernel estimation

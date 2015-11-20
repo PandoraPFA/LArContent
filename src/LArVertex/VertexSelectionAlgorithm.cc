@@ -26,6 +26,10 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_selectSingleVertex(true),
     m_maxTopScoreSelections(3),
     m_kernelEstimateSigma(0.026f),
+    m_minFastScoreFraction(0.8f),
+    m_fastHistogramNPhiBins(200),
+    m_fastHistogramPhiMin(-1.1f * M_PI),
+    m_fastHistogramPhiMax(+1.1f * M_PI),
     m_maxOnHitDisplacement(1.f),
     m_maxHitVertexDisplacement1D(100.f),
     m_minCandidateDisplacement(2.f),
@@ -145,6 +149,8 @@ void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, Be
 void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
     HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
+    float bestFastScore(0.f);
+
     for (const Vertex *const pVertex : vertexList)
     {
         KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
@@ -155,20 +161,55 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
         this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
         this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
 
-        // TODO fast score, best score, etc.
+        const float multiplier(!m_beamMode ? 1.f : std::exp(-(pVertex->GetPosition().GetZ() - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
+        const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
 
-        float figureOfMerit(this->GetFigureOfMerit(kernelEstimateU, kernelEstimateV, kernelEstimateW));
+        if (fastScore < m_minFastScoreFraction * bestFastScore)
+            continue;
 
-        if (m_beamMode)
-            figureOfMerit *= std::exp(-(pVertex->GetPosition().GetZ() - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant());
+        if (fastScore > bestFastScore)
+            bestFastScore = fastScore;
 
-        vertexScoreList.push_back(VertexScore(pVertex, figureOfMerit));
+        const float fullScore(multiplier * this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
+        vertexScoreList.push_back(VertexScore(pVertex, fullScore));
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::GetFigureOfMerit(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
+float VertexSelectionAlgorithm::GetFastScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
+    const KernelEstimate &kernelEstimateW) const
+{
+    Histogram histogramU(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
+    Histogram histogramV(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
+    Histogram histogramW(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
+
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateU.GetContributionList())
+        histogramU.Fill(contribution.first, contribution.second);
+
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateV.GetContributionList())
+        histogramV.Fill(contribution.first, contribution.second);
+
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateW.GetContributionList())
+        histogramW.Fill(contribution.first, contribution.second);
+
+    // ATTN Need to renormalise histograms if ever want to directly compare fast and full scores
+    float figureOfMerit(0.f);
+
+    for (int xBin = 0; xBin < histogramU.GetNBinsX(); ++xBin)
+    {
+        const float binContentU(histogramU.GetBinContent(xBin));
+        const float binContentV(histogramV.GetBinContent(xBin));
+        const float binContentW(histogramW.GetBinContent(xBin));
+        figureOfMerit += binContentU * binContentU + binContentV * binContentV + binContentW * binContentW;
+    }
+
+    return figureOfMerit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
     const KernelEstimate &kernelEstimateW) const
 {
     float figureOfMerit(0.f);
@@ -359,6 +400,18 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KernelEstimateSigma", m_kernelEstimateSigma));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinFastScoreFraction", m_minFastScoreFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FastHistogramNPhiBins", m_fastHistogramNPhiBins));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FastHistogramPhiMin", m_fastHistogramPhiMin));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FastHistogramPhiMax", m_fastHistogramPhiMax));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxOnHitDisplacement", m_maxOnHitDisplacement));
