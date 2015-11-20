@@ -77,11 +77,111 @@ private:
         bool operator< (const VertexScore &rhs) const;
 
     private:
-        const pandora::Vertex  *m_pVertex;      ///< The address of the vertex
-        float                   m_score;        ///< The score
+        const pandora::Vertex  *m_pVertex;          ///< The address of the vertex
+        float                   m_score;            ///< The score
     };
 
     typedef std::vector<VertexScore> VertexScoreList;
+
+    /**
+     *  @brief Beam constants class
+     */
+    class BeamConstants
+    {
+    public:
+        /**
+         *  @brief  Get the min z coordinate
+         * 
+         *  @return the min z coordinate
+         */
+        float GetMinZCoordinate() const;
+
+        /**
+         *  @brief  Get the decay constant
+         * 
+         *  @return the decay constant
+         */
+        float GetDecayConstant() const;
+
+        /**
+         *  @brief  Set the beam constants
+         * 
+         *  @param  minZCoordinate the min z coordinate
+         *  @param  decayConstant the decay constant
+         */
+        void SetConstants(const float minZCoordinate, const float decayConstant);
+
+    private:
+        pandora::InputFloat     m_minZCoordinate;   ///< The min z coordinate
+        pandora::InputFloat     m_decayConstant;    ///< The decay constant
+    };
+
+    /**
+     *  @brief Kernel estimate class
+     */
+    class KernelEstimate
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         * 
+         *  @param  sigma the width associated with the kernel estimate
+         */
+        KernelEstimate(const float sigma);
+
+        /**
+         *  @brief  Sample the parameterised distribution at a specified x coordinate
+         * 
+         *  @param  x the position at which to sample
+         * 
+         *  @return the sample value
+         */
+        float Sample(const float x) const;
+
+        typedef std::multimap<float, float> ContributionList;   ///< Map from x coord to weight, ATTN avoid map.find, etc. with float key
+
+        /**
+         *  @brief  Get the contribution list
+         * 
+         *  @return the contribution list
+         */
+        const ContributionList &GetContributionList() const;
+
+        /**
+         *  @brief  Get the assigned width
+         * 
+         *  @return the assigned width
+         */
+        float GetSigma() const;
+
+        /**
+         *  @brief  Get the sum of the contribution weights
+         * 
+         *  @return the sum of the contribution weights
+         */
+        float GetWeightSum() const;
+
+        /**
+         *  @brief  Get the bandwidth
+         * 
+         *  @return the bandwidth
+         */
+        float GetBandwidth() const;
+
+        /**
+         *  @brief  Add a contribution to the distribution
+         * 
+         *  @param  x the position
+         *  @param  weight the weight
+         */
+        void AddContribution(const float x, const float weight);
+
+    private:
+        ContributionList            m_contributionList;         ///< The contribution list
+        const float                 m_sigma;                    ///< The assigned width
+        float                       m_weightSum;                ///< The sum of the contribution weights
+        mutable pandora::InputFloat m_bandWidth;                ///< The bandwidth
+    };
 
     typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
@@ -107,36 +207,59 @@ private:
     void InitializeKDTree(const std::string &caloHitListName, HitKDTree2D &kdTree) const;
 
     /**
-     *  @brief  Get the figure of merit for a candidate vertex, using the provided parameters
+     *  @brief  Filter the input list of vertices to obtain a reduced number of vertex candidates
      * 
-     *  @param  pVertex the address of the vertex
+     *  @param  pInputVertexList the address of the input vertex list
      *  @param  kdTreeU the kd tree for u hits
      *  @param  kdTreeV the kd tree for v hits
      *  @param  kdTreeW the kd tree for w hits
-     * 
-     *  @return the figure of merit
+     *  @param  filteredVertexList to receive the filtered vertex score list
      */
-    float GetFigureOfMerit(const pandora::Vertex *const pVertex, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const;
+    void FilterVertexList(const pandora::VertexList *const pInputVertexList, HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV,
+        HitKDTree2D &kdTreeW, pandora::VertexList &filteredVertexList) const;
 
     /**
-     *  @brief  Get the figure of merit for a trio of histograms
+     *  @brief  Get the beam score constants for a provided list of candidate vertices
      * 
-     *  @param  histogramU the histogram for the u view
-     *  @param  histogramV the histogram for the v view
-     *  @param  histogramW the histogram for the w view
-     * 
-     *  @return the figure of merit
+     *  @param  vertexList the vertex list
+     *  @param  beamConstants to receive the beam constants
      */
-    float GetFigureOfMerit(const pandora::Histogram &histogramU, const pandora::Histogram &histogramV, const pandora::Histogram &histogramW) const;
+    void GetBeamConstants(const pandora::VertexList &vertexList, BeamConstants &beamConstants) const;
 
     /**
-     *  @brief  Get the figure of merit contribution for a single histogram
+     *  @brief  Get the vertex score list for a provided list of candidate vertices
      * 
-     *  @param  histogram the histogram
-     * 
-     *  @return the figure of merit
+     *  @param  vertexList the vertex list
+     *  @param  beamConstants the beam constants
+     *  @param  kdTreeU the kd tree for u hits
+     *  @param  kdTreeV the kd tree for v hits
+     *  @param  kdTreeW the kd tree for w hits
+     *  @param  vertexScoreList to receive the vertex score list
      */
-    float GetFigureOfMerit(const pandora::Histogram &histogram) const;
+    void GetVertexScoreList(const pandora::VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
+        HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const;
+
+    /**
+     *  @brief  Get the score for a trio of kernel estimations, using fast histogram approach
+     * 
+     *  @param  kernelEstimateU the kernel estimate for the u view
+     *  @param  kernelEstimateV the kernel estimate for the v view
+     *  @param  kernelEstimateW the kernel estimate for the w view
+     * 
+     *  @return the fast score
+     */
+    float GetFastScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
+
+    /**
+     *  @brief  Get the score for a trio of kernel estimations, using full kernel density estimation
+     * 
+     *  @param  kernelEstimateU the kernel estimate for the u view
+     *  @param  kernelEstimateV the kernel estimate for the v view
+     *  @param  kernelEstimateW the kernel estimate for the w view
+     * 
+     *  @return the full score
+     */
+    float GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
 
     /**
      *  @brief  Whether the vertex lies on a hit in the specified view
@@ -150,65 +273,32 @@ private:
     bool IsVertexOnHit(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
 
     /**
-     *  @brief  Use hits in clusters (in the provided kd tree) to fill a provided histogram with hit-vertex relationship information
+     *  @brief  Use hits in clusters (in the provided kd tree) to fill a provided kernel estimate with hit-vertex relationship information
      * 
      *  @param  pVertex the address of the vertex
      *  @param  hitType the relevant hit type
      *  @param  kdTree the relevant kd tree
-     *  @param  histogram to receive the populated histogram
+     *  @param  kernelEstimate to receive the populated kernel estimate
      */
-    void FillHistogram(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, pandora::Histogram &histogram) const;
+    void FillKernelEstimate(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, KernelEstimate &kernelEstimate) const;
 
     /**
      *  @brief  From the top-scoring candidate vertices, select a subset for further investigation
      * 
      *  @param  vertexScoreList the vertex score list
-     *  @param  selectedVertexScoreList to receive the selected vertex score list
+     *  @param  selectedVertexList to receive the selected vertex list
      */
-    void SelectTopScoreVertices(const VertexScoreList &vertexScoreList, VertexScoreList &selectedVertexScoreList) const;
-
-    /**
-     *  @brief  From the top-scoring candidate vertices, select the best using beam-direction assumptions
-     * 
-     *  @param  vertexScoreList the vertex score list
-     *  @param  minZCoordinate the minimum candidate vertex z-coordinate
-     *  @param  decayConstant the decay constant for calculating beam-modified vertex scores
-     *  @param  selectedVertexScoreList may receive an additional selected vertex, using beam-direction evidence
-     */
-    void SelectTopScoreBeamVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
-        VertexScoreList &selectedVertexScoreList) const;
+    void SelectTopScoreVertices(VertexScoreList &vertexScoreList, pandora::VertexList &selectedVertexList) const;
 
     /**
      *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates
      * 
      *  @param  pVertex the address of the vertex
-     *  @param  vertexScoreList the vertex score list
+     *  @param  selectedVertexList the selected vertex list
      * 
      *  @return boolean
      */
-    bool AcceptVertexLocation(const pandora::Vertex *const pVertex, const VertexScoreList &vertexScoreList) const;
-
-    /**
-     *  @brief  Whether to accept a candidate vertex, based on its score in relation to other selected candidates
-     * 
-     *  @param  score the vertex score
-     *  @param  minScoreFraction the minimum acceptable fraction of the current top-score
-     *  @param  vertexScoreList the vertex score list
-     * 
-     *  @return boolean
-     */
-    bool AcceptVertexScore(const float score, const float minScoreFraction, const VertexScoreList &vertexScoreList) const;
-
-    /**
-     *  @brief  Select the final vertex from the list of chosen top-scoring candidates
-     * 
-     *  @param  vertexScoreList the list of chosen top-scoring vertex candidates
-     *  @param  minZCoordinate the minimum candidate vertex z-coordinate
-     *  @param  decayConstant the decay constant for calculating beam-modified vertex scores
-     *  @param  finalVertexList to receive the list of final vertices
-     */
-    void SelectFinalVertices(const VertexScoreList &vertexScoreList, const float minZCoordinate, const float decayConstant,
-        pandora::VertexList &finalVertexList) const;
+    bool AcceptVertexLocation(const pandora::Vertex *const pVertex, const pandora::VertexList &selectedVertexList) const;
 
     /**
      *  @brief  Fast estimate of std::atan2 function. Rather coarse (max |error| > 0.01) but should suffice for this use-case.
@@ -220,6 +310,16 @@ private:
      */
     float atan2Fast(const float y, const float x) const;
 
+    /**
+     *  @brief  Sort vertices by increasing z position
+     * 
+     *  @param  pLhs address of the lhs vertex
+     *  @param  pRhs address of the rhs vertex
+     * 
+     *  @return whether lhs should precedes rhs
+     */
+    static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_inputCaloHitListNameU;        ///< The name of the view U calo hit list
@@ -228,29 +328,27 @@ private:
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
-    bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
-    bool            m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
+    bool            m_fullScoreOnly;                ///< Whether to use the full kernel density estimation score only
+    bool            m_fastScoreOnly;                ///< Whether to use the fast histogram based score only
 
-    unsigned int    m_histogramNPhiBins;            ///< The number of histogram bins in phi
-    float           m_histogramPhiMin;              ///< The histogram lower phi bound
-    float           m_histogramPhiMax;              ///< The histogram upper phi bound
+    bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
+    float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
+
+    bool            m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
+    unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertex candidate to select for output
+
+    float           m_kernelEstimateSigma;          ///< The Gaussian width to use for kernel estimation
+
+    float           m_minFastScoreFraction;         ///< Fast score must be at least this fraction of best fast score to calculate full score
+    unsigned int    m_fastHistogramNPhiBins;        ///< Number of bins to use for fast score histograms
+    float           m_fastHistogramPhiMin;          ///< Min value for fast score histograms
+    float           m_fastHistogramPhiMax;          ///< Max value for fast score histograms
 
     float           m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
-    float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to histograms
-
-    unsigned int    m_maxTopScoreCandidates;        ///< Max number of top-scoring vertices to examine and put forward for final selection
-    unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertices to select for final investigation
-    unsigned int    m_maxBeamTopScoreCandidates;    ///< Max number of top-beam-scoring vertices to examine and put forward for final selection
-    unsigned int    m_maxBeamTopScoreSelections;    ///< Max number of top-beam-scoring vertices to select for final investigation
+    float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to kernel estimation
 
     float           m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
     float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
-    float           m_minBeamCandidateScoreFraction;///< Ignore other top-beam-scoring candidates with score less than a fraction of original
-
-    float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
-    float           m_bestScoreMultiplier;          ///< In beam mode, best vertex must surpass a multiple of current best basic score
-    float           m_bestBeamScoreMultiplier;      ///< In beam mode, best vertex must surpass a multiple of current best beam-weighted score
-    float           m_mustUseBeamScoreMultiplier;   ///< Use ratio of beam scores to decide when to ensure beam score always overturns basic score
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -288,6 +386,61 @@ inline float VertexSelectionAlgorithm::VertexScore::GetScore() const
 inline bool VertexSelectionAlgorithm::VertexScore::operator< (const VertexScore &rhs) const
 {
     return (this->GetScore() > rhs.GetScore());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float VertexSelectionAlgorithm::BeamConstants::GetMinZCoordinate() const
+{
+    return m_minZCoordinate.Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float VertexSelectionAlgorithm::BeamConstants::GetDecayConstant() const
+{
+    return m_decayConstant.Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void VertexSelectionAlgorithm::BeamConstants::SetConstants(const float minZCoordinate, const float decayConstant)
+{
+    m_minZCoordinate = minZCoordinate;
+    m_decayConstant = decayConstant;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline VertexSelectionAlgorithm::KernelEstimate::KernelEstimate(const float sigma) :
+    m_sigma(sigma),
+    m_weightSum(0.f)
+{
+    if (m_sigma < std::numeric_limits<float>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const VertexSelectionAlgorithm::KernelEstimate::ContributionList &VertexSelectionAlgorithm::KernelEstimate::GetContributionList() const
+{
+    return m_contributionList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float VertexSelectionAlgorithm::KernelEstimate::GetSigma() const
+{
+    return m_sigma;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float VertexSelectionAlgorithm::KernelEstimate::GetWeightSum() const
+{
+    return m_weightSum;
 }
 
 } // namespace lar_content
