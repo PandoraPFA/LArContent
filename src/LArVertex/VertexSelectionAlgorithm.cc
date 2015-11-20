@@ -21,6 +21,8 @@ namespace lar_content
 
 VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_replaceCurrentVertexList(true),
+    m_fullScoreOnly(false),
+    m_fastScoreOnly(false),
     m_beamMode(false),
     m_nDecayLengthsInZSpan(2.f),
     m_selectSingleVertex(true),
@@ -149,9 +151,12 @@ void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, Be
 void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
     HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
+    VertexVector vertexVextor(vertexList.begin(), vertexList.end());
+    std::sort(vertexVextor.begin(), vertexVextor.end(), SortByVertexZPosition);
+
     float bestFastScore(0.f);
 
-    for (const Vertex *const pVertex : vertexList)
+    for (const Vertex *const pVertex : vertexVextor)
     {
         KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
         KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
@@ -162,13 +167,23 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
         this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
 
         const float multiplier(!m_beamMode ? 1.f : std::exp(-(pVertex->GetPosition().GetZ() - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
-        const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
 
-        if (fastScore < m_minFastScoreFraction * bestFastScore)
-            continue;
+        if (!m_fullScoreOnly)
+        {
+            const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
 
-        if (fastScore > bestFastScore)
-            bestFastScore = fastScore;
+            if (m_fastScoreOnly)
+            {
+                vertexScoreList.push_back(VertexScore(pVertex, fastScore));
+                continue;
+            }
+
+            if (fastScore < m_minFastScoreFraction * bestFastScore)
+                continue;
+
+            if (fastScore > bestFastScore)
+                bestFastScore = fastScore;
+        }
 
         const float fullScore(multiplier * this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
         vertexScoreList.push_back(VertexScore(pVertex, fullScore));
@@ -327,6 +342,13 @@ float VertexSelectionAlgorithm::atan2Fast(const float y, const float x) const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexSelectionAlgorithm::SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs)
+{
+    return (pLhs->GetPosition().GetZ() < pRhs->GetPosition().GetZ());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
@@ -385,6 +407,18 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FullScoreOnly", m_fullScoreOnly));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FastScoreOnly", m_fastScoreOnly));
+
+    if (m_fullScoreOnly && m_fastScoreOnly)
+    {
+        std::cout << "VertexSelectionAlgorithm: incompatible parameters, fullScoreOnly and fastScoreOnly, both set to true." << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BeamMode", m_beamMode));

@@ -310,6 +310,16 @@ private:
      */
     float atan2Fast(const float y, const float x) const;
 
+    /**
+     *  @brief  Sort vertices by increasing z position
+     * 
+     *  @param  pLhs address of the lhs vertex
+     *  @param  pRhs address of the rhs vertex
+     * 
+     *  @return whether lhs should precedes rhs
+     */
+    static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_inputCaloHitListNameU;        ///< The name of the view U calo hit list
@@ -317,6 +327,9 @@ private:
     std::string     m_inputCaloHitListNameW;        ///< The name of the view W calo hit list
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
+
+    bool            m_fullScoreOnly;                ///< Whether to use the full kernel density estimation score only
+    bool            m_fastScoreOnly;                ///< Whether to use the fast histogram based score only
 
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
     float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
