@@ -162,13 +162,6 @@ private:
         float GetWeightSum() const;
 
         /**
-         *  @brief  Get the bandwidth
-         * 
-         *  @return the bandwidth
-         */
-        float GetBandwidth() const;
-
-        /**
          *  @brief  Add a contribution to the distribution
          * 
          *  @param  x the position
@@ -180,7 +173,6 @@ private:
         ContributionList            m_contributionList;         ///< The contribution list
         const float                 m_sigma;                    ///< The assigned width
         float                       m_weightSum;                ///< The sum of the contribution weights
-        mutable pandora::InputFloat m_bandWidth;                ///< The bandwidth
     };
 
     typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;

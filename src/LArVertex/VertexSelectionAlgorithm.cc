@@ -224,19 +224,42 @@ float VertexSelectionAlgorithm::GetFastScore(const KernelEstimate &kernelEstimat
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+// TODO Retain the GetFullScore, add new GetMidwayScore or similar as below
 float VertexSelectionAlgorithm::GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
     const KernelEstimate &kernelEstimateW) const
 {
-    float figureOfMerit(0.f);
+    Histogram histogramU(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
+    Histogram histogramV(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
+    Histogram histogramW(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
 
     for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateU.GetContributionList())
-        figureOfMerit += contribution.second * kernelEstimateU.Sample(contribution.first);
+        histogramU.Fill(contribution.first, contribution.second);
 
     for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateV.GetContributionList())
-        figureOfMerit += contribution.second * kernelEstimateV.Sample(contribution.first);
+        histogramV.Fill(contribution.first, contribution.second);
 
     for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateW.GetContributionList())
-        figureOfMerit += contribution.second * kernelEstimateW.Sample(contribution.first);
+        histogramW.Fill(contribution.first, contribution.second);
+
+    float figureOfMerit(0.f);
+
+    for (int xBin = 0; xBin < histogramU.GetNBinsX(); ++xBin)
+    {
+        const float binCenter(histogramU.GetXLow() + (static_cast<float>(xBin) + 0.5f) * histogramU.GetXBinWidth()); // TODO CHECK THIS LIKE CRAZY, plus make more efficient
+
+        const float binContentU(histogramU.GetBinContent(xBin));
+        const float binContentV(histogramV.GetBinContent(xBin));
+        const float binContentW(histogramW.GetBinContent(xBin));
+
+        if (binContentU > 0.f)
+            figureOfMerit += binContentU * kernelEstimateU.Sample(binCenter);
+
+        if (binContentV > 0.f)
+            figureOfMerit += binContentV * kernelEstimateV.Sample(binCenter);
+
+        if (binContentW > 0.f)
+            figureOfMerit += binContentW * kernelEstimateW.Sample(binCenter);
+    }
 
     return figureOfMerit;
 }
@@ -272,8 +295,15 @@ void VertexSelectionAlgorithm::FillKernelEstimate(const Vertex *const pVertex, c
         if (magnitude < std::numeric_limits<float>::epsilon())
             continue;
 
-        const float phi(this->atan2Fast(displacement.GetZ(), displacement.GetX()));
-        const float weight(1.f / std::sqrt(magnitude));
+        float phi(this->atan2Fast(displacement.GetZ(), displacement.GetX()));
+        float weight(1.f / std::sqrt(magnitude));
+
+//        if (phi < 0.f)
+//        {
+//            phi += M_PI;
+//            weight *= -1.f;
+//        }
+        
         kernelEstimate.AddContribution(phi, weight);
     }
 }
@@ -353,22 +383,22 @@ bool VertexSelectionAlgorithm::SortByVertexZPosition(const pandora::Vertex *cons
 
 float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
 {
-    const float bandwidth(this->GetBandwidth());
+    //const float bandwidth(this->GetBandwidth());
     const float weightSum(this->GetWeightSum());
 
-    if ((bandwidth < std::numeric_limits<float>::epsilon()) || (weightSum < std::numeric_limits<float>::epsilon()))
+    if ((m_sigma < std::numeric_limits<float>::epsilon()) || (weightSum < std::numeric_limits<float>::epsilon()))
         return 0.f;
 
     const ContributionList &contributionList(this->GetContributionList());
-    ContributionList::const_iterator lowerIter(contributionList.lower_bound(x - 3.f * bandwidth));
-    ContributionList::const_iterator upperIter(contributionList.upper_bound(x + 3.f * bandwidth));
+    ContributionList::const_iterator lowerIter(contributionList.lower_bound(x - 3.f * m_sigma));
+    ContributionList::const_iterator upperIter(contributionList.upper_bound(x + 3.f * m_sigma));
 
     float sample(0.f);
-    const float gaussConstant(1.f / std::sqrt(2.f * M_PI * bandwidth * bandwidth));
+    const float gaussConstant(1.f / std::sqrt(2.f * M_PI * m_sigma * m_sigma));
 
     for (ContributionList::const_iterator iter = lowerIter; iter != upperIter; ++iter)
     {
-        const float deltaSigma((x - iter->first) / bandwidth);
+        const float deltaSigma((x - iter->first) / m_sigma);
         const float gaussian(gaussConstant * std::exp(-0.5f * deltaSigma * deltaSigma));
         sample += iter->second * gaussian;
     }
@@ -378,21 +408,10 @@ float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::KernelEstimate::GetBandwidth() const
-{
-    if (!m_bandWidth.IsInitialized())
-        m_bandWidth = 1.06f * m_sigma * std::pow(m_weightSum, -0.2f);
-
-    return m_bandWidth.Get();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void VertexSelectionAlgorithm::KernelEstimate::AddContribution(const float x, const float weight)
 {
     m_contributionList.insert(ContributionList::value_type(x, weight));
     m_weightSum += weight;
-    m_bandWidth.Reset();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
