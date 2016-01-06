@@ -155,13 +155,6 @@ private:
         float GetSigma() const;
 
         /**
-         *  @brief  Get the sum of the contribution weights
-         * 
-         *  @return the sum of the contribution weights
-         */
-        float GetWeightSum() const;
-
-        /**
          *  @brief  Add a contribution to the distribution
          * 
          *  @param  x the position
@@ -172,7 +165,6 @@ private:
     private:
         ContributionList            m_contributionList;         ///< The contribution list
         const float                 m_sigma;                    ///< The assigned width
-        float                       m_weightSum;                ///< The sum of the contribution weights
     };
 
     typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
@@ -243,7 +235,18 @@ private:
     float GetFastScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
 
     /**
-     *  @brief  Get the score for a trio of kernel estimations, using full kernel density estimation
+     *  @brief  Get the score for a trio of kernel estimations, using kernel density estimation but with reduced (binned) sampling
+     * 
+     *  @param  kernelEstimateU the kernel estimate for the u view
+     *  @param  kernelEstimateV the kernel estimate for the v view
+     *  @param  kernelEstimateW the kernel estimate for the w view
+     * 
+     *  @return the midway score
+     */
+    float GetMidwayScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const;
+
+    /**
+     *  @brief  Get the score for a trio of kernel estimations, using kernel density estimation and full hit-by-hit sampling
      * 
      *  @param  kernelEstimateU the kernel estimate for the u view
      *  @param  kernelEstimateV the kernel estimate for the v view
@@ -320,8 +323,9 @@ private:
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
-    bool            m_fullScoreOnly;                ///< Whether to use the full kernel density estimation score only
+    bool            m_fastScoreCheck;               ///< Whether to use the fast histogram based score to selectively avoid calling full or midway scores
     bool            m_fastScoreOnly;                ///< Whether to use the fast histogram based score only
+    bool            m_fullScore;                    ///< Whether to use the full kernel density estimation score, as opposed to the midway score
 
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
     float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
@@ -341,6 +345,8 @@ private:
 
     float           m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
     float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
+
+    bool            m_enableFolding;                ///< Whether to enable folding of -pi -> +pi phi distribution into 0 -> +pi region only
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -407,8 +413,7 @@ inline void VertexSelectionAlgorithm::BeamConstants::SetConstants(const float mi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline VertexSelectionAlgorithm::KernelEstimate::KernelEstimate(const float sigma) :
-    m_sigma(sigma),
-    m_weightSum(0.f)
+    m_sigma(sigma)
 {
     if (m_sigma < std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -426,13 +431,6 @@ inline const VertexSelectionAlgorithm::KernelEstimate::ContributionList &VertexS
 inline float VertexSelectionAlgorithm::KernelEstimate::GetSigma() const
 {
     return m_sigma;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float VertexSelectionAlgorithm::KernelEstimate::GetWeightSum() const
-{
-    return m_weightSum;
 }
 
 } // namespace lar_content

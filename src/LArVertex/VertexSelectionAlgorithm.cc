@@ -21,8 +21,9 @@ namespace lar_content
 
 VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_replaceCurrentVertexList(true),
-    m_fullScoreOnly(false),
+    m_fastScoreCheck(true),
     m_fastScoreOnly(false),
+    m_fullScore(false),
     m_beamMode(false),
     m_nDecayLengthsInZSpan(2.f),
     m_selectSingleVertex(true),
@@ -35,7 +36,8 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_maxOnHitDisplacement(1.f),
     m_maxHitVertexDisplacement1D(100.f),
     m_minCandidateDisplacement(2.f),
-    m_minCandidateScoreFraction(0.5f)
+    m_minCandidateScoreFraction(0.5f),
+    m_enableFolding(true)
 {
 }
 
@@ -168,7 +170,7 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
 
         const float multiplier(!m_beamMode ? 1.f : std::exp(-(pVertex->GetPosition().GetZ() - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
 
-        if (!m_fullScoreOnly)
+        if (m_fastScoreCheck || m_fastScoreOnly)
         {
             const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
 
@@ -185,8 +187,10 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
                 bestFastScore = fastScore;
         }
 
-        const float fullScore(multiplier * this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
-        vertexScoreList.push_back(VertexScore(pVertex, fullScore));
+        const float finalScore(multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
+            this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
+
+        vertexScoreList.push_back(VertexScore(pVertex, finalScore));
     }
 }
 
@@ -224,8 +228,7 @@ float VertexSelectionAlgorithm::GetFastScore(const KernelEstimate &kernelEstimat
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-// TODO Retain the GetFullScore, add new GetMidwayScore or similar as below
-float VertexSelectionAlgorithm::GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
+float VertexSelectionAlgorithm::GetMidwayScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
     const KernelEstimate &kernelEstimateW) const
 {
     Histogram histogramU(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
@@ -245,21 +248,30 @@ float VertexSelectionAlgorithm::GetFullScore(const KernelEstimate &kernelEstimat
 
     for (int xBin = 0; xBin < histogramU.GetNBinsX(); ++xBin)
     {
-        const float binCenter(histogramU.GetXLow() + (static_cast<float>(xBin) + 0.5f) * histogramU.GetXBinWidth()); // TODO CHECK THIS LIKE CRAZY, plus make more efficient
-
-        const float binContentU(histogramU.GetBinContent(xBin));
-        const float binContentV(histogramV.GetBinContent(xBin));
-        const float binContentW(histogramW.GetBinContent(xBin));
-
-        if (binContentU > 0.f)
-            figureOfMerit += binContentU * kernelEstimateU.Sample(binCenter);
-
-        if (binContentV > 0.f)
-            figureOfMerit += binContentV * kernelEstimateV.Sample(binCenter);
-
-        if (binContentW > 0.f)
-            figureOfMerit += binContentW * kernelEstimateW.Sample(binCenter);
+        const float binCenter(histogramU.GetXLow() + (static_cast<float>(xBin) + 0.5f) * histogramU.GetXBinWidth());
+        figureOfMerit += histogramU.GetBinContent(xBin) * kernelEstimateU.Sample(binCenter);
+        figureOfMerit += histogramV.GetBinContent(xBin) * kernelEstimateV.Sample(binCenter);
+        figureOfMerit += histogramW.GetBinContent(xBin) * kernelEstimateW.Sample(binCenter);
     }
+
+    return figureOfMerit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
+    const KernelEstimate &kernelEstimateW) const
+{
+    float figureOfMerit(0.f);
+
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateU.GetContributionList())
+        figureOfMerit += contribution.second * kernelEstimateU.Sample(contribution.first);
+
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateV.GetContributionList())
+        figureOfMerit += contribution.second * kernelEstimateV.Sample(contribution.first);
+
+    for (const KernelEstimate::ContributionList::value_type &contribution : kernelEstimateW.GetContributionList())
+        figureOfMerit += contribution.second * kernelEstimateW.Sample(contribution.first);
 
     return figureOfMerit;
 }
@@ -298,12 +310,12 @@ void VertexSelectionAlgorithm::FillKernelEstimate(const Vertex *const pVertex, c
         float phi(this->atan2Fast(displacement.GetZ(), displacement.GetX()));
         float weight(1.f / std::sqrt(magnitude));
 
-//        if (phi < 0.f)
-//        {
-//            phi += M_PI;
-//            weight *= -1.f;
-//        }
-        
+        if (m_enableFolding && (phi < 0.f))
+        {
+            phi += M_PI;
+            weight *= -1.f;
+        }
+
         kernelEstimate.AddContribution(phi, weight);
     }
 }
@@ -383,12 +395,6 @@ bool VertexSelectionAlgorithm::SortByVertexZPosition(const pandora::Vertex *cons
 
 float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
 {
-    //const float bandwidth(this->GetBandwidth());
-    const float weightSum(this->GetWeightSum());
-
-    if ((m_sigma < std::numeric_limits<float>::epsilon()) || (weightSum < std::numeric_limits<float>::epsilon()))
-        return 0.f;
-
     const ContributionList &contributionList(this->GetContributionList());
     ContributionList::const_iterator lowerIter(contributionList.lower_bound(x - 3.f * m_sigma));
     ContributionList::const_iterator upperIter(contributionList.upper_bound(x + 3.f * m_sigma));
@@ -403,7 +409,7 @@ float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
         sample += iter->second * gaussian;
     }
 
-    return (sample / weightSum);
+    return sample;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -411,7 +417,6 @@ float VertexSelectionAlgorithm::KernelEstimate::Sample(const float x) const
 void VertexSelectionAlgorithm::KernelEstimate::AddContribution(const float x, const float weight)
 {
     m_contributionList.insert(ContributionList::value_type(x, weight));
-    m_weightSum += weight;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -428,16 +433,13 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FullScoreOnly", m_fullScoreOnly));
+        "FastScoreCheck", m_fastScoreCheck));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FastScoreOnly", m_fastScoreOnly));
 
-    if (m_fullScoreOnly && m_fastScoreOnly)
-    {
-        std::cout << "VertexSelectionAlgorithm: incompatible parameters, fullScoreOnly and fastScoreOnly, both set to true." << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
-    }
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FullScore", m_fullScore));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BeamMode", m_beamMode));
@@ -477,6 +479,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCandidateScoreFraction", m_minCandidateScoreFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EnableFolding", m_enableFolding));
 
     return STATUS_CODE_SUCCESS;
 }
