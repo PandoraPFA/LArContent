@@ -26,6 +26,29 @@ public:
     /**
      *  @brief  Constructor using cluster extremal x-z positions to define primary axis
      *
+     *  @param  coordinateList input list of coordinates
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  layerPitch the layer pitch, units cm
+     */
+    TwoDSlidingFitResult(const pandora::CartesianPointList &coordinateList, const unsigned int layerFitHalfWindow, const float layerPitch);
+
+    /**
+     *  @brief  Constructor using specified primary axis. The orthogonal axis must be perpendicular to the primary axis.
+     *
+     *  @param  coordinateList input list of coordinates
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  layerPitch the layer pitch, units cm
+     *  @param  axisIntercept the axis intercept position
+     *  @param  axisDirection the axis direction vector
+     *  @param  orthoDirection the orthogonal direction vector
+     */
+    TwoDSlidingFitResult(const pandora::CartesianPointList &coordinateList, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection,
+        const pandora::CartesianVector &orthoDirection);
+
+    /**
+     *  @brief  Constructor using cluster extremal x-z positions to define primary axis
+     *
      *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
@@ -391,10 +414,16 @@ public:
     const FitSegment &GetFitSegment(const float rL) const;
 
 private:
+
+    /**
+     *  @brief  Calculate the longitudinal and transverse axes
+     */
+    void CalculateAxes(const pandora::CartesianPointList &coordinateList);
+
     /**
      *  @brief  Fill the layer fit contribution map
      */
-    void FillLayerFitContributionMap();
+    void FillLayerFitContributionMap(const pandora::CartesianPointList &coordinateList);
 
     /**
      *  @brief  Perform the sliding linear fit
