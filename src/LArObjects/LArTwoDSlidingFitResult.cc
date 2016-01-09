@@ -20,6 +20,40 @@ using namespace pandora;
 namespace lar_content
 {
 
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointList &coordinateList, const unsigned int layerFitHalfWindow, const float layerPitch) :
+    m_pCluster(NULL),
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(0.f, 0.f, 0.f),
+    m_axisDirection(0.f, 0.f, 0.f),
+    m_orthoDirection(0.f, 0.f, 0.f)
+{
+    // Calculate the sliding fit result
+    this->CalculateAxes(coordinateList);
+    this->FillLayerFitContributionMap(coordinateList);
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointList &coordinateList, const unsigned int layerFitHalfWindow, const float layerPitch,
+    const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
+    m_pCluster(NULL),
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(axisIntercept),
+    m_axisDirection(axisDirection),
+    m_orthoDirection(orthoDirection)
+{
+    // Calculate the sliding fit result
+    this->FillLayerFitContributionMap(coordinateList);
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
@@ -28,18 +62,13 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(0.f, 0.f, 0.f),
     m_orthoDirection(0.f, 0.f, 0.f)
 {
-    // Use extremal coordinates to define axis intercept and direction 
-    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
-    m_axisIntercept = innerCoordinate;
-    m_axisDirection = (outerCoordinate - innerCoordinate).GetUnitVector();
-
-    // Use y-axis to generate an orthogonal axis (assuming that cluster occupies X-Z plane)
-    CartesianVector yAxis(0.f, 1.f, 0.f);
-    m_orthoDirection = yAxis.GetCrossProduct(m_axisDirection).GetUnitVector();
+    // Get a list of hits coordinates from the cluster
+    CartesianPointList coordinateList;
+    LArClusterHelper::GetCoordinateList(pCluster, coordinateList);
 
     // Calculate the sliding fit result
-    this->FillLayerFitContributionMap();
+    this->CalculateAxes(coordinateList);
+    this->FillLayerFitContributionMap(coordinateList);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
@@ -55,7 +84,12 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(axisDirection),
     m_orthoDirection(orthoDirection)
 {
-    this->FillLayerFitContributionMap();
+    // Get a list of hits coordinates from the cluster
+    CartesianPointList coordinateList;
+    LArClusterHelper::GetCoordinateList(pCluster, coordinateList);
+
+    // Calculate the sliding fit result
+    this->FillLayerFitContributionMap(coordinateList);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
@@ -515,24 +549,38 @@ const FitSegment &TwoDSlidingFitResult::GetFitSegment(const float rL) const
 // Private member functions start here
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::FillLayerFitContributionMap()
+void TwoDSlidingFitResult::CalculateAxes(const CartesianPointList &coordinateList)
+{
+    // Use extremal coordinates to define axis intercept and direction
+    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
+    LArClusterHelper::GetExtremalCoordinates(coordinateList, innerCoordinate, outerCoordinate);
+    m_axisIntercept = innerCoordinate;
+    m_axisDirection = (outerCoordinate - innerCoordinate).GetUnitVector();
+
+    // Use y-axis to generate an orthogonal axis (assuming that cluster occupies X-Z plane)
+    CartesianVector yAxis(0.f, 1.f, 0.f);
+    m_orthoDirection = yAxis.GetCrossProduct(m_axisDirection).GetUnitVector();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoDSlidingFitResult::FillLayerFitContributionMap(const CartesianPointList &coordinateList)
 {
     if (m_layerPitch < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    if ((m_axisDirection.GetMagnitudeSquared() < std::numeric_limits<float>::epsilon()) ||
+        (m_orthoDirection.GetMagnitudeSquared() < std::numeric_limits<float>::epsilon()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     if (!m_layerFitContributionMap.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const OrderedCaloHitList &orderedCaloHitList(this->GetCluster()->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    for (CartesianPointList::const_iterator iter = coordinateList.begin(), iterEnd = coordinateList.end(); iter != iterEnd; ++iter)
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            float rL(0.f), rT(0.f);
-            this->GetLocalPosition((*hitIter)->GetPositionVector(), rL, rT);
-            m_layerFitContributionMap[this->GetLayer(rL)].AddPoint(rL, rT);
-        }
+        float rL(0.f), rT(0.f);
+        this->GetLocalPosition(*iter, rL, rT);
+        m_layerFitContributionMap[this->GetLayer(rL)].AddPoint(rL, rT);
     }
 }
 

@@ -453,142 +453,150 @@ void LArClusterHelper::GetExtremalCoordinates(const ClusterList &clusterList, Ca
 
 void LArClusterHelper::GetExtremalCoordinates(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
 {
-    return LArClusterHelper::GetExtremalCoordinates(pCluster->GetOrderedCaloHitList(), innerCoordinate, outerCoordinate);
+  return LArClusterHelper::GetExtremalCoordinates(pCluster->GetOrderedCaloHitList(), innerCoordinate, outerCoordinate);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetExtremalCoordinates(const OrderedCaloHitList &orderedCaloHitList, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate)
+void LArClusterHelper::GetExtremalCoordinates(const OrderedCaloHitList &orderedCaloHitList, CartesianVector &innerCoordinate,
+    CartesianVector &outerCoordinate)
 {
     if (orderedCaloHitList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    // Will skip the Y coordinate in the case of 2D clusters
-    const bool is2D((*(orderedCaloHitList.begin()->second->begin()))->GetHitType() != TPC_3D);
-
-    // Find the extremal hits separately for X, Y and Z coordinates
-    CaloHitList candidateList;
-
-    // First, find the extremal hits in Z, using the inner and outer layers 
-    OrderedCaloHitList::const_iterator iterInner = orderedCaloHitList.begin();
-    OrderedCaloHitList::const_reverse_iterator iterOuter = orderedCaloHitList.rbegin();
-
-    float maxDistanceSquared(-std::numeric_limits<float>::epsilon());
-
-    const CaloHit *pFirstCaloHitZ(NULL);
-    const CaloHit *pSecondCaloHitZ(NULL);
-
-    for (CaloHitList::const_iterator iterI = iterInner->second->begin(), iterEndI = iterInner->second->end(); iterI != iterEndI; ++iterI)
-    {
-        const CaloHit *const pCaloHitI = *iterI;
-
-        for (CaloHitList::const_iterator iterJ = iterOuter->second->begin(), iterEndJ = iterOuter->second->end(); iterJ != iterEndJ; ++iterJ)
-        {
-            const CaloHit *const pCaloHitJ = *iterJ;
-
-            const float distanceSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
-
-            if (distanceSquared > maxDistanceSquared)
-            {
-                maxDistanceSquared = distanceSquared;
-                pFirstCaloHitZ = pCaloHitI;
-                pSecondCaloHitZ = pCaloHitJ;
-            }
-        }
-    }
-
-    if (NULL != pFirstCaloHitZ)
-        candidateList.insert(pFirstCaloHitZ);  
-
-    if (NULL != pSecondCaloHitZ)
-        candidateList.insert(pSecondCaloHitZ);  
-
-    // Next, find the extremal hits in X and Y, assuming there are no ties
-    const CaloHit *pFirstCaloHitX(NULL);
-    const CaloHit *pSecondCaloHitX(NULL);
-
-    const CaloHit *pFirstCaloHitY(NULL);
-    const CaloHit *pSecondCaloHitY(NULL);
+    CartesianPointList coordinateList;
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
             const CaloHit *const pCaloHit = *hitIter;
+            coordinateList.push_back(pCaloHit->GetPositionVector());
+	}
+    }
 
-            if (NULL == pFirstCaloHitX || pCaloHit->GetPositionVector().GetX() < pFirstCaloHitX->GetPositionVector().GetX())
-                pFirstCaloHitX = pCaloHit;
+    return LArClusterHelper::GetExtremalCoordinates(coordinateList, innerCoordinate, outerCoordinate);
+}
 
-            if (NULL == pSecondCaloHitX || pCaloHit->GetPositionVector().GetX() > pSecondCaloHitX->GetPositionVector().GetX())
-                pSecondCaloHitX = pCaloHit;
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-            if (is2D)
-                continue;
+void LArClusterHelper::GetExtremalCoordinates(const CartesianPointList &coordinateList, CartesianVector &innerCoordinate,
+    CartesianVector &outerCoordinate)
+{
+    if (coordinateList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            if (NULL == pFirstCaloHitY || pCaloHit->GetPositionVector().GetY() < pFirstCaloHitY->GetPositionVector().GetY())
-                pFirstCaloHitY = pCaloHit;
+    // Find the extremal values of the X, Y and Z coordinates
+    float xMin(+std::numeric_limits<float>::max());
+    float yMin(+std::numeric_limits<float>::max());
+    float zMin(+std::numeric_limits<float>::max());
+    float xMax(-std::numeric_limits<float>::max());
+    float yMax(-std::numeric_limits<float>::max());
+    float zMax(-std::numeric_limits<float>::max());
 
-            if (NULL == pSecondCaloHitY || pCaloHit->GetPositionVector().GetY() > pSecondCaloHitY->GetPositionVector().GetY())
-                pSecondCaloHitY = pCaloHit;
+    for (CartesianPointList::const_iterator pIter = coordinateList.begin(), pIterEnd = coordinateList.end(); pIter != pIterEnd; ++pIter)
+    {
+        const CartesianVector &pos = *pIter;
+        xMin = std::min(pos.GetX(), xMin);
+        xMax = std::max(pos.GetX(), xMax);
+        yMin = std::min(pos.GetY(), yMin);
+        yMax = std::max(pos.GetY(), yMax);
+        zMin = std::min(pos.GetZ(), zMin);
+        zMax = std::max(pos.GetZ(), zMax);
+    }
+
+    // Choose the coordinate with the greatest span (keeping any ties)
+    const float xAve(0.5f * (xMin + xMax));
+    const float yAve(0.5f * (yMin + yMax));
+    const float zAve(0.5f * (zMin + zMax));
+
+    const float xSpan(xMax - xMin);
+    const float ySpan(yMax - yMin);
+    const float zSpan(zMax - zMin);
+
+    const bool useX((xSpan > std::numeric_limits<float>::epsilon()) && (xSpan + std::numeric_limits<float>::epsilon() > std::max(ySpan, zSpan)));
+    const bool useY((ySpan > std::numeric_limits<float>::epsilon()) && (ySpan + std::numeric_limits<float>::epsilon() > std::max(zSpan, xSpan)));
+    const bool useZ((zSpan > std::numeric_limits<float>::epsilon()) && (zSpan + std::numeric_limits<float>::epsilon() > std::max(xSpan, ySpan)));
+
+    // Find the extremal hits separately for the chosen coordinates
+    CartesianPointList candidateList;
+
+    for (CartesianPointList::const_iterator pIter = coordinateList.begin(), pIterEnd = coordinateList.end(); pIter != pIterEnd; ++pIter)
+    {
+        const CartesianVector &pos = *pIter;
+
+        if (useX)
+	{
+	    if (((pos.GetX() - xMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetX() - xMax) > -std::numeric_limits<float>::epsilon()))
+	        candidateList.push_back(pos);
+        }
+
+        if (useY)
+	{
+	    if (((pos.GetY() - yMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetY() - yMax) > -std::numeric_limits<float>::epsilon()))
+	        candidateList.push_back(pos);
+        }
+
+        if (useZ)
+	{
+	    if (((pos.GetZ() - zMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetZ() - zMax) > -std::numeric_limits<float>::epsilon()))
+	        candidateList.push_back(pos);
         }
     }
 
-    if (NULL != pFirstCaloHitX)
-        candidateList.insert(pFirstCaloHitX);  
-
-    if (NULL != pSecondCaloHitX)
-        candidateList.insert(pSecondCaloHitX);  
-
-    if (NULL != pFirstCaloHitY)
-        candidateList.insert(pFirstCaloHitY);  
-
-    if (NULL != pSecondCaloHitY)
-        candidateList.insert(pSecondCaloHitY);  
-
-    if (candidateList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
     // Finally, find the pair of hits that are separated by the greatest distance
-    maxDistanceSquared = +std::numeric_limits<float>::epsilon();
+    CartesianVector firstCoordinate(xAve, yAve, zAve);
+    CartesianVector secondCoordinate(xAve, yAve, zAve);
+    float maxDistanceSquared(+std::numeric_limits<float>::epsilon());
 
-    const CaloHit *pFirstCaloHit = *(candidateList.begin());
-    const CaloHit *pSecondCaloHit = pFirstCaloHit;
-
-    for (CaloHitList::const_iterator iterI = candidateList.begin(), iterEndI = candidateList.end(); iterI != iterEndI; ++iterI )
+    for (CartesianPointList::const_iterator iterI = candidateList.begin(), iterEndI = candidateList.end(); iterI != iterEndI; ++iterI)
     {
-        const CaloHit *const pCaloHitI = *iterI;
+        const CartesianVector &posI = *iterI;
 
-        for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = candidateList.end(); iterJ != iterEndJ; ++iterJ )
+        for (CartesianPointList::const_iterator iterJ = iterI, iterEndJ = candidateList.end(); iterJ != iterEndJ; ++iterJ)
         {
-            const CaloHit *const pCaloHitJ = *iterJ;
+            const CartesianVector &posJ = *iterJ;
 
-            if (pCaloHitI == pCaloHitJ)
-                continue;
-
-            const float distanceSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
+            const float distanceSquared((posI - posJ).GetMagnitudeSquared());
 
             if (distanceSquared > maxDistanceSquared)
             {
                 maxDistanceSquared = distanceSquared;
-                pFirstCaloHit = pCaloHitI;
-                pSecondCaloHit = pCaloHitJ;
+                firstCoordinate = posI;
+                secondCoordinate = posJ;
             }
         }
     }
 
     // Set the inner and outer coordinates (Check Z first, then X in the event of a tie)
-    const float deltaZ(pSecondCaloHit->GetPositionVector().GetZ() - pFirstCaloHit->GetPositionVector().GetZ());
-    const float deltaX(pSecondCaloHit->GetPositionVector().GetX() - pFirstCaloHit->GetPositionVector().GetX());
+    const float deltaZ(secondCoordinate.GetZ() - firstCoordinate.GetZ());
+    const float deltaX(secondCoordinate.GetX() - firstCoordinate.GetX());
 
     if ((deltaZ > 0.f) || ((std::fabs(deltaZ) < std::numeric_limits<float>::epsilon()) && (deltaX > 0.f)))
     {
-        innerCoordinate = pFirstCaloHit->GetPositionVector();
-        outerCoordinate = pSecondCaloHit->GetPositionVector();
+        innerCoordinate = firstCoordinate;
+        outerCoordinate = secondCoordinate;
     }
     else
     {
-        innerCoordinate = pSecondCaloHit->GetPositionVector();
-        outerCoordinate = pFirstCaloHit->GetPositionVector();
+        innerCoordinate = secondCoordinate;
+        outerCoordinate = firstCoordinate;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::GetCoordinateList(const Cluster *const pCluster, CartesianPointList &coordinateList)
+{
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    {
+        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        {
+            const CaloHit *const pCaloHit = *hitIter;
+            coordinateList.push_back(pCaloHit->GetPositionVector());
+	}
     }
 }
 
