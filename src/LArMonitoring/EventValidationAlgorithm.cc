@@ -134,6 +134,9 @@ StatusCode EventValidationAlgorithm::Run()
 
         if (m_printToScreen)
             std::cout << "RecoNeutrino, PDG " << recoNeutrinoPdg << std::endl;
+
+        if (m_printToScreen && (1 == nMCNeutrinos))
+            std::cout << "VtxOffset " << (recoNeutrinoVtxX - mcNeutrinoVtxX) << ", " << (recoNeutrinoVtxY - mcNeutrinoVtxY) << ", " << (recoNeutrinoVtxZ - mcNeutrinoVtxZ) << std::endl;
     }
 
     if (m_writeToTree)
