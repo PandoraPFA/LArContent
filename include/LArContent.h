@@ -33,6 +33,10 @@
 #include "LArPlugins/LArPseudoLayerPlugin.h"
 #include "LArPlugins/LArTransformationPlugin.h"
 
+#include "LArStitching/StitchingAlgorithm.h"
+#include "LArStitching/StitchingObjectCreationTool.h"
+#include "LArStitching/StitchingPfoMergingTool.h"
+
 #include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
@@ -146,6 +150,7 @@ public:
         d("LArCheatingNeutrinoDaughterVertices",    lar_content::CheatingNeutrinoDaughterVerticesAlgorithm::Factory)            \
         d("LArCheatingPfoCreation",                 lar_content::CheatingPfoCreationAlgorithm::Factory)                         \
         d("LArCheatingVertexCreation",              lar_content::CheatingVertexCreationAlgorithm::Factory)                      \
+        d("LArStitching",                           lar_content::StitchingAlgorithm::Factory)                                   \
         d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
         d("LArCosmicRayShowerMatching",             lar_content::CosmicRayShowerMatchingAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
@@ -206,6 +211,8 @@ public:
         d("LArVertexSelection",                     lar_content::VertexSelectionAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
+        d("LArStitchingObjectCreation",             lar_content::StitchingObjectCreationTool::Factory)                          \
+        d("LArStitchingPfoMerging",                 lar_content::StitchingPfoMergingTool::Factory)                              \
         d("LArCheatingEventSlicing",                lar_content::CheatingEventSlicingTool::Factory)                             \
         d("LArBranchAssociatedPfos",                lar_content::BranchAssociatedPfosTool::Factory)                             \
         d("LArEndAssociatedPfos",                   lar_content::EndAssociatedPfosTool::Factory)                                \
