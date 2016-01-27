@@ -22,6 +22,9 @@ set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_
 # Dependencies
 include(PandoraCMakeSettings)
 
+# Prefer local include directory to any paths to installed header files
+include_directories(include)
+
 find_package(PandoraSDK 02.01.00 REQUIRED)
 include_directories(${PandoraSDK_INCLUDE_DIRS})
 link_libraries(${PandoraSDK_LIBRARIES})
@@ -57,9 +60,6 @@ endif()
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Build products
-
-#- include directories
-include_directories(include)
 
 # - Collect sources - not ideal because you have to keep running CMake to pick up changes
 file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cc")
