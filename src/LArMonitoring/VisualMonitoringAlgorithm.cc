@@ -31,6 +31,7 @@ VisualMonitoringAlgorithm::VisualMonitoringAlgorithm() :
     m_thresholdEnergy(-1.f),
     m_transparencyThresholdE(-1.f),
     m_energyScaleThresholdE(1.f),
+    m_scalingFactor(1.f),
     m_showPfoVertices(true),
     m_showPfoHierarchy(true)
 {
@@ -41,7 +42,7 @@ VisualMonitoringAlgorithm::VisualMonitoringAlgorithm() :
 StatusCode VisualMonitoringAlgorithm::Run()
 {
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), m_showDetector, (m_detectorView.find("xz") != std::string::npos) ? DETECTOR_VIEW_XZ :
-        (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT, m_transparencyThresholdE, m_energyScaleThresholdE));
+        (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
 
     // Show current mc particles
     if (m_showCurrentMCParticles)
@@ -417,6 +418,9 @@ StatusCode VisualMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnergyScaleThresholdE", m_energyScaleThresholdE));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ScalingFactor", m_scalingFactor));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowPfoVertices", m_showPfoVertices));
