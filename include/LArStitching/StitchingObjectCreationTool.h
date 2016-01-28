@@ -8,6 +8,7 @@
 #ifndef LAR_STITCHING_OBJECT_CREATION_TOOL_H
 #define LAR_STITCHING_OBJECT_CREATION_TOOL_H 1
 
+#include "LArStitching/MultiPandoraApi.h"
 #include "LArStitching/StitchingAlgorithm.h"
 
 namespace lar_content
@@ -30,7 +31,7 @@ public:
 
     typedef StitchingAlgorithm::StitchingInfo StitchingInfo;
 
-    void Run(const StitchingAlgorithm *const pAlgorithm, const MultiPandora &multiPandora, StitchingInfo &stitchingInfo);
+    void Run(const StitchingAlgorithm *const pAlgorithm, StitchingInfo &stitchingInfo);
 
 private:
     /**

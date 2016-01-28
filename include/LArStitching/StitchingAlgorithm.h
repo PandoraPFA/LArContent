@@ -10,8 +10,6 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArStitching/MultiPandora.h"
-
 namespace lar_content
 {
 
@@ -63,10 +61,9 @@ public:
      *  @brief  Run the algorithm tool
      *
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  multiPandora the multi pandora details
      *  @param  stitchingInfo the source for additional, local, stitching information
      */
-    virtual void Run(const StitchingAlgorithm *const pAlgorithm, const MultiPandora &multiPandora, StitchingAlgorithm::StitchingInfo &stitchingInfo) = 0;
+    virtual void Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &stitchingInfo) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
