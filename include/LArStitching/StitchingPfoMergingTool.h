@@ -8,6 +8,7 @@
 #ifndef LAR_STITCHING_PFO_MERGING_TOOL_H
 #define LAR_STITCHING_PFO_MERGING_TOOL_H 1
 
+#include "LArStitching/MultiPandoraApi.h"
 #include "LArStitching/StitchingAlgorithm.h"
 
 namespace lar_content
@@ -28,7 +29,7 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    void Run(const StitchingAlgorithm *const pAlgorithm, const MultiPandora &multiPandora, StitchingAlgorithm::StitchingInfo &stitchingInfo);
+    void Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &stitchingInfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

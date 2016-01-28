@@ -19,7 +19,7 @@ using namespace lar_content;
 namespace lar_content
 {
 
-void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm, const MultiPandora &multiPandora, StitchingInfo &stitchingInfo)
+void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm, StitchingInfo &stitchingInfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -36,10 +36,10 @@ void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm
     const PfoList *pPfoList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*pAlgorithm, pPfoList, pfoListName));
 
-    const MultiPandora::PandoraInstanceList &pandoraInstances(multiPandora.GetDaughterPandoraInstances(&(this->GetPandora())));
+    const PandoraInstanceList &pandoraInstances(MultiPandoraApi::GetDaughterPandoraInstanceList(&(this->GetPandora())));
 
     for (const Pandora *const pPandora : pandoraInstances)
-        this->Recreate3DContent(pAlgorithm, pPandora, multiPandora.GetVolumeInfo(pPandora), stitchingInfo);
+        this->Recreate3DContent(pAlgorithm, pPandora, MultiPandoraApi::GetVolumeInfo(pPandora), stitchingInfo);
 
     if (!pClusterList->empty())
     {

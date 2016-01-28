@@ -15,13 +15,12 @@ using namespace pandora;
 namespace lar_content
 {
 
-void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, const MultiPandora &multiPandora,
-    StitchingAlgorithm::StitchingInfo &/*stitchingInfo*/)
+void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &/*stitchingInfo*/)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
-    const MultiPandora::PandoraInstanceList &pandoraInstances(multiPandora.GetDaughterPandoraInstances(&(this->GetPandora())));
+    const PandoraInstanceList &pandoraInstances(MultiPandoraApi::GetDaughterPandoraInstanceList(&(this->GetPandora())));
 
     if (2 != pandoraInstances.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

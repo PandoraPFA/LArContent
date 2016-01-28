@@ -18,11 +18,10 @@ namespace lar_content
 StatusCode StitchingAlgorithm::Run()
 {
     StitchingInfo stitchingInfo;
-    const MultiPandora &multiPandora(MultiPandoraApi::GetMultiPandora());
 
     for (StitchingTool *const pStitchingTool : m_algorithmToolList)
     {
-        pStitchingTool->Run(this, multiPandora, stitchingInfo);
+        pStitchingTool->Run(this, stitchingInfo);
     }
 
     return STATUS_CODE_SUCCESS;
