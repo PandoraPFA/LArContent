@@ -42,7 +42,7 @@ VisualMonitoringAlgorithm::VisualMonitoringAlgorithm() :
 StatusCode VisualMonitoringAlgorithm::Run()
 {
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), m_showDetector, (m_detectorView.find("xz") != std::string::npos) ? DETECTOR_VIEW_XZ :
-        (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
+        (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT, m_transparencyThresholdE, m_energyScaleThresholdE/*, m_scalingFactor*/));
 
     // Show current mc particles
     if (m_showCurrentMCParticles)
