@@ -1,4 +1,17 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-04-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Add MultiPandoraApi to handle multiple Pandora instances, used for particle reconstruction in separate volumes and stitching between volumes.
+Add first LArStitching algorithms and tools.
+Extended interface for 2D and 3D sliding fits to take an input list of cartesian coordinates.
+Vertex selection algorithm now runs off hits, rather than clusters.
+Vertex selection algorithm now uses kernel estimation to extract a vertex score from 2D weighted hit phi distribution.
+Vertex selection algorithm simplification; now runs in either beam mode or topological mode, not some weighted combination of the two.
+Improved exception handling in overshoot splitting algorithm.
+Improved event slicing configuration, including simple on/off option.
+CMake refinement: prefer local include directory to any paths to installed header files.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-03-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Improvements to CMake build mechanics.
