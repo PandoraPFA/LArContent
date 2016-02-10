@@ -282,7 +282,7 @@ bool SplitShowersTool::CheckClusterSplitPositions(ThreeDShowersAlgorithm *const 
     if (2 == nClustersProduct)
         return true;
 
-    const ClusterList &clusterList1((1 == nClustersU) ? clusterListV : (1 == nClustersV) ? clusterListU : clusterListU);
+    const ClusterList &clusterList1((1 == nClustersU) ? clusterListV : clusterListU);
     const ClusterList &clusterList2((1 == nClustersU) ? clusterListW : (1 == nClustersV) ? clusterListW : clusterListV);
 
     if ((2 != clusterList1.size()) || (2 != clusterList2.size()))

@@ -225,9 +225,9 @@ OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, con
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     m_pCommonCluster = (TPC_VIEW_U == commonView) ? elementA.GetClusterU() : (TPC_VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();
-    m_pClusterA1 = (TPC_VIEW_U == commonView) ? elementA.GetClusterV() : (TPC_VIEW_V == commonView) ? elementA.GetClusterU() : elementA.GetClusterU();
+    m_pClusterA1 = (TPC_VIEW_U == commonView) ? elementA.GetClusterV() : elementA.GetClusterU();
     m_pClusterA2 = (TPC_VIEW_U == commonView) ? elementA.GetClusterW() : (TPC_VIEW_V == commonView) ? elementA.GetClusterW() : elementA.GetClusterV();
-    m_pClusterB1 = (TPC_VIEW_U == commonView) ? elementB.GetClusterV() : (TPC_VIEW_V == commonView) ? elementB.GetClusterU() : elementB.GetClusterU();
+    m_pClusterB1 = (TPC_VIEW_U == commonView) ? elementB.GetClusterV() : elementB.GetClusterU();
     m_pClusterB2 = (TPC_VIEW_U == commonView) ? elementB.GetClusterW() : (TPC_VIEW_V == commonView) ? elementB.GetClusterW() : elementB.GetClusterV();
 
     if ((m_pClusterA1 == m_pClusterB1) || (m_pClusterA2 == m_pClusterB2))
