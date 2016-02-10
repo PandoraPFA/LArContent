@@ -40,15 +40,15 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
 
         // In cosmic mode, build tracks from all parent pfos, otherwise require that pfo is track-like
         if (m_cosmicMode)
-	{
-	    if(!LArPfoHelper::IsFinalState(pInputPfo))
-	        return;
-	}
+        {
+            if(!LArPfoHelper::IsFinalState(pInputPfo))
+                return;
+        }
         else 
-	{
+        {
             if (!LArPfoHelper::IsTrack(pInputPfo))
                 return;
-	}
+        }
 
         // Calculate sliding fit trajectory
         LArTrackStateVector trackStateVector;
@@ -153,11 +153,19 @@ void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowO
                 try
                 {
                     const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit3D->GetPositionVector()));
-                    CartesianVector position(0.f, 0.f, 0.f), direction(0.f, 0.f, 0.f);
 
-                    slidingFitResult.GetGlobalFitPosition(rL, position);
-                    slidingFitResult.GetGlobalFitDirection(rL, direction);
+                    CartesianVector position(0.f, 0.f, 0.f);
+                    const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
+
+                    if (positionStatusCode != STATUS_CODE_SUCCESS)
+                        throw positionStatusCode;
+
+                    CartesianVector direction(0.f, 0.f, 0.f);
+                    const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
  
+                    if (directionStatusCode != STATUS_CODE_SUCCESS)
+                        throw directionStatusCode;
+
                     const HitType hitType(pCaloHit2D->GetHitType());
                     const float wirePitch((TPC_VIEW_U == hitType) ? wirePitchU : (TPC_VIEW_V == hitType) ? wirePitchV : wirePitchW);
                     const CartesianVector wireAxis((TPC_VIEW_U == hitType) ? wireAxisU : (TPC_VIEW_V == hitType) ? wireAxisV : wireAxisW);
