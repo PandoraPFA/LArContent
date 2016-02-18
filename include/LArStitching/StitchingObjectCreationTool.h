@@ -29,6 +29,11 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    StitchingObjectCreationTool();
+
     typedef StitchingAlgorithm::StitchingInfo StitchingInfo;
 
     void Run(const StitchingAlgorithm *const pAlgorithm, StitchingInfo &stitchingInfo);
@@ -114,15 +119,19 @@ private:
      * 
      *  @param  pNewPfo the address of a new pfo, recreated from an input pfo
      *  @param  pPandora the address of the pandora instance that owns the input pfo
+     *  @param  volumeInfo the volume information for the input pandora instance
      *  @param  stitchingInfo to receive any modifications to the stitching info
      */
-    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::Pandora *const pPandora, StitchingInfo &stitchingInfo) const;
+    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::Pandora *const pPandora, const VolumeInfo &volumeInfo,
+        StitchingInfo &stitchingInfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_newClusterListName;           ///< The new cluster list name
     std::string     m_newVertexListName;            ///< The new vertex list name
     std::string     m_newPfoListName;               ///< The new pfo list name
+
+    bool            m_recreateTwoDContent;          ///< Whether to also recreate two dimensional hits and clusters
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
