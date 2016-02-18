@@ -106,7 +106,7 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
     }
 
     const ParticleFlowObject *const pNewPfo = this->CreatePfo(pAlgorithm, pInputPfo, newClusterList, newVertexList);
-    this->AddStitchingInfo(pNewPfo, pPandora, stitchingInfo);
+    this->AddStitchingInfo(pNewPfo, pPandora, volumeInfo, stitchingInfo);
 
     if (pNewParentPfo)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*pAlgorithm, pNewParentPfo, pNewPfo))
@@ -225,9 +225,12 @@ const ParticleFlowObject *StitchingObjectCreationTool::CreatePfo(const Algorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingObjectCreationTool::AddStitchingInfo(const ParticleFlowObject *const /*pNewPfo*/, const Pandora *const /*pPandora*/, StitchingInfo &/*stitchingInfo*/) const
+void StitchingObjectCreationTool::AddStitchingInfo(const ParticleFlowObject *const pNewPfo, const Pandora *const /*pPandora*/,
+    const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const
 {
     // TODO - work out what kind of information needs to be recorded
+    if (!stitchingInfo.m_pfoToVolumeIdMap.insert(StitchingAlgorithm::PfoToVolumeIdMap::value_type(pNewPfo, volumeInfo.GetIdNumber())).second)
+        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

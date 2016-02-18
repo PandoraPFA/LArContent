@@ -114,9 +114,11 @@ private:
      * 
      *  @param  pNewPfo the address of a new pfo, recreated from an input pfo
      *  @param  pPandora the address of the pandora instance that owns the input pfo
+     *  @param  volumeInfo the volume information for the input pandora instance
      *  @param  stitchingInfo to receive any modifications to the stitching info
      */
-    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::Pandora *const pPandora, StitchingInfo &stitchingInfo) const;
+    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::Pandora *const pPandora, const VolumeInfo &volumeInfo,
+        StitchingInfo &stitchingInfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

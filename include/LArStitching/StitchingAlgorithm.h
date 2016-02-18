@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -32,6 +34,8 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, int> PfoToVolumeIdMap;
+
     /**
      *  @brief  StitchingInfo class
      */
@@ -39,6 +43,7 @@ public:
     {
     public:
         // Placeholder
+        PfoToVolumeIdMap    m_pfoToVolumeIdMap;         ///< The pfo to volume id map
     };
 
 private:
