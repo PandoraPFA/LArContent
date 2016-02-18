@@ -19,6 +19,13 @@ using namespace lar_content;
 namespace lar_content
 {
 
+StitchingObjectCreationTool::StitchingObjectCreationTool() :
+    m_recreateTwoDContent(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm, StitchingInfo &stitchingInfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -83,7 +90,15 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
     const ParticleFlowObject *const pNewParentPfo, const Pandora *const pPandora, const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const
 {
     ClusterList inputClusterList, newClusterList;
-    LArPfoHelper::GetThreeDClusterList(pInputPfo, inputClusterList);
+
+    if (!m_recreateTwoDContent)
+    {
+        LArPfoHelper::GetThreeDClusterList(pInputPfo, inputClusterList);
+    }
+    else
+    {
+        inputClusterList = pInputPfo->GetClusterList();
+    }
 
     for (const Cluster *const pInputCluster : inputClusterList)
     {
@@ -120,14 +135,19 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
 const CaloHit *StitchingObjectCreationTool::CreateCaloHit(const Algorithm *const pAlgorithm, const CaloHit *const pInputCaloHit,
     const ParticleFlowObject *const pInputPfo, const VolumeInfo &volumeInfo) const
 {
-    if (TPC_3D != pInputCaloHit->GetHitType())
+    if (!m_recreateTwoDContent && (TPC_3D != pInputCaloHit->GetHitType()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const float x0(volumeInfo.GetParticleX0(pInputPfo));
-    const CartesianVector xOffset(volumeInfo.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f);
-
     PandoraContentApi::CaloHit::Parameters parameters;
-    parameters.m_positionVector = pInputCaloHit->GetPositionVector() + volumeInfo.GetCenter() + xOffset;
+    parameters.m_positionVector = pInputCaloHit->GetPositionVector();
+
+    if (TPC_3D == pInputCaloHit->GetHitType())
+    {
+        const float x0(volumeInfo.GetParticleX0(pInputPfo));
+        const CartesianVector xOffset(volumeInfo.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f);
+        parameters.m_positionVector = pInputCaloHit->GetPositionVector() + volumeInfo.GetCenter() + xOffset;
+    }
+
     parameters.m_expectedDirection = pInputCaloHit->GetExpectedDirection();
     parameters.m_cellNormalVector = pInputCaloHit->GetCellNormalVector();
     parameters.m_cellGeometry = pInputCaloHit->GetCellGeometry();
@@ -164,7 +184,7 @@ const CaloHit *StitchingObjectCreationTool::CreateCaloHit(const Algorithm *const
 const Cluster *StitchingObjectCreationTool::CreateCluster(const Algorithm *const pAlgorithm, const Cluster *const pInputCluster,
     const CaloHitList &newCaloHitList) const
 {
-    if (TPC_3D != LArClusterHelper::GetClusterHitType(pInputCluster))
+    if (!m_recreateTwoDContent && (TPC_3D != LArClusterHelper::GetClusterHitType(pInputCluster)))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     PandoraContentApi::Cluster::Parameters parameters;
@@ -185,14 +205,19 @@ const Cluster *StitchingObjectCreationTool::CreateCluster(const Algorithm *const
 const Vertex *StitchingObjectCreationTool::CreateVertex(const Algorithm *const pAlgorithm, const Vertex *const pInputVertex,
     const ParticleFlowObject *const pInputPfo, const VolumeInfo &volumeInfo) const
 {
-    if (VERTEX_3D != pInputVertex->GetVertexType())
+    if (!m_recreateTwoDContent && (VERTEX_3D != pInputVertex->GetVertexType()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const float x0(volumeInfo.GetParticleX0(pInputPfo));
-    const CartesianVector xOffset(volumeInfo.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f);
-
     PandoraContentApi::Vertex::Parameters parameters;
-    parameters.m_position = pInputVertex->GetPosition() + volumeInfo.GetCenter() + xOffset;
+    parameters.m_position = pInputVertex->GetPosition();
+
+    if (VERTEX_3D == pInputVertex->GetVertexType())
+    {
+        const float x0(volumeInfo.GetParticleX0(pInputPfo));
+        const CartesianVector xOffset(volumeInfo.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f);
+        parameters.m_position = pInputVertex->GetPosition() + volumeInfo.GetCenter() + xOffset;
+    }
+
     parameters.m_vertexLabel = pInputVertex->GetVertexLabel();
     parameters.m_vertexType = pInputVertex->GetVertexType();
 
@@ -240,6 +265,9 @@ StatusCode StitchingObjectCreationTool::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NewClusterListName", m_newClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NewVertexListName", m_newVertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NewPfoListName", m_newPfoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RecreateTwoDContent", m_recreateTwoDContent));
 
     return STATUS_CODE_SUCCESS;
 }
