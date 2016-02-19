@@ -11,6 +11,8 @@
 #include "Persistency/BinaryFileWriter.h"
 #include "Persistency/XmlFileWriter.h"
 
+#include "LArHelpers/LArMCParticleHelper.h"
+
 #include "LArObjects/LArMCParticle.h"
 
 #include "LArPersistency/EventWritingAlgorithm.h"
@@ -29,6 +31,8 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldWriteTrackRelationships(true),
     m_shouldOverwriteEventFile(false),
     m_shouldOverwriteGeometryFile(false),
+    m_shouldFilterByNuanceCode(false),
+    m_filterNuanceCode(0),
     m_pEventFileWriter(NULL)
 {
 }
@@ -91,7 +95,26 @@ StatusCode EventWritingAlgorithm::Initialize()
 
 StatusCode EventWritingAlgorithm::Run()
 {
-    if ((NULL != m_pEventFileWriter) && m_shouldWriteEvents)
+    bool shouldWrite(!m_shouldFilterByNuanceCode);
+
+    if (m_shouldFilterByNuanceCode)
+    {
+        const MCParticleList *pMCParticleList = NULL;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+        MCParticleVector mcNeutrinoList;
+        LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
+
+        if (!mcNeutrinoList.empty())
+        {
+            const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(*(mcNeutrinoList.begin()));
+
+            if (pLArMCNeutrino && (pLArMCNeutrino->GetNuanceCode() == m_filterNuanceCode))
+                shouldWrite = true;
+        }
+    }
+
+    if (shouldWrite && (NULL != m_pEventFileWriter) && m_shouldWriteEvents)
     {
         const CaloHitList *pCaloHitList = NULL;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
@@ -176,6 +199,15 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldWriteTrackRelationships", m_shouldWriteTrackRelationships));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldFilterByNuanceCode", m_shouldFilterByNuanceCode));
+
+    if (m_shouldFilterByNuanceCode)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FilterNuanceCode", m_filterNuanceCode));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
