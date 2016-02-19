@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/TrackParticleBuildingAlgorithm.cc
+ *  @file   LArContent/src/LArCustomParticles/TrackParticleBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the 3D track building algorithm class.
  *
@@ -15,7 +15,7 @@
 #include "LArObjects/LArTrackPfo.h"
 #include "LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArEventBuilding/TrackParticleBuildingAlgorithm.h"
+#include "LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
 using namespace pandora;
 

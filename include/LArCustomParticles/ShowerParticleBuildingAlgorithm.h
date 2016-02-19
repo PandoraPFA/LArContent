@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/ShowerParticleBuildingAlgorithm.h
+ *  @file   LArContent/include/LArCustomParticles/ShowerParticleBuildingAlgorithm.h
  *
  *  @brief  Header file for the neutrino event creation algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "LArObjects/LArShowerPfo.h"
 
-#include "LArThreeDReco/LArEventBuilding/CustomParticleCreationAlgorithm.h"
+#include "LArCustomParticles/CustomParticleCreationAlgorithm.h"
 
 namespace lar_content
 {

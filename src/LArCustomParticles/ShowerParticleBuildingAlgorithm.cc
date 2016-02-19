@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/ShowerParticleBuildingAlgorithm.cc
+ *  @file   LArContent/src/LArCustomParticles/ShowerParticleBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the 3D shower building algorithm class.
  *
@@ -12,7 +12,7 @@
 #include "LArHelpers/LArPfoHelper.h"
 #include "LArObjects/LArShowerPfo.h"
 
-#include "LArThreeDReco/LArEventBuilding/ShowerParticleBuildingAlgorithm.h"
+#include "LArCustomParticles/ShowerParticleBuildingAlgorithm.h"
 
 using namespace pandora;
 

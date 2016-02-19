@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/CustomParticleCreationAlgorithm.h
+ *  @file   LArContent/include/LArCustomParticles/CustomParticleCreationAlgorithm.h
  *
  *  @brief  Header file for the 3D particle creation algorithm class.
  *
