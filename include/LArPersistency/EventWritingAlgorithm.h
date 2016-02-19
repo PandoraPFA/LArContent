@@ -64,6 +64,10 @@ private:
     bool                    m_shouldOverwriteEventFile;     ///< Whether to overwrite existing event file with specified name, or append
     bool                    m_shouldOverwriteGeometryFile;  ///< Whether to overwrite existing geometry file with specified name, or append
 
+    bool                    m_shouldFilterByNuanceCode;     ///< Whether to filter output by nuance code
+    int                     m_filterNuanceCode;             ///< The filter nuance code (required if specify filter by nuance code)
+    std::string             m_mcParticleListName;           ///< Name of input MC particle list (required if specify filter by nuance code)
+
     pandora::FileWriter    *m_pEventFileWriter;             ///< Address of the event file writer
 };
 
