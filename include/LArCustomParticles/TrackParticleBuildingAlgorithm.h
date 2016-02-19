@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/TrackParticleBuildingAlgorithm.h
+ *  @file   LArContent/include/LArCustomParticles/TrackParticleBuildingAlgorithm.h
  *
  *  @brief  Header file for the 3D track building algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "LArObjects/LArTrackPfo.h"
 
-#include "LArThreeDReco/LArEventBuilding/CustomParticleCreationAlgorithm.h"
+#include "LArCustomParticles/CustomParticleCreationAlgorithm.h"
 
 namespace lar_content
 {

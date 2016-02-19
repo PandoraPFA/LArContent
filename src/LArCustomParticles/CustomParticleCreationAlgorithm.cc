@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/CustomParticleCreationAlgorithm.cc
+ *  @file   LArContent/src/LArCustomParticles/CustomParticleCreationAlgorithm.cc
  *
  *  @brief  Implementation of the 3D particle creation algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArEventBuilding/CustomParticleCreationAlgorithm.h"
+#include "LArCustomParticles/CustomParticleCreationAlgorithm.h"
 
 using namespace pandora;
 

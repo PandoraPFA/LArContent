@@ -34,6 +34,7 @@ endif
 
 SOURCES  = $(wildcard $(PROJECT_DIR)/src/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArCheating/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/src/LArCustomParticles/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArHelpers/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArMonitoring/*.cc)
 SOURCES += $(wildcard $(PROJECT_DIR)/src/LArObjects/*.cc)
