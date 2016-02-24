@@ -10,6 +10,10 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <map>
+#include <set>
+#include <vector>
+
 namespace lar_content
 {
 
@@ -50,6 +54,16 @@ private:
          */
         SimpleMCPrimary();
 
+        /**
+         *  @brief  operator <
+         * 
+         *  @param  rhs object for comparison
+         * 
+         *  @return boolean
+         */
+        bool operator<(const SimpleMCPrimary &rhs) const;
+
+        int                                 m_id;                       ///< The unique identifier
         int                                 m_pdgCode;                  ///< The pdg code
         int                                 m_nMCHitsTotal;             ///< The total number of mc hits
         int                                 m_nMCHitsU;                 ///< The number of u mc hits
@@ -96,8 +110,71 @@ private:
 
     typedef std::vector<SimpleMatchedPfo> SimpleMatchedPfoList;
 
+    /**
+     * @brief   MatchingDetails class
+     */
+    class MatchingDetails
+    {
+    public:
+        /**
+         *  @brief  Default constructor
+         */
+        MatchingDetails();
+
+        int                     m_matchedPrimaryId;         ///< The total number of occurences
+        int                     m_nMatchedHits;             ///< The number of times the primary has 0 pfo matches
+        float                   m_completeness;             ///< The completeness of the match
+    };
+
+    typedef std::map<int, MatchingDetails> MatchingDetailsMap;
+
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    typedef std::map<SimpleMCPrimary, SimpleMatchedPfoList> MCPrimaryMatchingMap;
+    typedef std::set<int> IntSet;
+
+    /**
+     *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
+     * 
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     */
+    void PerformMatching(const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+
+    /**
+     *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
+     * 
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  usedMCIds the list of mc primary ids with an existing match
+     *  @param  usedPfoIds the list of pfo ids with an existing match
+     *  @param  matchingDetailsMap the matching details map, to be populated
+     */
+    bool GetStrongestPfoMatch(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, IntSet &usedMCIds, IntSet &usedPfoIds, MatchingDetailsMap &matchingDetailsMap) const;
+
+    /**
+     *  @brief  Get the best matches for any pfos left-over after the strong matching procedure
+     * 
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  usedPfoIds the list of pfo ids with an existing match
+     *  @param  matchingDetailsMap the matching details map, to be populated
+     */
+    void GetRemainingPfoMatches(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const IntSet &usedPfoIds, MatchingDetailsMap &matchingDetailsMap) const;
+
+    /**
+     *  @brief  Print the results of the matching procedure
+     * 
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  matchingDetailsMap the matching details map
+     */
+    void PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
+
+    /**
+     *  @brief  Use Pandora monitoring to visualize results of the matching procedure
+     * 
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  matchingDetailsMap the matching details map
+     */
+    void VisualizeMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
 
     typedef std::map<const pandora::ParticleFlowObject*, int> PfoIdMap;
 
@@ -136,11 +213,13 @@ private:
     bool                m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
     bool                m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
 
-    bool                m_printToScreen;            ///< Whether to print output to screen
-    bool                m_writeToTree;              ///< Whether to write output to tree
+    bool                m_printAllToScreen;         ///< Whether to print all/raw matching details to screen
+    bool                m_printMatchingToScreen;    ///< Whether to print matching output to screen
+    bool                m_visualizeMatching;        ///< Whether to use Pandora monitoring to visualize matching output
+    bool                m_writeToTree;              ///< Whether to write all/raw matching details to tree
 
-    int                 m_minHitsToPrintPrimary;    ///< The minimum number of mc primary hits in order to warrant display
-    int                 m_minMatchedHitsToPrintPfo; ///< The minimum number of matched hits in order to warrant pfo display
+    int                 m_matchingMinPrimaryHits;   ///< The minimum number of mc primary hits used in matching scheme
+    int                 m_matchingMinSharedHits;    ///< The minimum number of shared hits used in matching scheme
 
     std::string         m_treeName;                 ///< Name of output tree
     std::string         m_fileName;                 ///< Name of output file
