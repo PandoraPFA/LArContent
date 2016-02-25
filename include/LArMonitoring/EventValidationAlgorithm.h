@@ -10,6 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "LArHelpers/LArMonitoringHelper.h"
+
 #include <map>
 #include <set>
 #include <vector>
@@ -131,15 +133,62 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    /**
+     *  @brief  Extract details of each mc primary (ordered by number of true hits)
+     * 
+     *  @param  mcPrimaryList the mc primary list
+     *  @param  mcToTrueHitListMap the mc to true hit list map
+     *  @param  mcToFullPfoMatchingMap the mc to full pfo matching map (to record number of matched pfos)
+     *  @param  simpleMCPrimaryList to receive the populated simple mc primary list
+     */
+    void GetSimpleMCPrimaryList(const pandora::MCParticleVector &mcPrimaryList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
+        const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, SimpleMCPrimaryList &simpleMCPrimaryList) const;
+
+    typedef std::map<const pandora::ParticleFlowObject*, int> PfoIdMap;
     typedef std::map<SimpleMCPrimary, SimpleMatchedPfoList> MCPrimaryMatchingMap;
-    typedef std::set<int> IntSet;
+
+    /**
+     *  @brief  Obtain a sorted list of matched pfos for each mc primary
+     * 
+     *  @param  simpleMCPrimaryList the simple mc primary list
+     *  @param  pfoIdMap the pfo id map
+     *  @param  mcToFullPfoMatchingMap the mc to full pfo matching map
+     *  @param  pfoToHitListMap the pfo to hit list map
+     *  @param  mcPrimaryMatchingMap to receive the populated mc primary matching map
+     */
+    void GetMCPrimaryMatchingMap(const SimpleMCPrimaryList &simpleMCPrimaryList, const PfoIdMap &pfoIdMap,
+        const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, const LArMonitoringHelper::PfoContributionMap &pfoToHitListMap,
+        MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+
+    /**
+     *  @brief  Print all the raw matching output to screen
+     * 
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     */
+    void PrintAllOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+
+    /**
+     *  @brief  Write all the raw matching output to a tree
+     * 
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     */
+    void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
 
     /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
      * 
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  matchingDetailsMap the matching details map, to be populated
      */
-    void PerformMatching(const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+    void PerformMatching(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, MatchingDetailsMap &matchingDetailsMap) const;
+
+    typedef std::set<int> IntSet;
 
     /**
      *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
@@ -175,8 +224,6 @@ private:
      *  @param  matchingDetailsMap the matching details map
      */
     void VisualizeMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
-
-    typedef std::map<const pandora::ParticleFlowObject*, int> PfoIdMap;
 
     /**
      *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
