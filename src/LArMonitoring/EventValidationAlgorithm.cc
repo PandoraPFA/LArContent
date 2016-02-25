@@ -238,7 +238,7 @@ void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList
 void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
 {
-   std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
+    std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
@@ -283,6 +283,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
 {
+#ifdef MONITORING
     int mcNeutrinoNuance(-1), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
     float mcNeutrinoVtxX(-1.f), mcNeutrinoVtxY(-1.f), mcNeutrinoVtxZ(-1.f);
     float recoNeutrinoVtxX(-1.f), recoNeutrinoVtxY(-1.f), recoNeutrinoVtxZ(-1.f);
@@ -420,6 +421,10 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
 
         PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
     }
+#else
+    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoList.size()
+              << ", nRecoNeutrinos" << recoNeutrinoList.size() << ", nMCPrimaries " << mcPrimaryMatchingMap.size() << std::endl;
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -518,7 +523,7 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
-        if (!matchingDetailsMap.count(simpleMCPrimary.m_id))
+        if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
             continue;
 
         std::cout << std::endl << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
@@ -555,32 +560,45 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
 
 void EventValidationAlgorithm::VisualizeMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
+    unsigned int displayIndex(0);
+
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
+        const std::string displayString(TypeToString(displayIndex));
 
         if (mapValue.second.empty())
         {
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingVtx", RED, 1));
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingEnd", RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingVtx_" + displayString, RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingEnd_" + displayString, RED, 1));
         }
 
-        PfoList matchedPfos;
+        PfoList primaryMatchedPfos, matchedPfos;
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
         {
             if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
-                matchedPfos.insert(simpleMatchedPfo.m_pPandoraAddress);
+            {
+                primaryMatchedPfos.insert(simpleMatchedPfo.m_pPandoraAddress);
+                LArPfoHelper::GetAllDownstreamPfos(simpleMatchedPfo.m_pPandoraAddress, matchedPfos);
+            }
         }
 
-        if (1 == matchedPfos.size())
+#ifdef MONITORING
+        const std::string prefix((1 == primaryMatchedPfos.size()) ? "Good" : "Bad");
+        const Color color((1 == primaryMatchedPfos.size()) ? GREEN : RED);
+
+        for (const ParticleFlowObject *const pPfo : matchedPfos)
         {
-            PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &matchedPfos, "GoodPfoMatch", GREEN, true, false));
+            ClusterList clusterList;
+            LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+            //PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &matchedPfos, prefix + "Pfo_" + displayString, color, true, false));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, prefix + "PfoClusters_" + displayString, color));
+            PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), &(pPfo->GetVertexList()), prefix + "PfoVertices_" + displayString, color));
         }
-        else
-        {
-            PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &matchedPfos, "BadPfoMatch", RED, true, false));
-        }
+
+#endif
+        ++displayIndex;
     }
 
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
