@@ -135,11 +135,32 @@ private:
     typedef std::set<int> IntSet;
 
     /**
+     *  @brief  Print all the raw matching output to screen
+     * 
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     */
+    void PrintAllOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+
+    /**
+     *  @brief  Write all the raw matching output to a tree
+     * 
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
+     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     */
+    void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+
+    /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
      * 
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  matchingDetailsMap the matching details map, to be populated
      */
-    void PerformMatching(const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+    void PerformMatching(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, MatchingDetailsMap &matchingDetailsMap) const;
 
     /**
      *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
