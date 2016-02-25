@@ -565,14 +565,11 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCPrimaryMatchingMa
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
+
+        if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
+            continue;
+
         const std::string displayString(TypeToString(displayIndex));
-
-        if (mapValue.second.empty())
-        {
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingVtx_" + displayString, RED, 1));
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingEnd_" + displayString, RED, 1));
-        }
-
         PfoList primaryMatchedPfos, matchedPfos;
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
@@ -597,6 +594,11 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCPrimaryMatchingMa
             PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), &(pPfo->GetVertexList()), prefix + "PfoVertices_" + displayString, color));
         }
 
+        if (matchedPfos.empty())
+        {
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingVtx_" + displayString, RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingEnd_" + displayString, RED, 1));
+        }
 #endif
         ++displayIndex;
     }
