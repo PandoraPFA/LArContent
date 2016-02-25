@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArMonitoringHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 
 #include "LArMonitoring/EventValidationAlgorithm.h"
@@ -94,9 +93,38 @@ StatusCode EventValidationAlgorithm::Run()
     LArMonitoringHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap; // [mc particle -> all matched pfos (and matched hits)]
     LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
-    // Process monitoring information - extract details of each mc primary (ordered by number of true hits)
     SimpleMCPrimaryList simpleMCPrimaryList;
+    this->GetSimpleMCPrimaryList(mcPrimaryList, mcToTrueHitListMap, mcToFullPfoMatchingMap, simpleMCPrimaryList);
 
+    MCPrimaryMatchingMap mcPrimaryMatchingMap;
+    this->GetMCPrimaryMatchingMap(simpleMCPrimaryList, pfoIdMap, mcToFullPfoMatchingMap, pfoToHitListMap, mcPrimaryMatchingMap);
+
+    if (m_printAllToScreen)
+        this->PrintAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap);
+
+    if (m_writeToTree)
+        this->WriteAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap);
+
+    if (m_printMatchingToScreen || m_visualizeMatching)
+    {
+        MatchingDetailsMap matchingDetailsMap;
+        this->PerformMatching(mcPrimaryMatchingMap, matchingDetailsMap);
+
+        if (m_printMatchingToScreen)
+            this->PrintMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
+
+        if (m_visualizeMatching)
+            this->VisualizeMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mcPrimaryList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
+    const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, SimpleMCPrimaryList &simpleMCPrimaryList) const
+{
     for (const MCParticle *const pMCPrimary : mcPrimaryList)
     {
         SimpleMCPrimary simpleMCPrimary;
@@ -127,17 +155,22 @@ StatusCode EventValidationAlgorithm::Run()
         simpleMCPrimaryList.push_back(simpleMCPrimary);
     }
 
-    // Process monitoring information - for each primary, write tree entry containing vector of matched pfos (ordered by number of matched hits)
     std::sort(simpleMCPrimaryList.begin(), simpleMCPrimaryList.end(), EventValidationAlgorithm::SortSimpleMCPrimaries);
 
     int mcPrimaryId(0);
-    MCPrimaryMatchingMap mcPrimaryMatchingMap;
-
     for (SimpleMCPrimary &simpleMCPrimary : simpleMCPrimaryList)
-    {
         simpleMCPrimary.m_id = mcPrimaryId++;
+}
 
-        // Process monitoring information - first loop over unordered list of matched pfos
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList &simpleMCPrimaryList, const PfoIdMap &pfoIdMap,
+    const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, const LArMonitoringHelper::PfoContributionMap &pfoToHitListMap,
+    MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
+{
+    for (const SimpleMCPrimary &simpleMCPrimary : simpleMCPrimaryList)
+    {
+        // First loop over unordered list of matched pfos
         SimpleMatchedPfoList simpleMatchedPfoList;
         LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(simpleMCPrimary.m_pPandoraAddress);
 
@@ -192,32 +225,12 @@ StatusCode EventValidationAlgorithm::Run()
             }
         }
 
-        // Process monitoring information - write the ordered vectors of matched pfo details
+        // Store the ordered vectors of matched pfo details
         std::sort(simpleMatchedPfoList.begin(), simpleMatchedPfoList.end(), EventValidationAlgorithm::SortSimpleMatchedPfos);
 
         if (!mcPrimaryMatchingMap.insert(MCPrimaryMatchingMap::value_type(simpleMCPrimary, simpleMatchedPfoList)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
-    
-    if (m_printAllToScreen)
-        this->PrintAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap);
-
-    if (m_writeToTree)
-        this->WriteAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap);
-
-    if (m_printMatchingToScreen || m_visualizeMatching)
-    {
-        MatchingDetailsMap matchingDetailsMap;
-        this->PerformMatching(mcPrimaryMatchingMap, matchingDetailsMap);
-
-        if (m_printMatchingToScreen)
-            this->PrintMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
-
-        if (m_visualizeMatching)
-            this->VisualizeMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
-    }
-
-    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
