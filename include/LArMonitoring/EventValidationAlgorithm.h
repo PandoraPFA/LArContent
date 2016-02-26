@@ -220,10 +220,21 @@ private:
     /**
      *  @brief  Use Pandora monitoring to visualize results of the matching procedure
      * 
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      *  @param  matchingDetailsMap the matching details map
      */
-    void VisualizeMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
+    void VisualizeMatchingOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
+
+    /**
+     *  @brief  Use Pandora monitoring to visualize vertex matches
+     * 
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
+     */
+    void VisualizeVertexMatches(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList) const;
 
     /**
      *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
@@ -267,6 +278,8 @@ private:
 
     int                 m_matchingMinPrimaryHits;   ///< The minimum number of mc primary hits used in matching scheme
     int                 m_matchingMinSharedHits;    ///< The minimum number of shared hits used in matching scheme
+
+    float               m_vertexVisualizationDeltaR;///< The vertex visualization delta r value, defining good and bad vertex matches
 
     std::string         m_treeName;                 ///< Name of output tree
     std::string         m_fileName;                 ///< Name of output file
