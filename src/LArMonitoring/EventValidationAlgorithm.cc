@@ -30,6 +30,7 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_writeToTree(true),
     m_matchingMinPrimaryHits(15),
     m_matchingMinSharedHits(5),
+    m_vertexVisualizationDeltaR(1.f),
     m_fileIdentifier(0),
     m_eventNumber(0)
 {
@@ -114,7 +115,7 @@ StatusCode EventValidationAlgorithm::Run()
             this->PrintMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
 
         if (m_visualizeMatching)
-            this->VisualizeMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
+            this->VisualizeMatchingOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap, matchingDetailsMap);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -558,8 +559,10 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::VisualizeMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
+void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
+    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
+    this->VisualizeVertexMatches(mcNeutrinoList, recoNeutrinoList);
     unsigned int displayIndex(0);
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
@@ -582,7 +585,7 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCPrimaryMatchingMa
         }
 
 #ifdef MONITORING
-        const std::string prefix((1 == primaryMatchedPfos.size()) ? "Good" : "Bad");
+        const std::string prefix((1 == primaryMatchedPfos.size()) ? "Matched" : "Split");
         const Color color((1 == primaryMatchedPfos.size()) ? GREEN : RED);
 
         for (const ParticleFlowObject *const pPfo : matchedPfos)
@@ -596,14 +599,66 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCPrimaryMatchingMa
 
         if (matchedPfos.empty())
         {
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingVtx_" + displayString, RED, 1));
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingEnd_" + displayString, RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingPrimaryVtx_" + displayString, RED, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingPrimaryEnd_" + displayString, RED, 1));
         }
 #endif
         ++displayIndex;
     }
 
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList) const
+{
+#ifdef MONITORING
+    const Vertex *pBestVertex(nullptr);
+    float closestDistance(m_vertexVisualizationDeltaR);
+
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
+    {
+        const CartesianVector &mcVertexPosition(pMCNeutrino->GetEndpoint());
+
+        for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoList)
+        {
+            const Vertex *const pVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+            const float distance((mcVertexPosition - pVertex->GetPosition()).GetMagnitude());
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                pBestVertex = pVertex;
+            }
+        }
+    }
+
+    const bool isGood((1 == mcNeutrinoList.size()) && (1 == recoNeutrinoList.size()) && pBestVertex);
+    const Color color(isGood ? GRAY : BLUE);
+
+    unsigned int displayIndex(0);
+
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
+    {
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &(pMCNeutrino->GetEndpoint()), "MCNeutrinoVertex_" + TypeToString(displayIndex++), color, 1));
+    }
+
+    displayIndex = 0;
+
+    for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoList)
+    {
+        const Vertex *const pThisVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+
+        const bool isThisGood(isGood || ((1 == mcNeutrinoList.size()) && (pThisVertex == pBestVertex)));
+        const std::string thisPrefix(isThisGood ? "Good" : "Displaced");
+        const Color thisColor(isThisGood ? CYAN : VIOLET);
+
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &(pThisVertex->GetPosition()), thisPrefix + "RecoNeutrinoVertex_" + TypeToString(displayIndex++), thisColor, 1));
+    }
+#else
+    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoList.size() << ", nRecoNeutrinos" << recoNeutrinoList.size() << std::endl;
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -732,6 +787,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MatchingMinSharedHits", m_matchingMinSharedHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexVisualizationDeltaR", m_vertexVisualizationDeltaR));
 
     if (m_writeToTree)
     {
