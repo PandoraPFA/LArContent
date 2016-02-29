@@ -530,10 +530,10 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
         std::cout << std::endl << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
             << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
+        unsigned int nMatches(0);
+
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
         {
-            unsigned int nMatches(0);
-
             if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
             {
                 std::cout << "-MatchedPfo " << simpleMatchedPfo.m_id;
@@ -547,10 +547,10 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
                     << ", nPfoHits " << simpleMatchedPfo.m_nPfoHitsTotal << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", "
                     << simpleMatchedPfo.m_nPfoHitsW << ")" << std::endl;
             }
-
-            if (1 != nMatches)
-                isCorrect = false;
         }
+
+        if (1 != nMatches)
+            isCorrect = false;
     }
 
     std::cout << std::endl << "Is correct? " << isCorrect << std::endl;
