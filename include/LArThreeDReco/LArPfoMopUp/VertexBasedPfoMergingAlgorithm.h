@@ -37,7 +37,7 @@ public:
      */
     VertexBasedPfoMergingAlgorithm();
 
-private:
+protected:
     /**
      *  @brief  ClusterAssociation class
      */
@@ -45,11 +45,17 @@ private:
     {
     public:
         /**
+         *  @brief  Default constructor
+         */
+        ClusterAssociation();
+
+        /**
          *  @brief  Constructor
          * 
          *  @param  pVertexCluster the address of the vertex cluster
          *  @param  pDaughterCluster the address of the daughter cluster
          *  @param  boundedFraction the fraction of daughter hits bounded by the cone defined by the vertex cluster
+         *  @param  isConsistentDirection whether clusters have consistent directions
          */
         ClusterAssociation(const pandora::Cluster *const pVertexCluster, const pandora::Cluster *const pDaughterCluster, const float boundedFraction,
             const bool isConsistentDirection);
@@ -251,6 +257,30 @@ private:
     pandora::StatusCode Run();
 
     /**
+     *  @brief  Whether a specified pfo is associated with a specified vertex
+     * 
+     *  @param  vertex2D the 2d vertex position
+     *  @param  pointingCluster the pointing cluster
+     * 
+     *  @return boolean
+     */
+    virtual bool IsVertexAssociated(const pandora::CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const;
+
+    typedef std::unordered_map<pandora::HitType, ClusterAssociation, std::hash<unsigned int> > HitTypeToAssociationMap;
+
+    /**
+     *  @brief  Get pfo association details between a vertex-associated pfo and a non-vertex associated daughter candidate pfo
+     * 
+     *  @param  pVertexPfo the address of the vertex-associated pfo
+     *  @param  pDaughterPfo the address of the non-vertex-associated pfo
+     *  @param  hitTypeToAssociationMap the hit type to association map
+     * 
+     *  @return the pfo association details
+     */
+    virtual PfoAssociation GetPfoAssociation(const pandora::Pfo *const pVertexPfo, const pandora::Pfo *const pDaughterPfo,
+        HitTypeToAssociationMap &hitTypeToAssociationMap) const;
+
+    /**
      *  @brief  Get the list of input pfos and divide them into vertex-associated and non-vertex-associated lists
      * 
      *  @param  pVertex the address of the 3d vertex
@@ -258,6 +288,16 @@ private:
      *  @param  nonVertexPfos to receive the list of nonvertex-associated pfos
      */
     void GetInputPfos(const pandora::Vertex *const pVertex, pandora::PfoList &vertexPfos, pandora::PfoList &nonVertexPfos) const;
+
+    /**
+     *  @brief  Whether a specified pfo is associated with a specified vertex
+     * 
+     *  @param  pPfo the address of the pfo
+     *  @param  pVertex the address of the 3d vertex
+     * 
+     *  @return boolean
+     */
+    bool IsVertexAssociated(const pandora::Pfo *const pPfo, const pandora::Vertex *const pVertex) const;
 
     /**
      *  @brief  Get the list of associations between vertex-associated pfos and non-vertex-associated pfos
@@ -269,25 +309,6 @@ private:
      */
     void GetPfoAssociations(const pandora::Vertex *const pVertex, const pandora::PfoList &vertexPfos, const pandora::PfoList &nonVertexPfos,
         PfoAssociationList &pfoAssociationList) const;
-
-    /**
-     *  @brief  Process the list of pfo associations, merging the best-matching pfo
-     * 
-     *  @param  pfoAssociationList the pfo association list
-     * 
-     *  @return whether a pfo merge was made
-     */
-    bool ProcessPfoAssociations(const PfoAssociationList &pfoAssociationList) const;
-
-    /**
-     *  @brief  Whether a specified pfo is associated with a specified vertex
-     * 
-     *  @param  pPfo the address of the pfo
-     *  @param  pVertex the address of the 3d vertex
-     * 
-     *  @return boolean
-     */
-    bool IsVertexAssociated(const pandora::Pfo *const pPfo, const pandora::Vertex *const pVertex) const;
 
     /**
      *  @brief  Get pfo association details between a vertex-associated pfo and a non-vertex associated daughter candidate pfo
@@ -313,6 +334,15 @@ private:
         const pandora::Cluster *const pDaughterCluster) const;
 
     /**
+     *  @brief  Process the list of pfo associations, merging the best-matching pfo
+     * 
+     *  @param  pfoAssociationList the pfo association list
+     * 
+     *  @return whether a pfo merge was made
+     */
+    bool ProcessPfoAssociations(const PfoAssociationList &pfoAssociationList) const;
+
+    /**
      *  @brief  Merge the vertex and daughter pfos (deleting daughter pfo, merging clusters, etc.) described in the specified pfoAssociation
      * 
      *  @param  pfoAssociation the pfo association details
@@ -320,33 +350,41 @@ private:
     void MergePfos(const PfoAssociation &pfoAssociation) const;
 
     /**
-     *  @brief  Get the 2d clusters (for the three constituent 2d hit type) from a specified pfo
+     *  @brief  Merge and delete a pair of pfos, with a specific set of conventions for cluster merging, vertex use, etc.
      * 
-     *  @param  pPfo the address of the pfo
-     *  @param  pClusterU to receive the address of the cluster in the u view
-     *  @param  pClusterV to receive the address of the cluster in the v view
-     *  @param  pClusterW to receive the address of the cluster in the w view
+     *  @param  pPfoToEnlarge the address of the pfo to enlarge
+     *  @param  pPfoToDelete the address of the pfo to delete (will become a dangling pointer)
      */
-    void Get2DClusters(const pandora::Pfo *const pPfo, const pandora::Cluster *&pClusterU, const pandora::Cluster *&pClusterV, const pandora::Cluster *&pClusterW) const;
+    void MergeAndDeletePfos(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::ParticleFlowObject *const pPfoToDelete) const;
 
     /**
-     *  @brief  Look through cluster lists (matching input cluster list names) to find name of list containing a specified cluster
+     *  @brief  Select the parent cluster (same hit type and most hits) using a provided cluster list and hit type
      * 
-     *  @param  pCluster the address of the cluster
-     *
-     *  @return the name of the list containing the specified cluster
+     *  @param  clusterList the cluster list
+     *  @param  hitType the hit type
+     * 
+     *  @return the address of the parent cluster
      */
-    std::string GetClusterListName(const pandora::Cluster *const pCluster) const;
+    const pandora::Cluster *GetParentCluster(const pandora::ClusterList &clusterList, const pandora::HitType hitType) const;
+
+    /**
+     *  @brief  Find the name of the list hosting a specific object
+     * 
+     *  @param  pT the address of the object
+     * 
+     *  @return the name of the list
+     */
+    template <typename T>
+    const std::string GetListName(const T *const pT) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::unordered_set<pandora::HitType, std::hash<unsigned int> > HitTypeSet;
     typedef std::unordered_map<pandora::HitType, const pandora::Cluster*, std::hash<unsigned int> > HitTypeToClusterMap;
-    typedef std::unordered_map<pandora::HitType, ClusterAssociation, std::hash<unsigned int> > HitTypeToAssociationMap;
 
     std::string             m_trackPfoListName;                 ///< The input track pfo list name
     std::string             m_showerPfoListName;                ///< The input shower pfo list name
-    pandora::StringVector   m_clusterListNames;                 ///< The list of underlying cluster list names
+    pandora::StringVector   m_daughterListNames;                ///< The list of potential daughter object list names
 
     float                   m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
     float                   m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
