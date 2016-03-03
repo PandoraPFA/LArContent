@@ -48,6 +48,14 @@ StatusCode VertexSelectionAlgorithm::Run()
     const VertexList *pInputVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
 
+    if (!pInputVertexList || pInputVertexList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "VertexSelectionAlgorithm: unable to find current vertex list " << std::endl;
+
+        return STATUS_CODE_SUCCESS;
+    }
+
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(kdTreeU, kdTreeV, kdTreeW);
 

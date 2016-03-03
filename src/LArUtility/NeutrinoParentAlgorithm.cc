@@ -105,7 +105,13 @@ void NeutrinoParentAlgorithm::PerformSlicing(SliceList &sliceList) const
 {
     for (const HitType hitType : m_hitTypeList)
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
+        const StatusCode caloHitStatusCode(PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
+
+        if (STATUS_CODE_NOT_FOUND == caloHitStatusCode)
+            continue;
+
+        if (STATUS_CODE_SUCCESS != caloHitStatusCode)
+            throw StatusCodeException(caloHitStatusCode);
 
         std::string clusterListName;
         const ClusterList *pClusterList(nullptr);
