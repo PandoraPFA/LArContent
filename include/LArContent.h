@@ -50,7 +50,6 @@
 #include "LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
 #include "LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
-#include "LArThreeDReco/LArEventBuilding/NeutrinoDaughterConsolidationAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
@@ -161,7 +160,6 @@ public:
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
         d("LArCosmicRayVertexBuilding",             lar_content::CosmicRayVertexBuildingAlgorithm::Factory)                     \
         d("LArNeutrinoCreation",                    lar_content::NeutrinoCreationAlgorithm::Factory)                            \
-        d("LArNeutrinoDaughterConsolidation",       lar_content::NeutrinoDaughterConsolidationAlgorithm::Factory)               \
         d("LArNeutrinoDaughterVertices",            lar_content::NeutrinoDaughterVerticesAlgorithm::Factory)                    \
         d("LArNeutrinoHierarchy",                   lar_content::NeutrinoHierarchyAlgorithm::Factory)                           \
         d("LArNeutrinoProperties",                  lar_content::NeutrinoPropertiesAlgorithm::Factory)                          \
