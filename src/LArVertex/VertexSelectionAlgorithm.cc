@@ -25,10 +25,11 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_fastScoreOnly(false),
     m_fullScore(false),
     m_beamMode(false),
-    m_nDecayLengthsInZSpan(2.f),
+    m_lambda(0.03f),
+    m_kappa(0.42f),
     m_selectSingleVertex(true),
     m_maxTopScoreSelections(3),
-    m_kernelEstimateSigma(0.026f),
+    m_kernelEstimateSigma(0.048f),
     m_minFastScoreFraction(0.8f),
     m_fastHistogramNPhiBins(200),
     m_fastHistogramPhiMin(-1.1f * M_PI),
@@ -139,21 +140,15 @@ void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, Be
     if (vertexList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    float minZCoordinate(std::numeric_limits<float>::max()), maxZCoordinate(-std::numeric_limits<float>::max());
+    float minZCoordinate(std::numeric_limits<float>::max());
 
     for (const Vertex *const pVertex : vertexList)
     {
         if (pVertex->GetPosition().GetZ() < minZCoordinate)
             minZCoordinate = pVertex->GetPosition().GetZ();
-
-        if (pVertex->GetPosition().GetZ() > maxZCoordinate)
-            maxZCoordinate = pVertex->GetPosition().GetZ();
     }
 
-    const float zSpan(maxZCoordinate - minZCoordinate);
-    const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
-
-    beamConstants.SetConstants(minZCoordinate, decayConstant);
+    beamConstants.SetConstants(minZCoordinate, m_lambda);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,12 +156,12 @@ void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, Be
 void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
     HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
-    VertexVector vertexVextor(vertexList.begin(), vertexList.end());
-    std::sort(vertexVextor.begin(), vertexVextor.end(), SortByVertexZPosition);
+    VertexVector vertexVector(vertexList.begin(), vertexList.end());
+    std::sort(vertexVector.begin(), vertexVector.end(), SortByVertexZPosition);
 
     float bestFastScore(0.f);
 
-    for (const Vertex *const pVertex : vertexVextor)
+    for (const Vertex *const pVertex : vertexVector)
     {
         KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
         KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
@@ -316,7 +311,7 @@ void VertexSelectionAlgorithm::FillKernelEstimate(const Vertex *const pVertex, c
             continue;
 
         float phi(this->atan2Fast(displacement.GetZ(), displacement.GetX()));
-        float weight(1.f / std::sqrt(magnitude));
+        float weight(1.f / (std::sqrt(magnitude + std::fabs(m_kappa))));
 
         if (m_enableFolding && (phi < 0.f))
         {
@@ -453,7 +448,10 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "BeamMode", m_beamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));
+        "Lambda", m_lambda));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Kappa", m_kappa));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectSingleVertex", m_selectSingleVertex));
