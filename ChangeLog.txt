@@ -1,4 +1,21 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-05-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Parameter optimisation for VertexSelection algorithm.
+Quieten screen output in event of zero input hits, vertices, etc.
+Add version of SplitShowerMerging algorithm.
+Refactoring and technical improvements for VertexBasedPfoMerging algorithms.
+Add print-out and visualization of mc primary to pfo matching details, plus VisualizeVertexMatches functionality.
+Add placeholder pfo stitching implementation.
+Add option to recreate input 2D content in StitchingObjectCreation tool.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-04-01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Utilise PandoraMonitoring distance scaling factor.
+Address some small issues highlighted by Coverity.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-04-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Add MultiPandoraApi to handle multiple Pandora instances, used for particle reconstruction in separate volumes and stitching between volumes.
