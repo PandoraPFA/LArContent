@@ -74,7 +74,7 @@ StatusCode EventReadingAlgorithm::Initialize()
             return STATUS_CODE_FAILURE;
         }
 
-        m_pEventFileReader->SetMCParticleFactory(new LArMCParticleFactory);
+        m_pEventFileReader->SetFactory(new LArMCParticleFactory);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->GoToEvent(m_skipToEvent));
     }
 
