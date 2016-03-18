@@ -25,7 +25,7 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_fastScoreOnly(false),
     m_fullScore(false),
     m_beamMode(false),
-    m_lambda(0.03f),
+    m_nDecayLengthsInZSpan(2.f),
     m_kappa(0.42f),
     m_selectSingleVertex(true),
     m_maxTopScoreSelections(3),
@@ -140,15 +140,21 @@ void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, Be
     if (vertexList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    float minZCoordinate(std::numeric_limits<float>::max());
+    float minZCoordinate(std::numeric_limits<float>::max()), maxZCoordinate(-std::numeric_limits<float>::max());
 
     for (const Vertex *const pVertex : vertexList)
     {
         if (pVertex->GetPosition().GetZ() < minZCoordinate)
             minZCoordinate = pVertex->GetPosition().GetZ();
+
+        if (pVertex->GetPosition().GetZ() > maxZCoordinate)
+            maxZCoordinate = pVertex->GetPosition().GetZ();
     }
 
-    beamConstants.SetConstants(minZCoordinate, m_lambda);
+    const float zSpan(maxZCoordinate - minZCoordinate);
+    const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
+
+    beamConstants.SetConstants(minZCoordinate, decayConstant);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -448,7 +454,7 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "BeamMode", m_beamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "Lambda", m_lambda));
+        "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Kappa", m_kappa));
