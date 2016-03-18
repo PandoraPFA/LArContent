@@ -328,7 +328,7 @@ private:
     bool            m_fullScore;                    ///< Whether to use the full kernel density estimation score, as opposed to the midway score
 
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
-    float           m_lambda;                       ///< Beam-weighting decay constant, of form: exp(-lambda * deltaZ), units cm^-1
+    float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
     float           m_kappa;                        ///< Hit-deweighting offset, of form: weight = 1 / sqrt(distance + kappa), units cm
 
     bool            m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
