@@ -84,9 +84,9 @@ StatusCode EventWritingAlgorithm::Initialize()
         {
             return STATUS_CODE_FAILURE;
         }
-    }
 
-    m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
+        m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
+    }
 
     return STATUS_CODE_SUCCESS;
 }
