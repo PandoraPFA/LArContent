@@ -53,6 +53,7 @@ private:
     pandora::FileType       m_eventFileType;                ///< The event file type
 
     bool                    m_shouldWriteGeometry;          ///< Whether to write geometry to a specified file
+    bool                    m_writtenGeometry;              ///< Whether geometry has been written
     std::string             m_geometryFileName;             ///< Name of the output geometry file
 
     bool                    m_shouldWriteEvents;            ///< Whether to write events to a specified file
@@ -69,6 +70,7 @@ private:
     std::string             m_mcParticleListName;           ///< Name of input MC particle list (required if specify filter by nuance code)
 
     pandora::FileWriter    *m_pEventFileWriter;             ///< Address of the event file writer
+    pandora::FileWriter    *m_pGeometryFileWriter;          ///< Address of the geometry file writer
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
