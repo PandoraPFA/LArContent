@@ -26,6 +26,7 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_geometryFileType(UNKNOWN_FILE_TYPE),
     m_eventFileType(UNKNOWN_FILE_TYPE),
     m_shouldWriteGeometry(false),
+    m_writtenGeometry(false),
     m_shouldWriteEvents(true),
     m_shouldWriteMCRelationships(true),
     m_shouldWriteTrackRelationships(true),
@@ -33,7 +34,8 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldOverwriteGeometryFile(false),
     m_shouldFilterByNuanceCode(false),
     m_filterNuanceCode(0),
-    m_pEventFileWriter(NULL)
+    m_pEventFileWriter(nullptr),
+    m_pGeometryFileWriter(nullptr)
 {
 }
 
@@ -42,6 +44,7 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
 EventWritingAlgorithm::~EventWritingAlgorithm()
 {
     delete m_pEventFileWriter;
+    delete m_pGeometryFileWriter;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,13 +57,11 @@ StatusCode EventWritingAlgorithm::Initialize()
 
         if (BINARY == m_geometryFileType)
         {
-            BinaryFileWriter geometryFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, geometryFileWriter.WriteGeometry());
+            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
         }
         else if (XML == m_geometryFileType)
         {
-            XmlFileWriter geometryFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, geometryFileWriter.WriteGeometry());
+            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
         }
         else
         {
@@ -95,11 +96,18 @@ StatusCode EventWritingAlgorithm::Initialize()
 
 StatusCode EventWritingAlgorithm::Run()
 {
-    bool shouldWrite(!m_shouldFilterByNuanceCode);
+    // ATTN Should complete geometry creation in LArSoft begin job, but some channel status service functionality unavailable at that point
+    if (!m_writtenGeometry && m_pGeometryFileWriter && m_shouldWriteGeometry)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryFileWriter->WriteGeometry());
+        m_writtenGeometry = true;
+    }
+
+    bool shouldWriteThisEvent(!m_shouldFilterByNuanceCode);
 
     if (m_shouldFilterByNuanceCode)
     {
-        const MCParticleList *pMCParticleList = NULL;
+        const MCParticleList *pMCParticleList = nullptr;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
         MCParticleVector mcNeutrinoList;
@@ -110,19 +118,19 @@ StatusCode EventWritingAlgorithm::Run()
             const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(*(mcNeutrinoList.begin()));
 
             if (pLArMCNeutrino && (pLArMCNeutrino->GetNuanceCode() == m_filterNuanceCode))
-                shouldWrite = true;
+                shouldWriteThisEvent = true;
         }
     }
 
-    if (shouldWrite && (NULL != m_pEventFileWriter) && m_shouldWriteEvents)
+    if (shouldWriteThisEvent && m_pEventFileWriter && m_shouldWriteEvents)
     {
-        const CaloHitList *pCaloHitList = NULL;
+        const CaloHitList *pCaloHitList = nullptr;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
-        const TrackList *pTrackList = NULL;
+        const TrackList *pTrackList = nullptr;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTrackList));
 
-        const MCParticleList *pMCParticleList = NULL;
+        const MCParticleList *pMCParticleList = nullptr;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileWriter->WriteEvent(*pCaloHitList, *pTrackList, *pMCParticleList,
