@@ -268,6 +268,16 @@ private:
     bool IsVertexOnHit(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
 
     /**
+     *  @brief  Whether the vertex lies in a registered gap
+     * 
+     *  @param  pVertex the address of the vertex
+     *  @param  hitType the relevant hit type
+     * 
+     *  @return boolean
+     */
+    bool IsVertexInGap(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
+
+    /**
      *  @brief  Use hits in clusters (in the provided kd tree) to fill a provided kernel estimate with hit-vertex relationship information
      * 
      *  @param  pVertex the address of the vertex
