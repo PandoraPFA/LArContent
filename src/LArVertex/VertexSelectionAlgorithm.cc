@@ -119,9 +119,9 @@ void VertexSelectionAlgorithm::FilterVertexList(const VertexList *const pInputVe
 {
     for (const Vertex *const pVertex : *pInputVertexList)
     {
-        if ((!kdTreeU.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU)) ||
-            (!kdTreeV.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV)) ||
-            (!kdTreeW.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW)))
+        if ((!kdTreeU.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU) && !this->IsVertexInGap(pVertex, TPC_VIEW_U)) ||
+            (!kdTreeV.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV) && !this->IsVertexInGap(pVertex, TPC_VIEW_V)) ||
+            (!kdTreeW.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW) && !this->IsVertexInGap(pVertex, TPC_VIEW_W)))
         {
             continue;
         }
@@ -177,7 +177,8 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
         this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
         this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
 
-        const float multiplier(!m_beamMode ? 1.f : std::exp(-(pVertex->GetPosition().GetZ() - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
+        const float vertexMinZ(std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
+        const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
 
         if (m_fastScoreCheck || m_fastScoreOnly)
         {
@@ -296,6 +297,21 @@ bool VertexSelectionAlgorithm::IsVertexOnHit(const Vertex *const pVertex, const 
     kdTree.search(searchRegionHits, found);
 
     return (!found.empty());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexSelectionAlgorithm::IsVertexInGap(const Vertex *const pVertex, const HitType hitType) const
+{
+    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+
+    for (const DetectorGap *const pDetectorGap : PandoraContentApi::GetGeometry(*this)->GetDetectorGapList())
+    {
+        if (pDetectorGap->IsInGap(vertexPosition2D, hitType))
+            return true;
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
