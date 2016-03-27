@@ -10,6 +10,7 @@
 
 #include "Objects/TrackState.h"
 #include "Objects/CartesianVector.h"
+#include "Objects/CaloHit.h"
 #include "Objects/ParticleFlowObject.h"
 
 #include "Pandora/ObjectFactory.h"
@@ -25,22 +26,27 @@ public:
      *
      *  @param  position
      *  @param  direction
-     *  @param  hitType
+     *  @param  pCaloHit
      *  @param  dQ
      *  @param  dL
      */
-    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::HitType hitType,
-        const float dQ, const float dL);
+    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::CaloHit *const pCaloHit, const float dQ, const float dL);
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  position
+     *  @param  direction
+     *  @param  HitType
+     *  @param  dQ
+     *  @param  dL
+     */
+    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::HitType hitType, const float dQ, const float dL);
 
     /**
      *  @brief  Return direction at this trajectory point
      */
     const pandora::CartesianVector &GetDirection() const;
-
-    /**
-     *  @brief Return hit type of this trajectory point
-     */
-    pandora::HitType GetHitType() const;
 
     /**
      *  @brief  Return dQ at this trajectory point
@@ -56,11 +62,22 @@ public:
      *  @brief Return dQ/dL at this trajectory point 
      */
     float GetdQdL() const;
+ 
+    /**
+     *  @brief Return hit type of this trajectory point
+     */
+    pandora::HitType GetHitType() const;
+
+    /**
+     *  @brief  Return calo hit at trajectory point
+     */
+    const pandora::CaloHit *GetCaloHit() const;
 
 private:
-    pandora::HitType   m_hitType;
-    float              m_dQ;
-    float              m_dL;
+    float                    m_dQ;
+    float                    m_dL;
+    pandora::HitType         m_hitType;
+    const pandora::CaloHit  *m_pCaloHit;
 };
 
 typedef std::vector<LArTrackState> LArTrackStateVector; 

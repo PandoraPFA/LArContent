@@ -13,10 +13,16 @@ using namespace pandora;
 namespace lar_content
 {
 
-LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVector &direction, const HitType hitType, const float dQ, const float dL) :
-    TrackState(position, direction), m_hitType(hitType), m_dQ(dQ), m_dL(dL)
+LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVector &direction, const CaloHit *const pCaloHit, const float dQ, const float dL) :
+    TrackState(position, direction), m_dQ(dQ), m_dL(dL), m_hitType(pCaloHit->GetHitType()), m_pCaloHit(pCaloHit)
 {
+}
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVector &direction, const HitType hitType, const float dQ, const float dL) :
+    TrackState(position, direction), m_dQ(dQ), m_dL(dL), m_hitType(hitType), m_pCaloHit(NULL)
+{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -24,13 +30,6 @@ LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVec
 const CartesianVector &LArTrackState::GetDirection() const
 {
     return this->GetMomentum();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-HitType LArTrackState::GetHitType() const
-{
-    return m_hitType;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,6 +54,23 @@ float LArTrackState::GetdQdL() const
         return m_dQ / m_dL;
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+HitType LArTrackState::GetHitType() const
+{
+    return m_hitType;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHit *LArTrackState::GetCaloHit() const
+{
+    if (m_pCaloHit)
+        return m_pCaloHit;
+
+    throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
