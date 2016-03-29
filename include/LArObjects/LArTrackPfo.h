@@ -10,10 +10,13 @@
 
 #include "Objects/TrackState.h"
 #include "Objects/CartesianVector.h"
-#include "Objects/CaloHit.h"
 #include "Objects/ParticleFlowObject.h"
 
 #include "Pandora/ObjectFactory.h"
+
+namespace pandora {class CaloHit;}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 namespace lar_content
 {
