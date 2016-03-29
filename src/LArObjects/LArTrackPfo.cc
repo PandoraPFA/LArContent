@@ -8,20 +8,30 @@
 
 #include "LArObjects/LArTrackPfo.h"
 
+#include "Objects/CaloHit.h"
+
 using namespace pandora;
 
 namespace lar_content
 {
 
 LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVector &direction, const CaloHit *const pCaloHit, const float dQ, const float dL) :
-    TrackState(position, direction), m_dQ(dQ), m_dL(dL), m_hitType(pCaloHit->GetHitType()), m_pCaloHit(pCaloHit)
+    TrackState(position, direction),
+    m_dQ(dQ),
+    m_dL(dL),
+    m_hitType(pCaloHit->GetHitType()),
+    m_pCaloHit(pCaloHit)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArTrackState::LArTrackState(const CartesianVector &position, const CartesianVector &direction, const HitType hitType, const float dQ, const float dL) :
-    TrackState(position, direction), m_dQ(dQ), m_dL(dL), m_hitType(hitType), m_pCaloHit(NULL)
+    TrackState(position, direction),
+    m_dQ(dQ),
+    m_dL(dL),
+    m_hitType(hitType),
+    m_pCaloHit(nullptr)
 {
 }
 
