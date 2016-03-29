@@ -25,13 +25,13 @@ include(PandoraCMakeSettings)
 # Prefer local include directory to any paths to installed header files
 include_directories(include)
 
-find_package(PandoraSDK 02.02.00 REQUIRED)
+find_package(PandoraSDK 02.03.00 REQUIRED)
 include_directories(${PandoraSDK_INCLUDE_DIRS})
 link_libraries(${PandoraSDK_LIBRARIES})
 add_definitions(${PandoraSDK_DEFINITIONS})
 
 if(PANDORA_MONITORING)
-    find_package(PandoraMonitoring 02.02.00 REQUIRED)
+    find_package(PandoraMonitoring 02.03.00 REQUIRED)
     include_directories(${PandoraMonitoring_INCLUDE_DIRS})
     link_libraries(${PandoraMonitoring_LIBRARIES})
     add_definitions(${PandoraMonitoring_DEFINITIONS})
