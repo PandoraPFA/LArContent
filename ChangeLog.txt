@@ -1,4 +1,14 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-06-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Add an association between track trajectory points and calo hits (so that it can be persisted into LArSoft)
+Include gap information when filtering candidate vertex list.
+Work around issue that LArSoft gap information can only be written when processing first event.
+VertexSelection algorithm: revert to using nDecayLengthsInZSpan rather than fixed decay constant for beam-weighting.
+Correct usage of EventFileWriter.
+Update to reflect interface changes for custom persistency.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-05-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Parameter optimisation for VertexSelection algorithm.
