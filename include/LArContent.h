@@ -45,6 +45,7 @@
 #include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
+#include "LArThreeDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.h"
 #include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 #include "LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h"
 #include "LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
@@ -158,6 +159,7 @@ public:
         d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
         d("LArCosmicRayShowerMatching",             lar_content::CosmicRayShowerMatchingAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
+        d("LArCosmicRayTrackRecovery",              lar_content::CosmicRayTrackRecoveryAlgorithm::Factory)                      \
         d("LArCosmicRayVertexBuilding",             lar_content::CosmicRayVertexBuildingAlgorithm::Factory)                     \
         d("LArNeutrinoCreation",                    lar_content::NeutrinoCreationAlgorithm::Factory)                            \
         d("LArNeutrinoDaughterVertices",            lar_content::NeutrinoDaughterVerticesAlgorithm::Factory)                    \
