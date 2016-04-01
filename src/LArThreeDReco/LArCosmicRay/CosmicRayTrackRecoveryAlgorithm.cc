@@ -75,7 +75,7 @@ StatusCode CosmicRayTrackRecoveryAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRayTrackRecoveryAlgorithm::GetAvailableClusters(const std::string inputClusterListName, ClusterVector &clusterVector) const
+StatusCode CosmicRayTrackRecoveryAlgorithm::GetAvailableClusters(const std::string &inputClusterListName, ClusterVector &clusterVector) const
 {
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,

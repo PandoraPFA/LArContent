@@ -50,7 +50,6 @@ private:
     };
 
     typedef std::vector<Particle> ParticleList;
-
     typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
 
     /**
@@ -59,7 +58,7 @@ private:
      *  @param inputClusterListName the input name of the cluster list
      *  @param clusterVector the output vector of available clusters
      */
-    pandora::StatusCode GetAvailableClusters(const std::string inputClusterListName, pandora::ClusterVector &clusterVector) const;
+    pandora::StatusCode GetAvailableClusters(const std::string &inputClusterListName, pandora::ClusterVector &clusterVector) const;
 
     /**
      *  @brief Select a set of clusters judged to be clean
@@ -110,10 +109,10 @@ private:
      *  @param clusterAssociationMapWU map of cluster associations between the W and U views
      *  @param particleList the output list of candidate particles
      */
-    void MatchThreeViews(const pandora::ClusterVector &clusterVectorU,  const pandora::ClusterVector &clusterVectorV,
-	const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
-	const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
-	ParticleList &particleList) const;
+    void MatchThreeViews(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
+        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
+        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
+        ParticleList &particleList) const;
 
     /**
      *  @brief  Create candidate particles using two primary clusters and one pair of broken clusters
@@ -127,9 +126,9 @@ private:
      *  @param particleList the output list of candidate particles
      */
     void MatchTwoViews(const pandora::ClusterVector &clusterVectorU,  const pandora::ClusterVector &clusterVectorV,
-	const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
-	const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
-	ParticleList &particleList) const;
+        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
+        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
+        ParticleList &particleList) const;
  
     /**
      *  @brief  Create candidate particles using one primary cluster and one pair of broken clusters
@@ -143,7 +142,7 @@ private:
      *  @param particleList the output list of candidate particles
      */
     void MatchOneView(const pandora::ClusterVector &clusterVectorU,  const pandora::ClusterVector &clusterVectorV,
-	const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
+        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
         const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
         ParticleList &particleList) const;
 
@@ -178,16 +177,15 @@ private:
      */
     void BuildParticles(const ParticleList &particleList);
 
+    float          m_clusterMinLength;          ///<
+    float          m_clusterMinSpanZ;           ///<
+    float          m_clusterMinOverlapX;        ///<
+    float          m_clusterMaxDeltaX;          ///<
 
-    float          m_clusterMinLength;
-    float          m_clusterMinSpanZ;
-    float          m_clusterMinOverlapX;
-    float          m_clusterMaxDeltaX;
-
-    std::string    m_inputClusterListNameU;
-    std::string    m_inputClusterListNameV;
-    std::string    m_inputClusterListNameW;
-    std::string    m_outputPfoListName;
+    std::string    m_inputClusterListNameU;     ///<
+    std::string    m_inputClusterListNameV;     ///<
+    std::string    m_inputClusterListNameW;     ///<
+    std::string    m_outputPfoListName;         ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
