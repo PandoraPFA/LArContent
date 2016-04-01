@@ -91,6 +91,7 @@
 #include "LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 #include "LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
+#include "LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h"
@@ -177,6 +178,7 @@ public:
         d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
         d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
+        d("LArCrossGapsAssociation",                lar_content::CrossGapsAssociationAlgorithm::Factory)                        \
         d("LArLongitudinalAssociation",             lar_content::LongitudinalAssociationAlgorithm::Factory)                     \
         d("LArLongitudinalExtension",               lar_content::LongitudinalExtensionAlgorithm::Factory)                       \
         d("LArSimpleClusterGrowing",                lar_content::SimpleClusterGrowingAlgorithm::Factory)                        \
