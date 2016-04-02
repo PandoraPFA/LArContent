@@ -92,6 +92,7 @@
 #include "LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
 #include "LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
+#include "LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 #include "LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h"
@@ -179,6 +180,7 @@ public:
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
         d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
         d("LArCrossGapsAssociation",                lar_content::CrossGapsAssociationAlgorithm::Factory)                        \
+        d("LArCrossGapsExtension",                  lar_content::CrossGapsExtensionAlgorithm::Factory)                          \
         d("LArLongitudinalAssociation",             lar_content::LongitudinalAssociationAlgorithm::Factory)                     \
         d("LArLongitudinalExtension",               lar_content::LongitudinalExtensionAlgorithm::Factory)                       \
         d("LArSimpleClusterGrowing",                lar_content::SimpleClusterGrowingAlgorithm::Factory)                        \
