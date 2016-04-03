@@ -77,14 +77,6 @@ private:
      */
     bool IsAcrossGap(const float minZ, const float maxZ, const pandora::HitType hitType) const;
 
-    /**
-     *  @brief Determine whether a test position lies within a gap
-     *
-     *  @param testPosition the test position
-     *  @param hitType the hit type
-     */
-    bool IsInGap(const pandora::CartesianVector &testPosition, const pandora::HitType hitType) const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float   m_minClusterLength;               ///<
