@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H
@@ -25,7 +25,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
 
     /**
@@ -40,7 +40,7 @@ private:
      *  @brief  Whether cluster is identified as a clear track
      *
      *  @param  pCluster address of the relevant cluster
-     * 
+     *
      *  @return boolean
      */
     bool IsClearTrack(const pandora::Cluster *const pCluster) const;
@@ -53,6 +53,7 @@ private:
     unsigned int            m_minHitsInCluster;             ///< The minimum number of hits in a clear track candidate
     float                   m_maxLayerGapFraction;          ///< The maximum (sliding fit) layer gap fraction for a clear track candidate
     float                   m_maxWidthPerUnitLength;        ///< The maximum width per unit length for a clear track candidate
+    float                   m_maxShowerLength;              ///< The maximum length for a cluster to be considered a shower candidate
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

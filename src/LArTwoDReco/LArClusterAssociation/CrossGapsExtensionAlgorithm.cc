@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
@@ -131,8 +132,9 @@ void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const bool useInner, 
     {
 	const LArPointingCluster &pointingCluster = *iter;
 	const LArPointingCluster::Vertex pointingVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
+	const HitType hitType(LArClusterHelper::GetClusterHitType(pointingCluster.GetCluster()));
 
-	if (this->IsInGap(pointingVertex.GetPosition(), LArClusterHelper::GetClusterHitType(pointingCluster.GetCluster())))
+	if (LArGeometryHelper::IsInGap(*this, pointingVertex.GetPosition(), hitType, m_maxGapTolerance))
 	    outputPointingClusterList.push_back(pointingCluster);
     }
 }
@@ -158,36 +160,12 @@ bool CrossGapsExtensionAlgorithm::IsAcrossGap(const float minZ, const float maxZ
     if (maxZ - minZ < std::numeric_limits<float>::epsilon())
 	return false;
 
-    float deltaZ(0.f);
+    const float gapDeltaZ(LArGeometryHelper::CalcGapDeltaZ(*this, minZ, maxZ, hitType));
 
-    for (const DetectorGap *const pDetectorGap : PandoraContentApi::GetGeometry(*this)->GetDetectorGapList())
-    {
-	const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
-
-        if (NULL == pLineGap)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-	if (pLineGap->GetHitType() == hitType && pLineGap->GetLineStartZ() > minZ && pLineGap->GetLineEndZ() < maxZ)
-	    deltaZ += (pLineGap->GetLineEndZ() - pLineGap->GetLineStartZ());
-    }
-
-    if (deltaZ / (maxZ - minZ) < m_minGapFraction)
+    if (gapDeltaZ / (maxZ - minZ) < m_minGapFraction)
 	return false;
 
     return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CrossGapsExtensionAlgorithm::IsInGap(const CartesianVector &testPosition, const HitType hitType) const
-{
-    for (const DetectorGap *const pDetectorGap : PandoraContentApi::GetGeometry(*this)->GetDetectorGapList())
-    {
-	if (pDetectorGap->IsInGap(testPosition, hitType, m_maxGapTolerance))
-	    return true;
-    }
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

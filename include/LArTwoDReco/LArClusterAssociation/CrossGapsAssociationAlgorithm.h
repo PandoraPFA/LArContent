@@ -1,8 +1,8 @@
 /**
  *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cross gaps association algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CROSS_GAPS_ASSOCIATION_ALGORITHM_H
@@ -29,7 +29,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-        pandora::Algorithm *CreateAlgorithm() const;
+	pandora::Algorithm *CreateAlgorithm() const;
     };
 
     /**
@@ -44,42 +44,32 @@ private:
 
     /**
      *  @brief  Determine whether two clusters are associated
-     * 
+     *
      *  @param  innerFitResult two dimensional sliding fit result for the inner cluster
      *  @param  outerFitResult two dimensional sliding fit result for the outer cluster
-     * 
+     *
      *  @return boolean
      */
     bool AreClustersAssociated(const TwoDSlidingFitResult &innerFitResult, const TwoDSlidingFitResult &outerFitResult) const;
 
     /**
      *  @brief  Sample points along the extrapolation from a starting position to a target fit result to declare cluster association
-     * 
+     *
      *  @param  startPosition the start position
      *  @param  startDirection the start direction
      *  @param  targetFitResult the target fit result
-     * 
+     *
      *  @return boolean
      */
     bool IsAssociated(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection,
-        const TwoDSlidingFitResult &targetFitResult) const;
-
-    /**
-     *  @brief  Whether a sampling point lies in a registered gap with the associated hit type
-     * 
-     *  @param  samplingPoint the sampling point
-     *  @param  hitType the hit type
-     * 
-     *  @return boolean
-     */
-    bool IsInGap(const pandora::CartesianVector &samplingPoint, const pandora::HitType hitType) const;
+	const TwoDSlidingFitResult &targetFitResult) const;
 
     /**
      *  @brief  Whether a sampling point lies near a target 2d sliding fit result
-     * 
+     *
      *  @param  samplingPoint the sampling point
      *  @param  targetFitResult the target fit result
-     * 
+     *
      *  @return boolean
      */
     bool IsNearCluster(const pandora::CartesianVector &samplingPoint, const TwoDSlidingFitResult &targetFitResult) const;

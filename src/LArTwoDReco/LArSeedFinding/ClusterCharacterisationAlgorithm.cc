@@ -1,13 +1,14 @@
 /**
  *  @file   LArContent/src/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cluster characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArObjects/LArTwoDSlidingShowerFitResult.h"
@@ -23,7 +24,8 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_slidingFitWindow(10),
     m_minHitsInCluster(20),
     m_maxLayerGapFraction(0.2f),
-    m_maxWidthPerUnitLength(0.15f)
+    m_maxWidthPerUnitLength(0.15f),
+    m_maxShowerLength(1000.f)
 {
 }
 
@@ -33,34 +35,34 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 {
     for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
-        const ClusterList *pClusterList = NULL;
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
+	const ClusterList *pClusterList = NULL;
+	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
 
-        if (!pClusterList || pClusterList->empty())
-        {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "ClusterCharacterisationAlgorithm: unable to find cluster list " << *listIter << std::endl;
+	if (!pClusterList || pClusterList->empty())
+	{
+	    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+		std::cout << "ClusterCharacterisationAlgorithm: unable to find cluster list " << *listIter << std::endl;
 
-            continue;
-        }
+	    continue;
+	}
 
-        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-        {
-            const Cluster *const pCluster(*iter);
+	for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+	{
+	    const Cluster *const pCluster(*iter);
 
-            if (this->IsClearTrack(pCluster))
-            {
-                PandoraContentApi::Cluster::Metadata metadata;
-                metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
-            }
-            else
-            {
-                PandoraContentApi::Cluster::Metadata metadata;
-                metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
-            }
-        }
+	    if (this->IsClearTrack(pCluster))
+	    {
+		PandoraContentApi::Cluster::Metadata metadata;
+		metadata.m_particleId = MU_MINUS;
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
+	    }
+	    else
+	    {
+		PandoraContentApi::Cluster::Metadata metadata;
+		metadata.m_particleId = E_MINUS;
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
+	    }
+	}
     }
 
     return STATUS_CODE_SUCCESS;
@@ -71,58 +73,74 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
 {
     if (pCluster->GetNCaloHits() < m_minHitsInCluster)
-        return false;
+	return false;
 
     try
     {
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
+	const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+	const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
 
-        const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
-        const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
-        const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
+	const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
+	const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
+	const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
 
-        if (layerFitResultMapS.size() < 2)
-            return false;
+	if (layerFitResultMapS.size() < 2)
+	    return false;
 
-        CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);
-        showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);
-        showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);
-        const float straightLinePathLength((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());
+	CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);
+	showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);
+	showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);
+	const float straightLinePathLength((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());
 
-        if (straightLinePathLength < std::numeric_limits<float>::epsilon())
-            return false;
+	if (straightLinePathLength < std::numeric_limits<float>::epsilon())
+	    return false;
 
-        float widthSum(0.f);
-        int biggestLayerGap(0), previousLayer(layerFitResultMapS.begin()->first);
+        // TODO: Improve on a straight selection cut above a certain distance
+	if (straightLinePathLength > m_maxShowerLength)
+	    return true;
 
-        for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
-        {
-            const int layerGap(iterS->first - previousLayer);
-            previousLayer = iterS->first;
+	float widthSum(0.f);
+	CartesianVector previousLayerPosition(globalMinLayerPositionOnAxis);
+	float biggestGapLength(std::numeric_limits<float>::epsilon());
 
-            if (layerGap > biggestLayerGap)
-                biggestLayerGap = layerGap;
+	for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
+	{
+	    CartesianVector thisLayerPosition(0.f, 0.f, 0.f);
+	    showerFitResult.GetShowerFitResult().GetGlobalPosition(iterS->second.GetL(), 0.f, thisLayerPosition);
+	    const float thisGapLength((thisLayerPosition - previousLayerPosition).GetMagnitude());
 
-            LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
-            LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
+	    if (thisGapLength > biggestGapLength)
+	    {
+		const float minZ(std::min(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
+		const float maxZ(std::max(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
+		const float gapZ(LArGeometryHelper::CalcGapDeltaZ(*this, minZ, maxZ, LArClusterHelper::GetClusterHitType(pCluster)));
+		const float correctedGapLength(thisGapLength * (1.f - gapZ / (maxZ - minZ)));
 
-            if ((layerFitResultMapP.end() == iterP) || (layerFitResultMapN.end() == iterN))
-                continue;
+		if (correctedGapLength > biggestGapLength)
+		    biggestGapLength = correctedGapLength;
+	    }
 
-            widthSum += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
-        }
+	    previousLayerPosition = thisLayerPosition;
 
-        const float layerGapFraction(static_cast<float>(biggestLayerGap) / static_cast<float>(layerFitResultMapS.size()));
+	    LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
+	    LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
 
-        if (layerGapFraction > m_maxLayerGapFraction)
-            return false;
+	    if ((layerFitResultMapP.end() == iterP) || (layerFitResultMapN.end() == iterN))
+		continue;
 
-        // ATTN: Could also try to recover long (sideways) tracks, with cuts on nHits and nHitsPerUnitLength
-        const float widthPerUnitLength(widthSum / straightLinePathLength);
+	    widthSum += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
+	}
 
-        if (widthPerUnitLength < m_maxWidthPerUnitLength)
-            return true;
+	const float layerGapFraction(biggestGapLength / straightLinePathLength);
+
+	if (layerGapFraction > m_maxLayerGapFraction)
+	    return false;
+
+	// ATTN: Could also try to recover long (sideways) tracks, with cuts on nHits and nHitsPerUnitLength
+	const float widthPerUnitLength(widthSum / straightLinePathLength);
+
+	if (widthPerUnitLength < m_maxWidthPerUnitLength)
+	    return true;
     }
     catch (StatusCodeException &)
     {
@@ -138,16 +156,19 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+	"SlidingFitWindow", m_slidingFitWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsInCluster", m_minHitsInCluster));
+	"MinHitsInCluster", m_minHitsInCluster));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLayerGapFraction", m_maxLayerGapFraction));
+	"MaxLayerGapFraction", m_maxLayerGapFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxWidthPerUnitLength", m_maxWidthPerUnitLength));
+	"MaxWidthPerUnitLength", m_maxWidthPerUnitLength));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"MaxShowerLength", m_maxShowerLength));
 
     return STATUS_CODE_SUCCESS;
 }
