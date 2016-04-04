@@ -27,7 +27,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
     /**
@@ -48,7 +48,7 @@ private:
      *  @param outerPointingClusterList the pointing clusters whose outer vertex is close to a detector gap
      */
     void BuildPointingClusterList(const pandora::ClusterVector &clusterVector, LArPointingClusterList &innerPointingClusterList,
-	LArPointingClusterList &outerPointingClusterList) const;
+        LArPointingClusterList &outerPointingClusterList) const;
 
     /**
      *  @brief Build a list of pointing clusters that are adjacent to a detector gap
@@ -58,7 +58,7 @@ private:
      *  @param outputPointingClusterList the output list of pointing clusters
      */
     void BuildPointingClusterList(const bool useInner, const LArPointingClusterList &inputPointingClusterList,
-	LArPointingClusterList &outputPointingClusterList) const;
+        LArPointingClusterList &outputPointingClusterList) const;
 
     /**
      *  @brief Use pointing information to determine whether two clusters are associated

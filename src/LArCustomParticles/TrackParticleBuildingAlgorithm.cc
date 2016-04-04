@@ -177,7 +177,7 @@ void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowO
                     const float dQ(pCaloHit2D->GetInputEnergy());
 
                     trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
-		        LArTrackState(position, direction * scaleFactor, pCaloHit2D, dQ, dL)));
+                    LArTrackState(position, direction * scaleFactor, pCaloHit2D, dQ, dL)));
                 }
                 catch (StatusCodeException &statusCodeException1)
                 {

@@ -8,10 +8,6 @@
 #ifndef LAR_GEOMETRY_HELPER_H
 #define LAR_GEOMETRY_HELPER_H 1
 
-#include "Api/PandoraApi.h"
-#include "Api/PandoraContentApi.h"
-
-#include "Objects/DetectorGap.h"
 #include "Objects/CartesianVector.h"
 
 #include <unordered_map>
@@ -40,7 +36,7 @@ public:
      *  @param  position2 the position in the second view
      */
     static float MergeTwoPositions(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-	const float position1, const float position2);
+        const float position1, const float position2);
 
     /**
      *  @brief  Merge two views (U,V) to give a third view (Z).
@@ -52,7 +48,7 @@ public:
      *  @param  direction2 the direction in the second view
      */
     static pandora::CartesianVector MergeTwoDirections(const pandora::Pandora &pandora, const pandora::HitType view1,
-	const pandora::HitType view2, const pandora::CartesianVector &direction1, const pandora::CartesianVector &direction2);
+        const pandora::HitType view2, const pandora::CartesianVector &direction1, const pandora::CartesianVector &direction2);
 
     /**
      *  @brief  Merge 2D positions from two views to give 2D position in third view
@@ -66,8 +62,8 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-	const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3,
-	float &chiSquared);
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3,
+        float &chiSquared);
 
     /**
      *  @brief  Merge 2D positions from two views to give 2D position in third view
@@ -83,8 +79,8 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-	const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &outputU,
-	pandora::CartesianVector &outputV, pandora::CartesianVector &outputW, float &chiSquared);
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &outputU,
+        pandora::CartesianVector &outputV, pandora::CartesianVector &outputW, float &chiSquared);
 
     /**
      *  @brief  Merge 2D positions from three views to give unified 2D positions for each view
@@ -102,9 +98,9 @@ public:
      *  @param  chi-squared
      */
     static void MergeThreePositions(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-	const pandora::HitType view3, const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
-	const pandora::CartesianVector &position3, pandora::CartesianVector &outputU, pandora::CartesianVector &outputV,
-	pandora::CartesianVector &outputW, float &chiSquared);
+        const pandora::HitType view3, const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
+        const pandora::CartesianVector &position3, pandora::CartesianVector &outputU, pandora::CartesianVector &outputV,
+        pandora::CartesianVector &outputW, float &chiSquared);
 
     /**
      *  @brief  Merge 2D positions from three views to give unified 2D positions for each view
@@ -119,8 +115,8 @@ public:
      *  @param  chi-squared
      */
     static void MergeThreePositions(const pandora::Pandora &pandora, const pandora::CartesianVector &positionU,
-	const pandora::CartesianVector &positionV, const pandora::CartesianVector &positionW, pandora::CartesianVector &outputU,
-	pandora::CartesianVector &outputV, pandora::CartesianVector &outputW, float &chiSquared);
+        const pandora::CartesianVector &positionV, const pandora::CartesianVector &positionW, pandora::CartesianVector &outputU,
+        pandora::CartesianVector &outputV, pandora::CartesianVector &outputW, float &chiSquared);
 
     /**
      *  @brief  Merge 2D positions from two views to give unified 3D position
@@ -134,7 +130,7 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions3D(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-	const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D, 
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D, 
         float &chiSquared);
 
     /**
@@ -151,8 +147,8 @@ public:
      *  @param  chi-squared
      */
     static void MergeThreePositions3D(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-	const pandora::HitType view3, const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
-	const pandora::CartesianVector &position3, pandora::CartesianVector &position3D, float &chiSquared);
+        const pandora::HitType view3, const pandora::CartesianVector &position1, const pandora::CartesianVector &position2,
+        const pandora::CartesianVector &position3, pandora::CartesianVector &position3D, float &chiSquared);
 
     /**
      *  @brief  Project 3D position into a given 2D view
@@ -162,7 +158,7 @@ public:
      *  @param  view the 2D projection
      */
     static pandora::CartesianVector ProjectPosition(const pandora::Pandora &pandora, const pandora::CartesianVector &position3D,
-	const pandora::HitType view);
+        const pandora::HitType view);
 
     /**
      *  @brief  Project 3D direction into a given 2D view
@@ -172,7 +168,7 @@ public:
      *  @param  view the 2D projection
      */
     static pandora::CartesianVector ProjectDirection(const pandora::Pandora &pandora, const pandora::CartesianVector &direction3D,
-	const pandora::HitType view);
+        const pandora::HitType view);
 
     /**
      *  @brief  Return the wire pitch
@@ -200,36 +196,36 @@ public:
     /**
      *  @brief  Whether a 2D test point lies in a registered gap with the associated hit type
      *
-     *  @param  algorithm the algorithm using this function
+     *  @param  pandora the associated pandora instance
      *  @param  testPoint the test point
      *  @param  hitType the hit type
      *
      *  @return boolean
      */
-    static bool IsInGap(const pandora::Algorithm &algorithm, const pandora::CartesianVector &testPoint2D, const pandora::HitType hitType,
+    static bool IsInGap(const pandora::Pandora &pandora, const pandora::CartesianVector &testPoint2D, const pandora::HitType hitType,
         const float gapTolerance = 0.f);
 
     /**
      *  @brief  Whether a 3D test point lies in a registered gap with the associated hit type
      *
-     *  @param  algorithm the algorithm using this function
+     *  @param  pandora the associated pandora instance
      *  @param  testPoint the test point
      *  @param  hitType the hit type
      *
      *  @return boolean
      */
-    static bool IsInGap3D(const pandora::Algorithm &algorithm, const pandora::CartesianVector &testPoint3D, const pandora::HitType hitType,
+    static bool IsInGap3D(const pandora::Pandora &pandora, const pandora::CartesianVector &testPoint3D, const pandora::HitType hitType,
         const float gapTolerance = 0.f);
 
     /**
      *  @brief  Calculate the total distance within a given 2D region that is composed of detector gaps
      *
-     *  @param  algorithm the algorithm using this function
+     *  @param  pandora the associated pandora instance
      *  @param  minZ the start position in Z
      *  @param  maxZ the end position in Z
      *  @param  hitType the hit type
      */
-    static float CalcGapDeltaZ(const pandora::Algorithm &algorithm, const float minZ, const float maxZ, const pandora::HitType hitType);
+    static float CalcGapDeltaZ(const pandora::Pandora &pandora, const float minZ, const float maxZ, const pandora::HitType hitType);
 
     /**
      *  @brief  Get the LArPseudoLayerPlugin registered with a specified pandora instance
