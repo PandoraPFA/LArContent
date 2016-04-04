@@ -225,7 +225,7 @@ public:
      *  @param  maxZ the end position in Z
      *  @param  hitType the hit type
      */
-    static float CalcGapDeltaZ(const pandora::Pandora &pandora, const float minZ, const float maxZ, const pandora::HitType hitType);
+    static float CalculateGapDeltaZ(const pandora::Pandora &pandora, const float minZ, const float maxZ, const pandora::HitType hitType);
 
     /**
      *  @brief  Get the LArPseudoLayerPlugin registered with a specified pandora instance

@@ -66,11 +66,6 @@ void CrossGapsAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterV
         try {(void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, TwoDSlidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch)));}
         catch (StatusCodeException &) {}
     }
-//ClusterList temp;
-//for (const auto &map : slidingFitResultMap) temp.insert(map.first);
-//PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp, "Clusters", BLUE);
-//PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     // ATTN This method assumes that clusters have been sorted by layer
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
@@ -131,14 +126,6 @@ bool CrossGapsAssociationAlgorithm::AreClustersAssociated(const TwoDSlidingFitRe
     if (outerFitResult.GetCluster()->GetInnerPseudoLayer() < innerFitResult.GetCluster()->GetOuterPseudoLayer())
         return false;
 
-//ClusterList tempList1, tempList2;
-//tempList1.insert(innerFitResult.GetCluster());
-//tempList2.insert(outerFitResult.GetCluster());
-//std::cout << " innerHits " << innerFitResult.GetCluster()->GetNCaloHits() << ", outerHits " << outerFitResult.GetCluster()->GetNCaloHits() << std::endl;
-//PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &tempList1, "InnerCluster", BLUE);
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &tempList2, "OuterCluster", GREEN);
-//PandoraMonitoringApi::ViewEvent(this->GetPandora());
     return (this->IsAssociated(innerFitResult.GetGlobalMaxLayerPosition(), innerFitResult.GetGlobalMaxLayerDirection(), outerFitResult) &&
         this->IsAssociated(outerFitResult.GetGlobalMinLayerPosition(), outerFitResult.GetGlobalMinLayerDirection() * -1.f, innerFitResult));
 }
@@ -158,7 +145,6 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(const CartesianVector &startPos
 
         if (LArGeometryHelper::IsInGap(this->GetPandora(), samplingPoint, hitType, m_gapTolerance))
         {
-//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "samplingPoint_" + TypeToString(iSample), GRAY, 1);
             ++nGapSamplingPoints;
             nUnmatchedSampleRun = 0; // ATTN Choose to also reset run when entering gap region
             continue;
@@ -166,24 +152,18 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(const CartesianVector &startPos
 
         if (this->IsNearCluster(samplingPoint, targetFitResult))
         {
-//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "samplingPoint_" + TypeToString(iSample), RED, 1);
             ++nMatchedSamplingPoints;
             nUnmatchedSampleRun = 0;
         }
-        else
+        else if (++nUnmatchedSampleRun > m_maxUnmatchedSampleRun)
         {
-//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "samplingPoint_" + TypeToString(iSample), ORANGE, 1);
-            if (++nUnmatchedSampleRun > m_maxUnmatchedSampleRun)
             break;
         }
     }
 
     const float expectation((targetFitResult.GetGlobalMaxLayerPosition() - targetFitResult.GetGlobalMinLayerPosition()).GetMagnitude() / m_sampleStepSize);
     const float matchedSamplingFraction(expectation > 0.f ? static_cast<float>(nMatchedSamplingPoints) / expectation : 0.f);
-//std::cout << "nSamplingPoints " << nSamplingPoints << " nGapSamplingPoints " << nGapSamplingPoints << " nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
-//std::cout << "non-gap matched fraction " << static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints - nGapSamplingPoints) << std::endl;
-//std::cout << "expectation " << expectation << " nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
-//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
     if ((nMatchedSamplingPoints > m_minMatchedSamplingPoints) || (matchedSamplingFraction > m_minMatchedSamplingFraction))
         return true;
 

@@ -25,7 +25,8 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_minHitsInCluster(20),
     m_maxLayerGapFraction(0.2f),
     m_maxWidthPerUnitLength(0.15f),
-    m_maxShowerLength(1000.f)
+    m_maxShowerLength(1000.f),
+    m_useDetectorGaps(true)
 {
 }
 
@@ -33,23 +34,21 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
 
 StatusCode ClusterCharacterisationAlgorithm::Run()
 {
-    for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
+    for (const std::string &clusterListName : m_inputClusterListNames)
     {
         const ClusterList *pClusterList = NULL;
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
         if (!pClusterList || pClusterList->empty())
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "ClusterCharacterisationAlgorithm: unable to find cluster list " << *listIter << std::endl;
+                std::cout << "ClusterCharacterisationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
 
             continue;
         }
 
-        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+        for (const Cluster *const pCluster : *pClusterList)
         {
-            const Cluster *const pCluster(*iter);
-
             if (this->IsClearTrack(pCluster))
             {
                 PandoraContentApi::Cluster::Metadata metadata;
@@ -113,7 +112,11 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
             {
                 const float minZ(std::min(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
                 const float maxZ(std::max(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
-                const float gapZ(LArGeometryHelper::CalcGapDeltaZ(this->GetPandora(), minZ, maxZ, LArClusterHelper::GetClusterHitType(pCluster)));
+
+                if ((maxZ - minZ) < std::numeric_limits<float>::epsilon())
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                const float gapZ(m_useDetectorGaps ? LArGeometryHelper::CalculateGapDeltaZ(this->GetPandora(), minZ, maxZ, LArClusterHelper::GetClusterHitType(pCluster)) : 0.f);
                 const float correctedGapLength(thisGapLength * (1.f - gapZ / (maxZ - minZ)));
 
                 if (correctedGapLength > biggestGapLength)
@@ -169,6 +172,9 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxShowerLength", m_maxShowerLength));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseDetectorGaps", m_useDetectorGaps));
 
     return STATUS_CODE_SUCCESS;
 }

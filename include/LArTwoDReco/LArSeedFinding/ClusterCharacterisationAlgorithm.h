@@ -54,6 +54,7 @@ private:
     float                   m_maxLayerGapFraction;          ///< The maximum (sliding fit) layer gap fraction for a clear track candidate
     float                   m_maxWidthPerUnitLength;        ///< The maximum width per unit length for a clear track candidate
     float                   m_maxShowerLength;              ///< The maximum length for a cluster to be considered a shower candidate
+    bool                    m_useDetectorGaps;              ///< Whether to account for registered detector gaps in characterisation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

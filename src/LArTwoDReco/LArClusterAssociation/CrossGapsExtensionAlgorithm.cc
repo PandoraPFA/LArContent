@@ -36,10 +36,8 @@ void CrossGapsExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *cons
     // if (PandoraContentApi::GetGeometry(*this)->GetDetectorGapList().empty())
     //     return;
 
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : *pClusterList)
     {
-        const Cluster *const pCluster = *iter;
-
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
             continue;
 
@@ -56,18 +54,14 @@ void CrossGapsExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
     this->BuildPointingClusterList(clusterVector, innerPointingClusterList, outerPointingClusterList);
 
     // Form associations between pairs of pointing clusters
-    for (LArPointingClusterList::const_iterator iterInner = innerPointingClusterList.begin(), iterEndInner = innerPointingClusterList.end();
-        iterInner != iterEndInner; ++iterInner)
+    for (const LArPointingCluster &pointingClusterInner : innerPointingClusterList)
     {
-        const LArPointingCluster &pointingClusterInner = *iterInner;
-        const LArPointingCluster::Vertex pointingVertexInner(pointingClusterInner.GetInnerVertex());
+        const LArPointingCluster::Vertex &pointingVertexInner(pointingClusterInner.GetInnerVertex());
         const float zInner(pointingVertexInner.GetPosition().GetZ());
 
-        for (LArPointingClusterList::const_iterator iterOuter = outerPointingClusterList.begin(), iterEndOuter = outerPointingClusterList.end();
-            iterOuter != iterEndOuter; ++iterOuter)
+        for (const LArPointingCluster &pointingClusterOuter : outerPointingClusterList)
         {
-            const LArPointingCluster &pointingClusterOuter = *iterOuter;
-            const LArPointingCluster::Vertex pointingVertexOuter(pointingClusterOuter.GetOuterVertex());
+            const LArPointingCluster::Vertex &pointingVertexOuter(pointingClusterOuter.GetOuterVertex());
             const float zOuter(pointingVertexOuter.GetPosition().GetZ());
 
             if (!this->IsAcrossGap(zOuter, zInner, LArClusterHelper::GetClusterHitType(pointingClusterInner.GetCluster())))
@@ -76,17 +70,9 @@ void CrossGapsExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
             if (!this->IsAssociated(pointingVertexInner, pointingVertexOuter))
                 continue;
 
-            const Cluster *const pClusterInner = pointingClusterInner.GetCluster();
-            const Cluster *const pClusterOuter = pointingClusterOuter.GetCluster();
-/*
-ClusterList clusterList1, clusterList2;
-clusterList1.insert(pClusterInner);
-clusterList2.insert(pClusterOuter);
-PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterList1, "ClusterInner", RED);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterList2, "ClusterOuter", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
-*/
+            const Cluster *const pClusterInner(pointingClusterInner.GetCluster());
+            const Cluster *const pClusterOuter(pointingClusterOuter.GetCluster());
+
             const float lengthSquaredInner(LArClusterHelper::GetLengthSquared(pClusterInner));
             const float lengthSquaredOuter(LArClusterHelper::GetLengthSquared(pClusterOuter));
 
@@ -106,15 +92,10 @@ void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &
     // Convert each input cluster into a pointing cluster
     LArPointingClusterList pointingClusterList;
 
-    for (ClusterVector::const_iterator iter = clusterVector.begin(), iterEnd = clusterVector.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : clusterVector)
     {
-        try
-        {
-            pointingClusterList.push_back(LArPointingCluster(*iter));
-        }
-        catch (StatusCodeException &)
-        {
-        }
+        try {pointingClusterList.push_back(LArPointingCluster(pCluster));}
+        catch (StatusCodeException &) {}
     }
 
     // Identify clusters adjacent to detector gaps
@@ -127,11 +108,9 @@ void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &
 void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const bool useInner, const LArPointingClusterList &inputPointingClusterList,
     LArPointingClusterList &outputPointingClusterList) const
 {
-    for (LArPointingClusterList::const_iterator iter = inputPointingClusterList.begin(), iterEnd = inputPointingClusterList.end();
-        iter != iterEnd; ++iter)
+    for (const LArPointingCluster &pointingCluster : inputPointingClusterList)
     {
-        const LArPointingCluster &pointingCluster = *iter;
-        const LArPointingCluster::Vertex pointingVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
+        const LArPointingCluster::Vertex &pointingVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
         const HitType hitType(LArClusterHelper::GetClusterHitType(pointingCluster.GetCluster()));
 
         if (LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex.GetPosition(), hitType, m_maxGapTolerance))
@@ -160,7 +139,7 @@ bool CrossGapsExtensionAlgorithm::IsAcrossGap(const float minZ, const float maxZ
     if (maxZ - minZ < std::numeric_limits<float>::epsilon())
         return false;
 
-    const float gapDeltaZ(LArGeometryHelper::CalcGapDeltaZ(this->GetPandora(), minZ, maxZ, hitType));
+    const float gapDeltaZ(LArGeometryHelper::CalculateGapDeltaZ(this->GetPandora(), minZ, maxZ, hitType));
 
     if (gapDeltaZ / (maxZ - minZ) < m_minGapFraction)
         return false;
