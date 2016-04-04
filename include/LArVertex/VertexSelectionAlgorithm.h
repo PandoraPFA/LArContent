@@ -361,6 +361,9 @@ private:
 
     bool            m_useDetectorGaps;              ///< Whether to account for registered detector gaps in vertex selection
     float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
+
+    bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
+    unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
