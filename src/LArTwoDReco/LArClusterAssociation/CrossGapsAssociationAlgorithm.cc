@@ -27,7 +27,8 @@ CrossGapsAssociationAlgorithm::CrossGapsAssociationAlgorithm() :
     m_maxUnmatchedSampleRun(8),
     m_maxOnClusterDistance(1.5f),
     m_minMatchedSamplingPoints(10),
-    m_minMatchedSamplingFraction(0.5f)
+    m_minMatchedSamplingFraction(0.5f),
+    m_gapTolerance(0.f)
 {
 }
 
@@ -41,13 +42,13 @@ void CrossGapsAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *co
 
     for (const Cluster *const pCluster : *pClusterList)
     {
-	if (pCluster->GetNCaloHits() < m_minClusterHits)
-	    continue;
+        if (pCluster->GetNCaloHits() < m_minClusterHits)
+            continue;
 
-	if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < m_minClusterLayers)
-	    continue;
+        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < m_minClusterLayers)
+            continue;
 
-	clusterVector.push_back(pCluster);
+        clusterVector.push_back(pCluster);
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByInnerLayer);
@@ -62,8 +63,8 @@ void CrossGapsAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterV
 
     for (const Cluster *const pCluster : clusterVector)
     {
-	try {(void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, TwoDSlidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch)));}
-	catch (StatusCodeException &) {}
+        try {(void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, TwoDSlidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch)));}
+        catch (StatusCodeException &) {}
     }
 //ClusterList temp;
 //for (const auto &map : slidingFitResultMap) temp.insert(map.first);
@@ -74,30 +75,30 @@ void CrossGapsAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterV
     // ATTN This method assumes that clusters have been sorted by layer
     for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterIEnd = clusterVector.end(); iterI != iterIEnd; ++iterI)
     {
-	const Cluster *const pInnerCluster = *iterI;
-	TwoDSlidingFitResultMap::const_iterator fitIterI = slidingFitResultMap.find(pInnerCluster);
+        const Cluster *const pInnerCluster = *iterI;
+        TwoDSlidingFitResultMap::const_iterator fitIterI = slidingFitResultMap.find(pInnerCluster);
 
-	if (slidingFitResultMap.end() == fitIterI)
-	    continue;
+        if (slidingFitResultMap.end() == fitIterI)
+            continue;
 
-	for (ClusterVector::const_iterator iterJ = iterI, iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
-	{
-	    const Cluster *const pOuterCluster = *iterJ;
+        for (ClusterVector::const_iterator iterJ = iterI, iterJEnd = clusterVector.end(); iterJ != iterJEnd; ++iterJ)
+        {
+            const Cluster *const pOuterCluster = *iterJ;
 
-	    if (pInnerCluster == pOuterCluster)
-		continue;
+            if (pInnerCluster == pOuterCluster)
+            continue;
 
-	    TwoDSlidingFitResultMap::const_iterator fitIterJ = slidingFitResultMap.find(pOuterCluster);
+            TwoDSlidingFitResultMap::const_iterator fitIterJ = slidingFitResultMap.find(pOuterCluster);
 
-	    if (slidingFitResultMap.end() == fitIterJ)
-		continue;
+            if (slidingFitResultMap.end() == fitIterJ)
+            continue;
 
-	    if (!this->AreClustersAssociated(fitIterI->second, fitIterJ->second))
-		continue;
+            if (!this->AreClustersAssociated(fitIterI->second, fitIterJ->second))
+            continue;
 
-	    clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
-	    clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
-	}
+            clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
+            clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
+        }
     }
 }
 
@@ -112,10 +113,10 @@ bool CrossGapsAssociationAlgorithm::IsExtremalCluster(const bool isForward, cons
     const float testEnergy(pTestCluster->GetHadronicEnergy());
 
     if (isForward && ((testLayer > currentLayer) || ((testLayer == currentLayer) && (testEnergy > currentEnergy))))
-	return true;
+        return true;
 
     if (!isForward && ((testLayer < currentLayer) || ((testLayer == currentLayer) && (testEnergy > currentEnergy))))
-	return true;
+        return true;
 
     return false;
 }
@@ -125,10 +126,10 @@ bool CrossGapsAssociationAlgorithm::IsExtremalCluster(const bool isForward, cons
 bool CrossGapsAssociationAlgorithm::AreClustersAssociated(const TwoDSlidingFitResult &innerFitResult, const TwoDSlidingFitResult &outerFitResult) const
 {
     if (outerFitResult.GetCluster()->GetInnerPseudoLayer() < innerFitResult.GetCluster()->GetInnerPseudoLayer())
-	throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+        throw pandora::StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
     if (outerFitResult.GetCluster()->GetInnerPseudoLayer() < innerFitResult.GetCluster()->GetOuterPseudoLayer())
-	return false;
+        return false;
 
 //ClusterList tempList1, tempList2;
 //tempList1.insert(innerFitResult.GetCluster());
@@ -139,7 +140,7 @@ bool CrossGapsAssociationAlgorithm::AreClustersAssociated(const TwoDSlidingFitRe
 //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &tempList2, "OuterCluster", GREEN);
 //PandoraMonitoringApi::ViewEvent(this->GetPandora());
     return (this->IsAssociated(innerFitResult.GetGlobalMaxLayerPosition(), innerFitResult.GetGlobalMaxLayerDirection(), outerFitResult) &&
-	this->IsAssociated(outerFitResult.GetGlobalMinLayerPosition(), outerFitResult.GetGlobalMinLayerDirection() * -1.f, innerFitResult));
+        this->IsAssociated(outerFitResult.GetGlobalMinLayerPosition(), outerFitResult.GetGlobalMinLayerDirection() * -1.f, innerFitResult));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -152,29 +153,29 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(const CartesianVector &startPos
 
     for (unsigned int iSample = 0; iSample < m_maxSamplingPoints; ++iSample)
     {
-	++nSamplingPoints;
-	const CartesianVector samplingPoint(startPosition + startDirection * static_cast<float>(iSample) * m_sampleStepSize);
+        ++nSamplingPoints;
+        const CartesianVector samplingPoint(startPosition + startDirection * static_cast<float>(iSample) * m_sampleStepSize);
 
-	if (LArGeometryHelper::IsInGap(*this, samplingPoint, hitType))
-	{
+        if (LArGeometryHelper::IsInGap(this->GetPandora(), samplingPoint, hitType, m_gapTolerance))
+        {
 //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "samplingPoint_" + TypeToString(iSample), GRAY, 1);
-	    ++nGapSamplingPoints;
-	    nUnmatchedSampleRun = 0; // ATTN Choose to also reset run when entering gap region
-	    continue;
-	}
+            ++nGapSamplingPoints;
+            nUnmatchedSampleRun = 0; // ATTN Choose to also reset run when entering gap region
+            continue;
+        }
 
-	if (this->IsNearCluster(samplingPoint, targetFitResult))
-	{
+        if (this->IsNearCluster(samplingPoint, targetFitResult))
+        {
 //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "samplingPoint_" + TypeToString(iSample), RED, 1);
-	    ++nMatchedSamplingPoints;
-	    nUnmatchedSampleRun = 0;
-	}
-	else
-	{
+            ++nMatchedSamplingPoints;
+            nUnmatchedSampleRun = 0;
+        }
+        else
+        {
 //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "samplingPoint_" + TypeToString(iSample), ORANGE, 1);
-	    if (++nUnmatchedSampleRun > m_maxUnmatchedSampleRun)
-		break;
-	}
+            if (++nUnmatchedSampleRun > m_maxUnmatchedSampleRun)
+            break;
+        }
     }
 
     const float expectation((targetFitResult.GetGlobalMaxLayerPosition() - targetFitResult.GetGlobalMinLayerPosition()).GetMagnitude() / m_sampleStepSize);
@@ -184,7 +185,7 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(const CartesianVector &startPos
 //std::cout << "expectation " << expectation << " nMatchedSamplingPoints " << nMatchedSamplingPoints << std::endl;
 //PandoraMonitoringApi::ViewEvent(this->GetPandora());
     if ((nMatchedSamplingPoints > m_minMatchedSamplingPoints) || (matchedSamplingFraction > m_minMatchedSamplingFraction))
-	return true;
+        return true;
 
     return false;
 }
@@ -200,16 +201,16 @@ bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplin
 
     if (STATUS_CODE_SUCCESS == targetFitResult.GetGlobalFitPosition(rL, fitPosition))
     {
-	if ((fitPosition - samplingPoint).GetMagnitudeSquared() < m_maxOnClusterDistance * m_maxOnClusterDistance)
-	    return true;
+        if ((fitPosition - samplingPoint).GetMagnitudeSquared() < m_maxOnClusterDistance * m_maxOnClusterDistance)
+            return true;
     }
 
     CartesianVector fitPositionAtX(0.f, 0.f, 0.f);
 
     if (STATUS_CODE_SUCCESS == targetFitResult.GetGlobalFitPositionAtX(samplingPoint.GetX(), fitPositionAtX))
     {
-	if ((fitPositionAtX - samplingPoint).GetMagnitudeSquared() < m_maxOnClusterDistance * m_maxOnClusterDistance)
-	    return true;
+        if ((fitPositionAtX - samplingPoint).GetMagnitudeSquared() < m_maxOnClusterDistance * m_maxOnClusterDistance)
+            return true;
     }
 
     return false;
@@ -220,37 +221,40 @@ bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplin
 StatusCode CrossGapsAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MinClusterHits", m_minClusterHits));
+        "MinClusterHits", m_minClusterHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MinClusterLayers", m_minClusterLayers));
+        "MinClusterLayers", m_minClusterLayers));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"SlidingFitWindow", m_slidingFitWindow));
+        "SlidingFitWindow", m_slidingFitWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MaxSamplingPoints", m_maxSamplingPoints));
+        "MaxSamplingPoints", m_maxSamplingPoints));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"SampleStepSize", m_sampleStepSize));
+        "SampleStepSize", m_sampleStepSize));
 
     if (m_sampleStepSize < std::numeric_limits<float>::epsilon())
     {
-	std::cout << "CrossGapsAssociationAlgorithm: Invalid value for SampleStepSize " << m_sampleStepSize << std::endl;
-	throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        std::cout << "CrossGapsAssociationAlgorithm: Invalid value for SampleStepSize " << m_sampleStepSize << std::endl;
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MaxUnmatchedSampleRun", m_maxUnmatchedSampleRun));
+        "MaxUnmatchedSampleRun", m_maxUnmatchedSampleRun));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MaxOnClusterDistance", m_maxOnClusterDistance));
+        "MaxOnClusterDistance", m_maxOnClusterDistance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"MinMatchedSamplingFraction", m_minMatchedSamplingFraction));
+        "MinMatchedSamplingFraction", m_minMatchedSamplingFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "GapTolerance", m_gapTolerance));
 
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }

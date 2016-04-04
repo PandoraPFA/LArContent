@@ -29,7 +29,7 @@ public:
     class Factory : public pandora::AlgorithmFactory
     {
     public:
-	pandora::Algorithm *CreateAlgorithm() const;
+        pandora::Algorithm *CreateAlgorithm() const;
     };
 
     /**
@@ -62,7 +62,7 @@ private:
      *  @return boolean
      */
     bool IsAssociated(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection,
-	const TwoDSlidingFitResult &targetFitResult) const;
+        const TwoDSlidingFitResult &targetFitResult) const;
 
     /**
      *  @brief  Whether a sampling point lies near a target 2d sliding fit result
@@ -85,6 +85,7 @@ private:
     float           m_maxOnClusterDistance;         ///< The maximum distance between a sampling point and sliding fit to target cluster
     unsigned int    m_minMatchedSamplingPoints;     ///< Minimum number of matched sampling points to declare association
     float           m_minMatchedSamplingFraction;   ///< Minimum ratio between matched sampling points and expectation to declare association
+    float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

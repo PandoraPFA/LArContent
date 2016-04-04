@@ -472,7 +472,7 @@ void LArClusterHelper::GetExtremalCoordinates(const OrderedCaloHitList &orderedC
         {
             const CaloHit *const pCaloHit = *hitIter;
             coordinateList.push_back(pCaloHit->GetPositionVector());
-	}
+        }
     }
 
     return LArClusterHelper::GetExtremalCoordinates(coordinateList, innerCoordinate, outerCoordinate);
@@ -526,21 +526,21 @@ void LArClusterHelper::GetExtremalCoordinates(const CartesianPointList &coordina
         const CartesianVector &pos = *pIter;
 
         if (useX)
-	{
-	    if (((pos.GetX() - xMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetX() - xMax) > -std::numeric_limits<float>::epsilon()))
-	        candidateList.push_back(pos);
+        {
+            if (((pos.GetX() - xMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetX() - xMax) > -std::numeric_limits<float>::epsilon()))
+                candidateList.push_back(pos);
         }
 
         if (useY)
-	{
-	    if (((pos.GetY() - yMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetY() - yMax) > -std::numeric_limits<float>::epsilon()))
-	        candidateList.push_back(pos);
+        {
+            if (((pos.GetY() - yMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetY() - yMax) > -std::numeric_limits<float>::epsilon()))
+                candidateList.push_back(pos);
         }
 
         if (useZ)
-	{
-	    if (((pos.GetZ() - zMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetZ() - zMax) > -std::numeric_limits<float>::epsilon()))
-	        candidateList.push_back(pos);
+        {
+            if (((pos.GetZ() - zMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetZ() - zMax) > -std::numeric_limits<float>::epsilon()))
+                candidateList.push_back(pos);
         }
     }
 
@@ -596,7 +596,7 @@ void LArClusterHelper::GetCoordinateList(const Cluster *const pCluster, Cartesia
         {
             const CaloHit *const pCaloHit = *hitIter;
             coordinateList.push_back(pCaloHit->GetPositionVector());
-	}
+        }
     }
 }
 

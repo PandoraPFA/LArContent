@@ -36,15 +36,15 @@ void ShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const 
 
         // In cosmic mode, build showers from all daughter pfos, otherwise require that pfo is shower-like
         if (m_cosmicMode)
-	{
-	    if (LArPfoHelper::IsFinalState(pInputPfo))
-	        return;
-	}
-        else
-	{
-            if (!LArPfoHelper::IsShower(pInputPfo))
+        {
+            if (LArPfoHelper::IsFinalState(pInputPfo))
                 return;
-	}
+        }
+        else
+        {
+                if (!LArPfoHelper::IsShower(pInputPfo))
+                    return;
+        }
 
         // Build a new pfo
         LArShowerPfoFactory pfoFactory;
