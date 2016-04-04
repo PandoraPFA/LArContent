@@ -305,7 +305,7 @@ bool VertexSelectionAlgorithm::IsVertexOnHit(const Vertex *const pVertex, const 
 
 bool VertexSelectionAlgorithm::IsVertexInGap(const Vertex *const pVertex, const HitType hitType) const
 {
-    if (m_useDetectorGaps)
+    if (!m_useDetectorGaps)
         return false;
 
     return LArGeometryHelper::IsInGap3D(this->GetPandora(), pVertex->GetPosition(), hitType, m_gapTolerance);
