@@ -414,7 +414,7 @@ bool LArGeometryHelper::IsInGap3D(const Pandora &pandora, const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArGeometryHelper::CalcGapDeltaZ(const Pandora &pandora, const float minZ, const float maxZ, const HitType hitType)
+float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float minZ, const float maxZ, const HitType hitType)
 {
     if (maxZ - minZ < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
