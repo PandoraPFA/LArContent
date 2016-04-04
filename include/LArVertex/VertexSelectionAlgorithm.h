@@ -358,6 +358,9 @@ private:
     float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
 
     bool            m_enableFolding;                ///< Whether to enable folding of -pi -> +pi phi distribution into 0 -> +pi region only
+
+    bool            m_useDetectorGaps;              ///< Whether to account for registered detector gaps in vertex selection
+    float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

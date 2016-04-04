@@ -38,7 +38,9 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_maxHitVertexDisplacement1D(100.f),
     m_minCandidateDisplacement(2.f),
     m_minCandidateScoreFraction(0.5f),
-    m_enableFolding(true)
+    m_enableFolding(true),
+    m_useDetectorGaps(true),
+    m_gapTolerance(0.f)
 {
 }
 
@@ -303,15 +305,10 @@ bool VertexSelectionAlgorithm::IsVertexOnHit(const Vertex *const pVertex, const 
 
 bool VertexSelectionAlgorithm::IsVertexInGap(const Vertex *const pVertex, const HitType hitType) const
 {
-    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+    if (m_useDetectorGaps)
+        return false;
 
-    for (const DetectorGap *const pDetectorGap : PandoraContentApi::GetGeometry(*this)->GetDetectorGapList())
-    {
-        if (pDetectorGap->IsInGap(vertexPosition2D, hitType))
-            return true;
-    }
-
-    return false;
+    return LArGeometryHelper::IsInGap3D(this->GetPandora(), pVertex->GetPosition(), hitType, m_gapTolerance);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -510,6 +507,12 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnableFolding", m_enableFolding));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseDetectorGaps", m_useDetectorGaps));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "GapTolerance", m_gapTolerance));
 
     return STATUS_CODE_SUCCESS;
 }
