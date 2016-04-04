@@ -40,7 +40,9 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_minCandidateScoreFraction(0.5f),
     m_enableFolding(true),
     m_useDetectorGaps(true),
-    m_gapTolerance(0.f)
+    m_gapTolerance(0.f),
+    m_isEmptyViewAcceptable(true),
+    m_minVertexAcceptableViews(3)
 {
 }
 
@@ -121,14 +123,19 @@ void VertexSelectionAlgorithm::FilterVertexList(const VertexList *const pInputVe
 {
     for (const Vertex *const pVertex : *pInputVertexList)
     {
-        if ((!kdTreeU.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU) && !this->IsVertexInGap(pVertex, TPC_VIEW_U)) ||
-            (!kdTreeV.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV) && !this->IsVertexInGap(pVertex, TPC_VIEW_V)) ||
-            (!kdTreeW.empty() && !this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW) && !this->IsVertexInGap(pVertex, TPC_VIEW_W)))
-        {
-            continue;
-        }
+        unsigned int nAcceptableViews(0);
 
-        (void) filteredVertexList.insert(pVertex);
+        if ((m_isEmptyViewAcceptable && kdTreeU.empty()) || this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU) || this->IsVertexInGap(pVertex, TPC_VIEW_U))
+            ++nAcceptableViews;
+
+        if ((m_isEmptyViewAcceptable && kdTreeV.empty()) || this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV) || this->IsVertexInGap(pVertex, TPC_VIEW_V))
+            ++nAcceptableViews;
+
+        if ((m_isEmptyViewAcceptable && kdTreeW.empty()) || this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW) || this->IsVertexInGap(pVertex, TPC_VIEW_W))
+            ++nAcceptableViews;
+
+        if (nAcceptableViews >= m_minVertexAcceptableViews)
+            (void) filteredVertexList.insert(pVertex);
     }
 }
 
@@ -513,6 +520,12 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "GapTolerance", m_gapTolerance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IsEmptyViewAcceptable", m_isEmptyViewAcceptable));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinVertexAcceptableViews", m_minVertexAcceptableViews));
 
     return STATUS_CODE_SUCCESS;
 }
