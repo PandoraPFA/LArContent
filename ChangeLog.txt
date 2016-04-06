@@ -1,4 +1,14 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-07-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Add IsInGap, IsInGap3D and CalculateGapDeltaZ functions to LArGeometryHelper.
+Add detector gap and number of acceptable views treatment to VertexSelection algorithm.
+Add detector gap treatment to ClusterCharacterisation algorithm.
+Add new ClusterExtension algorithm to join clusters across detector gaps.
+Add new CrossGapsAssociation algorithm to join clusters across detector gaps.
+Add new CosmicRayTrackRecovery algorithm to pick up cosmic ray events with a long track in one view and broken tracks in other views.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-06-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Add an association between track trajectory points and calo hits (so that it can be persisted into LArSoft)
