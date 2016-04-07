@@ -9,6 +9,7 @@
 #include "Managers/PluginManager.h"
 #include "Managers/GeometryManager.h"
 
+#include "Objects/CartesianVector.h"
 #include "Objects/DetectorGap.h"
 
 #include "Pandora/Pandora.h"
