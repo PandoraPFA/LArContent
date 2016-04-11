@@ -37,10 +37,14 @@ void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
     const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
 
-    for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
-    {
-        const Cluster *const pClusterP(*pIter);
+    ClusterVector sortedPfoClusters(pfoClusters.begin(), pfoClusters.end());
+    std::sort(sortedPfoClusters.begin(), sortedPfoClusters.end(), LArClusterHelper::SortByNHits);
 
+    ClusterVector sortedRemnantClusters(remnantClusters.begin(), remnantClusters.end());
+    std::sort(sortedRemnantClusters.begin(), sortedRemnantClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pClusterP : sortedPfoClusters)
+    {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterP));
         const CartesianVector vertexPosition2D(!pVertex ? CartesianVector(0.f, 0.f, 0.f) :
             LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
@@ -48,10 +52,8 @@ void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
         const float innerPV((vertexPosition2D - pClusterP->GetCentroid(pClusterP->GetInnerPseudoLayer())).GetMagnitude());
         const float outerPV((vertexPosition2D - pClusterP->GetCentroid(pClusterP->GetOuterPseudoLayer())).GetMagnitude());
 
-        for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
+        for (const Cluster *const pClusterR : sortedRemnantClusters)
         {
-            const Cluster *const pClusterR(*rIter);
-
             if (pClusterR->GetNCaloHits() < m_minHitsInCluster)
                 continue;
 

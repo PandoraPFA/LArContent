@@ -185,9 +185,18 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
     {
         m_overlapTensor.SetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
-    else if(newOverlapResult.GetFragmentCaloHitList().size() > oldOverlapResult.GetFragmentCaloHitList().size())
+    else if (newOverlapResult.GetFragmentCaloHitList().size() > oldOverlapResult.GetFragmentCaloHitList().size())
     {
         m_overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
+    }
+    else if (newOverlapResult.GetFragmentCaloHitList().size() == oldOverlapResult.GetFragmentCaloHitList().size())
+    {
+        float newEnergySum(0.f), oldEnergySum(0.f);
+        for (const CaloHit *const pCaloHit : newOverlapResult.GetFragmentCaloHitList()) newEnergySum += pCaloHit->GetHadronicEnergy();
+        for (const CaloHit *const pCaloHit : oldOverlapResult.GetFragmentCaloHitList()) oldEnergySum += pCaloHit->GetHadronicEnergy();
+
+        if (newEnergySum > oldEnergySum)
+            m_overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
 }
 
@@ -455,13 +464,15 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &
 
     pBestMatchedCluster = NULL;
     unsigned int bestClusterMatchedHits(0);
+    float tieBreakerBestEnergy(0.f);
 
     for (ClusterToMatchedHitsMap::const_iterator iter = clusterToMatchedHitsMap.begin(), iterEnd = clusterToMatchedHitsMap.end(); iter != iterEnd; ++iter)
     {
-        if (iter->second > bestClusterMatchedHits)
+        if ((iter->second > bestClusterMatchedHits) || ((iter->second == bestClusterMatchedHits) && (iter->first->GetHadronicEnergy() > tieBreakerBestEnergy)))
         {
             pBestMatchedCluster = iter->first;
             bestClusterMatchedHits = iter->second;
+            tieBreakerBestEnergy = iter->first->GetHadronicEnergy();
         }
     }
 

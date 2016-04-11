@@ -43,10 +43,10 @@ private:
     /**
      *  @brief Select calo hits for clustering
      *
-     *  @param inputList The input list of calo hits
+     *  @param pInputList The input list of calo hits
      *  @param outputList The output list of selected calo hits
      */
-    void SelectCaloHits(const pandora::CaloHitList* inputList, pandora::CaloHitList &outputList) const;
+    void SelectCaloHits(const pandora::CaloHitList *const pInputList, pandora::CaloHitList &outputList) const;
 
     /**
      *  @brief Create map of associations between calo hits
@@ -79,7 +79,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float                m_clusteringWindowSquared;      ///< Maximum distance (squared) for two hits to be joined
+    float   m_clusteringWindowSquared;      ///< Maximum distance (squared) for two hits to be joined
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

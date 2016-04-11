@@ -202,6 +202,8 @@ void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const
         {
         }
     }
+
+    std::sort(seedClusters.begin(), seedClusters.end(), ShowerGrowingAlgorithm::SortClusters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

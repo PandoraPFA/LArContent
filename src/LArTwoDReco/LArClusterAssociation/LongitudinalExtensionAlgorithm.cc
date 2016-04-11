@@ -45,6 +45,8 @@ void LongitudinalExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *c
 
         clusterVector.push_back(pCluster);
     }
+
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

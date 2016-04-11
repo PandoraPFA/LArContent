@@ -185,6 +185,11 @@ void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inpu
             longVector.push_back(pCluster);
         }
     }
+
+    std::sort(shortVector.begin(), shortVector.end(), LArClusterHelper::SortByNHits);
+    std::sort(transverseMediumVector.begin(), transverseMediumVector.end(), LArClusterHelper::SortByNHits);
+    std::sort(longitudinalMediumVector.begin(), longitudinalMediumVector.end(), LArClusterHelper::SortByNHits);
+    std::sort(longVector.begin(), longVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -218,7 +223,7 @@ void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterToClustersM
             const Cluster *const pClusterJ = *iterJ;
 
             if (pClusterI == pClusterJ)
-            continue;
+                continue;
 
             if (this->IsAssociated(true, pClusterI, pClusterJ, nearbyClusters))
             {
@@ -595,71 +600,70 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
     // which will remove association A->B from the input map if an association A->C and C->B
     // already exists in the map.
 
-    for (ClusterAssociationMap::const_iterator iterFirst = firstAssociationMap.begin(), iterEndFirst = firstAssociationMap.end(); iterFirst != iterEndFirst; ++iterFirst)
+    ClusterVector sortedClusters;
+    for (const auto &mapEntry : firstAssociationMap) sortedClusters.push_back(mapEntry.first);
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : sortedClusters)
     {
-        const Cluster *const pCluster = iterFirst->first;
+        const ClusterAssociation &firstAssociation(firstAssociationMap.at(pCluster));
+
+        ClusterVector sortedOuterClusters(firstAssociation.m_forwardAssociations.begin(), firstAssociation.m_forwardAssociations.end());
+        std::sort(sortedOuterClusters.begin(), sortedOuterClusters.end(), LArClusterHelper::SortByNHits);
+
+        ClusterVector sortedInnerClusters(firstAssociation.m_backwardAssociations.begin(), firstAssociation.m_backwardAssociations.end());
+        std::sort(sortedInnerClusters.begin(), sortedInnerClusters.end(), LArClusterHelper::SortByNHits);
 
         ClusterAssociationMap::const_iterator iterSecond = secondAssociationMap.find(pCluster);
+        ClusterVector sortedMiddleClusters;
 
-        // Remove double-counting in forward associations
-        for (ClusterList::const_iterator iterOuter = iterFirst->second.m_forwardAssociations.begin(), iterEndOuter = iterFirst->second.m_forwardAssociations.end(); iterOuter != iterEndOuter; ++iterOuter)
+        if (secondAssociationMap.end() != iterSecond)
         {
-            const Cluster *const pOuterCluster = *iterOuter;
+            sortedMiddleClusters.insert(sortedMiddleClusters.end(), iterSecond->second.m_forwardAssociations.begin(), iterSecond->second.m_forwardAssociations.end());
+            std::sort(sortedMiddleClusters.begin(), sortedMiddleClusters.end(), LArClusterHelper::SortByNHits);
+        }
 
+        for (const Cluster *const pOuterCluster : sortedOuterClusters)
+        {
             bool isNeighbouringCluster(true);
 
-            if (secondAssociationMap.end() != iterSecond)
+            for (const Cluster *const pMiddleCluster : sortedMiddleClusters)
             {
-                for (ClusterList::const_iterator iterMiddle = iterSecond->second.m_forwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_forwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
+                ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
+                if (secondAssociationMapSwapped.end() == iterSecondCheck)
+                    continue;
+
+                if (iterSecondCheck->second.m_forwardAssociations.count(pOuterCluster) > 0)
                 {
-                    const Cluster *const pMiddleCluster = *iterMiddle;
-
-                    ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
-                    if (secondAssociationMapSwapped.end() == iterSecondCheck)
-                        continue;
-
-                    if (iterSecondCheck->second.m_forwardAssociations.count(pOuterCluster) > 0)
-                    {
-                        isNeighbouringCluster = false;
-                        break;
-                    }
+                    isNeighbouringCluster = false;
+                    break;
                 }
             }
 
             if (isNeighbouringCluster)
-            clusterAssociationMap[pCluster].m_forwardAssociations.insert(pOuterCluster);
+                clusterAssociationMap[pCluster].m_forwardAssociations.insert(pOuterCluster);
         }
 
-
-        // Remove double-counting in backward associations
-        for (ClusterList::const_iterator iterInner = iterFirst->second.m_backwardAssociations.begin(), iterEndInner = iterFirst->second.m_backwardAssociations.end(); iterInner != iterEndInner; ++iterInner)
+        for (const Cluster *const pInnerCluster : sortedInnerClusters)
         {
-            const Cluster *const pInnerCluster = *iterInner;
-
             bool isNeighbouringCluster(true);
 
-            if (secondAssociationMap.end() != iterSecond)
+            for (const Cluster *const pMiddleCluster : sortedMiddleClusters)
             {
-                for (ClusterList::const_iterator iterMiddle = iterSecond->second.m_backwardAssociations.begin(), iterEndMiddle = iterSecond->second.m_backwardAssociations.end(); iterMiddle != iterEndMiddle; ++iterMiddle)
+                ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
+                if (secondAssociationMapSwapped.end() == iterSecondCheck)
+                    continue;
+
+                if (iterSecondCheck->second.m_backwardAssociations.count(pInnerCluster) > 0)
                 {
-                    const Cluster *const pMiddleCluster = *iterMiddle;
-
-                    ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
-                    if (secondAssociationMapSwapped.end() == iterSecondCheck)
-                        continue;
-
-                    if (iterSecondCheck->second.m_backwardAssociations.count(pInnerCluster) > 0)
-                    {
-                        isNeighbouringCluster = false;
-                        break;
-                    }
+                    isNeighbouringCluster = false;
+                    break;
                 }
             }
 
             if (isNeighbouringCluster)
                 clusterAssociationMap[pCluster].m_backwardAssociations.insert(pInnerCluster);
         }
-
     }
 }
 
@@ -671,18 +675,26 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
     // If A is associated to B through both a backward and forward association (very bad!),
     // try to rationalise this through majority voting, otherwise remove the association.
 
-    for (ClusterAssociationMap::const_iterator iter = inputAssociationMap.begin(), iterEnd = inputAssociationMap.end(); iter != iterEnd; ++iter)
+    ClusterVector sortedClusters;
+    for (const auto &mapEntry : inputAssociationMap) sortedClusters.push_back(mapEntry.first);
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : sortedClusters)
     {
-        const Cluster *const pCluster = iter->first;
+        const ClusterAssociation &inputAssociation(inputAssociationMap.at(pCluster));
+
+        ClusterVector sortedForwardClusters(inputAssociation.m_forwardAssociations.begin(), inputAssociation.m_forwardAssociations.end());
+        std::sort(sortedForwardClusters.begin(), sortedForwardClusters.end(), LArClusterHelper::SortByNHits);
+
+        ClusterVector sortedBackwardClusters(inputAssociation.m_backwardAssociations.begin(), inputAssociation.m_backwardAssociations.end());
+        std::sort(sortedBackwardClusters.begin(), sortedBackwardClusters.end(), LArClusterHelper::SortByNHits);
 
         // Symmetrise forward associations
-        for (ClusterList::const_iterator iterForward = iter->second.m_forwardAssociations.begin(), iterEndForward = iter->second.m_forwardAssociations.end(); iterForward != iterEndForward; ++iterForward)
+        for (const Cluster *const pForwardCluster : sortedForwardClusters)
         {
-            const Cluster *const pForwardCluster = *iterForward;
-
             int nCounter(+1);
 
-            if (iter->second.m_backwardAssociations.count(pForwardCluster))
+            if (inputAssociation.m_backwardAssociations.count(pForwardCluster))
                 --nCounter;
 
             ClusterAssociationMap::const_iterator iterCheck = inputAssociationMap.find(pForwardCluster);
@@ -707,14 +719,12 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
         }
 
         // Symmetrise backward associations
-        for (ClusterList::const_iterator iterBackward = iter->second.m_backwardAssociations.begin(), iterEndBackward = iter->second.m_backwardAssociations.end(); iterBackward != iterEndBackward; ++iterBackward)
+        for (const Cluster *const pBackwardCluster : sortedBackwardClusters)
         {
-            const Cluster *const pBackwardCluster = *iterBackward;
-
             int nCounter(-1);
 
-            if (iter->second.m_forwardAssociations.count(pBackwardCluster))
-            ++nCounter;
+            if (inputAssociation.m_forwardAssociations.count(pBackwardCluster))
+                ++nCounter;
 
             ClusterAssociationMap::const_iterator iterCheck = inputAssociationMap.find(pBackwardCluster);
             if (inputAssociationMap.end() != iterCheck)
@@ -772,20 +782,20 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
         {
             for (CaloHitList::const_iterator iterK = iterJ->second->begin(), iterEndK = iterJ->second->end(); iterK != iterEndK; ++iterK)
             {
-            const CaloHit *const pCaloHit = *iterK;
+                const CaloHit *const pCaloHit = *iterK;
 
-            if (pCaloHit->GetPositionVector().GetX() < minX)
-                minX = pCaloHit->GetPositionVector().GetX();
+                if (pCaloHit->GetPositionVector().GetX() < minX)
+                    minX = pCaloHit->GetPositionVector().GetX();
 
-            if (pCaloHit->GetPositionVector().GetX() > maxX)
-                maxX = pCaloHit->GetPositionVector().GetX();
+                if (pCaloHit->GetPositionVector().GetX() > maxX)
+                    maxX = pCaloHit->GetPositionVector().GetX();
 
-            Swzz += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetZ();
-            Swxx += pCaloHit->GetPositionVector().GetX() * pCaloHit->GetPositionVector().GetX();
-            Swzx += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetX();
-            Swz  += pCaloHit->GetPositionVector().GetZ();
-            Swx  += pCaloHit->GetPositionVector().GetX();
-            Sw   += 1.f;
+                Swzz += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetZ();
+                Swxx += pCaloHit->GetPositionVector().GetX() * pCaloHit->GetPositionVector().GetX();
+                Swzx += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetX();
+                Swz  += pCaloHit->GetPositionVector().GetZ();
+                Swx  += pCaloHit->GetPositionVector().GetX();
+                Sw   += 1.f;
             }
         }
     }

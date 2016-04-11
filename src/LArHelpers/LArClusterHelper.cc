@@ -602,35 +602,15 @@ void LArClusterHelper::GetCoordinateList(const Cluster *const pCluster, Cartesia
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArClusterHelper::SortByInnerLayer(const Cluster *const pLhs, const Cluster *const pRhs)
-{
-    const unsigned int innerLayerLhs(pLhs->GetInnerPseudoLayer());
-    const unsigned int innerLayerRhs(pRhs->GetInnerPseudoLayer());
-
-    if( innerLayerLhs != innerLayerRhs )
-      return (innerLayerLhs < innerLayerRhs);
-
-    // Use SortByNOccupiedLayers method to resolve ties
-    return SortByNOccupiedLayers(pLhs, pRhs);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool LArClusterHelper::SortByNOccupiedLayers(const Cluster *const pLhs, const Cluster *const pRhs)
 {
     const unsigned int nOccupiedLayersLhs(pLhs->GetOrderedCaloHitList().size());
     const unsigned int nOccupiedLayersRhs(pRhs->GetOrderedCaloHitList().size());
 
     if (nOccupiedLayersLhs != nOccupiedLayersRhs)
-    return (nOccupiedLayersLhs > nOccupiedLayersRhs);
+        return (nOccupiedLayersLhs > nOccupiedLayersRhs);
 
-    const unsigned int layerSpanLhs(pLhs->GetOuterPseudoLayer() - pLhs->GetInnerPseudoLayer());
-    const unsigned int layerSpanRhs(pRhs->GetOuterPseudoLayer() - pRhs->GetInnerPseudoLayer());
-
-    if (layerSpanLhs != layerSpanRhs)
-        return (layerSpanLhs > layerSpanRhs);
-
-    return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
+    return SortByNHits(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -643,18 +623,64 @@ bool LArClusterHelper::SortByNHits(const Cluster *const pLhs, const Cluster *con
     if (nHitsLhs != nHitsRhs)
         return (nHitsLhs > nHitsRhs);
 
+    return SortByLayerSpan(pLhs, pRhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortByLayerSpan(const Cluster *const pLhs, const Cluster *const pRhs)
+{
     const unsigned int layerSpanLhs(pLhs->GetOuterPseudoLayer() - pLhs->GetInnerPseudoLayer());
     const unsigned int layerSpanRhs(pRhs->GetOuterPseudoLayer() - pRhs->GetInnerPseudoLayer());
 
     if (layerSpanLhs != layerSpanRhs)
         return (layerSpanLhs > layerSpanRhs);
 
+    return SortByInnerLayer(pLhs, pRhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortByInnerLayer(const Cluster *const pLhs, const Cluster *const pRhs)
+{
+    const unsigned int innerLayerLhs(pLhs->GetInnerPseudoLayer());
+    const unsigned int innerLayerRhs(pRhs->GetInnerPseudoLayer());
+
+    if (innerLayerLhs != innerLayerRhs)
+      return (innerLayerLhs < innerLayerRhs);
+
+    return SortByPosition(pLhs, pRhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortByPosition(const Cluster *const pLhs, const Cluster *const pRhs)
+{
+    const CartesianVector deltaPosition(pRhs->GetCentroid(pRhs->GetInnerPseudoLayer()) - pLhs->GetCentroid(pLhs->GetInnerPseudoLayer()));
+
+    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPosition.GetY()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
+
+    // Use pulse height to resolve ties
+    return SortByPulseHeight(pLhs, pRhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortByPulseHeight(const Cluster *const pLhs, const Cluster *const pRhs)
+{
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArClusterHelper::SortByPosition(const CaloHit *const pLhs, const CaloHit *const pRhs)
+bool LArClusterHelper::SortHitsByPosition(const CaloHit *const pLhs, const CaloHit *const pRhs)
 {
     const CartesianVector deltaPosition(pRhs->GetPositionVector() - pLhs->GetPositionVector());
     
@@ -668,12 +694,12 @@ bool LArClusterHelper::SortByPosition(const CaloHit *const pLhs, const CaloHit *
         return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
 
     // Use pulse height to resolve ties
-    return SortByPulseHeight(pLhs, pRhs);
+    return SortHitsByPulseHeight(pLhs, pRhs);
 }
   
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArClusterHelper::SortByPulseHeight(const CaloHit *const pLhs, const CaloHit *const pRhs)
+bool LArClusterHelper::SortHitsByPulseHeight(const CaloHit *const pLhs, const CaloHit *const pRhs)
 {
     // TODO: Think about the correct energy to use here (should they ever be different)
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());

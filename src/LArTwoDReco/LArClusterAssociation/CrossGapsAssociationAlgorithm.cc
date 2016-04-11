@@ -81,15 +81,15 @@ void CrossGapsAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterV
             const Cluster *const pOuterCluster = *iterJ;
 
             if (pInnerCluster == pOuterCluster)
-            continue;
+                continue;
 
             TwoDSlidingFitResultMap::const_iterator fitIterJ = slidingFitResultMap.find(pOuterCluster);
 
             if (slidingFitResultMap.end() == fitIterJ)
-            continue;
+                continue;
 
             if (!this->AreClustersAssociated(fitIterI->second, fitIterJ->second))
-            continue;
+                continue;
 
             clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
             clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);

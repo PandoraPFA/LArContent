@@ -45,11 +45,16 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
 
     const Vertex *const pVertex(*(pVertexList->begin()));
 
-    for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
+    ClusterVector sortedPfoClusters(pfoClusters.begin(), pfoClusters.end());
+    std::sort(sortedPfoClusters.begin(), sortedPfoClusters.end(), LArClusterHelper::SortByNHits);
+
+    ClusterVector sortedRemnantClusters(remnantClusters.begin(), remnantClusters.end());
+    std::sort(sortedRemnantClusters.begin(), sortedRemnantClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pPfoCluster : sortedPfoClusters)
     {
         try
         {
-            const Cluster *const pPfoCluster(*pIter);
             const TwoDSlidingShowerFitResult showerFitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
             const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
@@ -108,9 +113,8 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
             }
 
             // Bounded fraction calculation
-            for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
+            for (const Cluster *const pRemnantCluster : sortedRemnantClusters)
             {
-                const Cluster *const pRemnantCluster(*rIter);
                 const unsigned int nHits(pRemnantCluster->GetNCaloHits());
 
                 unsigned int nMatchedHits(0);

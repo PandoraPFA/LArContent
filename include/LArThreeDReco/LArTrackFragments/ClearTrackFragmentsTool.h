@@ -141,6 +141,16 @@ private:
     void GetAffectedKeyClusters(const TensorType &overlapTensor, const pandora::ClusterList &unavailableClusters,
         pandora::ClusterList &affectedKeyClusters) const;
 
+    /**
+     *  @brief  Sort element list iterators by associated overlap operator<
+     *
+     *  @param  lhs first iterator
+     *  @param  rhs second iterator
+     * 
+     *  @return boolean
+     */
+    static bool SortByOverlapResult(TensorType::ElementList::const_iterator lhs, TensorType::ElementList::const_iterator rhs);
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points

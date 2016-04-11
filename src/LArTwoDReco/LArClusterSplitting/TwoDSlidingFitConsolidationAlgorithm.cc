@@ -49,7 +49,15 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromClusters(clustersToContract, unavailableClusters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToClusters(clustersToExpand, unavailableClusters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(clustersToContract, unavailableClusters));
-
+const ClusterList *pClusterList1(nullptr);
+if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pClusterList1))
+{
+    ClusterVector clusterVector1(pClusterList1->begin(), pClusterList1->end());
+    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
+    for (const Cluster *const pCluster1 : clusterVector1)
+        std::cout << "Alg " << this->GetType() << " Cluster " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
+         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
+}
     return STATUS_CODE_SUCCESS;
 }
 
@@ -72,12 +80,12 @@ void TwoDSlidingFitConsolidationAlgorithm::SortInputClusters(const ClusterList *
     }
 
     std::sort(trackClusters.begin(), trackClusters.end(), LArClusterHelper::SortByNHits);
+    std::sort(showerClusters.begin(), showerClusters.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector &trackClusters,
-    TwoDSlidingFitResultList &slidingFitResultList) const
+void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterVector &trackClusters, TwoDSlidingFitResultList &slidingFitResultList) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -98,13 +106,12 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract,
-    ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterList &unavailableClusters) const
 {
-    for (ClusterToHitMap::const_iterator iterI = clustersToContract.begin(), iterEndI = clustersToContract.end(); iterI != iterEndI; ++iterI)
+    for (const ClusterToHitMap::value_type &mapEntry : clustersToContract)
     {
-        const Cluster *const pCluster = iterI->first;
-        const CaloHitList &caloHitListToRemove = iterI->second;
+        const Cluster *const pCluster = mapEntry.first;
+        const CaloHitList &caloHitListToRemove = mapEntry.second;
 
         if (caloHitListToRemove.empty())
             continue;
@@ -114,23 +121,23 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 
         CaloHitList caloHitList, caloHitListToKeep;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
+
+        for (const CaloHit *const pCaloHit : caloHitList)
         {
-            const CaloHit *const pCaloHit = *iterJ;
             if (!caloHitListToRemove.count(pCaloHit))
                 caloHitListToKeep.insert(pCaloHit);
         }
 
         if (caloHitListToKeep.empty())
         {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pCluster));
+            // ATTN clustersToContract and unavailable clusters now contain dangling pointers
             unavailableClusters.insert(pCluster);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*this, pCluster));
             continue;
         }
 
-        for (CaloHitList::const_iterator iterJ = caloHitListToRemove.begin(), iterEndJ = caloHitListToRemove.end(); iterJ != iterEndJ; ++iterJ)
+        for (const CaloHit *const pCaloHit : caloHitListToRemove)
         {
-            const CaloHit *const pCaloHit = *iterJ;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pCluster, pCaloHit));
         }
     }
@@ -140,13 +147,12 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand,
-    ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterList &unavailableClusters) const
 {
-    for (ClusterToHitMap::const_iterator iterI = clustersToExpand.begin(), iterEndI = clustersToExpand.end(); iterI != iterEndI; ++iterI)
+    for (const ClusterToHitMap::value_type &mapEntry : clustersToExpand)
     {
-        const Cluster *const pCluster = iterI->first;
-        const CaloHitList &caloHitList = iterI->second;
+        const Cluster *const pCluster = mapEntry.first;
+        const CaloHitList &caloHitList = mapEntry.second;
 
         if (caloHitList.empty())
             continue;
@@ -156,9 +162,8 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
 
         unavailableClusters.insert(pCluster);
 
-        for (CaloHitList::const_iterator iterJ = caloHitList.begin(), iterEndJ = caloHitList.end(); iterJ != iterEndJ; ++iterJ)
+        for (const CaloHit *const pCaloHit : caloHitList)
         {
-            const CaloHit *const pCaloHit = *iterJ;
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHit));
         }
     }
@@ -168,21 +173,24 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersToRebuild,
-    const ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersToRebuild, const ClusterList &unavailableClusters) const
 {
     if (clustersToRebuild.empty())
         return STATUS_CODE_SUCCESS;
 
-    for (ClusterToHitMap::const_iterator iter = clustersToRebuild.begin(), iterEnd = clustersToRebuild.end(); iter != iterEnd; ++iter)
+    ClusterVector sortedClusters;
+    for (const auto &mapEntry : clustersToRebuild)
     {
-        const Cluster *const pCluster = iter->first;
-        const CaloHitList &caloHitList = iter->second;
+        if (!unavailableClusters.count(mapEntry.first))
+            sortedClusters.push_back(mapEntry.first);
+    }
 
-        const Cluster *const pClusterToDelete = pCluster;
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
-        if (unavailableClusters.count(pClusterToDelete))
-            continue;
+    for (const Cluster *const pCluster : sortedClusters)
+    {
+        const CaloHitList &caloHitList(clustersToRebuild.at(pCluster));
+        const Cluster *const pClusterToDelete(pCluster);
 
         if (caloHitList.empty())
             continue;

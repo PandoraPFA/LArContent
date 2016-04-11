@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
 
 using namespace pandora;
@@ -46,13 +48,12 @@ StatusCode SimpleClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleClusterCreationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitList, CaloHitList &caloHitList) const
+void SimpleClusterCreationAlgorithm::SelectCaloHits(const CaloHitList *const pInputList, CaloHitList &outputList) const
 {
-    for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
+    for (const CaloHit *const pCaloHit : *pInputList)
     {
-        const CaloHit *const pCaloHit = *iter;
         if (PandoraContentApi::IsAvailable(*this, pCaloHit))
-            caloHitList.insert(pCaloHit);
+            outputList.insert(pCaloHit);
     }
 }
 
@@ -60,14 +61,10 @@ void SimpleClusterCreationAlgorithm::SelectCaloHits(const CaloHitList *const pCa
 
 void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitList &caloHitList, HitAssociationMap &hitAssociationMap) const
 {
-    for (CaloHitList::const_iterator iterI = caloHitList.begin(), iterEndI = caloHitList.end(); iterI != iterEndI; ++iterI)
+    for (const CaloHit *const pCaloHitI : caloHitList)
     {
-        const CaloHit *const pCaloHitI = *iterI;
-
-        for (CaloHitList::const_iterator iterJ = iterI, iterEndJ = iterEndI; iterJ != iterEndJ; ++iterJ)
+        for (const CaloHit *const pCaloHitJ : caloHitList)
         {
-            const CaloHit *const pCaloHitJ = *iterJ;
-
             if (pCaloHitI == pCaloHitJ)
                 continue;
 
@@ -85,11 +82,11 @@ void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitList &calo
 void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitList, const HitAssociationMap &hitAssociationMap) const
 {
     CaloHitList vetoList;
+    CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
+    std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
 
-    for (CaloHitList::const_iterator iterI = caloHitList.begin(), iterEndI = caloHitList.end(); iterI != iterEndI; ++iterI)
+    for (const CaloHit *const pSeedCaloHit : caloHitVector)
     {
-        const CaloHit *const pSeedCaloHit = *iterI;
-
         if (vetoList.count(pSeedCaloHit))
             continue;
 
@@ -102,10 +99,8 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitLi
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
         vetoList.insert(pSeedCaloHit);
 
-        for (CaloHitList::const_iterator iterJ = mergeList.begin(), iterEndJ = mergeList.end(); iterJ != iterEndJ; ++iterJ)
+        for (const CaloHit *const pAssociatedCaloHit : mergeList)
         {
-            const CaloHit *const pAssociatedCaloHit = *iterJ;
-
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pAssociatedCaloHit));
             vetoList.insert(pAssociatedCaloHit);
         }
@@ -124,10 +119,11 @@ void SimpleClusterCreationAlgorithm::CollectAssociatedHits(const CaloHit *const 
     if (iter1 == hitAssociationMap.end())
         return;
 
-    for (CaloHitList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
-    {
-        const CaloHit *const pAssociatedCaloHit = *iter2;
+    CaloHitVector caloHitVector(iter1->second.begin(), iter1->second.end());
+    std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
 
+    for (const CaloHit *const pAssociatedCaloHit : caloHitVector)
+    {
         if (pAssociatedCaloHit == pSeedCaloHit)
             continue;
 
@@ -136,8 +132,6 @@ void SimpleClusterCreationAlgorithm::CollectAssociatedHits(const CaloHit *const 
 
         this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, vetoList, mergeList);
     }
-
-    return;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 

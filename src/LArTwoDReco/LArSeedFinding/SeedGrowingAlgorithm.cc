@@ -20,8 +20,8 @@ namespace lar_content
 void SeedGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pParticleSeed, ClusterVector &candidateClusters,
     ClusterUsageMap &forwardUsageMap, ClusterUsageMap &backwardUsageMap) const
 {
-    ClusterList currentSeedAssociations, newSeedAssociations;
-    currentSeedAssociations.insert(pParticleSeed);
+    ClusterVector currentSeedAssociations, newSeedAssociations;
+    currentSeedAssociations.push_back(pParticleSeed);
 
     unsigned int associationOrder(1);
 
@@ -34,7 +34,7 @@ void SeedGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pParticle
             if (NULL == pCandidateCluster)
                 continue;
 
-            for (ClusterList::iterator iterJ = currentSeedAssociations.begin(), iterJEnd = currentSeedAssociations.end(); iterJ != iterJEnd; ++iterJ)
+            for (ClusterVector::iterator iterJ = currentSeedAssociations.begin(), iterJEnd = currentSeedAssociations.end(); iterJ != iterJEnd; ++iterJ)
             {
                 const Cluster *const pAssociatedCluster = *iterJ;
 
@@ -57,7 +57,7 @@ void SeedGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pParticle
                     backwardUsageMap[pCandidateCluster][pParticleSeed] = association;
                 }
 
-                (void) newSeedAssociations.insert(pCandidateCluster);
+                newSeedAssociations.push_back(pCandidateCluster);
                 *iterI = NULL;
             }
         }
@@ -73,22 +73,28 @@ void SeedGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pParticle
 void SeedGrowingAlgorithm::IdentifyClusterMerges(const ClusterVector &particleSeedVector, const ClusterUsageMap &backwardUsageMap,
     SeedAssociationList &seedAssociationList) const
 {
-    for (ClusterUsageMap::const_iterator iterB = backwardUsageMap.begin(), iterBEnd = backwardUsageMap.end(); iterB != iterBEnd; ++iterB)
+    ClusterVector sortedCandidates;
+    for (const auto &mapEntry : backwardUsageMap) sortedCandidates.push_back(mapEntry.first);
+    std::sort(sortedCandidates.begin(), sortedCandidates.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : sortedCandidates)
     {
-        const Cluster *const pCluster = iterB->first;
-        const ClusterAssociationMap &particleSeedUsageMap = iterB->second;
+        const ClusterAssociationMap &particleSeedUsageMap(backwardUsageMap.at(pCluster));
 
         if (particleSeedUsageMap.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        ClusterVector sortedSeeds;
+        for (const auto &mapEntry : particleSeedUsageMap) sortedSeeds.push_back(mapEntry.first);
+        std::sort(sortedSeeds.begin(), sortedSeeds.end(), LArClusterHelper::SortByNHits);
 
         const Cluster *pBestParticleSeed = NULL;
         AssociationType bestType(NONE);
         unsigned int bestOrder(std::numeric_limits<unsigned int>::max());
 
-        for (ClusterAssociationMap::const_iterator iterP = particleSeedUsageMap.begin(), iterPEnd = particleSeedUsageMap.end(); iterP != iterPEnd; ++iterP)
+        for (const Cluster *const pParticleSeed : sortedSeeds)
         {
-            const Cluster *const pParticleSeed = iterP->first;
-            const Association &association(iterP->second);
+            const Association &association(particleSeedUsageMap.at(pParticleSeed));
 
             if ((association.GetType() > bestType) || ((association.GetType() == bestType) && (association.GetOrder() < bestOrder)))
             {
