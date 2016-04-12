@@ -39,6 +39,8 @@ void SimpleClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *co
 
         clusterVector.push_back(pCluster);
     }
+
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

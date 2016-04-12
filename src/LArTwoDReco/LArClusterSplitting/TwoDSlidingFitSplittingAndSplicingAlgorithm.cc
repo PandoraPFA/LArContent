@@ -215,12 +215,12 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
             // Select the overall best split position
             if (branchChisqI > branchChisqJ)
             {
-                (void) clusterExtensionList.push_back(ClusterExtension(pClusterI, pClusterJ, replacementStartPositionJ, branchSplitPositionI, branchSplitDirectionI));
+                clusterExtensionList.push_back(ClusterExtension(pClusterI, pClusterJ, replacementStartPositionJ, branchSplitPositionI, branchSplitDirectionI));
             }
 
             else if (branchChisqJ > branchChisqI)
             {
-                (void) clusterExtensionList.push_back(ClusterExtension(pClusterJ, pClusterI, replacementStartPositionI, branchSplitPositionJ, branchSplitDirectionJ));
+                clusterExtensionList.push_back(ClusterExtension(pClusterJ, pClusterI, replacementStartPositionI, branchSplitPositionJ, branchSplitDirectionJ));
             }
         }
     }

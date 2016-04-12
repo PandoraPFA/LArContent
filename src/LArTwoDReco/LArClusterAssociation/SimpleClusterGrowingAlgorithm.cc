@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h"
 
 using namespace pandora;
@@ -33,6 +35,8 @@ void SimpleClusterGrowingAlgorithm::GetListOfCleanClusters(const ClusterList *co
 
         clusterVector.push_back(pCluster);
     }
+
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,6 +52,8 @@ void SimpleClusterGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &i
 
         seedClusters.push_back(pCluster);
     }
+
+    std::sort(seedClusters.begin(), seedClusters.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

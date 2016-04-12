@@ -94,7 +94,14 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
             break;
         }
     }
-
+const ClusterList *pClusterList1(nullptr);
+if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pClusterList1))
+{
+    ClusterVector clusterVector1(pClusterList1->begin(), pClusterList1->end());
+    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
+    for (const Cluster *const pCluster1 : clusterVector1)
+        std::cout << "Alg " << this->GetType() << "Cluster " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy() << std::endl;
+}
     return this->TidyUpStep();
 }
 
@@ -199,16 +206,16 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(const C
     clusterList.insert(pCluster2);
 
     std::string clusterListToSaveName, clusterListToDeleteName;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,
         clusterListToDeleteName, clusterListToSaveName));
 
     // Create new clusters
     const Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, firstParameters, pFirstCluster));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, secondParameters, pSecondCluster));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, firstParameters, pFirstCluster));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, secondParameters, pSecondCluster));
 
     // End cluster fragmentation operations
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, clusterListToSaveName, clusterListToDeleteName));
 
     return STATUS_CODE_SUCCESS;
 }

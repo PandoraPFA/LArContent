@@ -39,6 +39,8 @@ void DeltaRayGrowingAlgorithm::GetListOfCleanClusters(const ClusterList *const p
 
         clusterVector.push_back(pCluster);
     }
+
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,6 +103,8 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
             seedClusters.push_back(pCluster);
         }
     }
+
+    std::sort(seedClusters.begin(), seedClusters.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

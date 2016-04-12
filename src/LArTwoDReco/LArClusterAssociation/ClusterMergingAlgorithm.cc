@@ -137,8 +137,6 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSe
 
         this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoMap, associatedClusterList);
     }
-
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

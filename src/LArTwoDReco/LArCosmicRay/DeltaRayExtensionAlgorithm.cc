@@ -38,6 +38,8 @@ void DeltaRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const
 
         clusterVector.push_back(pCluster);
     }
+
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
