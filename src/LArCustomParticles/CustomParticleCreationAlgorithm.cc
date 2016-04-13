@@ -7,7 +7,7 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-            #include "LArHelpers/LArClusterHelper.h"
+
 #include "LArHelpers/LArPfoHelper.h"
 
 #include "LArCustomParticles/CustomParticleCreationAlgorithm.h"
@@ -113,41 +113,7 @@ StatusCode CustomParticleCreationAlgorithm::Run()
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
     }
 
-const PfoList *pPfoList1(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList1))
-{
-    PfoVector pfoVector1(pPfoList1->begin(), pPfoList1->end());
-    std::sort(pfoVector1.begin(), pfoVector1.end(), LArPfoHelper::SortByNHits);
-
-    for (const Pfo *const pPfo1 : pfoVector1)
-    {
-        if ((pPfo1->GetParentPfoList().empty()) || ((1 == pPfo1->GetParentPfoList().size()) && LArPfoHelper::IsNeutrino(*(pPfo1->GetParentPfoList().begin()))))
-            this->Print(pPfo1);
-    }
-}
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CustomParticleCreationAlgorithm::Print(const pandora::ParticleFlowObject *const pPfo1) const
-{
-    std::cout << "Alg " << this->GetType() << "---Pfo, nParents " << pPfo1->GetParentPfoList().size() << ", nDaughters " << pPfo1->GetDaughterPfoList().size() << std::endl;
-
-    ClusterVector clusterVector1(pPfo1->GetClusterList().begin(), pPfo1->GetClusterList().end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "---PfoCluster " << this->GetType() << ", " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-
-    for (const Vertex *const pVertex1 : pPfo1->GetVertexList())    
-        std::cout << "---PfoVertex " << pVertex1->GetVertexLabel() << ", " << pVertex1->GetVertexType() << ", " << pVertex1->GetPosition() << std::endl;
-
-    PfoVector pfoDaughters(pPfo1->GetDaughterPfoList().begin(), pPfo1->GetDaughterPfoList().end());
-    std::sort(pfoDaughters.begin(), pfoDaughters.end(), LArPfoHelper::SortByNHits);
-
-    for (const Pfo *const pDaughter : pfoDaughters)
-        this->Print(pDaughter);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

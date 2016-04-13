@@ -58,15 +58,13 @@ private:
      * 
      *  @param  innerClusterEnd inner cluster end position
      *  @param  outerClusterStart outer cluster start position
-     *  @param  hitSizeX hit size x
-     *  @param  hitSizeZ hit size z
      *  @param  innerFit inner cluster fit result
      *  @param  outerFit outer cluster fit result
      * 
      *  @return whether the clusters are associated
      */
-    bool AreClustersAssociated(const pandora::CartesianVector &innerClusterEnd, const pandora::CartesianVector &outerClusterStart, const float hitSizeX,
-        const float hitSizeZ, const pandora::ClusterFitResult &innerFit, const pandora::ClusterFitResult &outerFit) const;
+    bool AreClustersAssociated(const pandora::CartesianVector &innerClusterEnd, const pandora::CartesianVector &outerClusterStart,
+        const pandora::ClusterFitResult &innerFit, const pandora::ClusterFitResult &outerFit) const;
 
     unsigned int m_minClusterLayers;            ///< minimum allowed number of layers for a clean cluster
     unsigned int m_maxGapLayers;                ///< maximum allowed number of layers between associated clusters
@@ -75,6 +73,8 @@ private:
     float        m_minCosRelativeAngle;         ///< maximum allowed relative angle between associated clusters
     float        m_maxTransverseDisplacement;   ///< maximum allowed transverse displacement after extrapolation (normalised to cell size)
     float        m_maxLongitudinalDisplacement; ///< maximum allowed longitudinal displacement after extrapolation (normalised to cell size)
+    float        m_hitSizeZ;                    ///< estimated hit size in z (wire number) dimension, units cm
+    float        m_hitSizeX;                    ///< estimated hit size in x (drift time) dimension, units cm
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

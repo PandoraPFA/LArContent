@@ -30,8 +30,6 @@ protected:
      */
     virtual void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject*& pOutputPfo) const = 0;
 
-void Print(const pandora::ParticleFlowObject *const pInputPfo) const;
-
 private:
     std::string  m_pfoListName;      ///< The name of the input pfo list
     std::string  m_vertexListName;   ///< The name of the input vertex list

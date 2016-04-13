@@ -37,11 +37,10 @@ bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *const pAlgorith
 
 bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const
 {
-    ClusterVector sortedClusters;
-    for (const auto &tensorEntry : overlapTensor) sortedClusters.push_back(tensorEntry.first);
-    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (const Cluster *const pKeyCluster : sortedClusters)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
         if (!pKeyCluster->IsAvailable())
             continue;

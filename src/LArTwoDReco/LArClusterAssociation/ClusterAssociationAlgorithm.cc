@@ -114,6 +114,11 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(const Cluster *const pC
         return;
 
     this->UpdateForUnambiguousMerge(pClusterToEnlarge, pClusterToDelete, isForward, clusterAssociationMap);
+std::cout << "Alg " << this->GetType() << " UnambigMerge P " << pClusterToEnlarge->GetNCaloHits() << ", E " << pClusterToEnlarge->GetHadronicEnergy()
+ << " il " << pClusterToEnlarge->GetInnerPseudoLayer() << " oc " << pClusterToEnlarge->GetOrderedCaloHitList().size() << " span " << (pClusterToEnlarge->GetOuterPseudoLayer() - pClusterToEnlarge->GetInnerPseudoLayer()) << std::endl;
+std::cout << "Alg " << this->GetType() << " UnambigMerge D " << pClusterToDelete->GetNCaloHits() << ", E " << pClusterToDelete->GetHadronicEnergy()
+ << " il " << pClusterToDelete->GetInnerPseudoLayer() << " oc " << pClusterToDelete->GetOrderedCaloHitList().size() << " span " << (pClusterToDelete->GetOuterPseudoLayer() - pClusterToDelete->GetInnerPseudoLayer()) << std::endl;
+
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pClusterToDelete));
     m_mergeMade = true;
 
@@ -153,6 +158,11 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pClu
     for (ClusterVector::iterator dIter = daughterClusterVector.begin(), dIterEnd = daughterClusterVector.end(); dIter != dIterEnd; ++dIter)
     {
         this->UpdateForAmbiguousMerge(pCluster, *dIter, isForward, clusterAssociationMap);
+std::cout << "Alg " << this->GetType() << " UnambigMerge P " << pCluster->GetNCaloHits() << ", E " << pCluster->GetHadronicEnergy()
+ << " il " << pCluster->GetInnerPseudoLayer() << " oc " << pCluster->GetOrderedCaloHitList().size() << " span " << (pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) << std::endl;
+std::cout << "Alg " << this->GetType() << " UnambigMerge D " << (*dIter)->GetNCaloHits() << ", E " << (*dIter)->GetHadronicEnergy()
+ << " il " << (*dIter)->GetInnerPseudoLayer() << " oc " << (*dIter)->GetOrderedCaloHitList().size() << " span " << ((*dIter)->GetOuterPseudoLayer() - (*dIter)->GetInnerPseudoLayer()) << std::endl;
+
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *dIter));
         m_mergeMade = true;
         *dIter = NULL;

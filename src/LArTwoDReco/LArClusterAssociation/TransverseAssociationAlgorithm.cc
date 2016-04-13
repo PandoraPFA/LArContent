@@ -67,12 +67,10 @@ void TransverseAssociationAlgorithm::PopulateClusterAssociationMap(const Cluster
         ClusterVector shortClusters, transverseMediumClusters, longitudinalMediumClusters, longClusters;
         this->SortInputClusters(allClusters, shortClusters, transverseMediumClusters, longitudinalMediumClusters, longClusters);
 
-        ClusterVector transverseClusters;
-        transverseClusters.insert(transverseClusters.end(), shortClusters.begin(), shortClusters.end());
+        ClusterVector transverseClusters(shortClusters.begin(), shortClusters.end());
         transverseClusters.insert(transverseClusters.end(), transverseMediumClusters.begin(), transverseMediumClusters.end());
 
-        ClusterVector establishedClusters;
-        establishedClusters.insert(establishedClusters.end(), transverseMediumClusters.begin(), transverseMediumClusters.end());
+        ClusterVector establishedClusters(transverseMediumClusters.begin(), transverseMediumClusters.end());
         establishedClusters.insert(establishedClusters.end(), longitudinalMediumClusters.begin(), longitudinalMediumClusters.end());
         establishedClusters.insert(establishedClusters.end(), longClusters.begin(), longClusters.end());
 
@@ -272,6 +270,8 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterT
         ClusterAssociationMap::const_iterator iterInner = transverseAssociationMap.find(pInnerCluster);
         if (transverseAssociationMap.end() == iterInner)
             continue;
+std::cout << "Alg " << this->GetType() << " D1 " << pInnerCluster->GetNCaloHits() << ", E " << pInnerCluster->GetHadronicEnergy()
+ << " il " << pInnerCluster->GetInnerPseudoLayer() << " oc " << pInnerCluster->GetOrderedCaloHitList().size() << " span " << (pInnerCluster->GetOuterPseudoLayer() - pInnerCluster->GetInnerPseudoLayer()) << std::endl;
 
         for (TransverseClusterList::const_iterator iter2 = transverseClusterList.begin(), iterEnd2 = transverseClusterList.end(); iter2 != iterEnd2; ++iter2)
         {
@@ -295,9 +295,16 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterT
 
             if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster, nearbyClusters))
                 continue;
+std::cout << "Alg " << this->GetType() << " D2 " << pOuterCluster->GetNCaloHits() << ", E " << pOuterCluster->GetHadronicEnergy()
+ << " il " << pOuterCluster->GetInnerPseudoLayer() << " oc " << pOuterCluster->GetOrderedCaloHitList().size() << " span " << (pOuterCluster->GetOuterPseudoLayer() - pOuterCluster->GetInnerPseudoLayer()) << std::endl;
 
             clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
             clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
+std::cout << "Alg " << this->GetType() << " C1 FILL " << pInnerCluster->GetNCaloHits() << ", E " << pInnerCluster->GetHadronicEnergy()
+ << " il " << pInnerCluster->GetInnerPseudoLayer() << " oc " << pInnerCluster->GetOrderedCaloHitList().size() << " span " << (pInnerCluster->GetOuterPseudoLayer() - pInnerCluster->GetInnerPseudoLayer()) << std::endl;
+std::cout << "Alg " << this->GetType() << " C2 FILL " << pOuterCluster->GetNCaloHits() << ", E " << pOuterCluster->GetHadronicEnergy()
+ << " il " << pOuterCluster->GetInnerPseudoLayer() << " oc " << pOuterCluster->GetOrderedCaloHitList().size() << " span " << (pOuterCluster->GetOuterPseudoLayer() - pOuterCluster->GetInnerPseudoLayer()) << std::endl;
+
         }
     }
 }
@@ -430,10 +437,10 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseC
     const CartesianVector &outerVertex(pTransverseCluster->GetOuterVertex());
     const CartesianVector &direction(pTransverseCluster->GetDirection());
 
-    if (std::fabs(direction.GetCrossProduct(testVertex - innerVertex).GetMagnitudeSquared()) > m_transverseClusterMaxDisplacement * m_transverseClusterMaxDisplacement)
+    if (direction.GetCrossProduct(testVertex - innerVertex).GetMagnitudeSquared() > m_transverseClusterMaxDisplacement * m_transverseClusterMaxDisplacement)
         return false;
 
-    if ((direction.GetDotProduct(testVertex - innerVertex) < -m_clusterWindow) || (direction.GetDotProduct(testVertex - outerVertex) > +m_clusterWindow))
+    if ((direction.GetDotProduct(testVertex - innerVertex) < -1.f * m_clusterWindow) || (direction.GetDotProduct(testVertex - outerVertex) > +1.f * m_clusterWindow))
         return false;
 
     return true;
@@ -615,19 +622,21 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
         std::sort(sortedInnerClusters.begin(), sortedInnerClusters.end(), LArClusterHelper::SortByNHits);
 
         ClusterAssociationMap::const_iterator iterSecond = secondAssociationMap.find(pCluster);
-        ClusterVector sortedMiddleClusters;
+        ClusterVector sortedMiddleClustersF, sortedMiddleClustersB;
 
         if (secondAssociationMap.end() != iterSecond)
         {
-            sortedMiddleClusters.insert(sortedMiddleClusters.end(), iterSecond->second.m_forwardAssociations.begin(), iterSecond->second.m_forwardAssociations.end());
-            std::sort(sortedMiddleClusters.begin(), sortedMiddleClusters.end(), LArClusterHelper::SortByNHits);
+            sortedMiddleClustersF.insert(sortedMiddleClustersF.end(), iterSecond->second.m_forwardAssociations.begin(), iterSecond->second.m_forwardAssociations.end());
+            sortedMiddleClustersB.insert(sortedMiddleClustersB.end(), iterSecond->second.m_backwardAssociations.begin(), iterSecond->second.m_backwardAssociations.end());
+            std::sort(sortedMiddleClustersF.begin(), sortedMiddleClustersF.end(), LArClusterHelper::SortByNHits);
+            std::sort(sortedMiddleClustersB.begin(), sortedMiddleClustersB.end(), LArClusterHelper::SortByNHits);
         }
 
         for (const Cluster *const pOuterCluster : sortedOuterClusters)
         {
             bool isNeighbouringCluster(true);
 
-            for (const Cluster *const pMiddleCluster : sortedMiddleClusters)
+            for (const Cluster *const pMiddleCluster : sortedMiddleClustersF)
             {
                 ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
                 if (secondAssociationMapSwapped.end() == iterSecondCheck)
@@ -648,7 +657,7 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
         {
             bool isNeighbouringCluster(true);
 
-            for (const Cluster *const pMiddleCluster : sortedMiddleClusters)
+            for (const Cluster *const pMiddleCluster : sortedMiddleClustersB)
             {
                 ClusterAssociationMap::const_iterator iterSecondCheck = secondAssociationMapSwapped.find(pMiddleCluster);
                 if (secondAssociationMapSwapped.end() == iterSecondCheck)
@@ -715,6 +724,10 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
 
                 outputAssociationMap[pCluster].m_forwardAssociations.insert(pForwardCluster);
                 outputAssociationMap[pForwardCluster].m_backwardAssociations.insert(pCluster);
+std::cout << "Alg " << this->GetType() << " A1 FILL " << pCluster->GetNCaloHits() << ", E " << pCluster->GetHadronicEnergy()
+ << " il " << pCluster->GetInnerPseudoLayer() << " oc " << pCluster->GetOrderedCaloHitList().size() << " span " << (pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) << std::endl;
+std::cout << "Alg " << this->GetType() << " A2 FILL " << pForwardCluster->GetNCaloHits() << ", E " << pForwardCluster->GetHadronicEnergy()
+ << " il " << pForwardCluster->GetInnerPseudoLayer() << " oc " << pForwardCluster->GetOrderedCaloHitList().size() << " span " << (pForwardCluster->GetOuterPseudoLayer() - pForwardCluster->GetInnerPseudoLayer()) << std::endl;
             }
         }
 
@@ -744,6 +757,10 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
 
                 outputAssociationMap[pCluster].m_backwardAssociations.insert(pBackwardCluster);
                 outputAssociationMap[pBackwardCluster].m_forwardAssociations.insert(pCluster);
+std::cout << "Alg " << this->GetType() << " B1 FILL " << pCluster->GetNCaloHits() << ", E " << pCluster->GetHadronicEnergy()
+ << " il " << pCluster->GetInnerPseudoLayer() << " oc " << pCluster->GetOrderedCaloHitList().size() << " span " << (pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) << std::endl;
+std::cout << "Alg " << this->GetType() << " B2 FILL " << pBackwardCluster->GetNCaloHits() << ", E " << pBackwardCluster->GetHadronicEnergy()
+ << " il " << pBackwardCluster->GetInnerPseudoLayer() << " oc " << pBackwardCluster->GetOrderedCaloHitList().size() << " span " << (pBackwardCluster->GetOuterPseudoLayer() - pBackwardCluster->GetInnerPseudoLayer()) << std::endl;
             }
         }
     }
@@ -768,9 +785,9 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
     m_outerVertex(0.f, 0.f, 0.f),
     m_direction(0.f, 0.f, 0.f)
 {
-    float Swzz(0.f), Swxx(0.f), Swzx(0.f), Swz(0.f), Swx(0.f), Sw(0.f);
-    float minX(std::numeric_limits<float>::max());
-    float maxX(-std::numeric_limits<float>::max());
+    double Swzz(0.), Swxx(0.), Swzx(0.), Swz(0.), Swx(0.), Sw(0.);
+    double minX(std::numeric_limits<double>::max());
+    double maxX(-std::numeric_limits<double>::max());
 
     ClusterList clusterList;
     clusterList.insert(pSeedCluster);
@@ -795,30 +812,30 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
                 Swzx += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetX();
                 Swz  += pCaloHit->GetPositionVector().GetZ();
                 Swx  += pCaloHit->GetPositionVector().GetX();
-                Sw   += 1.f;
+                Sw   += 1.;
             }
         }
     }
 
     if (Sw > 0.f)
     {
-        const float averageX(Swx / Sw);
-        const float averageZ(Swz / Sw);
+        const double averageX(Swx / Sw);
+        const double averageZ(Swz / Sw);
 
-        if (Sw * Swxx - Swx * Swx > 0.f)
+        if (Sw * Swxx - Swx * Swx > 0.)
         {
-            float m((Sw * Swzx - Swx * Swz) / (Sw * Swxx - Swx * Swx));
-            float px(1.f / std::sqrt(1.f + m * m));
-            float pz(m / std::sqrt(1.f + m * m));
+            double m((Sw * Swzx - Swx * Swz) / (Sw * Swxx - Swx * Swx));
+            double px(1. / std::sqrt(1. + m * m));
+            double pz(m / std::sqrt(1. + m * m));
 
-            m_innerVertex.SetValues(minX, 0.f, averageZ + m * (minX - averageX));
-            m_outerVertex.SetValues(maxX, 0.f, averageZ + m * (maxX - averageX));
-            m_direction.SetValues(px, 0.f, pz);
+            m_innerVertex.SetValues(static_cast<float>(minX), 0.f, static_cast<float>(averageZ + m * (minX - averageX)));
+            m_outerVertex.SetValues(static_cast<float>(maxX), 0.f, static_cast<float>(averageZ + m * (maxX - averageX)));
+            m_direction.SetValues(static_cast<float>(px), 0.f, static_cast<float>(pz));
         }
         else
         {
-            m_innerVertex.SetValues(averageX, 0.f, averageZ);
-            m_outerVertex.SetValues(averageX, 0.f, averageZ);
+            m_innerVertex.SetValues(static_cast<float>(averageX), 0.f, static_cast<float>(averageZ));
+            m_outerVertex.SetValues(static_cast<float>(averageX), 0.f, static_cast<float>(averageZ));
             m_direction.SetValues(1.f, 0.f, 0.f);
         }
     }
