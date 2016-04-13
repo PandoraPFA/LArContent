@@ -43,16 +43,6 @@ public:
     ThreeDShowersAlgorithm();
 
     /**
-     *  @brief  Sort tensor elements by number of matched sampling points, using matched fraction then xoverlap span to resolve ties
-     *
-     *  @param  lhs the first tensor element
-     *  @param  rhs the second tensor element
-     *
-     *  @return boolean
-     */
-    static bool SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs);
-
-    /**
      *  @brief  Get a sliding shower fit result from the algorithm cache
      * 
      *  @param  pCluster address of the relevant cluster

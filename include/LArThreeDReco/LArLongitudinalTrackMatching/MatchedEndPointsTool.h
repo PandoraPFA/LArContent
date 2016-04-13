@@ -46,6 +46,16 @@ private:
      */
     void FindMatchedTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
+    /**
+     *  @brief  Sort tensor elements by chi-squared
+     * 
+     *  @param  lhs the first tensor element
+     *  @param  rhs the second tensor element
+     * 
+     *  @return boolean
+     */
+    static bool SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs);
+
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     float           m_maxEndPointChi2;                    ///< The max chi2 of matched vertex and end points for particle creation
 };

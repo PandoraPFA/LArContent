@@ -40,20 +40,22 @@ bool MatchedEndPointsTool::Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorit
 void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 { 
     ClusterList usedClusters;
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (!iterU->first->IsAvailable())
+        if (!pKeyCluster->IsAvailable())
             continue;
 
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
+        overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
         
         if (nU * nV * nW == 0)
             continue;
 
-        std::sort(elementList.begin(), elementList.end(), ThreeDLongitudinalTracksAlgorithm::SortByChiSquared);
+        std::sort(elementList.begin(), elementList.end(), MatchedEndPointsTool::SortByChiSquared);
 
         for (TensorType::ElementList::const_iterator iter = elementList.begin(); iter != elementList.end(); ++iter)
         {
@@ -77,6 +79,14 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
             usedClusters.insert(iter->GetClusterW());
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool MatchedEndPointsTool::SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs)
+{
+    return (lhs.GetOverlapResult().GetInnerChi2() + lhs.GetOverlapResult().GetOuterChi2() < 
+        rhs.GetOverlapResult().GetInnerChi2() + rhs.GetOverlapResult().GetOuterChi2());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

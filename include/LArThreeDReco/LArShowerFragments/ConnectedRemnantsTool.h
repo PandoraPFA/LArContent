@@ -50,29 +50,29 @@ private:
     /**
      *  @brief  Separate connected clusters into cluster lists by view
      *
-     *  @param  connectedElements  the input list of connected elements
-     *  @param  usedClusters  the list of clusters already analysed
-     *  @param  clusterListU  the output list of clusters for the U view
-     *  @param  clusterListV  the output list of clusters for the V view
-     *  @param  clusterListW  the output list of clusters for the W view
+     *  @param  connectedElements the input list of connected elements
+     *  @param  usedClusters the list of clusters already analysed
+     *  @param  clusterVectorU the output vector of clusters for the U view
+     *  @param  clusterVectorV the output vector of clusters for the V view
+     *  @param  clusterVectorW the output vector of clusters for the W view
      */
     void GetClusters(const TensorType::ElementList &connectedElements, const pandora::ClusterList &usedClusters,
-        pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
+        pandora::ClusterVector &clusterVectorU, pandora::ClusterVector &clusterVectorV, pandora::ClusterVector &clusterVectorW) const;
 
     /**
      *  @brief  Fill map of clusters to be merged
      *
-     *  @param  clusterList the input list of clusters
+     *  @param  clusterVector the input vector of clusters
      *  @param  clusterMergeMap the output map of cluster merges
      */
-    void FillMergeMap(const pandora::Cluster *const pCluster, const pandora::ClusterList &clusterList, ClusterMergeMap &clusterMergeMap) const;
+    void FillMergeMap(const pandora::Cluster *const pCluster, const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const;
 
     /**
-     *  @brief  Check whether all clusters in the list are spatially connected
+     *  @brief  Check whether all clusters in a list are spatially connected
      *
-     *  @param  clusterList  the input cluster list
+     *  @param  clusterVector the input cluster vector
      */
-    bool IsConnected(const pandora::ClusterList &clusterList) const;
+    bool IsConnected(const pandora::ClusterVector &clusterVector) const;
 
     float m_maxClusterSeparation;       ///<
 };

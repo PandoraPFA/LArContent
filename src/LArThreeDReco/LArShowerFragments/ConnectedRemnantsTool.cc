@@ -44,31 +44,33 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
     ClusterMergeMap &clusterMergeMap) const
 {
     ClusterList usedClusters;
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (!iterU->first->IsAvailable())
+        if (!pKeyCluster->IsAvailable())
             continue;
 
         TensorType::ElementList connectedElements;
-        overlapTensor.GetConnectedElements(iterU->first, true, connectedElements);
+        overlapTensor.GetConnectedElements(pKeyCluster, true, connectedElements);
 
-        ClusterList clusterListU, clusterListV, clusterListW;
-        this->GetClusters(connectedElements, usedClusters, clusterListU, clusterListV, clusterListW);
+        ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
+        this->GetClusters(connectedElements, usedClusters, clusterVectorU, clusterVectorV, clusterVectorW);
 
-        if (clusterListU.empty() || clusterListV.empty() || clusterListW.empty())
+        if (clusterVectorU.empty() || clusterVectorV.empty() || clusterVectorW.empty())
             continue;
 
-        usedClusters.insert(clusterListU.begin(), clusterListU.end());
-        usedClusters.insert(clusterListV.begin(), clusterListV.end());
-        usedClusters.insert(clusterListW.begin(), clusterListW.end());
+        usedClusters.insert(clusterVectorU.begin(), clusterVectorU.end());
+        usedClusters.insert(clusterVectorV.begin(), clusterVectorV.end());
+        usedClusters.insert(clusterVectorW.begin(), clusterVectorW.end());
 
-        if (!(this->IsConnected(clusterListU) && this->IsConnected(clusterListV) && this->IsConnected(clusterListW)))
+        if (!(this->IsConnected(clusterVectorU) && this->IsConnected(clusterVectorV) && this->IsConnected(clusterVectorW)))
             continue;
 
-        const Cluster *const pClusterU = *(clusterListU.begin());
-        const Cluster *const pClusterV = *(clusterListV.begin());
-        const Cluster *const pClusterW = *(clusterListW.begin());
+        const Cluster *const pClusterU = clusterVectorU.front();
+        const Cluster *const pClusterV = clusterVectorV.front();
+        const Cluster *const pClusterW = clusterVectorW.front();
 
         ProtoParticle protoParticle;
         protoParticle.m_clusterListU.insert(pClusterU);
@@ -76,42 +78,37 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
         protoParticle.m_clusterListW.insert(pClusterW);
         protoParticleVector.push_back(protoParticle);
 
-        this->FillMergeMap(pClusterU, clusterListU, clusterMergeMap);
-        this->FillMergeMap(pClusterV, clusterListV, clusterMergeMap);
-        this->FillMergeMap(pClusterW, clusterListW, clusterMergeMap);
+        this->FillMergeMap(pClusterU, clusterVectorU, clusterMergeMap);
+        this->FillMergeMap(pClusterV, clusterVectorV, clusterMergeMap);
+        this->FillMergeMap(pClusterW, clusterVectorW, clusterMergeMap);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ConnectedRemnantsTool::GetClusters(const TensorType::ElementList &elementList, const ClusterList &usedClusters,
-    ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+    ClusterVector &clusterVectorU, ClusterVector &clusterVectorV, ClusterVector &clusterVectorW) const
 {
-    for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
+    for (const TensorType::Element &element : elementList)
     {
-        if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))
+        if (usedClusters.count(element.GetClusterU()) || usedClusters.count(element.GetClusterV()) || usedClusters.count(element.GetClusterW()))
             continue;
 
-        clusterListU.insert(eIter->GetClusterU());
-        clusterListV.insert(eIter->GetClusterV());
-        clusterListW.insert(eIter->GetClusterW());
+        clusterVectorU.push_back(element.GetClusterU());
+        clusterVectorV.push_back(element.GetClusterV());
+        clusterVectorW.push_back(element.GetClusterW());
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConnectedRemnantsTool::FillMergeMap(const Cluster *const pFirstCluster, const ClusterList &clusterList, ClusterMergeMap &clusterMergeMap) const
+void ConnectedRemnantsTool::FillMergeMap(const Cluster *const pFirstCluster, const ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
 {
-    if (clusterList.empty())
+    if (clusterVector.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    if (!clusterList.count(pFirstCluster))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pSecondCluster : clusterVector)
     {
-        const Cluster *const pSecondCluster = *iter;
-
         if (pFirstCluster == pSecondCluster)
             continue;
 
@@ -121,16 +118,12 @@ void ConnectedRemnantsTool::FillMergeMap(const Cluster *const pFirstCluster, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ConnectedRemnantsTool::IsConnected(const ClusterList &clusterList) const
+bool ConnectedRemnantsTool::IsConnected(const ClusterVector &clusterVector) const
 {
-    for (ClusterList::const_iterator iter1 = clusterList.begin(), iterEnd1 = clusterList.end(); iter1 != iterEnd1; ++iter1)
+    for (const Cluster *const pCluster1 : clusterVector)
     {
-        const Cluster *const pCluster1 = *iter1;
-
-        for (ClusterList::const_iterator iter2 = iter1, iterEnd2 = clusterList.end(); iter2 != iterEnd2; ++iter2)
+        for (const Cluster *const pCluster2 : clusterVector)
         {
-            const Cluster *const pCluster2 = *iter2;
-
             if (pCluster1 == pCluster2)
                 continue;
 

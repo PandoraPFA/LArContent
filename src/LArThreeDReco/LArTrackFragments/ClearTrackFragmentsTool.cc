@@ -53,7 +53,6 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
 
         IteratorList iteratorList;
         this->SelectClearElements(elementList, iteratorList);
-        std::sort(iteratorList.begin(), iteratorList.end(), SortByOverlapResult);
 
         bool particlesMade(false);
         ClusterList modifiedClusters, deletedClusters, unavailableClusters, newAvailableClusters;
@@ -410,13 +409,6 @@ void ClearTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTe
             }
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ClearTrackFragmentsTool::SortByOverlapResult(TensorType::ElementList::const_iterator lhs, TensorType::ElementList::const_iterator rhs)
-{
-    return (lhs->GetOverlapResult() < rhs->GetOverlapResult());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

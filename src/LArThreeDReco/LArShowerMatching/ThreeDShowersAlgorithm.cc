@@ -32,19 +32,6 @@ ThreeDShowersAlgorithm::ThreeDShowersAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDShowersAlgorithm::SortByNMatchedSamplingPoints(const TensorType::Element &lhs, const TensorType::Element &rhs)
-{
-    if (lhs.GetOverlapResult().GetNMatchedSamplingPoints() != rhs.GetOverlapResult().GetNMatchedSamplingPoints())
-        return (lhs.GetOverlapResult().GetNMatchedSamplingPoints() > rhs.GetOverlapResult().GetNMatchedSamplingPoints());
-
-    if (lhs.GetOverlapResult().GetNSamplingPoints() != rhs.GetOverlapResult().GetNSamplingPoints())
-        return (lhs.GetOverlapResult().GetNSamplingPoints() < rhs.GetOverlapResult().GetNSamplingPoints());
-
-    return (lhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan() < rhs.GetOverlapResult().GetXOverlap().GetXOverlapSpan());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 const TwoDSlidingShowerFitResult &ThreeDShowersAlgorithm::GetCachedSlidingFitResult(const Cluster *const pCluster) const
 {
     TwoDSlidingShowerFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);

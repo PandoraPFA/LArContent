@@ -69,6 +69,13 @@ public:
          */
         const OverlapResult &GetOverlapResult() const;
 
+        /**
+         *  @brief  Element less than operator
+         * 
+         *  @param  rhs the element for comparison
+         */
+        bool operator<(const Element &rhs) const;
+
     private:
         const pandora::Cluster *m_pClusterU;                    ///< The address of the u cluster
         const pandora::Cluster *m_pClusterV;                    ///< The address of the v cluster
@@ -150,6 +157,13 @@ public:
      *  @brief  Returns an iterator referring to the past-the-end element in the overlap tensor
      */
     const_iterator end() const;
+
+    /**
+     *  @brief  Get a sorted vector of key clusters (U clusters with current implementation)
+     * 
+     *  @param sortedKeyClusters to receive the sorted vector of key clusters
+     */
+    void GetSortedKeyClusters(pandora::ClusterVector &sortedKeyClusters) const;
 
     /**
      *  @brief  Get the overlap result for a specified trio of clusters
@@ -421,6 +435,17 @@ template <typename T>
 inline const typename OverlapTensor<T>::OverlapResult &OverlapTensor<T>::Element::GetOverlapResult() const
 {
     return m_overlapResult;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+bool OverlapTensor<T>::Element::operator<(const Element &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    return (this->GetOverlapResult() < rhs.GetOverlapResult());
 }
 
 } // namespace lar_content
