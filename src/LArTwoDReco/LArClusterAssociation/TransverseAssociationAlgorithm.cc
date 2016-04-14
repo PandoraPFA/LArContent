@@ -270,8 +270,6 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterT
         ClusterAssociationMap::const_iterator iterInner = transverseAssociationMap.find(pInnerCluster);
         if (transverseAssociationMap.end() == iterInner)
             continue;
-std::cout << "Alg " << this->GetType() << " D1 " << pInnerCluster->GetNCaloHits() << ", E " << pInnerCluster->GetHadronicEnergy()
- << " il " << pInnerCluster->GetInnerPseudoLayer() << " oc " << pInnerCluster->GetOrderedCaloHitList().size() << " span " << (pInnerCluster->GetOuterPseudoLayer() - pInnerCluster->GetInnerPseudoLayer()) << std::endl;
 
         for (TransverseClusterList::const_iterator iter2 = transverseClusterList.begin(), iterEnd2 = transverseClusterList.end(); iter2 != iterEnd2; ++iter2)
         {
@@ -295,16 +293,9 @@ std::cout << "Alg " << this->GetType() << " D1 " << pInnerCluster->GetNCaloHits(
 
             if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster, nearbyClusters))
                 continue;
-std::cout << "Alg " << this->GetType() << " D2 " << pOuterCluster->GetNCaloHits() << ", E " << pOuterCluster->GetHadronicEnergy()
- << " il " << pOuterCluster->GetInnerPseudoLayer() << " oc " << pOuterCluster->GetOrderedCaloHitList().size() << " span " << (pOuterCluster->GetOuterPseudoLayer() - pOuterCluster->GetInnerPseudoLayer()) << std::endl;
 
             clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
             clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
-std::cout << "Alg " << this->GetType() << " C1 FILL " << pInnerCluster->GetNCaloHits() << ", E " << pInnerCluster->GetHadronicEnergy()
- << " il " << pInnerCluster->GetInnerPseudoLayer() << " oc " << pInnerCluster->GetOrderedCaloHitList().size() << " span " << (pInnerCluster->GetOuterPseudoLayer() - pInnerCluster->GetInnerPseudoLayer()) << std::endl;
-std::cout << "Alg " << this->GetType() << " C2 FILL " << pOuterCluster->GetNCaloHits() << ", E " << pOuterCluster->GetHadronicEnergy()
- << " il " << pOuterCluster->GetInnerPseudoLayer() << " oc " << pOuterCluster->GetOrderedCaloHitList().size() << " span " << (pOuterCluster->GetOuterPseudoLayer() - pOuterCluster->GetInnerPseudoLayer()) << std::endl;
-
         }
     }
 }
@@ -724,10 +715,6 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
 
                 outputAssociationMap[pCluster].m_forwardAssociations.insert(pForwardCluster);
                 outputAssociationMap[pForwardCluster].m_backwardAssociations.insert(pCluster);
-std::cout << "Alg " << this->GetType() << " A1 FILL " << pCluster->GetNCaloHits() << ", E " << pCluster->GetHadronicEnergy()
- << " il " << pCluster->GetInnerPseudoLayer() << " oc " << pCluster->GetOrderedCaloHitList().size() << " span " << (pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) << std::endl;
-std::cout << "Alg " << this->GetType() << " A2 FILL " << pForwardCluster->GetNCaloHits() << ", E " << pForwardCluster->GetHadronicEnergy()
- << " il " << pForwardCluster->GetInnerPseudoLayer() << " oc " << pForwardCluster->GetOrderedCaloHitList().size() << " span " << (pForwardCluster->GetOuterPseudoLayer() - pForwardCluster->GetInnerPseudoLayer()) << std::endl;
             }
         }
 
@@ -757,10 +744,6 @@ std::cout << "Alg " << this->GetType() << " A2 FILL " << pForwardCluster->GetNCa
 
                 outputAssociationMap[pCluster].m_backwardAssociations.insert(pBackwardCluster);
                 outputAssociationMap[pBackwardCluster].m_forwardAssociations.insert(pCluster);
-std::cout << "Alg " << this->GetType() << " B1 FILL " << pCluster->GetNCaloHits() << ", E " << pCluster->GetHadronicEnergy()
- << " il " << pCluster->GetInnerPseudoLayer() << " oc " << pCluster->GetOrderedCaloHitList().size() << " span " << (pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer()) << std::endl;
-std::cout << "Alg " << this->GetType() << " B2 FILL " << pBackwardCluster->GetNCaloHits() << ", E " << pBackwardCluster->GetHadronicEnergy()
- << " il " << pBackwardCluster->GetInnerPseudoLayer() << " oc " << pBackwardCluster->GetOrderedCaloHitList().size() << " span " << (pBackwardCluster->GetOuterPseudoLayer() - pBackwardCluster->GetInnerPseudoLayer()) << std::endl;
             }
         }
     }

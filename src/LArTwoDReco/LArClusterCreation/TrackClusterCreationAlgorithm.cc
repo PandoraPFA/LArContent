@@ -7,7 +7,9 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-            #include "LArHelpers/LArClusterHelper.h"
+
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 
 using namespace pandora;
@@ -19,7 +21,7 @@ TrackClusterCreationAlgorithm::TrackClusterCreationAlgorithm() :
     m_mergeBackFilteredHits(true),
     m_maxGapLayers(2),
     m_maxCaloHitSeparationSquared(1.3f * 1.3f),
-    m_minCaloHitSeparationSquared( 0.4f *  0.4f),
+    m_minCaloHitSeparationSquared(0.4f *  0.4f),
     m_closeSeparationSquared(0.9f * 0.9f)
 {
 }
@@ -64,11 +66,10 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *cons
 {
     CaloHitList availableHitList;
 
-    for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        const CaloHit *const pCaloHit = *iter;
         if (PandoraContentApi::IsAvailable(*this, pCaloHit))
-          availableHitList.insert(pCaloHit);
+            availableHitList.insert(pCaloHit);
     }
 
     if (availableHitList.empty())
@@ -78,16 +79,17 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *cons
 
     for (OrderedCaloHitList::const_iterator iter = selectedCaloHitList.begin(), iterEnd = selectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        CaloHitList *const pLayerHitList = iter->second;
+        CaloHitVector caloHits(iter->second->begin(), iter->second->end());
+        std::sort(caloHits.begin(), caloHits.end(), LArClusterHelper::SortHitsByPosition);
 
-        for (CaloHitList::const_iterator iterI = pLayerHitList->begin(), iterIEnd = pLayerHitList->end(); iterI != iterIEnd; ++iterI)
+        for (const CaloHit *const pCaloHitI : caloHits)
         {
-            const CaloHit *const pCaloHitI = *iterI;
             bool useCaloHit(true);
 
-            for (CaloHitList::const_iterator iterJ = pLayerHitList->begin(), iterJEnd = pLayerHitList->end(); iterJ != iterJEnd; ++iterJ)
+            for (const CaloHit *const pCaloHitJ : caloHits)
             {
-                const CaloHit *const pCaloHitJ = *iterJ;
+                if (pCaloHitI == pCaloHitJ)
+                    continue;
 
                 if ((pCaloHitI->GetMipEquivalentEnergy() < pCaloHitJ->GetMipEquivalentEnergy()) &&
                     ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_minCaloHitSeparationSquared))
@@ -103,45 +105,47 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *cons
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.Remove(rejectedCaloHitList));
-
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &selectedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList, HitToClusterMap& hitToClusterMap) const
+StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &selectedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList,
+    HitToClusterMap &hitToClusterMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = rejectedCaloHitList.begin(), iterEnd = rejectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         CaloHitList *pCaloHitList = NULL;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.GetCaloHitsInPseudoLayer(iter->first, pCaloHitList));
 
-        CaloHitList currentAvailableHits(iter->second->begin(), iter->second->end());
-        CaloHitList currentClusteredHits(pCaloHitList->begin(), pCaloHitList->end());
+        CaloHitList unavailableHits;
+
+        CaloHitVector inputAvailableHits(iter->second->begin(), iter->second->end());
+        std::sort(inputAvailableHits.begin(), inputAvailableHits.end(), LArClusterHelper::SortHitsByPosition);
+
+        CaloHitVector clusteredHits(pCaloHitList->begin(), pCaloHitList->end());
+        std::sort(clusteredHits.begin(), clusteredHits.end(), LArClusterHelper::SortHitsByPosition);
 
         bool carryOn(true);
 
         while (carryOn)
         {
             carryOn = false;
+            CaloHitVector newClusteredHits;
 
-            CaloHitList newClusteredHits;
-
-            for (CaloHitList::const_iterator hitIterI = currentAvailableHits.begin(), hitIterIEnd = currentAvailableHits.end(); hitIterI != hitIterIEnd; ++hitIterI)
+            for (const CaloHit *const pCaloHitI : inputAvailableHits)
             {
-                const CaloHit *const pCaloHitI = *hitIterI;
+                if (unavailableHits.count(pCaloHitI))
+                    continue;
 
                 if (hitToClusterMap.end() != hitToClusterMap.find(pCaloHitI))
                     continue;
 
                 const CaloHit *pClosestHit = NULL;
-
                 float closestSeparationSquared(m_minCaloHitSeparationSquared);
 
-                for (CaloHitList::const_iterator hitIterJ = currentClusteredHits.begin(), hitIterJEnd = currentClusteredHits.end(); hitIterJ != hitIterJEnd; ++hitIterJ)
+                for (const CaloHit *const pCaloHitJ : clusteredHits)
                 {
-                    const CaloHit *const pCaloHitJ = *hitIterJ;
-
                     if (pCaloHitI->GetMipEquivalentEnergy() > pCaloHitJ->GetMipEquivalentEnergy())
                         continue;
 
@@ -163,18 +167,17 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloH
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
                 const Cluster *const pCluster = mapIter->second;
-
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHitI));
-                hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
+                (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
 
-                newClusteredHits.insert(pCaloHitI);
+                newClusteredHits.push_back(pCaloHitI);
                 carryOn = true;
             }
 
-            for (CaloHitList::const_iterator hitIter = newClusteredHits.begin(), hitIterEnd = newClusteredHits.end(); hitIter != hitIterEnd; ++hitIter)
+            for (const CaloHit *const pCaloHit : newClusteredHits)
             {
-                currentClusteredHits.insert(*hitIter);
-                currentAvailableHits.erase(*hitIter);
+                clusteredHits.push_back(pCaloHit);
+                unavailableHits.insert(pCaloHit);
             }
         }
     }
@@ -191,15 +194,21 @@ void TrackClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHit
     {
         unsigned int nLayersConsidered(0);
 
+        CaloHitVector caloHitsI(iterI->second->begin(), iterI->second->end());
+        std::sort(caloHitsI.begin(), caloHitsI.end(), LArClusterHelper::SortHitsByPosition);
+
         for (OrderedCaloHitList::const_iterator iterJ = iterI, iterJEnd = orderedCaloHitList.end(); (nLayersConsidered++ <= m_maxGapLayers + 1) && (iterJ != iterJEnd); ++iterJ)
         {
             if (iterJ->first == iterI->first || iterJ->first > iterI->first + m_maxGapLayers + 1)
                 continue;
 
-            for (CaloHitList::const_iterator hitIterI = iterI->second->begin(), hitIterIEnd = iterI->second->end(); hitIterI != hitIterIEnd; ++hitIterI)
+            CaloHitVector caloHitsJ(iterJ->second->begin(), iterJ->second->end());
+            std::sort(caloHitsJ.begin(), caloHitsJ.end(), LArClusterHelper::SortHitsByPosition);
+
+            for (const CaloHit *const pCaloHitI : caloHitsI)
             {
-                for (CaloHitList::const_iterator hitIterJ = iterJ->second->begin(), hitIterJEnd = iterJ->second->end(); hitIterJ != hitIterJEnd; ++hitIterJ)
-                    this->CreatePrimaryAssociation(*hitIterI, *hitIterJ, forwardHitAssociationMap, backwardHitAssociationMap);
+                for (const CaloHit *const pCaloHitJ : caloHitsJ)
+                    this->CreatePrimaryAssociation(pCaloHitI, pCaloHitJ, forwardHitAssociationMap, backwardHitAssociationMap);
             }
         }
     }
@@ -212,10 +221,11 @@ void TrackClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloH
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            const CaloHit *const pCaloHit = *hitIter;
+        CaloHitVector caloHits(iter->second->begin(), iter->second->end());
+        std::sort(caloHits.begin(), caloHits.end(), LArClusterHelper::SortHitsByPosition);
 
+        for (const CaloHit *const pCaloHit : caloHits)
+        {
             HitAssociationMap::const_iterator fwdIter = forwardHitAssociationMap.find(pCaloHit);
             const CaloHit *const pForwardHit((forwardHitAssociationMap.end() == fwdIter) ? NULL : fwdIter->second.GetPrimaryTarget());
 
@@ -244,9 +254,11 @@ void TrackClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orde
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        CaloHitVector caloHits(iter->second->begin(), iter->second->end());
+        std::sort(caloHits.begin(), caloHits.end(), LArClusterHelper::SortHitsByPosition);
+
+        for (const CaloHit *const pCaloHit : caloHits)
         {
-            const CaloHit *const pCaloHit = *hitIter;
             const CaloHit *const pForwardJoinHit = this->GetJoinHit(pCaloHit, forwardHitAssociationMap, backwardHitAssociationMap);
             const CaloHit *const pBackwardJoinHit = this->GetJoinHit(pForwardJoinHit, backwardHitAssociationMap, forwardHitAssociationMap);
 
@@ -270,9 +282,11 @@ void TrackClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &ord
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        CaloHitVector caloHits(iter->second->begin(), iter->second->end());
+        std::sort(caloHits.begin(), caloHits.end(), LArClusterHelper::SortHitsByPosition);
+
+        for (const CaloHit *const pCaloHit : caloHits)
         {
-            const CaloHit *const pCaloHit = *hitIter;
             const Cluster *pCluster = NULL;
 
             HitToClusterMap::const_iterator mapIter = hitToClusterMap.find(pCaloHit);
