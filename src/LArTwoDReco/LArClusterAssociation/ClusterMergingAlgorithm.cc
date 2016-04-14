@@ -52,14 +52,7 @@ StatusCode ClusterMergingAlgorithm::Run()
 
         this->MergeClusters(clusterVector, clusterMergeMap);
     }
-const ClusterList *pClusterList1(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pClusterList1))
-{
-    ClusterVector clusterVector1(pClusterList1->begin(), pClusterList1->end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "Alg " << this->GetType() << "Cluster " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy() << std::endl;
-}
+
     return STATUS_CODE_SUCCESS;
 }
 

@@ -13,7 +13,7 @@
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
-            #include "LArHelpers/LArPfoHelper.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -65,22 +65,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::Run()
 
     // Build new particles
     this->BuildParticles(particleList);
-const PfoList *pPfoList1(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_outputPfoListName, pPfoList1))
-{
-    PfoVector pfoVector1(pPfoList1->begin(), pPfoList1->end());
-    std::sort(pfoVector1.begin(), pfoVector1.end(), LArPfoHelper::SortByNHits);
-    std::cout << "Alg " << this->GetType() << " Pfo " << std::endl;
 
-    for (const Pfo *const pPfo1 : pfoVector1)
-    {
-        ClusterVector clusterVector1(pPfo1->GetClusterList().begin(), pPfo1->GetClusterList().end());
-        std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-        for (const Cluster *const pCluster1 : clusterVector1)
-            std::cout << "---PfoCluster " << this->GetType() << ", " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-             << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-    }
-}
     return STATUS_CODE_SUCCESS;
 }
 

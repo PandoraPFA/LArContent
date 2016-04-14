@@ -68,7 +68,7 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
     {
         foundSplit = true;
     }
-std::cout << "Alg " << this->GetType() << "Cluster " << pCluster->GetNCaloHits() << ", E " << pCluster->GetHadronicEnergy() << " foundSplit " << foundSplit << " splitPosition " << splitPosition << std::endl;
+
     if (!foundSplit)
         return STATUS_CODE_NOT_FOUND;
 

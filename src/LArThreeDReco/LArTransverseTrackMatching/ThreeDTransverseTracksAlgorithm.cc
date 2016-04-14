@@ -7,7 +7,7 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-        #include "LArHelpers/LArPfoHelper.h"
+
 #include "LArHelpers/LArGeometryHelper.h"
 #include "LArHelpers/LArClusterHelper.h"
 
@@ -282,83 +282,11 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
-std::cout << "INPUT LISTS: Alg " << this->GetType() << std::endl;
-{
-const ClusterList *pClusterList1(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ClustersU", pClusterList1))
-{
-    ClusterVector clusterVector1(pClusterList1->begin(), pClusterList1->end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "Alg " << this->GetType() << " ClusterU " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-}
-const ClusterList *pClusterList2(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ClustersV", pClusterList2))
-{
-    ClusterVector clusterVector1(pClusterList2->begin(), pClusterList2->end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "Alg " << this->GetType() << " ClusterV " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-}
-const ClusterList *pClusterList3(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ClustersW", pClusterList3))
-{
-    ClusterVector clusterVector1(pClusterList3->begin(), pClusterList3->end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "Alg " << this->GetType() << " ClusterW " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-}
-}
+
     for (TensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
-std::cout << "ToolChange: Alg " << this->GetType() << " tool " << (*iter)->GetType() << std::endl;
-const ClusterList *pClusterList1(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ClustersU", pClusterList1))
-{
-    ClusterVector clusterVector1(pClusterList1->begin(), pClusterList1->end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "Alg " << this->GetType() << " ClusterU " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-}
-const ClusterList *pClusterList2(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ClustersV", pClusterList2))
-{
-    ClusterVector clusterVector1(pClusterList2->begin(), pClusterList2->end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "Alg " << this->GetType() << " ClusterV " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-}
-const ClusterList *pClusterList3(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ClustersW", pClusterList3))
-{
-    ClusterVector clusterVector1(pClusterList3->begin(), pClusterList3->end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    for (const Cluster *const pCluster1 : clusterVector1)
-        std::cout << "Alg " << this->GetType() << " ClusterW " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-         << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-}
-const PfoList *pPfoList1(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "TrackParticles3D", pPfoList1))
-{
-    PfoVector pfoVector1(pPfoList1->begin(), pPfoList1->end());
-    std::sort(pfoVector1.begin(), pfoVector1.end(), LArPfoHelper::SortByNHits);
-
-    for (const Pfo *const pPfo1 : pfoVector1)
-    {
-        ClusterVector clusterVector1(pPfo1->GetClusterList().begin(), pPfo1->GetClusterList().end());
-        std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-        for (const Cluster *const pCluster1 : clusterVector1)
-            std::cout << "---3DTTPfoCluster " << this->GetType() << ", " << pCluster1->GetNCaloHits() << ", E " << pCluster1->GetHadronicEnergy()
-             << " il " << pCluster1->GetInnerPseudoLayer() << " oc " << pCluster1->GetOrderedCaloHitList().size() << " span " << (pCluster1->GetOuterPseudoLayer() - pCluster1->GetInnerPseudoLayer()) << std::endl;
-    }
-}
             iter = m_algorithmToolList.begin();
 
             if (++repeatCounter > m_nMaxTensorToolRepeats)
@@ -366,7 +294,6 @@ if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "TrackParticles3D",
         }
         else
         {
-std::cout << "NoToolChange: Alg " << this->GetType() << " tool " << (*iter)->GetType() << std::endl;
             ++iter;
         }
     }
