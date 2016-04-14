@@ -58,7 +58,7 @@ StatusCode ClusterSplittingAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, originalListName));
 
 const ClusterList *pClusterList1(nullptr);
-if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pClusterList1))
+if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "ClustersU", pClusterList1))
 {
     ClusterVector clusterVector1(pClusterList1->begin(), pClusterList1->end());
     std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
