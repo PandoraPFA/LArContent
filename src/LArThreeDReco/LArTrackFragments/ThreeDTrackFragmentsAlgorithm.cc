@@ -407,7 +407,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidin
 StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointList &projectedPositions,
     HitToClusterMap &hitToClusterMap, CaloHitList &matchedHits) const
 {
-    CaloHitList availableCaloHits;
+    CaloHitVector availableCaloHits;
 
     for(ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
     {
@@ -418,27 +418,28 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inpu
 
         CaloHitList caloHitList;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-        availableCaloHits.insert(caloHitList.begin(), caloHitList.end());
+        availableCaloHits.insert(availableCaloHits.end(), caloHitList.begin(), caloHitList.end());
 
         for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
             hitToClusterMap.insert(HitToClusterMap::value_type(*hIter, pCluster));
     }
 
-    for (CartesianPointList::const_iterator iter = projectedPositions.begin(), iterEnd = projectedPositions.end(); iter != iterEnd; ++iter)
-    {
-        const CartesianVector &projectedPosition = *iter;
-        float closestDistanceSquared(std::numeric_limits<float>::max());
-        const CaloHit *pClosestCaloHit(NULL);
+    std::sort(availableCaloHits.begin(), availableCaloHits.end(), LArClusterHelper::SortHitsByPosition);
 
-        for (CaloHitList::const_iterator hIter = availableCaloHits.begin(), hIterEnd = availableCaloHits.end(); hIter != hIterEnd; ++hIter)
+    for (const CartesianVector &projectedPosition : projectedPositions)
+    {
+        const CaloHit *pClosestCaloHit(NULL);
+        float closestDistanceSquared(std::numeric_limits<float>::max()), tieBreakerBestEnergy(0.f);
+
+        for (const CaloHit *const pCaloHit : availableCaloHits)
         {
-            const CaloHit *const pCaloHit = *hIter;
             const float distanceSquared((pCaloHit->GetPositionVector() - projectedPosition).GetMagnitudeSquared());
 
-            if (distanceSquared < closestDistanceSquared)
+            if ((distanceSquared < closestDistanceSquared) || ((std::fabs(distanceSquared - closestDistanceSquared) < std::numeric_limits<float>::epsilon()) && (pCaloHit->GetHadronicEnergy() > tieBreakerBestEnergy)))
             {
-                closestDistanceSquared = distanceSquared;
                 pClosestCaloHit = pCaloHit;
+                closestDistanceSquared = distanceSquared;
+                tieBreakerBestEnergy = pCaloHit->GetHadronicEnergy();
             }
         }
 
@@ -478,13 +479,19 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &
     unsigned int bestClusterMatchedHits(0);
     float tieBreakerBestEnergy(0.f);
 
-    for (ClusterToMatchedHitsMap::const_iterator iter = clusterToMatchedHitsMap.begin(), iterEnd = clusterToMatchedHitsMap.end(); iter != iterEnd; ++iter)
+    ClusterVector sortedClusters;
+    for (const auto &mapEntry : clusterToMatchedHitsMap) sortedClusters.push_back(mapEntry.first);
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : sortedClusters)
     {
-        if ((iter->second > bestClusterMatchedHits) || ((iter->second == bestClusterMatchedHits) && (iter->first->GetHadronicEnergy() > tieBreakerBestEnergy)))
+        const unsigned int nMatchedHits(clusterToMatchedHitsMap.at(pCluster));
+
+        if ((nMatchedHits > bestClusterMatchedHits) || ((nMatchedHits == bestClusterMatchedHits) && (pCluster->GetHadronicEnergy() > tieBreakerBestEnergy)))
         {
-            pBestMatchedCluster = iter->first;
-            bestClusterMatchedHits = iter->second;
-            tieBreakerBestEnergy = iter->first->GetHadronicEnergy();
+            pBestMatchedCluster = pCluster;
+            bestClusterMatchedHits = nMatchedHits;
+            tieBreakerBestEnergy = pCluster->GetHadronicEnergy();
         }
     }
 
@@ -502,14 +509,15 @@ void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPoin
     float chi2Sum(0.f);
     unsigned int nMatchedSamplingPoints(0);
 
-    for (CartesianPointList::const_iterator iter = projectedPositions.begin(), iterEnd = projectedPositions.end(); iter != iterEnd; ++iter)
+    CaloHitVector sortedMatchedHits(matchedHits.begin(), matchedHits.end());
+    std::sort(sortedMatchedHits.begin(), sortedMatchedHits.end(), LArClusterHelper::SortHitsByPosition);
+
+    for (const CartesianVector &projectedPosition : projectedPositions)
     {
-        const CartesianVector &projectedPosition = *iter;
         float closestDistanceSquared(std::numeric_limits<float>::max());
 
-        for (CaloHitList::const_iterator hIter = matchedHits.begin(), hIterEnd = matchedHits.end(); hIter != hIterEnd; ++hIter)
+        for (const CaloHit *const pCaloHit : matchedHits)
         {
-            const CaloHit *const pCaloHit = *hIter;
             const float distanceSquared((pCaloHit->GetPositionVector() - projectedPosition).GetMagnitudeSquared());
 
             if (distanceSquared < closestDistanceSquared)
@@ -539,10 +547,8 @@ bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointLis
     float minZproj(+std::numeric_limits<float>::max());
     float maxZproj(-std::numeric_limits<float>::max());
 
-    for (CartesianPointList::const_iterator iter = projectedPositions.begin(), iterEnd = projectedPositions.end(); iter != iterEnd; ++iter)
+    for (const CartesianVector &projectedPosition : projectedPositions)
     {
-        const CartesianVector &projectedPosition = *iter;
-
         minXproj = std::min(minXproj, projectedPosition.GetX());
         maxXproj = std::max(maxXproj, projectedPosition.GetX());
         minZproj = std::min(minZproj, projectedPosition.GetZ());
@@ -559,10 +565,8 @@ bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointLis
     float minZcluster(+std::numeric_limits<float>::max());
     float maxZcluster(-std::numeric_limits<float>::max());
 
-    for(ClusterList::const_iterator iter = matchedClusters.begin(), iterEnd = matchedClusters.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : matchedClusters)
     {
-        const Cluster *const pCluster = *iter;
-
         CartesianVector minPosition(0.f,0.f,0.f);
         CartesianVector maxPosition(0.f,0.f,0.f);
 

@@ -538,7 +538,7 @@ private:
      *  @param  secondWeight the weight assigned to the layer above the input coordinate
      */
     void GetLongitudinalInterpolationWeights(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter,
-        const LayerFitResultMap::const_iterator &secondLayerIter, float &firstWeight, float &secondWeight) const;
+        const LayerFitResultMap::const_iterator &secondLayerIter, double &firstWeight, double &secondWeight) const;
 
    /**
      *  @brief  Get interpolation weights for layers surrounding a specified transverse position
@@ -550,7 +550,7 @@ private:
      *  @param  firstWeight the weight assigned to the layer above the input coordinate
      */
     void GetTransverseInterpolationWeights(const float x, const LayerFitResultMap::const_iterator &firstLayerIter,
-        const LayerFitResultMap::const_iterator &secondLayerIter, float &firstWeight, float &secondWeight) const;
+        const LayerFitResultMap::const_iterator &secondLayerIter, double &firstWeight, double &secondWeight) const;
 
     const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
     unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window

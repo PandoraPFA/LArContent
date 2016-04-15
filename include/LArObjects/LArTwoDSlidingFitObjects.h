@@ -179,7 +179,7 @@ public:
      *  @param secondWeight  the weight to be applied to the downstream layer
      */
     LayerInterpolation(const LayerFitResultMap::const_iterator &firstLayerIter, const LayerFitResultMap::const_iterator &secondLayerIter,
-        const float firstWeight, const float secondWeight);
+        const double firstWeight, const double secondWeight);
 
     /**
      *  @brief  Whether the object is initialized
@@ -207,21 +207,21 @@ public:
     *
      *  @return the weight for the start layer
      */
-    float GetStartLayerWeight() const;
+    double GetStartLayerWeight() const;
 
     /**
      *  @brief  Get the end layer weight
      *
      *  @return the weight for the end layer
      */
-    float GetEndLayerWeight() const;
+    double GetEndLayerWeight() const;
 
 private:
     bool                                m_isInitialized;    ///< Whether the object is initialized
     LayerFitResultMap::const_iterator   m_startLayerIter;   ///< The start layer iterator
     LayerFitResultMap::const_iterator   m_endLayerIter;     ///< The end layer iterator
-    float                               m_startLayerWeight; ///< The start layer weight
-    float                               m_endLayerWeight;   ///< The end layer weight
+    double                              m_startLayerWeight; ///< The start layer weight
+    double                              m_endLayerWeight;   ///< The end layer weight
 };
 
 typedef std::vector<LayerInterpolation> LayerInterpolationList;
@@ -242,7 +242,7 @@ class FitSegment
      *  @param startX the x position at the start layer
      *  @param endX the x position at the end layer
      */
-    FitSegment(const int startLayer, const int endLayer, const float startX, const float endX);
+    FitSegment(const int startLayer, const int endLayer, const double startX, const double endX);
 
     /**
      *  @brief  Get start layer
@@ -263,14 +263,14 @@ class FitSegment
      *
      *  @return the minimum x value
      */
-    float GetMinX() const;
+    double GetMinX() const;
 
     /**
      *  @brief  Get the maximum x value
      *
      *  @return the maximum x value
      */
-    float GetMaxX() const;
+    double GetMaxX() const;
 
     /**
      *  @brief  Whether the x coordinate increases between the start and end layers
@@ -282,8 +282,8 @@ class FitSegment
 private:
     int             m_startLayer;                           ///< The start layer
     int             m_endLayer;                             ///< The end layer
-    float           m_minX;                                 ///< The minimum x value
-    float           m_maxX;                                 ///< The maximum x value
+    double          m_minX;                                 ///< The minimum x value
+    double          m_maxX;                                 ///< The maximum x value
     bool            m_isIncreasingX;                        ///< Whether the x coordinate increases between the start and end layers
 };
 
@@ -411,7 +411,7 @@ inline LayerInterpolation::LayerInterpolation() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LayerInterpolation::LayerInterpolation(const LayerFitResultMap::const_iterator &startLayerIter,
-        const LayerFitResultMap::const_iterator &endLayerIter, const float startLayerWeight, const float endLayerWeight) :
+        const LayerFitResultMap::const_iterator &endLayerIter, const double startLayerWeight, const double endLayerWeight) :
     m_isInitialized(true),
     m_startLayerIter(startLayerIter),
     m_endLayerIter(endLayerIter),
@@ -449,7 +449,7 @@ inline LayerFitResultMap::const_iterator LayerInterpolation::GetEndLayerIter() c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LayerInterpolation::GetStartLayerWeight() const
+inline double LayerInterpolation::GetStartLayerWeight() const
 {
     if (!m_isInitialized)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
@@ -459,7 +459,7 @@ inline float LayerInterpolation::GetStartLayerWeight() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LayerInterpolation::GetEndLayerWeight() const
+inline double LayerInterpolation::GetEndLayerWeight() const
 {
     if (!m_isInitialized)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
@@ -470,7 +470,7 @@ inline float LayerInterpolation::GetEndLayerWeight() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline FitSegment::FitSegment(const int startLayer, const int endLayer, const float startX, const float endX) :
+inline FitSegment::FitSegment(const int startLayer, const int endLayer, const double startX, const double endX) :
     m_startLayer(startLayer),
     m_endLayer(endLayer)
 {
@@ -495,14 +495,14 @@ inline int FitSegment::GetEndLayer() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float FitSegment::GetMinX() const
+inline double FitSegment::GetMinX() const
 {
     return m_minX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float FitSegment::GetMaxX() const
+inline double FitSegment::GetMaxX() const
 {
     return m_maxX;
 }

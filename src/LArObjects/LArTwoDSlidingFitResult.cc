@@ -838,7 +838,7 @@ float TwoDSlidingFitResult::GetFitRms(const LayerInterpolation &layerInterpolati
 
 StatusCode TwoDSlidingFitResult::LongitudinalInterpolation(const float rL, LayerInterpolation &layerInterpolation) const
 {
-    float firstWeight(0.f), secondWeight(0.f);
+    double firstWeight(0.), secondWeight(0.);
     LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
 
     const StatusCode statusCode(this->GetLongitudinalSurroundingLayers(rL, firstLayerIter, secondLayerIter));
@@ -856,7 +856,7 @@ StatusCode TwoDSlidingFitResult::LongitudinalInterpolation(const float rL, Layer
 
 StatusCode TwoDSlidingFitResult::TransverseInterpolation(const float x, const FitSegment &fitSegment, LayerInterpolation &layerInterpolation) const
 {
-    float firstWeight(0.f), secondWeight(0.f);
+    double firstWeight(0.), secondWeight(0.);
     LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
 
     const StatusCode statusCode(this->GetTransverseSurroundingLayers(x, fitSegment.GetStartLayer(), fitSegment.GetEndLayer(), firstLayerIter, secondLayerIter));
@@ -1036,30 +1036,30 @@ StatusCode TwoDSlidingFitResult::GetTransverseSurroundingLayers(const float x, c
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoDSlidingFitResult::GetLongitudinalInterpolationWeights(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter,
-    const LayerFitResultMap::const_iterator &secondLayerIter, float &firstWeight, float &secondWeight) const
+    const LayerFitResultMap::const_iterator &secondLayerIter, double &firstWeight, double &secondWeight) const
 {
     if (m_layerFitResultMap.end() == firstLayerIter || m_layerFitResultMap.end() == secondLayerIter)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const float deltaL(rL - firstLayerIter->second.GetL());
-    const float deltaLLayers(secondLayerIter->second.GetL() - firstLayerIter->second.GetL());
+    const double deltaL(rL - firstLayerIter->second.GetL());
+    const double deltaLLayers(secondLayerIter->second.GetL() - firstLayerIter->second.GetL());
 
-    if (std::fabs(deltaLLayers) > std::numeric_limits<float>::epsilon())
+    if (std::fabs(deltaLLayers) > std::numeric_limits<double>::epsilon())
     {
-        firstWeight = 1.f - deltaL / deltaLLayers;
+        firstWeight = 1. - deltaL / deltaLLayers;
         secondWeight = deltaL / deltaLLayers;
     }
     else
     {
-        firstWeight = 0.5f;
-        secondWeight = 0.5f;
+        firstWeight = 0.5;
+        secondWeight = 0.5;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoDSlidingFitResult::GetTransverseInterpolationWeights(const float x, const LayerFitResultMap::const_iterator &firstLayerIter,
-    const LayerFitResultMap::const_iterator &secondLayerIter, float &firstWeight, float &secondWeight) const
+    const LayerFitResultMap::const_iterator &secondLayerIter, double &firstWeight, double &secondWeight) const
 {
     if (m_layerFitResultMap.end() == firstLayerIter || m_layerFitResultMap.end() == secondLayerIter)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -1070,18 +1070,18 @@ void TwoDSlidingFitResult::GetTransverseInterpolationWeights(const float x, cons
     this->GetGlobalPosition(firstLayerIter->second.GetL(), firstLayerIter->second.GetFitT(), firstLayerPosition);
     this->GetGlobalPosition(secondLayerIter->second.GetL(), secondLayerIter->second.GetFitT(), secondLayerPosition);
 
-    const float deltaP(x - firstLayerPosition.GetX());
-    const float deltaPLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
+    const double deltaP(x - firstLayerPosition.GetX());
+    const double deltaPLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
 
-    if (std::fabs(deltaPLayers) > std::numeric_limits<float>::epsilon())
+    if (std::fabs(deltaPLayers) > std::numeric_limits<double>::epsilon())
     {
-        firstWeight = 1.f - deltaP / deltaPLayers;
+        firstWeight = 1. - deltaP / deltaPLayers;
         secondWeight = deltaP / deltaPLayers;
     }
     else
     {
-        firstWeight = 0.5f;
-        secondWeight = 0.5f;
+        firstWeight = 0.5;
+        secondWeight = 0.5;
     }
 }
 
