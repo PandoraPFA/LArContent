@@ -27,46 +27,46 @@ public:
      *  @param  thetaV  the angle from the W axis to the V axis (radians)
      *  @param  sigmaUVW  nominal spatial resolution for U, V and W (cm)
      */
-    LArRotationalTransformationPlugin(const float thetaU, const float thetaV, const float sigmaUVW);
+    LArRotationalTransformationPlugin(const double thetaU, const double thetaV, const double sigmaUVW);
 
     /**
      *  @brief  Destructor
      */
     virtual ~LArRotationalTransformationPlugin();
 
-    virtual float UVtoW(const float u, const float v) const;
+    virtual double UVtoW(const double u, const double v) const;
 
-    virtual float VWtoU(const float v, const float w) const;
+    virtual double VWtoU(const double v, const double w) const;
 
-    virtual float WUtoV(const float w, const float u) const;
+    virtual double WUtoV(const double w, const double u) const;
 
-    virtual float UVtoY(const float u, const float v) const;
+    virtual double UVtoY(const double u, const double v) const;
 
-    virtual float UVtoZ(const float u, const float v) const;
+    virtual double UVtoZ(const double u, const double v) const;
 
-    virtual float YZtoU(const float y, const float z) const;
+    virtual double YZtoU(const double y, const double z) const;
 
-    virtual float YZtoV(const float y, const float z) const;
+    virtual double YZtoV(const double y, const double z) const;
 
-    virtual float GetSigmaUVW() const;
+    virtual double GetSigmaUVW() const;
 
-    virtual void GetMinChiSquaredYZ(const float u, const float v, const float w, const float sigmaU, const float sigmaV, const float sigmaW,
-        float &y, float &z, float &chiSquared) const;
+    virtual void GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV, const double sigmaW,
+        double &y, double &z, double &chiSquared) const;
 
     virtual void GetProjectedYZ(const PositionAndType &hitPositionAndType, const PositionAndType &fitPositionAndType1,
-        const PositionAndType &fitPositionAndType2, const float sigmaHit, const float sigmaFit, float &y, float &z, float &chiSquared) const;
+        const PositionAndType &fitPositionAndType2, const double sigmaHit, const double sigmaFit, double &y, double &z, double &chiSquared) const;
 
 private:
 
-    const float     m_thetaU;          ///< inclination of U wires (radians)
-    const float     m_thetaV;          ///< inclination of V wires (radians)
-    const float     m_sigmaUVW;        ///< resolution (cm), for calculation of chi2
-    const float     m_sinUminusV;      ///< sin(thetaU-thetaV)
-    const float     m_sinUplusV;       ///< sin(thetaU+thetaV)
-    const float     m_sinU;            ///< sin(thetaU)
-    const float     m_sinV;            ///< sin(thetaV)
-    const float     m_cosU;            ///< cos(thetaU)
-    const float     m_cosV;            ///< cos(thetaV)
+    const double    m_thetaU;          ///< inclination of U wires (radians)
+    const double    m_thetaV;          ///< inclination of V wires (radians)
+    const double    m_sigmaUVW;        ///< resolution (cm), for calculation of chi2
+    const double    m_sinUminusV;      ///< sin(thetaU-thetaV)
+    const double    m_sinUplusV;       ///< sin(thetaU+thetaV)
+    const double    m_sinU;            ///< sin(thetaU)
+    const double    m_sinV;            ///< sin(thetaV)
+    const double    m_cosU;            ///< cos(thetaU)
+    const double    m_cosV;            ///< cos(thetaV)
 };
 
 } // namespace lar_content

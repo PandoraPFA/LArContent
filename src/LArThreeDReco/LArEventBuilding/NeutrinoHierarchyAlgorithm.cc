@@ -172,10 +172,11 @@ void NeutrinoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, Pf
 void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pNeutrinoPfo, const PfoList &candidateDaughterPfoList,
     const PfoInfoMap &pfoInfoMap) const
 {
-    // Add neutrino->primary pfo links
-    const PfoList originalDaughters(pNeutrinoPfo->GetDaughterPfoList());
+    PfoVector candidateDaughterPfoVector(candidateDaughterPfoList.begin(), candidateDaughterPfoList.end());
+    std::sort(candidateDaughterPfoVector.begin(), candidateDaughterPfoVector.end(), LArPfoHelper::SortByNHits);
 
-    for (const ParticleFlowObject *const pDaughterPfo : candidateDaughterPfoList)
+    // Add neutrino->primary pfo links
+    for (const ParticleFlowObject *const pDaughterPfo : candidateDaughterPfoVector)
     {
         PfoInfoMap::const_iterator iter = pfoInfoMap.find(pDaughterPfo);
 
@@ -184,16 +185,23 @@ void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *con
     }
 
     // Add primary pfo->daughter pfo links
-    for (const PfoInfoMap::value_type &iter : pfoInfoMap)
-    {
-        const PfoInfo *const pPfoInfo(iter.second);
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : pfoInfoMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
 
-        for (const ParticleFlowObject *const pDaughterPfo : pPfoInfo->GetDaughterPfoList())
+    for (const Pfo *const pPfo : sortedPfos)
+    {
+        const PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
+
+        PfoVector daughterPfos(pPfoInfo->GetDaughterPfoList().begin(), pPfoInfo->GetDaughterPfoList().end());
+        std::sort(daughterPfos.begin(), daughterPfos.end(), LArPfoHelper::SortByNHits);
+
+        for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoInfo->GetThisPfo(), pDaughterPfo));
     }
 
     // Deal with any remaining parent-less pfos
-    for (const ParticleFlowObject *const pRemainingPfo : candidateDaughterPfoList)
+    for (const ParticleFlowObject *const pRemainingPfo : candidateDaughterPfoVector)
     {
         if (!pRemainingPfo->GetParentPfoList().empty())
             continue;
@@ -211,9 +219,13 @@ void NeutrinoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *con
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
     std::cout << "-Neutrino Pfo, nDaughters " << pNeutrinoPfo->GetDaughterPfoList().size() << ", nVertices " << pNeutrinoPfo->GetVertexList().size() << std::endl;
 
-    for (const PfoInfoMap::value_type &iter : pfoInfoMap)
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : pfoInfoMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const Pfo *const pPfo : sortedPfos)
     {
-        const PfoInfo *const pPfoInfo(iter.second);
+        const PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
         std::cout << "Pfo " << pPfoInfo->GetThisPfo() << ", vtxAssoc " << pPfoInfo->IsNeutrinoVertexAssociated()
                   << ", parent " << pPfoInfo->GetParentPfo() << ", nDaughters " << pPfoInfo->GetDaughterPfoList().size() << " (";
@@ -236,9 +248,9 @@ void NeutrinoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *con
         display = false;
     }
 
-    for (const PfoInfoMap::value_type &iter : pfoInfoMap)
+    for (const Pfo *const pPfo : sortedPfos)
     {
-        const PfoInfo *const pPfoInfo(iter.second);
+        const PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
         if (!pPfoInfo->GetDaughterPfoList().empty())
         {

@@ -26,7 +26,7 @@ public:
      *  @param  U the U position
      *  @param  V the V position
      */
-     virtual float UVtoW(const float u, const float v) const = 0;
+     virtual double UVtoW(const double u, const double v) const = 0;
 
     /** 
      *  @brief  Transform from (V,W) to U position
@@ -34,7 +34,7 @@ public:
      *  @param  V the V position
      *  @param  W the W position
      */
-     virtual float VWtoU(const float v, const float w) const = 0;
+     virtual double VWtoU(const double v, const double w) const = 0;
 
     /** 
      *  @brief  Transform from (W,U) to V position
@@ -42,7 +42,7 @@ public:
      *  @param  W the W position
      *  @param  U the U position
      */
-     virtual float WUtoV(const float w, const float u) const = 0;
+     virtual double WUtoV(const double w, const double u) const = 0;
 
     /** 
      *  @brief  Transform from (U,V) to Y position
@@ -50,7 +50,7 @@ public:
      *  @param  U the U position
      *  @param  V the V position
      */
-    virtual float UVtoY(const float u, const float v)  const = 0;
+    virtual double UVtoY(const double u, const double v)  const = 0;
 
     /** 
      *  @brief  Transform from (U,V) to Z position
@@ -58,7 +58,7 @@ public:
      *  @param  U the U position
      *  @param  V the V position
      */
-     virtual float UVtoZ(const float u, const float v) const = 0;
+     virtual double UVtoZ(const double u, const double v) const = 0;
 
     /** 
      *  @brief  Transform from (Y,Z) to U position
@@ -66,7 +66,7 @@ public:
      *  @param  Y the Y position
      *  @param  Z the Z position
      */
-     virtual float YZtoU(const float y, const float z) const = 0;
+     virtual double YZtoU(const double y, const double z) const = 0;
 
     /** 
      *  @brief  Transform from (Y,Z) to V position
@@ -74,7 +74,7 @@ public:
      *  @param  Y the Y position
      *  @param  Z the Z position
      */
-     virtual float YZtoV(const float y, const float z) const = 0;
+     virtual double YZtoV(const double y, const double z) const = 0;
 
     /** 
      *  @brief  Transform from (pU,pV) to pW direction
@@ -82,7 +82,7 @@ public:
      *  @param  pU the pU direction
      *  @param  pV the pV direction
      */
-     virtual float PUPVtoPW(const float pu, const float pv) const;
+     virtual double PUPVtoPW(const double pu, const double pv) const;
 
     /** 
      *  @brief  Transform from (pV,pW) to pU direction
@@ -90,7 +90,7 @@ public:
      *  @param  pV the pV direction
      *  @param  pW the pW direction
      */
-     virtual float PVPWtoPU(const float pv, const float pw) const;
+     virtual double PVPWtoPU(const double pv, const double pw) const;
 
     /** 
      *  @brief  Transform from (pW,pU) to pV direction
@@ -98,7 +98,7 @@ public:
      *  @param  pW the pW direction
      *  @param  pU the pU direction
      */
-     virtual float PWPUtoPV(const float pw, const float pu) const;
+     virtual double PWPUtoPV(const double pw, const double pu) const;
 
     /** 
      *  @brief  Transform from (pU,pV) to pY position
@@ -106,7 +106,7 @@ public:
      *  @param  pU the pU position
      *  @param  pV the pV position
      */
-    virtual float PUPVtoPY(const float pu, const float pv)  const;
+    virtual double PUPVtoPY(const double pu, const double pv)  const;
 
     /** 
      *  @brief  Transform from (pU,pV) to pZ position
@@ -114,7 +114,7 @@ public:
      *  @param  pU the pU position
      *  @param  pV the pV position
      */
-     virtual float PUPVtoPZ(const float pu, const float pv) const;
+     virtual double PUPVtoPZ(const double pu, const double pv) const;
 
     /** 
      *  @brief  Transform from (pY,pZ) to pU direction
@@ -122,7 +122,7 @@ public:
      *  @param  pU the U component
      *  @param  pV the V component
      */
-    virtual float PYPZtoPU(const float py, const float pz) const;
+    virtual double PYPZtoPU(const double py, const double pz) const;
 
     /** 
      *  @brief  Transform from (pY,pZ) to pV direction
@@ -130,14 +130,14 @@ public:
      *  @param  pU the U component
      *  @param  pV the V component
      */
-    virtual float PYPZtoPV(const float py, const float pz) const;
+    virtual double PYPZtoPV(const double py, const double pz) const;
 
     /** 
      *  @brief  Get resolution, in cm, for calculation of chi2
      * 
      *  @return resolution, in cm, for calculation of chi2
      */
-    virtual float GetSigmaUVW() const = 0;
+    virtual double GetSigmaUVW() const = 0;
 
     /** 
      *  @brief  Get the y, z position that yields the minimum chi squared value with respect to specified u, v and w coordinates
@@ -152,10 +152,10 @@ public:
      *  @param  z to receive the z coordinate
      *  @param  chiSquared to receive the chi squared value
      */
-    virtual void GetMinChiSquaredYZ(const float u, const float v, const float w, const float sigmaU, const float sigmaV, const float sigmaW,
-        float &y, float &z, float &chiSquared) const = 0;
+    virtual void GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV, const double sigmaW,
+        double &y, double &z, double &chiSquared) const = 0;
 
-    typedef std::pair<float, pandora::HitType> PositionAndType;
+    typedef std::pair<double, pandora::HitType> PositionAndType;
 
     /** 
      *  @brief  Get the y, z position that corresponds to a projection of two fit positions onto the specific wire associated with a hit
@@ -170,7 +170,7 @@ public:
      *  @param  chiSquared to receive the chi squared value
      */
     virtual void GetProjectedYZ(const PositionAndType &hitPositionAndType, const PositionAndType &fitPositionAndType1,
-        const PositionAndType &fitPositionAndType2, const float sigmaHit, const float sigmaFit, float &y, float &z, float &chiSquared) const = 0;
+        const PositionAndType &fitPositionAndType2, const double sigmaHit, const double sigmaFit, double &y, double &z, double &chiSquared) const = 0;
     
 };
 
