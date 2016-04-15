@@ -11,49 +11,49 @@
 namespace lar_content
 {
 
-float LArTransformationPlugin::PUPVtoPW(const float pu, const float pv) const
+double LArTransformationPlugin::PUPVtoPW(const double pu, const double pv) const
 {
     return this->UVtoW(pu, pv); 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 
      
-float LArTransformationPlugin::PVPWtoPU(const float pv, const float pw) const
+double LArTransformationPlugin::PVPWtoPU(const double pv, const double pw) const
 {
     return this->VWtoU(pv, pw);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArTransformationPlugin::PWPUtoPV(const float pw, const float pu) const
+double LArTransformationPlugin::PWPUtoPV(const double pw, const double pu) const
 {
     return this->WUtoV(pw, pu);
 }
   
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArTransformationPlugin::PUPVtoPY(const float pu, const float pv)  const
+double LArTransformationPlugin::PUPVtoPY(const double pu, const double pv)  const
 {
     return this->UVtoY(pu, pv);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
   
-float LArTransformationPlugin::PUPVtoPZ(const float pu, const float pv) const
+double LArTransformationPlugin::PUPVtoPZ(const double pu, const double pv) const
 {
     return this->UVtoZ(pu, pv); 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-float LArTransformationPlugin::PYPZtoPU(const float py, const float pz) const
+double LArTransformationPlugin::PYPZtoPU(const double py, const double pz) const
 {
     return this->YZtoU(py, pz);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArTransformationPlugin::PYPZtoPV(const float py, const float pz) const
+double LArTransformationPlugin::PYPZtoPV(const double py, const double pz) const
 {
     return this->YZtoV(py, pz);
 }

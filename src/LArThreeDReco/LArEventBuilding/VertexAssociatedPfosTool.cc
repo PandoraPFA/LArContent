@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArPfoHelper.h"
 #include "LArHelpers/LArPointingClusterHelper.h"
 
 #include "LArObjects/LArPointingCluster.h"
@@ -40,9 +41,13 @@ void VertexAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm,
 
     const CartesianVector &neutrinoVertex(pNeutrinoVertex->GetPosition());
 
-    for (const PfoInfoMap::value_type mapIter : pfoInfoMap)
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : pfoInfoMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const Pfo *const pPfo : sortedPfos)
     {
-        PfoInfo *const pPfoInfo(mapIter.second);
+        PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
         if (pPfoInfo->IsNeutrinoVertexAssociated() || pPfoInfo->GetParentPfo())
             continue;
