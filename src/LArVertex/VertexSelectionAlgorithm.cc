@@ -419,7 +419,16 @@ float VertexSelectionAlgorithm::atan2Fast(const float y, const float x) const
 
 bool VertexSelectionAlgorithm::SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs)
 {
-    return (pLhs->GetPosition().GetZ() < pRhs->GetPosition().GetZ());
+    const CartesianVector deltaPosition(pRhs->GetPosition() - pLhs->GetPosition());
+
+    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+
+    // ATTN No way to distinguish between vertices if still have a tie in y coordinate
+    return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
