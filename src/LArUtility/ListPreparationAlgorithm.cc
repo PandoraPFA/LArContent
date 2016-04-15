@@ -221,8 +221,9 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
             if (pCaloHit1 == pCaloHit2)
                 continue;
 
-            if ((pCaloHit2->GetPositionVector() - pCaloHit1->GetPositionVector()).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon() &&
-                pCaloHit2->GetMipEquivalentEnergy() > pCaloHit1->GetMipEquivalentEnergy())
+            if (((pCaloHit2->GetPositionVector() - pCaloHit1->GetPositionVector()).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon()) &&
+                ((std::fabs(pCaloHit2->GetMipEquivalentEnergy() - pCaloHit1->GetMipEquivalentEnergy()) < std::numeric_limits<float>::epsilon()) ||
+                (pCaloHit2->GetMipEquivalentEnergy() > pCaloHit1->GetMipEquivalentEnergy())) )
             {
                 isUnique = false;
                 break;

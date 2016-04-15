@@ -67,6 +67,9 @@ StatusCode VertexSelectionAlgorithm::Run()
     VertexList filteredVertexList;
     this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
 
+    if (filteredVertexList.empty())
+        return STATUS_CODE_SUCCESS;
+
     BeamConstants beamConstants;
     this->GetBeamConstants(filteredVertexList, beamConstants);
 
