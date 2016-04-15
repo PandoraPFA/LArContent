@@ -27,22 +27,19 @@ TrackConsolidationAlgorithm::TrackConsolidationAlgorithm() :
 void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultList &slidingFitResultListI,
     const ClusterVector &showerClustersJ, ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
-    for (TwoDSlidingFitResultList::const_iterator iterI = slidingFitResultListI.begin(), iterEndI = slidingFitResultListI.end(); iterI != iterEndI; ++iterI)
+    for (const TwoDSlidingFitResult &slidingFitResultI : slidingFitResultListI)
     {
-        const TwoDSlidingFitResult &slidingFitResultI = *iterI;
-
         const Cluster *const pClusterI = slidingFitResultI.GetCluster();
         const float thisLengthSquaredI(LArClusterHelper::GetLengthSquared(pClusterI));
 
-        for (ClusterVector::const_iterator iterJ = showerClustersJ.begin(), iterEndJ = showerClustersJ.end(); iterJ != iterEndJ; ++iterJ)
+        for (const Cluster *const pClusterJ : showerClustersJ)
         {
-            const Cluster *const pClusterJ = *iterJ;
             const float thisLengthSquaredJ(LArClusterHelper::GetLengthSquared(pClusterJ));
 
             if (pClusterI == pClusterJ)
                 continue;
 
-            if (2.0 * thisLengthSquaredJ > thisLengthSquaredI)
+            if (2.f * thisLengthSquaredJ > thisLengthSquaredI)
                 continue;
 
             this->GetReclusteredHits(slidingFitResultI, pClusterJ, caloHitsToAddI, caloHitsToRemoveJ);
@@ -52,7 +49,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResultL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult& slidingFitResultI, const Cluster *const pClusterJ,
+void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult &slidingFitResultI, const Cluster *const pClusterJ,
     ClusterToHitMap &caloHitsToAddI, ClusterToHitMap &caloHitsToRemoveJ) const
 {
     const Cluster *const pClusterI(slidingFitResultI.GetCluster());

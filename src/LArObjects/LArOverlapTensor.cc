@@ -20,6 +20,8 @@
 #include "LArObjects/LArShowerOverlapResult.h"
 #include "LArObjects/LArTrackOverlapResult.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lar_content
@@ -56,6 +58,8 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
         Element element(pClusterU, pClusterV, pClusterW, iterW->second);
         elementList.push_back(element);
     }
+
+    std::sort(elementList.begin(), elementList.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -83,6 +87,17 @@ void OverlapTensor<T>::GetConnectedElements(const pandora::Cluster *const pClust
     ClusterList clusterListU, clusterListV, clusterListW;
     this->GetConnectedElements(pCluster, ignoreUnavailable, elementList, clusterListU, clusterListV, clusterListW);
     nU = clusterListU.size(); nV = clusterListV.size(); nW = clusterListW.size();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void OverlapTensor<T>::GetSortedKeyClusters(ClusterVector &sortedKeyClusters) const
+{
+    for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
+        sortedKeyClusters.push_back(iterU->first);
+
+    std::sort(sortedKeyClusters.begin(), sortedKeyClusters.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -244,6 +259,8 @@ void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const
             }
         }
     }
+
+    std::sort(elementList.begin(), elementList.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

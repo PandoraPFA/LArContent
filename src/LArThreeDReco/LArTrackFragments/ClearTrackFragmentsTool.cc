@@ -37,14 +37,17 @@ bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *const pAlgorith
 
 bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const
 {
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
+
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (!iterU->first->IsAvailable())
+        if (!pKeyCluster->IsAvailable())
             continue;
 
         TensorType::ElementList elementList;
 
-        if (!this->GetAndCheckElementList(overlapTensor, iterU->first, elementList))
+        if (!this->GetAndCheckElementList(overlapTensor, pKeyCluster, elementList))
             continue;
 
         IteratorList iteratorList;
@@ -235,19 +238,18 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 {
     pFragmentCluster = NULL;
 
-    const CaloHitList &caloHitList(overlapResult.GetFragmentCaloHitList());
-    const ClusterList &clusterList(overlapResult.GetFragmentClusterList());
     const HitType fragmentHitType(overlapResult.GetFragmentHitType());
+    const CaloHitList &caloHitList(overlapResult.GetFragmentCaloHitList());
+    ClusterVector clusterVector(overlapResult.GetFragmentClusterList().begin(), overlapResult.GetFragmentClusterList().end());
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 
     const std::string currentListName((TPC_VIEW_U == fragmentHitType) ? pAlgorithm->GetClusterListNameU() :
         (TPC_VIEW_V == fragmentHitType) ? pAlgorithm->GetClusterListNameV() : pAlgorithm->GetClusterListNameW());
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
 
-    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : clusterVector)
     {
-        const Cluster *const pCluster = *cIter;
-
         if (!pCluster->IsAvailable())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
@@ -255,10 +257,8 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
         pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHitList);
 
         CaloHitList daughterHits, separateHits;
-        for (CaloHitList::const_iterator hIter = clusterHitList.begin(), hIterEnd = clusterHitList.end(); hIter != hIterEnd; ++hIter)
+        for (const CaloHit *const pCaloHit : clusterHitList)
         {
-            const CaloHit *const pCaloHit = *hIter;
-
             if (caloHitList.count(pCaloHit))
             {
                 daughterHits.insert(pCaloHit);
@@ -346,7 +346,7 @@ void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *con
 
     if (rebuildList.empty())
         return;
-        
+
     pAlgorithm->RebuildClusters(rebuildList, newClusters);
 }
 

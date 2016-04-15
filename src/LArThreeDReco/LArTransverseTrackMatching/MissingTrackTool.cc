@@ -41,12 +41,14 @@ bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, Te
 void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
     ClusterList usedClusters;
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(iterU->first, false, elementList, nU, nV, nW);
+        overlapTensor.GetConnectedElements(pKeyCluster, false, elementList, nU, nV, nW);
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {

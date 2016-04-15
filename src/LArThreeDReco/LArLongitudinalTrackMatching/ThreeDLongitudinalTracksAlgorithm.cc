@@ -28,14 +28,6 @@ ThreeDLongitudinalTracksAlgorithm::ThreeDLongitudinalTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDLongitudinalTracksAlgorithm::SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs)
-{
-    return (lhs.GetOverlapResult().GetInnerChi2() + lhs.GetOverlapResult().GetOuterChi2() < 
-        rhs.GetOverlapResult().GetInnerChi2() + rhs.GetOverlapResult().GetOuterChi2());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     LongitudinalOverlapResult overlapResult;

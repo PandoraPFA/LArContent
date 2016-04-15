@@ -74,7 +74,10 @@ bool ShowerOverlapResult::operator<(const ShowerOverlapResult &rhs) const
     if (!rhs.IsInitialized())
         return false;
 
-    return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
+        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+
+    return (m_xOverlap.GetXOverlapSpan() > rhs.m_xOverlap.GetXOverlapSpan());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

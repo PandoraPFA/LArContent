@@ -62,10 +62,8 @@ StatusCode CosmicRayBaseMatchingAlgorithm::GetAvailableClusters(const std::strin
         return STATUS_CODE_SUCCESS;
     }
 
-    for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : *pClusterList)
     {
-        const Cluster *const pCluster = *cIter;
-
         if (!pCluster->IsAvailable())
             continue;
 
@@ -92,14 +90,10 @@ void CosmicRayBaseMatchingAlgorithm::MatchClusters(const ClusterVector &clusterV
     if (hitType1 == hitType2)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    for (ClusterVector::const_iterator iter1 = clusterVector1.begin(), iterEnd1 = clusterVector1.end(); iter1 != iterEnd1; ++iter1)
+    for (const Cluster *const pCluster1 : clusterVector1)
     {
-        const Cluster *const pCluster1 = *iter1;
-
-        for (ClusterVector::const_iterator iter2 = clusterVector2.begin(), iterEnd2 = clusterVector2.end(); iter2 != iterEnd2; ++iter2)
+        for (const Cluster *const pCluster2 : clusterVector2)
         {
-            const Cluster *const pCluster2 = *iter2;
-
             if (this->MatchClusters(pCluster1, pCluster2))
             {
                 matchedClusters12[pCluster1].insert(pCluster2);
@@ -118,26 +112,21 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
 
     ParticleList candidateParticles;
 
-    for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12;
-        ++iter12)
+    for (const ClusterAssociationMap::value_type &mapEntry12 : matchedClusters12)
     {
-        const Cluster *const pCluster1 = iter12->first;
-        const ClusterList &clusterList2 = iter12->second;
+        const Cluster *const pCluster1 = mapEntry12.first;
+        const ClusterList &clusterList2 = mapEntry12.second;
 
-        for(ClusterList::const_iterator iter2 = clusterList2.begin(), iterEnd2 = clusterList2.end(); iter2 != iterEnd2; ++iter2)
+        for (const Cluster *const pCluster2 : clusterList2)
         {
-            const Cluster *const pCluster2 = *iter2;
-
             ClusterAssociationMap::const_iterator iter23 = matchedClusters23.find(pCluster2);
             if (matchedClusters23.end() == iter23)
                 continue;
 
             const ClusterList &clusterList3 = iter23->second;
 
-            for(ClusterList::const_iterator iter3 = clusterList3.begin(), iterEnd3 = clusterList3.end(); iter3 != iterEnd3; ++iter3)
+            for(const Cluster *const pCluster3 : clusterList3)
             {
-                const Cluster *const pCluster3 = *iter3;
-
                 ClusterAssociationMap::const_iterator iter31 = matchedClusters31.find(pCluster3);
                 if (matchedClusters31.end() == iter31)
                     continue;
@@ -191,16 +180,13 @@ void CosmicRayBaseMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap &
     if (matchedClusters12.empty())
         return;
 
-    for (ClusterAssociationMap::const_iterator iter12 = matchedClusters12.begin(), iterEnd12 = matchedClusters12.end(); iter12 != iterEnd12;
-        ++iter12)
+    for (const ClusterAssociationMap::value_type &mapEntry12 : matchedClusters12)
     {
-        const Cluster *const pCluster1 = iter12->first;
-        const ClusterList &clusterList2 = iter12->second;
+        const Cluster *const pCluster1 = mapEntry12.first;
+        const ClusterList &clusterList2 = mapEntry12.second;
 
-        for (ClusterList::const_iterator iter2 = clusterList2.begin(), iterEnd2 = clusterList2.end() ; iter2 != iterEnd2; ++iter2)
+        for (const Cluster *const pCluster2 : clusterList2)
         {
-            const Cluster *const pCluster2 = *iter2;
-
             const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
             const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
 
@@ -217,16 +203,12 @@ void CosmicRayBaseMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap &
 
 void CosmicRayBaseMatchingAlgorithm::ResolveAmbiguities(const ParticleList &candidateParticles, ParticleList &matchedParticles) const
 {
-    for (ParticleList::const_iterator iter1 = candidateParticles.begin(), iterEnd1 = candidateParticles.end(); iter1 != iterEnd1; ++iter1)
+    for (const Particle &particle1 : candidateParticles)
     {
-        const Particle &particle1 = *iter1;
-
         bool isGoodMatch(true);
 
-        for (ParticleList::const_iterator iter2 = candidateParticles.begin(), iterEnd2 = candidateParticles.end(); iter2 != iterEnd2; ++iter2)
+        for (const Particle &particle2 : candidateParticles)
         {
-            const Particle &particle2 = *iter2;
-
             const bool commonU(particle1.m_pClusterU == particle2.m_pClusterU);
             const bool commonV(particle1.m_pClusterV == particle2.m_pClusterV);
             const bool commonW(particle1.m_pClusterW == particle2.m_pClusterW);
@@ -260,10 +242,8 @@ void CosmicRayBaseMatchingAlgorithm::BuildParticles(const ParticleList &particle
     const PfoList *pPfoList = NULL; std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
-    for (ParticleList::const_iterator iter = particleList.begin(), iterEnd = particleList.end(); iter != iterEnd; ++iter)
+    for (const Particle &particle : particleList)
     {
-        const Particle &particle = *iter;
-
         const Cluster *const pClusterU = particle.m_pClusterU;
         const Cluster *const pClusterV = particle.m_pClusterV;
         const Cluster *const pClusterW = particle.m_pClusterW;

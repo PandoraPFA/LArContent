@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "LArHelpers/LArClusterHelper.h"
+
 #include "LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 using namespace pandora;
@@ -38,6 +40,7 @@ StatusCode ClusterSplittingAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
     ClusterSplittingList internalClusterList(pClusterList->begin(), pClusterList->end());
+    internalClusterList.sort(LArClusterHelper::SortByNHits);
 
     for (ClusterSplittingList::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
     {

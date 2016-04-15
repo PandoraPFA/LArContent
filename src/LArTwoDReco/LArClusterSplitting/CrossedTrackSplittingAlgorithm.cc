@@ -242,26 +242,26 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
     pCluster1->GetOrderedCaloHitList().GetCaloHitList(caloHitList1);
     pCluster2->GetOrderedCaloHitList().GetCaloHitList(caloHitList2);
 
-    for (CaloHitList::const_iterator iter1 = caloHitList1.begin(), iterEnd1 = caloHitList1.end(); iter1 != iterEnd1; ++iter1)
-    {
-        const CaloHit *const pCaloHit = *iter1;
+    CaloHitVector caloHitVector1(caloHitList1.begin(), caloHitList1.end()), caloHitVector2(caloHitList2.begin(), caloHitList2.end());
+    std::sort(caloHitVector1.begin(), caloHitVector1.end(), LArClusterHelper::SortHitsByPosition);
+    std::sort(caloHitVector2.begin(), caloHitVector2.end(), LArClusterHelper::SortHitsByPosition);
 
+    for (const CaloHit *const pCaloHit : caloHitVector1)
+    {
         const CartesianVector position1(pCaloHit->GetPositionVector());
         const CartesianVector position2(LArClusterHelper::GetClosestPosition(position1, pCluster2));
 
         if ((position1 - position2).GetMagnitudeSquared() < m_maxClusterSeparationSquared)
-          candidateList.push_back((position1 + position2) * 0.5);
+            candidateList.push_back((position1 + position2) * 0.5);
     }
 
-    for (CaloHitList::const_iterator iter2 = caloHitList2.begin(), iterEnd2 = caloHitList2.end(); iter2 != iterEnd2; ++iter2)
+    for (const CaloHit *const pCaloHit : caloHitVector2)
     {
-        const CaloHit *const pCaloHit = *iter2;
-
         const CartesianVector position2(pCaloHit->GetPositionVector());
         const CartesianVector position1(LArClusterHelper::GetClosestPosition(position2, pCluster1));
 
         if ((position2 - position1).GetMagnitudeSquared() < m_maxClusterSeparationSquared)
-          candidateList.push_back((position2 + position1) * 0.5);
+            candidateList.push_back((position2 + position1) * 0.5);
     }
 }
 

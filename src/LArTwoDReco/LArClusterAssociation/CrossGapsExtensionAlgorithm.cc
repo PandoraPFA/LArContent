@@ -43,6 +43,8 @@ void CrossGapsExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 
         clusterVector.push_back(pCluster);
     }
+
+    std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

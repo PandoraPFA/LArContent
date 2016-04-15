@@ -34,10 +34,8 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
     ClusterVector clusterVector;
 
     // Select long clusters
-    for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : inputVector)
     {
-        const Cluster *const pCluster = *iter;
-
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_clusterMinLength * m_clusterMinLength)
             continue;
 
@@ -45,19 +43,16 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
     }
 
     // Remove long delta rays
-    for (ClusterVector::const_iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
+    for (const Cluster *const pCluster : clusterVector)
     {
-        const Cluster *const pCluster = *iter1;
         const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
         CartesianVector innerVertex(0.f,0.f,0.f), outerVertex(0.f,0.f,0.f);
         LArClusterHelper::GetExtremalCoordinates(pCluster, innerVertex, outerVertex);
 
         bool isDeltaRay(false);
 
-        for (ClusterVector::const_iterator iter2 = clusterVector.begin(), iterEnd2 = clusterVector.end(); iter2 != iterEnd2; ++iter2)
+        for (const Cluster *const pClusterCheck : clusterVector)
         {
-            const Cluster *const pClusterCheck = *iter2;
-
             if (pCluster == pClusterCheck)
                 continue;
 
@@ -105,7 +100,10 @@ bool CosmicRayTrackMatchingAlgorithm::MatchClusters(const Cluster *const pCluste
     const float xOverlap(std::min(xMax1,xMax2) - std::max(xMin1,xMin2));
     const float xSpan(std::max(xMax1,xMax2) - std::min(xMin1,xMin2));
 
-    if (xOverlap > m_minXOverlap && xOverlap/xSpan > m_minXOverlapFraction)
+    if (xSpan < std::numeric_limits<float>::epsilon())
+        return false;
+
+    if (xOverlap > m_minXOverlap && xOverlap / xSpan > m_minXOverlapFraction)
         return true;
 
     return false;
@@ -132,7 +130,7 @@ bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *cons
     LArClusterHelper::GetExtremalCoordinates(pCluster2, innerVertex2, outerVertex2);
     LArClusterHelper::GetExtremalCoordinates(pCluster3, innerVertex3, outerVertex3);
 
-    for (unsigned int n=0; n<4; ++n)
+    for (unsigned int n = 0; n < 4; ++n)
     {
         CartesianVector vtx1(1 == n ? outerVertex1 : innerVertex1);
         CartesianVector end1(1 == n ? innerVertex1 : outerVertex1);

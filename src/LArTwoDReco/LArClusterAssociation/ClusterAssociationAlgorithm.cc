@@ -106,7 +106,6 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(const Cluster *const pC
         return;
 
     this->UpdateForUnambiguousMerge(pClusterToEnlarge, pClusterToDelete, isForward, clusterAssociationMap);
-
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pClusterToDelete));
     m_mergeMade = true;
 
@@ -130,22 +129,25 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pClu
     ClusterList secondClusterList;
     this->NavigateAlongAssociations(clusterAssociationMap, pExtremalCluster, !isForward, pExtremalCluster, secondClusterList);
 
-    ClusterList daughterClusterList;
+    ClusterVector daughterClusterVector;
 
     if (pCluster == pExtremalCluster)
     {
         for (ClusterList::const_iterator fIter = firstClusterList.begin(), fIterEnd = firstClusterList.end(); fIter != fIterEnd; ++fIter)
         {
             if ((secondClusterList.end() != secondClusterList.find(*fIter)) && (pCluster != (*fIter)))
-                daughterClusterList.insert(*fIter);
+                daughterClusterVector.push_back(*fIter);
         }
     }
 
-    for (ClusterList::const_iterator dIter = daughterClusterList.begin(), dIterEnd = daughterClusterList.end(); dIter != dIterEnd; ++dIter)
+    std::sort(daughterClusterVector.begin(), daughterClusterVector.end(), LArClusterHelper::SortByNHits);
+
+    for (ClusterVector::iterator dIter = daughterClusterVector.begin(), dIterEnd = daughterClusterVector.end(); dIter != dIterEnd; ++dIter)
     {
         this->UpdateForAmbiguousMerge(pCluster, *dIter, isForward, clusterAssociationMap);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *dIter));
         m_mergeMade = true;
+        *dIter = NULL;
     } 
 }
 
@@ -266,7 +268,7 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
 
     clusterList.insert(pCluster);
 
-    if (this->IsExtremalCluster(isForward, pExtremalCluster, pCluster))
+    if ((pCluster != pExtremalCluster) && this->IsExtremalCluster(isForward, pExtremalCluster, pCluster))
           pExtremalCluster = pCluster;
 
     const ClusterList &associatedClusterList(isForward ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);

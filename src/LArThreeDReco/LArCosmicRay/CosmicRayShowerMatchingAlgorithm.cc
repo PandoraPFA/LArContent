@@ -30,10 +30,8 @@ CosmicRayShowerMatchingAlgorithm::CosmicRayShowerMatchingAlgorithm() :
 
 void CosmicRayShowerMatchingAlgorithm::SelectCleanClusters(const ClusterVector &inputVector, ClusterVector &outputVector) const
 {
-    for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : inputVector)
     {
-        const Cluster *const pCluster = *iter;
-
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
             continue;
 
@@ -49,10 +47,13 @@ bool CosmicRayShowerMatchingAlgorithm::MatchClusters(const Cluster *const pClust
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
 
-    const float xOverlap(std::min(xMax1,xMax2) - std::max(xMin1,xMin2));
-    const float xSpan(std::max(xMax1,xMax2) - std::min(xMin1,xMin2));
+    const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
+    const float xSpan(std::max(xMax1, xMax2) - std::min(xMin1, xMin2));
 
-    if (xOverlap > m_minXOverlap && xOverlap/xSpan > m_minXOverlapFraction)
+    if (xSpan < std::numeric_limits<float>::epsilon())
+        return false;
+
+    if (xOverlap > m_minXOverlap && xOverlap / xSpan > m_minXOverlapFraction)
         return true;
 
     return false;

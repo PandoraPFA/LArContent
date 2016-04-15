@@ -83,6 +83,8 @@ void ClusterGrowingAlgorithm::GetListOfNonSeedClusters(const ClusterVector &inpu
 
         nonSeedClusters.push_back(pCluster);
     }
+
+    std::sort(nonSeedClusters.begin(), nonSeedClusters.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

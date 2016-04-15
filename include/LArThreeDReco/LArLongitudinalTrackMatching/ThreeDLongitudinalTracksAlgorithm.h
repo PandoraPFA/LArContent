@@ -42,16 +42,6 @@ public:
      */
     ThreeDLongitudinalTracksAlgorithm();
 
-    /**
-     *  @brief  Sort tensor elements by chi-squared
-     * 
-     *  @param  lhs the first tensor element
-     *  @param  rhs the second tensor element
-     * 
-     *  @return boolean
-     */
-    static bool SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs);
-
 private:
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 

@@ -57,35 +57,40 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const pNe
     const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
     const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
 
-    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
+    ClusterVector clusterVector1(clusterList1.begin(), clusterList1.end());
+    ClusterVector clusterVector2(clusterList2.begin(), clusterList2.end());
+    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
+    std::sort(clusterVector2.begin(), clusterVector2.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster1 : clusterVector1)
     {
         if (TPC_VIEW_U == hitType)
         {
-            this->CalculateOverlapResult(pNewCluster, *iter1, NULL);
+            this->CalculateOverlapResult(pNewCluster, pCluster1, NULL);
         }
         else if (TPC_VIEW_V == hitType)
         {
-            this->CalculateOverlapResult(*iter1, pNewCluster, NULL);
+            this->CalculateOverlapResult(pCluster1, pNewCluster, NULL);
         }
         else
         {
-            this->CalculateOverlapResult(*iter1, NULL, pNewCluster);
+            this->CalculateOverlapResult(pCluster1, NULL, pNewCluster);
         }
     }
 
-    for (ClusterList::const_iterator iter2 = clusterList2.begin(), iter2End = clusterList2.end(); iter2 != iter2End; ++iter2)
+    for (const Cluster *const pCluster2 : clusterVector2)
     {
         if (TPC_VIEW_U == hitType)
         {
-            this->CalculateOverlapResult(pNewCluster, NULL, *iter2);
+            this->CalculateOverlapResult(pNewCluster, NULL, pCluster2);
         }
         else if (TPC_VIEW_V == hitType)
         {
-            this->CalculateOverlapResult(NULL, pNewCluster, *iter2);
+            this->CalculateOverlapResult(NULL, pNewCluster, pCluster2);
         }
         else
         {
-            this->CalculateOverlapResult(NULL, *iter2, pNewCluster);
+            this->CalculateOverlapResult(NULL, pCluster2, pNewCluster);
         }
     }
 }
@@ -110,22 +115,29 @@ void ThreeDTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuildLi
 
 void ThreeDTrackFragmentsAlgorithm::PerformMainLoop()
 {
-    for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
+    ClusterVector clusterVectorU(m_clusterListU.begin(), m_clusterListU.end());
+    ClusterVector clusterVectorV(m_clusterListV.begin(), m_clusterListV.end());
+    ClusterVector clusterVectorW(m_clusterListW.begin(), m_clusterListW.end());
+    std::sort(clusterVectorU.begin(), clusterVectorU.end(), LArClusterHelper::SortByNHits);
+    std::sort(clusterVectorV.begin(), clusterVectorV.end(), LArClusterHelper::SortByNHits);
+    std::sort(clusterVectorW.begin(), clusterVectorW.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pClusterU : clusterVectorU)
     {
-        for (ClusterList::const_iterator iterV = m_clusterListV.begin(), iterVEnd = m_clusterListV.end(); iterV != iterVEnd; ++iterV)
-            this->CalculateOverlapResult(*iterU, *iterV, NULL);
+        for (const Cluster *const pClusterV : clusterVectorV)
+            this->CalculateOverlapResult(pClusterU, pClusterV, NULL);
     }
 
-    for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pClusterU : clusterVectorU)
     {
-        for (ClusterList::const_iterator iterW = m_clusterListW.begin(), iterWEnd = m_clusterListW.end(); iterW != iterWEnd; ++iterW)
-            this->CalculateOverlapResult(*iterU, NULL, *iterW);
+        for (const Cluster *const pClusterW : clusterVectorW)
+            this->CalculateOverlapResult(pClusterU, NULL, pClusterW);
     }
 
-    for (ClusterList::const_iterator iterV = m_clusterListV.begin(), iterVEnd = m_clusterListV.end(); iterV != iterVEnd; ++iterV)
+    for (const Cluster *const pClusterV : clusterVectorV)
     {
-        for (ClusterList::const_iterator iterW = m_clusterListW.begin(), iterWEnd = m_clusterListW.end(); iterW != iterWEnd; ++iterW)
-            this->CalculateOverlapResult(NULL, *iterV, *iterW);
+        for (const Cluster *const pClusterW : clusterVectorW)
+            this->CalculateOverlapResult(NULL, pClusterV, pClusterW);
     }
 }
 
@@ -185,9 +197,18 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
     {
         m_overlapTensor.SetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
-    else if(newOverlapResult.GetFragmentCaloHitList().size() > oldOverlapResult.GetFragmentCaloHitList().size())
+    else if (newOverlapResult.GetFragmentCaloHitList().size() > oldOverlapResult.GetFragmentCaloHitList().size())
     {
         m_overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
+    }
+    else if (newOverlapResult.GetFragmentCaloHitList().size() == oldOverlapResult.GetFragmentCaloHitList().size())
+    {
+        float newEnergySum(0.f), oldEnergySum(0.f);
+        for (const CaloHit *const pCaloHit : newOverlapResult.GetFragmentCaloHitList()) newEnergySum += pCaloHit->GetHadronicEnergy();
+        for (const CaloHit *const pCaloHit : oldOverlapResult.GetFragmentCaloHitList()) oldEnergySum += pCaloHit->GetHadronicEnergy();
+
+        if (newEnergySum > oldEnergySum)
+            m_overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
 }
 
@@ -455,13 +476,15 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &
 
     pBestMatchedCluster = NULL;
     unsigned int bestClusterMatchedHits(0);
+    float tieBreakerBestEnergy(0.f);
 
     for (ClusterToMatchedHitsMap::const_iterator iter = clusterToMatchedHitsMap.begin(), iterEnd = clusterToMatchedHitsMap.end(); iter != iterEnd; ++iter)
     {
-        if (iter->second > bestClusterMatchedHits)
+        if ((iter->second > bestClusterMatchedHits) || ((iter->second == bestClusterMatchedHits) && (iter->first->GetHadronicEnergy() > tieBreakerBestEnergy)))
         {
             pBestMatchedCluster = iter->first;
             bestClusterMatchedHits = iter->second;
+            tieBreakerBestEnergy = iter->first->GetHadronicEnergy();
         }
     }
 

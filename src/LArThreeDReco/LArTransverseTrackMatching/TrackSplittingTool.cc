@@ -53,15 +53,17 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, 
 void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
 {
     ClusterList usedClusters;
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (!iterU->first->IsAvailable())
+        if (!pKeyCluster->IsAvailable())
             continue;
 
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
+        overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
 
         IteratorList iteratorList;
         this->SelectElements(elementList, usedClusters, iteratorList);

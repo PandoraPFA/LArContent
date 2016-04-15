@@ -33,18 +33,22 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
     ClusterAssociationMap clusterAssociationMap;
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
-    for (ClusterList::const_iterator pIter = pfoClusters.begin(), pIterEnd = pfoClusters.end(); pIter != pIterEnd; ++pIter)
+    ClusterVector sortedPfoClusters(pfoClusters.begin(), pfoClusters.end());
+    std::sort(sortedPfoClusters.begin(), sortedPfoClusters.end(), LArClusterHelper::SortByNHits);
+
+    ClusterVector sortedRemnantClusters(remnantClusters.begin(), remnantClusters.end());
+    std::sort(sortedRemnantClusters.begin(), sortedRemnantClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pPfoCluster : sortedPfoClusters)
     {
-        const Cluster *const pPfoCluster(*pIter);
         const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
         ShowerPositionMap showerPositionMap;
         const XSampling xSampling(fitResult.GetShowerFitResult());
         this->GetShowerPositionMap(fitResult, xSampling, showerPositionMap);
 
-        for (ClusterList::const_iterator rIter = remnantClusters.begin(), rIterEnd = remnantClusters.end(); rIter != rIterEnd; ++rIter)
+        for (const Cluster *const pRemnantCluster : sortedRemnantClusters)
         {
-            const Cluster *const pRemnantCluster(*rIter);
             const float boundedFraction(this->GetBoundedFraction(pRemnantCluster, xSampling, showerPositionMap));
 
             if (boundedFraction < m_minBoundedFraction)

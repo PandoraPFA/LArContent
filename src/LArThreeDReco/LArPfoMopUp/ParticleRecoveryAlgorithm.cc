@@ -223,11 +223,14 @@ bool ParticleRecoveryAlgorithm::IsOverlap(const Cluster *const pCluster1, const 
 
 void ParticleRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlapTensor) const
 {
-    for (ClusterList::const_iterator iter = overlapTensor.GetKeyClusters().begin(), iterEnd = overlapTensor.GetKeyClusters().end(); iter != iterEnd; ++iter)
+    ClusterVector sortedKeyClusters(overlapTensor.GetKeyClusters().begin(), overlapTensor.GetKeyClusters().end());
+    std::sort(sortedKeyClusters.begin(), sortedKeyClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
         ClusterList clusterListU, clusterListV, clusterListW;
 
-        overlapTensor.GetConnectedElements(*iter, true, clusterListU, clusterListV, clusterListW);
+        overlapTensor.GetConnectedElements(pKeyCluster, true, clusterListU, clusterListV, clusterListW);
         const unsigned int nU(clusterListU.size()), nV(clusterListV.size()), nW(clusterListW.size());
 
         if ((0 == nU * nV) && (0 == nV * nW) && (0 == nW * nU))

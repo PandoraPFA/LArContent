@@ -691,7 +691,10 @@ bool EventValidationAlgorithm::SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs
     if (lhs.m_nMatchedHitsTotal != rhs.m_nMatchedHitsTotal)
         return (lhs.m_nMatchedHitsTotal > rhs.m_nMatchedHitsTotal);
 
-    return (lhs.m_nPfoHitsTotal > rhs.m_nPfoHitsTotal);
+    if (lhs.m_nPfoHitsTotal != rhs.m_nPfoHitsTotal)
+        return (lhs.m_nPfoHitsTotal > rhs.m_nPfoHitsTotal);
+
+    return (lhs.m_id < rhs.m_id);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

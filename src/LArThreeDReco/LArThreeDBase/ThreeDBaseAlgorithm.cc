@@ -71,20 +71,24 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
 {
     ClusterList deletedClusters;
 
-    for (ClusterMergeMap::const_iterator iter = clusterMergeMap.begin(), iterEnd = clusterMergeMap.end(); iter != iterEnd; ++iter)
-    {
-        const Cluster *const pParentCluster = iter->first;
+    ClusterVector sortedClusters;
+    for (const auto &mapEntry : clusterMergeMap) sortedClusters.push_back(mapEntry.first);
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
+    for (const Cluster *const pParentCluster : sortedClusters)
+    {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pParentCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
 
         if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        for (ClusterList::const_iterator dIter = iter->second.begin(), dIterEnd = iter->second.end(); dIter != dIterEnd; ++dIter)
-        {
-            const Cluster *const pDaughterCluster = *dIter;
+        const ClusterList &daughterClusterList(clusterMergeMap.at(pParentCluster));
+        ClusterVector daughterClusterVector(daughterClusterList.begin(), daughterClusterList.end());
+        std::sort(daughterClusterVector.begin(), daughterClusterVector.end(), LArClusterHelper::SortByNHits);
 
+        for (const Cluster *const pDaughterCluster : daughterClusterVector)
+        {
             if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
@@ -135,21 +139,26 @@ void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluste
     const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
     const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
 
-    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
+    ClusterVector clusterVector1(clusterList1.begin(), clusterList1.end());
+    ClusterVector clusterVector2(clusterList2.begin(), clusterList2.end());
+    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
+    std::sort(clusterVector2.begin(), clusterVector2.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster1 : clusterVector1)
     {
-        for (ClusterList::const_iterator iter2 = clusterList2.begin(), iter2End = clusterList2.end(); iter2 != iter2End; ++iter2)
+        for (const Cluster *const pCluster2 : clusterVector2)
         {
             if (TPC_VIEW_U == hitType)
             {
-                this->CalculateOverlapResult(pNewCluster, *iter1, *iter2);
+                this->CalculateOverlapResult(pNewCluster, pCluster1, pCluster2);
             }
             else if (TPC_VIEW_V == hitType)
             {
-                this->CalculateOverlapResult(*iter1, pNewCluster, *iter2);
+                this->CalculateOverlapResult(pCluster1, pNewCluster, pCluster2);
             }
             else
             {
-                this->CalculateOverlapResult(*iter1, *iter2, pNewCluster);
+                this->CalculateOverlapResult(pCluster1, pCluster2, pNewCluster);
             }
         }
     }
@@ -286,12 +295,19 @@ StatusCode ThreeDBaseAlgorithm<T>::Run()
 template <typename T>
 void ThreeDBaseAlgorithm<T>::PerformMainLoop()
 {
-    for (ClusterList::const_iterator iterU = m_clusterListU.begin(), iterUEnd = m_clusterListU.end(); iterU != iterUEnd; ++iterU)
+    ClusterVector clusterVectorU(m_clusterListU.begin(), m_clusterListU.end());
+    ClusterVector clusterVectorV(m_clusterListV.begin(), m_clusterListV.end());
+    ClusterVector clusterVectorW(m_clusterListW.begin(), m_clusterListW.end());
+    std::sort(clusterVectorU.begin(), clusterVectorU.end(), LArClusterHelper::SortByNHits);
+    std::sort(clusterVectorV.begin(), clusterVectorV.end(), LArClusterHelper::SortByNHits);
+    std::sort(clusterVectorW.begin(), clusterVectorW.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pClusterU : clusterVectorU)
     {
-        for (ClusterList::const_iterator iterV = m_clusterListV.begin(), iterVEnd = m_clusterListV.end(); iterV != iterVEnd; ++iterV)
+        for (const Cluster *const pClusterV : clusterVectorV)
         {
-            for (ClusterList::const_iterator iterW = m_clusterListW.begin(), iterWEnd = m_clusterListW.end(); iterW != iterWEnd; ++iterW)
-                this->CalculateOverlapResult(*iterU, *iterV, *iterW);
+            for (const Cluster *const pClusterW : clusterVectorW)
+                this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW);
         }
     }
 }

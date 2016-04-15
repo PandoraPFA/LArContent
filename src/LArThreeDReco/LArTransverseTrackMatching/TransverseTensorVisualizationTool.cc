@@ -30,19 +30,21 @@ bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *con
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
-    ClusterList usedUClusters;
+    ClusterList usedKeyClusters;
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (m_ignoreUnavailableClusters && !iterU->first->IsAvailable())
+        if (m_ignoreUnavailableClusters && !pKeyCluster->IsAvailable())
             continue;
 
-        if (usedUClusters.count(iterU->first))
+        if (usedKeyClusters.count(pKeyCluster))
             continue;
 
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(iterU->first, m_ignoreUnavailableClusters, elementList, nU, nV, nW);
+        overlapTensor.GetConnectedElements(pKeyCluster, m_ignoreUnavailableClusters, elementList, nU, nV, nW);
 
         if ((nU < m_minClusterConnections) && (nV < m_minClusterConnections) && (nW < m_minClusterConnections))
             continue;
@@ -59,7 +61,7 @@ bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *con
             allClusterListU.insert(eIter->GetClusterU());
             allClusterListV.insert(eIter->GetClusterV());
             allClusterListW.insert(eIter->GetClusterW());
-            usedUClusters.insert(eIter->GetClusterU());
+            usedKeyClusters.insert(eIter->GetClusterU());
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
                       << ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints()

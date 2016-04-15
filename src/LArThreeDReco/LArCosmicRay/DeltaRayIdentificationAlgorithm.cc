@@ -29,7 +29,7 @@ DeltaRayIdentificationAlgorithm::DeltaRayIdentificationAlgorithm() :
 
 StatusCode DeltaRayIdentificationAlgorithm::Run()
 {
-    PfoList parentPfos, daughterPfos;
+    PfoVector parentPfos, daughterPfos;
     this->GetPfos(m_parentPfoListName, parentPfos);
     this->GetPfos(m_daughterPfoListName, daughterPfos);
 
@@ -59,7 +59,7 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayIdentificationAlgorithm::GetPfos(const std::string inputPfoListName, PfoList &outputPfoList) const
+void DeltaRayIdentificationAlgorithm::GetPfos(const std::string inputPfoListName, PfoVector &outputPfoVector) const
 {
     const PfoList *pPfoList = NULL;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
@@ -68,20 +68,24 @@ void DeltaRayIdentificationAlgorithm::GetPfos(const std::string inputPfoListName
     if (NULL == pPfoList)
         return;
 
-    outputPfoList.insert(pPfoList->begin(), pPfoList->end());
+    outputPfoVector.insert(outputPfoVector.end(), pPfoList->begin(), pPfoList->end());
+    std::sort(outputPfoVector.begin(), outputPfoVector.end(), LArPfoHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &parentPfos, const PfoList &daughterPfos,
+void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoVector &parentPfos, const PfoVector &daughterPfos,
     PfoAssociationMap &pfoAssociationMap) const
 {
-    PfoList allPfos;
-    allPfos.insert(parentPfos.begin(), parentPfos.end());
-    allPfos.insert(daughterPfos.begin(), daughterPfos.end());
+    PfoList parentPfoList, daughterPfoList;
+    parentPfoList.insert(parentPfos.begin(), parentPfos.end());
+    daughterPfoList.insert(daughterPfos.begin(), daughterPfos.end());
+
+    PfoVector allPfos(parentPfos.begin(), parentPfos.end());
+    allPfos.insert(allPfos.end(), daughterPfos.begin(), daughterPfos.end());
 
     // Loop over possible daughter Pfos in primary list
-    for (PfoList::const_iterator iter1 = parentPfos.begin(), iterEnd1 = parentPfos.end(); iter1 != iterEnd1; ++iter1)
+    for (PfoVector::const_iterator iter1 = parentPfos.begin(), iterEnd1 = parentPfos.end(); iter1 != iterEnd1; ++iter1)
     {
         const ParticleFlowObject *const pDaughterPfo = *iter1;
 
@@ -89,7 +93,7 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &parentP
         const ParticleFlowObject *pBestParentPfo = NULL;
         float bestDisplacement(std::numeric_limits<float>::max());
 
-        for (PfoList::const_iterator iter2 = allPfos.begin(), iterEnd2 = allPfos.end(); iter2 != iterEnd2; ++iter2)
+        for (PfoVector::const_iterator iter2 = allPfos.begin(), iterEnd2 = allPfos.end(); iter2 != iterEnd2; ++iter2)
         {
             const ParticleFlowObject *const pThisParentPfo = *iter2;
             float thisDisplacement(std::numeric_limits<float>::max());
@@ -114,7 +118,7 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &parentP
         if (pBestParentPfo->GetParentPfoList().empty())
         {
             // Check: parent shouldn't live in the secondary list
-            if (daughterPfos.count(pBestParentPfo))
+            if (daughterPfoList.count(pBestParentPfo))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             pfoAssociationMap.insert(PfoAssociationMap::value_type(pDaughterPfo, pBestParentPfo));
@@ -124,7 +128,7 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &parentP
         else
         {
             // Check: parent shouldn't live in the primary list
-            if (parentPfos.count(pBestParentPfo))
+            if (parentPfoList.count(pBestParentPfo))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             // Check: there should only be one parent
@@ -139,7 +143,6 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoList &parentP
 
             pfoAssociationMap.insert(PfoAssociationMap::value_type(pDaughterPfo, pReplacementParentPfo));
         }
-
     }
 }
 

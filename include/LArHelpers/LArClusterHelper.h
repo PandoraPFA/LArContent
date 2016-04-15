@@ -276,14 +276,6 @@ public:
     static pandora::StatusCode GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &averageZ);
 
     /**
-     *  @brief  Sort clusters by inner layer (then use SortByNOccupiedLayers method in event of a tie)
-     *
-     *  @param  pLhs address of first cluster
-     *  @param  pRhs address of second cluster
-     */
-    static bool SortByInnerLayer(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
-
-    /**
      *  @brief  Sort clusters by number of occupied layers, and by inner layer, then energy in event of a tie
      *
      *  @param  pLhs address of first cluster
@@ -292,7 +284,7 @@ public:
     static bool SortByNOccupiedLayers(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
     /**
-     *  @brief  Sort clusters by number of hits and by layer span, then energy in event of a tie
+     *  @brief  Sort clusters by number of hits, then layer span, then inner layer, then position, then pulse-height
      *
      *  @param  pLhs address of first cluster
      *  @param  pRhs address of second cluster
@@ -300,12 +292,44 @@ public:
     static bool SortByNHits(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
     /**
+     *  @brief  Sort clusters by layer span, then inner layer, then position, then pulse-height
+     *
+     *  @param  pLhs address of first cluster
+     *  @param  pRhs address of second cluster
+     */
+    static bool SortByLayerSpan(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
+     *  @brief  Sort clusters by inner layer, then position, then pulse-height
+     *
+     *  @param  pLhs address of first cluster
+     *  @param  pRhs address of second cluster
+     */
+    static bool SortByInnerLayer(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
+     *  @brief  Sort clusters by position, then pulse-height
+     *
+     *  @param  pLhs address of first cluster
+     *  @param  pRhs address of second cluster
+     */
+    static bool SortByPosition(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
+     *  @brief  Sort clusters by pulse-height
+     *
+     *  @param  pLhs address of first cluster
+     *  @param  pRhs address of second cluster
+     */
+    static bool SortByPulseHeight(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
      *  @brief  Sort calo hits by their position (use Z, followed by X, followed by Y)
      *
      *  @param  pLhs address of first calo hit
      *  @param  pRhs address of second calo hit
      */
-    static bool SortByPosition(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+    static bool SortHitsByPosition(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
   
    /**
      *  @brief  Sort calo hits by their pulse height
@@ -313,7 +337,7 @@ public:
      *  @param  pLhs address of first calo hit
      *  @param  pRhs address of second calo hit
      */
-    static bool SortByPulseHeight(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+    static bool SortHitsByPulseHeight(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
 };
 
 } // namespace lar_content

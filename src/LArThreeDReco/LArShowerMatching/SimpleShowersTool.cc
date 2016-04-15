@@ -40,22 +40,22 @@ bool SimpleShowersTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType
 
 void SimpleShowersTool::FindBestShower(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
+
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (!iterU->first->IsAvailable())
+        if (!pKeyCluster->IsAvailable())
             continue;
 
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
+        overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
 
-        TensorType::Element bestElement(NULL, NULL, NULL, ShowerOverlapResult());
+        if (elementList.empty())
+            continue;
 
-        for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
-        {
-            if (eIter->GetOverlapResult() > bestElement.GetOverlapResult())
-                bestElement = *eIter;
-        }
+        TensorType::Element bestElement(elementList.back());
 
         if (!bestElement.GetOverlapResult().IsInitialized())
             continue;

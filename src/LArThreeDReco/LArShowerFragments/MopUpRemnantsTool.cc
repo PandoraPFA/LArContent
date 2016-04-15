@@ -38,14 +38,16 @@ bool MopUpRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorTyp
 void MopUpRemnantsTool::FindBestShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
     ClusterList usedClusters;
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (!iterU->first->IsAvailable())
+        if (!pKeyCluster->IsAvailable())
             continue;
 
         TensorType::ElementList connectedElements;
-        overlapTensor.GetConnectedElements(iterU->first, true, connectedElements);
+        overlapTensor.GetConnectedElements(pKeyCluster, true, connectedElements);
 
         TensorType::ElementList::const_iterator eIter = connectedElements.end();
         this->SelectBestElement(connectedElements, usedClusters, eIter);

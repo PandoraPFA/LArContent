@@ -41,21 +41,21 @@ private:
     typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoAssociationMap;
 
     /**
-     *  @brief Get the list of Pfos, given the input list name
+     *  @brief Get the vector of Pfos, given the input list name
      *
      *  @param inputPfoListName the input Pfo list name
-     *  @param pfoList the output list of Pfos
+     *  @param outputPfoVector the output vector of Pfos
      */
-    void GetPfos(const std::string inputPfoListName, pandora::PfoList &pfoList) const;
+    void GetPfos(const std::string inputPfoListName, pandora::PfoVector &outputPfoVector) const;
 
     /**
      *  @brief Build parent/daughter associations between PFOs
      *
-     *  @param inputPfos the input list of current parent Pfos
-     *  @param outputPfos the input list of current daughter Pfos
+     *  @param inputPfos the input vector of current parent Pfos
+     *  @param outputPfos the input vector of current daughter Pfos
      *  @param pfoAssociationMap the output map of parent/daughter associations
      */
-    void BuildAssociationMap(const pandora::PfoList &inputPfos, const pandora::PfoList &outputPfos,
+    void BuildAssociationMap(const pandora::PfoVector &inputPfos, const pandora::PfoVector &outputPfos,
         PfoAssociationMap &pfoAssociationMap) const;
 
     /**

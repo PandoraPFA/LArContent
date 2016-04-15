@@ -61,15 +61,17 @@ void MissingTrackSegmentTool::FindTracks(ThreeDTransverseTracksAlgorithm *const 
     ProtoParticleVector &protoParticleVector, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterList usedClusters;
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    for (TensorType::const_iterator iterU = overlapTensor.begin(), iterUEnd = overlapTensor.end(); iterU != iterUEnd; ++iterU)
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        if (!iterU->first->IsAvailable())
+        if (!pKeyCluster->IsAvailable())
             continue;
 
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(iterU->first, true, elementList, nU, nV, nW);
+        overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
 
         IteratorList iteratorList;
         this->SelectElements(elementList, usedClusters, iteratorList);
@@ -281,14 +283,17 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
 bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const SlidingFitResultMap &slidingFitResultMap,
     const SegmentOverlapMap &segmentOverlapMap, ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterList possibleMerges;
+    ClusterVector possibleMerges;
     float shortMinX(particle.m_shortMinX), shortMaxX(particle.m_shortMaxX);
     bool matchesACluster(false);
 
-    for (SegmentOverlapMap::const_iterator iter = segmentOverlapMap.begin(), iterEnd = segmentOverlapMap.end(); iter != iterEnd; ++iter)
+    ClusterVector sortedClusters;
+    for (const auto &mapEntry : segmentOverlapMap) sortedClusters.push_back(mapEntry.first);
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : sortedClusters)
     {
-        const Cluster *const pCluster(iter->first);
-        const SegmentOverlap &segmentOverlap(iter->second);
+        const SegmentOverlap &segmentOverlap(segmentOverlapMap.at(pCluster));
 
         if (!this->PassesSamplingCuts(segmentOverlap))
             continue;
@@ -304,7 +309,7 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const Slid
         if (!this->IsPossibleMerge(pCluster, particle, segmentOverlap, slidingFitResultMap))
             continue;
 
-        possibleMerges.insert(pCluster);
+        possibleMerges.push_back(pCluster);
     }
 
     if (std::fabs(particle.m_longMaxX - particle.m_longMinX) < std::numeric_limits<float>::epsilon())

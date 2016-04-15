@@ -135,7 +135,7 @@ private:
      *  @param  inputPfoListName the input Pfo list name
      *  @param  pfoVector the output vector of Pfos
      */
-    void GetAllPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
+    void GetAllPfos(const std::string &inputPfoListName, pandora::PfoVector &pfoVector) const;
 
     /**
      *  @brief  Get a vector of track-like Pfos in the provided input Pfo lists
@@ -143,7 +143,7 @@ private:
      *  @param  inputPfoListName the input Pfo list name
      *  @param  pfoVector the output vector of Pfos
      */
-    void GetTrackPfos(const std::string inputPfoListName, pandora::PfoVector &pfoVector) const;
+    void GetTrackPfos(const std::string &inputPfoListName, pandora::PfoVector &pfoVector) const;
 
     /**
      *  @brief  Get a vector containing all available input clusters in the provided cluster list, storing sliding linear fits
