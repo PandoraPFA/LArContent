@@ -76,7 +76,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-    const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
+        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -97,8 +97,8 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-    const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, 
-    const LayerFitContributionMap &layerFitContributionMap) :
+        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, 
+        const LayerFitContributionMap &layerFitContributionMap) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -661,10 +661,10 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
 
         const double gradient((slidingSumLT - slidingSumL * slidingSumT / static_cast<double>(slidingNPoints)) / denominator);
         const double intercept((slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
-        const double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
+        double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
 
         if (variance < std::numeric_limits<double>::epsilon())
-            continue;
+            variance = 0.;
 
         const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
         const double l(this->GetL(iLayer));
