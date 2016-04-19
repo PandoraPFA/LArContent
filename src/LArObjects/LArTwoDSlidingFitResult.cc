@@ -656,14 +656,17 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
 
         const double denominator(slidingSumLL - slidingSumL * slidingSumL / static_cast<double>(slidingNPoints));
 
-        if (std::fabs(denominator) < std::numeric_limits<double>::epsilon())
+        if (std::fabs(denominator) < std::numeric_limits<float>::epsilon())
             continue;
 
         const double gradient((slidingSumLT - slidingSumL * slidingSumT / static_cast<double>(slidingNPoints)) / denominator);
         const double intercept((slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
         double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
 
-        if (variance < std::numeric_limits<double>::epsilon())
+        if (variance < -std::numeric_limits<float>::epsilon())
+            continue;
+
+        if (variance < std::numeric_limits<float>::epsilon())
             variance = 0.;
 
         const double rms(std::sqrt(variance / static_cast<double>(slidingNPoints)));
@@ -1044,7 +1047,7 @@ void TwoDSlidingFitResult::GetLongitudinalInterpolationWeights(const float rL, c
     const double deltaL(rL - firstLayerIter->second.GetL());
     const double deltaLLayers(secondLayerIter->second.GetL() - firstLayerIter->second.GetL());
 
-    if (std::fabs(deltaLLayers) > std::numeric_limits<double>::epsilon())
+    if (std::fabs(deltaLLayers) > std::numeric_limits<float>::epsilon())
     {
         firstWeight = 1. - deltaL / deltaLLayers;
         secondWeight = deltaL / deltaLLayers;
@@ -1073,7 +1076,7 @@ void TwoDSlidingFitResult::GetTransverseInterpolationWeights(const float x, cons
     const double deltaP(x - firstLayerPosition.GetX());
     const double deltaPLayers(secondLayerPosition.GetX() - firstLayerPosition.GetX());
 
-    if (std::fabs(deltaPLayers) > std::numeric_limits<double>::epsilon())
+    if (std::fabs(deltaPLayers) > std::numeric_limits<float>::epsilon())
     {
         firstWeight = 1. - deltaP / deltaPLayers;
         secondWeight = deltaP / deltaPLayers;
