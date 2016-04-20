@@ -61,9 +61,9 @@ public:
      *  @brief  Get neutrino MC particles from an input MC particle list
      * 
      *  @param  pMCParticleList the input MC particle list
-     *  @param  trueNeutrinos to receive the list of neutrino MC particles
+     *  @param  trueNeutrinos to receive the vector of neutrino MC particles
      */
-    static void GetTrueNeutrinos(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleList &trueNeutrinos);
+    static void GetTrueNeutrinos(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &trueNeutrinos);
 
     /**
      *  @brief  Get the primary parent mc particle

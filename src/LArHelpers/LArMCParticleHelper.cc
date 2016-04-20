@@ -13,10 +13,12 @@
 #include "Objects/Cluster.h"
 
 #include "Pandora/PdgTable.h"
+#include "Pandora/StatusCodes.h"
 
 #include "LArHelpers/LArMCParticleHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
 
+#include <algorithm>
 #include <cstdlib>
 
 namespace lar_content
@@ -68,7 +70,7 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCParticleList, MCParticleList &trueNeutrinos)
+void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCParticleList, MCParticleVector &trueNeutrinos)
 {
     if (!pMCParticleList)
         return;
@@ -78,8 +80,10 @@ void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCPartic
         const MCParticle *const pMCParticle = *iter;
 
         if (pMCParticle->GetParentList().empty() && LArMCParticleHelper::IsNeutrino(pMCParticle))
-            trueNeutrinos.insert(pMCParticle);
+            trueNeutrinos.push_back(pMCParticle);
     }
+
+    std::sort(trueNeutrinos.begin(), trueNeutrinos.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,6 +94,9 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
 
     while (pParentMCParticle->GetParentList().empty() == false)
     {
+        if (1 != pParentMCParticle->GetParentList().size())
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
         pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
     }
 
@@ -108,6 +115,9 @@ const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *co
 
     while (!pParentMCParticle->GetParentList().empty())
     {
+        if (1 != pParentMCParticle->GetParentList().size())
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
         pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
         mcVector.push_back(pParentMCParticle);
     }
@@ -193,7 +203,7 @@ float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
     }
 
     if (totalWeight > std::numeric_limits<float>::epsilon())
-        return (neutrinoWeight/totalWeight);
+        return (neutrinoWeight / totalWeight);
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
@@ -222,7 +232,7 @@ float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
     }
 
     if (totalWeight > std::numeric_limits<float>::epsilon())
-        return (neutrinoWeight/totalWeight);
+        return (neutrinoWeight / totalWeight);
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
@@ -272,6 +282,8 @@ void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const p
         if (LArMCParticleHelper::IsPrimary(pMCParticle))
             mcPrimaryVector.push_back(pMCParticle);
     }
+
+    std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,6 +297,8 @@ void LArMCParticleHelper::GetNeutrinoMCParticleList(const MCParticleList *const 
         if (LArMCParticleHelper::IsNeutrino(pMCParticle) && pMCParticle->GetParentList().empty())
             mcNeutrinoVector.push_back(pMCParticle);
     }
+
+    std::sort(mcNeutrinoVector.begin(), mcNeutrinoVector.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -364,11 +378,11 @@ bool LArMCParticleHelper::SortByMomentum(const MCParticle *const pLhs, const MCP
     const float momentumLhs(pLhs->GetMomentum().GetMagnitudeSquared());
     const float momentumRhs(pRhs->GetMomentum().GetMagnitudeSquared());
 
-    if (momentumLhs != momentumRhs)
+    if (std::fabs(momentumLhs - momentumRhs) > std::numeric_limits<float>::epsilon())
         return (momentumLhs > momentumRhs);
 
     // Sort by energy (prefer lighter particles)
-    if (pLhs->GetEnergy() != pRhs->GetEnergy())
+    if (std::fabs(pLhs->GetEnergy() - pRhs->GetEnergy()) > std::numeric_limits<float>::epsilon())
         return (pLhs->GetEnergy() < pRhs->GetEnergy());
 
     // Sort by PDG code (prefer smaller numbers)
