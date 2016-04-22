@@ -45,7 +45,7 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
     if (pCaloHit2D->GetHitType() == hitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    float Sqz(0.f), Sqx(0.f), Sq(0.f);
+    double Sqz(0.), Sqx(0.), Sq(0.);
 
     for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -56,10 +56,10 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
         Sq  += pCaloHit->GetMipEquivalentEnergy();
     }
 
-    if (Sq < std::numeric_limits<float>::epsilon())
+    if (Sq < std::numeric_limits<double>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const CartesianVector position(Sqx / Sq, 0.f, Sqz / Sq);
+    const CartesianVector position(static_cast<float>(Sqx / Sq), 0.f, static_cast<float>(Sqz / Sq));
 
     this->GetPosition3D(pCaloHit2D, hitType, position, position3D, chiSquared);
 }
