@@ -525,7 +525,7 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
 void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
     std::cout << "---PROCESSED-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
-    bool isCorrect(true);
+    bool isCorrect(true), isCalculable(false);
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
     {
@@ -537,6 +537,7 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
         std::cout << std::endl << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
             << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
+        isCalculable = true;
         unsigned int nMatches(0);
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
@@ -560,7 +561,7 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
             isCorrect = false;
     }
 
-    std::cout << std::endl << "Is correct? " << isCorrect << std::endl;
+    std::cout << std::endl << "Is correct? " << (isCorrect && isCalculable) << std::endl;
     std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
 }
 
