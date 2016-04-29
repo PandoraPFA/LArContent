@@ -22,6 +22,7 @@ namespace lar_content
 {
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
+    m_neutrinoInducedOnly(false),
     m_primaryPfosOnly(true),
     m_collapseToPrimaryPfos(true),
     m_printAllToScreen(false),
@@ -131,6 +132,9 @@ void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mc
 {
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
+        if (m_neutrinoInducedOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
+            continue;
+
         SimpleMCPrimary simpleMCPrimary;
         // ATTN simpleMCPrimary.m_id assigned later, after sorting
         simpleMCPrimary.m_pPandoraAddress = pMCPrimary;
@@ -806,6 +810,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NeutrinoInducedOnly", m_neutrinoInducedOnly));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrimaryPfosOnly", m_primaryPfosOnly));
