@@ -1,0 +1,15 @@
+
+add_subdirectory(LArCheating)
+add_subdirectory(LArCustomParticles)
+add_subdirectory(LArHelpers)
+add_subdirectory(LArMonitoring)
+add_subdirectory(LArObjects)
+add_subdirectory(LArPersistency)
+add_subdirectory(LArPlugins)
+add_subdirectory(LArStitching)
+add_subdirectory(LArThreeDReco)
+add_subdirectory(LArTwoDReco)
+add_subdirectory(LArUtility)
+add_subdirectory(LArVertex)
+
+install_headers()

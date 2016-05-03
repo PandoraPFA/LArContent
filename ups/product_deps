@@ -1,0 +1,32 @@
+# This @product_deps@ file defines dependencies for this package. 
+
+# The *parent* line must the first non-commented line and defines this product and version
+# The version should be of the form vxx_yy_zz (e.g. v01_02_03)
+parent larpandoracontent v02_07_01
+defaultqual e9
+
+# larpandoracontent has no fcl files
+flcdir  -
+
+# With "product  version" table below, we now define depdendencies
+# Add the dependent product and version
+
+product		version
+pandora		v02_07_00
+gcc		v4_9_3
+cetbuildtools	v4_19_04	-	only_for_build
+end_product_list
+
+# We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
+# Make a table by adding columns before "notes". 
+qualifier	pandora 	gcc	notes
+e9:debug	e9:nu:r5:debug	-nq-
+e9:opt		e9:nu:r5:opt	-nq-
+e9:prof		e9:nu:r5:prof	-nq-
+end_qualifier_list
+
+# Preserve tabs and formatting in emacs and vi / vim:
+
+### Local Variables:
+### tab-width: 8
+### End:
