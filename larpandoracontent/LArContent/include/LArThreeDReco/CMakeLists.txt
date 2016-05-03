@@ -1,2 +1,14 @@
 
-install_headers()
+install_source()
+
+add_subdirectory(LArCosmicRay)
+add_subdirectory(LArEventBuilding)
+add_subdirectory(LArHitCreation)
+add_subdirectory(LArLongitudinalTrackMatching)
+add_subdirectory(LArPfoMopUp)
+add_subdirectory(LArShowerFragments)
+add_subdirectory(LArShowerMatching)
+add_subdirectory(LArThreeDBase)
+add_subdirectory(LArTrackFragments)
+add_subdirectory(LArTransverseTrackMatching)
+

@@ -1,2 +1,9 @@
 
-install_headers()
+install_source()
+
+add_subdirectory(LArClusterAssociation)
+add_subdirectory(LArClusterCreation)
+add_subdirectory(LArClusterMopUp)
+add_subdirectory(LArClusterSplitting)
+add_subdirectory(LArCosmicRay)
+add_subdirectory(LArSeedFinding)
