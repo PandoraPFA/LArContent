@@ -132,6 +132,8 @@
 
 #include "LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "LArVertex/VertexSelectionAlgorithm.h"
+#include "LArVertex/VertexClusteringTool.h"
+#include "LArVertex/VertexScoringTool.h"
 
 /**
  *  @brief  LArContent class
@@ -251,7 +253,9 @@ public:
         d("LArOvershootTracks",                     lar_content::OvershootTracksTool::Factory)                                  \
         d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
         d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
-        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)
+        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)                                 \
+        d("LArVertexClustering",                    lar_content::VertexClusteringTool::Factory)                                 \
+        d("LArVertexScoring",                       lar_content::VertexScoringTool::Factory)                             
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
         d("LArMuonId",                              lar_content::LArParticleIdPlugins::LArMuonId)

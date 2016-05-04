@@ -1,5 +1,5 @@
 ifndef PROJECT_DIR
-    PROJECT_DIR = $(PANDORA_DIR)/LArContent
+    PROJECT_DIR = $(PANDORA_DIR)/LArContent-origin/master
     PROJECT_LIBRARY_DIR = $(PANDORA_DIR)/lib
 else
     PROJECT_LIBRARY_DIR = $(PROJECT_DIR)/lib
@@ -23,9 +23,9 @@ PROJECT_INCLUDE_DIR = $(PROJECT_DIR)/include/
 PROJECT_LIBRARY = $(PROJECT_LIBRARY_DIR)/libLArContent.so
 
 INCLUDES  = -I$(PROJECT_INCLUDE_DIR)
-INCLUDES += -I$(PANDORA_DIR)/PandoraSDK/include
+INCLUDES += -I$(PANDORA_DIR)/PandoraSDK-origin/master/include
 ifdef MONITORING
-    INCLUDES += -I$(PANDORA_DIR)/PandoraMonitoring/include
+    INCLUDES += -I$(PANDORA_DIR)/PandoraMonitoring-origin/master/include
 endif
 
 ifdef MONITORING
