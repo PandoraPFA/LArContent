@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArContent/LArObjects/LArPointingCluster.h"
 
-#include "LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
 
 using namespace pandora;
 

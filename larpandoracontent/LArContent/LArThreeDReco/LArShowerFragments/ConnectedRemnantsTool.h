@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h
+ *  @file   LArContent/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h
  *
  *  @brief  Header file for the connected remnants tool class.
  *
@@ -8,7 +8,7 @@
 #ifndef CONNECTED_REMNANTS_TOOL_H
 #define CONNECTED_REMNANTS_TOOL_H 1
 
-#include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
 namespace lar_content
 {

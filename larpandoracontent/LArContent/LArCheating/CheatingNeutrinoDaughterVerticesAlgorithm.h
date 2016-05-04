@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h
+ *  @file   LArContent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h
  * 
  *  @brief  Header file for the cheating neutrino daughter vertices algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
 
 namespace lar_content
 {

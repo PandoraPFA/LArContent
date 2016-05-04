@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h
  *
  *  @brief  Header file for the longitudinal extension algorithm class.
  *
@@ -8,9 +8,9 @@
 #ifndef LAR_LONGITUDINAL_EXTENSION_ALGORITHM_H
 #define LAR_LONGITUDINAL_EXTENSION_ALGORITHM_H 1
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArContent/LArObjects/LArPointingCluster.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 namespace lar_content
 {

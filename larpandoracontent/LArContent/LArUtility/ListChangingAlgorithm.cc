@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/ListChangingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArUtility/ListChangingAlgorithm.h"
 
 using namespace pandora;
 

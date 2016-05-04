@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h
  *
  *  @brief  Header file for the cluster splitting algorithm class.
  *

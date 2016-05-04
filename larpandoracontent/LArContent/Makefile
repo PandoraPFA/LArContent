@@ -2,7 +2,7 @@ ifndef PROJECT_DIR
     PROJECT_DIR = $(PANDORA_DIR)/LArContent
     PROJECT_LIBRARY_DIR = $(PANDORA_DIR)/lib
 else
-    PROJECT_LIBRARY_DIR = $(PROJECT_DIR)/larpandoracontent/LArContent/lib
+    PROJECT_LIBRARY_DIR = $(PROJECT_DIR)/lib
 endif
 
 CC = g++
@@ -19,7 +19,7 @@ ifdef BUILD_32BIT_COMPATIBLE
     LIBS += -m32
 endif
 
-PROJECT_INCLUDE_DIR = $(PROJECT_DIR)/larpandoracontent/LArContent/
+PROJECT_INCLUDE_DIR = $(PROJECT_DIR)
 PROJECT_LIBRARY = $(PROJECT_LIBRARY_DIR)/libLArContent.so
 
 INCLUDES  = -I$(PROJECT_INCLUDE_DIR)

@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArContent/LArPlugins/LArTransformationPlugin.h"
 
-#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
-#include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h
  *
  *  @brief  Header file for the three dimensional hit creation algorithm class.
  *

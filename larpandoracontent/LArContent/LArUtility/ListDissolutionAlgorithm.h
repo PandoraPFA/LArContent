@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArUtility/ListDissolutionAlgorithm.h
+ *  @file   LArContent/LArUtility/ListDissolutionAlgorithm.h
  * 
  *  @brief  Header file for the list dissolution algorithm class.
  * 

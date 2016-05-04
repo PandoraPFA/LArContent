@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArContent/LArUtility/NeutrinoParentAlgorithm.h"
 
 using namespace pandora;
 

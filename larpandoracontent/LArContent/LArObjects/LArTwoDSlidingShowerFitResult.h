@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArTwoDSlidingShowerFitResult.h
+ *  @file   LArContent/LArObjects/LArTwoDSlidingShowerFitResult.h
  *
  *  @brief  Header file for the lar two dimensional sliding shower fit result class.
  *
@@ -10,7 +10,7 @@
 
 #include "Api/PandoraApi.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include <unordered_map>
 

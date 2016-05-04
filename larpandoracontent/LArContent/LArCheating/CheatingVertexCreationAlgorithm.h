@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArCheating/CheatingVertexCreationAlgorithm.h
+ *  @file   LArContent/LArCheating/CheatingVertexCreationAlgorithm.h
  * 
  *  @brief  Header file for the cheating vertex creation algorithm class.
  * 

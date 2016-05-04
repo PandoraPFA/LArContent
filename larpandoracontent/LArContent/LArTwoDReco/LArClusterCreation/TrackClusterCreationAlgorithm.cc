@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 
 using namespace pandora;
 

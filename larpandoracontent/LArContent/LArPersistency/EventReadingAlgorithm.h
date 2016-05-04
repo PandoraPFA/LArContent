@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArPersistency/EventReadingAlgorithm.h
+ *  @file   LArContent/LArPersistency/EventReadingAlgorithm.h
  * 
  *  @brief  Header file for the event reading algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h
  * 
  *  @brief  Header file for the vertex based pfo merging algorithm class.
  * 

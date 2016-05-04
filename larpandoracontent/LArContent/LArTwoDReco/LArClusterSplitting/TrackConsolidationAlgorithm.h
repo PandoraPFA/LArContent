@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h
  *
  *  @brief  Header file for the track consolidation algorithm class.
  *
@@ -8,9 +8,9 @@
 #ifndef LAR_TRACK_CONSOLIDATION_ALGORITHM_H
 #define LAR_TRACK_CONSOLIDATION_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
 namespace lar_content
 {

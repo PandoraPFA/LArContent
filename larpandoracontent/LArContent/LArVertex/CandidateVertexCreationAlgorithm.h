@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArVertex/CandidateVertexCreationAlgorithm.h
+ *  @file   LArContent/LArVertex/CandidateVertexCreationAlgorithm.h
  * 
  *  @brief  Header file for the candidate vertex creation algorithm class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_CANDIDATE_VERTEX_CREATION_ALGORITHM_H
 #define LAR_CANDIDATE_VERTEX_CREATION_ALGORITHM_H 1
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include "Pandora/Algorithm.h"
 

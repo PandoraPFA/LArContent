@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h
  *
  *  @brief  Header file for the cosmic ray base matching algorithm class.
  *

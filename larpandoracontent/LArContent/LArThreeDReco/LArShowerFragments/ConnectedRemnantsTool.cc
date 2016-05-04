@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
-#include "LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h"
 
 using namespace pandora;
 

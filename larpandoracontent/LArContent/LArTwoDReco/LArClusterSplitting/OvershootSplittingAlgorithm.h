@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.h
  *
  *  @brief  Header file for the overshoot splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_OVERSHOOT_SPLITTING_ALGORITHM_H
 #define LAR_OVERSHOOT_SPLITTING_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.h"
 
 namespace lar_content
 {

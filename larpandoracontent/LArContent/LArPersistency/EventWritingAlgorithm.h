@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArPersistency/EventWritingAlgorithm.h
+ *  @file   LArContent/LArPersistency/EventWritingAlgorithm.h
  * 
  *  @brief  Header file for the event writing algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h
  * 
  *  @brief  Header file for the cluster association algorithm class.
  * 

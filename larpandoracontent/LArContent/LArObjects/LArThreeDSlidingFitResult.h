@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArThreeDSlidingFitResult.h
+ *  @file   LArContent/LArObjects/LArThreeDSlidingFitResult.h
  *
  *  @brief  Header file for the lar three dimensional sliding fit result class.
  *
@@ -10,7 +10,7 @@
 
 #include "Api/PandoraApi.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include <unordered_map>
 

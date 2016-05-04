@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h
  *
  *  @brief  Header file for the cluster characterisation algorithm class.
  *

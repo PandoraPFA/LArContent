@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.h"
 
 using namespace pandora;
 

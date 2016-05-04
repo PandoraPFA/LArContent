@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h
+ *  @file   LArContent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h
  *
  *  @brief  Header file for the track hits base tool.
  *
@@ -8,9 +8,9 @@
 #ifndef TRACK_HITS_BASE_TOOL_H
 #define TRACK_HITS_BASE_TOOL_H 1
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 #include <unordered_map>
 

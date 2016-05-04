@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h
+ *  @file   LArContent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h
  * 
  *  @brief  Header file for the vertex associated pfos tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_VERTEX_ASSOCIATED_PFOS_TOOL_H
 #define LAR_VERTEX_ASSOCIATED_PFOS_TOOL_H 1
 
-#include "LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 
 namespace lar_content
 {

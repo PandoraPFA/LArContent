@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArStitching/StitchingPfoMergingTool.h
+ *  @file   LArContent/LArStitching/StitchingPfoMergingTool.h
  * 
  *  @brief  Header file for the stitching pfo merging tool class.
  * 
@@ -8,8 +8,8 @@
 #ifndef LAR_STITCHING_PFO_MERGING_TOOL_H
 #define LAR_STITCHING_PFO_MERGING_TOOL_H 1
 
-#include "LArStitching/MultiPandoraApi.h"
-#include "LArStitching/StitchingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArContent/LArStitching/StitchingAlgorithm.h"
 
 namespace lar_content
 {

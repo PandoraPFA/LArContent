@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 
-#include "LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArContent/LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
 

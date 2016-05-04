@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h
  *
  *  @brief  Header file for the cluster growing algorithm class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArUtility/ListDeletionAlgorithm.h
+ *  @file   LArContent/LArUtility/ListDeletionAlgorithm.h
  * 
  *  @brief  Header file for the list deletion algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h
  *
  *  @brief  Header file for the transverse association algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
 
 namespace lar_content
 {

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/ClusterSplitting/KinkSplittingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/ClusterSplitting/KinkSplittingAlgorithm.h
  *
  *  @brief  Header file for the kink splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_KINK_SPLITTING_ALGORITHM_H
 #define LAR_KINK_SPLITTING_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 namespace lar_content
 {

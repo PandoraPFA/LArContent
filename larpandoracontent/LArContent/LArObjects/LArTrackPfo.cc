@@ -6,7 +6,7 @@
  *  $Log: $
  */
 
-#include "LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTrackPfo.h"
 
 #include "Objects/CaloHit.h"
 

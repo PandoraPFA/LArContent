@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 
 using namespace pandora;
 

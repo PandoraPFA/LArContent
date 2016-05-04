@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterAssociation/SimpleClusterGrowingAlgorithm.h
  *
  *  @brief  Header file for the simple cluster growing algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h"
 
 namespace lar_content
 {

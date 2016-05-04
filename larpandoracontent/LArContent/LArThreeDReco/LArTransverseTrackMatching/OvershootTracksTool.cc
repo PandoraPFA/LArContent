@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
 
 using namespace pandora;
 

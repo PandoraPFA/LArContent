@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h
  * 
  *  @brief  Header file for the bounded cluster merging algorithm class.
  * 
@@ -10,9 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
 
 namespace lar_content
 {

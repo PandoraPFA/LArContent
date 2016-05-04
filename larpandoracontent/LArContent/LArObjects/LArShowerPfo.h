@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArShowerPfo.h
+ *  @file   LArContent/LArObjects/LArShowerPfo.h
  *
  *  @brief  Header file for the lar pfo class.
  *

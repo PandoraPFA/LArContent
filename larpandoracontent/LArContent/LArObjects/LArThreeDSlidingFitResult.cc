@@ -8,9 +8,9 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include <algorithm>
 #include <cmath>

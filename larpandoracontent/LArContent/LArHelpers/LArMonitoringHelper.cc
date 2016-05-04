@@ -13,10 +13,10 @@
 
 #include "Helpers/MCParticleHelper.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArMonitoringHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
 

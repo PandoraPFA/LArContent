@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h
  *
  *  @brief  Header file for the crossed track splitting algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.h"
 
 namespace lar_content
 {

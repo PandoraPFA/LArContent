@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArPointingCluster.h
+ *  @file   LArContent/LArObjects/LArPointingCluster.h
  * 
  *  @brief  Header file for the lar pointing cluster class.
  * 
@@ -8,8 +8,8 @@
 #ifndef LAR_POINTING_CLUSTER_H
 #define LAR_POINTING_CLUSTER_H 1
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArThreeDSlidingFitResult.h"
 
 namespace lar_content
 {

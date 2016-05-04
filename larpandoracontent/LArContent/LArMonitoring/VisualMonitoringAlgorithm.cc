@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArMonitoring/VisualMonitoringAlgorithm.h"
+#include "larpandoracontent/LArContent/LArMonitoring/VisualMonitoringAlgorithm.h"
 
 using namespace pandora;
 

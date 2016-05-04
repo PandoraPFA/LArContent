@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 
 using namespace pandora;
 

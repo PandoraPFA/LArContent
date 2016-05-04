@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/ListMergingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArUtility/ListMergingAlgorithm.h"
 
 using namespace pandora;
 

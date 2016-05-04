@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArCheating/CheatingEventSlicingTool.h
+ *  @file   LArContent/LArCheating/CheatingEventSlicingTool.h
  * 
  *  @brief  Header file for the cheating event slicing tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_CHEATING_EVENT_SLICING_TOOL_H
 #define LAR_CHEATING_EVENT_SLICING_TOOL_H 1
 
-#include "LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArContent/LArUtility/NeutrinoParentAlgorithm.h"
 
 #include <unordered_map>
 

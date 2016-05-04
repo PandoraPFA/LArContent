@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h
+ *  @file   LArContent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h
  * 
  *  @brief  Header file for the missing track tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef MISSING_TRACK_TOOL_H
 #define MISSING_TRACK_TOOL_H 1
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {

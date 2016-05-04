@@ -6,7 +6,7 @@
  *  $Log: $
  */
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
 #include <algorithm>
 #include <cmath>

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h
  * 
  *  @brief  Header file for the neutrino creation algorithm class.
  * 

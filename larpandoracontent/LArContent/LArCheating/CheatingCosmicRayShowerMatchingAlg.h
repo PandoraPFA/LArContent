@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArCheating/CheatingCosmicRayShowerMatchingAlg.h
+ *  @file   LArContent/LArCheating/CheatingCosmicRayShowerMatchingAlg.h
  * 
  *  @brief  Header file for the cosmic ray shower matching cheater class.
  * 

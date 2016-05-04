@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/ListDeletionAlgorithm.h"
+#include "larpandoracontent/LArContent/LArUtility/ListDeletionAlgorithm.h"
 
 using namespace pandora;
 

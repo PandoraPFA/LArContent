@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArStitching/MultiPandoraApi.h
+ *  @file   LArContent/LArStitching/MultiPandoraApi.h
  * 
  *  @brief  Header file for the MultiPandoraApi class.
  * 

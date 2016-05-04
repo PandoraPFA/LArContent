@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
 
-#include "LArStitching/StitchingObjectCreationTool.h"
+#include "larpandoracontent/LArContent/LArStitching/StitchingObjectCreationTool.h"
 
 using namespace pandora;
 using namespace lar_content;

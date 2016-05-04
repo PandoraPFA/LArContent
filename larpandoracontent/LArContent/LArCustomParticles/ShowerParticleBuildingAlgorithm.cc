@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArObjects/LArShowerPfo.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArObjects/LArShowerPfo.h"
 
-#include "LArCustomParticles/ShowerParticleBuildingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArCustomParticles/ShowerParticleBuildingAlgorithm.h"
 
 using namespace pandora;
 

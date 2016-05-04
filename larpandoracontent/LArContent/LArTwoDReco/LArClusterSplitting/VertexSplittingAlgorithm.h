@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h
  * 
  *  @brief  Header file for the vertex splitting algorithm class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_VERTEX_SPLITTING_ALGORITHM_H
 #define LAR_VERTEX_SPLITTING_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 #include "Pandora/Algorithm.h"
 

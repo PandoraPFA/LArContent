@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArMonitoringHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
 
-#include "LArObjects/LArTrackPfo.h"
-#include "LArObjects/LArShowerPfo.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArContent/LArObjects/LArShowerPfo.h"
 
-#include "LArMonitoring/ParticleMonitoringAlgorithm.h"
+#include "larpandoracontent/LArContent/LArMonitoring/ParticleMonitoringAlgorithm.h"
 
 using namespace pandora;
 

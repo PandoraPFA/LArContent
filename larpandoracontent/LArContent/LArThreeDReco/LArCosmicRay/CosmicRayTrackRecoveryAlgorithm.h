@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.h
  *
  *  @brief  Header file for the cosmic ray longitudinal track recovery algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
 
 namespace lar_content
 {

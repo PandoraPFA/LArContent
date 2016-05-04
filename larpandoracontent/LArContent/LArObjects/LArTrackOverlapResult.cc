@@ -10,7 +10,7 @@
 
 #include "Pandora/PandoraInternal.h"
 
-#include "LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTrackOverlapResult.h"
 
 using namespace pandora;
 

@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArContent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 
 using namespace pandora;
 

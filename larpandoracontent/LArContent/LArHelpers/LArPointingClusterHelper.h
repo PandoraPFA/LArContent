@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArHelpers/LArClusterHelper.h
+ *  @file   LArContent/LArHelpers/LArClusterHelper.h
  * 
  *  @brief  Header file for the cluster helper class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArContent/LArObjects/LArPointingCluster.h"
 
 namespace lar_content
 {

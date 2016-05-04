@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArUtility/ListMergingAlgorithm.h
+ *  @file   LArContent/LArUtility/ListMergingAlgorithm.h
  * 
  *  @brief  Header file for the list merging algorithm class.
  * 

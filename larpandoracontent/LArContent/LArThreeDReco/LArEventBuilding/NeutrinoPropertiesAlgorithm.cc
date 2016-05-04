@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
 
 using namespace pandora;
 

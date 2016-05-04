@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
 
 using namespace pandora;
 

@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/TwoDParticleCreationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 using namespace pandora;
 

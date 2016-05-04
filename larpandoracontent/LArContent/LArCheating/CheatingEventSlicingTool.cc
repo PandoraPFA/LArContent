@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCheating/CheatingEventSlicingTool.h"
+#include "larpandoracontent/LArContent/LArCheating/CheatingEventSlicingTool.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
 
 using namespace pandora;
 

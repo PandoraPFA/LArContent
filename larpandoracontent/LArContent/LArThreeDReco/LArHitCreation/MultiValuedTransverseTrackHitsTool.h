@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h
+ *  @file   LArContent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h
  * 
  *  @brief  Header file for the multivalued transverse track hit creation tool.
  * 
@@ -8,7 +8,7 @@
 #ifndef MULTI_VALUED_TRANSVERSE_TRACK_HITS_TOOL_H
 #define MULTI_VALUED_TRANSVERSE_TRACK_HITS_TOOL_H 1
 
-#include "LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h"
 
 namespace lar_content
 {

@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 
 using namespace pandora;
 

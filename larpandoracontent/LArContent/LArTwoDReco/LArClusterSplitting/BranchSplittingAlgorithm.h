@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h
  *
  *  @brief  Header file for the branch splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_BRANCH_SPLITTING_ALGORITHM_H
 #define LAR_BRANCH_SPLITTING_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
 
 namespace lar_content
 {

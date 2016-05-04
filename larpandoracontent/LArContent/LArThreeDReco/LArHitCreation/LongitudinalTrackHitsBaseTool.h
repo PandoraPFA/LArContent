@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h
+ *  @file   LArContent/LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h
  *
  *  @brief  Header file for the longitudinal track hits base tool.
  *
@@ -8,7 +8,7 @@
 #ifndef LONGITUDINAL_TRACK_HITS_BASE_TOOL_H
 #define LONGITUDINAL_TRACK_HITS_BASE_TOOL_H 1
 
-#include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
 namespace lar_content
 {

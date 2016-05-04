@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h
  * 
  *  @brief  Header file for the isolated hit merging algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
 
 #include <unordered_map>
 

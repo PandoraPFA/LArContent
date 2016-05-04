@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h
+ *  @file   LArContent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h
  * 
  *  @brief  Header file for the overshoot tracks tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef OVERSHOOT_TRACKS_TOOL_H
 #define OVERSHOOT_TRACKS_TOOL_H 1
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h"
 
 namespace lar_content
 {

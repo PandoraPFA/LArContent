@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h
+ *  @file   LArContent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h
  *
  *  @brief  Header file for the matched end points tool class.
  *
@@ -8,7 +8,7 @@
 #ifndef MATCHED_END_POINTS_TOOL_H
 #define MATCHED_END_POINTS_TOOL_H 1
 
-#include "LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 
 namespace lar_content
 {

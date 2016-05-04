@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h
  * 
  *  @brief  Header file for the cosmic ray identification algorithm class.
  * 

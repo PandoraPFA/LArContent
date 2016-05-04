@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerMatching/SimpleShowersTool.h
+ *  @file   LArContent/LArThreeDReco/LArShowerMatching/SimpleShowersTool.h
  * 
  *  @brief  Header file for the simple showers tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef SIMPLE_SHOWERS_TOOL_H
 #define SIMPLE_SHOWERS_TOOL_H 1
 
-#include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
 namespace lar_content
 {

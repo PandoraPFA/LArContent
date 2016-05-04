@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h
+ *  @file   LArContent/LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h
  *
  *  @brief  Header file for the clear transverse track hit creation tool.
  *
@@ -8,7 +8,7 @@
 #ifndef CLEAR_TRANSVERSE_TRACK_HITS_TOOL_H
 #define CLEAR_TRANSVERSE_TRACK_HITS_TOOL_H 1
 
-#include "LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h"
 
 namespace lar_content
 {

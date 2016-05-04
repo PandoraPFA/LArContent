@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArContent/LArPlugins/LArTransformationPlugin.h"
 
-#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 using namespace pandora;
 

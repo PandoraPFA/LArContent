@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArMonitoring/ParticleMonitoringAlgorithm.h
+ *  @file   LArContent/LArMonitoring/ParticleMonitoringAlgorithm.h
  *
  *  @brief  Header file for the particle monitoring algorithm.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
 
 namespace lar_content
 {

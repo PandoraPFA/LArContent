@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h
  *
  *  @brief  Header file for the cosmic ray shower matching algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_COSMIC_RAY_SHOWER_MATCHING_ALGORITHM_H
 #define LAR_COSMIC_RAY_SHOWER_MATCHING_ALGORITHM_H 1
 
-#include "LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h"
 
 namespace lar_content
 {

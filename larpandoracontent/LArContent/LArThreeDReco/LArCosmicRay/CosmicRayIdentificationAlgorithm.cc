@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 
 using namespace pandora;
 

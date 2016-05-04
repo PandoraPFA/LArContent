@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArStitching/StitchingObjectCreationTool.h
+ *  @file   LArContent/LArStitching/StitchingObjectCreationTool.h
  * 
  *  @brief  Header file for the stitching object creation tool class.
  * 
@@ -8,8 +8,8 @@
 #ifndef LAR_STITCHING_OBJECT_CREATION_TOOL_H
 #define LAR_STITCHING_OBJECT_CREATION_TOOL_H 1
 
-#include "LArStitching/MultiPandoraApi.h"
-#include "LArStitching/StitchingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArContent/LArStitching/StitchingAlgorithm.h"
 
 namespace lar_content
 {

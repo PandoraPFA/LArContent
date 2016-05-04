@@ -7,12 +7,12 @@
  */
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArContent/LArUtility/KDTreeLinkerAlgoT.h"
 
-#include "LArVertex/VertexSelectionAlgorithm.h"
+#include "larpandoracontent/LArContent/LArVertex/VertexSelectionAlgorithm.h"
 
 using namespace pandora;
 

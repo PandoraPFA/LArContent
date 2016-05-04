@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArHelpers/LArMCParticleHelper.h
+ *  @file   LArContent/LArHelpers/LArMCParticleHelper.h
  *
  *  @brief  Header file for the lar monte carlo particle helper helper class.
  *

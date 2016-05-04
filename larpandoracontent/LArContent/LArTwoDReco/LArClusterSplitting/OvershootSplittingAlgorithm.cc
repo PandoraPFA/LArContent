@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArContent/LArObjects/LArPointingCluster.h"
 
-#include "LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.h"
 
 using namespace pandora;
 

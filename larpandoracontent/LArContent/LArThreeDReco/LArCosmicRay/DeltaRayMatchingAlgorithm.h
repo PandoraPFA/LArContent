@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h
  *
  *  @brief  Header file for the delta ray matching algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
 
 namespace lar_content
 {

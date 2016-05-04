@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
 
-#include "LArCheating/CheatingVertexCreationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArCheating/CheatingVertexCreationAlgorithm.h"
 
 using namespace pandora;
 

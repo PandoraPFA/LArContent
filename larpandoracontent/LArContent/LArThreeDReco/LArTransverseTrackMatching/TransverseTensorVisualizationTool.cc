@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 
 using namespace pandora;
 

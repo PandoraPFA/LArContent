@@ -8,16 +8,16 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 
-#include "LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArContent/LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
 

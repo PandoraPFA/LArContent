@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h
  *
  *  @brief  Header file for the three dimensional longitudinal tracks algorithm class.
  *
@@ -11,9 +11,9 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTrackOverlapResult.h"
 
-#include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
 namespace lar_content
 {

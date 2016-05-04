@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArUtility/ListMovingAlgorithm.h
+ *  @file   LArContent/LArUtility/ListMovingAlgorithm.h
  * 
  *  @brief  Header file for the list moving algorithm class.
  * 

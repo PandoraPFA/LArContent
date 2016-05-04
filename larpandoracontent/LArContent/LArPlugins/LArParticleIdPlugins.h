@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArPlugins/LArParticleIdPlugins.h
+ *  @file   LArContent/LArPlugins/LArParticleIdPlugins.h
  * 
  *  @brief  Header file for the lar particle id plugins class.
  * 

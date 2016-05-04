@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArCheating/CheatingCosmicRayIdentificationAlg.h
+ *  @file   LArContent/LArCheating/CheatingCosmicRayIdentificationAlg.h
  * 
  *  @brief  Header file for the cosmic ray identification cheater class.
  * 

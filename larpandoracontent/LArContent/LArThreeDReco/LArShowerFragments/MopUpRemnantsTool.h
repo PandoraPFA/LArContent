@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h
+ *  @file   LArContent/LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h
  *
  *  @brief  Header file for the mop-up remnants tool class.
  *
@@ -8,7 +8,7 @@
 #ifndef MOP_UP_REMNANTS_TOOL_H
 #define MOP_UP_REMNANTS_TOOL_H 1
 
-#include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArContent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
 namespace lar_content
 {

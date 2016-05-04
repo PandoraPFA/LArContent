@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArMonitoring/VisualMonitoringAlgorithm.h
+ *  @file   LArContent/LArMonitoring/VisualMonitoringAlgorithm.h
  * 
  *  @brief  Header file for the visual monitoring algorithm class
  * 

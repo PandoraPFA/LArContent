@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArTrackPfo.h
+ *  @file   LArContent/LArObjects/LArTrackPfo.h
  *
  *  @brief  Header file for the lar pfo class.
  *

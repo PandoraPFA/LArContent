@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArMonitoring/EventValidationAlgorithm.h
+ *  @file   LArContent/LArMonitoring/EventValidationAlgorithm.h
  *
  *  @brief  Header file for the event validation algorithm.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMonitoringHelper.h"
 
 #include <map>
 #include <set>

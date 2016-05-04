@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
 
-#include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
+#include "larpandoracontent/LArContent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
 
 using namespace pandora;
 

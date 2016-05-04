@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 
 using namespace pandora;
 

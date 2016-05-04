@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArPlugins/LArTransformationPlugin.h
+ *  @file   LArContent/LArPlugins/LArTransformationPlugin.h
  * 
  *  @brief  Header file for the transformation plugin interface class.
  * 

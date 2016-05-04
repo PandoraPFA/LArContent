@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h
+ *  @file   LArContent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h
  * 
  *  @brief  Header file for the neutrino hierarchy algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include <unordered_map>
 

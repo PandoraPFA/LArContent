@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h
  *
  *  @brief  Header file for the cluster creation algorithm class.
  *

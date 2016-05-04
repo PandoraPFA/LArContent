@@ -8,7 +8,7 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include <algorithm>
 #include <cmath>

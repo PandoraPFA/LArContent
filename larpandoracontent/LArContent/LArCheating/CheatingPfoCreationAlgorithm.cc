@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCheating/CheatingPfoCreationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArCheating/CheatingPfoCreationAlgorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 

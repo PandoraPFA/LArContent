@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
 
-#include "LArCustomParticles/CustomParticleCreationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
 
 using namespace pandora;
 

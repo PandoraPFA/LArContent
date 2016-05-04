@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
+ *  @file   LArContent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
  * 
  *  @brief  Header file for the longitudinal association algorithm class.
  * 
@@ -12,7 +12,7 @@
 
 #include "Helpers/ClusterFitHelper.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
 
 namespace lar_content
 {

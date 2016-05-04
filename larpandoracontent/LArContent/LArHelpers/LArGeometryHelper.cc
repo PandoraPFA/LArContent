@@ -14,10 +14,10 @@
 
 #include "Pandora/Pandora.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArPseudoLayerPlugin.h"
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArContent/LArPlugins/LArPseudoLayerPlugin.h"
+#include "larpandoracontent/LArContent/LArPlugins/LArTransformationPlugin.h"
 
 using namespace pandora;
 

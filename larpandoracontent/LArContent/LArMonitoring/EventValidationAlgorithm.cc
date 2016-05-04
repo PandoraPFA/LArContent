@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
 
-#include "LArMonitoring/EventValidationAlgorithm.h"
+#include "larpandoracontent/LArContent/LArMonitoring/EventValidationAlgorithm.h"
 
-#include "LArObjects/LArMCParticle.h"
-#include "LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArContent/LArObjects/LArMCParticle.h"
+#include "larpandoracontent/LArContent/LArObjects/LArTrackPfo.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArTrackOverlapResult.h
+ *  @file   LArContent/LArObjects/LArTrackOverlapResult.h
  * 
  *  @brief  Header file for the lar track overlap result class.
  * 
@@ -11,7 +11,7 @@
 #include "Pandora/PandoraInputTypes.h"
 #include "Pandora/StatusCodes.h"
 
-#include "LArObjects/LArXOverlap.h"
+#include "larpandoracontent/LArContent/LArObjects/LArXOverlap.h"
 
 #include <cmath>
 #include <vector>
