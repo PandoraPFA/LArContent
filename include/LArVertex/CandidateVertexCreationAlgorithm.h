@@ -9,6 +9,7 @@
 #define LAR_CANDIDATE_VERTEX_CREATION_ALGORITHM_H 1
 
 #include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "LArObjects/LArThreeDSlidingFitResult.h"
 
 #include "Pandora/Algorithm.h"
 
@@ -77,6 +78,24 @@ private:
      * 
      *  @param  pCluster address of the relevant cluster
      */
+     
+    /**
+     *  @brief  Create candidate vertex positions by comparing pairs of cluster end positions
+     *
+     *  @param  clusterList1 the list of clusters in view 1
+     *  @param  clusterList1 the list of clusters in view 2
+     */
+    void Find2DClusterCrossings(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &crossingsVector) const;
+
+    /**
+     *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
+     *
+     *  @param  position1 an end-point position for the first cluster
+     *  @param  hitType1 the hit type of the first cluster
+     *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
+     */
+    void CreateCrossingVertex(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2, const pandora::ClusterList &clusterList, pandora::HitType hitType1, pandora::HitType hitType2) const;
+     
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
     /**
