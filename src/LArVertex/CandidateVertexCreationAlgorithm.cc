@@ -43,6 +43,18 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         this->ClusterEndPointComparison(clusterListU, clusterListV);
         this->ClusterEndPointComparison(clusterListU, clusterListW);
         this->ClusterEndPointComparison(clusterListV, clusterListW);
+        
+        std::vector<CartesianVector> crossingsU;
+        std::vector<CartesianVector> crossingsV;
+        std::vector<CartesianVector> crossingsW;
+        
+        this->Find2DClusterCrossings(clusterListU, crossingsU);
+        this->Find2DClusterCrossings(clusterListV, crossingsV);
+        this->Find2DClusterCrossings(clusterListW, crossingsW);
+        
+        this->CreateCrossingVertex(crossingsU, crossingsV, clusterListW, TPC_VIEW_U, TPC_VIEW_V);
+        this->CreateCrossingVertex(crossingsU, crossingsW, clusterListV, TPC_VIEW_U, TPC_VIEW_W);
+        this->CreateCrossingVertex(crossingsV, crossingsW, clusterListU, TPC_VIEW_V, TPC_VIEW_W);
 
         if (!pVertexList->empty())
         {
@@ -108,7 +120,7 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
 {
     const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
-
+    
     if ((((position1.GetX() < minLayerPosition2.GetX()) && (position1.GetX() < maxLayerPosition2.GetX())) ||
         ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
         (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxClusterXDiscrepancy) &&
@@ -126,9 +138,12 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
     float chiSquared(0.f);
     CartesianVector position3D(0.f, 0.f, 0.f);
     LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
+    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
 
     if (chiSquared > m_chiSquaredCut)
         return;
+        
+    //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Old Vertex", RED, 1));
 
     PandoraContentApi::Vertex::Parameters parameters;
     parameters.m_position = position3D;
@@ -173,6 +188,194 @@ void CandidateVertexCreationAlgorithm::SelectClusters(const std::string &cluster
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::Find2DClusterCrossings(const ClusterList &clusterList, std::vector<CartesianVector> &crossingsVector) const
+{
+    for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = clusterList.end(); iter1 != iter1End; ++iter1)
+    {
+        const Cluster *const pCluster1 = *iter1;
+        
+        if (pCluster1->GetNCaloHits() < 10)
+            continue;
+        
+        const TwoDSlidingFitResult &fitResult1(this->GetCachedSlidingFitResult(*iter1));
+        const CartesianVector minLayerPosition1(fitResult1.GetGlobalMinLayerPosition());
+        const CartesianVector maxLayerPosition1(fitResult1.GetGlobalMaxLayerPosition());
+        
+        std::vector<CartesianVector> spacePointVector1;
+        
+        OrderedCaloHitList orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
+        CaloHitList caloHitList1;
+        orderedCaloHitList1.GetCaloHitList(caloHitList1);
+        
+        for (CaloHitList::const_iterator caloIter1 = caloHitList1.begin(), caloIterEnd1 = caloHitList1.end(); caloIter1 != caloIterEnd1; ++caloIter1)
+        {
+            const CaloHit *const pCaloHit = (*caloIter1);
+            CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+            spacePointVector1.push_back(caloHitPosition);
+        }
+        
+        for (float i = 0.1; i < 20.0; i += 0.1)
+        {
+            CartesianVector tempExtrapolatedPositionUnder(0.f, 0.f, 0.f);
+            CartesianVector tempExtrapolatedPositionOver(0.f, 0.f, 0.f);
+
+            float minLayerRL(fitResult1.GetL(fitResult1.GetMinLayer()));
+            float maxLayerRL(fitResult1.GetL(fitResult1.GetMaxLayer()));
+
+            fitResult1.GetExtrapolatedPosition(minLayerRL - i, tempExtrapolatedPositionUnder);
+            fitResult1.GetExtrapolatedPosition(maxLayerRL + i, tempExtrapolatedPositionOver);
+            
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionUnder, "Target Vertex", BLUE, 1));
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionOver, "Target Vertex", BLUE, 1));
+
+            spacePointVector1.push_back(tempExtrapolatedPositionUnder);
+            spacePointVector1.push_back(tempExtrapolatedPositionOver);
+        }
+
+        for (ClusterList::const_iterator iter2 = clusterList.begin(), iter2End = clusterList.end(); iter2 != iter2End; ++iter2)
+        {
+            if ((*iter1)->GetNCaloHits() == (*iter2)->GetNCaloHits())
+                continue;
+                
+            const Cluster *const pCluster2 = *iter2;
+            
+            if (pCluster2->GetNCaloHits() < 10)
+            continue;
+            
+            const TwoDSlidingFitResult &fitResult2(this->GetCachedSlidingFitResult(*iter2));
+            const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
+            const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
+
+            std::vector<CartesianVector> spacePointVector2;
+            
+            OrderedCaloHitList orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
+            CaloHitList caloHitList2;
+            orderedCaloHitList2.GetCaloHitList(caloHitList2);
+            
+            for (CaloHitList::const_iterator caloIter2 = caloHitList2.begin(), caloIterEnd2 = caloHitList2.end(); caloIter2 != caloIterEnd2; ++caloIter2)
+            {
+                const CaloHit *const pCaloHit = (*caloIter2);
+                CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+                spacePointVector2.push_back(caloHitPosition);
+            }
+
+            for (float i = 0.1; i < 20.0; i += 0.1)
+            {
+                CartesianVector tempExtrapolatedPositionUnder(0.f, 0.f, 0.f);
+                CartesianVector tempExtrapolatedPositionOver(0.f, 0.f, 0.f);
+
+                float minLayerRL(fitResult2.GetL(fitResult2.GetMinLayer()));
+                float maxLayerRL(fitResult2.GetL(fitResult2.GetMaxLayer()));
+
+                fitResult2.GetExtrapolatedPosition(minLayerRL - i, tempExtrapolatedPositionUnder);
+                fitResult2.GetExtrapolatedPosition(maxLayerRL + i, tempExtrapolatedPositionOver);
+                
+                //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionUnder, "Extrapolated Point", BLUE, 1));
+                //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionOver, "Extrapolated Point", BLUE, 1));
+
+                spacePointVector2.push_back(tempExtrapolatedPositionUnder);
+                spacePointVector2.push_back(tempExtrapolatedPositionOver);
+            }
+            
+            bool thisClusterCrossingHasBeenFound(false);
+            
+            std::vector<float> distancesBetweenClusters;
+            
+            for (CartesianVector &position1: spacePointVector1)
+            {
+                for (CartesianVector &position2: spacePointVector2)
+                    distancesBetweenClusters.push_back((position1-position2).GetMagnitude());
+            }
+
+            for (CartesianVector &position1: spacePointVector1)
+            {
+                for (CartesianVector &position2: spacePointVector2)
+                {
+                    //if ((position1-position2).GetMagnitude() + 0.1 > (*(std::min_element(distancesBetweenClusters.begin(), distancesBetweenClusters.end())))
+                    //&& (position1-position2).GetMagnitude() - 0.1 < (*(std::min_element(distancesBetweenClusters.begin(), distancesBetweenClusters.end()))))
+                    if ((position1-position2).GetMagnitude() < 0.5)
+                    {
+                        crossingsVector.push_back(position1);
+                        crossingsVector.push_back(position2);
+                        
+                        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position1, "Crossover Point", RED, 1));
+                        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position2, "Crossover Point", RED, 1));
+                        
+                        thisClusterCrossingHasBeenFound = true;
+                        break;
+                    }
+                }
+                
+                if (thisClusterCrossingHasBeenFound)
+                    break;
+            }
+            
+            //CartesianVector minimalApproachPointOne(0.f, 0.f, 0.f);
+            //CartesianVector minimalApproachPointTwo(0.f, 0.f, 0.f);
+            //float minimalApproach(100.f);
+            //
+            //for (CartesianVector &position1: spacePointVector1)
+            //{
+            //    for (CartesianVector &position2: spacePointVector2)
+            //    {
+            //        if ((position1-position2).GetMagnitude() > 0.5)
+            //            continue;
+            //        
+            //        if ((position1-position2).GetMagnitude() < minimalApproach)
+            //        {
+            //            minimalApproachPointOne  = position1;
+            //            minimalApproachPointTwo = position2;
+            //            minimalApproach = (position1-position2).GetMagnitude();
+            //        }
+            //    }
+            //    
+            //    crossingsVector.push_back(minimalApproachPointOne);
+            //    crossingsVector.push_back(minimalApproachPointTwo);
+            //    //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &minimalApproachPointOne, "Target Vertex", RED, 1));
+            //    //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &minimalApproachPointTwo, "Target Vertex", RED, 1));
+            //}
+            
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::CreateCrossingVertex(std::vector<CartesianVector> &crossingsVector1, std::vector<CartesianVector> &crossingsVector2, const ClusterList &clusterList, HitType hitType1, HitType hitType2) const
+{
+    std::vector<CartesianVector> spacePointVector;
+    std::cout << "clusterList.size(): " << clusterList.size() << std::endl;
+    
+    for (CartesianVector &position1: crossingsVector1)
+    {
+        for (CartesianVector &position2: crossingsVector2)
+        {
+            if (std::fabs(position1.GetX() - position2.GetX()) > 0.1)
+                continue;
+                
+            float chiSquared(0.f);
+            CartesianVector position3D(0.f, 0.f, 0.f);
+            LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
+            const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
+                
+            if (chiSquared > 2.0)
+                return;
+                
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "New Vertex", GREEN, 1));
+                
+            PandoraContentApi::Vertex::Parameters parameters;
+            parameters.m_position = position3D;
+            parameters.m_vertexLabel = VERTEX_INTERACTION;
+            parameters.m_vertexType = VERTEX_3D;
+                
+            const Vertex *pVertex(NULL);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
         }
     }
 }
