@@ -55,7 +55,10 @@ StatusCode VertexSelectionAlgorithm::Run()
     vertexListCopy.insert(pInputVertexList->begin(), pInputVertexList->end());
     std::vector<VertexList> vertexListVector = m_pVertexClusteringTool->ClusterVertices(vertexListCopy);
 
-    std::vector<VertexScoringTool::VertexScoreList> vertexScoreListVector = m_pVertexScoringTool->ScoreVertices(this, vertexListVector);
+    VertexScoringTool::VertexScoreList intermediateVertexScoreList;    
+    m_pVertexScoringTool->ScoreVertices(this, vertexListVector, intermediateVertexScoreList);
+
+    std::cout << ">>>>>>>>>>There are " << intermediateVertexScoreList.size() << " vertices in the intermediate list" << std::endl;
 
 //    VertexList selectedVertexList;
 //    this->SelectTopScoreVertices(vertexScoreList, selectedVertexList, mcNeutrinoList, pClusterListW);

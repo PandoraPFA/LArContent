@@ -83,7 +83,7 @@ public:
     
     typedef std::vector<VertexScore> VertexScoreList;
 
-    std::vector<VertexScoreList> ScoreVertices(const pandora::Algorithm *const pAlgorithm, std::vector<pandora::VertexList> &vertexListVector);
+    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, std::vector<pandora::VertexList> &vertexListVector, VertexScoreList &outputVertexScoreList);
 
 private:
     
@@ -358,6 +358,9 @@ private:
 
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty
+    
+    unsigned int             m_minVertexClusterSize;         ///< THe smallest number of vertices a vertex cluster must contain to contribute to the output vertex list
+    int             m_nSelectedVerticesPerCluster; ///< The number of vertices to take from each vertex cluster and put in the output vertex list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

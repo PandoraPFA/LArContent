@@ -15,6 +15,11 @@ using namespace pandora;
 namespace lar_content
 {
 
+VertexClusteringTool::VertexClusteringTool() :
+    m_maxVertexToCentroidDistance(5.f)
+{
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool VertexClusteringTool::SortVerticesByZ(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs)
@@ -40,8 +45,6 @@ std::vector<VertexList> VertexClusteringTool::ClusterVertices(const VertexList &
 
     //-------------------------------------------------------------------------------------------------
 
-std::cout << "Begin clustering tool" << std::endl;
-
     std::vector<const Vertex*> sortedVertexVector;
     for (const Vertex *const pVertex : vertexList)
         sortedVertexVector.push_back(pVertex);
@@ -65,7 +68,7 @@ std::cout << "Begin clustering tool" << std::endl;
         else
             currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
         
-        if ((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() < 5.0)
+        if ((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() < m_maxVertexToCentroidDistance)
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
@@ -83,8 +86,6 @@ std::cout << "Begin clustering tool" << std::endl;
     
     for (VertexCluster* pVertexCluster : vertexClusterList)
         outputVertexListVector.push_back(pVertexCluster->GetVertexList());
-
-std::cout << "End clustering tool" << std::endl;
 
     return outputVertexListVector;  
 
@@ -123,9 +124,12 @@ void VertexClusteringTool::RemoveSmallClusters(VertexClusterList &vertexClusterL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     // Read settings from xml file here
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexToCentroidDistance", m_maxVertexToCentroidDistance));
 
     return STATUS_CODE_SUCCESS;
 }

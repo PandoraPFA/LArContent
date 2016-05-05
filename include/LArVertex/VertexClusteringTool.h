@@ -19,6 +19,20 @@ class VertexClusteringTool : public pandora::AlgorithmTool
 
 public:
 
+    /**
+     *  @brief  Default constructor
+     */
+    VertexClusteringTool();
+
+    /**
+     *  @brief  Factory class for instantiating algorithm tool
+     */
+    class Factory : public pandora::AlgorithmToolFactory
+    {
+    public:
+        pandora::AlgorithmTool *CreateAlgorithmTool() const;
+    };
+
     class VertexCluster
     {
         public:
@@ -81,15 +95,6 @@ public:
 
     typedef std::vector<VertexCluster*> VertexClusterList;
 
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
     std::vector<pandora::VertexList> ClusterVertices(const pandora::VertexList &vertexList);
 
     void RemoveSmallClusters(VertexClusterList &vertexClusterList);
@@ -99,6 +104,8 @@ public:
 private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float   m_maxVertexToCentroidDistance; ///< The radius around the centroid within which vertices will be added to the current vertex cluster
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

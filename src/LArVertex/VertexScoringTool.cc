@@ -43,59 +43,58 @@ VertexScoringTool::VertexScoringTool() :
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_minVertexAcceptableViews(3)
+    m_minVertexAcceptableViews(3),
+    m_minVertexClusterSize(2),
+    m_nSelectedVerticesPerCluster(2)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<VertexScoringTool::VertexScoreList> VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::vector<VertexList> &vertexListVector)
+void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::vector<VertexList> &vertexListVector, VertexScoreList &outputVertexScoreList)
 {
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
     //-------------------------------------------------------------------------------------------------
 
-std::cout << "Begin scoring tool" << std::endl;
-
     std::vector<VertexScoreList> vertexScoreListVector;
 
     for (VertexList vertexList : vertexListVector)
     {
-std::cout << "This vertex list contains " << vertexList.size() << " vertices" << std::endl;
         const VertexList *pInputVertexList(&vertexList);
-std::cout << "The pointer contains " << vertexList.size() << " vertices" << std::endl;
-
-std::cout << "A" << std::endl;
 
         HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
         this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
 
-std::cout << "B" << std::endl;
-
         VertexList filteredVertexList;
         this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
 
-std::cout << "C" << std::endl;
         if (filteredVertexList.size() == 0)
             continue;
 
         BeamConstants beamConstants;
         this->GetBeamConstants(filteredVertexList, beamConstants);
 
-std::cout << "D" << std::endl;
-
         VertexScoreList vertexScoreList;
         this->GetVertexScoreList(filteredVertexList, beamConstants, kdTreeU, kdTreeV, kdTreeW, vertexScoreList);
-
-std::cout << "E" << std::endl;
 
         vertexScoreListVector.push_back(vertexScoreList);
     }
 
-std::cout << "End scoring tool" << std::endl;
+    for (VertexScoreList vertexScoreList : vertexScoreListVector)
+    {
+        std::sort(vertexScoreList.begin(), vertexScoreList.end());
 
-    return vertexScoreListVector;
+        if (vertexScoreList.size() < m_minVertexClusterSize)
+            continue;
+
+        outputVertexScoreList.insert(outputVertexScoreList.begin(), vertexScoreList.begin(), std::next(vertexScoreList.begin(), (m_nSelectedVerticesPerCluster-1) ));
+        
+    }
+    
+    std::sort(outputVertexScoreList.begin(), outputVertexScoreList.end());
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -495,6 +494,12 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexAcceptableViews", m_minVertexAcceptableViews));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinVertexClusterSize", m_minVertexClusterSize));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectedVerticesPerCluster", m_nSelectedVerticesPerCluster));
 
     return STATUS_CODE_SUCCESS;
 }
