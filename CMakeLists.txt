@@ -1,4 +1,4 @@
-# cmake file for building LArContent
+# cmake file for building LArContent in Pandora standalone cmake setup, distinct from cetbuildtools setup
 #-------------------------------------------------------------------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 2.8.2 FATAL_ERROR)
 
@@ -13,7 +13,7 @@ endif()
 project(${LAR_CONTENT_LIBRARY_NAME})
 
 # project version
-set(${PROJECT_NAME}_VERSION_MAJOR 02)
+set(${PROJECT_NAME}_VERSION_MAJOR 02) # ATTN liable to go out of sync with cetbuildtools version numbers; check and treat with caution
 set(${PROJECT_NAME}_VERSION_MINOR 07)
 set(${PROJECT_NAME}_VERSION_PATCH 02)
 set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
