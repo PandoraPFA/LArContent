@@ -8,7 +8,7 @@
 #ifndef CLEAR_LONGITUDINAL_TRACKS_TOOL_H
 #define CLEAR_LONGITUDINAL_TRACKS_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 
 namespace lar_content
 {

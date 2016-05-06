@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
 #include <map>
 #include <set>

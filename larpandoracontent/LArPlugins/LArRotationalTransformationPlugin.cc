@@ -8,7 +8,7 @@
 
 #include "Objects/CartesianVector.h"
 
-#include "larpandoracontent/LArContent/LArPlugins/LArRotationalTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
 
 #include <cmath>
 

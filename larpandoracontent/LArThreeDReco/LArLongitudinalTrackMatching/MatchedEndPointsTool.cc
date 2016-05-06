@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 
 using namespace pandora;
 

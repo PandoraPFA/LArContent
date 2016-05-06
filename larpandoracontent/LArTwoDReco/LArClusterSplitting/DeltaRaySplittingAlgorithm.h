@@ -8,7 +8,7 @@
 #ifndef LAR_DELTA_RAY_SPLITTING_ALGORITHM_H
 #define LAR_DELTA_RAY_SPLITTING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
 
 namespace lar_content
 {

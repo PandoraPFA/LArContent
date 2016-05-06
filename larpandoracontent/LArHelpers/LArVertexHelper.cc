@@ -6,10 +6,10 @@
  *  $Log: $
  */
 
-#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArContent/LArHelpers/LArPointingClusterHelper.h"
-#include "larpandoracontent/LArContent/LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 #include <limits>
 

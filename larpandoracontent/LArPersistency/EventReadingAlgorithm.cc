@@ -11,9 +11,9 @@
 #include "Persistency/BinaryFileReader.h"
 #include "Persistency/XmlFileReader.h"
 
-#include "larpandoracontent/LArContent/LArObjects/LArMCParticle.h"
+#include "larpandoracontent/LArObjects/LArMCParticle.h"
 
-#include "larpandoracontent/LArContent/LArPersistency/EventReadingAlgorithm.h"
+#include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
 
 using namespace pandora;
 

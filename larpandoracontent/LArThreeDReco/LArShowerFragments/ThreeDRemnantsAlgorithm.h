@@ -11,9 +11,9 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "larpandoracontent/LArContent/LArObjects/LArOverlapTensor.h"
+#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
 namespace lar_content
 {

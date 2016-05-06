@@ -8,7 +8,7 @@
 #ifndef CLEAR_TRACK_FRAGMENTS_TOOL_H
 #define CLEAR_TRACK_FRAGMENTS_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
 
 namespace lar_content
 {

@@ -8,7 +8,7 @@
 #ifndef MISSING_TRACK_SEGMENT_TOOL_H
 #define MISSING_TRACK_SEGMENT_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 #include <unordered_map>
 

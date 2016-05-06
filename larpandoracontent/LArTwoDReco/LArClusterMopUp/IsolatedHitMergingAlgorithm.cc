@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
 
 using namespace pandora;
 

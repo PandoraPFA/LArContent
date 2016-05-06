@@ -6,7 +6,7 @@
  *  $Log: $
  */
 
-#include "larpandoracontent/LArContent/LArUtility/KDTreeLinkerToolsT.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerToolsT.h"
 
 namespace lar_content
 {

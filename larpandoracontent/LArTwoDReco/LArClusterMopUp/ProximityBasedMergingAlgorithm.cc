@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArContent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.h"
 
 using namespace pandora;
 

@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArContent/LArMonitoring/EventDisplayAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/EventDisplayAlgorithm.h"
 
 using namespace pandora;
 

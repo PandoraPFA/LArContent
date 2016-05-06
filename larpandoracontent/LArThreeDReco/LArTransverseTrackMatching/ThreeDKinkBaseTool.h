@@ -8,9 +8,9 @@
 #ifndef THREE_D_KINK_BASE_TOOL_H
 #define THREE_D_KINK_BASE_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {

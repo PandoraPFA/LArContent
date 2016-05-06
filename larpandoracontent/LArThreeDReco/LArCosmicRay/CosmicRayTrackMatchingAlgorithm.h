@@ -8,7 +8,7 @@
 #ifndef LAR_COSMIC_RAY_TRACK_MATCHING_ALGORITHM_H
 #define LAR_COSMIC_RAY_TRACK_MATCHING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h"
 
 namespace lar_content
 {

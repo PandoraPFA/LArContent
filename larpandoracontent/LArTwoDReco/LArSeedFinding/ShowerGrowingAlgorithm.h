@@ -10,11 +10,11 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
-#include "larpandoracontent/LArContent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 #include <unordered_map>
 

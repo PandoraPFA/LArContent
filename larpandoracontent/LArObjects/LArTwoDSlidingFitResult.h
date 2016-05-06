@@ -10,7 +10,7 @@
 
 #include "Api/PandoraApi.h"
 
-#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitObjects.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitObjects.h"
 
 #include <unordered_map>
 

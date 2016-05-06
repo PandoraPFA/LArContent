@@ -8,7 +8,7 @@
 #ifndef CONNECTED_REMNANTS_TOOL_H
 #define CONNECTED_REMNANTS_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
 namespace lar_content
 {

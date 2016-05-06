@@ -8,7 +8,7 @@
 #ifndef LAR_OVERSHOOT_SPLITTING_ALGORITHM_H
 #define LAR_OVERSHOOT_SPLITTING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.h"
 
 namespace lar_content
 {

@@ -8,9 +8,9 @@
 #ifndef LAR_TRACK_PARTICLE_BUILDING_ALGORITHM_H
 #define LAR_TRACK_PARTICLE_BUILDING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArObjects/LArTrackPfo.h"
 
-#include "larpandoracontent/LArContent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
+#include "larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
 
 namespace lar_content
 {

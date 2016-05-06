@@ -8,7 +8,7 @@
 #ifndef LAR_EVENT_SLICING_TOOL_H
 #define LAR_EVENT_SLICING_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
 
 #include <unordered_map>
 

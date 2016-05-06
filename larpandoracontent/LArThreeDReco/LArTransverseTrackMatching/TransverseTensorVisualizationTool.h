@@ -8,7 +8,7 @@
 #ifndef TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H
 #define TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {

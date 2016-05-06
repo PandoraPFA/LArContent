@@ -15,8 +15,8 @@
 #include "Pandora/PdgTable.h"
 #include "Pandora/StatusCodes.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArContent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include <algorithm>
 #include <cstdlib>

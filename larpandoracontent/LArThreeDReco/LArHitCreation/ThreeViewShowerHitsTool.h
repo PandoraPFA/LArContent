@@ -8,7 +8,7 @@
 #ifndef THREE_VIEW_SHOWER_HITS_TOOL_H
 #define THREE_VIEW_SHOWER_HITS_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
 
 namespace lar_content
 {

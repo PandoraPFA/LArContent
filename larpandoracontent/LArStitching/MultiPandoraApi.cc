@@ -9,8 +9,8 @@
 #include "Pandora/Pandora.h"
 #include "Pandora/StatusCodes.h"
 
-#include "larpandoracontent/LArContent/LArStitching/MultiPandoraApi.h"
-#include "larpandoracontent/LArContent/LArStitching/MultiPandoraApiImpl.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApiImpl.h"
 
 MultiPandoraApiImpl MultiPandoraApi::m_multiPandoraApiImpl;
 

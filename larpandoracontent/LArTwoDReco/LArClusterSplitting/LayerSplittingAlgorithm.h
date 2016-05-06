@@ -8,7 +8,7 @@
 #ifndef LAR_LAYER_SPLITTING_ALGORITHM_H
 #define LAR_LAYER_SPLITTING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 namespace lar_content
 {

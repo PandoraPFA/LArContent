@@ -8,7 +8,7 @@
 #ifndef DELTA_RAY_SHOWER_HITS_TOOL_H
 #define DELTA_RAY_SHOWER_HITS_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 namespace lar_content
 {

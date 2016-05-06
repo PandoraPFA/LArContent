@@ -9,7 +9,7 @@
 #include "Pandora/Pandora.h"
 #include "Pandora/StatusCodes.h"
 
-#include "larpandoracontent/LArContent/LArStitching/MultiPandoraApiImpl.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApiImpl.h"
 
 const PandoraInstanceMap &MultiPandoraApiImpl::GetPandoraInstanceMap() const
 {

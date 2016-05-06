@@ -10,7 +10,7 @@
 
 #include "Pandora/PandoraInputTypes.h"
 
-#include "larpandoracontent/LArContent/LArPlugins/LArPseudoLayerPlugin.h"
+#include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
 
 #include <limits>
 

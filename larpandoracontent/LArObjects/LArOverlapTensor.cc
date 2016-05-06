@@ -14,11 +14,11 @@
 
 #include "Objects/Cluster.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArContent/LArObjects/LArOverlapTensor.h"
-#include "larpandoracontent/LArContent/LArObjects/LArShowerOverlapResult.h"
-#include "larpandoracontent/LArContent/LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
+#include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include <algorithm>
 

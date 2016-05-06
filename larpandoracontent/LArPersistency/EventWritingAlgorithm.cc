@@ -11,11 +11,11 @@
 #include "Persistency/BinaryFileWriter.h"
 #include "Persistency/XmlFileWriter.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "larpandoracontent/LArContent/LArObjects/LArMCParticle.h"
+#include "larpandoracontent/LArObjects/LArMCParticle.h"
 
-#include "larpandoracontent/LArContent/LArPersistency/EventWritingAlgorithm.h"
+#include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
 
 using namespace pandora;
 

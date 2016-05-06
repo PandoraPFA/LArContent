@@ -8,7 +8,7 @@
 #ifndef LAR_SPLIT_SHOWER_MERGING_ALGORITHM_H
 #define LAR_SPLIT_SHOWER_MERGING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
 
 namespace lar_content
 {

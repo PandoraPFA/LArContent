@@ -8,9 +8,9 @@
 #ifndef LAR_TWO_D_SLIDING_FIT_SPLITTING_ALGORITHM_H
 #define LAR_TWO_D_SLIDING_FIT_SPLITTING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 namespace lar_content
 {

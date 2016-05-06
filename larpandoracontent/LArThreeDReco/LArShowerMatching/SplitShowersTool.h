@@ -8,7 +8,7 @@
 #ifndef SPLIT_SHOWERS_TOOL_H
 #define SPLIT_SHOWERS_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
 namespace lar_content
 {

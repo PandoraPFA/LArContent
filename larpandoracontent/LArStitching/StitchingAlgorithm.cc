@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArContent/LArStitching/StitchingAlgorithm.h"
+#include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
 
 using namespace pandora;
 

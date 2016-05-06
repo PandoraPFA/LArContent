@@ -12,7 +12,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArContent/LArObjects/LArOverlapTensor.h"
+#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 
 #include <unordered_map>
 

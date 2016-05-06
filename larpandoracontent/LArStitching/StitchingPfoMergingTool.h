@@ -8,8 +8,8 @@
 #ifndef LAR_STITCHING_PFO_MERGING_TOOL_H
 #define LAR_STITCHING_PFO_MERGING_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArStitching/MultiPandoraApi.h"
-#include "larpandoracontent/LArContent/LArStitching/StitchingAlgorithm.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
 
 namespace lar_content
 {

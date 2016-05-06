@@ -8,7 +8,7 @@
 #ifndef LAR_END_ASSOCIATED_PFOS_TOOL_H
 #define LAR_END_ASSOCIATED_PFOS_TOOL_H 1
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 
 namespace lar_content
 {

@@ -8,7 +8,7 @@
 #ifndef LAR_KINK_SPLITTING_ALGORITHM_H
 #define LAR_KINK_SPLITTING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h"
 
 namespace lar_content
 {

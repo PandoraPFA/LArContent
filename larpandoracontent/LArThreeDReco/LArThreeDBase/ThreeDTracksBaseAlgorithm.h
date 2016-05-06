@@ -8,9 +8,9 @@
 #ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H
 #define LAR_THREE_D_TRACKS_BASE_ALGORITHM_H 1
 
-#include "larpandoracontent/LArContent/LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
-#include "larpandoracontent/LArContent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
 #include <unordered_map>
 

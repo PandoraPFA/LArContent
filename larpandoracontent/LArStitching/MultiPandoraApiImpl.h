@@ -10,7 +10,7 @@
 
 #include "Objects/CartesianVector.h"
 
-#include "larpandoracontent/LArContent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
 
 #include <map>
 #include <unordered_map>

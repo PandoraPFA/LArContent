@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArContent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "larpandoracontent/LArContent/LArUtility/KDTreeLinkerAlgoT.h"
-#include "larpandoracontent/LArContent/LArUtility/ListPreparationAlgorithm.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArUtility/ListPreparationAlgorithm.h"
 
 using namespace pandora;
 

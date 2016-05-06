@@ -8,7 +8,7 @@
 #ifndef LAR_ROTATIONAL_TRANSFORMATION_PLUGIN_H
 #define LAR_ROTATIONAL_TRANSFORMATION_PLUGIN_H 1
 
-#include "larpandoracontent/LArContent/LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
 
 namespace lar_content
 {
