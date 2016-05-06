@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/StitchingObjectCreationTool.cc
+ *  @file   larpandoracontent/LArStitching/StitchingObjectCreationTool.cc
  * 
  *  @brief  Implementation of the stitching object creation tool class.
  * 

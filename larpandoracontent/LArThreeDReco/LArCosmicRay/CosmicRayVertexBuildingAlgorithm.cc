@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic-ray vertex building algorithm class.
  *

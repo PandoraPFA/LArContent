@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.cc
  *
  *  @brief  Implementation of the track hits base tool.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h
  *
  *  @brief  Header file for the matched end points tool class.
  *

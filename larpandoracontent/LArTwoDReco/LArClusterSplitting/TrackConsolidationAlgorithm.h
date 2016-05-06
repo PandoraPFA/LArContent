@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h
  *
  *  @brief  Header file for the track consolidation algorithm class.
  *

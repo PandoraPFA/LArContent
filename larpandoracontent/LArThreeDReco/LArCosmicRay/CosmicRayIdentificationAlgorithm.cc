@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.cc
  * 
  *  @brief  Implementation of the cosmic ray identification algorithm class.
  * 

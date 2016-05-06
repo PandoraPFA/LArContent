@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArStitching/StitchingObjectCreationTool.h
+ *  @file   larpandoracontent/LArStitching/StitchingObjectCreationTool.h
  * 
  *  @brief  Header file for the stitching object creation tool class.
  * 

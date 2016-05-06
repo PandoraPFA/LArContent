@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h
  *
  *  @brief  Header file for the cosmic-ray vertex building algorithm class.
  *

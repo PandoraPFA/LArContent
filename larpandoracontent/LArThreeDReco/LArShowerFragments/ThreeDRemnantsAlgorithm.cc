@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.cc
  *
  *  @brief  Implementation of the three dimensional remnants algorithm class.
  *

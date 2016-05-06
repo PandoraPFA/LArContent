@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArClusterSplitting/VertexBasedPfoRecoveryAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArClusterSplitting/VertexBasedPfoRecoveryAlgorithm.cc
  *
  *  @brief  Implementation of the vertex-based particle recovery algorithm
  *

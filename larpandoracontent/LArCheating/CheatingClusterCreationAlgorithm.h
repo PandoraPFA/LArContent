@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArCheating/CheatingClusterCreationAlgorithm.h
+ *  @file   larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h
  * 
  *  @brief  Header file for the cheating cluster creation algorithm class.
  * 

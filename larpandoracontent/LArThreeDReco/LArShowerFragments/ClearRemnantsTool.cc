@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/ShowerFragments/ClearRemnantsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/ShowerFragments/ClearRemnantsTool.cc
  *
  *  @brief  Implementation of the clear remnants tool class.
  *

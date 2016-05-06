@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.cc
  *
  *  @brief  Implementation of the cluster creation algorithm class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h
  * 
  *  @brief  Header file for the transverse tensor visualization tool class.
  * 

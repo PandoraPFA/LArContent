@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic ray splitting algorithm class.
  *

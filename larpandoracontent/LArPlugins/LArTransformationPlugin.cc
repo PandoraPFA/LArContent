@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArPlugins/LArTranformationPlugin.cc
+ *  @file   larpandoracontent/LArPlugins/LArTranformationPlugin.cc
  * 
  *  @brief  Implementation of the lar transformation plugin class.
  * 

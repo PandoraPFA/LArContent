@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.cc
  * 
  *  @brief  Implementation of the vertex associated pfos tool class.
  * 

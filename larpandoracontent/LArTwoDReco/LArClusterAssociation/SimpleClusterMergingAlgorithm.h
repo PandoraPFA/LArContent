@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h
  *
  *  @brief  Header file for the simple cluster merging algorithm class.
  *

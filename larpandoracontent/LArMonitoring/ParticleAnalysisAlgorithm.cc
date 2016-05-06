@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArMonitoring/ParticleAnalysisAlgorithm.cc
+ *  @file   larpandoracontent/LArMonitoring/ParticleAnalysisAlgorithm.cc
  *
  *  @brief  Implementation of the particle analysis algorithm.
  *

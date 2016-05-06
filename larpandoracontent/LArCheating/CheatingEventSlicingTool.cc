@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingEventSlicingTool.cc
+ *  @file   larpandoracontent/LArCheating/CheatingEventSlicingTool.cc
  * 
  *  @brief  Implementation of the cheating event slicing tool class.
  * 

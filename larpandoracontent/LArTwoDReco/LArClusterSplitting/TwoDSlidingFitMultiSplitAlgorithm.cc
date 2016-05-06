@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.cc
  *
  *  @brief  Implementation of the 2D sliding fit multi-splitting algorithm class.
  *

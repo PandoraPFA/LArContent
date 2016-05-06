@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.cc
  * 
  *  @brief  Implementation of the long tracks tool class.
  * 

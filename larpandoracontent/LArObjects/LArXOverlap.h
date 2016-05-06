@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArObjects/LArXOverlap.h
+ *  @file   larpandoracontent/LArObjects/LArXOverlap.h
  * 
  *  @brief  Header file for the lar x overlap class.
  * 

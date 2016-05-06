@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArPfoHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArPfoHelper.cc
  *
  *  @brief  Implementation of the pfo helper class.
  *

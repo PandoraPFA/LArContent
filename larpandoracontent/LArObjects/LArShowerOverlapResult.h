@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArObjects/LArShowerOverlapResult.h
+ *  @file   larpandoracontent/LArObjects/LArShowerOverlapResult.h
  * 
  *  @brief  Header file for the lar shower overlap result class.
  * 

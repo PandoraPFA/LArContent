@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArGeometryHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArGeometryHelper.cc
  *
  *  @brief  Implementation of the geometry helper class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArCustomParticles/TrackParticleBuildingAlgorithm.h
+ *  @file   larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h
  *
  *  @brief  Header file for the 3D track building algorithm class.
  *

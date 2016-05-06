@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArPlugins/LarPandoraPseudoLayerPlugin.h
+ *  @file   larpandoracontent/LArPlugins/LarPandoraPseudoLayerPlugin.h
  *
  *  @brief  Header file for the lar pseudo layer plugin class.
  *

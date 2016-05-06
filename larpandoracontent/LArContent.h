@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArContent.h
+ *  @file   larpandoracontent/LArContent.h
  * 
  *  @brief  Header file detailing content for use with particle flow reconstruction at liquid argon time projection chambers
  * 

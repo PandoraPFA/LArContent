@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h
  *
  *  @brief  Header file for the cross gaps extension algorithm class.
  *

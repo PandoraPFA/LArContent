@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/ClusterSplitting/BranchSplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/BranchSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the branch splitting algorithm class.
  *

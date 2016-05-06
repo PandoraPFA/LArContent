@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListChangingAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListChangingAlgorithm.cc
  * 
  *  @brief  Implementation of the list changing algorithm class.
  * 

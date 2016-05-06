@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArVertex/CandidateVertexCreationAlgorithm.h
+ *  @file   larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h
  * 
  *  @brief  Header file for the candidate vertex creation algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.cc
  * 
  *  @brief  Implementation of the particle recovery algorithm class.
  * 

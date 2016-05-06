@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArObjects/LArTwoDSlidingShowerFitResult.h
+ *  @file   larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h
  *
  *  @brief  Header file for the lar two dimensional sliding shower fit result class.
  *

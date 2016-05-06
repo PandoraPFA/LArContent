@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArVertexHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArVertexHelper.cc
  *
  *  @brief  Implementation of the vertex helper class.
  *

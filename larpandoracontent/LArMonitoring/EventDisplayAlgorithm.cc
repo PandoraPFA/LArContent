@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArMonitoring/EventDisplayAlgorithm.cc
+ *  @file   larpandoracontent/LArMonitoring/EventDisplayAlgorithm.cc
  *
  *  @brief  Implementation of the event display algorithm
  *

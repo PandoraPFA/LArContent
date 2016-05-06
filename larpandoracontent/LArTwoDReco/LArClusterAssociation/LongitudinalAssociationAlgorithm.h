@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
  * 
  *  @brief  Header file for the longitudinal association algorithm class.
  * 

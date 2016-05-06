@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/MultiPandoraApiImpl.cc
+ *  @file   larpandoracontent/LArStitching/MultiPandoraApiImpl.cc
  * 
  *  @brief  Implementation of the MultiPandoraApiImpl class.
  * 

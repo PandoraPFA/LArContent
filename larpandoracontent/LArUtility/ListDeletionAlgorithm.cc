@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListDeletionAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListDeletionAlgorithm.cc
  * 
  *  @brief  Implementation of the list deletion algorithm class.
  * 

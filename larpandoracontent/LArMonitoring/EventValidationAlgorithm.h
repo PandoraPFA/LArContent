@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArMonitoring/EventValidationAlgorithm.h
+ *  @file   larpandoracontent/LArMonitoring/EventValidationAlgorithm.h
  *
  *  @brief  Header file for the event validation algorithm.
  *

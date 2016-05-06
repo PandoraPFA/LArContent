@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h
  *
  *  @brief  Header file for the longitudinal track hits base tool.
  *

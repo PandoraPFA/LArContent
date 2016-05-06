@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerMatching/SplitShowersTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/SplitShowersTool.h
  * 
  *  @brief  Header file for the split showers tool class.
  * 

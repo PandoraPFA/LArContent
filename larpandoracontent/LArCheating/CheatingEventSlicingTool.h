@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArCheating/CheatingEventSlicingTool.h
+ *  @file   larpandoracontent/LArCheating/CheatingEventSlicingTool.h
  * 
  *  @brief  Header file for the cheating event slicing tool class.
  * 

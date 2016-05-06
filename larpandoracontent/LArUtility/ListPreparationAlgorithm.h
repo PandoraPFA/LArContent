@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArUtility/ListPreparationAlgorithm.h
+ *  @file   larpandoracontent/LArUtility/ListPreparationAlgorithm.h
  * 
  *  @brief  Header file for the list preparation algorithm class.
  * 

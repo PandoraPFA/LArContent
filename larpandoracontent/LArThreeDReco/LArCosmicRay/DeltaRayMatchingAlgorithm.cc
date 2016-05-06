@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.cc
  *
  *  @brief  Implementation of the delta ray shower matching algorithm class.
  *

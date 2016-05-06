@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArStitching/StitchingPfoMergingTool.h
+ *  @file   larpandoracontent/LArStitching/StitchingPfoMergingTool.h
  * 
  *  @brief  Header file for the stitching pfo merging tool class.
  * 

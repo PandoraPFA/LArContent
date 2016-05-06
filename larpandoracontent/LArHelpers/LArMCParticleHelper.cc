@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArMCParticleHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArMCParticleHelper.cc
  *
  *  @brief  Implementation of the lar monte carlo particle helper class.
  *

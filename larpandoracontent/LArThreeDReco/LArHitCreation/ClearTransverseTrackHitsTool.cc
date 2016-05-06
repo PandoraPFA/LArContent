@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.cc
  *
  *  @brief  Implementation of the transverse track hit creation tool.
  *

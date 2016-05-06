@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.cc
  * 
  *  @brief  Implementation of the cluster association algorithm class.
  * 

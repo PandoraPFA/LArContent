@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListPreparationAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListPreparationAlgorithm.cc
  *
  *  @brief  Implementation of the list preparation algorithm class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/StitchingPfoMergingTool.cc
+ *  @file   larpandoracontent/LArStitching/StitchingPfoMergingTool.cc
  * 
  *  @brief  Implementation of the stitching pfo merging tool class.
  * 

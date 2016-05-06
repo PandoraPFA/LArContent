@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.cc
  * 
  *  @brief  Implementation of the overshoot tracks tool class.
  * 

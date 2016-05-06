@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h
  *
  *  @brief  Header file for the transverse association algorithm class.
  *

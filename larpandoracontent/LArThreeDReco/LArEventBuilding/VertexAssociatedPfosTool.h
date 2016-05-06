@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h
  * 
  *  @brief  Header file for the vertex associated pfos tool class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.cc
  *
  *  @brief  Implementation of the three dimension algorithm base class.
  *

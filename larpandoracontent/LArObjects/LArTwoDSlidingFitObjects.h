@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArObjects/LArTwoDSlidingFitObjects.h
+ *  @file   larpandoracontent/LArObjects/LArTwoDSlidingFitObjects.h
  *
  *  @brief  Header file for the lar two dimensional sliding fit objects.
  *

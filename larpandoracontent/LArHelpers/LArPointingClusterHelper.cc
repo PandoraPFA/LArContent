@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArPointingClusterHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArPointingClusterHelper.cc
  *
  *  @brief  Implementation of the pointing cluster helper class.
  *

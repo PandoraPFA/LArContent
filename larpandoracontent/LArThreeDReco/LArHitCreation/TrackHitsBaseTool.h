@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h
  *
  *  @brief  Header file for the track hits base tool.
  *

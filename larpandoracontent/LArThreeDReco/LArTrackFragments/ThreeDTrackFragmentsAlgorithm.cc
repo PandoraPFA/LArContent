@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.cc
  *
  *  @brief  Implementation of the three dimensional fragments algorithm base class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h
  * 
  *  @brief  Header file for the end associated pfos tool class.
  * 

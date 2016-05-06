@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h
  *
  *  @brief  Header file for the connected remnants tool class.
  *

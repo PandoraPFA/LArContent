@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/StitchingAlgorithm.cc
+ *  @file   larpandoracontent/LArStitching/StitchingAlgorithm.cc
  * 
  *  @brief  Implementation of the Stitching algorithm class.
  * 

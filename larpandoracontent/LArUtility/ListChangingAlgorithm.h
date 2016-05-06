@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArUtility/ListChangingAlgorithm.h
+ *  @file   larpandoracontent/LArUtility/ListChangingAlgorithm.h
  * 
  *  @brief  Header file for the list changing algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.cc
  *
  *  @brief  Implementation of the transverse extension algorithm class.
  *

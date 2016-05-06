@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h
  *
  *  @brief  Header file for the 2D sliding fit consolidation algorithm class.
  *

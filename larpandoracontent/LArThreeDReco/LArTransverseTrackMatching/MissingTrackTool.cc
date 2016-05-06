@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.cc
  * 
  *  @brief  Implementation of the missing track tool class.
  * 

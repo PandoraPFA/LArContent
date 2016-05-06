@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h
  * 
  *  @brief  Header file for the three d kink base tool
  * 

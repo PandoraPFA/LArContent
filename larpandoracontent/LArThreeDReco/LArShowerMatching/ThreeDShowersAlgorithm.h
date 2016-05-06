@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
  * 
  *  @brief  Header file for the three dimensional showers algorithm class.
  * 

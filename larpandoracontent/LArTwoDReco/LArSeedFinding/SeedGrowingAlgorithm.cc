@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.cc
  * 
  *  @brief  Implementation of the seed growing algorithm base class.
  * 

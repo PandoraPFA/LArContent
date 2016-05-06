@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h
  *
  *  @brief  Header file for the shower hits base tool.
  *

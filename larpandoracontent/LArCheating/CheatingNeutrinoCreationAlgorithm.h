@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArCheating/CheatingNeutrinoCreationAlgorithm.h
+ *  @file   larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h
  * 
  *  @brief  Header file for the cheating neutrino creation algorithm class.
  * 

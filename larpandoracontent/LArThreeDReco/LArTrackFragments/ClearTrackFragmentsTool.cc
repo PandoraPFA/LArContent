@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.cc
  *
  *  @brief  Implementation of the clear track fragments tool class.
  *

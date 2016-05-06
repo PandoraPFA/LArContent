@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArMonitoringHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArMonitoringHelper.cc
  *
  *  @brief  Implementation of the lar monitoring helper class.
  *

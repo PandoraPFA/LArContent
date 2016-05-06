@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.cc
  *
  *  @brief  Implementation of the matched end point tool class.
  *

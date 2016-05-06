@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h
  * 
  *  @brief  Header file for the long tracks tool class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArObjects/LArTrackOverlapResult.cc
+ *  @file   larpandoracontent/LArObjects/LArTrackOverlapResult.cc
  * 
  *  @brief  Implementation of the lar track overlap result class.
  * 

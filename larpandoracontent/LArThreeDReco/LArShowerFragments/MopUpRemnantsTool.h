@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h
  *
  *  @brief  Header file for the mop-up remnants tool class.
  *

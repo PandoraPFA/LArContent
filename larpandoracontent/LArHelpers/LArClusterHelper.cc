@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArClusterHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArClusterHelper.cc
  *
  *  @brief  Implementation of the cluster helper class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h
  *
  *  @brief  Header file for the three dimensional longitudinal tracks algorithm class.
  *

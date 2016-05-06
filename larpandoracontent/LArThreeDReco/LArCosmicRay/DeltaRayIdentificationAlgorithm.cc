@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.cc
  *
  *  @brief  Implementation of the delta ray identification algorithm class.
  *

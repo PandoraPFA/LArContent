@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/ClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h
  *
  *  @brief  Header file for the two dimensional sliding fit splitting algorithm class.
  *

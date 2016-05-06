@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerMatching/ClearShowersTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.h
  * 
  *  @brief  Header file for the clear showers tool class.
  * 

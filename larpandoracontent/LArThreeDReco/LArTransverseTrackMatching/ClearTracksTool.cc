@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.cc
  * 
  *  @brief  Implementation of the clear tracks tool class.
  * 

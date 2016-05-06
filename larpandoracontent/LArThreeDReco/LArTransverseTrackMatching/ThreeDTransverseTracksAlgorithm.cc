@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.cc
  *
  *  @brief  Implementation of the three dimensional transverse tracks algorithm class.
  *

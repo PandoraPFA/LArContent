@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h
  *
  *  @brief  Header file for the branch splitting algorithm class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArShowerMatching/ClearShowersTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.cc
  * 
  *  @brief  Implementation of the clear showers tool class.
  * 

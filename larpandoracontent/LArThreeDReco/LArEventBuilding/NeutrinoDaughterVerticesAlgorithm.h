@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h
  *
  *  @brief  Header file for the neutrino daughter vertices algorithm class.
  *

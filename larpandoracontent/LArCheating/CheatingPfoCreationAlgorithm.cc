@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingPfoCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating cluster creation algorithm class.
  * 

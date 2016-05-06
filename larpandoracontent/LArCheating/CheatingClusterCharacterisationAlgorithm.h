@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArSeedFinding/CheatingClusterCharacterisationAlgorithm.h
+ *  @file   larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h
  * 
  *  @brief  Header file for the cheating cluster characterisation algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h
  * 
  *  @brief  Header file for the delta ray shower hits tool
  * 

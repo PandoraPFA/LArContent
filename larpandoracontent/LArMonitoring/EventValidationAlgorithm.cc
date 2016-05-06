@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArMonitoring/EventValidationAlgorithm.cc
+ *  @file   larpandoracontent/LArMonitoring/EventValidationAlgorithm.cc
  *
  *  @brief  Implementation of the event validation algorithm.
  *

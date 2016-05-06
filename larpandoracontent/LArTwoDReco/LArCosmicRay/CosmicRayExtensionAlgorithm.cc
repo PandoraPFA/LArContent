@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic-ray extension algorithm class.
  *

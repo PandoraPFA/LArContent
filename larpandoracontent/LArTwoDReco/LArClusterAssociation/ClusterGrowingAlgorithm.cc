@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.cc
  *
  *  @brief  Implementation of the cluster growing algorithm class.
  *

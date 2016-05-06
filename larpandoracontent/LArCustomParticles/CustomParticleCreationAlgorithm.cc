@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCustomParticles/CustomParticleCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.cc
  *
  *  @brief  Implementation of the 3D particle creation algorithm class.
  *

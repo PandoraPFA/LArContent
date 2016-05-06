@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.cc
  *
  *  @brief  Implementation of the longitudinal extension algorithm class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.cc
  * 
  *  @brief  Implementation of the branch associated pfos tool class.
  * 

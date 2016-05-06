@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.cc
  *
  *  @brief  Implementation of the shower hit creation tool.
  *

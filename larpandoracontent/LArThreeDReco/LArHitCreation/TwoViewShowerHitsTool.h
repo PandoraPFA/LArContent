@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h
  *
  *  @brief  Header file for the two view shower hits tool
  *

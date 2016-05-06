@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingVertexCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating vertex creation algorithm class.
  * 

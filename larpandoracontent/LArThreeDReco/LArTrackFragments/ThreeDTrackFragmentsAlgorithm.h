@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h
  *
  *  @brief  Header file for the three dimensional fragments algorithm base class.
  *

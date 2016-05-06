@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCustomParticles/ShowerParticleBuildingAlgorithm.cc
+ *  @file   larpandoracontent/LArCustomParticles/ShowerParticleBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the 3D shower building algorithm class.
  *

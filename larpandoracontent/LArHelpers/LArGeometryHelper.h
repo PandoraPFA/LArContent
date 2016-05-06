@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArHelpers/LArGeometryHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArGeometryHelper.h
  *
  *  @brief  Header file for the geometry helper class.
  *

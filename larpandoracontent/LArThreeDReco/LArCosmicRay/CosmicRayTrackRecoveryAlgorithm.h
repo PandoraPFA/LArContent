@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.h
  *
  *  @brief  Header file for the cosmic ray longitudinal track recovery algorithm class.
  *

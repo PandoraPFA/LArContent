@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h
  *
  *  @brief  Header file for the clear remnants tool class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.cc
  * 
  *  @brief  Implementation of the transverse tensor visualization tool class.
  * 

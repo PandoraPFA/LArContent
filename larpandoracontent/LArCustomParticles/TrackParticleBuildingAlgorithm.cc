@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCustomParticles/TrackParticleBuildingAlgorithm.cc
+ *  @file   larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the 3D track building algorithm class.
  *

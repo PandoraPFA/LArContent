@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h
  *
  *  @brief  Header file for the cosmic ray splitting algorithm class.
  *

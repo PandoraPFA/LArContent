@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h
  * 
  *  @brief  Header file for the event slicing tool class.
  * 

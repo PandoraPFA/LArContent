@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArSeedFinding/CheatingClusterCharacterisationAlgorithm.cc
+ *  @file   larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating cluster characterisation algorithm class.
  * 

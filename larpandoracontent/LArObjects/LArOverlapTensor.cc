@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArObjects/LArOverlapTensor.cc
+ *  @file   larpandoracontent/LArObjects/LArOverlapTensor.cc
  * 
  *  @brief  Implementation of the lar overlap tensor class.
  * 

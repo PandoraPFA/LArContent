@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h
  *
  *  @brief  Header file for the cosmic-ray extension algorithm class.
  *

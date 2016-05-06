@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h
  *
  *  @brief  Header file for the clear longitudinal track hit creation tool.
  *

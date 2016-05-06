@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic ray longitudinal track recovery algorithm class.
  *

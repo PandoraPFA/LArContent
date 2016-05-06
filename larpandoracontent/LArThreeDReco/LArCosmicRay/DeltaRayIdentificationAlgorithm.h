@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h
  *
  *  @brief  Header file for the delta ray identification algorithm class.
  *

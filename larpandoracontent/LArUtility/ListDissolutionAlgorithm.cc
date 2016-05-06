@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListDissolutionAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListDissolutionAlgorithm.cc
  * 
  *  @brief  Implementation of the list dissolution algorithm class.
  * 

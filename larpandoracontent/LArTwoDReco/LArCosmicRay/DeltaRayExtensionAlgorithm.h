@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h
  *
  *  @brief  Header file for the delta ray extension algorithm class.
  *

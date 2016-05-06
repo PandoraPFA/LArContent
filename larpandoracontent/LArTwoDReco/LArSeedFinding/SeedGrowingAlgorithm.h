@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h
  * 
  *  @brief  Header file for the seed growing algorithm base class.
  * 

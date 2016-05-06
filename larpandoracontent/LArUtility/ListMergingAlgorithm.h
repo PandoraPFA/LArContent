@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArUtility/ListMergingAlgorithm.h
+ *  @file   larpandoracontent/LArUtility/ListMergingAlgorithm.h
  * 
  *  @brief  Header file for the list merging algorithm class.
  * 

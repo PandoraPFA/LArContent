@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArMonitoring/ParticleMonitoringAlgorithm.h
+ *  @file   larpandoracontent/LArMonitoring/ParticleMonitoringAlgorithm.h
  *
  *  @brief  Header file for the particle monitoring algorithm.
  *

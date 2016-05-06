@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListMovingAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListMovingAlgorithm.cc
  * 
  *  @brief  Implementation of the list moving algorithm class.
  * 

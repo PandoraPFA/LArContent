@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h
  * 
  *  @brief  Header file for the shower tensor visualization tool class.
  * 

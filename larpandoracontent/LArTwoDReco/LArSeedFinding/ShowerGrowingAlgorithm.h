@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h
  * 
  *  @brief  Header file for the shower growing algorithm class.
  * 

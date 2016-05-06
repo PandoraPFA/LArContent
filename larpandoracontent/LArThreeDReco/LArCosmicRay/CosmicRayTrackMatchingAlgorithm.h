@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h
  *
  *  @brief  Header file for the cosmic ray track matching algorithm class.
  *

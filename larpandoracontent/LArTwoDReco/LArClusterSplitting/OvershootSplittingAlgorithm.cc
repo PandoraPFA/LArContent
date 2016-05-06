@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the overshoot splitting algorithm class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.cc
  *
  *  @brief  Implementation of the delta ray growing algorithm class.
  *

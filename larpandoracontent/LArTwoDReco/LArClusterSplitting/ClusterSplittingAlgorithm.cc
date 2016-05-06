@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/ClusterSplitting/ClusterSplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/ClusterSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the cluster splitting algorithm class.
  *

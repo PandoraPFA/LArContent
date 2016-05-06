@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.cc
  *
  *  @brief  Implementation of the delta ray extension algorithm class.
  *

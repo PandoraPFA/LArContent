@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.cc
  *
  *  @brief  Implementation of the multivalued longitudinal track hit creation tool.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/ClusterSplitting/DeltaRaySplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/DeltaRaySplittingAlgorithm.cc
  *
  *  @brief  Implementation of the branch splitting algorithm class.
  *

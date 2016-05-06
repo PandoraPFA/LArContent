@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArObjects/LArTrackOverlapResult.h
+ *  @file   larpandoracontent/LArObjects/LArTrackOverlapResult.h
  * 
  *  @brief  Header file for the lar track overlap result class.
  * 

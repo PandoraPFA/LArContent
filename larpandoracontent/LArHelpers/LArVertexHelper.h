@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArHelpers/LArVertexHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArVertexHelper.h
  *
  *  @brief  Header file for the vertex helper class.
  *

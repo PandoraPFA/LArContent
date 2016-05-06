@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArVertex/CandidateVertexCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the candidate vertex creation algorithm class.
  * 

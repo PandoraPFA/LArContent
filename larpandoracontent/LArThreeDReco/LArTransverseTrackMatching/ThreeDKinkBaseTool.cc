@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.cc
  * 
  *  @brief  Implementation of the three d kink base tool class.
  * 

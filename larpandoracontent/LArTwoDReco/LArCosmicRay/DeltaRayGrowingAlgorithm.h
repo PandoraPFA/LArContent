@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/LArCosmicRay/CosmicRayShowerGrowingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayShowerGrowingAlgorithm.h
  *
  *  @brief  Header file for the delta ray growing algorithm class.
  *

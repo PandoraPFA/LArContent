@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArHelpers/LArPfoHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArPfoHelper.h
  *
  *  @brief  Header file for the pfo helper class.
  *

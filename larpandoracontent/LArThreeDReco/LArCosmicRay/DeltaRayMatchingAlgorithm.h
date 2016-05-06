@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h
  *
  *  @brief  Header file for the delta ray matching algorithm class.
  *

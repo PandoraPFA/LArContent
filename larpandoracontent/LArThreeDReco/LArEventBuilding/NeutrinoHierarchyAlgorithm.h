@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h
  * 
  *  @brief  Header file for the neutrino hierarchy algorithm class.
  * 

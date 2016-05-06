@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArTwoDReco/ClusterSplitting/LayerSplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/LayerSplittingAlgorithm.h
  *
  *  @brief  Header file for the layer splitting algorithm class.
  *

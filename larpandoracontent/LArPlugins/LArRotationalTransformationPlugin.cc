@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArPlugins/LArRotationalTransformationPlugin.cc
+ *  @file   larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.cc
  *
  *  @brief  Implementation of the rotational transformation plugin class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArPlugins/LArParticleIdPlugins.cc
+ *  @file   larpandoracontent/LArPlugins/LArParticleIdPlugins.cc
  * 
  *  @brief  Implementation of the lar particle id plugins class.
  * 

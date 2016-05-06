@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArObjects/LArTwoDSlidingFitResult.cc
+ *  @file   larpandoracontent/LArObjects/LArTwoDSlidingFitResult.cc
  *
  *  @brief  Implementation of the lar two dimensional sliding fit result class.
  *

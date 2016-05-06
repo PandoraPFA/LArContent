@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h
  * 
  *  @brief  Header file for the track splitting tool class.
  * 

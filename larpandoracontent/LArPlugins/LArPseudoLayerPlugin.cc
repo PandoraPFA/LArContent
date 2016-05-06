@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArPlugins/LArPseudoLayerPlugin.cxx
+ *  @file   larpandoracontent/LArPlugins/LArPseudoLayerPlugin.cxx
  *
  *  @brief  Implementation of the LAr pseudo layer Plugin class.
  *

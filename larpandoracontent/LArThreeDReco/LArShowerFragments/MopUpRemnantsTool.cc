@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/ShowerFragments/MopUpRemnantsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/ShowerFragments/MopUpRemnantsTool.cc
  *
  *  @brief  Implementation of the mop-up remnants tool class.
  *

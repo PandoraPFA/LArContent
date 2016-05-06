@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h
  *
  *  @brief  Header file for the three dimensional remnants algorithm class.
  *

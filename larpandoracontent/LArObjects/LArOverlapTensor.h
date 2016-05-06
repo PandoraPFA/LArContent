@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArObjects/LArOverlapTensor.h
+ *  @file   larpandoracontent/LArObjects/LArOverlapTensor.h
  * 
  *  @brief  Header file for the lar overlap tensor class.
  * 
