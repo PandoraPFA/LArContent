@@ -15,7 +15,7 @@ project(${LAR_CONTENT_LIBRARY_NAME})
 # project version
 set(${PROJECT_NAME}_VERSION_MAJOR 02)
 set(${PROJECT_NAME}_VERSION_MINOR 07)
-set(${PROJECT_NAME}_VERSION_PATCH 01)
+set(${PROJECT_NAME}_VERSION_PATCH 02)
 set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_
 include(PandoraCMakeSettings)
 
 # Prefer local include directory to any paths to installed header files
-include_directories(include)
+include_directories(./)
 
 find_package(PandoraSDK 02.03.00 REQUIRED)
 include_directories(${PandoraSDK_INCLUDE_DIRS})
@@ -62,7 +62,7 @@ endif()
 # Build products
 
 # - Collect sources - not ideal because you have to keep running CMake to pick up changes
-file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cc")
+file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larpandoracontent/LArContent/*.cc")
 
 # - Add library and properties
 add_library(${PROJECT_NAME} SHARED ${LAR_CONTENT_SRCS})
