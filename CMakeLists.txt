@@ -81,7 +81,7 @@ endif()
 install(TARGETS ${PROJECT_NAME} DESTINATION lib COMPONENT Runtime)
 
 # - headers
-install(DIRECTORY include/ DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ./ DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")
 
 # - support files
 PANDORA_GENERATE_PACKAGE_CONFIGURATION_FILES(${PROJECT_NAME}Config.cmake ${PROJECT_NAME}ConfigVersion.cmake ${PROJECT_NAME}LibDeps.cmake)
