@@ -1,7 +1,8 @@
 # use cmake 2.8 or later
 cmake_minimum_required (VERSION 2.8)
 
-if(DEFINED ENV{CETBUILDTOOLS_VERSION}) # TODO Settle on an appropriate test to determine build system
+# if the CETBUILDTOOLS_VERSION environmental variable is defined, use cetbuildtools
+if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     # ======================================================================
     #  larpandoracontent main build file
     #
@@ -54,10 +55,10 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION}) # TODO Settle on an appropriate test to d
     # packaging utility
     include(UseCPack)
 else()
-    # cmake file for building LArContent in Pandora standalone cmake setup, distinct from cetbuildtools setup
+    # cmake file for building in Pandora standalone cmake setup, distinct from cetbuildtools setup
     #-------------------------------------------------------------------------------------------------------------------------------------------
     if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-        message(FATAL_ERROR "LArContent requires an out-of-source build.")
+        message(FATAL_ERROR "LArPandoraContent requires an out-of-source build.")
     endif()
 
     # project name
@@ -116,7 +117,7 @@ else()
     # Build products
 
     # - Collect sources - not ideal because you have to keep running CMake to pick up changes
-    file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larpandoracontent/LArContent/*.cc")
+    file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larpandoracontent/*.cc")
 
     # - Add library and properties
     add_library(${PROJECT_NAME} SHARED ${LAR_CONTENT_SRCS})
