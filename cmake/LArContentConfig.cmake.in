@@ -35,7 +35,7 @@ MARK_AS_ADVANCED( LArContent_INCLUDE_DIRS )
 
 FIND_PATH( LArContent_INCLUDE_DIRS
 	NAMES larpandoracontent/LArContent/LArCheating/CheatingClusterCreationAlgorithm.h
-	PATHS ${LArContent_ROOT}
+	PATHS ${LArContent_ROOT} ${LArContent_ROOT}/include
 	NO_DEFAULT_PATH
 )
 
