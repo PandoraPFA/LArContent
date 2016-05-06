@@ -1,7 +1,8 @@
 # use cmake 2.8 or later
 cmake_minimum_required (VERSION 2.8)
 
-if(DEFINED ENV{CETBUILDTOOLS_VERSION}) # TODO Settle on an appropriate test to determine build system
+# if the CETBUILDTOOLS_VERSION environmental variable is defined, use cetbuildtools
+if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     # ======================================================================
     #  larpandoracontent main build file
     #
