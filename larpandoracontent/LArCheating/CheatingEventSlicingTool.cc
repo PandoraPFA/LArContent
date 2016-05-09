@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingEventSlicingTool.cc
+ *  @file   larpandoracontent/LArCheating/CheatingEventSlicingTool.cc
  * 
  *  @brief  Implementation of the cheating event slicing tool class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCheating/CheatingEventSlicingTool.h"
+#include "larpandoracontent/LArCheating/CheatingEventSlicingTool.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArPlugins/LArRotationalTransformationPlugin.cc
+ *  @file   larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.cc
  *
  *  @brief  Implementation of the rotational transformation plugin class.
  *
@@ -8,7 +8,7 @@
 
 #include "Objects/CartesianVector.h"
 
-#include "LArPlugins/LArRotationalTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
 
 #include <cmath>
 

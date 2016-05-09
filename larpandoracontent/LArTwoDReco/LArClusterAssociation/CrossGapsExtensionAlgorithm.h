@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h
  *
  *  @brief  Header file for the cross gaps extension algorithm class.
  *
@@ -8,9 +8,9 @@
 #ifndef LAR_CROSS_GAPS_EXTENSION_ALGORITHM_H
 #define LAR_GROSS_GAPS_EXTENSION_ALGORITHM_H 1
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 namespace lar_content
 {

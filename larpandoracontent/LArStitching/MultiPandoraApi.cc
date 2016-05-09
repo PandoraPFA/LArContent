@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/MultiPandoraApi.cc
+ *  @file   larpandoracontent/LArStitching/MultiPandoraApi.cc
  * 
  *  @brief  Implementation of the MultiPandoraApi class.
  * 
@@ -9,8 +9,8 @@
 #include "Pandora/Pandora.h"
 #include "Pandora/StatusCodes.h"
 
-#include "LArStitching/MultiPandoraApi.h"
-#include "LArStitching/MultiPandoraApiImpl.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApiImpl.h"
 
 MultiPandoraApiImpl MultiPandoraApi::m_multiPandoraApiImpl;
 

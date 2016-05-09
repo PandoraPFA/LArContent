@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.cc
  *
  *  @brief  Implementation of the track hits base tool.
  *
@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
 
-#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
-#include "LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
 using namespace pandora;
 

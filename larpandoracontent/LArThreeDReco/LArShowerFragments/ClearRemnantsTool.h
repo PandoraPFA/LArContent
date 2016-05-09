@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h
  *
  *  @brief  Header file for the clear remnants tool class.
  *
@@ -8,7 +8,7 @@
 #ifndef CLEAR_REMNANTS_TOOL_H
 #define CLEAR_REMNANTS_TOOL_H 1
 
-#include "LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 
 namespace lar_content
 {

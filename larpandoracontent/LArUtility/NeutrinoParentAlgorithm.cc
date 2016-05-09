@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/NeutrinoParentAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/NeutrinoParentAlgorithm.cc
  * 
  *  @brief  Implementation of the neutrino parent algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
 
 using namespace pandora;
 

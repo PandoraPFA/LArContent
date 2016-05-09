@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic-ray vertex building algorithm class.
  *
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 
 using namespace pandora;
 

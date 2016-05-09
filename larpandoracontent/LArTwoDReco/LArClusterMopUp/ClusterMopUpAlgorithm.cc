@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.cc
  * 
  *  @brief  Implementation of the cluster mop up algorithm base class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
 
 using namespace pandora;
 

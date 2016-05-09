@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.cc
  * 
  *  @brief  Implementation of the three view shower hits tool.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h"
 
 using namespace pandora;
 

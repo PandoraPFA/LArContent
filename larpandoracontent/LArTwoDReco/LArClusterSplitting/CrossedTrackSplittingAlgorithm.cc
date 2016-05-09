@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the crossed track splitting algorithm class.
  *
@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
 
-#include "LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
 

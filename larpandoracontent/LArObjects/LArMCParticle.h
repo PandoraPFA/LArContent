@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArMCParticle.h
+ *  @file   larpandoracontent/LArObjects/LArMCParticle.h
  * 
  *  @brief  Header file for the lar mc particle class.
  * 

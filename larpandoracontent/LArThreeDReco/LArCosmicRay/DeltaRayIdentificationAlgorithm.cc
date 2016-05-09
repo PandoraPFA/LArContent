@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.cc
  *
  *  @brief  Implementation of the delta ray identification algorithm class.
  *
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 
 using namespace pandora;
 

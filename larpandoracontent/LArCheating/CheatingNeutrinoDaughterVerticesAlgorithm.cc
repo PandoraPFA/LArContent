@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.cc
+ *  @file   larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating neutrino daughter vertices algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
 
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic ray splitting algorithm class.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayBaseMatchingAlgorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 

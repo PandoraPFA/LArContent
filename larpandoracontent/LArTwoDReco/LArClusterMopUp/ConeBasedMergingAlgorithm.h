@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h
  * 
  *  @brief  Header file for the cone based merging algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
 
 namespace lar_content
 {

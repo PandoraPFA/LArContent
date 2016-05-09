@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
  * 
  *  @brief  Header file for the three dimensional showers algorithm class.
  * 
@@ -10,10 +10,10 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArShowerOverlapResult.h"
-#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
+#include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
 namespace lar_content
 {

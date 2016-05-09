@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.cc
  *
  *  @brief  Implementation of the cluster merging algorithm class.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
 
 using namespace pandora;
 

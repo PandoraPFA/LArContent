@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the list merging algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/ListMergingAlgorithm.h"
+#include "larpandoracontent/LArUtility/ListMergingAlgorithm.h"
 
 using namespace pandora;
 

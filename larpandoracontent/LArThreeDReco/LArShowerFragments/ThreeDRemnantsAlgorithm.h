@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h
  *
  *  @brief  Header file for the three dimensional remnants algorithm class.
  *
@@ -11,9 +11,9 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "LArObjects/LArOverlapTensor.h"
+#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 
-#include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
 namespace lar_content
 {

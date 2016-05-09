@@ -1,15 +1,15 @@
 /**
- *  @file   LArContent/src/LArObjects/LArTwoDSlidingFitResult.cc
+ *  @file   larpandoracontent/LArObjects/LArTwoDSlidingFitResult.cc
  *
  *  @brief  Implementation of the lar two dimensional sliding fit result class.
  *
  *  $Log: $
  */
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include <algorithm>
 #include <cmath>

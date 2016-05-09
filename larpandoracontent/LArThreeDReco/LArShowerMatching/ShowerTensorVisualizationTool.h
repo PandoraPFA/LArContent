@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h
  * 
  *  @brief  Header file for the shower tensor visualization tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef SHOWER_TENSOR_VISUALIZATION_TOOL_H
 #define SHOWER_TENSOR_VISUALIZATION_TOOL_H 1
 
-#include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
 namespace lar_content
 {

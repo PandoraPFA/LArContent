@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/StitchingAlgorithm.cc
+ *  @file   larpandoracontent/LArStitching/StitchingAlgorithm.cc
  * 
  *  @brief  Implementation of the Stitching algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArStitching/StitchingAlgorithm.h"
+#include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
 
 using namespace pandora;
 

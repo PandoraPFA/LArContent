@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCustomParticles/TrackParticleBuildingAlgorithm.cc
+ *  @file   larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the 3D track building algorithm class.
  *
@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArObjects/LArTrackPfo.h"
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArCustomParticles/TrackParticleBuildingAlgorithm.h"
+#include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
 using namespace pandora;
 

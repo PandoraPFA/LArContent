@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArObjects/LArThreeDSlidingFitResult.cc
+ *  @file   larpandoracontent/LArObjects/LArThreeDSlidingFitResult.cc
  *
  *  @brief  Implementation of the lar three dimensional sliding fit result class.
  *
@@ -8,9 +8,9 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include <algorithm>
 #include <cmath>

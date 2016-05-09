@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/ShowerFragments/ClearRemnantsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/ShowerFragments/ClearRemnantsTool.cc
  *
  *  @brief  Implementation of the clear remnants tool class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 
 using namespace pandora;
 

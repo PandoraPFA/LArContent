@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/src/LArUtility/KDTreeLinkerToolsT.cc
+ *  @file   larpandoracontent/LArUtility/KDTreeLinkerToolsT.cc
  * 
  *  @brief  Implementation of the kd tree linker tools template class
  * 
  *  $Log: $
  */
 
-#include "LArUtility/KDTreeLinkerToolsT.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerToolsT.h"
 
 namespace lar_content
 {

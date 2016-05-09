@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/MultiPandoraApiImpl.cc
+ *  @file   larpandoracontent/LArStitching/MultiPandoraApiImpl.cc
  * 
  *  @brief  Implementation of the MultiPandoraApiImpl class.
  * 
@@ -9,7 +9,7 @@
 #include "Pandora/Pandora.h"
 #include "Pandora/StatusCodes.h"
 
-#include "LArStitching/MultiPandoraApiImpl.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApiImpl.h"
 
 const PandoraInstanceMap &MultiPandoraApiImpl::GetPandoraInstanceMap() const
 {

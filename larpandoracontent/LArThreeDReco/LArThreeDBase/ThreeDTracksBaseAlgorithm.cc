@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.cc
  * 
  *  @brief  Implementation of the three dimensional tracks tracks algorithm base class.
  * 
@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
-#include "LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
 using namespace pandora;
 

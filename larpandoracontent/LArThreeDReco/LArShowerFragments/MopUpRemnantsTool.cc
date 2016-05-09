@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/ShowerFragments/MopUpRemnantsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/ShowerFragments/MopUpRemnantsTool.cc
  *
  *  @brief  Implementation of the mop-up remnants tool class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h"
 
 using namespace pandora;
 

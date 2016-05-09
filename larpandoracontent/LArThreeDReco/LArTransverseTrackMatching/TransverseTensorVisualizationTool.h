@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h
  * 
  *  @brief  Header file for the transverse tensor visualization tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H
 #define TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H 1
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {

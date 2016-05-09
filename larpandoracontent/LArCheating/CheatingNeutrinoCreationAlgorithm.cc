@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingNeutrinoCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating neutrino creation algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArCheating/CheatingNeutrinoCreationAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h"
 
 using namespace pandora;
 

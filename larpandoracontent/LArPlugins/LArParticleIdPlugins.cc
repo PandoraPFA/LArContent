@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArPlugins/LArParticleIdPlugins.cc
+ *  @file   larpandoracontent/LArPlugins/LArParticleIdPlugins.cc
  * 
  *  @brief  Implementation of the lar particle id plugins class.
  * 
@@ -10,12 +10,12 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArParticleIdPlugins.h"
+#include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include <algorithm>
 #include <cmath>

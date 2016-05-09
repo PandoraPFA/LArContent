@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListMovingAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListMovingAlgorithm.cc
  * 
  *  @brief  Implementation of the list moving algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/ListMovingAlgorithm.h"
+#include "larpandoracontent/LArUtility/ListMovingAlgorithm.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArSeedFinding/CheatingClusterCharacterisationAlgorithm.cc
+ *  @file   larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating cluster characterisation algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCheating/CheatingClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h"
 
 using namespace pandora;
 

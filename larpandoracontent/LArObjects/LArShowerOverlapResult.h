@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArObjects/LArShowerOverlapResult.h
+ *  @file   larpandoracontent/LArObjects/LArShowerOverlapResult.h
  * 
  *  @brief  Header file for the lar shower overlap result class.
  * 
@@ -11,7 +11,7 @@
 #include "Pandora/PandoraInputTypes.h"
 #include "Pandora/StatusCodes.h"
 
-#include "LArObjects/LArXOverlap.h"
+#include "larpandoracontent/LArObjects/LArXOverlap.h"
 
 #include <cmath>
 #include <vector>

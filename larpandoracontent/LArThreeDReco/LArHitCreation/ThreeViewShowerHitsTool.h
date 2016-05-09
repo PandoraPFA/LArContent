@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h
  *
  *  @brief  Header file for the three view shower hits tool.
  *
@@ -8,7 +8,7 @@
 #ifndef THREE_VIEW_SHOWER_HITS_TOOL_H
 #define THREE_VIEW_SHOWER_HITS_TOOL_H 1
 
-#include "LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
 
 namespace lar_content
 {

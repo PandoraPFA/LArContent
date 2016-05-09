@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/ClusterSplitting/BranchSplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/BranchSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the branch splitting algorithm class.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 
 using namespace pandora;
 

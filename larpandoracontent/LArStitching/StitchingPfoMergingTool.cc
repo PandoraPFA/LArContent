@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/StitchingPfoMergingTool.cc
+ *  @file   larpandoracontent/LArStitching/StitchingPfoMergingTool.cc
  * 
  *  @brief  Implementation of the stitching pfo merging tool class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArStitching/StitchingPfoMergingTool.h"
+#include "larpandoracontent/LArStitching/StitchingPfoMergingTool.h"
 
 using namespace pandora;
 

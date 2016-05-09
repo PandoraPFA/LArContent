@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArVertex/VertexSelectionAlgorithm.h
+ *  @file   larpandoracontent/LArVertex/VertexSelectionAlgorithm.h
  * 
  *  @brief  Header file for the vertex selection algorithm class.
  * 

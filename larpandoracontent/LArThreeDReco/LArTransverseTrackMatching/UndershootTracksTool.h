@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h
  * 
  *  @brief  Header file for the undershoot tracks tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef UNDERSHOOT_TRACKS_TOOL_H
 #define UNDERSHOOT_TRACKS_TOOL_H 1
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h"
 
 namespace lar_content
 {

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.cc
  * 
  *  @brief  Implementation of the seed growing algorithm base class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 using namespace pandora;
 

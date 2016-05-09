@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h
  * 
  *  @brief  Header file for the shower growing algorithm class.
  * 
@@ -10,11 +10,11 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 #include <unordered_map>
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArVertex/CandidateVertexCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the candidate vertex creation algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArVertex/CandidateVertexCreationAlgorithm.h"
+#include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 
 using namespace pandora;
 

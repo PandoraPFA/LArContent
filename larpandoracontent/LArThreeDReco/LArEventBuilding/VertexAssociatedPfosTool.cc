@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.cc
  * 
  *  @brief  Implementation of the vertex associated pfos tool class.
  * 
@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 
 using namespace pandora;
 

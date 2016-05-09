@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.cc
  * 
  *  @brief  Implementation of the multivalued transverse track hit creation tool.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
 
 using namespace pandora;
 

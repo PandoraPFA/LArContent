@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.cc
  * 
  *  @brief  Implementation of the clustering parent algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
 
 using namespace pandora;
 

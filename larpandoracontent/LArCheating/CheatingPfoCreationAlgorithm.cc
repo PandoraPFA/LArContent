@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingPfoCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating cluster creation algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArCheating/CheatingPfoCreationAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArHelpers/LArClusterHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArClusterHelper.h
  *
  *  @brief  Header file for the cluster helper class.
  *

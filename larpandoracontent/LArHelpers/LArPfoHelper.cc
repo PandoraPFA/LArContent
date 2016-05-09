@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArPfoHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArPfoHelper.cc
  *
  *  @brief  Implementation of the pfo helper class.
  *
@@ -8,10 +8,10 @@
 
 #include "Pandora/PdgTable.h"
 
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include <algorithm>
 #include <cmath>

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/ClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.cc
  *
  *  @brief  Implementation of the two dimensional sliding fit splitting and splicing algorithm class.
  *
@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.h"
 
 using namespace pandora;
 

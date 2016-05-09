@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/src/LArObjects/LArTrackPfo.cc
+ *  @file   larpandoracontent/LArObjects/LArTrackPfo.cc
  *
  *  @brief  Implementation of the lar pointing cluster class.
  *
  *  $Log: $
  */
 
-#include "LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArObjects/LArTrackPfo.h"
 
 #include "Objects/CaloHit.h"
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArCustomParticles/TrackParticleBuildingAlgorithm.h
+ *  @file   larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h
  *
  *  @brief  Header file for the 3D track building algorithm class.
  *
@@ -8,9 +8,9 @@
 #ifndef LAR_TRACK_PARTICLE_BUILDING_ALGORITHM_H
 #define LAR_TRACK_PARTICLE_BUILDING_ALGORITHM_H 1
 
-#include "LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArObjects/LArTrackPfo.h"
 
-#include "LArCustomParticles/CustomParticleCreationAlgorithm.h"
+#include "larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
 
 namespace lar_content
 {

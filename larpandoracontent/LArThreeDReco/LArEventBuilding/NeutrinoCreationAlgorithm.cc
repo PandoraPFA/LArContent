@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the neutrino creation algorithm class.
  * 
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
 
 using namespace pandora;
 

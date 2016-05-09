@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the proximity based merging algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.h"
 
 using namespace pandora;
 

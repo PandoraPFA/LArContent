@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.cc
  *
  *  @brief  Implementation of the longitudinal extension algorithm class.
  *
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h"
 
 using namespace pandora;
 

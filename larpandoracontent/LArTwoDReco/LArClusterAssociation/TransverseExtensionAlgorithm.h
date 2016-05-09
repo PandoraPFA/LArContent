@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h
  *
  *  @brief  Header file for the transverse extension algorithm class.
  *
@@ -10,9 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 namespace lar_content
 {

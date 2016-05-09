@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.cc
  * 
  *  @brief  Implementation of the missing track segment tool class.
  * 
@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
-#include "LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h
  * 
  *  @brief  Header file for the branch associated pfos tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_BRANCH_ASSOCIATED_PFOS_TOOL_H
 #define LAR_BRANCH_ASSOCIATED_PFOS_TOOL_H 1
 
-#include "LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 
 namespace lar_content
 {

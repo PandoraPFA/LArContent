@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.cc
  * 
  *  @brief  Implementation of the long tracks tool class.
  * 
@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
-#include "LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
 
 using namespace pandora;
 

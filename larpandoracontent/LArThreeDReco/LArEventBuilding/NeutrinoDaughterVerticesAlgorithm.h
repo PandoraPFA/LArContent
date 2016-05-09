@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h
  *
  *  @brief  Header file for the neutrino daughter vertices algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
 namespace lar_content
 {

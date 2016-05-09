@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.cc
  *
  *  @brief  Implementation of the clear longitudinal track hit creation tool.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 
 using namespace pandora;
 

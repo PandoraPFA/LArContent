@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h
  * 
  *  @brief  Header file for the split shower merging algorithm class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_SPLIT_SHOWER_MERGING_ALGORITHM_H
 #define LAR_SPLIT_SHOWER_MERGING_ALGORITHM_H 1
 
-#include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
 
 namespace lar_content
 {

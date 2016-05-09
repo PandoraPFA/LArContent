@@ -1,12 +1,12 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArClusterHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArClusterHelper.cc
  *
  *  @brief  Implementation of the cluster helper class.
  *
  *  $Log: $
  */
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 #include <algorithm>
 #include <cmath>

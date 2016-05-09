@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h
  *
  *  @brief  Header file for the delta ray extension algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h"
 
 namespace lar_content
 {

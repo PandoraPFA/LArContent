@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArStitching/StitchingAlgorithm.h
+ *  @file   larpandoracontent/LArStitching/StitchingAlgorithm.h
  * 
  *  @brief  Header file for the Stitching algorithm class.
  * 

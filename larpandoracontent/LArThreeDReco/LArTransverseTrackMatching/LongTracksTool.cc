@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.cc
  * 
  *  @brief  Implementation of the long tracks tool class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.cc
  *
  *  @brief  Implementation of the clear track fragments tool class.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArMonitoring/EventDisplayAlgorithm.h
+ *  @file   larpandoracontent/LArMonitoring/EventDisplayAlgorithm.h
  *
  *  @brief  Header file for the event display algorithm
  *

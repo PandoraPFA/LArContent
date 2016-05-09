@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArMonitoring/ParticleMonitoringAlgorithm.cc
+ *  @file   larpandoracontent/LArMonitoring/ParticleMonitoringAlgorithm.cc
  *
  *  @brief  Implementation of the particle monitoring algorithm.
  *
@@ -8,14 +8,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArMonitoringHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArObjects/LArTrackPfo.h"
-#include "LArObjects/LArShowerPfo.h"
+#include "larpandoracontent/LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArObjects/LArShowerPfo.h"
 
-#include "LArMonitoring/ParticleMonitoringAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/ParticleMonitoringAlgorithm.h"
 
 using namespace pandora;
 

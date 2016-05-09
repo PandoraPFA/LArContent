@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the layer splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h"
 
 using namespace pandora;
 

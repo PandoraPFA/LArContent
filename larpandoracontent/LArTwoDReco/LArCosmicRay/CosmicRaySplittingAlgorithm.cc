@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic ray splitting algorithm class.
  *
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 using namespace pandora;
 

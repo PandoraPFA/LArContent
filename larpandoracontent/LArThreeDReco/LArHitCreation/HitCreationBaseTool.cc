@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/HitCreationBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.cc
  *
  *  @brief  Implementation of the hit creation base tool.
  *
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
 
-#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 using namespace pandora;
 

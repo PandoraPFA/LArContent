@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.cc
  *
  *  @brief  Implementation of the delta ray shower matching algorithm class.
  *
@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 
-#include "LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
 

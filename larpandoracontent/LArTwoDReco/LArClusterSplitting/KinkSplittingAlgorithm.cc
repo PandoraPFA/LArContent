@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.cc
  *
  *  @brief  Implementation of the kink splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h"
 
 using namespace pandora;
 

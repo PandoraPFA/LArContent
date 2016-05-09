@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArGeometryHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArGeometryHelper.cc
  *
  *  @brief  Implementation of the geometry helper class.
  *
@@ -14,10 +14,10 @@
 
 #include "Pandora/Pandora.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArPlugins/LArPseudoLayerPlugin.h"
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
+#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
 
 using namespace pandora;
 

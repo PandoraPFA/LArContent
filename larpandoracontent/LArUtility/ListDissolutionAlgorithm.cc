@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListDissolutionAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListDissolutionAlgorithm.cc
  * 
  *  @brief  Implementation of the list dissolution algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/ListDissolutionAlgorithm.h"
+#include "larpandoracontent/LArUtility/ListDissolutionAlgorithm.h"
 
 using namespace pandora;
 

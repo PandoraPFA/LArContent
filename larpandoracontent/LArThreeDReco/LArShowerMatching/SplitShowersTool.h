@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerMatching/SplitShowersTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/SplitShowersTool.h
  * 
  *  @brief  Header file for the split showers tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef SPLIT_SHOWERS_TOOL_H
 #define SPLIT_SHOWERS_TOOL_H 1
 
-#include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
 namespace lar_content
 {

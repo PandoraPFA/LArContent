@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArObjects/LArTwoDSlidingShowerFitResult.cc
+ *  @file   larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.cc
  *
  *  @brief  Implementation of the lar two dimensional sliding shower fit result class.
  *
@@ -8,7 +8,7 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include <algorithm>
 #include <cmath>

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/EventSlicingTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h
  * 
  *  @brief  Header file for the event slicing tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_EVENT_SLICING_TOOL_H
 #define LAR_EVENT_SLICING_TOOL_H 1
 
-#include "LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
 
 #include <unordered_map>
 

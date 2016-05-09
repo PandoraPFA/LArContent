@@ -1,15 +1,15 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArVertexHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArVertexHelper.cc
  *
  *  @brief  Implementation of the vertex helper class.
  *
  *  $Log: $
  */
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 #include <limits>
 

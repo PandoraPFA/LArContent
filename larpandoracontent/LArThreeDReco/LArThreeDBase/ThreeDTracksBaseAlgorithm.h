@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h
  * 
  *  @brief  Header file for the three dimensional tracks algorithm base class.
  * 
@@ -8,9 +8,9 @@
 #ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H
 #define LAR_THREE_D_TRACKS_BASE_ALGORITHM_H 1
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
 
 #include <unordered_map>
 

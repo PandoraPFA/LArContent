@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.cc
  *
  *  @brief  Implementation of the cluster creation algorithm class.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 
 using namespace pandora;
 

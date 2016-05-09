@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/ClusterSplitting/LayerSplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/LayerSplittingAlgorithm.h
  *
  *  @brief  Header file for the layer splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_LAYER_SPLITTING_ALGORITHM_H
 #define LAR_LAYER_SPLITTING_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h"
 
 namespace lar_content
 {

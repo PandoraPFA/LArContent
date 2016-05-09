@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArCheating/CheatingCosmicRayIdentificationAlg.cc
+ *  @file   larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.cc
  * 
  *  @brief  Implementation of the cheater for the cosmic ray identification algorithm class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "LArCheating/CheatingCosmicRayIdentificationAlg.h"
+#include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
 
 using namespace pandora;
 

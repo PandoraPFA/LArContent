@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h
  *
  *  @brief  Header file for the cluster extension algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_CLUSTER_EXTENSION_ALGORITHM_H
 #define LAR_CLUSTER_EXTENSION_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
 
 #include <unordered_map>
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/LArPlugins/LArRotationalTransformationPlugin.h
+ *  @file   larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h
  *
  *  @brief  Header file for the rotational transformation plugin class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_ROTATIONAL_TRANSFORMATION_PLUGIN_H
 #define LAR_ROTATIONAL_TRANSFORMATION_PLUGIN_H 1
 
-#include "LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
 
 namespace lar_content
 {

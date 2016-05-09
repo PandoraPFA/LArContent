@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArUtility/NeutrinoParentAlgorithm.h
+ *  @file   larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h
  * 
  *  @brief  Header file for the neutrino parent algorithm class.
  * 

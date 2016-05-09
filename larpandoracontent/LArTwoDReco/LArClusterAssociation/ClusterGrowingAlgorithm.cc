@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.cc
  *
  *  @brief  Implementation of the cluster growing algorithm class.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h"
 
 using namespace pandora;
 

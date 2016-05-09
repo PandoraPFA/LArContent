@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.cc
  * 
  *  @brief  Implementation of the particle recovery algorithm class.
  * 
@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h"
 
 using namespace pandora;
 

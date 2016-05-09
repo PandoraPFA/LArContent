@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArObjects/LArOverlapTensor.cc
+ *  @file   larpandoracontent/LArObjects/LArOverlapTensor.cc
  * 
  *  @brief  Implementation of the lar overlap tensor class.
  * 
@@ -14,11 +14,11 @@
 
 #include "Objects/Cluster.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArObjects/LArOverlapTensor.h"
-#include "LArObjects/LArShowerOverlapResult.h"
-#include "LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
+#include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include <algorithm>
 

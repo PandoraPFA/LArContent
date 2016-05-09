@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArShowerMatching/ClearShowersTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.cc
  * 
  *  @brief  Implementation of the clear showers tool class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
 
 using namespace pandora;
 

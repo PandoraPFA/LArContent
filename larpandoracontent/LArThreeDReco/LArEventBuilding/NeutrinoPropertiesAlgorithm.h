@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h
  *
  *  @brief  Header file for the neutrino properties algorithm class.
  *

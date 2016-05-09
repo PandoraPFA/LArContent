@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h
  * 
  *  @brief  Header file for the three d kink base tool
  * 
@@ -8,9 +8,9 @@
 #ifndef THREE_D_KINK_BASE_TOOL_H
 #define THREE_D_KINK_BASE_TOOL_H 1
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {

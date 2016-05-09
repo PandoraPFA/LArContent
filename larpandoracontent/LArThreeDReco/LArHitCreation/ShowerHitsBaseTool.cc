@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.cc
  *
  *  @brief  Implementation of the shower hit creation tool.
  *
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
-#include "LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 
 using namespace pandora;
 

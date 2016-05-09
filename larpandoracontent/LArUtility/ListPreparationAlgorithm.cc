@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListPreparationAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListPreparationAlgorithm.cc
  *
  *  @brief  Implementation of the list preparation algorithm class.
  *
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "LArUtility/KDTreeLinkerAlgoT.h"
-#include "LArUtility/ListPreparationAlgorithm.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
+#include "larpandoracontent/LArUtility/ListPreparationAlgorithm.h"
 
 using namespace pandora;
 

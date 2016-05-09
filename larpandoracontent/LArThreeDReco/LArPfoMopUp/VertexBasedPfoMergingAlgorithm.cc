@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the vertex based pfo merging algorithm class.
  * 
@@ -8,15 +8,15 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
-#include "LArHelpers/LArVertexHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.cc
  * 
  *  @brief  Implementation of the three d kink base tool class.
  * 
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h"
 
 using namespace pandora;
 

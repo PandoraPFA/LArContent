@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h
  *
  *  @brief  Header file for the 2D sliding fit consolidation algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include <unordered_map>
 

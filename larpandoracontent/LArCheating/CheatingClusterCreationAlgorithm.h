@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArCheating/CheatingClusterCreationAlgorithm.h
+ *  @file   larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h
  * 
  *  @brief  Header file for the cheating cluster creation algorithm class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include <unordered_map>
 

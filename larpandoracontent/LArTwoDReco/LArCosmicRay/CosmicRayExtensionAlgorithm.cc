@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.cc
  *
  *  @brief  Implementation of the cosmic-ray extension algorithm class.
  *
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 
 using namespace pandora;
 

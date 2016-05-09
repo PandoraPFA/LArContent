@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h
  *
  *  @brief  Header file for the delta ray splitting algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_DELTA_RAY_SPLITTING_ALGORITHM_H
 #define LAR_DELTA_RAY_SPLITTING_ALGORITHM_H 1
 
-#include "LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h"
 
 namespace lar_content
 {

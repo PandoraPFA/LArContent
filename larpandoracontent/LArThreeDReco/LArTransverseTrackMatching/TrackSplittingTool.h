@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h
  * 
  *  @brief  Header file for the track splitting tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef TRACK_SPLITTING_TOOL_H
 #define TRACK_SPLITTING_TOOL_H 1
 
-#include "LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {

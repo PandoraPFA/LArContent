@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h
  *
  *  @brief  Header file for the three dimensional fragments algorithm base class.
  *
@@ -11,9 +11,9 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
 
 #include <unordered_map>
 

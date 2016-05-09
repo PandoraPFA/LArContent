@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArClusterSplitting/VertexBasedPfoRecoveryAlgorithm
+ *  @file   larpandoracontent/LArThreeDReco/LArClusterSplitting/VertexBasedPfoRecoveryAlgorithm
  *
  *  @brief  Header file for the vertex-based particle recovery algorithm
  *
@@ -10,8 +10,8 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArTwoDSlidingFitResult.h"
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
 namespace lar_content
 {

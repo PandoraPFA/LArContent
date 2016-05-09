@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArStitching/MultiPandoraApiImpl.h
+ *  @file   larpandoracontent/LArStitching/MultiPandoraApiImpl.h
  * 
  *  @brief  Header file for the MultiPandoraApiImpl class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Objects/CartesianVector.h"
 
-#include "LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
 
 #include <map>
 #include <unordered_map>

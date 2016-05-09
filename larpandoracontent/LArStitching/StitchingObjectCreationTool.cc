@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArStitching/StitchingObjectCreationTool.cc
+ *  @file   larpandoracontent/LArStitching/StitchingObjectCreationTool.cc
  * 
  *  @brief  Implementation of the stitching object creation tool class.
  * 
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArStitching/StitchingObjectCreationTool.h"
+#include "larpandoracontent/LArStitching/StitchingObjectCreationTool.h"
 
 using namespace pandora;
 using namespace lar_content;

@@ -1,13 +1,13 @@
 /**
- *  @file   LArContent/src/LArObjects/LArPointingCluster.cc
+ *  @file   larpandoracontent/LArObjects/LArPointingCluster.cc
  *
  *  @brief  Implementation of the lar pointing cluster class.
  *
  *  $Log: $
  */
 
-#include "LArObjects/LArPointingCluster.h"
-#include "LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 using namespace pandora;
 

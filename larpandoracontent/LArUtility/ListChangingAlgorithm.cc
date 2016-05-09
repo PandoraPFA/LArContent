@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArUtility/ListChangingAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/ListChangingAlgorithm.cc
  * 
  *  @brief  Implementation of the list changing algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArUtility/ListChangingAlgorithm.h"
+#include "larpandoracontent/LArUtility/ListChangingAlgorithm.h"
 
 using namespace pandora;
 

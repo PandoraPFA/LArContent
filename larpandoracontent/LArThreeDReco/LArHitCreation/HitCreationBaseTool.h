@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArHitCreation/HitCreationBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.cc
  *
  *  @brief  Header file for the hit creation base tool.
  *

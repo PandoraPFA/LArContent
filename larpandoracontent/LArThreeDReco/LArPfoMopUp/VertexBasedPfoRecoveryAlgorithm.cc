@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArClusterSplitting/VertexBasedPfoRecoveryAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArClusterSplitting/VertexBasedPfoRecoveryAlgorithm.cc
  *
  *  @brief  Implementation of the vertex-based particle recovery algorithm
  *
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArPfoMopUp/VertexBasedPfoRecoveryAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoRecoveryAlgorithm.h"
 
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 using namespace pandora;
 

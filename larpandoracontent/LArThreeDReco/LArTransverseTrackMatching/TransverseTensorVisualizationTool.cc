@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.cc
  * 
  *  @brief  Implementation of the transverse tensor visualization tool class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 
 using namespace pandora;
 

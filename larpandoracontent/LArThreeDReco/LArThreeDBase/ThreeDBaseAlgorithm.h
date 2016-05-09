@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h
  *
  *  @brief  Header file for the three dimension algorithm base class.
  *
@@ -12,7 +12,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "LArObjects/LArOverlapTensor.h"
+#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 
 #include <unordered_map>
 

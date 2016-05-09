@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h
  *
  *  @brief  Header file for the cluster creation algorithm class.
  *

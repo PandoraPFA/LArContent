@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.cc
  * 
  *  @brief  Implementation of the overshoot tracks tool class.
  * 
@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.cc
  * 
  *  @brief  Implementation of the cosmic ray identification algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 
 using namespace pandora;
 

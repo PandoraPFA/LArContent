@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArShowerMatching/ClearShowersTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.h
  * 
  *  @brief  Header file for the clear showers tool class.
  * 
@@ -8,7 +8,7 @@
 #ifndef CLEAR_SHOWERS_TOOL_H
 #define CLEAR_SHOWERS_TOOL_H 1
 
-#include "LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 
 namespace lar_content
 {

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArMonitoringHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArMonitoringHelper.cc
  *
  *  @brief  Implementation of the lar monitoring helper class.
  *
@@ -13,10 +13,10 @@
 
 #include "Helpers/MCParticleHelper.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArMonitoringHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
 

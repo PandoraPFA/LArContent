@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArHelpers/LArMCParticleHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArMCParticleHelper.cc
  *
  *  @brief  Implementation of the lar monte carlo particle helper class.
  *
@@ -15,8 +15,8 @@
 #include "Pandora/PdgTable.h"
 #include "Pandora/StatusCodes.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include <algorithm>
 #include <cstdlib>

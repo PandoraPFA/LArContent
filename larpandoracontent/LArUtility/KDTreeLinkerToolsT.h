@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArUtility/KDTreeLinkerToolsT.h
+ *  @file   larpandoracontent/LArUtility/KDTreeLinkerToolsT.h
  * 
  *  @brief  Header file for the kd tree linker tools template class
  * 

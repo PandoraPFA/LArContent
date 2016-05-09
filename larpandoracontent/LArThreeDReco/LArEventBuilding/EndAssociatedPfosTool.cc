@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.cc
  * 
  *  @brief  Implementation of the end associated pfos tool class.
  * 
@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
-#include "LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
 
 using namespace pandora;
 

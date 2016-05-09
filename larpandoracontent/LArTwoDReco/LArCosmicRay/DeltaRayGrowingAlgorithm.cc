@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.cc
  *
  *  @brief  Implementation of the delta ray growing algorithm class.
  *
@@ -8,10 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h
  * 
  *  @brief  Header file for the cluster mop up algorithm base class.
  * 

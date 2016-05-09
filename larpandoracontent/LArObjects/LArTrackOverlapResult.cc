@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArObjects/LArTrackOverlapResult.cc
+ *  @file   larpandoracontent/LArObjects/LArTrackOverlapResult.cc
  * 
  *  @brief  Implementation of the lar track overlap result class.
  * 
@@ -10,7 +10,7 @@
 
 #include "Pandora/PandoraInternal.h"
 
-#include "LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 using namespace pandora;
 

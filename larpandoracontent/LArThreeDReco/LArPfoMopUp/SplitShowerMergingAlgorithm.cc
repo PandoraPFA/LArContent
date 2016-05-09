@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the split shower merging algorithm class.
  * 
@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
-#include "LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
-#include "LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h"
 
 using namespace pandora;
 

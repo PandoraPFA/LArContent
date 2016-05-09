@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.cc
  * 
  *  @brief  Implementation of the cone based merging algorithm class.
  * 
@@ -8,12 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArClusterHelper.h"
-#include "LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "LArObjects/LArTwoDSlidingShowerFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.cc
  * 
  *  @brief  Implementation of the shower tensor visualization tool class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
 
 using namespace pandora;
 

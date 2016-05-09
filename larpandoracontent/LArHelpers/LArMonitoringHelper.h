@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArHelpers/LArMonitoringHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArMonitoringHelper.h
  *
  *  @brief  Header file for the lar monitoring helper helper class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.cc
  *
  *  @brief  Implementation of the matched end point tool class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 
 using namespace pandora;
 

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h
  * 
  *  @brief  Header file for the delta ray shower hits tool
  * 
@@ -8,7 +8,7 @@
 #ifndef DELTA_RAY_SHOWER_HITS_TOOL_H
 #define DELTA_RAY_SHOWER_HITS_TOOL_H 1
 
-#include "LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 namespace lar_content
 {

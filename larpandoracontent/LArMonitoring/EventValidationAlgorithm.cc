@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArMonitoring/EventValidationAlgorithm.cc
+ *  @file   larpandoracontent/LArMonitoring/EventValidationAlgorithm.cc
  *
  *  @brief  Implementation of the event validation algorithm.
  *
@@ -8,13 +8,13 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "LArHelpers/LArMCParticleHelper.h"
-#include "LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "LArMonitoring/EventValidationAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
 
-#include "LArObjects/LArMCParticle.h"
-#include "LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArObjects/LArMCParticle.h"
+#include "larpandoracontent/LArObjects/LArTrackPfo.h"
 
 using namespace pandora;
 
