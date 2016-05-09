@@ -41,11 +41,11 @@ private:
     pandora::StatusCode Run();
 
     /**
-     *  @brief  Get the address of the mc neutrino
+     *  @brief  Get the mc neutrino vector
      * 
-     *  @param  pMCNeutrino to receive the address of the mc neutrino
+     *  @param  mcNeutrinoVector to receive the mc neutrino vector
      */
-    void GetMCNeutrino(const pandora::MCParticle *&pMCNeutrino) const;
+    void GetMCNeutrinoVector(pandora::MCParticleVector &mcNeutrinoVector) const;
 
     /**
      *  @brief  Create and save a neutrino pfo with properties dictated by the mc neutrino
@@ -89,6 +89,16 @@ private:
      */
     void CreatePfoHierarchy(const pandora::MCParticle *const pParentMCParticle, const pandora::ParticleFlowObject *const pParentPfo,
         const MCParticleToPfoMap &mcParticleToPfoMap) const;
+
+    /**
+     *  @brief  Sort vertices by increasing z position
+     * 
+     *  @param  pLhs address of the lhs vertex
+     *  @param  pRhs address of the rhs vertex
+     * 
+     *  @return whether lhs should precedes rhs
+     */
+    static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
