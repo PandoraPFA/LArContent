@@ -2,8 +2,8 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent larpandoracontent v02_07_02
-defaultqual e9
+parent larpandoracontent v02_07_03
+defaultqual e9:r5
 
 # larpandoracontent has no fcl files
 flcdir  -
@@ -20,9 +20,12 @@ end_product_list
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
 qualifier	pandora 	gcc	notes
-e9:debug	e9:nu:r5:debug	-nq-
-e9:opt		e9:nu:r5:opt	-nq-
-e9:prof		e9:nu:r5:prof	-nq-
+e9:r5:debug	e9:nu:r5:debug	-nq-
+e9:r5:opt	e9:nu:r5:opt	-nq-
+e9:r5:prof	e9:nu:r5:prof	-nq-
+e9:r6:debug	e9:nu:r6:debug	-nq-
+e9:r6:opt	e9:nu:r6:opt	-nq-
+e9:r6:prof	e9:nu:r6:prof	-nq-
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:
