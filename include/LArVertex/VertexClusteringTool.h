@@ -57,6 +57,13 @@ public:
          *  @return the score
          */
         pandora::CartesianVector GetCentroidPosition() const;
+        
+        /**
+         *  @brief  Get the score
+         * 
+         *  @return the score
+         */
+        pandora::CartesianVector GetCentroidPositionW() const;
 
         /**
          *  @brief  Get the score
@@ -106,6 +113,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float   m_maxVertexToCentroidDistance; ///< The radius around the centroid within which vertices will be added to the current vertex cluster
+    bool    m_removeSmallClusters; ///< whether to remove small clusters from the vertex 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

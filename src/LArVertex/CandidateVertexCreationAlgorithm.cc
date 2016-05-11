@@ -52,9 +52,9 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         this->Find2DClusterCrossings(clusterListV, crossingsV);
         this->Find2DClusterCrossings(clusterListW, crossingsW);
         
-        this->CreateCrossingVertex(crossingsU, crossingsV, clusterListW, TPC_VIEW_U, TPC_VIEW_V);
-        this->CreateCrossingVertex(crossingsU, crossingsW, clusterListV, TPC_VIEW_U, TPC_VIEW_W);
-        this->CreateCrossingVertex(crossingsV, crossingsW, clusterListU, TPC_VIEW_V, TPC_VIEW_W);
+        this->CreateCrossingVertex(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
+        this->CreateCrossingVertex(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
+        this->CreateCrossingVertex(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
 
         if (!pVertexList->empty())
         {
@@ -347,10 +347,9 @@ void CandidateVertexCreationAlgorithm::Find2DClusterCrossings(const ClusterList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::CreateCrossingVertex(std::vector<CartesianVector> &crossingsVector1, std::vector<CartesianVector> &crossingsVector2, const ClusterList &clusterList, HitType hitType1, HitType hitType2) const
+void CandidateVertexCreationAlgorithm::CreateCrossingVertex(std::vector<CartesianVector> &crossingsVector1, std::vector<CartesianVector> &crossingsVector2, HitType hitType1, HitType hitType2) const
 {
     std::vector<CartesianVector> spacePointVector;
-    std::cout << "clusterList.size(): " << clusterList.size() << std::endl;
     
     for (CartesianVector &position1: crossingsVector1)
     {

@@ -16,7 +16,9 @@ namespace lar_content
 {
 
 VertexClusteringTool::VertexClusteringTool() :
-    m_maxVertexToCentroidDistance(5.f)
+    m_clusterInWView(false),
+    m_maxVertexToCentroidDistance(5.f),
+    m_removeSmallClusters(false)
 {
 }
 
@@ -64,11 +66,28 @@ std::vector<VertexList> VertexClusteringTool::ClusterVertices(const VertexList &
         CartesianVector currentClusterCentroid(0., 0., 0.);
 
         if (pVertexClusterSeed->GetVertexList().size() == 0)
-            currentClusterCentroid = pVertex->GetPosition();
+        {
+            if (!m_clusterInWView)
+                currentClusterCentroid = pVertex->GetPosition();
+            else
+                currentClusterCentroid = lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W);
+        }
         else
-            currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
+        {
+            if (!m_clusterInWView)
+                currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
+            else
+                currentClusterCentroid = pVertexClusterSeed->GetCentroidPositionW();
+        }
         
-        if ((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() < m_maxVertexToCentroidDistance)
+        CartesianVector vertexPosition(0.f, 0.f, 0.f);
+        
+        if (!m_clusterinWView)
+            vertexPosition = pVertex->GetPosition();
+        else
+            vertexPosition = lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W);
+        
+        if ((currentClusterCentroid - (vertexPosition)).GetMagnitude() < m_maxVertexToCentroidDistance)
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
@@ -83,6 +102,9 @@ std::vector<VertexList> VertexClusteringTool::ClusterVertices(const VertexList &
     }
 
     std::vector<VertexList> outputVertexListVector;
+    
+    if (m_removeSmallClusters == true)
+        this->RemoveSmallClusters(vertexClusterList);
     
     for (VertexCluster* pVertexCluster : vertexClusterList)
         outputVertexListVector.push_back(pVertexCluster->GetVertexList());
@@ -102,6 +124,25 @@ pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositio
 
     for (const pandora::Vertex *const pVertex : this->GetVertexList())
         centroid += pVertex->GetPosition();
+
+    centroid *= static_cast<float>(1.f / this->GetVertexList().size());
+    return centroid;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositionW() const
+{
+    if (this->GetVertexList().empty())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    pandora::CartesianVector centroid(0.f, 0.f, 0.f);
+
+    for (const pandora::Vertex *const pVertex : this->GetVertexList())
+    {
+        const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
+        centroid += vertexProjectionW;
+    }
 
     centroid *= static_cast<float>(1.f / this->GetVertexList().size());
     return centroid;
@@ -130,6 +171,9 @@ StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexToCentroidDistance", m_maxVertexToCentroidDistance));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RemoveSmallClusters", m_removeSmallClusters));
 
     return STATUS_CODE_SUCCESS;
 }

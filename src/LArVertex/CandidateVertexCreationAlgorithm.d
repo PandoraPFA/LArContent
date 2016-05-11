@@ -46,6 +46,7 @@
  /usera/jjd49/LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArVertex/CandidateVertexCreationAlgorithm.h \
  /usera/jjd49/LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArTwoDSlidingFitResult.h \
  /usera/jjd49/LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArTwoDSlidingFitObjects.h \
+ /usera/jjd49/LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArThreeDSlidingFitResult.h \
  /usera/jjd49/LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h
 
 /usera/jjd49/LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/AlgorithmHeaders.h:
@@ -137,5 +138,7 @@
 /usera/jjd49/LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArTwoDSlidingFitResult.h:
 
 /usera/jjd49/LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArTwoDSlidingFitObjects.h:
+
+/usera/jjd49/LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArThreeDSlidingFitResult.h:
 
 /usera/jjd49/LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h:

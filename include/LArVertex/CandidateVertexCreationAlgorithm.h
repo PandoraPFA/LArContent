@@ -94,7 +94,7 @@ private:
      *  @param  hitType1 the hit type of the first cluster
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
-    void CreateCrossingVertex(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2, const pandora::ClusterList &clusterList, pandora::HitType hitType1, pandora::HitType hitType2) const;
+    void CreateCrossingVertex(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2,  pandora::HitType hitType1, pandora::HitType hitType2) const;
      
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 

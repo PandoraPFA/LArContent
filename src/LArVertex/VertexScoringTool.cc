@@ -89,6 +89,8 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::ve
         if (vertexScoreList.size() < m_minVertexClusterSize)
             continue;
 
+        std::cout << "Vertex cluster size is: " << vertexScoreList.size() << std::endl;
+
         outputVertexScoreList.insert(outputVertexScoreList.begin(), vertexScoreList.begin(), std::next(vertexScoreList.begin(), (m_nSelectedVerticesPerCluster-1) ));
         
     }
