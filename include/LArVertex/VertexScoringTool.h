@@ -325,7 +325,6 @@ private:
     std::string     m_inputCaloHitListNameV;        ///< The name of the view V calo hit list
     std::string     m_inputCaloHitListNameW;        ///< The name of the view W calo hit list
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
-    bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
     bool            m_fastScoreCheck;               ///< Whether to use the fast histogram based score to selectively avoid calling full or midway scores
     bool            m_fastScoreOnly;                ///< Whether to use the fast histogram based score only
@@ -349,7 +348,6 @@ private:
     float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to kernel estimation
 
     float           m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
-    float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
 
     bool            m_enableFolding;                ///< Whether to enable folding of -pi -> +pi phi distribution into 0 -> +pi region only
 
@@ -359,7 +357,7 @@ private:
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty
     
-    unsigned int             m_minVertexClusterSize;         ///< THe smallest number of vertices a vertex cluster must contain to contribute to the output vertex list
+    unsigned int    m_minVertexClusterSize;         ///< THe smallest number of vertices a vertex cluster must contain to contribute to the output vertex list
     int             m_nSelectedVerticesPerCluster; ///< The number of vertices to take from each vertex cluster and put in the output vertex list
 };
 

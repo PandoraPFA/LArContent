@@ -21,15 +21,12 @@ namespace lar_content
 {
 
 VertexScoringTool::VertexScoringTool() :
-    m_replaceCurrentVertexList(true),
     m_fastScoreCheck(true),
     m_fastScoreOnly(false),
     m_fullScore(false),
     m_beamMode(false),
     m_nDecayLengthsInZSpan(2.f),
     m_kappa(0.42f),
-    m_selectSingleVertex(false),
-    m_maxTopScoreSelections(3),
     m_kernelEstimateSigma(0.048f),
     m_minFastScoreFraction(0.8f),
     m_fastHistogramNPhiBins(200),
@@ -38,12 +35,11 @@ VertexScoringTool::VertexScoringTool() :
     m_maxOnHitDisplacement(1.f),
     m_maxHitVertexDisplacement1D(100.f),
     m_minCandidateDisplacement(2.f),
-    m_minCandidateScoreFraction(0.5f),
     m_enableFolding(true),
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_minVertexAcceptableViews(3),
+    m_minVertexAcceptableViews(2),
     m_minVertexClusterSize(2),
     m_nSelectedVerticesPerCluster(2)
 {
@@ -429,9 +425,6 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameW", m_inputCaloHitListNameW));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FastScoreCheck", m_fastScoreCheck));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -448,12 +441,6 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Kappa", m_kappa));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectSingleVertex", m_selectSingleVertex));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTopScoreSelections", m_maxTopScoreSelections));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KernelEstimateSigma", m_kernelEstimateSigma));
@@ -478,9 +465,6 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCandidateDisplacement", m_minCandidateDisplacement));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCandidateScoreFraction", m_minCandidateScoreFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnableFolding", m_enableFolding));

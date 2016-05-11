@@ -31,8 +31,18 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_minVertexAcceptableViews(3)
+    m_minVertexAcceptableViews(3),
+    m_writeToTree(false)
 {
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+VertexSelectionAlgorithm::~VertexSelectionAlgorithm()
+{
+    if (m_writeToTree)
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,30 +65,66 @@ StatusCode VertexSelectionAlgorithm::Run()
     vertexListCopy.insert(pInputVertexList->begin(), pInputVertexList->end());
     std::vector<VertexList> vertexListVector = m_pVertexClusteringTool->ClusterVertices(vertexListCopy);
     
-    for (const VertexList &vertexList : vertexListVector)
-    {
-        for (const Vertex *const pVertex : vertexList)
-        {
-            const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
-            const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
-            const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
-            
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", RED, 1));
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", RED, 1));
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", RED, 1));
-        }
-        
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-    }
+    //for (const VertexList &vertexList : vertexListVector)
+    //{
+    //    for (const Vertex *const pVertex : vertexList)
+    //    {
+    //        const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
+    //        const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
+    //        const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
+    //        
+    //        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", RED, 1));
+    //        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", RED, 1));
+    //        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", RED, 1));
+    //    }
+    //    
+    //    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    //}
     
     for (VertexList &vertexList : vertexListVector)
-        std::cout << "This many vertices in cluster: " << vertexList.size() << std::endl;
+        std::cout << "Cluster size is: " << vertexList.size() << std::endl;
     
-    std::cout << "Completed vertex clustering." << std::endl;
-
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
     m_pVertexScoringTool->ScoreVertices(this, vertexListVector, intermediateVertexScoreList);
-
+    
+    //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
+    //{
+    //    const Vertex *const pVertex(vertexScore.GetVertex());
+    //    
+    //    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
+    //    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
+    //    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
+    //    
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", GREEN, 1));
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", GREEN, 1));
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", GREEN, 1));
+    //    
+    //    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    //}
+    
+    
+    //-------------------------TREE--------------------------------------------------------------------
+    const MCParticleList *pMCParticleList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "MCParticleList3D", pMCParticleList));
+    MCParticleVector mcNeutrinoList;                                // true neutrinos
+    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
+    
+    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.begin())->GetVertex());
+    std::vector<float> allVerticesDR;
+    
+    for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
+    {
+        const Vertex *const pVertex(vertexScore.GetVertex());
+        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+        allVerticesDR.push_back(vertexDR);
+    }
+    
+    std::sort(allVerticesDR.begin(), allVerticesDR.end());
+    
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
+    //-------------------------TREE--------------------------------------------------------------------
+    
     std::cout << ">>>>>>>>>>There are " << intermediateVertexScoreList.size() << " vertices in the intermediate list" << std::endl;
 
 //    VertexList selectedVertexList;
@@ -155,6 +201,14 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "VertexScoring", pAnotherAlgorithmTool));
 
     m_pVertexScoringTool = dynamic_cast<VertexScoringTool *>(pAnotherAlgorithmTool);
+    
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "WriteToTree", m_writeToTree));
+    
+    if (m_writeToTree)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputTree", m_treeName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
+    }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
