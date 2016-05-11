@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArVertex/VertexClusteringTool.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 using namespace pandora;
 
@@ -77,12 +78,12 @@ std::vector<VertexList> VertexClusteringTool::ClusterVertices(const VertexList &
             if (!m_clusterInWView)
                 currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
             else
-                currentClusterCentroid = pVertexClusterSeed->GetCentroidPositionW();
+                currentClusterCentroid = pVertexClusterSeed->GetCentroidPositionW(this->GetPandora());
         }
         
         CartesianVector vertexPosition(0.f, 0.f, 0.f);
         
-        if (!m_clusterinWView)
+        if (!m_clusterInWView)
             vertexPosition = pVertex->GetPosition();
         else
             vertexPosition = lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W);
@@ -131,7 +132,7 @@ pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositio
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositionW() const
+pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositionW(Pandora pandora) const
 {
     if (this->GetVertexList().empty())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
@@ -140,7 +141,7 @@ pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositio
 
     for (const pandora::Vertex *const pVertex : this->GetVertexList())
     {
-        const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
+        const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(pandora, pVertex->GetPosition(), TPC_VIEW_W));
         centroid += vertexProjectionW;
     }
 

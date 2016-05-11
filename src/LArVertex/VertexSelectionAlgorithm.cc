@@ -70,7 +70,11 @@ StatusCode VertexSelectionAlgorithm::Run()
         
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
-            
+    
+    for (VertexList &vertexList : vertexListVector)
+        std::cout << "This many vertices in cluster: " << vertexList.size() << std::endl;
+    
+    std::cout << "Completed vertex clustering." << std::endl;
 
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
     m_pVertexScoringTool->ScoreVertices(this, vertexListVector, intermediateVertexScoreList);
