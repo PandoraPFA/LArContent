@@ -100,7 +100,7 @@ private:
      *  @param  vertexScoreList the vertex score list
      *  @param  selectedVertexList to receive the selected vertex list
      */
-    void SelectTopScoreVertices(VertexScoreList &vertexScoreList, pandora::VertexList &selectedVertexList) const;
+    void SelectTopScoreVertices(VertexScoringTool::VertexScoreList &vertexScoreList, pandora::VertexList &selectedVertexList) const;
 
     /**
      *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates

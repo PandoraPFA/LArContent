@@ -81,11 +81,9 @@ StatusCode VertexSelectionAlgorithm::Run()
     //    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     //}
     
-    for (VertexList &vertexList : vertexListVector)
-        std::cout << "Cluster size is: " << vertexList.size() << std::endl;
-    
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
     m_pVertexScoringTool->ScoreVertices(this, vertexListVector, intermediateVertexScoreList);
+    std::cout << ">>>>>>>>>>There are " << intermediateVertexScoreList.size() << " vertices in the intermediate list" << std::endl;
     
     //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
     //{
@@ -102,7 +100,6 @@ StatusCode VertexSelectionAlgorithm::Run()
     //    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     //}
     
-    
     //-------------------------TREE--------------------------------------------------------------------
     const MCParticleList *pMCParticleList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "MCParticleList3D", pMCParticleList));
@@ -111,6 +108,8 @@ StatusCode VertexSelectionAlgorithm::Run()
     
     CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.begin())->GetVertex());
     std::vector<float> allVerticesDR;
+    
+    std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
     
     for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
     {
@@ -124,30 +123,28 @@ StatusCode VertexSelectionAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
     //-------------------------TREE--------------------------------------------------------------------
-    
-    std::cout << ">>>>>>>>>>There are " << intermediateVertexScoreList.size() << " vertices in the intermediate list" << std::endl;
 
-//    VertexList selectedVertexList;
-//    this->SelectTopScoreVertices(vertexScoreList, selectedVertexList, mcNeutrinoList, pClusterListW);
+    VertexList selectedVertexList;
+    this->SelectTopScoreVertices(intermediateVertexScoreList, selectedVertexList);
 
-//    if (!selectedVertexList.empty())
-//    {
-//        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
+    if (!selectedVertexList.empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
 
-//        if (m_replaceCurrentVertexList)
-//            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
-//    }
+        if (m_replaceCurrentVertexList)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::SelectTopScoreVertices(VertexScoreList &vertexScoreList, VertexList &selectedVertexList) const
+void VertexSelectionAlgorithm::SelectTopScoreVertices(VertexScoringTool::VertexScoreList &vertexScoreList, VertexList &selectedVertexList) const
 {
     float bestScore(0.f);
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
     
-    for (const VertexScore &vertexScore : vertexScoreList)
+    for (const VertexScoringTool::VertexScore &vertexScore : vertexScoreList)
     {
         if (selectedVertexList.size() >= m_maxTopScoreSelections)
             break;

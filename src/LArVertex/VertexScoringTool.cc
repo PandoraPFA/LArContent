@@ -56,7 +56,7 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::ve
 
     std::vector<VertexScoreList> vertexScoreListVector;
 
-    for (VertexList vertexList : vertexListVector)
+    for (VertexList &vertexList : vertexListVector)
     {
         const VertexList *pInputVertexList(&vertexList);
 
@@ -78,21 +78,18 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::ve
         vertexScoreListVector.push_back(vertexScoreList);
     }
 
-    for (VertexScoreList vertexScoreList : vertexScoreListVector)
+    for (VertexScoreList &vertexScoreList : vertexScoreListVector)
     {
         std::sort(vertexScoreList.begin(), vertexScoreList.end());
-
+        
         if (vertexScoreList.size() < m_minVertexClusterSize)
             continue;
-
-        std::cout << "Vertex cluster size is: " << vertexScoreList.size() << std::endl;
-
-        outputVertexScoreList.insert(outputVertexScoreList.begin(), vertexScoreList.begin(), std::next(vertexScoreList.begin(), (m_nSelectedVerticesPerCluster-1) ));
+        
+        outputVertexScoreList.insert(outputVertexScoreList.begin(), vertexScoreList.begin(), std::next(vertexScoreList.begin(), m_nSelectedVerticesPerCluster ));
         
     }
     
     std::sort(outputVertexScoreList.begin(), outputVertexScoreList.end());
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
