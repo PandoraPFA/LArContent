@@ -80,13 +80,20 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::ve
 
     for (VertexScoreList &vertexScoreList : vertexScoreListVector)
     {
-        std::sort(vertexScoreList.begin(), vertexScoreList.end());
-        
         if (vertexScoreList.size() < m_minVertexClusterSize)
             continue;
         
-        outputVertexScoreList.insert(outputVertexScoreList.begin(), vertexScoreList.begin(), std::next(vertexScoreList.begin(), m_nSelectedVerticesPerCluster ));
+        std::sort(vertexScoreList.begin(), vertexScoreList.end());
         
+        int counter(0);
+        
+        for (VertexScore &vertexScore : vertexScoreList)
+        {
+            if (counter > m_nSelectedVerticesPerCluster)
+                break;
+            outputVertexScoreList.push_back(vertexScore);
+            counter++;
+        }
     }
     
     std::sort(outputVertexScoreList.begin(), outputVertexScoreList.end());

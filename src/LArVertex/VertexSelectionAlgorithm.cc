@@ -123,14 +123,14 @@ StatusCode VertexSelectionAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
     //-------------------------TREE--------------------------------------------------------------------
-
+    
     VertexList selectedVertexList;
     this->SelectTopScoreVertices(intermediateVertexScoreList, selectedVertexList);
-
+    
     if (!selectedVertexList.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
-
+    
         if (m_replaceCurrentVertexList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
     }
