@@ -46,7 +46,6 @@
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArUtility/KDTreeLinkerAlgoT.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArUtility/KDTreeLinkerToolsT.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArVertex/VertexScoringTool.h \
- /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMCParticleHelper.h
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/AlgorithmHeaders.h:
@@ -138,7 +137,5 @@
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArUtility/KDTreeLinkerToolsT.h:
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArVertex/VertexScoringTool.h:
-
-/usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h:
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMCParticleHelper.h:

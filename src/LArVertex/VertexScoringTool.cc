@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/src/LArVertex/VertexScoringTool.cc
+ *  @file   larpandoracontent/LArVertex/VertexScoringTool.cc
  * 
  *  @brief  Implementation of the vertex selection algorithm class.
  * 
@@ -21,12 +21,15 @@ namespace lar_content
 {
 
 VertexScoringTool::VertexScoringTool() :
+    m_replaceCurrentVertexList(true),
     m_fastScoreCheck(true),
     m_fastScoreOnly(false),
     m_fullScore(false),
     m_beamMode(false),
     m_nDecayLengthsInZSpan(2.f),
     m_kappa(0.42f),
+    m_selectSingleVertex(true),
+    m_maxTopScoreSelections(3),
     m_kernelEstimateSigma(0.048f),
     m_minFastScoreFraction(0.8f),
     m_fastHistogramNPhiBins(200),
@@ -35,68 +38,31 @@ VertexScoringTool::VertexScoringTool() :
     m_maxOnHitDisplacement(1.f),
     m_maxHitVertexDisplacement1D(100.f),
     m_minCandidateDisplacement(2.f),
+    m_minCandidateScoreFraction(0.5f),
     m_enableFolding(true),
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_minVertexAcceptableViews(2),
-    m_minVertexClusterSize(2),
-    m_nSelectedVerticesPerCluster(2)
+    m_minVertexAcceptableViews(3)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::vector<VertexList> &vertexListVector, VertexScoreList &outputVertexScoreList)
+void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const VertexList *const pInputVertexList, VertexScoreList &vertexScoreList)
 {
-    if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+    HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
+    this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
 
-    //-------------------------------------------------------------------------------------------------
+    VertexList filteredVertexList;
+    this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
 
-    std::vector<VertexScoreList> vertexScoreListVector;
+    BeamConstants beamConstants;
+    this->GetBeamConstants(filteredVertexList, beamConstants);
 
-    for (VertexList &vertexList : vertexListVector)
-    {
-        const VertexList *pInputVertexList(&vertexList);
-
-        HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
-        this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
-
-        VertexList filteredVertexList;
-        this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
-
-        if (filteredVertexList.size() == 0)
-            continue;
-
-        BeamConstants beamConstants;
-        this->GetBeamConstants(filteredVertexList, beamConstants);
-
-        VertexScoreList vertexScoreList;
-        this->GetVertexScoreList(filteredVertexList, beamConstants, kdTreeU, kdTreeV, kdTreeW, vertexScoreList);
-
-        vertexScoreListVector.push_back(vertexScoreList);
-    }
-
-    for (VertexScoreList &vertexScoreList : vertexScoreListVector)
-    {
-        if (vertexScoreList.size() < m_minVertexClusterSize)
-            continue;
-        
-        std::sort(vertexScoreList.begin(), vertexScoreList.end());
-        
-        int counter(0);
-        
-        for (VertexScore &vertexScore : vertexScoreList)
-        {
-            if (counter > m_nSelectedVerticesPerCluster)
-                break;
-            outputVertexScoreList.push_back(vertexScore);
-            counter++;
-        }
-    }
+    this->GetVertexScoreList(filteredVertexList, beamConstants, kdTreeU, kdTreeV, kdTreeW, vertexScoreList);
     
-    std::sort(outputVertexScoreList.begin(), outputVertexScoreList.end());
+    std::sort(vertexScoreList.begin(), vertexScoreList.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,7 +84,7 @@ void VertexScoringTool::InitializeKDTree(const Algorithm *const pAlgorithm, cons
     if (!pCaloHitList || pCaloHitList->empty())
     {
         if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-            std::cout << "VertexSelectionAlgorithm: unable to find calo hit list " << caloHitListName << std::endl;
+            std::cout << "VertexScoringTool: unable to find calo hit list " << caloHitListName << std::endl;
 
         return;
     }
@@ -134,18 +100,18 @@ void VertexScoringTool::FilterVertexList(const VertexList *const pInputVertexLis
     HitKDTree2D &kdTreeW, VertexList &filteredVertexList) const
 {
     for (const Vertex *const pVertex : *pInputVertexList)
-    {   
+    {
         unsigned int nAcceptableViews(0);
-        
+
         if ((m_isEmptyViewAcceptable && kdTreeU.empty()) || this->IsVertexOnHit(pVertex, TPC_VIEW_U, kdTreeU) || this->IsVertexInGap(pVertex, TPC_VIEW_U))
             ++nAcceptableViews;
-        
+
         if ((m_isEmptyViewAcceptable && kdTreeV.empty()) || this->IsVertexOnHit(pVertex, TPC_VIEW_V, kdTreeV) || this->IsVertexInGap(pVertex, TPC_VIEW_V))
             ++nAcceptableViews;
-        
+
         if ((m_isEmptyViewAcceptable && kdTreeW.empty()) || this->IsVertexOnHit(pVertex, TPC_VIEW_W, kdTreeW) || this->IsVertexInGap(pVertex, TPC_VIEW_W))
             ++nAcceptableViews;
-        
+
         if (nAcceptableViews >= m_minVertexAcceptableViews)
             (void) filteredVertexList.insert(pVertex);
     }
@@ -363,6 +329,25 @@ void VertexScoringTool::FillKernelEstimate(const Vertex *const pVertex, const Hi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool VertexScoringTool::AcceptVertexLocation(const Vertex *const pVertex, const VertexList &selectedVertexList) const
+{
+    const CartesianVector &position(pVertex->GetPosition());
+    const float minCandidateDisplacementSquared(m_minCandidateDisplacement * m_minCandidateDisplacement);
+
+    for (const Vertex *const pSelectedVertex : selectedVertexList)
+    {
+        if (pVertex == pSelectedVertex)
+            return false;
+
+        if ((position - pSelectedVertex->GetPosition()).GetMagnitudeSquared() < minCandidateDisplacementSquared)
+            return false;
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float VertexScoringTool::atan2Fast(const float y, const float x) const
 {
     const float ONE_QTR_PI(0.25f * M_PI);
@@ -394,6 +379,7 @@ bool VertexScoringTool::SortByVertexZPosition(const pandora::Vertex *const pLhs,
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 float VertexScoringTool::KernelEstimate::Sample(const float x) const
 {
@@ -422,11 +408,16 @@ void VertexScoringTool::KernelEstimate::AddContribution(const float x, const flo
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameU", m_inputCaloHitListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameV", m_inputCaloHitListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameW", m_inputCaloHitListNameW));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FastScoreCheck", m_fastScoreCheck));
@@ -445,6 +436,12 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Kappa", m_kappa));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectSingleVertex", m_selectSingleVertex));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxTopScoreSelections", m_maxTopScoreSelections));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KernelEstimateSigma", m_kernelEstimateSigma));
@@ -471,6 +468,9 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
         "MinCandidateDisplacement", m_minCandidateDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCandidateScoreFraction", m_minCandidateScoreFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnableFolding", m_enableFolding));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -484,12 +484,6 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexAcceptableViews", m_minVertexAcceptableViews));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexClusterSize", m_minVertexClusterSize));
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectedVerticesPerCluster", m_nSelectedVerticesPerCluster));
 
     return STATUS_CODE_SUCCESS;
 }

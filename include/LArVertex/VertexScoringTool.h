@@ -1,15 +1,14 @@
 /**
- *  @file   LArContent/include/LArVertex/VertexScoringTool.h
+ *  @file   larpandoracontent/LArVertex/VertexScoringTool.h
  * 
- *  @brief  Header file for the vertex selection algorithm class.
+ *  @brief  Header file for the vertex selection AlgorithmTool class.
  * 
  *  $Log: $
  */
 #ifndef LAR_VERTEX_SCORING_TOOL_H
 #define LAR_VERTEX_SCORING_TOOL_H 1
 
-#include "Pandora/Algorithm.h"
-#include <list>
+#include "Pandora/AlgorithmTool.h"
 
 namespace lar_content
 {
@@ -20,13 +19,13 @@ template<typename, unsigned int> class KDTreeNodeInfoT;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  VertexScoringTool class
+ *  @brief  VertexScoringTool::AlgorithmTool class
  */
 class VertexScoringTool : public pandora::AlgorithmTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
+     *  @brief  Factory class for instantiating AlgorithmTool
      */
     class Factory : public pandora::AlgorithmToolFactory
     {
@@ -80,13 +79,12 @@ public:
         const pandora::Vertex  *m_pVertex;          ///< The address of the vertex
         float                   m_score;            ///< The score
     };
-    
+
     typedef std::vector<VertexScore> VertexScoreList;
 
-    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, std::vector<pandora::VertexList> &vertexListVector, VertexScoreList &outputVertexScoreList);
+    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList *const pInputVertexList, VertexScoreList &vertexScoreList);
 
 private:
-    
     /**
      *  @brief Beam constants class
      */
@@ -176,7 +174,7 @@ private:
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
     /**
-     *  @brief  Initialize kd trees with details of hits in algorithm-configured cluster lists
+     *  @brief  Initialize kd trees with details of hits in AlgorithmTool-configured cluster lists
      * 
      *  @param  kdTreeU the kd tree for u hits
      *  @param  kdTreeV the kd tree for v hits
@@ -290,12 +288,14 @@ private:
     void FillKernelEstimate(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree, KernelEstimate &kernelEstimate) const;
 
     /**
-     *  @brief  From the top-scoring candidate vertices, select a subset for further investigation
+     *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates
      * 
-     *  @param  vertexScoreList the vertex score list
-     *  @param  selectedVertexList to receive the selected vertex list
+     *  @param  pVertex the address of the vertex
+     *  @param  selectedVertexList the selected vertex list
+     * 
+     *  @return boolean
      */
-    void SelectTopScoreVertices(VertexScoreList &vertexScoreList, pandora::VertexList &selectedVertexList, const pandora::MCParticleVector &mcNeutrinoList, const pandora::ClusterList *const pClusterListW) const;
+    bool AcceptVertexLocation(const pandora::Vertex *const pVertex, const pandora::VertexList &selectedVertexList) const;
 
     /**
      *  @brief  Fast estimate of std::atan2 function. Rather coarse (max |error| > 0.01) but should suffice for this use-case.
@@ -316,8 +316,6 @@ private:
      *  @return whether lhs should precedes rhs
      */
     static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
-    
-    //------------------------------------------------------------------------------------------------------------------------------
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -325,6 +323,7 @@ private:
     std::string     m_inputCaloHitListNameV;        ///< The name of the view V calo hit list
     std::string     m_inputCaloHitListNameW;        ///< The name of the view W calo hit list
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
+    bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
     bool            m_fastScoreCheck;               ///< Whether to use the fast histogram based score to selectively avoid calling full or midway scores
     bool            m_fastScoreOnly;                ///< Whether to use the fast histogram based score only
@@ -348,6 +347,7 @@ private:
     float           m_maxHitVertexDisplacement1D;   ///< Max hit-vertex displacement in *any one dimension* for contribution to kernel estimation
 
     float           m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
+    float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
 
     bool            m_enableFolding;                ///< Whether to enable folding of -pi -> +pi phi distribution into 0 -> +pi region only
 
@@ -355,10 +355,7 @@ private:
     float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
-    unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty
-    
-    unsigned int    m_minVertexClusterSize;         ///< THe smallest number of vertices a vertex cluster must contain to contribute to the output vertex list
-    int             m_nSelectedVerticesPerCluster; ///< The number of vertices to take from each vertex cluster and put in the output vertex list
+    unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -398,6 +395,7 @@ inline bool VertexScoringTool::VertexScore::operator< (const VertexScore &rhs) c
     return (this->GetScore() > rhs.GetScore());
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float VertexScoringTool::BeamConstants::GetMinZCoordinate() const
