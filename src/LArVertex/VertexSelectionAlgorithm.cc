@@ -24,7 +24,7 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_replaceCurrentVertexList(true),
     m_nDecayLengthsInZSpan(2.f),
     m_kappa(0.42f),
-    m_selectSingleVertex(false),
+    m_selectSingleVertex(true),
     m_maxTopScoreSelections(3),
     m_minCandidateDisplacement(2.f),
     m_minCandidateScoreFraction(0.5f),
@@ -59,6 +59,8 @@ StatusCode VertexSelectionAlgorithm::Run()
 
         return STATUS_CODE_SUCCESS;
     }
+    
+    std::cout << ">>>>>>>>>>There are " << pInputVertexList->size() << " vertices in the imported list" << std::endl;
 
     //Test clustering tool
 //    VertexList vertexListCopy;
@@ -100,32 +102,34 @@ StatusCode VertexSelectionAlgorithm::Run()
     //    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     //}
     
-    //-------------------------TREE--------------------------------------------------------------------
-    const MCParticleList *pMCParticleList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "MCParticleList3D", pMCParticleList));
-    MCParticleVector mcNeutrinoList;                                // true neutrinos
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
-    
-    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.begin())->GetVertex());
-    std::vector<float> allVerticesDR;
-    
-    std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
-    
-    for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
-    {
-        const Vertex *const pVertex(vertexScore.GetVertex());
-        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-        allVerticesDR.push_back(vertexDR);
-    }
-    
-    std::sort(allVerticesDR.begin(), allVerticesDR.end());
-    
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-    //-------------------------TREE--------------------------------------------------------------------
+    ////-------------------------TREE--------------------------------------------------------------------
+    //const MCParticleList *pMCParticleList = NULL;
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "MCParticleList3D", pMCParticleList));
+    //MCParticleVector mcNeutrinoList;                                // true neutrinos
+    //LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
+    //
+    //CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.begin())->GetVertex());
+    //std::vector<float> allVerticesDR;
+    //
+    //std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
+    //
+    //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
+    //{
+    //    const Vertex *const pVertex(vertexScore.GetVertex());
+    //    float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+    //    allVerticesDR.push_back(vertexDR);
+    //}
+    //
+    //std::sort(allVerticesDR.begin(), allVerticesDR.end());
+    //
+    //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
+    //PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
+    ////-------------------------TREE--------------------------------------------------------------------
     
     VertexList selectedVertexList;
     this->SelectTopScoreVertices(intermediateVertexScoreList, selectedVertexList);
+    
+    std::cout << "# output: " << selectedVertexList.size() << std::endl;
     
     if (!selectedVertexList.empty())
     {
@@ -187,11 +191,11 @@ bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex,
 //------------------------------------------------------------------------------------------------------------------------------------------
 StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmTool *pAlgorithmTool(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-        "VertexClustering", pAlgorithmTool));
+//    AlgorithmTool *pAlgorithmTool(nullptr);
+//    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
+//        "VertexClustering", pAlgorithmTool));
 
-    m_pVertexClusteringTool = dynamic_cast<VertexClusteringTool *>(pAlgorithmTool);
+//    m_pVertexClusteringTool = dynamic_cast<VertexClusteringTool *>(pAlgorithmTool);
 
     AlgorithmTool *pAnotherAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,

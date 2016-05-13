@@ -116,7 +116,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    VertexClusteringTool *m_pVertexClusteringTool; ///< Vertex Tool 1
+    //VertexClusteringTool *m_pVertexClusteringTool; ///< Vertex Tool 1
     VertexScoringTool    *m_pVertexScoringTool;    ///< Vertex Tool 2
 
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
