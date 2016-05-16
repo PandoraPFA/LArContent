@@ -39,7 +39,7 @@ bool VertexClusteringTool::SortVerticesByZ(const pandora::Vertex *const pLhs, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const VertexList &vertexList)
+std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const VertexList* pVertexList)
 {
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -47,7 +47,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
     //-------------------------------------------------------------------------------------------------
 
     std::vector<const Vertex*> sortedVertexVector;
-    for (const Vertex *const pVertex : vertexList)
+    for (const Vertex *const pVertex : (*pVertexList))
         sortedVertexVector.push_back(pVertex);
 
     std::sort(sortedVertexVector.begin(), sortedVertexVector.end(), SortVerticesByZ);
@@ -56,7 +56,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
     VertexList usedVertices;
     
     VertexCluster *const pVertexClusterSeed = new VertexCluster();
-    
+
     for (const Vertex *const pVertex : sortedVertexVector)
     {
         if (usedVertices.count(pVertex) == 1)
@@ -65,11 +65,15 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
         CartesianVector currentClusterCentroid(0., 0., 0.);
 
         if (pVertexClusterSeed->GetVertexList().size() == 0)
-            currentClusterCentroid = pVertex->GetPosition();
+        {
+            pVertexClusterSeed->AddVertex(pVertex);
+            usedVertices.insert(pVertex);
+            continue;
+        }
         else
             currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
         
-        if ((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() < m_maxVertexToCentroidDistance)
+        if ((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
@@ -78,18 +82,24 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
         {
             VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
             vertexClusterList.push_back(pNewVertexCluster);
+
             pVertexClusterSeed->ClearVertexCluster();
+            pVertexClusterSeed->AddVertex(pVertex);
+            usedVertices.insert(pVertex);
         }
         
     }
 
+    VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
+    vertexClusterList.push_back(pNewVertexCluster);
+
     std::vector<const VertexList*> outputVertexListVector;
     
-    if (m_removeSmallClusters == true)
-        this->RemoveSmallClusters(vertexClusterList);
+//    if (m_removeSmallClusters == true)
+//        this->RemoveSmallClusters(vertexClusterList);
     
     for (VertexCluster* pVertexCluster : vertexClusterList)
-        outputVertexListVector.push_back(&(pVertexCluster->GetVertexList()));
+        outputVertexListVector.push_back(&(pVertexCluster->GetVertexList())); //all for now: later m_nSelectedVerticesPerCluster
 
     return outputVertexListVector;  
 

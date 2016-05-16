@@ -61,9 +61,8 @@ StatusCode VertexSelectionAlgorithm::Run()
     }
 
     //Test clustering tool
-     VertexList vertexListCopy;
-     vertexListCopy.insert(pInputVertexList->begin(), pInputVertexList->end());
-     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(vertexListCopy);
+     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pInputVertexList);
+        
 //    
 //    for (const VertexList &vertexList : vertexListVector)
 //    {
@@ -83,7 +82,6 @@ StatusCode VertexSelectionAlgorithm::Run()
     
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
     m_pVertexScoringTool->ScoreVertices(this, vertexListVector, intermediateVertexScoreList);
-    std::cout << ">>>>>>>>>>There are " << intermediateVertexScoreList.size() << " vertices in the intermediate list" << std::endl;
     
     //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
     //{

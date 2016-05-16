@@ -95,7 +95,7 @@ public:
 
     typedef std::vector<VertexCluster*> VertexClusterList;
 
-    std::vector<const pandora::VertexList*> ClusterVertices(const pandora::VertexList &vertexList);
+    std::vector<const pandora::VertexList*> ClusterVertices(const pandora::VertexList* pVertexList);
 
     void RemoveSmallClusters(VertexClusterList &vertexClusterList);
 
