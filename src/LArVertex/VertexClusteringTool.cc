@@ -39,7 +39,7 @@ bool VertexClusteringTool::SortVerticesByZ(const pandora::Vertex *const pLhs, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<VertexList> VertexClusteringTool::ClusterVertices(const VertexList &vertexList)
+std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const VertexList &vertexList)
 {
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -83,13 +83,13 @@ std::vector<VertexList> VertexClusteringTool::ClusterVertices(const VertexList &
         
     }
 
-    std::vector<VertexList> outputVertexListVector;
+    std::vector<const VertexList*> outputVertexListVector;
     
     if (m_removeSmallClusters == true)
         this->RemoveSmallClusters(vertexClusterList);
     
     for (VertexCluster* pVertexCluster : vertexClusterList)
-        outputVertexListVector.push_back(pVertexCluster->GetVertexList());
+        outputVertexListVector.push_back(&(pVertexCluster->GetVertexList()));
 
     return outputVertexListVector;  
 

@@ -82,7 +82,7 @@ public:
 
     typedef std::vector<VertexScore> VertexScoreList;
 
-    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList *const pInputVertexList, VertexScoreList &vertexScoreList);
+    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const std::vector<const pandora::VertexList*> vertexListVector, VertexScoreList &vertexScoreList);
 
 private:
     /**

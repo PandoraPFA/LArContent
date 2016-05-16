@@ -49,31 +49,31 @@ VertexScoringTool::VertexScoringTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const VertexList *const pInputVertexList, VertexScoreList &vertexScoreList)
+void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::vector<const VertexList*> vertexListVector, VertexScoreList &vertexScoreList)
 {
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
 
-    std::cout << "Before filtering: " << pInputVertexList->size() << std::endl;
+    for (const VertexList *const pInputVertexList : vertexListVector)
+    {
+        VertexList filteredVertexList;
+        this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
+        
+        if (filteredVertexList.empty())
+            return;
 
-    VertexList filteredVertexList;
-    this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
-    
-    std::cout << "After filtering: " << filteredVertexList.size() << std::endl;
-    
-    if (filteredVertexList.empty())
-        return;
+        BeamConstants beamConstants;
+        this->GetBeamConstants(filteredVertexList, beamConstants);
 
-    BeamConstants beamConstants;
-    this->GetBeamConstants(filteredVertexList, beamConstants);
-    
-    std::cout << "Before getvertexscorelist: " << filteredVertexList.size() << std::endl;
+        VertexScoreList clusterVertexScoreList;
+        this->GetVertexScoreList(filteredVertexList, beamConstants, kdTreeU, kdTreeV, kdTreeW, clusterVertexScoreList);
+        
+        for (VertexScore &vertexScore : clusterVertexScoreList)
+            vertexScoreList.push_back(vertexScore);
+    }
 
-    this->GetVertexScoreList(filteredVertexList, beamConstants, kdTreeU, kdTreeV, kdTreeW, vertexScoreList);
-    
-    std::cout << "After getvertexscorelist: " << vertexScoreList.size() << std::endl;
-    
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
+   
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ void VertexScoringTool::GetVertexScoreList(const VertexList &vertexList, const B
 
         const float vertexMinZ(std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
         const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
-        std::cout << std::boolalpha << m_fastScoreCheck << " " << m_fastScoreOnly << std::endl;
+        
         if (m_fastScoreCheck || m_fastScoreOnly)
         {
             const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
@@ -187,14 +187,9 @@ void VertexScoringTool::GetVertexScoreList(const VertexList &vertexList, const B
                 vertexScoreList.push_back(VertexScore(pVertex, fastScore));
                 continue;
             }
-            
-            std::cout << "Fast score numbers " << fastScore << ": " << m_minFastScoreFraction * bestFastScore << std::endl;
 
             if (fastScore < m_minFastScoreFraction * bestFastScore)
-            {
-                std::cout << "Fast score caught a vertex." << fastScore << ": " << m_minFastScoreFraction * bestFastScore << std::endl;
                 continue;
-            }
 
             if (fastScore > bestFastScore)
                 bestFastScore = fastScore;

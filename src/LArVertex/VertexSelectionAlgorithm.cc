@@ -59,14 +59,12 @@ StatusCode VertexSelectionAlgorithm::Run()
 
         return STATUS_CODE_SUCCESS;
     }
-    
-    std::cout << ">>>>>>>>>>There are " << pInputVertexList->size() << " vertices in the imported list" << std::endl;
 
     //Test clustering tool
-//    VertexList vertexListCopy;
-//    vertexListCopy.insert(pInputVertexList->begin(), pInputVertexList->end());
-//    std::vector<VertexList> vertexListVector = m_pVertexClusteringTool->ClusterVertices(vertexListCopy);
-    
+     VertexList vertexListCopy;
+     vertexListCopy.insert(pInputVertexList->begin(), pInputVertexList->end());
+     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(vertexListCopy);
+//    
 //    for (const VertexList &vertexList : vertexListVector)
 //    {
 //        for (const Vertex *const pVertex : vertexList)
@@ -84,7 +82,7 @@ StatusCode VertexSelectionAlgorithm::Run()
 //    }
     
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
-    m_pVertexScoringTool->ScoreVertices(this, pInputVertexList, intermediateVertexScoreList);
+    m_pVertexScoringTool->ScoreVertices(this, vertexListVector, intermediateVertexScoreList);
     std::cout << ">>>>>>>>>>There are " << intermediateVertexScoreList.size() << " vertices in the intermediate list" << std::endl;
     
     //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
@@ -102,29 +100,27 @@ StatusCode VertexSelectionAlgorithm::Run()
     //    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     //}
     
-    ////-------------------------TREE--------------------------------------------------------------------
-    //const MCParticleList *pMCParticleList = NULL;
-    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "MCParticleList3D", pMCParticleList));
-    //MCParticleVector mcNeutrinoList;                                // true neutrinos
-    //LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
-    //
-    //CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.begin())->GetVertex());
-    //std::vector<float> allVerticesDR;
-    //
-    //std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
-    //
-    //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
-    //{
-    //    const Vertex *const pVertex(vertexScore.GetVertex());
-    //    float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-    //    allVerticesDR.push_back(vertexDR);
-    //}
-    //
-    //std::sort(allVerticesDR.begin(), allVerticesDR.end());
-    //
-    //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
-    //PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-    ////-------------------------TREE--------------------------------------------------------------------
+    //-------------------------TREE--------------------------------------------------------------------
+    const MCParticleList *pMCParticleList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "MCParticleList3D", pMCParticleList));
+    MCParticleVector mcNeutrinoList;                                // true neutrinos
+    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
+    
+    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.begin())->GetVertex());
+    std::vector<float> allVerticesDR;
+    
+    std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
+    
+    for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
+    {
+        const Vertex *const pVertex(vertexScore.GetVertex());
+        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+        allVerticesDR.push_back(vertexDR);
+    }
+    
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
+    //-------------------------TREE--------------------------------------------------------------------
     
     VertexList selectedVertexList;
     this->SelectTopScoreVertices(intermediateVertexScoreList, selectedVertexList);
@@ -191,11 +187,11 @@ bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex,
 //------------------------------------------------------------------------------------------------------------------------------------------
 StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-//    AlgorithmTool *pAlgorithmTool(nullptr);
-//    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-//        "VertexClustering", pAlgorithmTool));
+    AlgorithmTool *pAlgorithmTool(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
+        "VertexClustering", pAlgorithmTool));
 
-//    m_pVertexClusteringTool = dynamic_cast<VertexClusteringTool *>(pAlgorithmTool);
+    m_pVertexClusteringTool = dynamic_cast<VertexClusteringTool *>(pAlgorithmTool);
 
     AlgorithmTool *pAnotherAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
@@ -203,7 +199,8 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     m_pVertexScoringTool = dynamic_cast<VertexScoringTool *>(pAnotherAlgorithmTool);
     
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "WriteToTree", m_writeToTree));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "WriteToTree", m_writeToTree));
     
     if (m_writeToTree)
     {
