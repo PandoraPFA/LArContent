@@ -77,6 +77,13 @@ private:
         float GetScore() const;
 
         /**
+         *  @brief  Multiply the score
+         * 
+         *  @return void
+         */
+        void MultiplyScore(const float &multiplier);
+
+        /**
          *  @brief  operator<
          * 
          *  @param  rhs the value for comparison
@@ -171,6 +178,13 @@ inline const pandora::Vertex *VertexSelectionAlgorithm::VertexScore::GetVertex()
 inline float VertexSelectionAlgorithm::VertexScore::GetScore() const
 {
     return m_score;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void VertexSelectionAlgorithm::VertexScore::MultiplyScore(const float &multiplier)
+{
+    m_score *= multiplier;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
