@@ -49,24 +49,40 @@ VertexScoringTool::VertexScoringTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, std::vector<const VertexList*> vertexListVector, VertexScoreList &vertexScoreList)
+void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const VertexList* pInputVertexList, std::vector<const VertexList*> vertexListVector, VertexScoreList &vertexScoreList)
 {
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
 
-    for (const VertexList *const pInputVertexList : vertexListVector)
-    {
-        VertexList filteredVertexList;
-        this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
-        
-        if (filteredVertexList.empty())
-            return;
+    VertexList filteredVertexList;
+    this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
 
-        BeamConstants beamConstants;
-        this->GetBeamConstants(filteredVertexList, beamConstants);
+    if (filteredVertexList.empty())
+        return;
+
+    BeamConstants beamConstants;
+    this->GetBeamConstants(filteredVertexList, beamConstants);
+
+    float bestFastScore(0.f);
+    this->GetGlobalBestFastScore(filteredVertexList, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW);
+
+    std::cout << "Best fast score: " << bestFastScore << std::endl;
+
+    for (const VertexList *const pVertexList : vertexListVector)
+    {
+        VertexList filteredCluster;
+        for (const Vertex *const pVertex: (*pVertexList))
+        {
+            if (filteredVertexList.count(pVertex) != 0)
+                filteredCluster.insert(pVertex);
+        }
+
+        std::cout << "Before GetVertexScoreList: " << filteredCluster.size() << std::endl;        
 
         VertexScoreList clusterVertexScoreList;
-        this->GetVertexScoreList(filteredVertexList, beamConstants, kdTreeU, kdTreeV, kdTreeW, clusterVertexScoreList);
+        this->GetVertexScoreList(filteredCluster, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW, clusterVertexScoreList);
+
+        std::cout << "After GetVertexScoreList: " << clusterVertexScoreList.size() << std::endl;
         
         for (VertexScore &vertexScore : clusterVertexScoreList)
             vertexScoreList.push_back(vertexScore);
@@ -157,13 +173,11 @@ void VertexScoringTool::GetBeamConstants(const VertexList &vertexList, BeamConst
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexScoringTool::GetVertexScoreList(const VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
+void VertexScoringTool::GetVertexScoreList(const VertexList &vertexList, const float &bestFastScore, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
     HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
     VertexVector vertexVector(vertexList.begin(), vertexList.end());
     std::sort(vertexVector.begin(), vertexVector.end(), SortByVertexZPosition);
-
-    float bestFastScore(0.f);
 
     for (const Vertex *const pVertex : vertexVector)
     {
@@ -190,15 +204,41 @@ void VertexScoringTool::GetVertexScoreList(const VertexList &vertexList, const B
 
             if (fastScore < m_minFastScoreFraction * bestFastScore)
                 continue;
-
-            if (fastScore > bestFastScore)
-                bestFastScore = fastScore;
         }
 
         const float finalScore(multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
             this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
 
+        std::cout << "finalScore: " << finalScore << std::endl;
         vertexScoreList.push_back(VertexScore(pVertex, finalScore));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexScoringTool::GetGlobalBestFastScore(const VertexList &vertexList, float &bestFastScore, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
+    HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW)
+{
+    VertexVector vertexVector(vertexList.begin(), vertexList.end());
+    std::sort(vertexVector.begin(), vertexVector.end(), SortByVertexZPosition);
+
+    for (const Vertex *const pVertex : vertexVector)
+    {
+        KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
+        KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
+        KernelEstimate kernelEstimateW(m_kernelEstimateSigma);
+
+        this->FillKernelEstimate(pVertex, TPC_VIEW_U, kdTreeU, kernelEstimateU);
+        this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
+        this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
+
+        const float vertexMinZ(std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
+        const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
+        
+        const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
+
+        if (fastScore > bestFastScore)
+            bestFastScore = fastScore;
     }
 }
 

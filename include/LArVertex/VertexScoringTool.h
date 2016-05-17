@@ -82,7 +82,7 @@ public:
 
     typedef std::vector<VertexScore> VertexScoreList;
 
-    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const std::vector<const pandora::VertexList*> vertexListVector, VertexScoreList &vertexScoreList);
+    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, const std::vector<const pandora::VertexList*> vertexListVector, VertexScoreList &vertexScoreList);
 
 private:
     /**
@@ -220,8 +220,21 @@ private:
      *  @param  kdTreeW the kd tree for w hits
      *  @param  vertexScoreList to receive the vertex score list
      */
-    void GetVertexScoreList(const pandora::VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
+    void GetVertexScoreList(const pandora::VertexList &vertexList, const float &bestFastScore, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
         HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const;
+
+    /**
+     *  @brief  Get the vertex score list for a provided list of candidate vertices
+     * 
+     *  @param  vertexList the vertex list
+     *  @param  beamConstants the beam constants
+     *  @param  kdTreeU the kd tree for u hits
+     *  @param  kdTreeV the kd tree for v hits
+     *  @param  kdTreeW the kd tree for w hits
+     *  @param  vertexScoreList to receive the vertex score list
+     */
+    void GetGlobalBestFastScore(const pandora::VertexList &vertexList, float &bestFastScore, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
+        HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW);
 
     /**
      *  @brief  Get the score for a trio of kernel estimations, using fast histogram approach
