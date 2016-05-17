@@ -83,13 +83,9 @@ StatusCode VertexSelectionAlgorithm::Run()
     int nVertices(0);
     for (const VertexList* vertexList : vertexListVector)
         nVertices += vertexList->size();
-
-    std::cout << "Before scoring: " << nVertices << std::endl;
     
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
     m_pVertexScoringTool->ScoreVertices(this, pInputVertexList, vertexListVector, intermediateVertexScoreList);
-
-    std::cout << "After scoring: " << intermediateVertexScoreList.size() << std::endl;
     
     //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
     //{

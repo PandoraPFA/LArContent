@@ -369,6 +369,8 @@ private:
 
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
+
+    unsigned int    m_nSelectedVerticesPerCluster;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

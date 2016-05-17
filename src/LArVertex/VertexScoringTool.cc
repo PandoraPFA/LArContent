@@ -43,7 +43,8 @@ VertexScoringTool::VertexScoringTool() :
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_minVertexAcceptableViews(3)
+    m_minVertexAcceptableViews(3),
+    m_nSelectedVerticesPerCluster(2)
 {
 }
 
@@ -66,8 +67,6 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
     float bestFastScore(0.f);
     this->GetGlobalBestFastScore(filteredVertexList, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW);
 
-    std::cout << "Best fast score: " << bestFastScore << std::endl;
-
     for (const VertexList *const pVertexList : vertexListVector)
     {
         VertexList filteredCluster;
@@ -77,15 +76,18 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
                 filteredCluster.insert(pVertex);
         }
 
-        std::cout << "Before GetVertexScoreList: " << filteredCluster.size() << std::endl;        
-
         VertexScoreList clusterVertexScoreList;
         this->GetVertexScoreList(filteredCluster, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW, clusterVertexScoreList);
 
-        std::cout << "After GetVertexScoreList: " << clusterVertexScoreList.size() << std::endl;
+        std::sort(clusterVertexScoreList.begin(), clusterVertexScoreList.end());
         
-        for (VertexScore &vertexScore : clusterVertexScoreList)
-            vertexScoreList.push_back(vertexScore);
+        if (clusterVertexScoreList.size() >= m_nSelectedVerticesPerCluster)
+            vertexScoreList.insert(vertexScoreList.begin(), clusterVertexScoreList.begin(), std::next(clusterVertexScoreList.begin(), m_nSelectedVerticesPerCluster));
+        else
+        {
+            for (VertexScore &vertexScore : clusterVertexScoreList)
+                vertexScoreList.push_back(vertexScore);
+        }
     }
 
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
@@ -209,7 +211,6 @@ void VertexScoringTool::GetVertexScoreList(const VertexList &vertexList, const f
         const float finalScore(multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
             this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
 
-        std::cout << "finalScore: " << finalScore << std::endl;
         vertexScoreList.push_back(VertexScore(pVertex, finalScore));
     }
 }
@@ -535,6 +536,9 @@ StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexAcceptableViews", m_minVertexAcceptableViews));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectedVerticesPerCluster", m_nSelectedVerticesPerCluster));
 
     return STATUS_CODE_SUCCESS;
 }
