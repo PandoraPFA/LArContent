@@ -81,19 +81,25 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
         std::sort(clusterVertexScoreList.begin(), clusterVertexScoreList.end());
         
-        
-        unsigned int counter(0);
-        for (VertexScore &vertexScore : clusterVertexScoreList)
+        if (clusterVertexScoreList.size() >= m_nSelectedVerticesPerCluster)
+            vertexScoreList.insert(vertexScoreList.begin(), clusterVertexScoreList.begin(), std::next(clusterVertexScoreList.begin(), m_nSelectedVerticesPerCluster) );
+        else
         {
-            if (counter == m_nSelectedVerticesPerCluster)
-                break;
+            for (VertexScore &vertexScore : clusterVertexScoreList)
+                vertexScoreList.push_back(vertexScore);
+        }
+        //        unsigned int counter(0);
+        //        for (VertexScore &vertexScore : clusterVertexScoreList)
+        //        {
+        //            if (counter == m_nSelectedVerticesPerCluster)
+        //                break;
 
-            vertexScore.MultiplyScore(1.30);
-            counter++;
-        }        
-        
-        for (VertexScore &vertexScore : clusterVertexScoreList)
-            vertexScoreList.push_back(vertexScore);
+        //            vertexScore.MultiplyScore(1.30);
+        //            counter++;
+        //        }        
+        //        
+        //        for (VertexScore &vertexScore : clusterVertexScoreList)
+        //            vertexScoreList.push_back(vertexScore);
     }
 
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
