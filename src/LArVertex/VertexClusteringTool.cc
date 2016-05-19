@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "LArVertex/VertexClusteringTool.h"
+#include "LArHelpers/LArMCParticleHelper.h"
 
 using namespace pandora;
 
@@ -39,10 +40,25 @@ bool VertexClusteringTool::SortVerticesByZ(const pandora::Vertex *const pLhs, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const VertexList* pVertexList)
+std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algorithm *const pAlgorithm, const VertexList* pVertexList)
 {
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+
+    //-------------------------------------------------------------------------------------------------
+
+    const MCParticleList *pMCParticleList = NULL;
+    PandoraContentApi::GetList(*pAlgorithm, "MCParticleList3D", pMCParticleList);
+    MCParticleVector mcPrimaryVector;
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+
+    std::vector<CartesianVector> endpointVector;
+
+    for (const MCParticle* mcParticle : mcPrimaryVector)
+    {
+        endpointVector.push_back(mcParticle->GetVertex());   
+        endpointVector.push_back(mcParticle->GetEndpoint());    
+    }
 
     //-------------------------------------------------------------------------------------------------
 
@@ -81,7 +97,21 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
         else
         {
             VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
-            vertexClusterList.push_back(pNewVertexCluster);
+
+            for (const Vertex *const pAnotherVertex : (pNewVertexCluster->GetVertexList()))
+            {
+                for (CartesianVector &endPoint : endpointVector)
+                {
+                    if (((endPoint - (pAnotherVertex->GetPosition())).GetMagnitude()) < 1.0)
+                    {
+                        //std::cout << "True cluster." << std::endl;
+                        vertexClusterList.push_back(pNewVertexCluster);
+                        break;  
+                    }
+                }
+            }
+
+            //vertexClusterList.push_back(pNewVertexCluster);
 
             pVertexClusterSeed->ClearVertexCluster();
             pVertexClusterSeed->AddVertex(pVertex);
@@ -91,7 +121,20 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
     }
 
     VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
-    vertexClusterList.push_back(pNewVertexCluster);
+
+    for (const Vertex *const pVertex : (pNewVertexCluster->GetVertexList()))
+    {
+        for (CartesianVector &endPoint : endpointVector)
+        {
+            if (((endPoint - (pVertex->GetPosition())).GetMagnitude()) < 1.0)
+            {
+                //std::cout << "True cluster." << std::endl;
+                vertexClusterList.push_back(pNewVertexCluster);
+                break;   
+            }
+        }
+    }
+    //vertexClusterList.push_back(pNewVertexCluster);
 
     std::vector<const VertexList*> outputVertexListVector;
     

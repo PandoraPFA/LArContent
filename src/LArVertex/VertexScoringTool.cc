@@ -44,7 +44,7 @@ VertexScoringTool::VertexScoringTool() :
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
     m_minVertexAcceptableViews(3),
-    m_nSelectedVerticesPerCluster(2)
+    m_nSelectedVerticesPerCluster(5)
 {
 }
 
@@ -88,18 +88,7 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
             for (VertexScore &vertexScore : clusterVertexScoreList)
                 vertexScoreList.push_back(vertexScore);
         }
-        //        unsigned int counter(0);
-        //        for (VertexScore &vertexScore : clusterVertexScoreList)
-        //        {
-        //            if (counter == m_nSelectedVerticesPerCluster)
-        //                break;
 
-        //            vertexScore.MultiplyScore(1.30);
-        //            counter++;
-        //        }        
-        //        
-        //        for (VertexScore &vertexScore : clusterVertexScoreList)
-        //            vertexScoreList.push_back(vertexScore);
     }
 
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
@@ -162,8 +151,8 @@ void VertexScoringTool::FilterVertexList(const VertexList *const pInputVertexLis
 
 void VertexScoringTool::GetBeamConstants(const VertexList &vertexList, BeamConstants &beamConstants) const
 {
-    if (!m_beamMode)
-        return;
+//    if (!m_beamMode)
+//        return;
 
     if (vertexList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);

@@ -61,12 +61,12 @@ StatusCode VertexSelectionAlgorithm::Run()
     }
 
     //Test clustering tool
-     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pInputVertexList);
+     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(this, pInputVertexList);
         
-//    
-//    for (const VertexList &vertexList : vertexListVector)
+//-------------------------DRAW VERTICES--------------------------------------------------------------------    
+//    for (const VertexList* vertexList : vertexListVector)
 //    {
-//        for (const Vertex *const pVertex : vertexList)
+//        for (const Vertex *const pVertex : (*vertexList))
 //        {
 //            const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
 //            const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
@@ -79,6 +79,7 @@ StatusCode VertexSelectionAlgorithm::Run()
 //        
 //        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 //    }
+//-------------------------DRAW VERTICES--------------------------------------------------------------------    
 
     int nVertices(0);
     for (const VertexList* vertexList : vertexListVector)
@@ -86,6 +87,8 @@ StatusCode VertexSelectionAlgorithm::Run()
     
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
     m_pVertexScoringTool->ScoreVertices(this, pInputVertexList, vertexListVector, intermediateVertexScoreList);
+
+    std::cout << "There are " << intermediateVertexScoreList.size() << " vertices after scoring." << std::endl;
     
     //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
     //{
