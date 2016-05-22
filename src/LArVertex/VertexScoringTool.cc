@@ -55,17 +55,23 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
 
+    std::cout << "Number of vertex candidates in event: " << pInputVertexList->size() << std::endl;
+
     VertexList filteredVertexList;
     this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
 
     if (filteredVertexList.empty())
         return;
 
+    std::cout << "Number of filtered vertex candidates in event: " << filteredVertexList.size() << std::endl;
+
     BeamConstants beamConstants;
     this->GetBeamConstants(filteredVertexList, beamConstants);
 
     float bestFastScore(0.f);
     this->GetGlobalBestFastScore(filteredVertexList, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW);
+
+    std::vector<VertexScoreList> scoredClusterCollection;
 
     for (const VertexList *const pVertexList : vertexListVector)
     {
@@ -80,17 +86,49 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
         this->GetVertexScoreList(filteredCluster, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW, clusterVertexScoreList);
 
         std::sort(clusterVertexScoreList.begin(), clusterVertexScoreList.end());
+        scoredClusterCollection.push_back(clusterVertexScoreList);
+
         
-        if (clusterVertexScoreList.size() >= m_nSelectedVerticesPerCluster)
-            vertexScoreList.insert(vertexScoreList.begin(), clusterVertexScoreList.begin(), std::next(clusterVertexScoreList.begin(), m_nSelectedVerticesPerCluster) );
-        else
-        {
-            for (VertexScore &vertexScore : clusterVertexScoreList)
-                vertexScoreList.push_back(vertexScore);
-        }
+        
+//        if (clusterVertexScoreList.size() >= m_nSelectedVerticesPerCluster)
+//            vertexScoreList.insert(vertexScoreList.begin(), clusterVertexScoreList.begin(), std::next(clusterVertexScoreList.begin(), m_nSelectedVerticesPerCluster) );
+//        else
+//        {
+//            for (VertexScore &vertexScore : clusterVertexScoreList)
+//                vertexScoreList.push_back(vertexScore);
+//        }
 
     }
 
+    std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);
+
+
+    unsigned int counter(0);
+
+    for (VertexScoreList &thisVertexScoreList : scoredClusterCollection)
+    {
+        if (counter == 5 || counter == scoredClusterCollection.size() || thisVertexScoreList.size() == 0)
+            break;
+
+        std::sort(vertexScoreList.begin(), vertexScoreList.end());
+    
+        float totalClusterScore(0.f);
+        for (VertexScore &thisVertexScore : thisVertexScoreList)
+            totalClusterScore += thisVertexScore.GetScore();
+
+        if (thisVertexScoreList.size() != 0)
+        {        
+            std::cout << "Total cluster score is: " << totalClusterScore << std::endl;
+            std::cout << "Number of vertices in cluster: " << thisVertexScoreList.size() << std::endl;
+            std::cout << "************************************" << std::endl;
+        }
+
+        vertexScoreList.push_back(*(thisVertexScoreList.begin()));
+
+        counter++;
+    }
+
+   
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
    
 }
@@ -429,6 +467,21 @@ bool VertexScoringTool::SortByVertexZPosition(const pandora::Vertex *const pLhs,
 
     // ATTN No way to distinguish between vertices if still have a tie in y coordinate
     return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexScoringTool::SortClustersByScore(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList)
+{
+    float firstTotalClusterScore(0.f);
+    for (VertexScore &firstTempVertexScore : firstScoreList)
+        firstTotalClusterScore += firstTempVertexScore.GetScore();
+
+    float secondTotalClusterScore(0.f);
+    for (VertexScore &secondTempVertexScore : secondScoreList)
+        secondTotalClusterScore += secondTempVertexScore.GetScore();
+
+    return firstTotalClusterScore > secondTotalClusterScore;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

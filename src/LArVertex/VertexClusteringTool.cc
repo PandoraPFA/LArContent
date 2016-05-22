@@ -92,12 +92,12 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
         else
             currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
         
-        if ((pVertexClusterSeed->GetVertexList().size() <= m_minClusterSize) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 1.5))
+        if ((pVertexClusterSeed->GetVertexList().size() <= m_minClusterSize) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5))
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
         }
-        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && (((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance) || (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 1.5)))
+        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && (((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance) || (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5)))
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);

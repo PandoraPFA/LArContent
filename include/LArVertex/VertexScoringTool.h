@@ -337,6 +337,8 @@ private:
      */
     static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
 
+    static bool SortClustersByScore(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList);
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string     m_inputCaloHitListNameU;        ///< The name of the view U calo hit list
