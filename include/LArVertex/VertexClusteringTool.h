@@ -105,8 +105,10 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float   m_maxVertexToCentroidDistance; ///< The radius around the centroid within which vertices will be added to the current vertex cluster
-    bool    m_removeSmallClusters; ///< whether to remove small clusters from the vertex 
+    float           m_maxVertexToCentroidDistance; ///< The radius around the centroid within which vertices will be added to the current vertex cluster
+    bool            m_removeSmallClusters; ///< Whether to remove small clusters from the vertex
+    unsigned int    m_minClusterSize;   ///< Minimum size of cluster before switching to centroid as part of the distance clustering measure
+    bool            m_monteCarloClusterCheck;   ///< Whether to use Montre Carlo information to check whetehr the cluter contains an MC particle begin- or endpoint
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

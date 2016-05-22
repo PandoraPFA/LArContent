@@ -44,7 +44,7 @@ VertexScoringTool::VertexScoringTool() :
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
     m_minVertexAcceptableViews(3),
-    m_nSelectedVerticesPerCluster(5)
+    m_nSelectedVerticesPerCluster(1)
 {
 }
 

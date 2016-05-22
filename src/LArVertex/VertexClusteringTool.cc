@@ -18,7 +18,9 @@ namespace lar_content
 
 VertexClusteringTool::VertexClusteringTool() :
     m_maxVertexToCentroidDistance(5.f),
-    m_removeSmallClusters(false)
+    m_removeSmallClusters(false),
+    m_minClusterSize(5),
+    m_monteCarloClusterCheck(false)
 {
 }
 
@@ -54,10 +56,10 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
 
     std::vector<CartesianVector> endpointVector;
 
-    for (const MCParticle* mcParticle : mcPrimaryVector)
+    for (const MCParticle* mcParticle : (*pMCParticleList))
     {
         endpointVector.push_back(mcParticle->GetVertex());   
-        endpointVector.push_back(mcParticle->GetEndpoint());    
+        endpointVector.push_back(mcParticle->GetEndpoint()); 
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -72,6 +74,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
     VertexList usedVertices;
     
     VertexCluster *const pVertexClusterSeed = new VertexCluster();
+    const Vertex* pPreviousVertex(*(sortedVertexVector.begin()));
 
     for (const Vertex *const pVertex : sortedVertexVector)
     {
@@ -89,7 +92,12 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
         else
             currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
         
-        if ((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)
+        if ((pVertexClusterSeed->GetVertexList().size() <= m_minClusterSize) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 1.5))
+        {
+            pVertexClusterSeed->AddVertex(pVertex);
+            usedVertices.insert(pVertex);
+        }
+        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && (((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance) || (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 1.5)))
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
@@ -98,43 +106,51 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
         {
             VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
 
-            for (const Vertex *const pAnotherVertex : (pNewVertexCluster->GetVertexList()))
+            if (m_monteCarloClusterCheck)
             {
-                for (CartesianVector &endPoint : endpointVector)
+                for (const Vertex *const pAnotherVertex : (pNewVertexCluster->GetVertexList()))
                 {
-                    if (((endPoint - (pAnotherVertex->GetPosition())).GetMagnitude()) < 1.0)
+                    for (CartesianVector &endPoint : endpointVector)
                     {
-                        //std::cout << "True cluster." << std::endl;
-                        vertexClusterList.push_back(pNewVertexCluster);
-                        break;  
+                        if (((endPoint - (pAnotherVertex->GetPosition())).GetMagnitude()) < 5.0)
+                        {
+                            //std::cout << "True cluster." << std::endl;
+                            vertexClusterList.push_back(pNewVertexCluster);
+                            break;  
+                        }
                     }
                 }
             }
-
-            //vertexClusterList.push_back(pNewVertexCluster);
+            else
+                vertexClusterList.push_back(pNewVertexCluster);
 
             pVertexClusterSeed->ClearVertexCluster();
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
         }
-        
+
+        pPreviousVertex = pVertex;     
     }
 
     VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
 
-    for (const Vertex *const pVertex : (pNewVertexCluster->GetVertexList()))
+    if (m_monteCarloClusterCheck)
     {
-        for (CartesianVector &endPoint : endpointVector)
+        for (const Vertex *const pVertex : (pNewVertexCluster->GetVertexList()))
         {
-            if (((endPoint - (pVertex->GetPosition())).GetMagnitude()) < 1.0)
+            for (CartesianVector &endPoint : endpointVector)
             {
-                //std::cout << "True cluster." << std::endl;
-                vertexClusterList.push_back(pNewVertexCluster);
-                break;   
+                if (((endPoint - (pVertex->GetPosition())).GetMagnitude()) < 5.0)
+                {
+                    //std::cout << "True cluster." << std::endl;
+                    vertexClusterList.push_back(pNewVertexCluster);
+                    break;   
+                }
             }
         }
     }
-    //vertexClusterList.push_back(pNewVertexCluster);
+    else
+        vertexClusterList.push_back(pNewVertexCluster);
 
     std::vector<const VertexList*> outputVertexListVector;
     
@@ -190,6 +206,12 @@ StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "RemoveSmallClusters", m_removeSmallClusters));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClusterSize", m_minClusterSize));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MonteCarloClusterCheck", m_monteCarloClusterCheck));
 
     return STATUS_CODE_SUCCESS;
 }
