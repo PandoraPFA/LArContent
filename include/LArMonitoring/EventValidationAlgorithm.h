@@ -178,7 +178,7 @@ private:
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      */
     void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-        const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const pandora::VertexList* pVertexList) const;
 
     /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map

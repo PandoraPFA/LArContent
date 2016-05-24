@@ -75,17 +75,6 @@ StatusCode EventValidationAlgorithm::Run()
 
     MCParticleVector mcNeutrinoVector;                              // true neutrinos
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
-    
-    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoVector.begin())->GetVertex());
-    std::vector<float> top5VerticesDR;
-    
-    for (const Vertex *const pVertex : (*pVertexList))
-    {
-        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-        top5VerticesDR.push_back(vertexDR);
-    }
-    
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VerticesDR", &top5VerticesDR));
 
     PfoList recoNeutrinoList;                                       // reco neutrinos
     LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
@@ -122,7 +111,7 @@ StatusCode EventValidationAlgorithm::Run()
         this->PrintAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
 
     if (m_writeToTree)
-        this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
+        this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap, pVertexList);
 
     if (m_printMatchingToScreen || m_visualizeMatching)
     {
@@ -303,7 +292,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
-    const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
+    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pVertexList) const
 {
 #ifdef MONITORING
     int mcNeutrinoNuance(-1), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
@@ -342,6 +331,26 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         recoNeutrinoVtxY = pVertex->GetPosition().GetY();
         recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
     }
+    
+    //---------------------------------------------------------TOP 5--------------------------------------------------------------------
+    std::vector<float> top5VerticesDR;
+    
+    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoVector.begin())->GetVertex());
+    const ParticleFlowObject *const pPfo = recoNeutrinoVector.front();
+    const Vertex *const pReconstructedVertex(pPfo->GetVertexList().empty() ? NULL : *(pPfo->GetVertexList().begin()));
+    float reconstructedDR((pReconstructedVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+    top5VerticesDR.push_back(reconstructedDR);
+    
+    for (const Vertex *const pVertex : (*pVertexList))
+    {
+        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+        top5VerticesDR.push_back(vertexDR);
+    }
+    
+    std::cout << "top5VerticesDR size: " << top5VerticesDR.size() << std::endl;
+    
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VerticesDR", &top5VerticesDR));
+//---------------------------------------------------------TOP 5--------------------------------------------------------------------
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber - 1));
