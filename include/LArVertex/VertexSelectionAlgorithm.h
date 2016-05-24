@@ -127,6 +127,8 @@ private:
     VertexScoringTool    *m_pVertexScoringTool;    ///< Vertex Tool 2
 
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
+    std::string     m_top5VertexListName;
+    
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction

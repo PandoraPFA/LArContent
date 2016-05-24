@@ -44,17 +44,17 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         this->ClusterEndPointComparison(clusterListU, clusterListW);
         this->ClusterEndPointComparison(clusterListV, clusterListW);
         
-        std::vector<CartesianVector> crossingsU;
-        std::vector<CartesianVector> crossingsV;
-        std::vector<CartesianVector> crossingsW;
-        
-        this->Find2DClusterCrossings(clusterListU, crossingsU);
-        this->Find2DClusterCrossings(clusterListV, crossingsV);
-        this->Find2DClusterCrossings(clusterListW, crossingsW);
-        
-        this->CreateCrossingVertex(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
-        this->CreateCrossingVertex(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
-        this->CreateCrossingVertex(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
+        //std::vector<CartesianVector> crossingsU;
+        //std::vector<CartesianVector> crossingsV;
+        //std::vector<CartesianVector> crossingsW;
+        //
+        //this->Find2DClusterCrossings(clusterListU, crossingsU);
+        //this->Find2DClusterCrossings(clusterListV, crossingsV);
+        //this->Find2DClusterCrossings(clusterListW, crossingsW);
+        //
+        //this->CreateCrossingVertex(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
+        //this->CreateCrossingVertex(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
+        //this->CreateCrossingVertex(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
 
         if (!pVertexList->empty())
         {

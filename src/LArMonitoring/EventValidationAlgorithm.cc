@@ -59,6 +59,9 @@ StatusCode EventValidationAlgorithm::Run()
 
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+    
+    const VertexList *pVertexList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_vertexListName, pVertexList));
 
     const PfoList *pPfoList = NULL;
     PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
@@ -72,6 +75,17 @@ StatusCode EventValidationAlgorithm::Run()
 
     MCParticleVector mcNeutrinoVector;                              // true neutrinos
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
+    
+    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoVector.begin())->GetVertex());
+    std::vector<float> top5VerticesDR;
+    
+    for (const Vertex *const pVertex : (*pVertexList))
+    {
+        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+        top5VerticesDR.push_back(vertexDR);
+    }
+    
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VerticesDR", &top5VerticesDR));
 
     PfoList recoNeutrinoList;                                       // reco neutrinos
     LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
@@ -810,6 +824,7 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NeutrinoInducedOnly", m_neutrinoInducedOnly));

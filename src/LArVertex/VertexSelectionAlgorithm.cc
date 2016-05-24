@@ -41,7 +41,7 @@ VertexSelectionAlgorithm::~VertexSelectionAlgorithm()
 {
     if (m_writeToTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+        //PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
     }
 }
 
@@ -60,84 +60,42 @@ StatusCode VertexSelectionAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    //Test clustering tool
-     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(this, pInputVertexList);
-        
-//-------------------------DRAW VERTICES--------------------------------------------------------------------    
-//    for (const VertexList* vertexList : vertexListVector)
-//    {
-//        for (const Vertex *const pVertex : (*vertexList))
-//        {
-//            const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
-//            const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
-//            const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
-//            
-//            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", RED, 1));
-//            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", RED, 1));
-//            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", RED, 1));
-//        }
-//        
-//        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-//    }
-//-------------------------DRAW VERTICES--------------------------------------------------------------------    
-
-    int nVertices(0);
-    for (const VertexList* vertexList : vertexListVector)
-        nVertices += vertexList->size();
+    std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(this, pInputVertexList); 
     
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
     m_pVertexScoringTool->ScoreVertices(this, pInputVertexList, vertexListVector, intermediateVertexScoreList);
-
-    std::cout << "There are " << intermediateVertexScoreList.size() << " vertices after scoring." << std::endl;
-    
-    //for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
-    //{
-    //    const Vertex *const pVertex(vertexScore.GetVertex());
-    //    
-    //    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
-    //    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
-    //    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
-    //    
-    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", GREEN, 1));
-    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", GREEN, 1));
-    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", GREEN, 1));
-    //    
-    //    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-    //}
-    
-    //-------------------------TREE--------------------------------------------------------------------
-    const MCParticleList *pMCParticleList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "MCParticleList3D", pMCParticleList));
-    MCParticleVector mcNeutrinoList;                                // true neutrinos
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
-    
-    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.begin())->GetVertex());
-    std::vector<float> allVerticesDR;
     
     std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
+    VertexList top5Vertices;
     
-    for (VertexScoringTool::VertexScore &vertexScore : intermediateVertexScoreList)
+    int counter(0);
+    for (VertexScoringTool::VertexScore &vertexScore: intermediateVertexScoreList)
     {
-        const Vertex *const pVertex(vertexScore.GetVertex());
-        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-        allVerticesDR.push_back(vertexDR);
+        if (counter == 5)
+            break;
+
+        if (counter == 0)
+        {
+            counter++;
+            continue;
+        }
+        
+        top5Vertices.insert(vertexScore.GetVertex());
+        counter++;
     }
-    
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allVerticesDR", &allVerticesDR));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-    //-------------------------TREE--------------------------------------------------------------------
     
     VertexList selectedVertexList;
     this->SelectTopScoreVertices(intermediateVertexScoreList, selectedVertexList);
     
-    std::cout << "# output: " << selectedVertexList.size() << std::endl;
-    
     if (!selectedVertexList.empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_top5VertexListName, top5Vertices));
     
         if (m_replaceCurrentVertexList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
+
+
     }
 
     return STATUS_CODE_SUCCESS;
@@ -214,6 +172,7 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Top5VertexListName", m_top5VertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
