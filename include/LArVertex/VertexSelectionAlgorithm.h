@@ -41,11 +41,6 @@ public:
      *  @brief  Default constructor
      */
     VertexSelectionAlgorithm();
-    
-    /**
-     *  @brief  Default destructor
-     */
-    ~VertexSelectionAlgorithm();
 
 private:
     /**
@@ -146,10 +141,6 @@ private:
 
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
-    
-    bool            m_writeToTree;
-    std::string     m_treeName;                 ///< Name of output tree
-    std::string     m_fileName;                 ///< Name of output file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

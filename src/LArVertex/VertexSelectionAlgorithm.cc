@@ -31,18 +31,8 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_minVertexAcceptableViews(3),
-    m_writeToTree(false)
+    m_minVertexAcceptableViews(3)
 {
-}
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-VertexSelectionAlgorithm::~VertexSelectionAlgorithm()
-{
-    if (m_writeToTree)
-    {
-        //PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,15 +151,6 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "VertexScoring", pAnotherAlgorithmTool));
 
     m_pVertexScoringTool = dynamic_cast<VertexScoringTool *>(pAnotherAlgorithmTool);
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "WriteToTree", m_writeToTree));
-    
-    if (m_writeToTree)
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputTree", m_treeName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
-    }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Top5VertexListName", m_top5VertexListName));
