@@ -60,8 +60,11 @@ StatusCode EventValidationAlgorithm::Run()
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
     
-    const VertexList *pVertexList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_vertexListName, pVertexList));
+    const VertexList *pTop5VertexList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_top5VertexListName, pTop5VertexList));
+    
+    const VertexList *pAllVerticesList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_allVerticesListName, pAllVerticesList));
 
     const PfoList *pPfoList = NULL;
     PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
@@ -111,7 +114,7 @@ StatusCode EventValidationAlgorithm::Run()
         this->PrintAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
 
     if (m_writeToTree)
-        this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap, pVertexList);
+        this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap, pTop5VertexList, pAllVerticesList);
 
     if (m_printMatchingToScreen || m_visualizeMatching)
     {
@@ -292,7 +295,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
-    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pVertexList) const
+    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pTop5VertexList, const VertexList* pAllVerticesList) const
 {
 #ifdef MONITORING
     int mcNeutrinoNuance(-1), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
@@ -333,25 +336,36 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     }
     
     //---------------------------------------------------------TOP 5--------------------------------------------------------------------
-    std::vector<float> top5VerticesDR;
+    float top5VertexOffset(-1.f);
+    float bestVertexOffset(-1.f);
     
-    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoVector.begin())->GetVertex());
-    const ParticleFlowObject *const pPfo = recoNeutrinoVector.front();
-    const Vertex *const pReconstructedVertex(pPfo->GetVertexList().empty() ? NULL : *(pPfo->GetVertexList().begin()));
-    float reconstructedDR((pReconstructedVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-    top5VerticesDR.push_back(reconstructedDR);
-    
-    for (const Vertex *const pVertex : (*pVertexList))
+    if (!recoNeutrinoVector.empty())
     {
-        float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-        top5VerticesDR.push_back(vertexDR);
+        std::vector<float> top5VerticesDR;
+        std::vector<float> allVerticesDR;
+        
+        CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoVector.begin())->GetVertex());
+        
+        for (const Vertex *const pVertex : (*pTop5VertexList))
+        {
+            float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+            top5VerticesDR.push_back(vertexDR);
+        }
+        
+        for (const Vertex *const pVertex : (*pAllVerticesList))
+        {
+            float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+            allVerticesDR.push_back(vertexDR);
+        }
+        
+        top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
+        bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
     }
     
-    std::cout << "top5VerticesDR size: " << top5VerticesDR.size() << std::endl;
-    
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VerticesDR", &top5VerticesDR));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffset", bestVertexOffset));
 //---------------------------------------------------------TOP 5--------------------------------------------------------------------
-
+    
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber - 1));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCNeutrinos", nMCNeutrinos));
@@ -833,7 +847,8 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Top5VertexListName", m_top5VertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "AllVerticesListName", m_allVerticesListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NeutrinoInducedOnly", m_neutrinoInducedOnly));

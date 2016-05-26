@@ -178,7 +178,7 @@ private:
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      */
     void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-        const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const pandora::VertexList* pVertexList) const;
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const pandora::VertexList* pTop5VertexList, const pandora::VertexList* pAllVerticesList) const;
 
     /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
@@ -277,7 +277,8 @@ private:
     std::string         m_caloHitListName;          ///< Name of input calo hit list
     std::string         m_mcParticleListName;       ///< Name of input MC particle list
     std::string         m_pfoListName;              ///< Name of input Pfo list
-    std::string         m_vertexListName;
+    std::string         m_top5VertexListName;
+    std::string         m_allVerticesListName;
 
     bool                m_neutrinoInducedOnly;      ///< Whether to consider only mc particles that were neutrino induced
     bool                m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
