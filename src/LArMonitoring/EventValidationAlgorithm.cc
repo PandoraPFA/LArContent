@@ -22,7 +22,6 @@ namespace lar_content
 {
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
-    m_neutrinoInducedOnly(false),
     m_primaryPfosOnly(true),
     m_collapseToPrimaryPfos(true),
     m_printAllToScreen(false),
@@ -51,7 +50,7 @@ EventValidationAlgorithm::~EventValidationAlgorithm()
 
 StatusCode EventValidationAlgorithm::Run()
 {
-    ++m_eventNumber;
+    m_eventNumber++;
 
     // Input collections
     const MCParticleList *pMCParticleList = NULL;
@@ -76,17 +75,14 @@ StatusCode EventValidationAlgorithm::Run()
     PfoIdMap pfoIdMap;                                              // pfo -> unique identifier
     this->GetPfoIdMap(pfoList, pfoIdMap);
 
-    MCParticleVector mcNeutrinoVector;                              // true neutrinos
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
+    MCParticleVector mcNeutrinoList;                                // true neutrinos
+    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
 
     PfoList recoNeutrinoList;                                       // reco neutrinos
     LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
 
-    PfoVector recoNeutrinoVector(recoNeutrinoList.begin(), recoNeutrinoList.end());
-    std::sort(recoNeutrinoVector.begin(), recoNeutrinoVector.end(), EventValidationAlgorithm::SortRecoNeutrinos);
-
-    MCParticleVector mcPrimaryVector;                               // primary mc particles
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+    MCParticleVector mcPrimaryList;                                 // primary mc particles
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryList);
 
     LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;            // [mc particles -> primary mc particle]
     LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
@@ -105,16 +101,16 @@ StatusCode EventValidationAlgorithm::Run()
     LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
     SimpleMCPrimaryList simpleMCPrimaryList;
-    this->GetSimpleMCPrimaryList(mcPrimaryVector, mcToTrueHitListMap, mcToFullPfoMatchingMap, simpleMCPrimaryList);
+    this->GetSimpleMCPrimaryList(mcPrimaryList, mcToTrueHitListMap, mcToFullPfoMatchingMap, simpleMCPrimaryList);
 
     MCPrimaryMatchingMap mcPrimaryMatchingMap;
     this->GetMCPrimaryMatchingMap(simpleMCPrimaryList, pfoIdMap, mcToFullPfoMatchingMap, pfoToHitListMap, mcPrimaryMatchingMap);
 
     if (m_printAllToScreen)
-        this->PrintAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
+        this->PrintAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap);
 
     if (m_writeToTree)
-        this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap, pTop5VertexList, pAllVerticesList);
+        this->WriteAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap, pTop5VertexList, pAllVerticesList);
 
     if (m_printMatchingToScreen || m_visualizeMatching)
     {
@@ -125,7 +121,7 @@ StatusCode EventValidationAlgorithm::Run()
             this->PrintMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
 
         if (m_visualizeMatching)
-            this->VisualizeMatchingOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap, matchingDetailsMap);
+            this->VisualizeMatchingOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap, matchingDetailsMap);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -133,14 +129,11 @@ StatusCode EventValidationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mcPrimaryVector, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
+void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mcPrimaryList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
     const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, SimpleMCPrimaryList &simpleMCPrimaryList) const
 {
-    for (const MCParticle *const pMCPrimary : mcPrimaryVector)
+    for (const MCParticle *const pMCPrimary : mcPrimaryList)
     {
-        if (m_neutrinoInducedOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
-            continue;
-
         SimpleMCPrimary simpleMCPrimary;
         // ATTN simpleMCPrimary.m_id assigned later, after sorting
         simpleMCPrimary.m_pPandoraAddress = pMCPrimary;
@@ -249,23 +242,23 @@ void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
+void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
 {
     std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
 
-    for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
         const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
         std::cout << "MCNeutrino, PDG " << pMCNeutrino->GetParticleId() << ", Nuance " << (pLArMCNeutrino ? pLArMCNeutrino->GetNuanceCode() : -1) << std::endl;
     }
 
-    for (const ParticleFlowObject *const pPfo : recoNeutrinoVector)
+    for (const ParticleFlowObject *const pPfo : recoNeutrinoList)
     {
         std::cout << "RecoNeutrino, PDG " << pPfo->GetParticleId() << std::endl;
 
-        if ((1 == pPfo->GetVertexList().size()) && (1 == mcNeutrinoVector.size()))
-            std::cout << "VtxOffset" << ((*(pPfo->GetVertexList().begin()))->GetPosition() - mcNeutrinoVector.front()->GetEndpoint()) << std::endl;
+        if ((1 == pPfo->GetVertexList().size()) && (1 == mcNeutrinoList.size()))
+            std::cout << "VtxOffset" << ((*(pPfo->GetVertexList().begin()))->GetPosition() - (*(mcNeutrinoList.begin()))->GetEndpoint()) << std::endl;
     }
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
@@ -294,7 +287,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
+void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pTop5VertexList, const VertexList* pAllVerticesList) const
 {
 #ifdef MONITORING
@@ -302,12 +295,10 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     float mcNeutrinoVtxX(-1.f), mcNeutrinoVtxY(-1.f), mcNeutrinoVtxZ(-1.f);
     float recoNeutrinoVtxX(-1.f), recoNeutrinoVtxY(-1.f), recoNeutrinoVtxZ(-1.f);
     float mcNeutrinoE(0.f), mcNeutrinoPX(0.f), mcNeutrinoPY(0.f), mcNeutrinoPZ(0.f);
-    const int nMCNeutrinos(mcNeutrinoVector.size()), nRecoNeutrinos(recoNeutrinoVector.size()), nMCPrimaries(mcPrimaryMatchingMap.size());
+    const int nMCNeutrinos(mcNeutrinoList.size()), nRecoNeutrinos(recoNeutrinoList.size()), nMCPrimaries(mcPrimaryMatchingMap.size());
 
-    if (!mcNeutrinoVector.empty())
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
-        const MCParticle *const pMCNeutrino = mcNeutrinoVector.front();
-
         mcNeutrinoPdg = pMCNeutrino->GetParticleId();
         mcNeutrinoVtxX = pMCNeutrino->GetEndpoint().GetX();
         mcNeutrinoVtxY = pMCNeutrino->GetEndpoint().GetY();
@@ -324,10 +315,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             mcNeutrinoNuance = pLArMCNeutrino->GetNuanceCode();
     }
 
-    if (!recoNeutrinoVector.empty())
+    for (const ParticleFlowObject *const pPfo : recoNeutrinoList)
     {
-        const ParticleFlowObject *const pPfo = recoNeutrinoVector.front();
-
         recoNeutrinoPdg = pPfo->GetParticleId();
         const Vertex *const pVertex(pPfo->GetVertexList().empty() ? NULL : *(pPfo->GetVertexList().begin()));
         recoNeutrinoVtxX = pVertex->GetPosition().GetX();
@@ -336,38 +325,49 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     }
     
     //---------------------------------------------------------TOP 5--------------------------------------------------------------------
-    float top5VertexOffset(-1.f);
-    float bestVertexOffset(-1.f);
-    
-    if (!recoNeutrinoVector.empty())
+    if (!recoNeutrinoList.empty() && !mcNeutrinoList.empty())
     {
+        float top5VertexOffset(-1.f);
+        float bestVertexOffset(-1.f);
+        
         std::vector<float> top5VerticesDR;
         std::vector<float> allVerticesDR;
         
-        CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoVector.begin())->GetVertex());
+        CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.front()).GetVertex());
         
-        for (const Vertex *const pVertex : (*pTop5VertexList))
+        if (!pTop5VertexList->empty())
         {
-            float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-            top5VerticesDR.push_back(vertexDR);
+            for (const Vertex *const pVertex : (*pTop5VertexList))
+            {
+                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                top5VerticesDR.push_back(vertexDR);
+            }
+            
+            top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
+            std::cout << top5VertexOffset << std::endl;
         }
         
-        for (const Vertex *const pVertex : (*pAllVerticesList))
+        if (!pAllVerticesList->empty())
         {
-            float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-            allVerticesDR.push_back(vertexDR);
+            for (const Vertex *const pVertex : (*pAllVerticesList))
+            {
+                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                allVerticesDR.push_back(vertexDR);
+            }
+            
+            //allVerticesDR.erase(std::remove(allVerticesDR.begin(), allVerticesDR.end(), 0.f), allVerticesDR.end());
+            
+            bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
+            std::cout << bestVertexOffset << std::endl;
         }
         
-        top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
-        bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffset", bestVertexOffset));
     }
-    
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffset", bestVertexOffset));
 //---------------------------------------------------------TOP 5--------------------------------------------------------------------
-    
+
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber - 1));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCNeutrinos", nMCNeutrinos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPdg", mcNeutrinoPdg));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoNuance", mcNeutrinoNuance));
@@ -471,8 +471,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
     }
 #else
-    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoVector.size()
-              << ", nRecoNeutrinos" << recoNeutrinoVector.size() << ", nMCPrimaries " << mcPrimaryMatchingMap.size() << std::endl;
+    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoList.size()
+              << ", nRecoNeutrinos" << recoNeutrinoList.size() << ", nMCPrimaries " << mcPrimaryMatchingMap.size() << std::endl;
 #endif
 }
 
@@ -566,7 +566,7 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
 void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
     std::cout << "---PROCESSED-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
-    bool isCorrect(true), isCalculable(false);
+    bool isCorrect(true);
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
     {
@@ -578,7 +578,6 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
         std::cout << std::endl << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
             << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
-        isCalculable = true;
         unsigned int nMatches(0);
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
@@ -602,16 +601,16 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
             isCorrect = false;
     }
 
-    std::cout << std::endl << "Is correct? " << (isCorrect && isCalculable) << std::endl;
+    std::cout << std::endl << "Is correct? " << isCorrect << std::endl;
     std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
+void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
-    this->VisualizeVertexMatches(mcNeutrinoVector, recoNeutrinoVector);
+    this->VisualizeVertexMatches(mcNeutrinoList, recoNeutrinoList);
     unsigned int displayIndex(0);
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
@@ -660,17 +659,17 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector) const
+void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList) const
 {
 #ifdef MONITORING
     const Vertex *pBestVertex(nullptr);
     float closestDistance(m_vertexVisualizationDeltaR);
 
-    for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
         const CartesianVector &mcVertexPosition(pMCNeutrino->GetEndpoint());
 
-        for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoVector)
+        for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoList)
         {
             const Vertex *const pVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
             const float distance((mcVertexPosition - pVertex->GetPosition()).GetMagnitude());
@@ -683,30 +682,30 @@ void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mc
         }
     }
 
-    const bool isGood((1 == mcNeutrinoVector.size()) && (1 == recoNeutrinoVector.size()) && pBestVertex);
+    const bool isGood((1 == mcNeutrinoList.size()) && (1 == recoNeutrinoList.size()) && pBestVertex);
     const Color color(isGood ? GRAY : BLUE);
 
     unsigned int displayIndex(0);
 
-    for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
         PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &(pMCNeutrino->GetEndpoint()), "MCNeutrinoVertex_" + TypeToString(displayIndex++), color, 1));
     }
 
     displayIndex = 0;
 
-    for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoVector)
+    for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoList)
     {
         const Vertex *const pThisVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
 
-        const bool isThisGood(isGood || ((1 == mcNeutrinoVector.size()) && (pThisVertex == pBestVertex)));
+        const bool isThisGood(isGood || ((1 == mcNeutrinoList.size()) && (pThisVertex == pBestVertex)));
         const std::string thisPrefix(isThisGood ? "Good" : "Displaced");
         const Color thisColor(isThisGood ? CYAN : VIOLET);
 
         PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &(pThisVertex->GetPosition()), thisPrefix + "RecoNeutrinoVertex_" + TypeToString(displayIndex++), thisColor, 1));
     }
 #else
-    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoVector.size() << ", nRecoNeutrinos" << recoNeutrinoVector.size() << std::endl;
+    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoList.size() << ", nRecoNeutrinos" << recoNeutrinoList.size() << std::endl;
 #endif
 }
 
@@ -744,38 +743,6 @@ bool EventValidationAlgorithm::SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs
         return (lhs.m_nPfoHitsTotal > rhs.m_nPfoHitsTotal);
 
     return (lhs.m_id < rhs.m_id);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventValidationAlgorithm::SortRecoNeutrinos(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
-{
-    if (!LArPfoHelper::IsNeutrino(pLhs) || !LArPfoHelper::IsNeutrino(pRhs))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    PfoList downstreamPfosLhs, downstreamPfosRhs;
-    LArPfoHelper::GetAllDownstreamPfos(pLhs, downstreamPfosLhs);
-    LArPfoHelper::GetAllDownstreamPfos(pRhs, downstreamPfosRhs);
-
-    // If just left with the neutrino pfos themselves
-    if ((1 == downstreamPfosLhs.size()) && (1 == downstreamPfosRhs.size()))
-    {
-        // ATTN Not a good pair of tie-breakers, but this should be rare (ideally shouldn't have any neutrinos without daughter pfos)
-        if (!pLhs->GetVertexList().empty() && !pRhs->GetVertexList().empty())
-            return ((*(pLhs->GetVertexList().begin()))->GetPosition().GetZ() < (*(pRhs->GetVertexList().begin()))->GetPosition().GetZ());
-
-        return (pLhs->GetParticleId() < pRhs->GetParticleId());
-    }
-
-    PfoVector pfoVectorLhs(downstreamPfosLhs.begin(), downstreamPfosLhs.end());
-    PfoVector pfoVectorRhs(downstreamPfosRhs.begin(), downstreamPfosRhs.end());
-    std::sort(pfoVectorLhs.begin(), pfoVectorLhs.end(), LArPfoHelper::SortByNHits);
-    std::sort(pfoVectorRhs.begin(), pfoVectorRhs.end(), LArPfoHelper::SortByNHits);
-
-    if (pfoVectorLhs.empty() || pfoVectorRhs.empty())
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    return (LArPfoHelper::SortByNHits(pfoVectorLhs.front(), pfoVectorRhs.front()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -849,9 +816,6 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Top5VertexListName", m_top5VertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "AllVerticesListName", m_allVerticesListName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NeutrinoInducedOnly", m_neutrinoInducedOnly));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrimaryPfosOnly", m_primaryPfosOnly));

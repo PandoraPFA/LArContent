@@ -163,21 +163,21 @@ private:
     /**
      *  @brief  Print all the raw matching output to screen
      * 
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      */
-    void PrintAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
+    void PrintAllOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
         const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
 
     /**
      *  @brief  Write all the raw matching output to a tree
      * 
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      */
-    void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
+    void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
         const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const pandora::VertexList* pTop5VertexList, const pandora::VertexList* pAllVerticesList) const;
 
     /**
@@ -220,21 +220,21 @@ private:
     /**
      *  @brief  Use Pandora monitoring to visualize results of the matching procedure
      * 
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      *  @param  matchingDetailsMap the matching details map
      */
-    void VisualizeMatchingOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
+    void VisualizeMatchingOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
         const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
 
     /**
      *  @brief  Use Pandora monitoring to visualize vertex matches
      * 
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  mcNeutrinoList the mc neutrino list
+     *  @param  recoNeutrinoList the reco neutrino list
      */
-    void VisualizeVertexMatches(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector) const;
+    void VisualizeVertexMatches(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList) const;
 
     /**
      *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
@@ -264,23 +264,13 @@ private:
      */
     static bool SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs);
 
-    /**
-     *  @brief  Sort reco neutrinos by number of hits in their largest daughter particle
-     * 
-     *  @param  pLhs address the left-hand side instance
-     *  @param  pRhs address the right-hand side instance
-     * 
-     *  @return boolean
-     */
-    static bool SortRecoNeutrinos(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
-
     std::string         m_caloHitListName;          ///< Name of input calo hit list
     std::string         m_mcParticleListName;       ///< Name of input MC particle list
     std::string         m_pfoListName;              ///< Name of input Pfo list
     std::string         m_top5VertexListName;
     std::string         m_allVerticesListName;
+    
 
-    bool                m_neutrinoInducedOnly;      ///< Whether to consider only mc particles that were neutrino induced
     bool                m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
     bool                m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
 
