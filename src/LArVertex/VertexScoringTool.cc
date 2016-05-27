@@ -87,8 +87,6 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
         std::sort(clusterVertexScoreList.begin(), clusterVertexScoreList.end());
         scoredClusterCollection.push_back(clusterVertexScoreList);
-
-        
         
 //        if (clusterVertexScoreList.size() >= m_nSelectedVerticesPerCluster)
 //            vertexScoreList.insert(vertexScoreList.begin(), clusterVertexScoreList.begin(), std::next(clusterVertexScoreList.begin(), m_nSelectedVerticesPerCluster) );
@@ -103,18 +101,26 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
     std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);
 
 
-    unsigned int counter(0);
+    unsigned int clusterCounter(0);
 
     for (VertexScoreList &thisVertexScoreList : scoredClusterCollection)
     {
-        if (counter == 5 || counter == scoredClusterCollection.size() || thisVertexScoreList.size() == 0)
+        if (clusterCounter == 5 || clusterCounter == scoredClusterCollection.size() || thisVertexScoreList.size() == 0)
             break;
 
         std::sort(vertexScoreList.begin(), vertexScoreList.end());
     
         float totalClusterScore(0.f);
+        int vertexCounter(0);
+
         for (VertexScore &thisVertexScore : thisVertexScoreList)
+        {
+            if (vertexCounter == 4)
+                break;
+
             totalClusterScore += thisVertexScore.GetScore();
+            vertexCounter++;
+        }
 
         if (thisVertexScoreList.size() != 0)
         {        
@@ -125,7 +131,7 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
         vertexScoreList.push_back(*(thisVertexScoreList.begin()));
 
-        counter++;
+        clusterCounter++;
     }
 
    

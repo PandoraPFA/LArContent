@@ -83,6 +83,7 @@ StatusCode VertexSelectionAlgorithm::Run()
 
         const Vertex *pVertex(NULL);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+        counter++;
     }
     
     VertexList top5Vertices;
