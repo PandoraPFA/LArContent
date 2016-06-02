@@ -42,7 +42,9 @@
  /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Plugins/ShowerProfilePlugin.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraMonitoring-origin/master/include/PandoraMonitoringApi.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArVertex/VertexClusteringTool.h \
- /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMCParticleHelper.h
+ /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMCParticleHelper.h \
+ /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArClusterHelper.h \
+ /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArGeometryHelper.h
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/AlgorithmHeaders.h:
 
@@ -127,3 +129,7 @@
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArVertex/VertexClusteringTool.h:
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMCParticleHelper.h:
+
+/usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArClusterHelper.h:
+
+/usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArGeometryHelper.h:

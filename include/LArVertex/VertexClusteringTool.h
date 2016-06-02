@@ -109,6 +109,7 @@ private:
     bool            m_removeSmallClusters; ///< Whether to remove small clusters from the vertex
     unsigned int    m_minClusterSize;   ///< Minimum size of cluster before switching to centroid as part of the distance clustering measure
     bool            m_monteCarloClusterCheck;   ///< Whether to use Montre Carlo information to check whetehr the cluter contains an MC particle begin- or endpoint
+    bool            m_recoEndPointCheck;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

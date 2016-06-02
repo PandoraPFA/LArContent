@@ -10,6 +10,8 @@
 
 #include "LArVertex/VertexClusteringTool.h"
 #include "LArHelpers/LArMCParticleHelper.h"
+#include "LArHelpers/LArClusterHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 using namespace pandora;
 
@@ -20,7 +22,8 @@ VertexClusteringTool::VertexClusteringTool() :
     m_maxVertexToCentroidDistance(5.f),
     m_removeSmallClusters(false),
     m_minClusterSize(5),
-    m_monteCarloClusterCheck(false)
+    m_monteCarloClusterCheck(false),
+    m_recoEndPointCheck(false)
 {
 }
 
@@ -60,6 +63,30 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
     {
         endpointVector.push_back(mcParticle->GetVertex());   
         endpointVector.push_back(mcParticle->GetEndpoint()); 
+    }
+
+   //-------------------------------------------------------------------------------------------------
+
+//    const ClusterList *pClusterListU(NULL);
+//    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, "ClustersU", pClusterListU));
+
+//    const ClusterList *pClusterListV(NULL);
+//    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, "ClustersV", pClusterListV));
+
+    const ClusterList *pClusterListW(NULL);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, "ClustersW", pClusterListW));
+
+    std::vector<CartesianVector> reconstructedEndpointVectorW;
+
+    for (const Cluster* pCluster : (*pClusterListW))
+    {
+        OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        CartesianVector innerCoordinate(0.f, 0.f, 0.f);
+        CartesianVector outerCoordinate(0.f, 0.f, 0.f);
+
+        LArClusterHelper::GetExtremalCoordinates(orderedCaloHitList, innerCoordinate, outerCoordinate);
+        reconstructedEndpointVectorW.push_back(innerCoordinate);   
+        reconstructedEndpointVectorW.push_back(outerCoordinate); 
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -108,14 +135,41 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
 
             if (m_monteCarloClusterCheck)
             {
+                bool MCCheckFulfilled(false);
                 for (const Vertex *const pAnotherVertex : (pNewVertexCluster->GetVertexList()))
                 {
+                    if (MCCheckFulfilled)
+                        break;
+
                     for (CartesianVector &endPoint : endpointVector)
                     {
                         if (((endPoint - (pAnotherVertex->GetPosition())).GetMagnitude()) < 5.0)
                         {
                             //std::cout << "True cluster." << std::endl;
                             vertexClusterList.push_back(pNewVertexCluster);
+                            MCCheckFulfilled = true;
+                            break;  
+                        }
+                    }
+                }
+            }
+            else if (m_recoEndPointCheck)
+            {
+                bool recoCheckFulfilled(false);
+                for (const Vertex *const pYetAnotherVertex : (pNewVertexCluster->GetVertexList()))
+                {
+                    if (recoCheckFulfilled)
+                        break;
+
+                    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pYetAnotherVertex->GetPosition(), TPC_VIEW_W));
+
+                    for (CartesianVector &endPoint : reconstructedEndpointVectorW)
+                    {
+                        if (((endPoint - vertexProjectionW).GetMagnitude()) < 5.0)
+                        {
+                            //std::cout << "True cluster." << std::endl;
+                            vertexClusterList.push_back(pNewVertexCluster);
+                            recoCheckFulfilled = true;
                             break;  
                         }
                     }
@@ -145,6 +199,23 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
                     //std::cout << "True cluster." << std::endl;
                     vertexClusterList.push_back(pNewVertexCluster);
                     break;   
+                }
+            }
+        }
+    }
+    else if (m_recoEndPointCheck)
+    {
+        for (const Vertex *const pYetAnotherVertex : (pNewVertexCluster->GetVertexList()))
+        {
+            const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pYetAnotherVertex->GetPosition(), TPC_VIEW_W));
+
+            for (CartesianVector &endPoint : reconstructedEndpointVectorW)
+            {
+                if (((endPoint - vertexProjectionW).GetMagnitude()) < 5.0)
+                {
+                    //std::cout << "True cluster." << std::endl;
+                    vertexClusterList.push_back(pNewVertexCluster);
+                    break;  
                 }
             }
         }
@@ -212,6 +283,9 @@ StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MonteCarloClusterCheck", m_monteCarloClusterCheck));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RecoEndPointCheck", m_recoEndPointCheck));
 
     return STATUS_CODE_SUCCESS;
 }
