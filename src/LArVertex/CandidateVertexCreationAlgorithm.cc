@@ -207,6 +207,9 @@ void CandidateVertexCreationAlgorithm::Find2DClusterCrossings(const ClusterList 
         const CartesianVector minLayerPosition1(fitResult1.GetGlobalMinLayerPosition());
         const CartesianVector maxLayerPosition1(fitResult1.GetGlobalMaxLayerPosition());
         
+        crossingsVector.push_back(minLayerPosition1);
+        crossingsVector.push_back(maxLayerPosition1);
+
         std::vector<CartesianVector> spacePointVector1;
         
         OrderedCaloHitList orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());

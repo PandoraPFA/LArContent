@@ -100,7 +100,6 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
     std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);
 
-
     unsigned int clusterCounter(0);
 
     for (VertexScoreList &thisVertexScoreList : scoredClusterCollection)
@@ -108,7 +107,7 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
         if (clusterCounter == 5 || clusterCounter == scoredClusterCollection.size() || thisVertexScoreList.size() == 0)
             break;
 
-        std::sort(vertexScoreList.begin(), vertexScoreList.end());
+        std::sort(thisVertexScoreList.begin(), thisVertexScoreList.end());
     
         float totalClusterScore(0.f);
         int vertexCounter(0);

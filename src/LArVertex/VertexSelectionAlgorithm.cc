@@ -42,6 +42,8 @@ StatusCode VertexSelectionAlgorithm::Run()
     const VertexList *pInputVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
 
+    const VertexList inputVertexListCopy(*pInputVertexList);
+
     if (!pInputVertexList || pInputVertexList->empty())
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
@@ -117,7 +119,7 @@ StatusCode VertexSelectionAlgorithm::Run()
     std::string allVerticesTemporaryList;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pAllVerticesTemporaryList, allVerticesTemporaryList));
     
-    for (const Vertex *const pVertex : (*pInputVertexList))
+    for (const Vertex *const pVertex : inputVertexListCopy)
     {
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = pVertex->GetPosition();

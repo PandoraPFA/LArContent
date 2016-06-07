@@ -355,8 +355,6 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
                 allVerticesDR.push_back(vertexDR);
             }
             
-            //allVerticesDR.erase(std::remove(allVerticesDR.begin(), allVerticesDR.end(), 0.f), allVerticesDR.end());
-            
             bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
             std::cout << bestVertexOffset << std::endl;
         }
@@ -850,7 +848,7 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
 
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-            "FileIdentifier", m_fileIdentifier));
+            "FileIdentifier", m_fileIdentifier));     
     }
 
     return STATUS_CODE_SUCCESS;

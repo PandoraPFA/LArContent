@@ -124,7 +124,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
         }
-        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && (((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance) || (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5)))
+        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && ((((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)) || (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5)))
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
@@ -143,7 +143,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
 
                     for (CartesianVector &endPoint : endpointVector)
                     {
-                        if (((endPoint - (pAnotherVertex->GetPosition())).GetMagnitude()) < 5.0)
+                        if (((endPoint - (pAnotherVertex->GetPosition())).GetMagnitude()) < m_maxVertexToCentroidDistance)
                         {
                             //std::cout << "True cluster." << std::endl;
                             vertexClusterList.push_back(pNewVertexCluster);
@@ -165,7 +165,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
 
                     for (CartesianVector &endPoint : reconstructedEndpointVectorW)
                     {
-                        if (((endPoint - vertexProjectionW).GetMagnitude()) < 5.0)
+                        if (((endPoint - vertexProjectionW).GetMagnitude()) < m_maxVertexToCentroidDistance)
                         {
                             //std::cout << "True cluster." << std::endl;
                             vertexClusterList.push_back(pNewVertexCluster);
@@ -194,7 +194,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
         {
             for (CartesianVector &endPoint : endpointVector)
             {
-                if (((endPoint - (pVertex->GetPosition())).GetMagnitude()) < 5.0)
+                if (((endPoint - (pVertex->GetPosition())).GetMagnitude()) < m_maxVertexToCentroidDistance)
                 {
                     //std::cout << "True cluster." << std::endl;
                     vertexClusterList.push_back(pNewVertexCluster);
@@ -211,7 +211,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
 
             for (CartesianVector &endPoint : reconstructedEndpointVectorW)
             {
-                if (((endPoint - vertexProjectionW).GetMagnitude()) < 5.0)
+                if (((endPoint - vertexProjectionW).GetMagnitude()) < m_maxVertexToCentroidDistance)
                 {
                     //std::cout << "True cluster." << std::endl;
                     vertexClusterList.push_back(pNewVertexCluster);
@@ -225,8 +225,8 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
 
     std::vector<const VertexList*> outputVertexListVector;
     
-//    if (m_removeSmallClusters == true)
-//        this->RemoveSmallClusters(vertexClusterList);
+    if (m_removeSmallClusters == true)
+        this->RemoveSmallClusters(vertexClusterList);
     
     for (VertexCluster* pVertexCluster : vertexClusterList)
         outputVertexListVector.push_back(&(pVertexCluster->GetVertexList())); //all for now: later m_nSelectedVerticesPerCluster
@@ -259,7 +259,7 @@ void VertexClusteringTool::RemoveSmallClusters(VertexClusterList &vertexClusterL
     {
         const VertexCluster* pVertexCluster(*iter);
         
-        if (pVertexCluster->GetVertexList().size() < 3)
+        if (pVertexCluster->GetVertexList().size() == 1)
             iter = vertexClusterList.erase(iter); //calls destructor
         else
             ++iter;
