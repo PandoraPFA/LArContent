@@ -208,7 +208,7 @@ public:
         d("LArVertexSplitting",                     lar_content::VertexSplittingAlgorithm::Factory)                             \
         d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \
         d("LArShowerGrowing",                       lar_content::ShowerGrowingAlgorithm::Factory)                               \
-        d("LArTwoDParticleCreationAlgorithm",       lar_content::TwoDParticleCreationAlgorithm::Factory)                        \
+        d("LArTwoDParticleCreation",                lar_content::TwoDParticleCreationAlgorithm::Factory)                        \
         d("LArListChanging",                        lar_content::ListChangingAlgorithm::Factory)                                \
         d("LArListDeletion",                        lar_content::ListDeletionAlgorithm::Factory)                                \
         d("LArListDissolution",                     lar_content::ListDissolutionAlgorithm::Factory)                             \
