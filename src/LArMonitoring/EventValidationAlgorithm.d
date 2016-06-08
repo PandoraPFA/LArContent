@@ -43,6 +43,7 @@
  /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraMonitoring-origin/master/include/PandoraMonitoringApi.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMCParticleHelper.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArPfoHelper.h \
+ /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArGeometryHelper.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArMonitoring/EventValidationAlgorithm.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMonitoringHelper.h \
@@ -140,6 +141,8 @@
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArMCParticleHelper.h:
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArPfoHelper.h:
+
+/usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArHelpers/LArGeometryHelper.h:
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArMonitoring/EventValidationAlgorithm.h:
 

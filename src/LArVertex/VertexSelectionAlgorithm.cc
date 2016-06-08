@@ -110,7 +110,7 @@ StatusCode VertexSelectionAlgorithm::Run()
     for (const Vertex *const pVertex : (*pTop5TemporaryList))
         top5Vertices.insert(pVertex);
     
-    if (!selectedVertexList.empty())
+    if (!top5Vertices.empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_top5VertexListName, top5Vertices));
     
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ StatusCode VertexSelectionAlgorithm::Run()
     for (const Vertex *const pVertex : (*pAllVerticesTemporaryList))
         allVertices.insert(pVertex);
     
-    if (!selectedVertexList.empty())
+    if (!allVertices.empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_allOtherVertexListName, allVertices));
     
     //--------------------------------------------------------------------------------------------------------------------------------------

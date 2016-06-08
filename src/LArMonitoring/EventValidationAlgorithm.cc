@@ -10,6 +10,7 @@
 
 #include "LArHelpers/LArMCParticleHelper.h"
 #include "LArHelpers/LArPfoHelper.h"
+#include "LArHelpers/LArGeometryHelper.h"
 
 #include "LArMonitoring/EventValidationAlgorithm.h"
 
@@ -325,7 +326,7 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     }
     
     //---------------------------------------------------------TOP 5--------------------------------------------------------------------
-    if (!recoNeutrinoList.empty() && !mcNeutrinoList.empty())
+    if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
         float top5VertexOffset(-1.f);
         float bestVertexOffset(-1.f);
@@ -334,6 +335,16 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         std::vector<float> allVerticesDR;
         
         CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.front()).GetVertex());
+        
+        //const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_U));
+        //const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_V));
+        //const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_W));
+        //
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", RED, 1));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", RED, 1));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", RED, 1));
+        //
+        //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         
         if (!pTop5VertexList->empty())
         {
@@ -344,11 +355,27 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             }
             
             top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
-            std::cout << top5VertexOffset << std::endl;
+            
+            float vertexOffsetX(0.f), vertexOffsetY(0.f), vertexOffsetZ(0.f);
+            
+            for (const Vertex *const pVertex : (*pTop5VertexList))
+            {
+                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                if (vertexDR == top5VertexOffset)
+                {
+                    vertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
+                    vertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
+                    vertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
+                }
+            }
+            
+            std::cout << "Top 5 vertex DR: " << top5VertexOffset << " with DX: " << vertexOffsetX << " DY: " << vertexOffsetY << " DZ: " << vertexOffsetZ << std::endl;
         }
         
         if (!pAllVerticesList->empty())
         {
+            std::cout << "All vertex list contains " << pAllVerticesList->size() << " entries." << std::endl;
+            
             for (const Vertex *const pVertex : (*pAllVerticesList))
             {
                 float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
@@ -356,7 +383,21 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             }
             
             bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
-            std::cout << bestVertexOffset << std::endl;
+            
+            float vertexOffsetX(0.f), vertexOffsetY(0.f), vertexOffsetZ(0.f);
+            
+            for (const Vertex *const pVertex : (*pAllVerticesList))
+            {
+                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                if (vertexDR == bestVertexOffset)
+                {
+                    vertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
+                    vertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
+                    vertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
+                }
+            }
+            
+            std::cout << "Best possible vertex DR: " << bestVertexOffset << " with DX: " << vertexOffsetX << " DY: " << vertexOffsetY << " DZ: " << vertexOffsetZ << std::endl;
         }
         
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));
