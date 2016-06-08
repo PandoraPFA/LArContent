@@ -62,7 +62,7 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *const pClusterList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
-    const int idOffset, IdToClusterListMap &idToClusterListMap) const
+    const Id idOffset, IdToClusterListMap &idToClusterListMap) const
 {
     if (NULL == pClusterList)
         return;
@@ -91,7 +91,7 @@ void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *cons
             if (!m_particleIdList.empty() && !m_particleIdList.count(pMCParticle->GetParticleId()))
                 continue;
 
-            const int id(intptr_t(pMCParticle->GetUid()) - idOffset);
+            const Id id(intptr_t(pMCParticle->GetUid()) - idOffset);
             idToClusterListMap[id].insert(pCluster);
         }
         catch (StatusCodeException &)
@@ -107,7 +107,7 @@ void CheatingPfoCreationAlgorithm::GetIdToMCParticleMap(const MCParticleList *co
     for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
     {
         const MCParticle *const pMCParticle(*iter);
-        const int id(intptr_t(pMCParticle->GetUid()));
+        const Id id(intptr_t(pMCParticle->GetUid()));
 
         if (!idToMCParticleMap.insert(IdToMCParticleMap::value_type(id, pMCParticle)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -126,7 +126,7 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const IdToClusterListMap &idToClus
 
     for (IdToClusterListMap::const_iterator iter = idToClusterListMap.begin(), iterEnd = idToClusterListMap.end(); iter != iterEnd; ++iter)
     {
-        const int id(iter->first);
+        const Id id(iter->first);
         const ClusterList &clusterList(iter->second);
 
         if (this->GetNHitTypesAboveThreshold(clusterList, m_nHitsForGoodHitType) < m_minGoodHitTypes)
