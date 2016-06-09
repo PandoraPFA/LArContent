@@ -335,14 +335,14 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         
         CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.front()).GetVertex());
         
-        //const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_U));
-        //const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_V));
-        //const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_W));
-        //
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", RED, 1));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", RED, 1));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", RED, 1));
-        //
+        const CartesianVector mcVertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_U));
+        const CartesianVector mcVertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_V));
+        const CartesianVector mcVertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_W));
+        
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionU, "Target Vertex", RED, 1));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionV, "Target Vertex", RED, 1));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionW, "Target Vertex", RED, 1));
+        
         //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         
         if (!pTop5VertexList->empty())
@@ -381,6 +381,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             
             bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
             
+            float DeltaU(0.f), DeltaV(0.f), DeltaW(0.f);
+            
             for (const Vertex *const pVertex : (*pAllVerticesList))
             {
                 float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
@@ -389,10 +391,21 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
                     bestVertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
                     bestVertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
                     bestVertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
+                    
+                    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
+                    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
+                    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
+                    
+                    DeltaU = (vertexProjectionU - mcVertexProjectionU).GetMagnitude();
+                    DeltaV = (vertexProjectionV - mcVertexProjectionV).GetMagnitude();
+                    DeltaW = (vertexProjectionW - mcVertexProjectionW).GetMagnitude();
+                    
                 }
             }
             
             std::cout << "Best possible vertex DR: " << bestVertexOffset << " with DX: " << bestVertexOffsetX << " DY: " << bestVertexOffsetY << " DZ: " << bestVertexOffsetZ << std::endl;
+            std::cout << "DU: " << DeltaU << " DV: " << DeltaV << " DW: " << DeltaW << std::endl;
+
         }
         
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));

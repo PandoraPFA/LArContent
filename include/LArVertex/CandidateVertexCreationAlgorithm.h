@@ -109,6 +109,8 @@ private:
      *  @brief  Clear relevant algorithm member variables between events
      */
     void TidyUp();
+    
+    static bool SortSpacePointsByZ(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
