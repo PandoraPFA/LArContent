@@ -13,6 +13,8 @@
 
 #include "LArVertex/CandidateVertexCreationAlgorithm.h"
 
+#include <utility> 
+
 using namespace pandora;
 
 namespace lar_content
@@ -223,7 +225,7 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
             spacePointVector1.push_back(caloHitPosition);
         }
         
-        for (float i = 0.1; i < 20.0; i += 0.1)
+        for (float i = 0.2; i < 10.0; i += 0.2)
         {
             CartesianVector tempExtrapolatedPositionUnder(0.f, 0.f, 0.f);
             CartesianVector tempExtrapolatedPositionOver(0.f, 0.f, 0.f);
@@ -268,7 +270,7 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
                 spacePointVector2.push_back(caloHitPosition);
             }
 
-            for (float i = 0.1; i < 20.0; i += 0.1)
+            for (float i = 0.2; i < 10.0; i += 0.2)
             {
                 CartesianVector tempExtrapolatedPositionUnder(0.f, 0.f, 0.f);
                 CartesianVector tempExtrapolatedPositionOver(0.f, 0.f, 0.f);
@@ -296,6 +298,7 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
             
             std::sort(spacePointVector1.begin(), spacePointVector1.end(), SortSpacePointsByZ);
             std::sort(spacePointVector2.begin(), spacePointVector2.end(), SortSpacePointsByZ);
+            
 
             for (CartesianVector &position1: spacePointVector1)
             {
@@ -310,7 +313,6 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
                     }
                 }
             }
-            
         }
     }
 }
@@ -319,10 +321,11 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
 
 void CandidateVertexCreationAlgorithm::CreateCrossingVertex(std::vector<CartesianVector> &crossingsVector1, std::vector<CartesianVector> &crossingsVector2, HitType hitType1, HitType hitType2) const
 {
-    std::vector<CartesianVector> spacePointVector;
-    
     for (CartesianVector &position1: crossingsVector1)
     {
+        std::vector<std::pair<CartesianVector*,float>> matched3DPositions;
+        std::vector<float> chiSquareds;
+        
         for (CartesianVector &position2: crossingsVector2)
         {
             if (std::fabs(position1.GetX() - position2.GetX()) > 0.1)
@@ -333,18 +336,30 @@ void CandidateVertexCreationAlgorithm::CreateCrossingVertex(std::vector<Cartesia
             LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
             const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
                 
-            if (chiSquared > 2.0)
+            if (chiSquared > 0.5)
                 return;
-                
+            
+            std::pair<CartesianVector*,float> positionChiSquaredPair;
+            positionChiSquaredPair = std::make_pair(&position3D, chiSquared);
+            
+            matched3DPositions.push_back(positionChiSquaredPair);
+            chiSquareds.push_back(chiSquared);
+            
             //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "New Vertex", GREEN, 1));
-                
-            PandoraContentApi::Vertex::Parameters parameters;
-            parameters.m_position = position3D;
-            parameters.m_vertexLabel = VERTEX_INTERACTION;
-            parameters.m_vertexType = VERTEX_3D;
-                
-            const Vertex *pVertex(NULL);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+        }
+        
+        for (std::pair<CartesianVector*,float> &pair : matched3DPositions)
+        {
+            if (pair.second == (*std::min_element(chiSquareds.begin(), chiSquareds.end())))
+            {
+                PandoraContentApi::Vertex::Parameters parameters;
+                parameters.m_position = *(pair.first);
+                parameters.m_vertexLabel = VERTEX_INTERACTION;
+                parameters.m_vertexType = VERTEX_3D;
+                    
+                const Vertex *pVertex(NULL);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+            }
         }
     }
 }
