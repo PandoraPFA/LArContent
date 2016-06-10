@@ -86,6 +86,15 @@ private:
      *  @param  clusterList1 the list of clusters in view 2
      */
     void Find2DClusterCrossings(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &crossingsVector) const;
+    
+    /**
+     *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
+     *
+     *  @param  position1 an end-point position for the first cluster
+     *  @param  hitType1 the hit type of the first cluster
+     *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
+     */
+    void Find2DEnergySpikes(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &energySpikeVector);
 
     /**
      *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
@@ -94,7 +103,7 @@ private:
      *  @param  hitType1 the hit type of the first cluster
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
-    void CreateCrossingVertex(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2,  pandora::HitType hitType1, pandora::HitType hitType2) const;
+    void CreateMatchedVertices(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2,  pandora::HitType hitType1, pandora::HitType hitType2) const;
      
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
@@ -111,6 +120,8 @@ private:
     void TidyUp();
     
     static bool SortSpacePointsByZ(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
+    
+    static bool SortFloatPairByFirstElement(std::pair<float, float> &pair1, std::pair<float, float> &pair2);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
