@@ -478,13 +478,27 @@ bool VertexScoringTool::SortByVertexZPosition(const pandora::Vertex *const pLhs,
 
 bool VertexScoringTool::SortClustersByScore(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList)
 {
+    int vertexCounterOne(0), vertexCounterTwo(0);
+
     float firstTotalClusterScore(0.f);
     for (VertexScore &firstTempVertexScore : firstScoreList)
+    {
+        if (vertexCounterOne > 4)
+            break;
+
         firstTotalClusterScore += firstTempVertexScore.GetScore();
+        vertexCounterOne++;
+    }
 
     float secondTotalClusterScore(0.f);
     for (VertexScore &secondTempVertexScore : secondScoreList)
+    {
+        if (vertexCounterTwo > 4)
+            break;
+
         secondTotalClusterScore += secondTempVertexScore.GetScore();
+        vertexCounterTwo++;
+    }
 
     return firstTotalClusterScore > secondTotalClusterScore;
 }

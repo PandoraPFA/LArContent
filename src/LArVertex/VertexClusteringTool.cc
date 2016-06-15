@@ -124,7 +124,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
         }
-        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && ((((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)) || (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5)))
+        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && ((((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5)))
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);

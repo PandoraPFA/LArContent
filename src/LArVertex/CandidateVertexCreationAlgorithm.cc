@@ -57,18 +57,18 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         this->CreateMatchedVertices(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
         this->CreateMatchedVertices(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
         this->CreateMatchedVertices(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
-        
-        //std::vector<CartesianVector> energySpikesU;
-        //std::vector<CartesianVector> energySpikesV;
-        //std::vector<CartesianVector> energySpikesW;
-        //
-        //this->Find2DEnergySpikes(clusterListU, energySpikesU);
-        //this->Find2DEnergySpikes(clusterListV, energySpikesV);
-        //this->Find2DEnergySpikes(clusterListW, energySpikesW);
-        //
-        //this->CreateMatchedVertices(energySpikesU, energySpikesV, TPC_VIEW_U, TPC_VIEW_V);
-        //this->CreateMatchedVertices(energySpikesU, energySpikesW, TPC_VIEW_U, TPC_VIEW_W);
-        //this->CreateMatchedVertices(energySpikesV, energySpikesW, TPC_VIEW_V, TPC_VIEW_W);
+     
+//        std::vector<CartesianVector> energySpikesU;
+//        std::vector<CartesianVector> energySpikesV;
+//        std::vector<CartesianVector> energySpikesW;
+//        
+//        this->Find2DEnergySpikes(clusterListU, energySpikesU);
+//        this->Find2DEnergySpikes(clusterListV, energySpikesV);
+//        this->Find2DEnergySpikes(clusterListW, energySpikesW);
+//        
+//        this->CreateMatchedVertices(energySpikesU, energySpikesV, TPC_VIEW_U, TPC_VIEW_V);
+//        this->CreateMatchedVertices(energySpikesU, energySpikesW, TPC_VIEW_U, TPC_VIEW_W);
+//        this->CreateMatchedVertices(energySpikesV, energySpikesW, TPC_VIEW_V, TPC_VIEW_W);
 
         if (!pVertexList->empty())
         {
@@ -311,12 +311,11 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
             std::sort(spacePointVector1.begin(), spacePointVector1.end(), SortSpacePointsByZ);
             std::sort(spacePointVector2.begin(), spacePointVector2.end(), SortSpacePointsByZ);
             
-
             for (CartesianVector &position1: spacePointVector1)
             {
                 for (CartesianVector &position2: spacePointVector2)
                 {
-                    if ((position1-position2).GetMagnitude() < 0.25)
+                    if ((position1-position2).GetMagnitude() < 0.5)
                     {
                         crossingsVector.push_back(position1);
                         crossingsVector.push_back(position2);
@@ -364,75 +363,96 @@ void CandidateVertexCreationAlgorithm::Find2DEnergySpikes(const ClusterList &clu
         }
         
         std::sort(energyAlongRLvector.begin(), energyAlongRLvector.end(), SortFloatPairByFirstElement);
-        
-        int counter(0);
-        for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 10); pairIter != pairIterEnd; ++pairIter)
+
+        for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 1); pairIter != pairIterEnd; ++pairIter)
         {
             
-            if (counter <= 10)
+            float chargeRatio(((*pairIter).second)/((*(std::next(pairIter, 1))).second));
+            if (chargeRatio < 0.5 || chargeRatio > 1.5)
             {
-                counter++;
-                continue;
-            }
-            
-            //int previousHitSimilarCount(0);
-            //int nextHitDissimilarCount(0);
-            
-            for (int i = 1; i < 10; i++)
-            {
-                //std::cout << (*pairIter).second << std::endl;
-                //std::cout << (*(std::prev(pairIter, i))).second << std::endl;
-                //std::cout << "***********" << std::endl;
-                
-                float chargeRatio(((*pairIter).second)/((*(std::next(pairIter, i))).second));
-                if (chargeRatio < 0.5 || chargeRatio > 1.5)
+                std::cout << chargeRatio << std::endl;
+                for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
                 {
-                    std::cout << chargeRatio << std::endl;
-                    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
-                    {
-                        const CaloHit *const pCaloHit(*hitIter);
-                        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
-                        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
+                    const CaloHit *const pCaloHit(*hitIter);
+                    const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+                    float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
                         
-                        if ((*pairIter).second == caloHitEnergy)
-                        {
-                            energySpikeVector.push_back(caloHitPosition);
-                            //std::cout << ">>>>>>>>>>>>>>> ENERGY SPIKE" << std::endl;
-                        }
-                    }
+                    if ((*pairIter).second == caloHitEnergy)
+                        energySpikeVector.push_back(caloHitPosition);
                 }
-                
-                //if (((*pairIter).second > 0.9*(*(std::prev(pairIter, i))).second) && ((*pairIter).second < 1.1*(*(std::prev(pairIter, i))).second)) //does not account for constantly increasing line or wiggle
-                //    previousHitSimilarCount++;
-                //    
-                //if (((*pairIter).second > 1.1*(*(std::next(pairIter, i))).second) || ((*pairIter).second < 0.9*(*(std::next(pairIter, i))).second)) //does not account for constantly increasing line or wiggle
-                //    nextHitDissimilarCount++;
             }
-            
-            //if (nextHitDissimilarCount != 0)
-            //{
-            //    std::cout << "***********" << std::endl;
-            //    std::cout << previousHitSimilarCount << std::endl;
-            //    std::cout << nextHitDissimilarCount << std::endl;
-            //    std::cout << "***********" << std::endl;
-            //}
-            
-            //if (previousHitSimilarCount > 2 && nextHitDissimilarCount > 2)
-            //{
-            //    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
-            //    {
-            //        const CaloHit *const pCaloHit(*hitIter);
-            //        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
-            //        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
-            //        
-            //        if ((*pairIter).second == caloHitEnergy)
-            //        {
-            //            energySpikeVector.push_back(caloHitPosition);
-            //            //std::cout << ">>>>>>>>>>>>>>> ENERGY SPIKE" << std::endl;
-            //        }
-            //    }
-            //}
         }
+                
+                
+        
+//        int counter(0);
+//        for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 10); pairIter != pairIterEnd; ++pairIter)
+//        {
+//            
+//            if (counter <= 10)
+//            {
+//                counter++;
+//                continue;
+//            }
+//            
+//            //int previousHitSimilarCount(0);
+//            //int nextHitDissimilarCount(0);
+//            
+//            for (int i = 1; i < 10; i++)
+//            {
+//                //std::cout << (*pairIter).second << std::endl;
+//                //std::cout << (*(std::prev(pairIter, i))).second << std::endl;
+//                //std::cout << "***********" << std::endl;
+//                
+//                float chargeRatio(((*pairIter).second)/((*(std::next(pairIter, i))).second));
+//                if (chargeRatio < 0.5 || chargeRatio > 1.5)
+//                {
+//                    std::cout << chargeRatio << std::endl;
+//                    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+//                    {
+//                        const CaloHit *const pCaloHit(*hitIter);
+//                        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+//                        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
+//                        
+//                        if ((*pairIter).second == caloHitEnergy)
+//                        {
+//                            energySpikeVector.push_back(caloHitPosition);
+//                            //std::cout << ">>>>>>>>>>>>>>> ENERGY SPIKE" << std::endl;
+//                        }
+//                    }
+//                }
+//                
+//                //if (((*pairIter).second > 0.9*(*(std::prev(pairIter, i))).second) && ((*pairIter).second < 1.1*(*(std::prev(pairIter, i))).second)) //does not account for constantly increasing line or wiggle
+//                //    previousHitSimilarCount++;
+//                //    
+//                //if (((*pairIter).second > 1.1*(*(std::next(pairIter, i))).second) || ((*pairIter).second < 0.9*(*(std::next(pairIter, i))).second)) //does not account for constantly increasing line or wiggle
+//                //    nextHitDissimilarCount++;
+//            }
+//            
+//            //if (nextHitDissimilarCount != 0)
+//            //{
+//            //    std::cout << "***********" << std::endl;
+//            //    std::cout << previousHitSimilarCount << std::endl;
+//            //    std::cout << nextHitDissimilarCount << std::endl;
+//            //    std::cout << "***********" << std::endl;
+//            //}
+//            
+//            //if (previousHitSimilarCount > 2 && nextHitDissimilarCount > 2)
+//            //{
+//            //    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+//            //    {
+//            //        const CaloHit *const pCaloHit(*hitIter);
+//            //        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+//            //        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
+//            //        
+//            //        if ((*pairIter).second == caloHitEnergy)
+//            //        {
+//            //            energySpikeVector.push_back(caloHitPosition);
+//            //            //std::cout << ">>>>>>>>>>>>>>> ENERGY SPIKE" << std::endl;
+//            //        }
+//            //    }
+//            //}
+//        }
         
     }
 }
@@ -456,7 +476,7 @@ void CandidateVertexCreationAlgorithm::CreateMatchedVertices(std::vector<Cartesi
             LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
             const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
                 
-            if (chiSquared > 0.5)
+            if (chiSquared > 2.0)
                 return;
             
             std::pair<CartesianVector*,float> positionChiSquaredPair;
