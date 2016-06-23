@@ -42,8 +42,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<int, pandora::ClusterList> IdToClusterListMap;
-    typedef std::unordered_map<int, const pandora::MCParticle*> IdToMCParticleMap;
+    typedef signed long long Id;
+    typedef std::unordered_map<Id, pandora::ClusterList> IdToClusterListMap;
+    typedef std::unordered_map<Id, const pandora::MCParticle*> IdToMCParticleMap;
 
     /**
      *  @brief  Get a map relating three dimensional mc particle ids to a list of daughter clusters
@@ -54,7 +55,7 @@ private:
      *  @param  idToClusterListMap to receive the populated id to cluster list map
      */
     void GetIdToClusterListMap(const pandora::ClusterList *const pClusterList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
-        const int idOffset, IdToClusterListMap &idToClusterListMap) const;
+        const Id idOffset, IdToClusterListMap &idToClusterListMap) const;
 
     /**
      *  @brief  Get a map relating three dimensional mc particle ids to the three dimensional mc particles

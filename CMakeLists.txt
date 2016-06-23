@@ -42,6 +42,7 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
 
     cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
     cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
+    add_definitions("-DMONITORING")
 
     # ADD SOURCE CODE SUBDIRECTORIES HERE
     add_subdirectory(larpandoracontent)
@@ -70,7 +71,7 @@ else()
     # project version
     set(${PROJECT_NAME}_VERSION_MAJOR 02) # ATTN liable to go out of sync with cetbuildtools version numbers; check and treat with caution
     set(${PROJECT_NAME}_VERSION_MINOR 07)
-    set(${PROJECT_NAME}_VERSION_PATCH 03)
+    set(${PROJECT_NAME}_VERSION_PATCH 04)
     set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
     #-------------------------------------------------------------------------------------------------------------------------------------------

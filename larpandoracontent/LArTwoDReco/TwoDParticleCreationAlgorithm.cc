@@ -25,31 +25,34 @@ TwoDParticleCreationAlgorithm::TwoDParticleCreationAlgorithm() :
 
 StatusCode TwoDParticleCreationAlgorithm::Run()
 {
-    const PfoList *pPfoList = NULL; std::string pfoListName;
+    const PfoList *pPfoList = nullptr; std::string pfoListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
-    const ClusterList *pClusterListU = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameU, pClusterListU));
-
-    if (NULL != pClusterListU)
+    if (!m_inputClusterListNameU.empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListU));
+        const ClusterList *pClusterListU = nullptr;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameU, pClusterListU));
+
+        if (pClusterListU)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListU));
     }
 
-    const ClusterList *pClusterListV = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameV, pClusterListV));
-
-    if (NULL != pClusterListV)
+    if (!m_inputClusterListNameV.empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListV));
+        const ClusterList *pClusterListV = nullptr;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameV, pClusterListV));
+
+        if (pClusterListV)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListV));
     }
 
-    const ClusterList *pClusterListW = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameW, pClusterListW));
-
-    if (NULL != pClusterListW)
+    if (!m_inputClusterListNameW.empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListW));
+        const ClusterList *pClusterListW = nullptr;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNameW, pClusterListW));
+
+        if (pClusterListW)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreatePFOs(pClusterListW));
     }
 
     if (!pPfoList->empty())
@@ -107,10 +110,17 @@ StatusCode TwoDParticleCreationAlgorithm::CreatePFOs(const ClusterList *const pC
 
 StatusCode TwoDParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListNameU", m_inputClusterListNameU));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListNameV", m_inputClusterListNameV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListNameW", m_inputClusterListNameW));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputPfoListName", m_outputPfoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterListNameU", m_inputClusterListNameU));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterListNameV", m_inputClusterListNameV));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterListNameW", m_inputClusterListNameW));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinHitsInCluster", m_minHitsInCluster));
