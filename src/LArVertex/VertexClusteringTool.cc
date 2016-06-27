@@ -19,9 +19,10 @@ namespace lar_content
 {
 
 VertexClusteringTool::VertexClusteringTool() :
+    m_clusteringRadius(2.5f),
     m_maxVertexToCentroidDistance(5.f),
-    m_removeSmallClusters(false),
     m_minClusterSize(5),
+    m_removeSmallClusters(false),
     m_monteCarloClusterCheck(false),
     m_recoEndPointCheck(false)
 {
@@ -119,12 +120,12 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
         else
             currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
         
-        if ((pVertexClusterSeed->GetVertexList().size() <= m_minClusterSize) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5))
+        if ((pVertexClusterSeed->GetVertexList().size() <= m_minClusterSize) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= m_clusteringRadius))
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
         }
-        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && ((((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= 2.5)))
+        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && ((((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= m_clusteringRadius)))
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
@@ -271,6 +272,9 @@ void VertexClusteringTool::RemoveSmallClusters(VertexClusterList &vertexClusterL
 StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     // Read settings from xml file here
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusteringRadius", m_clusteringRadius));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexToCentroidDistance", m_maxVertexToCentroidDistance));

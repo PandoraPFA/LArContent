@@ -68,6 +68,8 @@ StatusCode EventValidationAlgorithm::Run()
 
     const PfoList *pPfoList = NULL;
     PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
+    
+    const PfoList *pPfoListCopy = pPfoList;
 
     PfoList pfoList;
     LArMonitoringHelper::ExtractTargetPfos(inputPfoList, m_primaryPfosOnly, pfoList);
@@ -111,7 +113,7 @@ StatusCode EventValidationAlgorithm::Run()
         this->PrintAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap);
 
     if (m_writeToTree)
-        this->WriteAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap, pTop5VertexList, pAllVerticesList);
+        this->WriteAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap, pTop5VertexList, pAllVerticesList, pPfoListCopy);
 
     if (m_printMatchingToScreen || m_visualizeMatching)
     {
@@ -289,7 +291,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
-    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pTop5VertexList, const VertexList* pAllVerticesList) const
+    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pTop5VertexList, const VertexList* pAllVerticesList, const PfoList *pPfoList) const
 {
 #ifdef MONITORING
     int mcNeutrinoNuance(-1), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
@@ -328,7 +330,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     //---------------------------------------------------------TOP 5--------------------------------------------------------------------
     if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
-        float top5VertexOffset(-1.f), bestVertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f), bestVertexOffsetX(-1.f),  bestVertexOffsetY(-1.f),  bestVertexOffsetZ(-1.f);
+        float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
+        float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
         
         std::vector<float> top5VerticesDR;
         std::vector<float> allVerticesDR;
@@ -339,11 +342,38 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         const CartesianVector mcVertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_V));
         const CartesianVector mcVertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_W));
         
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionU, "Target Vertex", RED, 1));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionV, "Target Vertex", RED, 1));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionW, "Target Vertex", RED, 1));
-        
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionU, "MC Vertex U", RED, 1));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionV, "MC Vertex V", RED, 1));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionW, "MC Vertex W", RED, 1));
+        //
         //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        
+        float minimalHitToMCVertexDistance(1000.f);
+        for (const Pfo* pPfo : *(pPfoList))
+        {
+            PfoList daughterPfoList(pPfo->GetDaughterPfoList());
+            
+            for (const Pfo* pDaughterPfo : daughterPfoList)
+            {
+                ClusterList clusterList(pDaughterPfo->GetClusterList());
+                
+                for (const Cluster* pCluster : clusterList)
+                {
+                    OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+                    CaloHitList caloHitList;
+                    orderedCaloHitList.GetCaloHitList(caloHitList);
+                    
+                    for (const CaloHit* pCaloHit : caloHitList)
+                    {
+                        float hitToMCVertexDistance(((pCaloHit->GetPositionVector()) - (mcNeutrinoVertexPosition)).GetMagnitude());
+                        if (hitToMCVertexDistance < minimalHitToMCVertexDistance)
+                            minimalHitToMCVertexDistance = hitToMCVertexDistance;
+                    }
+                }
+            }
+        }
+        
+        std::cout << "minimalHitToMCVertexDistance: " << minimalHitToMCVertexDistance << std::endl;
         
         if (!pTop5VertexList->empty())
         {
@@ -408,6 +438,7 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
 
         }
         
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "minimalHitToMCVertexDistance", minimalHitToMCVertexDistance));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffset", bestVertexOffset));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffsetX", top5VertexOffsetX));

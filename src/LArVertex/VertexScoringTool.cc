@@ -50,7 +50,7 @@ VertexScoringTool::VertexScoringTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const VertexList* pInputVertexList, std::vector<const VertexList*> vertexListVector, VertexScoreList &vertexScoreList)
+void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const VertexList* pInputVertexList, std::vector<const VertexList*> vertexListVector, std::vector<VertexScoreList> &scoredClusterCollection)
 {
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
@@ -71,8 +71,6 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
     float bestFastScore(0.f);
     this->GetGlobalBestFastScore(filteredVertexList, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW);
 
-    std::vector<VertexScoreList> scoredClusterCollection;
-
     for (const VertexList *const pVertexList : vertexListVector)
     {
         VertexList filteredCluster;
@@ -87,54 +85,9 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
         std::sort(clusterVertexScoreList.begin(), clusterVertexScoreList.end());
         scoredClusterCollection.push_back(clusterVertexScoreList);
-        
-//        if (clusterVertexScoreList.size() >= m_nSelectedVerticesPerCluster)
-//            vertexScoreList.insert(vertexScoreList.begin(), clusterVertexScoreList.begin(), std::next(clusterVertexScoreList.begin(), m_nSelectedVerticesPerCluster) );
-//        else
-//        {
-//            for (VertexScore &vertexScore : clusterVertexScoreList)
-//                vertexScoreList.push_back(vertexScore);
-//        }
-
     }
 
     std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);
-
-    unsigned int clusterCounter(0);
-
-    for (VertexScoreList &thisVertexScoreList : scoredClusterCollection)
-    {
-        if (clusterCounter == 5 || clusterCounter == scoredClusterCollection.size() || thisVertexScoreList.size() == 0)
-            break;
-
-        std::sort(thisVertexScoreList.begin(), thisVertexScoreList.end());
-    
-        float totalClusterScore(0.f);
-        int vertexCounter(0);
-
-        for (VertexScore &thisVertexScore : thisVertexScoreList)
-        {
-            if (vertexCounter == 4)
-                break;
-
-            totalClusterScore += thisVertexScore.GetScore();
-            vertexCounter++;
-        }
-
-        if (thisVertexScoreList.size() != 0)
-        {        
-            std::cout << "Total cluster score is: " << totalClusterScore << std::endl;
-            std::cout << "Number of vertices in cluster: " << thisVertexScoreList.size() << std::endl;
-            std::cout << "************************************" << std::endl;
-        }
-
-        vertexScoreList.push_back(*(thisVertexScoreList.begin()));
-
-        clusterCounter++;
-    }
-
-   
-    std::sort(vertexScoreList.begin(), vertexScoreList.end());
    
 }
 
@@ -478,29 +431,22 @@ bool VertexScoringTool::SortByVertexZPosition(const pandora::Vertex *const pLhs,
 
 bool VertexScoringTool::SortClustersByScore(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList)
 {
-    int vertexCounterOne(0), vertexCounterTwo(0);
-
     float firstTotalClusterScore(0.f);
     for (VertexScore &firstTempVertexScore : firstScoreList)
-    {
-        if (vertexCounterOne > 4)
-            break;
-
         firstTotalClusterScore += firstTempVertexScore.GetScore();
-        vertexCounterOne++;
-    }
 
     float secondTotalClusterScore(0.f);
     for (VertexScore &secondTempVertexScore : secondScoreList)
-    {
-        if (vertexCounterTwo > 4)
-            break;
-
         secondTotalClusterScore += secondTempVertexScore.GetScore();
-        vertexCounterTwo++;
-    }
-
+    
     return firstTotalClusterScore > secondTotalClusterScore;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexScoringTool::SortClustersBySize(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList)
+{
+    return firstScoreList.size() > secondScoreList.size();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

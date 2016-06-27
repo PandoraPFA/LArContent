@@ -26,7 +26,10 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f),
     m_maxClusterXDiscrepancy(4.f),
-    m_chiSquaredCut(2.f)
+    m_chiSquaredCut(2.f),
+    m_enableCrossingCandidates(false),
+    m_enableEnergyCandidates(false),
+    m_strictMatching(true)
 {
 }
 
@@ -46,29 +49,35 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         this->ClusterEndPointComparison(clusterListU, clusterListW);
         this->ClusterEndPointComparison(clusterListV, clusterListW);
         
-        std::vector<CartesianVector> crossingsU;
-        std::vector<CartesianVector> crossingsV;
-        std::vector<CartesianVector> crossingsW;
-        
-        this->Find2DClusterCrossings(clusterListU, crossingsU);
-        this->Find2DClusterCrossings(clusterListV, crossingsV);
-        this->Find2DClusterCrossings(clusterListW, crossingsW);
-        
-        this->CreateMatchedVertices(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
-        this->CreateMatchedVertices(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
-        this->CreateMatchedVertices(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
+        if (m_enableCrossingCandidates)
+        {
+            std::vector<CartesianVector> crossingsU;
+            std::vector<CartesianVector> crossingsV;
+            std::vector<CartesianVector> crossingsW;
+            
+            this->Find2DClusterCrossings(clusterListU, crossingsU);
+            this->Find2DClusterCrossings(clusterListV, crossingsV);
+            this->Find2DClusterCrossings(clusterListW, crossingsW);
+            
+            this->CreateMatchedVertices(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
+            this->CreateMatchedVertices(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
+            this->CreateMatchedVertices(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
+        }
      
-//        std::vector<CartesianVector> energySpikesU;
-//        std::vector<CartesianVector> energySpikesV;
-//        std::vector<CartesianVector> energySpikesW;
-//        
-//        this->Find2DEnergySpikes(clusterListU, energySpikesU);
-//        this->Find2DEnergySpikes(clusterListV, energySpikesV);
-//        this->Find2DEnergySpikes(clusterListW, energySpikesW);
-//        
-//        this->CreateMatchedVertices(energySpikesU, energySpikesV, TPC_VIEW_U, TPC_VIEW_V);
-//        this->CreateMatchedVertices(energySpikesU, energySpikesW, TPC_VIEW_U, TPC_VIEW_W);
-//        this->CreateMatchedVertices(energySpikesV, energySpikesW, TPC_VIEW_V, TPC_VIEW_W);
+        if (m_enableEnergyCandidates)
+        {
+            std::vector<CartesianVector> energySpikesU;
+            std::vector<CartesianVector> energySpikesV;
+            std::vector<CartesianVector> energySpikesW;
+            
+            this->Find2DEnergySpikes(clusterListU, energySpikesU);
+            this->Find2DEnergySpikes(clusterListV, energySpikesV);
+            this->Find2DEnergySpikes(clusterListW, energySpikesW);
+            
+            this->CreateMatchedVertices(energySpikesU, energySpikesV, TPC_VIEW_U, TPC_VIEW_V);
+            this->CreateMatchedVertices(energySpikesU, energySpikesW, TPC_VIEW_U, TPC_VIEW_W);
+            this->CreateMatchedVertices(energySpikesV, energySpikesW, TPC_VIEW_V, TPC_VIEW_W);
+        }
 
         if (!pVertexList->empty())
         {
@@ -311,15 +320,31 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
             std::sort(spacePointVector1.begin(), spacePointVector1.end(), SortSpacePointsByZ);
             std::sort(spacePointVector2.begin(), spacePointVector2.end(), SortSpacePointsByZ);
             
+            int skipCounter(0);
+            bool shouldSkip(false);
+            
             for (CartesianVector &position1: spacePointVector1)
             {
+                if (shouldSkip)
+                {
+                    if (skipCounter <= 50)
+                    {
+                        skipCounter++;
+                        continue;
+                    }
+                }
+                
+                skipCounter = 0;
+                shouldSkip = false;
+                
                 for (CartesianVector &position2: spacePointVector2)
                 {
-                    if ((position1-position2).GetMagnitude() < 0.5)
+                    if ((position1-position2).GetMagnitude() < 0.4)
                     {
                         crossingsVector.push_back(position1);
                         crossingsVector.push_back(position2);
                         
+                        shouldSkip = true;
                         break;
                     }
                 }
@@ -362,98 +387,25 @@ void CandidateVertexCreationAlgorithm::Find2DEnergySpikes(const ClusterList &clu
             energyAlongRLvector.push_back(energyAlongRL);
         }
         
-        std::sort(energyAlongRLvector.begin(), energyAlongRLvector.end(), SortFloatPairByFirstElement);
+        std::sort(energyAlongRLvector.begin(), energyAlongRLvector.end(), SortEnergyVectorByRL);
 
-        for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 1); pairIter != pairIterEnd; ++pairIter)
+        for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 4); pairIter != pairIterEnd; ++pairIter)
         {
+            float chargeRatio(((*(std::next(pairIter, 1))).second)/((*pairIter).second));
             
-            float chargeRatio(((*pairIter).second)/((*(std::next(pairIter, 1))).second));
-            if (chargeRatio < 0.5 || chargeRatio > 1.5)
+            if (chargeRatio > 1.5)
             {
-                std::cout << chargeRatio << std::endl;
                 for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
                 {
                     const CaloHit *const pCaloHit(*hitIter);
                     const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
                     float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
                         
-                    if ((*pairIter).second == caloHitEnergy)
+                    if (caloHitEnergy == ((*(std::next(pairIter, 1))).second))
                         energySpikeVector.push_back(caloHitPosition);
                 }
             }
         }
-                
-                
-        
-//        int counter(0);
-//        for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 10); pairIter != pairIterEnd; ++pairIter)
-//        {
-//            
-//            if (counter <= 10)
-//            {
-//                counter++;
-//                continue;
-//            }
-//            
-//            //int previousHitSimilarCount(0);
-//            //int nextHitDissimilarCount(0);
-//            
-//            for (int i = 1; i < 10; i++)
-//            {
-//                //std::cout << (*pairIter).second << std::endl;
-//                //std::cout << (*(std::prev(pairIter, i))).second << std::endl;
-//                //std::cout << "***********" << std::endl;
-//                
-//                float chargeRatio(((*pairIter).second)/((*(std::next(pairIter, i))).second));
-//                if (chargeRatio < 0.5 || chargeRatio > 1.5)
-//                {
-//                    std::cout << chargeRatio << std::endl;
-//                    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
-//                    {
-//                        const CaloHit *const pCaloHit(*hitIter);
-//                        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
-//                        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
-//                        
-//                        if ((*pairIter).second == caloHitEnergy)
-//                        {
-//                            energySpikeVector.push_back(caloHitPosition);
-//                            //std::cout << ">>>>>>>>>>>>>>> ENERGY SPIKE" << std::endl;
-//                        }
-//                    }
-//                }
-//                
-//                //if (((*pairIter).second > 0.9*(*(std::prev(pairIter, i))).second) && ((*pairIter).second < 1.1*(*(std::prev(pairIter, i))).second)) //does not account for constantly increasing line or wiggle
-//                //    previousHitSimilarCount++;
-//                //    
-//                //if (((*pairIter).second > 1.1*(*(std::next(pairIter, i))).second) || ((*pairIter).second < 0.9*(*(std::next(pairIter, i))).second)) //does not account for constantly increasing line or wiggle
-//                //    nextHitDissimilarCount++;
-//            }
-//            
-//            //if (nextHitDissimilarCount != 0)
-//            //{
-//            //    std::cout << "***********" << std::endl;
-//            //    std::cout << previousHitSimilarCount << std::endl;
-//            //    std::cout << nextHitDissimilarCount << std::endl;
-//            //    std::cout << "***********" << std::endl;
-//            //}
-//            
-//            //if (previousHitSimilarCount > 2 && nextHitDissimilarCount > 2)
-//            //{
-//            //    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
-//            //    {
-//            //        const CaloHit *const pCaloHit(*hitIter);
-//            //        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
-//            //        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
-//            //        
-//            //        if ((*pairIter).second == caloHitEnergy)
-//            //        {
-//            //            energySpikeVector.push_back(caloHitPosition);
-//            //            //std::cout << ">>>>>>>>>>>>>>> ENERGY SPIKE" << std::endl;
-//            //        }
-//            //    }
-//            //}
-//        }
-        
     }
 }
 
@@ -474,32 +426,47 @@ void CandidateVertexCreationAlgorithm::CreateMatchedVertices(std::vector<Cartesi
             float chiSquared(0.f);
             CartesianVector position3D(0.f, 0.f, 0.f);
             LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
-            const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
+            //const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
                 
             if (chiSquared > 2.0)
                 return;
             
-            std::pair<CartesianVector*,float> positionChiSquaredPair;
-            positionChiSquaredPair = std::make_pair(&position3D, chiSquared);
-            
-            matched3DPositions.push_back(positionChiSquaredPair);
-            chiSquareds.push_back(chiSquared);
+            if (m_strictMatching)
+            {
+                std::pair<CartesianVector*,float> positionChiSquaredPair;
+                positionChiSquaredPair = std::make_pair(&position3D, chiSquared);
+                
+                matched3DPositions.push_back(positionChiSquaredPair);
+                chiSquareds.push_back(chiSquared);
+            }
+            else
+            {
+                PandoraContentApi::Vertex::Parameters parameters;
+                parameters.m_position = position3D;
+                parameters.m_vertexLabel = VERTEX_INTERACTION;
+                parameters.m_vertexType = VERTEX_3D;
+                        
+                const Vertex *pVertex(NULL);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+            }
             
             //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "New Vertex", GREEN, 1));
         }
         
-        for (std::pair<CartesianVector*,float> &pair : matched3DPositions)
+        if (m_strictMatching)
         {
-            if (pair.second == (*std::min_element(chiSquareds.begin(), chiSquareds.end())))
+            for (std::pair<CartesianVector*,float> &pair : matched3DPositions)
             {
-                PandoraContentApi::Vertex::Parameters parameters;
-                parameters.m_position = *(pair.first);
-                parameters.m_vertexLabel = VERTEX_INTERACTION;
-                parameters.m_vertexType = VERTEX_3D;
-                    
-                const Vertex *pVertex(NULL);
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-                //std::cout << "Made vertex." << std::endl;
+                if (pair.second == (*std::min_element(chiSquareds.begin(), chiSquareds.end())))
+                {
+                    PandoraContentApi::Vertex::Parameters parameters;
+                    parameters.m_position = *(pair.first);
+                    parameters.m_vertexLabel = VERTEX_INTERACTION;
+                    parameters.m_vertexType = VERTEX_3D;
+                        
+                    const Vertex *pVertex(NULL);
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+                }
             }
         }
     }
@@ -544,7 +511,7 @@ bool CandidateVertexCreationAlgorithm::SortSpacePointsByZ(CartesianVector &vecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CandidateVertexCreationAlgorithm::SortFloatPairByFirstElement(std::pair<float, float> &pair1, std::pair<float, float> &pair2)
+bool CandidateVertexCreationAlgorithm::SortEnergyVectorByRL(std::pair<float, float> &pair1, std::pair<float, float> &pair2)
 {
     return pair1.second < pair2.second;
 }
@@ -577,6 +544,15 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ChiSquaredCut", m_chiSquaredCut));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EnableCrossingCandidates", m_enableCrossingCandidates));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EnableEnergyCandidates", m_enableEnergyCandidates));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "StrictMatching", m_strictMatching));
 
     return STATUS_CODE_SUCCESS;
 }

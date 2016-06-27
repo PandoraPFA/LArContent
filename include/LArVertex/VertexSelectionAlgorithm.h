@@ -102,7 +102,7 @@ private:
      *  @param  vertexScoreList the vertex score list
      *  @param  selectedVertexList to receive the selected vertex list
      */
-    void SelectTopScoreVertices(VertexScoringTool::VertexScoreList &vertexScoreList, pandora::VertexList &selectedVertexList) const;
+    void SelectTopScoreVertices(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, pandora::VertexList &selectedVertexList) const;
 
     /**
      *  @brief  Whether to accept a candidate vertex, based on its spatial position in relation to other selected candidates
@@ -141,7 +141,8 @@ private:
     float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
-    unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
+    
+    bool            m_enableClustering;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

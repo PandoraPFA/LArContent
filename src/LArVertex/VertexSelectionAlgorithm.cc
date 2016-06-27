@@ -31,7 +31,7 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_minVertexAcceptableViews(3)
+    m_enableClustering(false)
 {
 }
 
@@ -72,30 +72,67 @@ StatusCode VertexSelectionAlgorithm::Run()
 //        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 //    } 
     
-    VertexScoringTool::VertexScoreList intermediateVertexScoreList;
-    m_pVertexScoringTool->ScoreVertices(this, pInputVertexList, vertexListVector, intermediateVertexScoreList);
+    std::vector<VertexScoringTool::VertexScoreList> scoredClusterCollection;
+    m_pVertexScoringTool->ScoreVertices(this, pInputVertexList, vertexListVector, scoredClusterCollection);
     
     VertexList selectedVertexList;
-    this->SelectTopScoreVertices(intermediateVertexScoreList, selectedVertexList);
+    this->SelectTopScoreVertices(scoredClusterCollection, selectedVertexList);
     
     if (!selectedVertexList.empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_outputVertexListName, selectedVertexList));
     
     //---------------------------------------------------------------------------------------------------------------------------------------
     
+    VertexScoringTool::VertexScoreList intermediateVertexScoreList;
+    unsigned int clusterCounter(0);
+    
+    if (m_enableClustering)
+    {
+        for (VertexScoringTool::VertexScoreList &tempVertexScoreList : scoredClusterCollection)
+        {
+            if (clusterCounter == 5 || clusterCounter == scoredClusterCollection.size())
+                break;
+                
+            if (tempVertexScoreList.size() == 0)
+                continue;
+            
+            std::sort(tempVertexScoreList.begin(), tempVertexScoreList.end());
+            intermediateVertexScoreList.push_back(*tempVertexScoreList.begin());
+            clusterCounter++;
+        }
+    }
+    else
+    {
+        VertexScoringTool::VertexScoreList anotherVertexScoreList;
+        
+        for (VertexScoringTool::VertexScoreList &tempVertexScoreList : scoredClusterCollection)
+        {
+            if (tempVertexScoreList.size() == 0)
+                continue;
+            
+            anotherVertexScoreList.insert(anotherVertexScoreList.begin(), tempVertexScoreList.begin(), tempVertexScoreList.end());
+        }
+        
+        std::sort(anotherVertexScoreList.begin(), anotherVertexScoreList.end());
+        
+        for (VertexScoringTool::VertexScore &anotherTempVertexScore : anotherVertexScoreList)
+        {
+            if (clusterCounter == 5 || clusterCounter == anotherVertexScoreList.size())
+                break;
+            
+            intermediateVertexScoreList.push_back(anotherTempVertexScore);
+            clusterCounter++;
+        }
+    }
+    
     std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
-    const VertexScoringTool::VertexScoreList vertexScoreListCopy = intermediateVertexScoreList;
     
     const VertexList *pTop5TemporaryList(NULL);
     std::string top5TemporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTop5TemporaryList, top5TemporaryListName));
     
-    int counter(0);
-    for (const VertexScoringTool::VertexScore &vertexScore: vertexScoreListCopy)
+    for (const VertexScoringTool::VertexScore &vertexScore: intermediateVertexScoreList)
     {
-        if (counter == 5)
-            break;
-        
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = vertexScore.GetVertex()->GetPosition();
         parameters.m_vertexLabel = vertexScore.GetVertex()->GetVertexLabel();
@@ -103,7 +140,6 @@ StatusCode VertexSelectionAlgorithm::Run()
 
         const Vertex *pVertex(NULL);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-        counter++;
     }
     
     VertexList top5Vertices;
@@ -149,9 +185,14 @@ StatusCode VertexSelectionAlgorithm::Run()
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::SelectTopScoreVertices(VertexScoringTool::VertexScoreList &vertexScoreList, VertexList &selectedVertexList) const
+void VertexSelectionAlgorithm::SelectTopScoreVertices(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexList &selectedVertexList) const
 {
     float bestScore(0.f);
+    
+    VertexScoringTool::VertexScoreList vertexScoreList;
+    for (VertexScoringTool::VertexScoreList &tempVertexScoreList : scoredClusterCollection)
+        vertexScoreList.insert(vertexScoreList.begin(), tempVertexScoreList.begin(), tempVertexScoreList.end());
+    
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
     
     for (const VertexScoringTool::VertexScore &vertexScore : vertexScoreList)
@@ -245,9 +286,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IsEmptyViewAcceptable", m_isEmptyViewAcceptable));
-
+        
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexAcceptableViews", m_minVertexAcceptableViews));
+        "EnableClustering", m_enableClustering));
 
     return STATUS_CODE_SUCCESS;
 }

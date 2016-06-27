@@ -89,7 +89,7 @@ public:
 
     typedef std::vector<VertexScore> VertexScoreList;
 
-    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, const std::vector<const pandora::VertexList*> vertexListVector, VertexScoreList &vertexScoreList);
+    void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, const std::vector<const pandora::VertexList*> vertexListVector, std::vector<VertexScoreList> &scoredClusterCollection);
 
 private:
     /**
@@ -338,6 +338,7 @@ private:
     static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
 
     static bool SortClustersByScore(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList);
+    static bool SortClustersBySize(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

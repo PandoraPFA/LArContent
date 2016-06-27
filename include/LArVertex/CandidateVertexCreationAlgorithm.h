@@ -121,7 +121,7 @@ private:
     
     static bool SortSpacePointsByZ(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
     
-    static bool SortFloatPairByFirstElement(std::pair<float, float> &pair1, std::pair<float, float> &pair2);
+    static bool SortEnergyVectorByRL(std::pair<float, float> &pair1, std::pair<float, float> &pair2);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -138,6 +138,11 @@ private:
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
     float                       m_maxClusterXDiscrepancy;       ///< The max cluster end-point discrepancy
     float                       m_chiSquaredCut;                ///< The chi squared cut (accept only values below the cut value)
+    
+    bool                        m_enableCrossingCandidates;
+    bool                        m_enableEnergyCandidates;
+    
+    bool                        m_strictMatching;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
