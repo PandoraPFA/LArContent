@@ -47,7 +47,59 @@
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArTwoDSlidingFitResult.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArTwoDSlidingFitObjects.h \
  /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArThreeDSlidingFitResult.h \
- /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h
+ /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TGraph.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TNamed.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TObject.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Rtypes.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/RConfig.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/RVersion.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/DllImport.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Rtypeinfo.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/snprintf.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/strlcpy.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TGenericClassInfo.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TSchemaHelper.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TStorage.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVersionCheck.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Riosfwd.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TBuffer.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TString.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TMathBase.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttLine.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttFill.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttMarker.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVectorFfwd.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVectorDfwd.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TFitResultPtr.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TH2D.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TH2.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TH1.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAxis.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttAxis.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayD.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArray.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayC.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayS.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayI.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayF.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Foption.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TMatrixFBasefwd.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TMatrixDBasefwd.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TCanvas.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TPad.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVirtualPad.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttPad.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVirtualX.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttText.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/GuiTypes.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Buttons.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TQObject.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttBBox2D.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TPoint.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttCanvas.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TCanvasImp.h \
+ /cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TProfile.h
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/AlgorithmHeaders.h:
 
@@ -142,3 +194,107 @@
 /usera/jjd49//LAr/pandora_git/PandoraPFA/LArContent-origin/master/include/LArObjects/LArThreeDSlidingFitResult.h:
 
 /usera/jjd49//LAr/pandora_git/PandoraPFA/PandoraSDK-origin/master/include/Pandora/Algorithm.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TGraph.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TNamed.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TObject.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Rtypes.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/RConfig.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/RVersion.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/DllImport.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Rtypeinfo.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/snprintf.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/strlcpy.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TGenericClassInfo.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TSchemaHelper.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TStorage.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVersionCheck.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Riosfwd.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TBuffer.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TString.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TMathBase.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttLine.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttFill.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttMarker.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVectorFfwd.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVectorDfwd.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TFitResultPtr.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TH2D.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TH2.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TH1.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAxis.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttAxis.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayD.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArray.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayC.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayS.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayI.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TArrayF.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Foption.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TMatrixFBasefwd.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TMatrixDBasefwd.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TCanvas.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TPad.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVirtualPad.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttPad.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TVirtualX.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttText.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/GuiTypes.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/Buttons.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TQObject.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttBBox2D.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TPoint.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TAttCanvas.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TCanvasImp.h:
+
+/cvmfs/fermilab.opensciencegrid.org/products/larsoft/root/v5_34_32/Linux64bit+2.6-2.12-e9-nu-prof/include/TProfile.h:

@@ -335,11 +335,11 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         const CartesianVector mcVertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_V));
         const CartesianVector mcVertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_W));
         
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionU, "MC Vertex U", RED, 1));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionV, "MC Vertex V", RED, 1));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionW, "MC Vertex W", RED, 1));
-        //
-        //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionU, "MC Vertex U", RED, 1));
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionV, "MC Vertex V", RED, 1));
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &mcVertexProjectionW, "MC Vertex W", RED, 1));
+        
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         
         float minimalHitToMCVertexDistance(1000.f);
         for (const Pfo* pPfo : *(pPfoList))

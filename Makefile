@@ -24,6 +24,8 @@ PROJECT_LIBRARY = $(PROJECT_LIBRARY_DIR)/libLArContent.so
 
 INCLUDES  = -I$(PROJECT_INCLUDE_DIR)
 INCLUDES += -I$(PANDORA_DIR)/PandoraSDK-origin/master/include
+INCLUDES += -I$(shell root-config --incdir)
+
 ifdef MONITORING
     INCLUDES += -I$(PANDORA_DIR)/PandoraMonitoring-origin/master/include
 endif

@@ -13,6 +13,11 @@
 
 #include "LArVertex/CandidateVertexCreationAlgorithm.h"
 
+#include "TGraph.h"
+#include "TH2D.h"
+#include "TCanvas.h"
+#include "TProfile.h"
+
 #include <utility> 
 
 using namespace pandora;
@@ -29,7 +34,8 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_chiSquaredCut(2.f),
     m_enableCrossingCandidates(false),
     m_enableEnergyCandidates(false),
-    m_strictMatching(true)
+    m_strictMatching(true),
+    m_energyPlot(false)
 {
 }
 
@@ -388,21 +394,61 @@ void CandidateVertexCreationAlgorithm::Find2DEnergySpikes(const ClusterList &clu
         }
         
         std::sort(energyAlongRLvector.begin(), energyAlongRLvector.end(), SortEnergyVectorByRL);
-
-        for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 4); pairIter != pairIterEnd; ++pairIter)
+        
+        if (m_energyPlot)
         {
-            float chargeRatio(((*(std::next(pairIter, 1))).second)/((*pairIter).second));
+            TGraph *HitEnergy_vs_rL = new TGraph(energyAlongRLvector.size());
+            ClusterList tempClusterList;
+            tempClusterList.insert(pCluster);
             
-            if (chargeRatio > 1.5)
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &tempClusterList, "Visualised Cluster", BLUE, 1));
+            
+            int n(0);
+            
+            for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 4); pairIter != pairIterEnd; ++pairIter)
             {
-                for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+                float chargeRatio(((*(std::next(pairIter, 1))).second)/((*pairIter).second));
+                
+                HitEnergy_vs_rL->SetPoint(n, (*pairIter).first, (*pairIter).second);
+                n++;
+                
+                if (chargeRatio > 1.5)
                 {
-                    const CaloHit *const pCaloHit(*hitIter);
-                    const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
-                    float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
-                        
-                    if (caloHitEnergy == ((*(std::next(pairIter, 1))).second))
-                        energySpikeVector.push_back(caloHitPosition);
+                    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+                    {
+                        const CaloHit *const pCaloHit(*hitIter);
+                        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+                        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
+                            
+                        if (caloHitEnergy == ((*(std::next(pairIter, 1))).second))
+                            energySpikeVector.push_back(caloHitPosition);
+                    }
+                }
+            }
+            
+            TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
+            canvas1->cd();
+            HitEnergy_vs_rL->SetMarkerStyle(6);
+            HitEnergy_vs_rL->Draw("AP");
+            PANDORA_MONITORING_API(Pause(this->GetPandora()));
+        }
+        else
+        {
+            for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 4); pairIter != pairIterEnd; ++pairIter)
+            {
+                float chargeRatio(((*(std::next(pairIter, 1))).second)/((*pairIter).second));
+                
+                if (chargeRatio > 1.5)
+                {
+                    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+                    {
+                        const CaloHit *const pCaloHit(*hitIter);
+                        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+                        float caloHitEnergy(pCaloHit->GetElectromagneticEnergy());
+                            
+                        if (caloHitEnergy == ((*(std::next(pairIter, 1))).second))
+                            energySpikeVector.push_back(caloHitPosition);
+                    }
                 }
             }
         }
@@ -553,6 +599,9 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "StrictMatching", m_strictMatching));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EnergyPlot", m_energyPlot));
 
     return STATUS_CODE_SUCCESS;
 }
