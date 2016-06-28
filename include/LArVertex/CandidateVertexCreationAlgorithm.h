@@ -94,7 +94,8 @@ private:
      *  @param  hitType1 the hit type of the first cluster
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
-    void Find2DEnergySpikes(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &energySpikeVector);
+    void Find2DEnergySpikes(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW, std::vector<pandora::CartesianVector> &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHitsU, std::vector<pandora::CartesianVector> &matchedHitsV);
+    
 
     /**
      *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
@@ -122,6 +123,21 @@ private:
     static bool SortSpacePointsByZ(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
     
     static bool SortEnergyVectorByRL(std::pair<float, float> &pair1, std::pair<float, float> &pair2);
+    
+    void CreateEnergyAlongRLVector(const TwoDSlidingFitResult &slidingFitResult, pandora::CaloHitList &caloHitList, std::vector<std::pair<float, float>> &energyAlongRLvector);
+    
+    void DrawEnergyVector(std::vector<std::pair<float, float>> &energyAlongRLvector, const pandora::Cluster* pCluster);
+    
+    void FilterEnergyVector(std::vector<std::pair<float, float>> &unfilteredEnergyVector, std::vector<std::pair<float, float>> &filteredEnergyVector);
+    
+    void BinEnergyVector(std::vector<std::pair<float, float>> &unbinnedEnergyVector, std::vector<std::vector<std::pair<float, float>>> &binnedEnergyvector);
+    
+    float GetAverageBinEnergy(const std::vector<std::pair<float, float>> &bin);
+    
+    pandora::CartesianVector GetAverageBinPosition(const std::vector<std::pair<float, float>> &bin, const pandora::CaloHitList &caloHitList);
+    
+    void FindMatchingHitsInDifferentView(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHits);
+    
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
