@@ -417,7 +417,7 @@ void CandidateVertexCreationAlgorithm::Find2DEnergySpikes(const ClusterList &clu
             HitEnergy_vs_rL->Draw("AP");
             PANDORA_MONITORING_API(Pause(this->GetPandora()));
         }
-
+        
         for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 4); pairIter != pairIterEnd; ++pairIter)
         {
             float chargeRatio(((*(std::next(pairIter, 1))).second)/((*pairIter).second));
