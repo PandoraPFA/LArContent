@@ -327,16 +327,9 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
     }
     
-    //---------------------------------------------------------TOP 5--------------------------------------------------------------------
-    if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
-    {
-        float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
-        float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
-        
-        std::vector<float> top5VerticesDR;
-        std::vector<float> allVerticesDR;
-        
-        CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.front()).GetVertex());
+    //-----------------------------------------------------------------------------------------------------
+    
+    CartesianVector mcNeutrinoVertexPosition((*mcNeutrinoList.front()).GetVertex());
         
         const CartesianVector mcVertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_U));
         const CartesianVector mcVertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), mcNeutrinoVertexPosition, TPC_VIEW_V));
@@ -374,6 +367,17 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         }
         
         std::cout << "minimalHitToMCVertexDistance: " << minimalHitToMCVertexDistance << std::endl;
+    
+    //---------------------------------------------------------TOP 5--------------------------------------------------------------------
+    if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
+    {
+        float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
+        float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
+        
+        std::vector<float> top5VerticesDR;
+        std::vector<float> allVerticesDR;
+        
+        
         
         if (!pTop5VertexList->empty())
         {
