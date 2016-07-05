@@ -289,6 +289,8 @@ private:
 
     int                 m_fileIdentifier;           ///< The input file identifier
     int                 m_eventNumber;              ///< The event number
+    
+    bool                m_showTrueNeutrinoVertex;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

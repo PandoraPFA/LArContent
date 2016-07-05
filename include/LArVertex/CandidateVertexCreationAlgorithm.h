@@ -94,7 +94,7 @@ private:
      *  @param  hitType1 the hit type of the first cluster
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
-    void Find2DEnergySpikes(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW, std::vector<pandora::CartesianVector> &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHitsU, std::vector<pandora::CartesianVector> &matchedHitsV);
+    void CreateEnergySpikeVertices(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
     
 
     /**
@@ -122,23 +122,19 @@ private:
     
     static bool SortSpacePointsByZ(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
     
-    static bool SortEnergyVectorByRL(std::pair<float, float> &pair1, std::pair<float, float> &pair2);
+    static bool SortEnergyVectorByRL(pandora::CartesianVector &position1, pandora::CartesianVector &position2);
     
-    void CreateEnergyAlongRLVector(const TwoDSlidingFitResult &slidingFitResult, pandora::CaloHitList &caloHitList, std::vector<std::pair<float, float>> &energyAlongRLvector);
+    void CreateEnergyAlongRLVector(const TwoDSlidingFitResult &slidingFitResult, pandora::CaloHitList &caloHitList, std::vector<pandora::CartesianVector> &energyAlongRLvector);
     
-    void DrawEnergyVector(std::vector<std::pair<float, float>> &energyAlongRLvector, const pandora::Cluster* pCluster);
+    void DrawEnergyVector(std::vector<pandora::CartesianVector> &energyAlongRLvector, const pandora::Cluster* pCluster);
     
-    void FilterEnergyVector(std::vector<std::pair<float, float>> &unfilteredEnergyVector, std::vector<std::pair<float, float>> &filteredEnergyVector);
+    void FilterEnergyVector(std::vector<pandora::CartesianVector> &unfilteredEnergyVector, std::vector<pandora::CartesianVector> &filteredEnergyVector);
     
-    void BinEnergyVector(std::vector<std::pair<float, float>> &unbinnedEnergyVector, std::vector<std::vector<std::pair<float, float>>> &binnedEnergyvector);
+    void FindMatchingHitsInDifferentView(const pandora::ClusterList &clusterList, pandora::CartesianVector &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHits);
     
-    float GetAverageBinEnergy(const std::vector<std::pair<float, float>> &bin);
+    void FindEnergySpike(const TwoDSlidingFitResult &slidingFitResult, pandora::CartesianVector &energySpikePosition, bool &foundSplit) const;
     
-    pandora::CartesianVector GetAverageBinPosition(const std::vector<std::pair<float, float>> &bin, const pandora::CaloHitList &caloHitList);
     
-    void FindMatchingHitsInDifferentView(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHits);
-    
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
@@ -160,6 +156,10 @@ private:
     
     bool                        m_strictMatching;
     bool                        m_energyPlot;
+    
+    float                       m_maxScatterRms;
+    float                       m_maxScatterCosTheta;
+    float                       m_maxSlidingCosTheta;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

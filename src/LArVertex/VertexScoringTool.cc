@@ -55,15 +55,11 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
 
-    std::cout << "Number of vertex candidates in event: " << pInputVertexList->size() << std::endl;
-
     VertexList filteredVertexList;
     this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
 
     if (filteredVertexList.empty())
         return;
-
-    std::cout << "Number of filtered vertex candidates in event: " << filteredVertexList.size() << std::endl;
 
     BeamConstants beamConstants;
     this->GetBeamConstants(filteredVertexList, beamConstants);
