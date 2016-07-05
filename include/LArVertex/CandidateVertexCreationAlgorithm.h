@@ -124,15 +124,17 @@ private:
     
     static bool SortEnergyVectorByRL(pandora::CartesianVector &position1, pandora::CartesianVector &position2);
     
-    void CreateEnergyAlongRLVector(const TwoDSlidingFitResult &slidingFitResult, pandora::CaloHitList &caloHitList, std::vector<pandora::CartesianVector> &energyAlongRLvector);
+    void CreateEnergyAlongRLVector(const TwoDSlidingFitResult &slidingFitResult, const pandora::CaloHitList &caloHitList, std::vector<pandora::CartesianVector> &energyAlongRLvector);
     
     void DrawEnergyVector(std::vector<pandora::CartesianVector> &energyAlongRLvector, const pandora::Cluster* pCluster);
     
-    void FilterEnergyVector(std::vector<pandora::CartesianVector> &unfilteredEnergyVector, std::vector<pandora::CartesianVector> &filteredEnergyVector);
+    void FilterEnergyVector(const std::vector<pandora::CartesianVector> &unfilteredEnergyVector, std::vector<pandora::CartesianVector> &filteredEnergyVector);
     
     void FindMatchingHitsInDifferentView(const pandora::ClusterList &clusterList, pandora::CartesianVector &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHits);
     
-    void FindEnergySpike(const TwoDSlidingFitResult &slidingFitResult, pandora::CartesianVector &energySpikePosition, bool &foundSplit) const;
+    void FindEnergySpike(const TwoDSlidingFitResult &slidingFitResult, float &spikeRL, bool &foundSplit) const;
+    
+    void ConvertRLtoCaloHit(const float &spikeRL, const TwoDSlidingFitResult &slidingFitResult, const pandora::CaloHitList &caloHitList, pandora::CartesianVector &hitPosition);
     
     
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

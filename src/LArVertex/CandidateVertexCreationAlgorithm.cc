@@ -379,15 +379,18 @@ void CandidateVertexCreationAlgorithm::CreateEnergySpikeVertices(const ClusterLi
             this->DrawEnergyVector(filteredEnergyAlongRLvector, pCluster);
         
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult energySlidingFitResult(filteredEnergyAlongRLvector, m_slidingFitWindow/4, slidingFitPitch);
+        const TwoDSlidingFitResult energySlidingFitResult(filteredEnergyAlongRLvector, m_slidingFitWindow, slidingFitPitch); 
         
         bool spikeFound(false);
-        CartesianVector energySpikePosition(0.f, 0.f, 0.f);
+        float energySpikeRL(0.f);
         
-        this->FindEnergySpike(energySlidingFitResult, energySpikePosition, spikeFound);
+        this->FindEnergySpike(energySlidingFitResult, energySpikeRL, spikeFound);
         
         if (!spikeFound)
             continue;
+            
+        CartesianVector energySpikePosition(0.f, 0.f, 0.f);
+        this->ConvertRLtoCaloHit(energySpikeRL, slidingFitResult, caloHitList, energySpikePosition);
         
         std::vector<CartesianVector> energySpikesW, matchedHitsU, matchedHitsV;
         
@@ -398,55 +401,6 @@ void CandidateVertexCreationAlgorithm::CreateEnergySpikeVertices(const ClusterLi
         
         this->CreateMatchedVertices(energySpikesW, matchedHitsU, TPC_VIEW_W, TPC_VIEW_U);
         this->CreateMatchedVertices(energySpikesW, matchedHitsV, TPC_VIEW_W, TPC_VIEW_V);
-        
-        ////create energy along RL vector
-        //std::vector<std::pair<float, float>> energyAlongRLvector;
-        //this->CreateEnergyAlongRLVector(slidingFitResult, caloHitList, energyAlongRLvector);
-        //
-        ////sort energy along RL vctor
-        //std::sort(energyAlongRLvector.begin(), energyAlongRLvector.end(), SortEnergyVectorByRL);
-        //
-        ////draw energy along rl vector
-        //if (m_energyPlot)
-        //    this->DrawEnergyVector(energyAlongRLvector, pCluster);
-        //
-        ////filter energy along rl vector
-        //std::vector<std::pair<float, float>> filteredEnergyAlongRLvector;
-        //this->FilterEnergyVector(energyAlongRLvector, filteredEnergyAlongRLvector);
-        //
-        //for (std::vector<std::pair<float, float>>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 1); pairIter != pairIterEnd; ++pairIter)
-        //{
-        //    float chargeRatioNext(((*(std::next(pairIter, 1))).second)/((*pairIter).second));
-        //    
-        //    if (chargeRatioNext > 0.85 && chargeRatioNext < 1.15)
-        //        filteredEnergyAlongRLvector.push_back(*pairIter);
-        //}
-        //
-        //if (filteredEnergyAlongRLvector.empty())
-        //    continue;
-        //
-        //if ((*(filteredEnergyAlongRLvector.end())).first < std::numeric_limits<float>::epsilon() || (*(filteredEnergyAlongRLvector.end())).first < 5.0)
-        //    continue;
-        //
-        //std::vector<std::vector<std::pair<float, float>>> binnedEnergyAlongRLvector;
-        //this->BinEnergyVector(filteredEnergyAlongRLvector, binnedEnergyAlongRLvector);
-        //
-        ////identify energy spike in W
-        //for (std::vector<std::vector<std::pair<float, float>>>::const_iterator binIter = binnedEnergyAlongRLvector.begin(), binIterEnd = std::prev(binnedEnergyAlongRLvector.end(), 1); binIter != binIterEnd; ++binIter)
-        //{
-        //    std::vector<std::pair<float, float>> thisBin(*binIter);
-        //    std::vector<std::pair<float, float>> nextBin(*(std::next(binIter, 1)));
-        //    
-        //    if (this->GetAverageBinEnergy(nextBin) > 1.5 * this->GetAverageBinEnergy(thisBin))
-        //        energySpikeVector.push_back(this->GetAverageBinPosition(thisBin, caloHitList));
-        //        
-        //    if (this->GetAverageBinEnergy(nextBin) < 0.5 * this->GetAverageBinEnergy(thisBin))
-        //        energySpikeVector.push_back(this->GetAverageBinPosition(nextBin, caloHitList));
-        //}
-        //
-        ////store hits in U, V that lie within X range of W energy spike
-        //this->FindMatchingHitsInDifferentView(clusterListU, energySpikeVector, matchedHitsU);
-        //this->FindMatchingHitsInDifferentView(clusterListV, energySpikeVector, matchedHitsV);
         
     }
 }
@@ -563,7 +517,7 @@ bool CandidateVertexCreationAlgorithm::SortEnergyVectorByRL(CartesianVector &pos
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::CreateEnergyAlongRLVector(const TwoDSlidingFitResult &slidingFitResult, CaloHitList &caloHitList, std::vector<CartesianVector> &energyAlongRLvector)
+void CandidateVertexCreationAlgorithm::CreateEnergyAlongRLVector(const TwoDSlidingFitResult &slidingFitResult, const CaloHitList &caloHitList, std::vector<CartesianVector> &energyAlongRLvector)
 {
     for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
     {
@@ -610,9 +564,9 @@ void CandidateVertexCreationAlgorithm::DrawEnergyVector(std::vector<CartesianVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::FilterEnergyVector(std::vector<CartesianVector> &unfilteredEnergyVector, std::vector<CartesianVector> &filteredEnergyVector)
+void CandidateVertexCreationAlgorithm::FilterEnergyVector(const std::vector<CartesianVector> &unfilteredEnergyVector, std::vector<CartesianVector> &filteredEnergyVector)
 {
-    for (std::vector<CartesianVector>::const_iterator pairIter = unfilteredEnergyVector.begin(), pairIterEnd = std::prev(unfilteredEnergyVector.end(), 1); pairIter != pairIterEnd; ++pairIter)
+    for (std::vector<CartesianVector>::const_iterator pairIter = std::next(unfilteredEnergyVector.begin(), 1), pairIterEnd = std::prev(unfilteredEnergyVector.end(), 1); pairIter != pairIterEnd; ++pairIter)
     {
         float chargeRatioNext(((*(std::next(pairIter, 1))).GetZ())/((*pairIter).GetZ()));
         float chargeRatioPrevious(((*(std::prev(pairIter, 1))).GetZ())/((*pairIter).GetZ()));
@@ -652,7 +606,7 @@ void CandidateVertexCreationAlgorithm::FindMatchingHitsInDifferentView(const Clu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::FindEnergySpike(const TwoDSlidingFitResult &slidingFitResult, CartesianVector &spikePosition, bool &foundSpike) const
+void CandidateVertexCreationAlgorithm::FindEnergySpike(const TwoDSlidingFitResult &slidingFitResult, float &spikeRL, bool &foundSpike) const
 {
     // Search for scatters by scanning over the layers in the sliding fit result
     const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
@@ -665,8 +619,6 @@ void CandidateVertexCreationAlgorithm::FindEnergySpike(const TwoDSlidingFitResul
         return;
 
     float bestCosTheta(1.f);
-    
-    float finalRL(0.f);
 
     for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
     {
@@ -703,13 +655,60 @@ void CandidateVertexCreationAlgorithm::FindEnergySpike(const TwoDSlidingFitResul
         if (cosTheta < bestCosTheta) //rms < rmsCut && 
         {
             bestCosTheta = cosTheta;
-            spikePosition = centralPosition;
+            spikeRL = rL;
+            std::cout << "rL: " << rL << std::endl;
             foundSpike = true;
-            finalRL = rL;
         }
     }
     
-    std::cout << "Energy spike found at rL position " << finalRL << std::endl;
+    std::cout << "Energy spike found at rL position " << spikeRL << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::ConvertRLtoCaloHit(const float &spikeRL, const TwoDSlidingFitResult &slidingFitResult, const CaloHitList &caloHitList, CartesianVector &hitPosition)
+{
+    std::vector<std::pair<float, float>> XtoRLvector;
+    
+    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+    {
+        const CaloHit *const pCaloHit(*hitIter);
+        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+        
+        float rL(0.f), rT(0.f);
+        slidingFitResult.GetLocalPosition(caloHitPosition, rL, rT);
+       
+        std::pair<float, float> XvsRL;
+        XvsRL = std::make_pair(caloHitPosition.GetX(), rL);
+        
+        XtoRLvector.push_back(XvsRL);
+    }
+    
+    float targetXcoordinate(0.f);
+    
+    for (std::pair<float, float> &pair : XtoRLvector)
+    {
+        if (pair.second + 0.2 > spikeRL && pair.second - 0.2 < spikeRL)
+        {
+            targetXcoordinate = pair.first;
+            break;
+        }
+    }
+    
+    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+    {
+        const CaloHit *const pCaloHit(*hitIter);
+        const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+        
+        if (caloHitPosition.GetX() == targetXcoordinate)
+            hitPosition = caloHitPosition;
+    }
+    
+    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hitPosition, "New Vertex", GREEN, 1));
+    PANDORA_MONITORING_API(Pause(this->GetPandora()));
+    
+    std::cout << "targetCaloHitPosition (X, Y, Z): " << hitPosition.GetX() << ", " << hitPosition.GetY() << ", " << hitPosition.GetZ() << std::endl;
+    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
