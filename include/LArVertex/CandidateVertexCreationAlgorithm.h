@@ -142,7 +142,9 @@ private:
     std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
     std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
-    std::string                 m_outputVertexListName;         ///< The name under which to save the output vertex list
+    std::string                 m_topologyVertexListName;         ///< The name under which to save the output vertex list
+    std::string                 m_energyVertexListName;
+
     bool                        m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
     unsigned int                m_slidingFitWindow;             ///< The layer window for the sliding linear fits

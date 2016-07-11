@@ -91,6 +91,8 @@ public:
 
     void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, const std::vector<const pandora::VertexList*> vertexListVector, std::vector<VertexScoreList> &scoredClusterCollection);
 
+    void ScoreEnergyVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, const pandora::ClusterList &clusterListW, VertexScoreList &vertexScoreList);
+
 private:
     /**
      *  @brief Beam constants class
@@ -229,6 +231,8 @@ private:
      */
     void GetVertexScoreList(const pandora::VertexList &vertexList, const float &bestFastScore, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
         HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const;
+
+    void NormaliseVertexScores(VertexScoreList &vertexScoreList);
 
     /**
      *  @brief  Get the vertex score list for a provided list of candidate vertices

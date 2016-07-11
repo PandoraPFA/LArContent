@@ -15,6 +15,9 @@
 #include "LArVertex/VertexScoringTool.h"
 #include "LArHelpers/LArMCParticleHelper.h"
 
+#include "LArObjects/LArTwoDSlidingFitObjects.h"
+#include "LArObjects/LArTwoDSlidingFitResult.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -60,19 +63,6 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
     if (filteredVertexList.empty())
         return;
-        
-    //for (const Vertex *const pVertex : (filteredVertexList))
-    //{
-    //    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
-    //    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
-    //    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
-    //    
-    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", BLUE, 1));
-    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", BLUE, 1));
-    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", BLUE, 1));
-    //}
-    //    
-    //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
     BeamConstants beamConstants;
     this->GetBeamConstants(filteredVertexList, beamConstants);
@@ -93,11 +83,75 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
         this->GetVertexScoreList(filteredCluster, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW, clusterVertexScoreList);
 
         std::sort(clusterVertexScoreList.begin(), clusterVertexScoreList.end());
+        this->NormaliseVertexScores(clusterVertexScoreList);
+
         scoredClusterCollection.push_back(clusterVertexScoreList);
     }
 
-    std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);
-   
+    std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);  
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, const VertexList* pInputVertexList, const ClusterList &clusterListW, VertexScoreList &vertexScoreList)
+{
+    HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
+    this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
+
+    VertexList filteredVertexList;
+    this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
+
+    if (filteredVertexList.empty())
+        return;
+    
+    for (ClusterList::const_iterator iter1 = clusterListW.begin(), iter1End = clusterListW.end(); iter1 != iter1End; ++iter1)
+    {
+        const Cluster *const pCluster = *iter1;
+        
+        if (pCluster->GetNCaloHits() < 60)
+            continue;
+    
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingFitResult slidingFitResult(pCluster, 20, slidingFitPitch); 
+        
+        OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        CaloHitList caloHitList;
+        orderedCaloHitList.GetCaloHitList(caloHitList);
+
+        for (const Vertex *const pVertex : (*pInputVertexList))
+        {
+            float vertexL(0.f), vertexT(0.f), firstParticleAverageEnergy(0.f), secondParticleAverageEnergy(0.f);
+            int nHitsFirstParticle(0), nHitsSecondParticle(0);
+            slidingFitResult.GetLocalPosition(pVertex->GetPosition(), vertexL, vertexT);
+
+            for (const CaloHit* pCaloHit : caloHitList)
+            {
+                float hitL(0.f), hitT(0.f);
+                slidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), hitL, hitT);
+                if (hitL <= vertexL)
+                {
+                    firstParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
+                    nHitsFirstParticle++;
+                }
+                else
+                {
+                    secondParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
+                    nHitsSecondParticle++;
+                }
+            }
+
+            firstParticleAverageEnergy /= nHitsFirstParticle;
+            secondParticleAverageEnergy /= nHitsSecondParticle;
+
+            float finalScore(secondParticleAverageEnergy/firstParticleAverageEnergy);
+
+            vertexScoreList.push_back(VertexScore(pVertex, finalScore));
+
+        }
+
+        this->NormaliseVertexScores(vertexScoreList);
+    }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -473,6 +527,24 @@ bool VertexScoringTool::SortClustersBySize(VertexScoreList &firstScoreList, Vert
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexScoringTool::NormaliseVertexScores(VertexScoreList &vertexScoreList)
+{
+    VertexScoreList tempVertexScoreList;
+
+    float bestScore((*(vertexScoreList.begin())).GetScore());
+
+    for (VertexScore &vertexScore : vertexScoreList)
+    {
+        const Vertex *const pVertex(vertexScore.GetVertex());
+        float finalScore(vertexScore.GetScore()/bestScore);
+        tempVertexScoreList.push_back(VertexScore(pVertex, finalScore));
+    }
+    
+    vertexScoreList.clear();
+    vertexScoreList = tempVertexScoreList;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float VertexScoringTool::KernelEstimate::Sample(const float x) const
