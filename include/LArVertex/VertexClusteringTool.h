@@ -95,9 +95,7 @@ public:
 
     typedef std::vector<VertexCluster*> VertexClusterList;
 
-    std::vector<const pandora::VertexList*> ClusterVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pVertexList);
-
-    void RemoveSmallClusters(VertexClusterList &vertexClusterList);
+    std::vector<const pandora::VertexList*> ClusterVertices(const pandora::VertexList* pVertexList);
 
     static bool SortVerticesByZ(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
 
@@ -108,9 +106,6 @@ private:
     float           m_clusteringRadius; ///< The distance between individual vertex candidates that guarantees them being in the same cluster
     float           m_maxVertexToCentroidDistance; ///< The radius around the centroid within which vertices will be added to the current vertex cluster
     unsigned int    m_minClusterSize;   ///< Minimum size of cluster before switching to centroid as part of the distance clustering measure
-    bool            m_removeSmallClusters; ///< Whether to remove small clusters from the vertex
-    bool            m_monteCarloClusterCheck;   ///< Whether to use Montre Carlo information to check whetehr the cluter contains an MC particle begin- or endpoint
-    bool            m_recoEndPointCheck;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

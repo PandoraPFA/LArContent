@@ -21,10 +21,7 @@ namespace lar_content
 VertexClusteringTool::VertexClusteringTool() :
     m_clusteringRadius(2.5f),
     m_maxVertexToCentroidDistance(5.f),
-    m_minClusterSize(5),
-    m_removeSmallClusters(false),
-    m_monteCarloClusterCheck(false),
-    m_recoEndPointCheck(false)
+    m_minClusterSize(5)
 {
 }
 
@@ -46,51 +43,10 @@ bool VertexClusteringTool::SortVerticesByZ(const pandora::Vertex *const pLhs, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algorithm *const pAlgorithm, const VertexList* pVertexList)
+std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const VertexList* pVertexList)
 {
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
-
-    //-------------------------------------------------------------------------------------------------
-
-    const MCParticleList *pMCParticleList = NULL;
-    PandoraContentApi::GetList(*pAlgorithm, "MCParticleList3D", pMCParticleList);
-    MCParticleVector mcPrimaryVector;
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
-
-    std::vector<CartesianVector> endpointVector;
-
-    for (const MCParticle* mcParticle : (*pMCParticleList))
-    {
-        endpointVector.push_back(mcParticle->GetVertex());   
-        endpointVector.push_back(mcParticle->GetEndpoint()); 
-    }
-
-   //-------------------------------------------------------------------------------------------------
-
-//    const ClusterList *pClusterListU(NULL);
-//    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, "ClustersU", pClusterListU));
-
-//    const ClusterList *pClusterListV(NULL);
-//    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, "ClustersV", pClusterListV));
-
-    const ClusterList *pClusterListW(NULL);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, "ClustersW", pClusterListW));
-
-    std::vector<CartesianVector> reconstructedEndpointVectorW;
-
-    for (const Cluster* pCluster : (*pClusterListW))
-    {
-        OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        CartesianVector innerCoordinate(0.f, 0.f, 0.f);
-        CartesianVector outerCoordinate(0.f, 0.f, 0.f);
-
-        LArClusterHelper::GetExtremalCoordinates(orderedCaloHitList, innerCoordinate, outerCoordinate);
-        reconstructedEndpointVectorW.push_back(innerCoordinate);   
-        reconstructedEndpointVectorW.push_back(outerCoordinate); 
-    }
-
-    //-------------------------------------------------------------------------------------------------
 
     std::vector<const Vertex*> sortedVertexVector;
     for (const Vertex *const pVertex : (*pVertexList))
@@ -133,101 +89,20 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Algor
         else
         {
             VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
-
-            if (m_monteCarloClusterCheck)
-            {
-                bool MCCheckFulfilled(false);
-                for (const Vertex *const pAnotherVertex : (pNewVertexCluster->GetVertexList()))
-                {
-                    if (MCCheckFulfilled)
-                        break;
-
-                    for (CartesianVector &endPoint : endpointVector)
-                    {
-                        if (((endPoint - (pAnotherVertex->GetPosition())).GetMagnitude()) < m_maxVertexToCentroidDistance)
-                        {
-                            //std::cout << "True cluster." << std::endl;
-                            vertexClusterList.push_back(pNewVertexCluster);
-                            MCCheckFulfilled = true;
-                            break;  
-                        }
-                    }
-                }
-            }
-            else if (m_recoEndPointCheck)
-            {
-                bool recoCheckFulfilled(false);
-                for (const Vertex *const pYetAnotherVertex : (pNewVertexCluster->GetVertexList()))
-                {
-                    if (recoCheckFulfilled)
-                        break;
-
-                    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pYetAnotherVertex->GetPosition(), TPC_VIEW_W));
-
-                    for (CartesianVector &endPoint : reconstructedEndpointVectorW)
-                    {
-                        if (((endPoint - vertexProjectionW).GetMagnitude()) < m_maxVertexToCentroidDistance)
-                        {
-                            //std::cout << "True cluster." << std::endl;
-                            vertexClusterList.push_back(pNewVertexCluster);
-                            recoCheckFulfilled = true;
-                            break;  
-                        }
-                    }
-                }
-            }
-            else
-                vertexClusterList.push_back(pNewVertexCluster);
+            vertexClusterList.push_back(pNewVertexCluster);
 
             pVertexClusterSeed->ClearVertexCluster();
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
         }
 
-        pPreviousVertex = pVertex;     
+        pPreviousVertex = pVertex;
     }
 
     VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
-
-    if (m_monteCarloClusterCheck)
-    {
-        for (const Vertex *const pVertex : (pNewVertexCluster->GetVertexList()))
-        {
-            for (CartesianVector &endPoint : endpointVector)
-            {
-                if (((endPoint - (pVertex->GetPosition())).GetMagnitude()) < m_maxVertexToCentroidDistance)
-                {
-                    //std::cout << "True cluster." << std::endl;
-                    vertexClusterList.push_back(pNewVertexCluster);
-                    break;   
-                }
-            }
-        }
-    }
-    else if (m_recoEndPointCheck)
-    {
-        for (const Vertex *const pYetAnotherVertex : (pNewVertexCluster->GetVertexList()))
-        {
-            const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pYetAnotherVertex->GetPosition(), TPC_VIEW_W));
-
-            for (CartesianVector &endPoint : reconstructedEndpointVectorW)
-            {
-                if (((endPoint - vertexProjectionW).GetMagnitude()) < m_maxVertexToCentroidDistance)
-                {
-                    //std::cout << "True cluster." << std::endl;
-                    vertexClusterList.push_back(pNewVertexCluster);
-                    break;  
-                }
-            }
-        }
-    }
-    else
-        vertexClusterList.push_back(pNewVertexCluster);
+    vertexClusterList.push_back(pNewVertexCluster);
 
     std::vector<const VertexList*> outputVertexListVector;
-    
-    if (m_removeSmallClusters == true)
-        this->RemoveSmallClusters(vertexClusterList);
     
     for (VertexCluster* pVertexCluster : vertexClusterList)
         outputVertexListVector.push_back(&(pVertexCluster->GetVertexList())); //all for now: later m_nSelectedVerticesPerCluster
@@ -254,21 +129,6 @@ pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositio
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexClusteringTool::RemoveSmallClusters(VertexClusterList &vertexClusterList)
-{
-    for (VertexClusterList::const_iterator iter = vertexClusterList.begin(); iter != vertexClusterList.end(); )
-    {
-        const VertexCluster* pVertexCluster(*iter);
-        
-        if (pVertexCluster->GetVertexList().size() == 1)
-            iter = vertexClusterList.erase(iter); //calls destructor
-        else
-            ++iter;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     // Read settings from xml file here
@@ -278,18 +138,9 @@ StatusCode VertexClusteringTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexToCentroidDistance", m_maxVertexToCentroidDistance));
-        
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RemoveSmallClusters", m_removeSmallClusters));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterSize", m_minClusterSize));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MonteCarloClusterCheck", m_monteCarloClusterCheck));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RecoEndPointCheck", m_recoEndPointCheck));
 
     return STATUS_CODE_SUCCESS;
 }

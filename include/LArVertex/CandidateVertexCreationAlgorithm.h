@@ -132,7 +132,7 @@ private:
     
     void FindMatchingHitsInDifferentView(const pandora::ClusterList &clusterList, pandora::CartesianVector &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHits);
     
-    void FindEnergySpike(const TwoDSlidingFitResult &slidingFitResult, float &spikeRL, bool &foundSplit) const;
+    void FindEnergySpike(std::vector<pandora::CartesianVector> &energyAlongRLvector, std::vector<float> &spikeRLvector, bool &foundSplit) const;
     
     void ConvertRLtoCaloHit(const float &spikeRL, const TwoDSlidingFitResult &slidingFitResult, const pandora::CaloHitList &caloHitList, pandora::CartesianVector &hitPosition);
     
@@ -162,6 +162,8 @@ private:
     float                       m_maxScatterRms;
     float                       m_maxScatterCosTheta;
     float                       m_maxSlidingCosTheta;
+    
+    float                       m_energyDifferenceThreshold;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -65,7 +65,7 @@ StatusCode VertexSelectionAlgorithm::Run()
     //    
     //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
-    std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(this, pInputVertexList);
+    std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pInputVertexList);
 
     //for (const VertexList* pVertexList : vertexListVector)
     //{

@@ -60,6 +60,19 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
     if (filteredVertexList.empty())
         return;
+        
+    //for (const Vertex *const pVertex : (filteredVertexList))
+    //{
+    //    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
+    //    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
+    //    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
+    //    
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Target Vertex", BLUE, 1));
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Target Vertex", BLUE, 1));
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Target Vertex", BLUE, 1));
+    //}
+    //    
+    //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
     BeamConstants beamConstants;
     this->GetBeamConstants(filteredVertexList, beamConstants);
@@ -427,13 +440,27 @@ bool VertexScoringTool::SortByVertexZPosition(const pandora::Vertex *const pLhs,
 
 bool VertexScoringTool::SortClustersByScore(VertexScoreList &firstScoreList, VertexScoreList &secondScoreList)
 {
+    int counterOne(0), counterTwo(0);
+
     float firstTotalClusterScore(0.f);
     for (VertexScore &firstTempVertexScore : firstScoreList)
+    {
+        if (counterOne == 5)
+            break;
+
         firstTotalClusterScore += firstTempVertexScore.GetScore();
+        counterOne++;
+    }
 
     float secondTotalClusterScore(0.f);
     for (VertexScore &secondTempVertexScore : secondScoreList)
+    {
+        if (counterTwo == 5)
+            break;
+
         secondTotalClusterScore += secondTempVertexScore.GetScore();
+        counterTwo++;
+    }
     
     return firstTotalClusterScore > secondTotalClusterScore;
 }

@@ -347,40 +347,43 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
     
-    float minimalHitToMCVertexDistance(1000.f);
-    for (const Pfo* pPfo : *(pPfoList))
-    {
-        PfoList daughterPfoList(pPfo->GetDaughterPfoList());
-        
-        for (const Pfo* pDaughterPfo : daughterPfoList)
-        {
-            ClusterList clusterList(pDaughterPfo->GetClusterList());
-            
-            for (const Cluster* pCluster : clusterList)
-            {
-                OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-                CaloHitList caloHitList;
-                orderedCaloHitList.GetCaloHitList(caloHitList);
-                
-                for (const CaloHit* pCaloHit : caloHitList)
-                {
-                    float hitToMCVertexDistance(((pCaloHit->GetPositionVector()) - (mcNeutrinoVertexPosition)).GetMagnitude());
-                    if (hitToMCVertexDistance < minimalHitToMCVertexDistance)
-                        minimalHitToMCVertexDistance = hitToMCVertexDistance;
-                }
-            }
-        }
-    }
-    
-    std::cout << "minimalHitToMCVertexDistance: " << minimalHitToMCVertexDistance << std::endl;
-    
     //---------------------------------------------------------TOP 5--------------------------------------------------------------------
-    
+    float minimalHitToMCVertexDistance(-1.f);
     float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
     float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
-        
+    
+    std::cout << pPfoList->size() << std::endl;
+    
     if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
+        //for (const Pfo* pPfo : *(pPfoList))
+        //{
+        //    PfoList daughterPfoList(pPfo->GetDaughterPfoList());
+        //    
+        //    for (const Pfo* pDaughterPfo : daughterPfoList)
+        //    {
+        //        ClusterList clusterList(pDaughterPfo->GetClusterList());
+        //        
+        //        for (const Cluster* pCluster : clusterList)
+        //        {
+        //            OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        //            CaloHitList caloHitList;
+        //            orderedCaloHitList.GetCaloHitList(caloHitList);
+        //            
+        //            for (const CaloHit* pCaloHit : caloHitList)
+        //            {
+        //                float hitToMCVertexDistance(((pCaloHit->GetPositionVector()) - (mcNeutrinoVertexPosition)).GetMagnitude());
+        //                if (hitToMCVertexDistance < minimalHitToMCVertexDistance)
+        //                    minimalHitToMCVertexDistance = hitToMCVertexDistance;
+        //            }
+        //        }
+        //    }
+        //}
+        //
+        //std::cout << "minimalHitToMCVertexDistance: " << minimalHitToMCVertexDistance << std::endl;
+        
+        //----------------------------------------------------------------------------------------------------------------------------------
+        
         std::vector<float> top5VerticesDR;
         std::vector<float> allVerticesDR;
         
@@ -388,11 +391,20 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         {
             for (const Vertex *const pVertex : (*pTop5VertexList))
             {
-                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-                top5VerticesDR.push_back(vertexDR);
+                try
+                {
+                    float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                    top5VerticesDR.push_back(vertexDR);
+                }
+                
+                catch(...)
+                {
+                    continue;
+                }
             }
             
-            top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
+            if (!top5VerticesDR.empty())
+                top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
             
             for (const Vertex *const pVertex : (*pTop5VertexList))
             {
@@ -410,15 +422,22 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         
         if (!pAllVerticesList->empty())
         {
-            std::cout << "All vertex list contains " << pAllVerticesList->size() << " entries." << std::endl;
-            
             for (const Vertex *const pVertex : (*pAllVerticesList))
             {
-                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-                allVerticesDR.push_back(vertexDR);
+                try
+                {
+                    float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                    allVerticesDR.push_back(vertexDR);
+                }
+                
+                catch(...)
+                {
+                    continue;
+                }
             }
             
-            bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
+            if (!allVerticesDR.empty())
+                bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
             
             float DeltaU(0.f), DeltaV(0.f), DeltaW(0.f);
             

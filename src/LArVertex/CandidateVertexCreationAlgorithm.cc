@@ -36,9 +36,10 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_enableEnergyCandidates(false),
     m_strictMatching(true),
     m_energyPlot(false),
-    m_maxScatterRms(0.2f), //0.2
+    m_maxScatterRms(0.4f), //0.2
     m_maxScatterCosTheta(0.905f), //0.905f
-    m_maxSlidingCosTheta(0.985f) //0.985f
+    m_maxSlidingCosTheta(0.985f), //0.985f
+    m_energyDifferenceThreshold(0.5)
 {
 }
 
@@ -358,7 +359,7 @@ void CandidateVertexCreationAlgorithm::CreateEnergySpikeVertices(const ClusterLi
     {
         const Cluster *const pCluster = *iter1;
         
-        if (pCluster->GetNCaloHits() < 20)
+        if (pCluster->GetNCaloHits() < 60)
             continue;
     
         const TwoDSlidingFitResult &slidingFitResult(this->GetCachedSlidingFitResult(*iter1));
@@ -379,29 +380,31 @@ void CandidateVertexCreationAlgorithm::CreateEnergySpikeVertices(const ClusterLi
             this->DrawEnergyVector(filteredEnergyAlongRLvector, pCluster);
         
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult energySlidingFitResult(filteredEnergyAlongRLvector, m_slidingFitWindow, slidingFitPitch); 
+        const TwoDSlidingFitResult energySlidingFitResult(filteredEnergyAlongRLvector, 2*m_slidingFitWindow, slidingFitPitch); 
         
         bool spikeFound(false);
-        float energySpikeRL(0.f);
+        std::vector<float> energySpikeRLvector;
         
-        this->FindEnergySpike(energySlidingFitResult, energySpikeRL, spikeFound);
+        this->FindEnergySpike(filteredEnergyAlongRLvector, energySpikeRLvector, spikeFound);
         
         if (!spikeFound)
             continue;
+        
+        for (const float &energySpikeRL : energySpikeRLvector)
+        {
+            CartesianVector energySpikePosition(0.f, 0.f, 0.f);
+            this->ConvertRLtoCaloHit(energySpikeRL, slidingFitResult, caloHitList, energySpikePosition);
             
-        CartesianVector energySpikePosition(0.f, 0.f, 0.f);
-        this->ConvertRLtoCaloHit(energySpikeRL, slidingFitResult, caloHitList, energySpikePosition);
-        
-        std::vector<CartesianVector> energySpikesW, matchedHitsU, matchedHitsV;
-        
-        energySpikesW.push_back(energySpikePosition);
-        
-        this->FindMatchingHitsInDifferentView(clusterListU, energySpikePosition, matchedHitsU);
-        this->FindMatchingHitsInDifferentView(clusterListV, energySpikePosition, matchedHitsV);
-        
-        this->CreateMatchedVertices(energySpikesW, matchedHitsU, TPC_VIEW_W, TPC_VIEW_U);
-        this->CreateMatchedVertices(energySpikesW, matchedHitsV, TPC_VIEW_W, TPC_VIEW_V);
-        
+            std::vector<CartesianVector> energySpikesW, matchedHitsU, matchedHitsV;
+            
+            energySpikesW.push_back(energySpikePosition);
+            
+            this->FindMatchingHitsInDifferentView(clusterListU, energySpikePosition, matchedHitsU);
+            this->FindMatchingHitsInDifferentView(clusterListV, energySpikePosition, matchedHitsV);
+            
+            this->CreateMatchedVertices(energySpikesW, matchedHitsU, TPC_VIEW_W, TPC_VIEW_U);
+            this->CreateMatchedVertices(energySpikesW, matchedHitsV, TPC_VIEW_W, TPC_VIEW_V);
+        }
     }
 }
 
@@ -573,7 +576,7 @@ void CandidateVertexCreationAlgorithm::FilterEnergyVector(const std::vector<Cart
         
         //std::cout << "(X, Y, Z): " << (*pairIter).GetX() << ", " << (*pairIter).GetY() << ", " << (*pairIter).GetZ() << std::endl;
         
-        if (!(chargeRatioPrevious < 0.7 && chargeRatioNext < 0.7))
+        if (!(chargeRatioPrevious < 0.8 && chargeRatioNext < 0.8))
             filteredEnergyVector.push_back(*pairIter);
     }
 }
@@ -598,7 +601,7 @@ void CandidateVertexCreationAlgorithm::FindMatchingHitsInDifferentView(const Clu
             const CaloHit *const pCaloHit(*hitIter);
             const CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
             
-            if (caloHitPosition.GetX() + 1.0 > energySpikePosition.GetX() && caloHitPosition.GetX() - 1.0 < energySpikePosition.GetX())
+            if (caloHitPosition.GetX() + 0.5 > energySpikePosition.GetX() && caloHitPosition.GetX() - 0.5 < energySpikePosition.GetX())
                 matchedHits.push_back(caloHitPosition);
         }
     }
@@ -606,62 +609,104 @@ void CandidateVertexCreationAlgorithm::FindMatchingHitsInDifferentView(const Clu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::FindEnergySpike(const TwoDSlidingFitResult &slidingFitResult, float &spikeRL, bool &foundSpike) const
+void CandidateVertexCreationAlgorithm::FindEnergySpike(std::vector<CartesianVector> &energyAlongRLvector, std::vector<float> &spikeRLvector, bool &foundSpike) const
 {
-    // Search for scatters by scanning over the layers in the sliding fit result
-    const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
-    const int minLayer(layerFitResultMap.begin()->first), maxLayer(layerFitResultMap.rbegin()->first);
+    float chargeDifferenceThreshold(m_energyDifferenceThreshold);
     
-    const int nLayersHalfWindow(slidingFitResult.GetLayerFitHalfWindow());
-    const int nLayersSpanned(1 + maxLayer - minLayer);
-    
-    if (nLayersSpanned <= 2 * nLayersHalfWindow)
-        return;
-
-    float bestCosTheta(1.f);
-
-    for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+    for (std::vector<CartesianVector>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 2); pairIter != pairIterEnd; ++pairIter)
     {
-        const int iLayer(iter->first);
-
-        const float rL(slidingFitResult.GetL(iLayer));
-        const float rL1(slidingFitResult.GetL(iLayer - nLayersHalfWindow));
-        const float rL2(slidingFitResult.GetL(iLayer + nLayersHalfWindow));
-
-        CartesianVector centralPosition(0.f,0.f,0.f), firstDirection(0.f,0.f,0.f), secondDirection(0.f,0.f,0.f);
-
-        if ((STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitPosition(rL, centralPosition)) ||
-            (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitDirection(rL1, firstDirection)) ||
-            (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitDirection(rL2, secondDirection)))
-        {
-            continue;
-        }
-
-        const float cosTheta(firstDirection.GetDotProduct(secondDirection));
+        //std::cout << "rL: " << (*pairIter).GetX() << std::endl;
+        //std::cout << "rT: " << (*pairIter).GetZ() << std::endl;
+        //std::cout << "charge ratio: " << ((*(std::next(pairIter, 2))).GetZ())/((*pairIter).GetZ()) << std::endl;
+        //std::cout << "charge difference: " << std::abs(((*(std::next(pairIter, 1))).GetZ()) - ((*pairIter).GetZ())) << std::endl;
+        //std::cout << "---------------------" << std::endl;
         
-        //std::cout << cosTheta << std::endl;
-        //const float rms1(slidingFitResult.GetFitRms(rL1));
-        //const float rms2(slidingFitResult.GetFitRms(rL2));
-        //const float rms(std::max(rms1, rms2));
-        //
-        //float rmsCut(m_maxScatterRms);
-        //
-        //if (cosTheta > m_maxScatterCosTheta)
-        //{
-        //    rmsCut *= ((m_maxSlidingCosTheta > cosTheta) ? (m_maxSlidingCosTheta - cosTheta) /
-        //            (m_maxSlidingCosTheta - m_maxScatterCosTheta) : 0.f);
-        //}
-
-        if (cosTheta < bestCosTheta) //rms < rmsCut && 
+        if (std::abs(((*(std::next(pairIter, 2))).GetZ()) - ((*pairIter).GetZ())) > chargeDifferenceThreshold)
         {
-            bestCosTheta = cosTheta;
-            spikeRL = rL;
-            std::cout << "rL: " << rL << std::endl;
+            //float nextFiveAverageCharge(0.f);
+            //float previousFiveAverageCharge(0.f);
+            //
+            //for (int i = 1; i != 5; ++i)
+            //{
+            //    nextFiveAverageCharge += ((*(std::next(pairIter, i))).GetZ());
+            //    previousFiveAverageCharge += ((*(std::prev(pairIter, i))).GetZ());
+            //}
+            //
+            //nextFiveAverageCharge /= 5.0;
+            //previousFiveAverageCharge /= 5.0;
+            
+            const float spikeRL = (*pairIter).GetX();
+            spikeRLvector.push_back(spikeRL);
             foundSpike = true;
         }
     }
     
-    std::cout << "Energy spike found at rL position " << spikeRL << std::endl;
+    for (const float &rLiter : spikeRLvector)
+        std::cout << "Spike rL: " << rLiter << std::endl;
+    
+    //// Search for scatters by scanning over the layers in the sliding fit result
+    //const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
+    //const int minLayer(layerFitResultMap.begin()->first), maxLayer(layerFitResultMap.rbegin()->first);
+    //
+    //const int nLayersHalfWindow(slidingFitResult.GetLayerFitHalfWindow());
+    //const int nLayersSpanned(1 + maxLayer - minLayer);
+    //
+    //if (nLayersSpanned <= 2 * nLayersHalfWindow)
+    //    return;
+    //    
+    //std::cout << nLayersHalfWindow << std::endl;
+    //
+    //float bestCosTheta(1.f);
+    //
+    //for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
+    //{
+    //    const int iLayer(iter->first);
+    //    const LayerFitResult layerFitResult(iter->second);
+    //
+    //    const float rL(slidingFitResult.GetL(iLayer));
+    //    const float rT(layerFitResult.GetFitT());
+    //    
+    //    const float rL1(slidingFitResult.GetL(iLayer - nLayersHalfWindow));
+    //    const float rL2(slidingFitResult.GetL(iLayer + nLayersSpanned/8)); //1/8 of layers spanned: proton to muon length approx. 1/8
+    //
+    //    CartesianVector centralPosition(0.f,0.f,0.f), firstDirection(0.f,0.f,0.f), secondDirection(0.f,0.f,0.f);
+    //
+    //    if ((STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitPosition(rL, centralPosition)) ||
+    //        (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitDirection(rL1, firstDirection)) ||
+    //        (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitDirection(rL2, secondDirection)))
+    //    {
+    //        continue;
+    //    }
+    //
+    //    const float cosTheta(firstDirection.GetDotProduct(secondDirection));
+    //    
+    //    const float rms1(slidingFitResult.GetFitRms(rL1));
+    //    const float rms2(slidingFitResult.GetFitRms(rL2));
+    //    const float rms(std::max(rms1, rms2));
+    //    
+    //    //float rmsCut(m_maxScatterRms);
+    //    
+    //    //if (cosTheta > m_maxScatterCosTheta)
+    //    //{
+    //    //    rmsCut *= ((m_maxSlidingCosTheta > cosTheta) ? (m_maxSlidingCosTheta - cosTheta) /
+    //    //            (m_maxSlidingCosTheta - m_maxScatterCosTheta) : 0.f);
+    //    //}
+    //    
+    //    std::cout << "rms: " << rms << std::endl;
+    //    std::cout << "cosTheta: " << cosTheta << std::endl;
+    //    std::cout << "rL: " << rL << std::endl;
+    //    std::cout << "rT: " << rT << std::endl;
+    //    std::cout << "------------" << std::endl;
+    //
+    //    if (cosTheta < bestCosTheta) //rms < rmsCut && 
+    //    {
+    //        bestCosTheta = cosTheta;
+    //        spikeRL = rL;
+    //        foundSpike = true;
+    //    }
+    //}
+    //
+    //std::cout << "Energy spike found at rL position " << spikeRL << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -704,10 +749,10 @@ void CandidateVertexCreationAlgorithm::ConvertRLtoCaloHit(const float &spikeRL, 
             hitPosition = caloHitPosition;
     }
     
-    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hitPosition, "New Vertex", GREEN, 1));
-    PANDORA_MONITORING_API(Pause(this->GetPandora()));
-    
-    std::cout << "targetCaloHitPosition (X, Y, Z): " << hitPosition.GetX() << ", " << hitPosition.GetY() << ", " << hitPosition.GetZ() << std::endl;
+    //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hitPosition, "New Vertex", GREEN, 1));
+    //PANDORA_MONITORING_API(Pause(this->GetPandora()));
+    //
+    //std::cout << "targetCaloHitPosition (X, Y, Z): " << hitPosition.GetX() << ", " << hitPosition.GetY() << ", " << hitPosition.GetZ() << std::endl;
     
 }
 
@@ -751,6 +796,10 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnergyPlot", m_energyPlot));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EnergyDifferenceThreshold", m_energyDifferenceThreshold));
+        
 
     return STATUS_CODE_SUCCESS;
 }
