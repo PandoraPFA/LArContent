@@ -31,7 +31,8 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_useDetectorGaps(true),
     m_gapTolerance(0.f),
     m_isEmptyViewAcceptable(true),
-    m_enableClustering(false)
+    m_enableClustering(false),
+    m_enableEnergyCandidates(false)
 {
 }
 
@@ -39,12 +40,16 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
 
 StatusCode VertexSelectionAlgorithm::Run()
 {
-    const VertexList *pInputVertexList(NULL);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
+    const VertexList *pTopologyVertexList(NULL);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_topologyVertexListName, pTopologyVertexList));
+    
+    const VertexList *pEnergyVertexList(NULL);
+    if (m_enableEnergyCandidates)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_energyVertexListName, pEnergyVertexList));
 
-    const VertexList inputVertexListCopy(*pInputVertexList);
+    const VertexList inputVertexListCopy(*pTopologyVertexList);
 
-    if (!pInputVertexList || pInputVertexList->empty())
+    if (!pTopologyVertexList || pTopologyVertexList->empty())
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "VertexSelectionAlgorithm: unable to find current vertex list " << std::endl;
@@ -52,11 +57,26 @@ StatusCode VertexSelectionAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pInputVertexList);
+    if (!pEnergyVertexList || pEnergyVertexList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "VertexSelectionAlgorithm: there is no energy vertex list. Energy vertices are probably turned off." << std::endl;
+    }
+
+
+    std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pTopologyVertexList);
     
     std::vector<VertexScoringTool::VertexScoreList> scoredClusterCollection;
-    m_pVertexScoringTool->ScoreVertices(this, pInputVertexList, vertexListVector, scoredClusterCollection);
-    
+    m_pVertexScoringTool->ScoreVertices(this, pTopologyVertexList, vertexListVector, scoredClusterCollection);
+
+    VertexScoringTool::VertexScoreList energyVertexScoreList;
+
+    if (m_enableEnergyCandidates && !pEnergyVertexList->empty())
+    {
+        m_pVertexScoringTool->ScoreEnergyVertices(this, pEnergyVertexList, energyVertexScoreList);
+        std::sort(energyVertexScoreList.begin(), energyVertexScoreList.end());
+    }
+
     VertexList selectedVertexList;
     this->SelectTopScoreVertices(scoredClusterCollection, selectedVertexList);
     
@@ -66,10 +86,17 @@ StatusCode VertexSelectionAlgorithm::Run()
     //---------------------------------------------------------------------------------------------------------------------------------------
     
     VertexScoringTool::VertexScoreList intermediateVertexScoreList;
+
     unsigned int clusterCounter(0);
     
     if (m_enableClustering)
     {
+        if (m_enableEnergyCandidates && !energyVertexScoreList.empty())
+        {
+            intermediateVertexScoreList.push_back(*energyVertexScoreList.begin());
+            clusterCounter++;
+        }
+
         for (VertexScoringTool::VertexScoreList &tempVertexScoreList : scoredClusterCollection)
         {
             if (clusterCounter == 5 || clusterCounter == scoredClusterCollection.size())
@@ -94,6 +121,9 @@ StatusCode VertexSelectionAlgorithm::Run()
             
             anotherVertexScoreList.insert(anotherVertexScoreList.begin(), tempVertexScoreList.begin(), tempVertexScoreList.end());
         }
+
+        if (m_enableEnergyCandidates && !energyVertexScoreList.empty())
+            anotherVertexScoreList.insert(anotherVertexScoreList.begin(), energyVertexScoreList.begin(), energyVertexScoreList.end());
         
         std::sort(anotherVertexScoreList.begin(), anotherVertexScoreList.end());
         
@@ -176,6 +206,7 @@ void VertexSelectionAlgorithm::SelectTopScoreVertices(std::vector<VertexScoringT
         vertexScoreList.insert(vertexScoreList.begin(), tempVertexScoreList.begin(), tempVertexScoreList.end());
     
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
+    m_pVertexScoringTool->NormaliseVertexScores(vertexScoreList);
     
     for (const VertexScoringTool::VertexScore &vertexScore : vertexScoreList)
     {
@@ -232,6 +263,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     m_pVertexScoringTool = dynamic_cast<VertexScoringTool *>(pAnotherAlgorithmTool);
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TopologyVertexListName", m_topologyVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "EnergyVertexListName", m_energyVertexListName));
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "Top5VertexListName", m_top5VertexListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "AllOtherVertexListName", m_allOtherVertexListName));
@@ -271,6 +305,9 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnableClustering", m_enableClustering));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EnableEnergyCandidates", m_enableEnergyCandidates));
 
     return STATUS_CODE_SUCCESS;
 }

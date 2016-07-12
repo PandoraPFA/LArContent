@@ -122,6 +122,10 @@ private:
     VertexScoringTool    *m_pVertexScoringTool;    ///< Vertex Tool 2
 
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
+
+    std::string     m_topologyVertexListName;
+    std::string     m_energyVertexListName;
+
     std::string     m_top5VertexListName;
     std::string     m_allOtherVertexListName;
     
@@ -143,6 +147,7 @@ private:
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     
     bool            m_enableClustering;
+    bool            m_enableEnergyCandidates;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -83,7 +83,6 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
         this->GetVertexScoreList(filteredCluster, bestFastScore, beamConstants, kdTreeU, kdTreeV, kdTreeW, clusterVertexScoreList);
 
         std::sort(clusterVertexScoreList.begin(), clusterVertexScoreList.end());
-        this->NormaliseVertexScores(clusterVertexScoreList);
 
         scoredClusterCollection.push_back(clusterVertexScoreList);
     }
@@ -93,7 +92,7 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, const VertexList* pInputVertexList, const ClusterList &clusterListW, VertexScoreList &vertexScoreList)
+void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, const VertexList* pInputVertexList, VertexScoreList &vertexScoreList)
 {
     HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
     this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
@@ -103,6 +102,10 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
 
     if (filteredVertexList.empty())
         return;
+
+    const ClusterList *pClusterList = NULL;
+    PandoraContentApi::GetList(*pAlgorithm, "ClustersW", pClusterList);
+    const ClusterList clusterListW = *pClusterList;
     
     for (ClusterList::const_iterator iter1 = clusterListW.begin(), iter1End = clusterListW.end(); iter1 != iter1End; ++iter1)
     {
@@ -530,19 +533,16 @@ bool VertexScoringTool::SortClustersBySize(VertexScoreList &firstScoreList, Vert
 
 void VertexScoringTool::NormaliseVertexScores(VertexScoreList &vertexScoreList)
 {
-    VertexScoreList tempVertexScoreList;
-
-    float bestScore((*(vertexScoreList.begin())).GetScore());
+    float bestScore(0.f);
 
     for (VertexScore &vertexScore : vertexScoreList)
     {
-        const Vertex *const pVertex(vertexScore.GetVertex());
-        float finalScore(vertexScore.GetScore()/bestScore);
-        tempVertexScoreList.push_back(VertexScore(pVertex, finalScore));
+        if (vertexScore.GetScore() > bestScore)
+            bestScore = vertexScore.GetScore();
     }
-    
-    vertexScoreList.clear();
-    vertexScoreList = tempVertexScoreList;
+
+    for (VertexScore &vertexScore : vertexScoreList)
+        vertexScore.MultiplyScore(1/bestScore);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
