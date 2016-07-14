@@ -113,7 +113,10 @@ private:
      *  @return boolean
      */
     bool AcceptVertexLocation(const pandora::Vertex *const pVertex, const pandora::VertexList &selectedVertexList) const;
+
+    void StoreTop5Information(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList);
     
+    void StoreTopAllInformation(const pandora::VertexList* pTopologyVertexList, const pandora::VertexList* pEnergyVertexList, bool &energyVertices);
     //------------------------------------------------------------------------------------------------------------------------------
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -147,7 +150,6 @@ private:
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     
     bool            m_enableClustering;
-    bool            m_enableEnergyCandidates;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

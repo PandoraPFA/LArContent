@@ -47,26 +47,12 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
 
 StatusCode CandidateVertexCreationAlgorithm::Run()
 {
+    //std::cout << "Cluster list sizes: " << clusterListU.size() << " " << clusterListV.size() << " " << clusterListW.size() << std::endl;
+
     try
     {
         ClusterList clusterListU, clusterListV, clusterListW;
         this->SelectClusters(clusterListU, clusterListV, clusterListW);
-
-        if (m_enableEnergyCandidates)
-        {
-            VertexList energyVertices;
-
-            const VertexList *pEnergyVerticesTemporaryList(NULL);
-            std::string energyVerticesTemporaryList;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pEnergyVerticesTemporaryList, energyVerticesTemporaryList));
-
-            this->CreateEnergySpikeVertices(clusterListU, clusterListV, clusterListW);
-        
-            for (const Vertex *const pVertex : (*pEnergyVerticesTemporaryList))
-                energyVertices.insert(pVertex);
-            
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_energyVertexListName, energyVertices));
-        }
 
         const VertexList *pVertexList(NULL); std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
@@ -97,13 +83,42 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
             if (m_replaceCurrentVertexList)
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_topologyVertexListName));
         }
-
-        this->TidyUp();
     }
     catch (StatusCodeException &statusCodeException)
     {
         this->TidyUp();
         throw statusCodeException;
+    }
+
+    this->TidyUp();
+
+    if (m_enableEnergyCandidates)
+    {
+        try
+        {   
+            ClusterList energyClusterListU, energyClusterListV, energyClusterListW;
+            this->SelectClusters(energyClusterListU, energyClusterListV, energyClusterListW);
+            
+            VertexList energyVertices;
+
+            const VertexList *pEnergyVerticesTemporaryList(NULL);
+            std::string energyVerticesTemporaryList;
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pEnergyVerticesTemporaryList, energyVerticesTemporaryList));
+
+            this->CreateEnergySpikeVertices(energyClusterListU, energyClusterListV, energyClusterListW);
+            
+            for (const Vertex *const pVertex : (*pEnergyVerticesTemporaryList))
+                energyVertices.insert(pVertex);
+                
+            if (!pEnergyVerticesTemporaryList->empty())
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_energyVertexListName, energyVertices));               
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            this->TidyUp();
+        }
+
+        this->TidyUp();
     }
 
     return STATUS_CODE_SUCCESS;
@@ -368,16 +383,6 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
 
 void CandidateVertexCreationAlgorithm::CreateEnergySpikeVertices(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW)
 {
-    CartesianVector badVector(0.f, 0.f, 0.f);
-
-    PandoraContentApi::Vertex::Parameters parameters;
-    parameters.m_position = badVector;
-    parameters.m_vertexLabel = VERTEX_INTERACTION;
-    parameters.m_vertexType = VERTEX_3D;
-                        
-    const Vertex *pBadVertex(NULL);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pBadVertex));
-
     for (ClusterList::const_iterator iter1 = clusterListW.begin(), iter1End = clusterListW.end(); iter1 != iter1End; ++iter1)
     {
         const Cluster *const pCluster = *iter1;
@@ -435,7 +440,7 @@ void CandidateVertexCreationAlgorithm::CreateEnergySpikeVertices(const ClusterLi
 
 void CandidateVertexCreationAlgorithm::CreateMatchedVertices(std::vector<CartesianVector> &crossingsVector1, std::vector<CartesianVector> &crossingsVector2, HitType hitType1, HitType hitType2) const
 {
-    if (crossingsVector1.empty() || crossingsVector2.empty())
+     if (crossingsVector1.empty() || crossingsVector2.empty())
         return;
     
     for (CartesianVector &position1: crossingsVector1)
