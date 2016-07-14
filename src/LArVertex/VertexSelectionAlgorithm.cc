@@ -159,7 +159,9 @@ bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex,
 
 void VertexSelectionAlgorithm::StoreTop5Information(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList)
 {
-    VertexScoringTool::VertexScoreList intermediateVertexScoreList;
+    VertexScoringTool::VertexScoreList top5VertexScoreList;
+    
+    std::sort(energyVertexScoreList.begin(), energyVertexScoreList.end());
 
     unsigned int clusterCounter(0);
     
@@ -167,57 +169,58 @@ void VertexSelectionAlgorithm::StoreTop5Information(std::vector<VertexScoringToo
     {
         if (!energyVertexScoreList.empty())
         {
-            intermediateVertexScoreList.push_back(*energyVertexScoreList.begin());
+            top5VertexScoreList.push_back(*energyVertexScoreList.begin());
             clusterCounter++;
         }
 
-        for (VertexScoringTool::VertexScoreList &tempVertexScoreList : scoredClusterCollection)
+        for (VertexScoringTool::VertexScoreList &vertexScoreList : scoredClusterCollection)
         {
-            if (clusterCounter == 5 || clusterCounter == scoredClusterCollection.size())
+            if (clusterCounter == 5)
                 break;
                 
-            if (tempVertexScoreList.size() == 0)
+            if (vertexScoreList.size() == 0)
                 continue;
             
-            std::sort(tempVertexScoreList.begin(), tempVertexScoreList.end());
-            intermediateVertexScoreList.push_back(*tempVertexScoreList.begin());
+            std::sort(vertexScoreList.begin(), vertexScoreList.end());
+            top5VertexScoreList.push_back(*vertexScoreList.begin());
             clusterCounter++;
         }
     }
     else
     {
-        VertexScoringTool::VertexScoreList anotherVertexScoreList;
+        VertexScoringTool::VertexScoreList temporaryVertexScoreList;
         
-        for (VertexScoringTool::VertexScoreList &tempVertexScoreList : scoredClusterCollection)
+        for (VertexScoringTool::VertexScoreList &vertexScoreList : scoredClusterCollection)
         {
-            if (tempVertexScoreList.size() == 0)
+            if (vertexScoreList.size() == 0)
                 continue;
             
-            anotherVertexScoreList.insert(anotherVertexScoreList.begin(), tempVertexScoreList.begin(), tempVertexScoreList.end());
+            temporaryVertexScoreList.insert(temporaryVertexScoreList.begin(), vertexScoreList.begin(), vertexScoreList.end());
         }
-
+        
+        std::sort(temporaryVertexScoreList.begin(), temporaryVertexScoreList.end());
+        
         if (!energyVertexScoreList.empty())
-            anotherVertexScoreList.insert(anotherVertexScoreList.begin(), energyVertexScoreList.begin(), energyVertexScoreList.end());
-        
-        std::sort(anotherVertexScoreList.begin(), anotherVertexScoreList.end());
-        
-        for (VertexScoringTool::VertexScore &anotherTempVertexScore : anotherVertexScoreList)
         {
-            if (clusterCounter == 5 || clusterCounter == anotherVertexScoreList.size())
+            top5VertexScoreList.push_back(*energyVertexScoreList.begin());
+            clusterCounter++;
+        }
+        
+        for (VertexScoringTool::VertexScore &vertexScore : temporaryVertexScoreList)
+        {
+            if (clusterCounter == 5)
                 break;
             
-            intermediateVertexScoreList.push_back(anotherTempVertexScore);
+            top5VertexScoreList.push_back(vertexScore);
             clusterCounter++;
         }
     }
-    
-    std::sort(intermediateVertexScoreList.begin(), intermediateVertexScoreList.end());
     
     const VertexList *pTop5TemporaryList(NULL);
     std::string top5TemporaryListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTop5TemporaryList, top5TemporaryListName));
     
-    for (const VertexScoringTool::VertexScore &vertexScore: intermediateVertexScoreList)
+    for (const VertexScoringTool::VertexScore &vertexScore: top5VertexScoreList)
     {
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = vertexScore.GetVertex()->GetPosition();
