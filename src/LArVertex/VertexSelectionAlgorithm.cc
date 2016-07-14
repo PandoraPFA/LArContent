@@ -77,15 +77,15 @@ StatusCode VertexSelectionAlgorithm::Run()
     catch (StatusCodeException &statusCodeException)
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "There are no energy vertices: the setting is probabaly disabled." << std::endl;
+            std::cout << "There are no energy vertices." << std::endl;
     }    
 
     //---------------------------------------------------------------------------------------------------------------------------------------
 
     try
     {
-    this->StoreTop5Information(scoredClusterCollection, energyVertexScoreList);
-    this->StoreTopAllInformation(pTopologyVertexList, pEnergyVertexList, energyVertices);
+        this->StoreTop5Information(scoredClusterCollection, energyVertexScoreList);
+        this->StoreTopAllInformation(pTopologyVertexList, pEnergyVertexList, energyVertices);
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -244,7 +244,13 @@ void VertexSelectionAlgorithm::StoreTopAllInformation(const VertexList* pTopolog
     std::string allVerticesTemporaryList;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pAllVerticesTemporaryList, allVerticesTemporaryList));
     
-    for (const Vertex *const pVertex : (*pTopologyVertexList))
+    VertexList allVerticesList;
+    allVerticesList.insert(pTopologyVertexList->begin(), pTopologyVertexList->end());
+    
+    if (energyVertices)
+        allVerticesList.insert(pEnergyVertexList->begin(), pEnergyVertexList->end());
+    
+    for (const Vertex *const pVertex : allVerticesList)
     {
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = pVertex->GetPosition();
@@ -253,20 +259,6 @@ void VertexSelectionAlgorithm::StoreTopAllInformation(const VertexList* pTopolog
 
         const Vertex *pVertexClone(NULL);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertexClone));
-    }
-
-    if (energyVertices)
-    {
-        for (const Vertex *const pEnergyVertex : (*pEnergyVertexList))
-        {
-            PandoraContentApi::Vertex::Parameters energyParameters;
-            energyParameters.m_position = pEnergyVertex->GetPosition();
-            energyParameters.m_vertexLabel = pEnergyVertex->GetVertexLabel();
-            energyParameters.m_vertexType = pEnergyVertex->GetVertexType();
-
-            const Vertex *pEnergyVertexClone(NULL);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, energyParameters, pEnergyVertexClone));
-        }
     }
 
     VertexList allVertices;

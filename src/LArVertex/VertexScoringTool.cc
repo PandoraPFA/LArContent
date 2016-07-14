@@ -151,23 +151,19 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
             if (firstParticleAverageEnergy > std::numeric_limits<float>::min() && secondParticleAverageEnergy > std::numeric_limits<float>::min()
                 && firstParticleAverageEnergy < std::numeric_limits<float>::max() && secondParticleAverageEnergy < std::numeric_limits<float>::max())
             {
-                const float energyRatio(secondParticleAverageEnergy/firstParticleAverageEnergy);
-                const float energyRatioTwo(firstParticleAverageEnergy/secondParticleAverageEnergy);
+                float energyRatio(secondParticleAverageEnergy/firstParticleAverageEnergy);
+                
+                if (energyRatio < 1.0)
+                    energyRatio = 1.0/energyRatio;
 
                 float finalScore(exp(-1 * (std::pow((energyRatio - 7), 2)/4)));
-                float finalScoreTwo(exp(-1 * (std::pow((energyRatioTwo - 7), 2)/4)));
-
-                std::vector<float> scoresVector;
-                scoresVector.push_back(finalScore);
-                scoresVector.push_back(finalScoreTwo);
-
-                float bestVertexScore = *std::min_element(scoresVector.begin(), scoresVector.end());
 
                 //std::cout << energyRatio << std::endl;
                 //std::cout << finalScore << std::endl;
                 //std::cout << "******" << std::endl;
 
-                vertexScoreList.push_back(VertexScore(pVertex, bestVertexScore));
+                if (finalScore > 0.7)
+                    vertexScoreList.push_back(VertexScore(pVertex, finalScore));
             }
 
         }
