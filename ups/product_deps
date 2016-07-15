@@ -2,7 +2,7 @@
 
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
-parent larpandoracontent v06_00_00_rc6
+parent larpandoracontent v02_07_05
 defaultqual e10
 
 # larpandoracontent has no fcl files
