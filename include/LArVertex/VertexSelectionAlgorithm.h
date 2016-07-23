@@ -116,7 +116,7 @@ private:
 
     void StoreTop5Information(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList);
     
-    void StoreTopAllInformation(const pandora::VertexList* pTopologyVertexList, const pandora::VertexList* pEnergyVertexList, bool &energyVertices);
+    void StoreTopAllInformation(const pandora::VertexList* pTopologyVertexList, pandora::VertexList selectedVertexList, const pandora::VertexList* pEnergyVertexList, bool &energyVerticesPresent);
     //------------------------------------------------------------------------------------------------------------------------------
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

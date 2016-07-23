@@ -156,13 +156,13 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
                 if (energyRatio < 1.0)
                     energyRatio = 1.0/energyRatio;
 
-                float finalScore(exp(-1 * (std::pow((energyRatio - 7), 2)/4)));
+                float finalScore(energyRatio);
 
                 //std::cout << energyRatio << std::endl;
                 //std::cout << finalScore << std::endl;
                 //std::cout << "******" << std::endl;
 
-                if (finalScore > 0.7)
+                if (finalScore > 2.0)
                     vertexScoreList.push_back(VertexScore(pVertex, finalScore));
             }
 

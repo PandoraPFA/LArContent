@@ -94,9 +94,8 @@ private:
      *  @param  hitType1 the hit type of the first cluster
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
-    void CreateEnergySpikeVertices(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
+    void FindEnergySpikes(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &energySpikesVector);
     
-
     /**
      *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
      *
@@ -104,7 +103,9 @@ private:
      *  @param  hitType1 the hit type of the first cluster
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
-    void CreateMatchedVertices(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2,  pandora::HitType hitType1, pandora::HitType hitType2) const;
+    void CreateMatchedVertices(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2, pandora::HitType hitType1, pandora::HitType hitType2) const;
+     
+    void CreateXBasedVerticesFromW(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
      
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
@@ -134,7 +135,7 @@ private:
     
     void FindEnergySpike(std::vector<pandora::CartesianVector> &energyAlongRLvector, std::vector<float> &spikeRLvector, bool &foundSplit) const;
     
-    void ConvertRLtoCaloHit(const float &spikeRL, const TwoDSlidingFitResult &slidingFitResult, const pandora::CaloHitList &caloHitList, pandora::CartesianVector &hitPosition);
+    void ConvertRLtoCaloHit(const float &spikeRL, std::vector<pandora::CartesianVector> &filteredEnergyAlongRLvector, const pandora::CaloHitList &caloHitList, pandora::CartesianVector &hitPosition);
     
     
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
