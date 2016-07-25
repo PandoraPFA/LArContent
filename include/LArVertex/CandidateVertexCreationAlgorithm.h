@@ -105,7 +105,7 @@ private:
      */
     void CreateMatchedVertices(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2, pandora::HitType hitType1, pandora::HitType hitType2) const;
      
-    void CreateXBasedVerticesFromW(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
+    void CreateXBasedVertices(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
      
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
