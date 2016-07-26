@@ -133,9 +133,17 @@ private:
     
     void FindMatchingHitsInDifferentView(const pandora::ClusterList &clusterList, pandora::CartesianVector &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHits);
     
-    void FindEnergySpike(std::vector<pandora::CartesianVector> &energyAlongRLvector, std::vector<float> &spikeRLvector, bool &foundSplit) const;
+    void FindEnergySpike(const std::vector<pandora::CartesianVector> &energyAlongRLvector, std::vector<float> &spikeRLvector);
+    
+    void BinEnergyRLVector(const std::vector<pandora::CartesianVector> &energyAlongRLvector, std::vector<pandora::CartesianVector> &binnedEnergyAlongRLvector);
+    
+    void FindBinRLFromBinnedVector(const std::vector<pandora::CartesianVector> &binnedEnergyAlongRLvector, std::vector<float> &binRLvector);
+    
+    void ConvertBinRLToSpikeRL(const std::vector<float> &binRLvector, std::vector<float> &spikeRLvector, const std::vector<pandora::CartesianVector> &energyAlongRLvector);
     
     void ConvertRLtoCaloHit(const float &spikeRL, std::vector<pandora::CartesianVector> &filteredEnergyAlongRLvector, const pandora::CaloHitList &caloHitList, pandora::CartesianVector &hitPosition);
+    
+    void CreateVerticesFromSpikes(const std::vector<float>energySpikeRLvector, std::vector<pandora::CartesianVector> filteredEnergyAlongRLvector, pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2, const pandora::ClusterList &clusterList3);
     
     
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
