@@ -133,6 +133,7 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
             {
                 float hitL(0.f), hitT(0.f);
                 slidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), hitL, hitT);
+                
                 if (hitL <= vertexL)
                 {
                     firstParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();

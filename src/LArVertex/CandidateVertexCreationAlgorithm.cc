@@ -623,18 +623,18 @@ void CandidateVertexCreationAlgorithm::FindEnergySpike(const std::vector<Cartesi
     this->FindBinRLFromBinnedVector(binnedEnergyAlongRLvector, binRLvector);
     
     //DRAW BINNED DISTRIBUTION
-    //TGraph *HitEnergy_vs_rL = new TGraph(binnedEnergyAlongRLvector.size());
-    //int n(0);    
-    //for (std::vector<CartesianVector>::const_iterator pairIter = binnedEnergyAlongRLvector.begin(), pairIterEnd = binnedEnergyAlongRLvector.end(); pairIter != pairIterEnd; ++pairIter)
-    //{
-    //    HitEnergy_vs_rL->SetPoint(n, (*pairIter).GetX(), (*pairIter).GetZ());
-    //    n++;
-    //}    
-    //TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
-    //canvas1->cd();
-    //HitEnergy_vs_rL->SetMarkerStyle(6);
-    //HitEnergy_vs_rL->Draw("AP");
-    //PANDORA_MONITORING_API(Pause(this->GetPandora()));
+    TGraph *HitEnergy_vs_rL = new TGraph(binnedEnergyAlongRLvector.size());
+    int n(0);    
+    for (std::vector<CartesianVector>::const_iterator pairIter = binnedEnergyAlongRLvector.begin(), pairIterEnd = binnedEnergyAlongRLvector.end(); pairIter != pairIterEnd; ++pairIter)
+    {
+        HitEnergy_vs_rL->SetPoint(n, (*pairIter).GetX(), (*pairIter).GetZ());
+        n++;
+    }    
+    TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
+    canvas1->cd();
+    HitEnergy_vs_rL->SetMarkerStyle(6);
+    HitEnergy_vs_rL->Draw("AP");
+    PANDORA_MONITORING_API(Pause(this->GetPandora()));
     
     this->ConvertBinRLToSpikeRL(binRLvector, spikeRLvector, energyAlongRLvector);
 }
@@ -681,6 +681,24 @@ void CandidateVertexCreationAlgorithm::BinEnergyRLVector(const std::vector<Carte
 
 void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vector<CartesianVector> &binnedEnergyAlongRLvector, std::vector<float> &binRLvector)
 {
+    float averageEnergyDifference(0.f);
+    
+    for (std::vector<CartesianVector>::const_iterator pairIter = std::next(binnedEnergyAlongRLvector.begin(), 1), pairIterEnd = std::prev(binnedEnergyAlongRLvector.end(), 1); pairIter != pairIterEnd; ++pairIter)
+    {
+        float thisBinAverageEnergy((*pairIter).GetZ());
+        float nextBinAverageEnergy((*std::next(pairIter, 1)).GetZ());
+        float energyDifference(std::abs(nextBinAverageEnergy / thisBinAverageEnergy));
+        averageEnergyDifference += (energyDifference);
+    }
+    
+    averageEnergyDifference /= binnedEnergyAlongRLvector.size();
+    std::cout << "averageEnergyDifference: " << averageEnergyDifference << std::endl;
+    
+    if (averageEnergyDifference > 1.5)
+        return;
+        
+    float bestScore(0.f);
+    
     for (std::vector<CartesianVector>::const_iterator pairIter = std::next(binnedEnergyAlongRLvector.begin(), 1), pairIterEnd = std::prev(binnedEnergyAlongRLvector.end(), 2); pairIter != pairIterEnd; ++pairIter)
     {
         float thisBinAveragePosition((*pairIter).GetX());
@@ -692,37 +710,64 @@ void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vect
         float previousPreviousBinAverageEnergy((*std::prev(pairIter, 2)).GetZ());
         float nextNextBinAverageEnergy((*std::next(pairIter, 2)).GetZ());
         
+        float previousPreviousPreviousBinAverageEnergy((*std::prev(pairIter, 3)).GetZ());
+        float nextNextNextBinAverageEnergy((*std::next(pairIter, 3)).GetZ());
+        
         //std::cout << thisBinAveragePosition << std::endl;
         //std::cout << thisBinAverageEnergy << std::endl;
         //std::cout << std::abs(nextBinAverageEnergy - thisBinAverageEnergy) << std::endl;
         //std::cout << "******************" << std::endl;
         
 
-            //std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
-            //std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            //std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) << std::endl;
-            //std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            //std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy)) << std::endl;
-            //std::cout << "*******************" << std::endl;
+            std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
+            std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+            std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
+            std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+            std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
             
-            //This if statement means: can we find two bins close to one another, then a jump and then again two bins that are close to one another, in either the + or - RL direction?
-            if ((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.3 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) > 0.3
-            && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy))) < 0.15)
-            || (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.3 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy))) > 0.3
-            && std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) < 0.15))
+            //This if statement means: can we find a bin from which one one side the bin energies steadily rise and on the other side there are two bins close together in energy in either the + or - RL direction?
+            if ((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.7
+            && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) < 0.3)
+            || (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.7
+            && std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) < 0.3))
             {
                 if (thisBinAverageEnergy < 0.25 || thisBinAverageEnergy == 4.375)
                     continue;
                 
-                binRLvector.push_back(thisBinAveragePosition);
-                //std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>JUMP" << std::endl;
-
+                float score((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) + std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) + std::abs(1 - (std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy)))) / (std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) + std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))));
+                float scoreTwo((std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) + std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) + std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))) / (std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) + std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy)))));
+                
+                float workingScore(0.f);
+                if (score > scoreTwo)
+                    workingScore = score;
+                else
+                    workingScore = scoreTwo;
+                    
+                std::cout << "workingScore: " << workingScore << std::endl;
+                
+                if (workingScore > bestScore)
+                {
+                    binRLvector.clear();
+                    binRLvector.push_back(thisBinAveragePosition);
+                    std::cout << bestScore << std::endl;
+                    bestScore = workingScore;
+                    std::cout << ">>>>>>>>>> JUMP" << std::endl;
+                }
+                
                 //binRLvector.push_back(nextBinAveragePosition);
                 //binRLvector.push_back(previousBinAveragePosition);
             }
+            //else if (std::abs(thisBinAveragePosition - ((*std::next(pairIter, 1)).GetX())) > 5.0)
+            //{
+            //    binRLvector.push_back(thisBinAveragePosition);
+            //    //std::cout << ">>>>>>>>>> GAP" << std::endl;
+            //}
+            
+            std::cout << "*******************" << std::endl;
+            
     }
     
-    //std::cout << "Number of spikes: " << binRLvector.size() << std::endl;
+    std::cout << "Number of spikes: " << binRLvector.size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
