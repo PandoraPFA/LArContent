@@ -69,8 +69,6 @@ StatusCode EventValidationAlgorithm::Run()
 
     const PfoList *pPfoList = NULL;
     PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
-    
-    const PfoList *pPfoListCopy = pPfoList;
 
     PfoList pfoList;
     LArMonitoringHelper::ExtractTargetPfos(inputPfoList, m_primaryPfosOnly, pfoList);
@@ -114,7 +112,7 @@ StatusCode EventValidationAlgorithm::Run()
         this->PrintAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap);
 
     if (m_writeToTree)
-        this->WriteAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap, pTop5VertexList, pAllVerticesList, pPfoListCopy);
+        this->WriteAllOutput(mcNeutrinoList, recoNeutrinoList, mcPrimaryMatchingMap, pTop5VertexList, pAllVerticesList);
 
     if (m_printMatchingToScreen || m_visualizeMatching)
     {
@@ -292,7 +290,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoList, const PfoList &recoNeutrinoList,
-    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pTop5VertexList, const VertexList* pAllVerticesList, const PfoList *pPfoList) const
+    const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const VertexList* pTop5VertexList, const VertexList* pAllVerticesList) const
 {
 #ifdef MONITORING
     int mcNeutrinoNuance(-1), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
@@ -352,38 +350,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
     float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
     
-    std::cout << pPfoList->size() << std::endl;
-    
     if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
-        //for (const Pfo* pPfo : *(pPfoList))
-        //{
-        //    PfoList daughterPfoList(pPfo->GetDaughterPfoList());
-        //    
-        //    for (const Pfo* pDaughterPfo : daughterPfoList)
-        //    {
-        //        ClusterList clusterList(pDaughterPfo->GetClusterList());
-        //        
-        //        for (const Cluster* pCluster : clusterList)
-        //        {
-        //            OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        //            CaloHitList caloHitList;
-        //            orderedCaloHitList.GetCaloHitList(caloHitList);
-        //            
-        //            for (const CaloHit* pCaloHit : caloHitList)
-        //            {
-        //                float hitToMCVertexDistance(((pCaloHit->GetPositionVector()) - (mcNeutrinoVertexPosition)).GetMagnitude());
-        //                if (hitToMCVertexDistance < minimalHitToMCVertexDistance)
-        //                    minimalHitToMCVertexDistance = hitToMCVertexDistance;
-        //            }
-        //        }
-        //    }
-        //}
-        //
-        //std::cout << "minimalHitToMCVertexDistance: " << minimalHitToMCVertexDistance << std::endl;
-        
-        //----------------------------------------------------------------------------------------------------------------------------------
-        
         std::vector<float> top5VerticesDR;
         std::vector<float> allVerticesDR;
         

@@ -684,10 +684,6 @@ void CandidateVertexCreationAlgorithm::BinEnergyRLVector(const std::vector<Carte
 
 void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vector<CartesianVector> &binnedEnergyAlongRLvector, std::vector<float> &binRLvector)
 {
-        //FIND SPIKE
-    float firstBinEnergy((*(std::next(binnedEnergyAlongRLvector.begin(), 1))).GetZ());
-    float lastBinEnergy((*(std::prev(binnedEnergyAlongRLvector.end(), 2))).GetZ());
-    
     for (std::vector<CartesianVector>::const_iterator pairIter = std::next(binnedEnergyAlongRLvector.begin(), 1), pairIterEnd = std::prev(binnedEnergyAlongRLvector.end(), 2); pairIter != pairIterEnd; ++pairIter)
     {
         float thisBinAveragePosition((*pairIter).GetX());
@@ -704,54 +700,28 @@ void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vect
         //std::cout << std::abs(nextBinAverageEnergy - thisBinAverageEnergy) << std::endl;
         //std::cout << "******************" << std::endl;
         
-        if (lastBinEnergy > firstBinEnergy)
-        {
-            //std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
-            //std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            //std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-            //std::cout << "Previous jump ratio: " << std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-            //std::cout << "Next previous jump ratio: " << std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-            //std::cout << "*******************" << std::endl;
+
+            std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
+            std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+            std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) << std::endl;
+            std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+            std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy)) << std::endl;
+            std::cout << "*******************" << std::endl;
                 
-            if (std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.6 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.6
-            && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.2 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) < 0.2)
+            if ((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.3 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) > 0.3
+            && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy))) < 0.15)
+            || (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.3 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy))) > 0.3
+            && std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) < 0.15))
             {
                 if (thisBinAverageEnergy < 0.25 || thisBinAverageEnergy == 4.375)
                     continue;
                 
-                if (thisBinAverageEnergy < 1.0)
-                {
-                    binRLvector.push_back(thisBinAveragePosition);
-                    //std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>JUMP" << std::endl;
-                }
+                binRLvector.push_back(thisBinAveragePosition);
+                //std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>JUMP" << std::endl;
+
                 //binRLvector.push_back(nextBinAveragePosition);
                 //binRLvector.push_back(previousBinAveragePosition);
             }
-        }
-        else
-        {
-            //std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
-            //std::cout << "Jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            //std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-            //std::cout << "Previous jump ratio: " << std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-            //std::cout << "Next previous jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-            //std::cout << "*******************" << std::endl;
-                
-            if (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.6 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.6
-            && std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) < 0.2 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) < 0.2)
-            {
-                if (thisBinAverageEnergy < 0.25 || thisBinAverageEnergy == 4.375)
-                    continue;
-                
-                if (thisBinAverageEnergy < 1.0)
-                {
-                    binRLvector.push_back(thisBinAveragePosition);
-                    //std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>JUMP" << std::endl;
-                }
-                //binRLvector.push_back(nextBinAveragePosition);
-                //binRLvector.push_back(previousBinAveragePosition);
-            }
-        }
     }
     
     std::cout << "Number of spikes: " << binRLvector.size() << std::endl;
