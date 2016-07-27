@@ -616,28 +616,25 @@ void CandidateVertexCreationAlgorithm::FindMatchingHitsInDifferentView(const Clu
 
 void CandidateVertexCreationAlgorithm::FindEnergySpike(const std::vector<CartesianVector> &energyAlongRLvector, std::vector<float> &spikeRLvector)
 {
-    //BIN VECTOR
-    
     std::vector<CartesianVector> binnedEnergyAlongRLvector;
     this->BinEnergyRLVector(energyAlongRLvector, binnedEnergyAlongRLvector);
-    
-    //float currentJumpPosition(1000000.f);
     
     std::vector<float> binRLvector;
     this->FindBinRLFromBinnedVector(binnedEnergyAlongRLvector, binRLvector);
     
-    TGraph *HitEnergy_vs_rL = new TGraph(binnedEnergyAlongRLvector.size());    
-    int n(0);    
-    for (std::vector<CartesianVector>::const_iterator pairIter = binnedEnergyAlongRLvector.begin(), pairIterEnd = binnedEnergyAlongRLvector.end(); pairIter != pairIterEnd; ++pairIter)
-    {
-        HitEnergy_vs_rL->SetPoint(n, (*pairIter).GetX(), (*pairIter).GetZ());
-        n++;
-    }    
-    TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
-    canvas1->cd();
-    HitEnergy_vs_rL->SetMarkerStyle(6);
-    HitEnergy_vs_rL->Draw("AP");
-    PANDORA_MONITORING_API(Pause(this->GetPandora()));
+    //DRAW BINNED DISTRIBUTION
+    //TGraph *HitEnergy_vs_rL = new TGraph(binnedEnergyAlongRLvector.size());
+    //int n(0);    
+    //for (std::vector<CartesianVector>::const_iterator pairIter = binnedEnergyAlongRLvector.begin(), pairIterEnd = binnedEnergyAlongRLvector.end(); pairIter != pairIterEnd; ++pairIter)
+    //{
+    //    HitEnergy_vs_rL->SetPoint(n, (*pairIter).GetX(), (*pairIter).GetZ());
+    //    n++;
+    //}    
+    //TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
+    //canvas1->cd();
+    //HitEnergy_vs_rL->SetMarkerStyle(6);
+    //HitEnergy_vs_rL->Draw("AP");
+    //PANDORA_MONITORING_API(Pause(this->GetPandora()));
     
     this->ConvertBinRLToSpikeRL(binRLvector, spikeRLvector, energyAlongRLvector);
 }
@@ -701,13 +698,14 @@ void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vect
         //std::cout << "******************" << std::endl;
         
 
-            std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
-            std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) << std::endl;
-            std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy)) << std::endl;
-            std::cout << "*******************" << std::endl;
-                
+            //std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
+            //std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+            //std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) << std::endl;
+            //std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+            //std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy)) << std::endl;
+            //std::cout << "*******************" << std::endl;
+            
+            //This if statement means: can we find two bins close to one another, then a jump and then again two bins that are close to one another, in either the + or - RL direction?
             if ((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.3 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / nextBinAverageEnergy))) > 0.3
             && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy))) < 0.15)
             || (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.3 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / previousBinAverageEnergy))) > 0.3
@@ -724,7 +722,7 @@ void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vect
             }
     }
     
-    std::cout << "Number of spikes: " << binRLvector.size() << std::endl;
+    //std::cout << "Number of spikes: " << binRLvector.size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -890,14 +888,14 @@ void CandidateVertexCreationAlgorithm::CreateMatchedVertices(std::vector<Cartesi
                         
                     const Vertex *pVertex(NULL);
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-                    std::cout << ">>>>>> Created vertex." << std::endl;
+                    //std::cout << ">>>>>> Created vertex." << std::endl;
                     break;
                 }
             }
         }
     }
     
-    std::cout << "***********************" << std::endl;
+    //std::cout << "***********************" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
