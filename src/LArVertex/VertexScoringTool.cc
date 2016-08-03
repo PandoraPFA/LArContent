@@ -105,73 +105,100 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
     if (filteredVertexList.empty())
         return;
 
-    const ClusterList *pClusterList = NULL;
-    PandoraContentApi::GetList(*pAlgorithm, "ClustersW", pClusterList);
-    const ClusterList clusterListW = *pClusterList;
+    const ClusterList *pClusterListU = NULL;
+    PandoraContentApi::GetList(*pAlgorithm, "ClustersU", pClusterListU);
+    const ClusterList clusterListU = *pClusterListU;
     
-    for (ClusterList::const_iterator iter1 = clusterListW.begin(), iter1End = clusterListW.end(); iter1 != iter1End; ++iter1)
+    const ClusterList *pClusterListV = NULL;
+    PandoraContentApi::GetList(*pAlgorithm, "ClustersV", pClusterListV);
+    const ClusterList clusterListV = *pClusterListV;
+    
+    const ClusterList *pClusterListW = NULL;
+    PandoraContentApi::GetList(*pAlgorithm, "ClustersW", pClusterListW);
+    const ClusterList clusterListW = *pClusterListW;
+    
+    std::vector<ClusterList> clusterLists;
+    clusterLists.push_back(clusterListU);
+    clusterLists.push_back(clusterListV);
+    clusterLists.push_back(clusterListW);
+    
+    float bestFinalScore(0.f);
+    
+    for (const Vertex *const pVertex : (*pInputVertexList))
     {
-        const Cluster *const pCluster = *iter1;
+        float finalScore(0.f);
         
-        if (pCluster->GetNCaloHits() < 60)
-            continue;
-    
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult slidingFitResult(pCluster, 20, slidingFitPitch); 
+        const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
+        const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
+        const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
         
-        OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        CaloHitList caloHitList;
-        orderedCaloHitList.GetCaloHitList(caloHitList);
-
-        for (const Vertex *const pVertex : (*pInputVertexList))
+        for (const ClusterList &clusterList : clusterLists)
         {
-            float vertexL(0.f), vertexT(0.f), firstParticleAverageEnergy(0.f), secondParticleAverageEnergy(0.f);
-            int nHitsFirstParticle(0), nHitsSecondParticle(0);
-            slidingFitResult.GetLocalPosition(pVertex->GetPosition(), vertexL, vertexT);
-
-            for (const CaloHit* pCaloHit : caloHitList)
+            for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = clusterList.end(); iter1 != iter1End; ++iter1)
             {
-                float hitL(0.f), hitT(0.f);
-                slidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), hitL, hitT);
+                const Cluster *const pCluster = *iter1;
+                const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
                 
-                if (hitL <= vertexL)
+                if (pCluster->GetNCaloHits() < 60)
+                    continue;
+            
+                const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+                const TwoDSlidingFitResult slidingFitResult(pCluster, 20, slidingFitPitch); 
+                
+                OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+                CaloHitList caloHitList;
+                orderedCaloHitList.GetCaloHitList(caloHitList);
+                
+                float vertexL(0.f), vertexT(0.f), firstParticleAverageEnergy(0.f), secondParticleAverageEnergy(0.f);
+                
+                if (hitType == TPC_VIEW_U)
+                    slidingFitResult.GetLocalPosition(vertexProjectionU, vertexL, vertexT);
+                else if (hitType == TPC_VIEW_V)
+                    slidingFitResult.GetLocalPosition(vertexProjectionV, vertexL, vertexT);
+                else if (hitType == TPC_VIEW_W)
+                    slidingFitResult.GetLocalPosition(vertexProjectionW, vertexL, vertexT);
+                
+                for (const CaloHit* pCaloHit : caloHitList)
                 {
-                    firstParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
-                    nHitsFirstParticle++;
+                    float hitL(0.f), hitT(0.f);
+                    slidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), hitL, hitT);
+                    
+                    ///std::cout << hitL << std::endl;
+                    
+                    if (std::abs(hitL - vertexL) > 5.0)
+                        continue;
+                    
+                    if (hitL < vertexL)
+                        firstParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
+                    else
+                        secondParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
                 }
-                else
+                
+                //std::cout << firstParticleAverageEnergy << std::endl;
+                //std::cout << secondParticleAverageEnergy << std::endl;
+                
+                
+                if (firstParticleAverageEnergy > std::numeric_limits<float>::min() && secondParticleAverageEnergy > std::numeric_limits<float>::min()
+                    && firstParticleAverageEnergy < std::numeric_limits<float>::max() && secondParticleAverageEnergy < std::numeric_limits<float>::max())
                 {
-                    secondParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
-                    nHitsSecondParticle++;
+                    float energyRatio(secondParticleAverageEnergy/firstParticleAverageEnergy);
+                    
+                    if (energyRatio < 1.0)
+                        energyRatio = 1.0/energyRatio;
+    
+                    finalScore += energyRatio;
+                    std::cout << finalScore << std::endl;
                 }
             }
-
-            firstParticleAverageEnergy /= nHitsFirstParticle;
-            secondParticleAverageEnergy /= nHitsSecondParticle;
-        
-            if (firstParticleAverageEnergy > std::numeric_limits<float>::min() && secondParticleAverageEnergy > std::numeric_limits<float>::min()
-                && firstParticleAverageEnergy < std::numeric_limits<float>::max() && secondParticleAverageEnergy < std::numeric_limits<float>::max())
-            {
-                float energyRatio(secondParticleAverageEnergy/firstParticleAverageEnergy);
-                
-                if (energyRatio < 1.0)
-                    energyRatio = 1.0/energyRatio;
-
-                float finalScore(energyRatio);
-
-                //std::cout << energyRatio << std::endl;
-                //std::cout << finalScore << std::endl;
-                //std::cout << "******" << std::endl;
-
-                if (finalScore > 2.0)
-                    vertexScoreList.push_back(VertexScore(pVertex, finalScore));
-            }
-
         }
-
-        this->NormaliseVertexScores(vertexScoreList);
+        
+        if (finalScore > bestFinalScore)
+        {
+            vertexScoreList.clear();
+            vertexScoreList.push_back(VertexScore(pVertex, finalScore));
+            bestFinalScore = finalScore;
+        }
     }
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

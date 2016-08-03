@@ -82,10 +82,13 @@ StatusCode VertexSelectionAlgorithm::Run()
     const VertexList *pEnergyVertexList(NULL);
     VertexScoringTool::VertexScoreList energyVertexScoreList;
     bool energyVerticesPresent(false);
+    
+    std::cout << "ENERGY" << std::endl;
 
     try
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_energyVertexListName, pEnergyVertexList));
+        std::cout << "Imported energy list." << std::endl;
         m_pVertexScoringTool->ScoreEnergyVertices(this, pEnergyVertexList, energyVertexScoreList);
         std::sort(energyVertexScoreList.begin(), energyVertexScoreList.end());
         energyVerticesPresent = true;
