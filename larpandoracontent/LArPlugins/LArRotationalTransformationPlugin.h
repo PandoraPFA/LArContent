@@ -61,7 +61,6 @@ private:
     const double    m_thetaU;          ///< inclination of U wires (radians)
     const double    m_thetaV;          ///< inclination of V wires (radians)
     const double    m_sigmaUVW;        ///< resolution (cm), for calculation of chi2
-    const double    m_sinUminusV;      ///< sin(thetaU-thetaV)
     const double    m_sinUplusV;       ///< sin(thetaU+thetaV)
     const double    m_sinU;            ///< sin(thetaU)
     const double    m_sinV;            ///< sin(thetaV)

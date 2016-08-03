@@ -21,7 +21,6 @@ LArRotationalTransformationPlugin::LArRotationalTransformationPlugin(const doubl
     m_thetaU(thetaU),
     m_thetaV(thetaV),
     m_sigmaUVW(sigmaUVW),
-    m_sinUminusV(std::sin(m_thetaU - m_thetaV)),
     m_sinUplusV(std::sin(m_thetaU + m_thetaV)),
     m_sinU(std::sin(m_thetaU)),
     m_sinV(std::sin(m_thetaV)),
