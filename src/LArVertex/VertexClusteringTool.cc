@@ -49,6 +49,7 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
     std::vector<const Vertex*> sortedVertexVector;
+    
     for (const Vertex *const pVertex : (*pVertexList))
         sortedVertexVector.push_back(pVertex);
 

@@ -93,8 +93,6 @@ public:
 
     void ScoreEnergyVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, VertexScoreList &vertexScoreList);
 
-    void NormaliseVertexScores(VertexScoreList &vertexScoreList);
-
 private:
     /**
      *  @brief Beam constants class

@@ -34,12 +34,11 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_chiSquaredCut(2.f),
     m_enableCrossingCandidates(false),
     m_enableEnergyCandidates(false),
-    m_strictMatching(true),
     m_energyPlot(false),
-    m_maxScatterRms(0.4f), //0.2
-    m_maxScatterCosTheta(0.905f), //0.905f
-    m_maxSlidingCosTheta(0.985f), //0.985f
-    m_energyDifferenceThreshold(0.5)
+    m_energyDifferenceThreshold(0.5),
+    m_minCrossingClusterSize(10),
+    m_extrapolationLength(20.0),
+    m_extrapolationStepSize(0.1)
 {
 }
 
@@ -110,12 +109,6 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
             //this->FindEnergySpikes(energyClusterListV, energySpikesV);
             //this->FindEnergySpikes(energyClusterListW, energySpikesW);
             
-            //LONGITUDINAL
-            //this->CreateMatchedVertices(energySpikesU, energySpikesV, TPC_VIEW_U, TPC_VIEW_V);
-            //this->CreateMatchedVertices(energySpikesU, energySpikesW, TPC_VIEW_U, TPC_VIEW_W);
-            //this->CreateMatchedVertices(energySpikesV, energySpikesW, TPC_VIEW_V, TPC_VIEW_W);
-            
-            //TRANSVERSE
             this->CreateXBasedVertices(energyClusterListU, energyClusterListV, energyClusterListW);
             this->CreateXBasedVertices(energyClusterListV, energyClusterListW, energyClusterListU);
             this->CreateXBasedVertices(energyClusterListW, energyClusterListU, energyClusterListV);
@@ -256,16 +249,17 @@ void CandidateVertexCreationAlgorithm::SelectClusters(const std::string &cluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::Find2DClusterCrossings(const ClusterList &clusterList, std::vector<CartesianVector> &crossingsVector) const
+void CandidateVertexCreationAlgorithm::Find2DClusterCrossings(const ClusterList &clusterList, std::vector<CartesianVector> &crossingsVector)
 {
 for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = clusterList.end(); iter1 != iter1End; ++iter1)
     {
         const Cluster *const pCluster1 = *iter1;
         
-        if (pCluster1->GetNCaloHits() < 10)
+        if (pCluster1->GetNCaloHits() < m_minCrossingClusterSize)
             continue;
         
         const TwoDSlidingFitResult &fitResult1(this->GetCachedSlidingFitResult(*iter1));
+        
         const CartesianVector minLayerPosition1(fitResult1.GetGlobalMinLayerPosition());
         const CartesianVector maxLayerPosition1(fitResult1.GetGlobalMaxLayerPosition());
         
@@ -273,80 +267,19 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
         crossingsVector.push_back(maxLayerPosition1);
 
         std::vector<CartesianVector> spacePointVector1;
+        this->GetExtrapolatedClusterSpacepoints(spacePointVector1, pCluster1, fitResult1);
         
-        OrderedCaloHitList orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
-        CaloHitList caloHitList1;
-        orderedCaloHitList1.GetCaloHitList(caloHitList1);
-        
-        for (CaloHitList::const_iterator caloIter1 = caloHitList1.begin(), caloIterEnd1 = caloHitList1.end(); caloIter1 != caloIterEnd1; ++caloIter1)
-        {
-            const CaloHit *const pCaloHit = (*caloIter1);
-            CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
-            spacePointVector1.push_back(caloHitPosition);
-        }
-        
-        for (float i = 0.1; i < 20.0; i += 0.1)
-        {
-            CartesianVector tempExtrapolatedPositionUnder(0.f, 0.f, 0.f);
-            CartesianVector tempExtrapolatedPositionOver(0.f, 0.f, 0.f);
-
-            float minLayerRL(fitResult1.GetL(fitResult1.GetMinLayer()));
-            float maxLayerRL(fitResult1.GetL(fitResult1.GetMaxLayer()));
-
-            fitResult1.GetExtrapolatedPosition(minLayerRL - i, tempExtrapolatedPositionUnder);
-            fitResult1.GetExtrapolatedPosition(maxLayerRL + i, tempExtrapolatedPositionOver);
-            
-            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionUnder, "Target Vertex", BLUE, 1));
-            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionOver, "Target Vertex", BLUE, 1));
-
-            spacePointVector1.push_back(tempExtrapolatedPositionUnder);
-            spacePointVector1.push_back(tempExtrapolatedPositionOver);
-        }
-
         for (ClusterList::const_iterator iter2 = clusterList.begin(), iter2End = clusterList.end(); iter2 != iter2End; ++iter2)
         {
-            if ((*iter1)->GetNCaloHits() == (*iter2)->GetNCaloHits())
-                continue;
-                
             const Cluster *const pCluster2 = *iter2;
             
-            if (pCluster2->GetNCaloHits() < 10)
-            continue;
+            if (pCluster1->GetNCaloHits() == pCluster2->GetNCaloHits() || pCluster2->GetNCaloHits() < m_minCrossingClusterSize)
+                continue;
             
             const TwoDSlidingFitResult &fitResult2(this->GetCachedSlidingFitResult(*iter2));
-            const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
-            const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
 
             std::vector<CartesianVector> spacePointVector2;
-            
-            OrderedCaloHitList orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
-            CaloHitList caloHitList2;
-            orderedCaloHitList2.GetCaloHitList(caloHitList2);
-            
-            for (CaloHitList::const_iterator caloIter2 = caloHitList2.begin(), caloIterEnd2 = caloHitList2.end(); caloIter2 != caloIterEnd2; ++caloIter2)
-            {
-                const CaloHit *const pCaloHit = (*caloIter2);
-                CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
-                spacePointVector2.push_back(caloHitPosition);
-            }
-
-            for (float i = 0.1; i < 20.0; i += 0.1)
-            {
-                CartesianVector tempExtrapolatedPositionUnder(0.f, 0.f, 0.f);
-                CartesianVector tempExtrapolatedPositionOver(0.f, 0.f, 0.f);
-
-                float minLayerRL(fitResult2.GetL(fitResult2.GetMinLayer()));
-                float maxLayerRL(fitResult2.GetL(fitResult2.GetMaxLayer()));
-
-                fitResult2.GetExtrapolatedPosition(minLayerRL - i, tempExtrapolatedPositionUnder);
-                fitResult2.GetExtrapolatedPosition(maxLayerRL + i, tempExtrapolatedPositionOver);
-                
-                //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionUnder, "Extrapolated Point", BLUE, 1));
-                //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tempExtrapolatedPositionOver, "Extrapolated Point", BLUE, 1));
-
-                spacePointVector2.push_back(tempExtrapolatedPositionUnder);
-                spacePointVector2.push_back(tempExtrapolatedPositionOver);
-            }
+            this->GetExtrapolatedClusterSpacepoints(spacePointVector2, pCluster2, fitResult2);
             
             std::vector<float> distancesBetweenClusters;
             
@@ -359,92 +292,75 @@ for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = cluster
             std::sort(spacePointVector1.begin(), spacePointVector1.end(), SortSpacePointsByZ);
             std::sort(spacePointVector2.begin(), spacePointVector2.end(), SortSpacePointsByZ);
             
-            int skipCounter(0);
-            bool shouldSkip(false);
-            
-            for (CartesianVector &position1: spacePointVector1)
-            {
-                if (shouldSkip)
-                {
-                    if (skipCounter <= 50)
-                    {
-                        skipCounter++;
-                        continue;
-                    }
-                }
-                
-                skipCounter = 0;
-                shouldSkip = false;
-                
-                for (CartesianVector &position2: spacePointVector2)
-                {
-                    if ((position1-position2).GetMagnitude() < 0.25)
-                    {
-                        crossingsVector.push_back(position1);
-                        crossingsVector.push_back(position2);
-                        
-                        shouldSkip = true;
-                        break;
-                    }
-                }
-            }
+            this->FindCrossingsFromSpacepoints(spacePointVector1, spacePointVector2, crossingsVector);
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::FindEnergySpikes(const ClusterList &clusterList, std::vector<CartesianVector> &energySpikesVector)
+void CandidateVertexCreationAlgorithm::GetExtrapolatedClusterSpacepoints(std::vector<CartesianVector> &spacePointVector1, const Cluster *const pCluster1, const TwoDSlidingFitResult &fitResult1)
 {
-    for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = clusterList.end(); iter1 != iter1End; ++iter1)
-    {
-        const Cluster *const pCluster = *iter1;
-        
-        if (pCluster->GetNCaloHits() < 60)
-            continue;
+    OrderedCaloHitList orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
+    CaloHitList caloHitList1;
+    orderedCaloHitList1.GetCaloHitList(caloHitList1);
     
-        const TwoDSlidingFitResult &slidingFitResult(this->GetCachedSlidingFitResult(*iter1));
-        
-        OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        CaloHitList caloHitList;
-        orderedCaloHitList.GetCaloHitList(caloHitList);
-        
-        std::vector<CartesianVector> energyAlongRLvector;
-        this->CreateEnergyAlongRLVector(slidingFitResult, caloHitList, energyAlongRLvector);
-        
-        std::sort(energyAlongRLvector.begin(), energyAlongRLvector.end(), SortEnergyVectorByRL);
-        
-        std::vector<CartesianVector> filteredEnergyAlongRLvector;
-        this->FilterEnergyVector(energyAlongRLvector, filteredEnergyAlongRLvector);
-        this->FilterEnergyVector(filteredEnergyAlongRLvector, filteredEnergyAlongRLvector);
-        this->FilterEnergyVector(filteredEnergyAlongRLvector, filteredEnergyAlongRLvector);
-        
-        std::sort(filteredEnergyAlongRLvector.begin(), filteredEnergyAlongRLvector.end(), SortEnergyVectorByRL);
-        
-        //const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        //const TwoDSlidingFitResult energySlidingFitResult(filteredEnergyAlongRLvector, 2*m_slidingFitWindow, slidingFitPitch); 
-        
-        bool spikeFound(false);
-        std::vector<float> energySpikeRLvector;
-        
-        this->FindEnergySpike(filteredEnergyAlongRLvector, energySpikeRLvector);
-        
-        if (!spikeFound)
-            continue;
-        
-        if (m_energyPlot)
-            this->DrawEnergyVector(filteredEnergyAlongRLvector, pCluster);
-            
-        for (const float &energySpikeRL : energySpikeRLvector)
-        {
-            CartesianVector energySpikePosition(0.f, 0.f, 0.f);
-            this->ConvertRLtoCaloHit(energySpikeRL, filteredEnergyAlongRLvector, caloHitList, energySpikePosition);
-            energySpikesVector.push_back(energySpikePosition);
-        }
-        
+    for (const CaloHit *const pCaloHit : caloHitList1)
+    {
+        CartesianVector caloHitPosition(pCaloHit->GetPositionVector());
+        spacePointVector1.push_back(caloHitPosition);
+    }
+    
+    float minLayerRL(fitResult1.GetL(fitResult1.GetMinLayer()));
+    float maxLayerRL(fitResult1.GetL(fitResult1.GetMaxLayer()));
+    
+    for (float i = m_extrapolationStepSize; i < m_extrapolationLength; i += m_extrapolationStepSize)
+    {
+        CartesianVector tempExtrapolatedPositionUnder(0.f, 0.f, 0.f);
+        CartesianVector tempExtrapolatedPositionOver(0.f, 0.f, 0.f);
+    
+        fitResult1.GetExtrapolatedPosition(minLayerRL - i, tempExtrapolatedPositionUnder);
+        fitResult1.GetExtrapolatedPosition(maxLayerRL + i, tempExtrapolatedPositionOver);
+    
+        spacePointVector1.push_back(tempExtrapolatedPositionUnder);
+        spacePointVector1.push_back(tempExtrapolatedPositionOver);
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::FindCrossingsFromSpacepoints(std::vector<CartesianVector> &spacePointVector1, std::vector<CartesianVector> &spacePointVector2, std::vector<CartesianVector> &crossingsVector)
+{
+    int skipCounter(0);
+    bool shouldSkip(false);
+    
+    for (CartesianVector &position1: spacePointVector1)
+    {
+        if (shouldSkip)
+        {
+            if (skipCounter <= 50)
+            {
+                skipCounter++;
+                continue;
+            }
+        }
+        
+        skipCounter = 0;
+        shouldSkip = false;
+        
+        for (CartesianVector &position2: spacePointVector2)
+        {
+            if ((position1-position2).GetMagnitude() < 0.25)
+            {
+                crossingsVector.push_back(position1);
+                crossingsVector.push_back(position2);
+                
+                shouldSkip = true;
+                break;
+            }
+        }
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -471,9 +387,6 @@ void CandidateVertexCreationAlgorithm::CreateXBasedVertices(const ClusterList &c
         
         std::vector<float> energySpikeRLvector;
         this->FindEnergySpike(filteredEnergyAlongRLvector, energySpikeRLvector);
-        
-        if (energySpikeRLvector.empty())
-            std::cout << "No spike found." << std::endl;
         
         this->CreateVerticesFromSpikes(energySpikeRLvector, filteredEnergyAlongRLvector, caloHitList, clusterList1, clusterList2, clusterList3);
     }
@@ -578,9 +491,6 @@ void CandidateVertexCreationAlgorithm::FilterEnergyVector(const std::vector<Cart
     {
         float chargeRatioNext(((*(std::next(pairIter, 1))).GetZ())/((*pairIter).GetZ()));
         float chargeRatioPrevious(((*(std::prev(pairIter, 1))).GetZ())/((*pairIter).GetZ()));
-        //float chargeDifference(std::abs(((*(std::prev(pairIter, 1))).GetZ()) - ((*pairIter).GetZ())));
-        
-        //std::cout << "(X, Y, Z): " << (*pairIter).GetX() << ", " << (*pairIter).GetY() << ", " << (*pairIter).GetZ() << std::endl;
         
         if (!(chargeRatioPrevious < 0.8 && chargeRatioNext < 0.8))
             filteredEnergyVector.push_back(*pairIter);
@@ -621,21 +531,6 @@ void CandidateVertexCreationAlgorithm::FindEnergySpike(const std::vector<Cartesi
     
     std::vector<float> binRLvector;
     this->FindBinRLFromBinnedVector(binnedEnergyAlongRLvector, binRLvector);
-    
-    //DRAW BINNED DISTRIBUTION
-    
-    //TGraph *HitEnergy_vs_rL = new TGraph(binnedEnergyAlongRLvector.size());
-    //int n(0);    
-    //for (std::vector<CartesianVector>::const_iterator pairIter = binnedEnergyAlongRLvector.begin(), pairIterEnd = binnedEnergyAlongRLvector.end(); pairIter != pairIterEnd; ++pairIter)
-    //{
-    //    HitEnergy_vs_rL->SetPoint(n, (*pairIter).GetX(), (*pairIter).GetZ());
-    //    n++;
-    //}    
-    //TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
-    //canvas1->cd();
-    //HitEnergy_vs_rL->SetMarkerStyle(6);
-    //HitEnergy_vs_rL->Draw("AP");
-    //PANDORA_MONITORING_API(Pause(this->GetPandora()));
     
     this->ConvertBinRLToSpikeRL(binRLvector, spikeRLvector, energyAlongRLvector);
 }
@@ -693,7 +588,6 @@ void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vect
     }
     
     averageEnergyDifference /= binnedEnergyAlongRLvector.size();
-    //std::cout << "averageEnergyDifference: " << averageEnergyDifference << std::endl;
     
     if (averageEnergyDifference > 1.5)
         return;
@@ -717,63 +611,48 @@ void CandidateVertexCreationAlgorithm::FindBinRLFromBinnedVector(const std::vect
         float previousPreviousPreviousPreviousBinAverageEnergy((*std::prev(pairIter, 4)).GetZ());
         float nextNextNextNextBinAverageEnergy((*std::next(pairIter, 4)).GetZ());
         
-        //std::cout << thisBinAveragePosition << std::endl;
-        //std::cout << thisBinAverageEnergy << std::endl;
-        //std::cout << std::abs(nextBinAverageEnergy - thisBinAverageEnergy) << std::endl;
-        //std::cout << "******************" << std::endl;
-        
 
-            //std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
-            //std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            //std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-            //std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-            //std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+        //std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
+        //std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+        //std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
+        //std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+        //std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+        
+        //This if statement means: can we find a bin from which one one side the bin energies steadily rise and on the other side there are two bins close together in energy in either the + or - RL direction?
+        if ((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.7
+        && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) < 0.3)
+        || (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.7
+        && std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) < 0.3))
+        {
+            if (thisBinAverageEnergy < 0.25 || thisBinAverageEnergy == 4.375)
+                continue;
             
-            //This if statement means: can we find a bin from which one one side the bin energies steadily rise and on the other side there are two bins close together in energy in either the + or - RL direction?
-            if ((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.7
-            && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) < 0.3)
-            || (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.7
-            && std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) < 0.3))
+            float score((std::abs(std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) + std::abs((std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy)))
+            + std::abs((std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(nextNextNextNextBinAverageEnergy / thisBinAverageEnergy)))) 
+            / (std::abs((std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))));
+            
+            float scoreTwo((std::abs(std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) + std::abs((std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))
+            + std::abs((std::abs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(previousPreviousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))))
+            / (std::abs((std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy)))));
+            
+            float workingScore(0.f);
+            
+            if (score > scoreTwo)
+                workingScore = score;
+            else
+                workingScore = scoreTwo;
+                
+            //std::cout << "workingScore: " << workingScore << std::endl;
+            
+            if (workingScore > bestScore)
             {
-                if (thisBinAverageEnergy < 0.25 || thisBinAverageEnergy == 4.375)
-                    continue;
-                
-                float score((std::abs(std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) + std::abs((std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy)))
-                + std::abs((std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(nextNextNextNextBinAverageEnergy / thisBinAverageEnergy)))) 
-                / (std::abs((std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))));
-                
-                float scoreTwo((std::abs(std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) + std::abs((std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))
-                + std::abs((std::abs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(previousPreviousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))))
-                / (std::abs((std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy)))));
-                
-                float workingScore(0.f);
-                if (score > scoreTwo)
-                    workingScore = score;
-                else
-                    workingScore = scoreTwo;
-                    
-                //std::cout << "workingScore: " << workingScore << std::endl;
-                
-                if (workingScore > bestScore)
-                {
-                    binRLvector.clear();
-                    binRLvector.push_back(thisBinAveragePosition);
-                    //std::cout << bestScore << std::endl;
-                    bestScore = workingScore;
-                    //std::cout << ">>>>>>>>>> JUMP" << std::endl;
-                }
-                
+                binRLvector.clear();
+                binRLvector.push_back(thisBinAveragePosition);
                 //binRLvector.push_back(nextBinAveragePosition);
                 //binRLvector.push_back(previousBinAveragePosition);
+                bestScore = workingScore;
             }
-            //else if (std::abs(thisBinAveragePosition - ((*std::next(pairIter, 1)).GetX())) > 5.0)
-            //{
-            //    binRLvector.push_back(thisBinAveragePosition);
-            //    //std::cout << ">>>>>>>>>> GAP" << std::endl;
-            //}
-            
-            //std::cout << "*******************" << std::endl;
-            
+        }
     }
     
     //std::cout << "Number of spikes: " << binRLvector.size() << std::endl;
@@ -785,7 +664,6 @@ void CandidateVertexCreationAlgorithm::ConvertBinRLToSpikeRL(const std::vector<f
 {
     for (const float &binRL : binRLvector)
     {
-        //std::cout << "bin RL: " << binRL << std::endl;
         float closestApproach(100.f);
         float closestMatchingRL(0.f);
         
@@ -803,7 +681,6 @@ void CandidateVertexCreationAlgorithm::ConvertBinRLToSpikeRL(const std::vector<f
             if (energyRL.GetX() == closestMatchingRL)
             {
                 spikeRLvector.push_back(energyRL.GetX());
-                //std::cout << "spike position: " << energyRL.GetX() << std::endl;
                 break;
             }
         }
@@ -902,54 +779,28 @@ void CandidateVertexCreationAlgorithm::CreateMatchedVertices(std::vector<Cartesi
             if (chiSquared > 2.0)
                 return;
             
-            if (m_strictMatching)
-            {
-                std::pair<CartesianVector*,float> positionChiSquaredPair;
-                positionChiSquaredPair = std::make_pair(&position3D, chiSquared);
-                
-                matched3DPositions.push_back(positionChiSquaredPair);
-                chiSquareds.push_back(chiSquared);
-            }
-            else
-            {
-                PandoraContentApi::Vertex::Parameters parameters;
-                parameters.m_position = position3D;
-                parameters.m_vertexLabel = VERTEX_INTERACTION;
-                parameters.m_vertexType = VERTEX_3D;
-                        
-                const Vertex *pVertex(NULL);
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-                
-                //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "New Vertex", GREEN, 1));
-                //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "New Vertex", GREEN, 1));
-                //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "New Vertex", GREEN, 1));
-                //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-            }
+            std::pair<CartesianVector*,float> positionChiSquaredPair;
+            positionChiSquaredPair = std::make_pair(&position3D, chiSquared);
             
-            
+            matched3DPositions.push_back(positionChiSquaredPair);
+            chiSquareds.push_back(chiSquared);
         }
         
-        if (m_strictMatching)
+        for (std::pair<CartesianVector*,float> &pair : matched3DPositions)
         {
-            for (std::pair<CartesianVector*,float> &pair : matched3DPositions)
+            if (pair.second == (*std::min_element(chiSquareds.begin(), chiSquareds.end())))
             {
-                if (pair.second == (*std::min_element(chiSquareds.begin(), chiSquareds.end())))
-                {
-                    PandoraContentApi::Vertex::Parameters parameters;
-                    parameters.m_position = *(pair.first);
-                    parameters.m_vertexLabel = VERTEX_INTERACTION;
-                    parameters.m_vertexType = VERTEX_3D;
-                        
-                    const Vertex *pVertex(NULL);
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-                    std::cout << ">>>>>> Created vertex." << std::endl;
-                    break;
-                }
+                PandoraContentApi::Vertex::Parameters parameters;
+                parameters.m_position = *(pair.first);
+                parameters.m_vertexLabel = VERTEX_INTERACTION;
+                parameters.m_vertexType = VERTEX_3D;
+                    
+                const Vertex *pVertex(NULL);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+                break;
             }
         }
     }
-    
-    //std::cout << "***********************" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -989,14 +840,19 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
         "EnableEnergyCandidates", m_enableEnergyCandidates));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "StrictMatching", m_strictMatching));
-        
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnergyPlot", m_energyPlot));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnergyDifferenceThreshold", m_energyDifferenceThreshold));
         
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCrossingClusterSize", m_minCrossingClusterSize));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ExtrapolationLength", m_extrapolationLength));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ExtrapolationStepSize", m_extrapolationStepSize));
 
     return STATUS_CODE_SUCCESS;
 }

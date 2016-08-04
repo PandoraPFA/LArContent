@@ -52,22 +52,6 @@ StatusCode VertexSelectionAlgorithm::Run()
 
     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pTopologyVertexList);
 
-//    for (const VertexList* pVertexList : vertexListVector)
-//    {
-//        for (const Vertex *const pVertex : (*pVertexList))
-//        {
-//            CartesianVector vertexPosition(pVertex->GetPoisition());
-//            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexPosition, "Vertex in Cluster", RED, 1));  
-//        {
-//        
-//        PANDORA_MONITORING_API(Pause(this->GetPandora()));
-//    }
-    
-    int vertexCounter(0);
-    
-    for (const VertexList* pVertexList : vertexListVector)
-        vertexCounter += pVertexList->size();
-    
     std::vector<VertexScoringTool::VertexScoreList> scoredClusterCollection;
     m_pVertexScoringTool->ScoreVertices(this, pTopologyVertexList, vertexListVector, scoredClusterCollection);
     
@@ -83,14 +67,11 @@ StatusCode VertexSelectionAlgorithm::Run()
     VertexScoringTool::VertexScoreList energyVertexScoreList;
     bool energyVerticesPresent(false);
     
-    std::cout << "ENERGY" << std::endl;
-
     try
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_energyVertexListName, pEnergyVertexList));
-        std::cout << "Imported energy list." << std::endl;
         m_pVertexScoringTool->ScoreEnergyVertices(this, pEnergyVertexList, energyVertexScoreList);
-        std::sort(energyVertexScoreList.begin(), energyVertexScoreList.end());
+        
         energyVerticesPresent = true;
     }
     catch (StatusCodeException &statusCodeException)
@@ -131,7 +112,6 @@ void VertexSelectionAlgorithm::SelectTopScoreVertices(std::vector<VertexScoringT
         vertexScoreList.insert(vertexScoreList.begin(), tempVertexScoreList.begin(), tempVertexScoreList.end());
     
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
-    //m_pVertexScoringTool->NormaliseVertexScores(vertexScoreList);
     
     for (const VertexScoringTool::VertexScore &vertexScore : vertexScoreList)
     {

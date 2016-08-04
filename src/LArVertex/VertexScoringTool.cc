@@ -143,6 +143,7 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
                     continue;
             
                 const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+                int nHitsFirstParticle(0), nHitsSecondParticle(0);
                 const TwoDSlidingFitResult slidingFitResult(pCluster, 20, slidingFitPitch); 
                 
                 OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
@@ -163,20 +164,23 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
                     float hitL(0.f), hitT(0.f);
                     slidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), hitL, hitT);
                     
-                    ///std::cout << hitL << std::endl;
-                    
                     if (std::abs(hitL - vertexL) > 5.0)
                         continue;
                     
                     if (hitL < vertexL)
+                    {
                         firstParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
+                        nHitsFirstParticle++;
+                    }
                     else
+                    {
                         secondParticleAverageEnergy += pCaloHit->GetElectromagneticEnergy();
+                        nHitsSecondParticle++;
+                    }
                 }
                 
-                //std::cout << firstParticleAverageEnergy << std::endl;
-                //std::cout << secondParticleAverageEnergy << std::endl;
-                
+                firstParticleAverageEnergy /= nHitsFirstParticle;
+                secondParticleAverageEnergy /= nHitsSecondParticle;
                 
                 if (firstParticleAverageEnergy > std::numeric_limits<float>::min() && secondParticleAverageEnergy > std::numeric_limits<float>::min()
                     && firstParticleAverageEnergy < std::numeric_limits<float>::max() && secondParticleAverageEnergy < std::numeric_limits<float>::max())
@@ -199,6 +203,8 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
             bestFinalScore = finalScore;
         }
     }
+    
+    std::sort(vertexScoreList.begin(), vertexScoreList.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -575,22 +581,6 @@ bool VertexScoringTool::SortClustersBySize(VertexScoreList &firstScoreList, Vert
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexScoringTool::NormaliseVertexScores(VertexScoreList &vertexScoreList)
-{
-    float bestScore(0.f);
-
-    for (VertexScore &vertexScore : vertexScoreList)
-    {
-        if (vertexScore.GetScore() > bestScore)
-            bestScore = vertexScore.GetScore();
-    }
-
-    for (VertexScore &vertexScore : vertexScoreList)
-        vertexScore.MultiplyScore(1/bestScore);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 float VertexScoringTool::KernelEstimate::Sample(const float x) const
 {
     const ContributionList &contributionList(this->GetContributionList());
@@ -617,7 +607,6 @@ void VertexScoringTool::KernelEstimate::AddContribution(const float x, const flo
     m_contributionList.insert(ContributionList::value_type(x, weight));
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode VertexScoringTool::ReadSettings(const TiXmlHandle xmlHandle)

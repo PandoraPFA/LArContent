@@ -85,16 +85,11 @@ private:
      *  @param  clusterList1 the list of clusters in view 1
      *  @param  clusterList1 the list of clusters in view 2
      */
-    void Find2DClusterCrossings(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &crossingsVector) const;
+    void Find2DClusterCrossings(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &crossingsVector);
     
-    /**
-     *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
-     *
-     *  @param  position1 an end-point position for the first cluster
-     *  @param  hitType1 the hit type of the first cluster
-     *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
-     */
-    void FindEnergySpikes(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &energySpikesVector);
+    void GetExtrapolatedClusterSpacepoints(std::vector<pandora::CartesianVector> &spacePointVector1, const pandora::Cluster *const pCluster1, const TwoDSlidingFitResult &fitResult1);
+    
+    void FindCrossingsFromSpacepoints(std::vector<pandora::CartesianVector> &spacePointVector1, std::vector<pandora::CartesianVector> &spacePointVector2, std::vector<pandora::CartesianVector> &crossingsVector);
     
     /**
      *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
@@ -145,7 +140,6 @@ private:
     
     void CreateVerticesFromSpikes(const std::vector<float>energySpikeRLvector, std::vector<pandora::CartesianVector> filteredEnergyAlongRLvector, pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2, const pandora::ClusterList &clusterList3);
     
-    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
@@ -165,16 +159,14 @@ private:
     float                       m_chiSquaredCut;                ///< The chi squared cut (accept only values below the cut value)
     
     bool                        m_enableCrossingCandidates;
-    bool                        m_enableEnergyCandidates;
-    
-    bool                        m_strictMatching;
+    bool                        m_enableEnergyCandidates; 
     bool                        m_energyPlot;
     
-    float                       m_maxScatterRms;
-    float                       m_maxScatterCosTheta;
-    float                       m_maxSlidingCosTheta;
-    
     float                       m_energyDifferenceThreshold;
+    unsigned int                m_minCrossingClusterSize;
+    
+    float                       m_extrapolationLength;
+    float                       m_extrapolationStepSize;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
