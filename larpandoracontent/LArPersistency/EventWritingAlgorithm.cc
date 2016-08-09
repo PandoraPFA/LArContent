@@ -12,6 +12,7 @@
 #include "Persistency/XmlFileWriter.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
@@ -25,6 +26,8 @@ namespace lar_content
 EventWritingAlgorithm::EventWritingAlgorithm() :
     m_geometryFileType(UNKNOWN_FILE_TYPE),
     m_eventFileType(UNKNOWN_FILE_TYPE),
+    m_pEventFileWriter(nullptr),
+    m_pGeometryFileWriter(nullptr),
     m_shouldWriteGeometry(false),
     m_writtenGeometry(false),
     m_shouldWriteEvents(true),
@@ -34,8 +37,25 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldOverwriteGeometryFile(false),
     m_shouldFilterByNuanceCode(false),
     m_filterNuanceCode(0),
-    m_pEventFileWriter(nullptr),
-    m_pGeometryFileWriter(nullptr)
+    m_shouldFilterByMCParticles(false),
+    m_neutrinoInducedOnly(false),
+    m_matchingMinPrimaryHits(15),
+    m_nNonNeutrons(0),
+    m_nMuons(0),
+    m_nElectrons(0),
+    m_nProtons(0),
+    m_nPhotons(0),
+    m_nChargedPions(0),
+    m_shouldFilterByNeutrinoVertex(false),
+    m_detectorHalfLengthX(-1.f),
+    m_detectorHalfLengthY(-1.f),
+    m_detectorHalfLengthZ(-1.f),
+    m_coordinateOffsetX(0.f),
+    m_coordinateOffsetY(0.f),
+    m_coordinateOffsetZ(0.f),
+    m_selectedBorderX(-1.f),
+    m_selectedBorderY(-1.f),
+    m_selectedBorderZ(-1.f)
 {
 }
 
@@ -103,26 +123,11 @@ StatusCode EventWritingAlgorithm::Run()
         m_writtenGeometry = true;
     }
 
-    bool shouldWriteThisEvent(!m_shouldFilterByNuanceCode);
+    bool matchNuanceCode(!m_shouldFilterByNuanceCode || this->PassNuanceCodeFilter());
+    bool matchParticles(!m_shouldFilterByMCParticles || this->PassMCParticleFilter());
+    bool matchNeutrinoVertexPosition(!m_shouldFilterByNeutrinoVertex || this->PassNeutrinoVertexFilter());
 
-    if (m_shouldFilterByNuanceCode)
-    {
-        const MCParticleList *pMCParticleList = nullptr;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-
-        MCParticleVector mcNeutrinoList;
-        LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
-
-        if (!mcNeutrinoList.empty())
-        {
-            const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(*(mcNeutrinoList.begin()));
-
-            if (pLArMCNeutrino && (pLArMCNeutrino->GetNuanceCode() == m_filterNuanceCode))
-                shouldWriteThisEvent = true;
-        }
-    }
-
-    if (shouldWriteThisEvent && m_pEventFileWriter && m_shouldWriteEvents)
+    if (matchNuanceCode && matchParticles && matchNeutrinoVertexPosition && m_pEventFileWriter && m_shouldWriteEvents)
     {
         const CaloHitList *pCaloHitList = nullptr;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
@@ -138,6 +143,104 @@ StatusCode EventWritingAlgorithm::Run()
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventWritingAlgorithm::PassNuanceCodeFilter() const
+{
+    const MCParticleList *pMCParticleList = nullptr;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+
+    MCParticleVector mcNeutrinoList;
+    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
+
+    if (!mcNeutrinoList.empty())
+    {
+        const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(*(mcNeutrinoList.begin()));
+
+        if (pLArMCNeutrino && (pLArMCNeutrino->GetNuanceCode() == m_filterNuanceCode))
+            return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventWritingAlgorithm::PassMCParticleFilter() const
+{
+    const MCParticleList *pMCParticleList = nullptr;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+
+    const CaloHitList *pCaloHitList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
+
+    MCParticleVector mcPrimaryVector;                               // primary mc particles
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+
+    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;            // [mc particles -> primary mc particle]
+    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+
+    LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
+    LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
+    LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+
+    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPhotons(0), nChargedPions(0);
+
+    for (const MCParticle *const pMCPrimary : mcPrimaryVector)
+    {
+        if (m_neutrinoInducedOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
+            continue;
+
+        LArMonitoringHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
+        const unsigned int nMCHitsTotal((mcToTrueHitListMap.end() != trueHitsIter) ? trueHitsIter->second.size() : 0);
+
+        if (nMCHitsTotal < m_matchingMinPrimaryHits)
+            continue;
+
+        const unsigned int particleId(std::abs(pMCPrimary->GetParticleId()));
+        if (NEUTRON != particleId) ++nNonNeutrons;
+
+        if (MU_MINUS == particleId) ++nMuons;
+        else if (E_MINUS == particleId) ++nElectrons;
+        else if (PROTON == particleId) ++nProtons;
+        else if (PHOTON == particleId) ++nPhotons;
+        else if (PI_PLUS == particleId) ++nChargedPions;
+    }
+
+    if ((nNonNeutrons == m_nNonNeutrons) && (nMuons == m_nMuons) && (nElectrons == m_nElectrons) &&
+        (nProtons == m_nProtons) && (nPhotons == m_nPhotons) && (nChargedPions == m_nChargedPions))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventWritingAlgorithm::PassNeutrinoVertexFilter() const
+{
+    const MCParticleList *pMCParticleList = nullptr;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+
+    MCParticleVector mcNeutrinoVector;                              // true neutrinos
+    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
+
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
+    {
+        const CartesianVector &neutrinoInteractionVertex(pMCNeutrino->GetEndpoint());
+
+        if ((neutrinoInteractionVertex.GetX() < (m_detectorHalfLengthX - m_coordinateOffsetX - m_selectedBorderX)) && (neutrinoInteractionVertex.GetX() > (-m_coordinateOffsetX + m_selectedBorderX)) &&
+            (neutrinoInteractionVertex.GetY() < (m_detectorHalfLengthY - m_coordinateOffsetY - m_selectedBorderY)) && (neutrinoInteractionVertex.GetY() > (-m_coordinateOffsetY + m_selectedBorderY)) &&
+            (neutrinoInteractionVertex.GetZ() < (m_detectorHalfLengthZ - m_coordinateOffsetZ - m_selectedBorderZ)) && (neutrinoInteractionVertex.GetZ() > (-m_coordinateOffsetZ + m_selectedBorderZ)) )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -211,10 +314,40 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldFilterByNuanceCode", m_shouldFilterByNuanceCode));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldFilterByMCParticles", m_shouldFilterByMCParticles));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldFilterByNeutrinoVertex", m_shouldFilterByNeutrinoVertex));
+
     if (m_shouldFilterByNuanceCode)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FilterNuanceCode", m_filterNuanceCode));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
+    }
+
+    if (m_shouldFilterByMCParticles)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoInducedOnly", m_neutrinoInducedOnly));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MatchingMinPrimaryHits", m_matchingMinPrimaryHits));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NNonNeutrons", m_nNonNeutrons));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NMuons", m_nMuons));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NElectrons", m_nElectrons));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NProtons", m_nProtons));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NPhotons", m_nPhotons));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NChargedPions", m_nChargedPions));
+    }
+
+    if (m_shouldFilterByNeutrinoVertex)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DetectorHalfLengthX", m_detectorHalfLengthX));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DetectorHalfLengthY", m_detectorHalfLengthY));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DetectorHalfLengthZ", m_detectorHalfLengthZ));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CoordinateOffsetX", m_coordinateOffsetX));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CoordinateOffsetY", m_coordinateOffsetY));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CoordinateOffsetZ", m_coordinateOffsetZ));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SelectedBorderX", m_selectedBorderX));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SelectedBorderY", m_selectedBorderY));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SelectedBorderZ", m_selectedBorderZ));
     }
 
     return STATUS_CODE_SUCCESS;
