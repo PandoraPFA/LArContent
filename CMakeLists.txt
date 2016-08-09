@@ -69,9 +69,10 @@ else()
     project(${LAR_CONTENT_LIBRARY_NAME})
 
     # project version
-    set(${PROJECT_NAME}_VERSION_MAJOR 02) # ATTN liable to go out of sync with cetbuildtools version numbers; check and treat with caution
+    # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
+    set(${PROJECT_NAME}_VERSION_MAJOR 02)
     set(${PROJECT_NAME}_VERSION_MINOR 07)
-    set(${PROJECT_NAME}_VERSION_PATCH 04)
+    set(${PROJECT_NAME}_VERSION_PATCH 06)
     set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
