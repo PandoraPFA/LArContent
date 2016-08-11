@@ -155,9 +155,9 @@ bool EventWritingAlgorithm::PassNuanceCodeFilter() const
     MCParticleVector mcNeutrinoList;
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
 
-    if (!mcNeutrinoList.empty())
+    for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
-        const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(*(mcNeutrinoList.begin()));
+        const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
 
         if (pLArMCNeutrino && (pLArMCNeutrino->GetNuanceCode() == m_filterNuanceCode))
             return true;

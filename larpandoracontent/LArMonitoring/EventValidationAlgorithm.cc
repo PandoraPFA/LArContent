@@ -541,7 +541,9 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
         std::cout << std::endl << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
             << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
-        isCalculable = true;
+        if (NEUTRON != simpleMCPrimary.m_pdgCode)
+            isCalculable = true;
+
         unsigned int nMatches(0);
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
@@ -561,7 +563,7 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
             }
         }
 
-        if (1 != nMatches)
+        if ((1 != nMatches) && !((0 == nMatches) && (NEUTRON == simpleMCPrimary.m_pdgCode)))
             isCorrect = false;
     }
 
@@ -609,7 +611,7 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
             PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), &(pPfo->GetVertexList()), prefix + "PfoVertices_" + displayString, color));
         }
 
-        if (matchedPfos.empty())
+        if (matchedPfos.empty() && (NEUTRON != simpleMCPrimary.m_pdgCode))
         {
             PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingPrimaryVtx_" + displayString, RED, 1));
             PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingPrimaryEnd_" + displayString, RED, 1));
