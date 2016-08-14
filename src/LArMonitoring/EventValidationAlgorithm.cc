@@ -365,90 +365,90 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     std::cout << "recoNeutrinoList size: " << recoNeutrinoList.size() << std::endl;
     std::cout << "mcNeutrinoList size: " << mcNeutrinoList.size() << std::endl;
     
-    //if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
-    
-    std::vector<float> top5VerticesDR;
-    std::vector<float> allVerticesDR;
-    
-    if (!pTop5VertexList->empty())
+    if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
-        for (const Vertex *const pVertex : (*pTop5VertexList))
+        std::vector<float> top5VerticesDR;
+        std::vector<float> allVerticesDR;
+        
+        if (!pTop5VertexList->empty())
         {
-            try
+            for (const Vertex *const pVertex : (*pTop5VertexList))
             {
-                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-                top5VerticesDR.push_back(vertexDR);
+                try
+                {
+                    float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                    top5VerticesDR.push_back(vertexDR);
+                }
+                
+                catch(...)
+                {
+                    continue;
+                }
             }
             
-            catch(...)
-            {
-                continue;
-            }
-        }
-        
-        if (!top5VerticesDR.empty())
-            top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
-        
-        for (const Vertex *const pVertex : (*pTop5VertexList))
-        {
-            float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-            if (vertexDR == top5VertexOffset)
-            {
-                top5VertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
-                top5VertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
-                top5VertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
-            }
-        }
-        
-        std::cout << "Top 5 vertex DR: " << top5VertexOffset << " with DX: " << top5VertexOffsetX << " DY: " << top5VertexOffsetY << " DZ: " << top5VertexOffsetZ << std::endl;
-    }
-    
-    if (!pAllVerticesList->empty())
-    {
-        
-        for (const Vertex *const pVertex : (*pAllVerticesList))
-        {
-            try
+            if (!top5VerticesDR.empty())
+                top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
+            
+            for (const Vertex *const pVertex : (*pTop5VertexList))
             {
                 float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-                allVerticesDR.push_back(vertexDR);
+                if (vertexDR == top5VertexOffset)
+                {
+                    top5VertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
+                    top5VertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
+                    top5VertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
+                }
             }
             
-            catch(...)
-            {
-                continue;
-            }
+            std::cout << "Top 5 vertex DR: " << top5VertexOffset << " with DX: " << top5VertexOffsetX << " DY: " << top5VertexOffsetY << " DZ: " << top5VertexOffsetZ << std::endl;
         }
         
-        if (!allVerticesDR.empty())
-            bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
-        
-        float DeltaU(0.f), DeltaV(0.f), DeltaW(0.f);
-        
-        for (const Vertex *const pVertex : (*pAllVerticesList))
+        if (!pAllVerticesList->empty())
         {
-            float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
-            if (vertexDR == bestVertexOffset)
+            
+            for (const Vertex *const pVertex : (*pAllVerticesList))
             {
-                bestVertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
-                bestVertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
-                bestVertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
+                try
+                {
+                    float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                    allVerticesDR.push_back(vertexDR);
+                }
                 
-                const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
-                const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
-                const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
-                
-                DeltaU = (vertexProjectionU - mcVertexProjectionU).GetMagnitude();
-                DeltaV = (vertexProjectionV - mcVertexProjectionV).GetMagnitude();
-                DeltaW = (vertexProjectionW - mcVertexProjectionW).GetMagnitude();
-                
+                catch(...)
+                {
+                    continue;
+                }
             }
+            
+            if (!allVerticesDR.empty())
+                bestVertexOffset = (*std::min_element(allVerticesDR.begin(), allVerticesDR.end()));
+            
+            float DeltaU(0.f), DeltaV(0.f), DeltaW(0.f);
+            
+            for (const Vertex *const pVertex : (*pAllVerticesList))
+            {
+                float vertexDR((pVertex->GetPosition() - mcNeutrinoVertexPosition).GetMagnitude());
+                if (vertexDR == bestVertexOffset)
+                {
+                    bestVertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
+                    bestVertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
+                    bestVertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
+                    
+                    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U));
+                    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
+                    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
+                    
+                    DeltaU = (vertexProjectionU - mcVertexProjectionU).GetMagnitude();
+                    DeltaV = (vertexProjectionV - mcVertexProjectionV).GetMagnitude();
+                    DeltaW = (vertexProjectionW - mcVertexProjectionW).GetMagnitude();
+                    
+                }
+            }
+            
+            std::cout << "Best possible vertex DR: " << bestVertexOffset << " with DX: " << bestVertexOffsetX << " DY: " << bestVertexOffsetY << " DZ: " << bestVertexOffsetZ << std::endl;
+            std::cout << "DU: " << DeltaU << " DV: " << DeltaV << " DW: " << DeltaW << std::endl;
         }
-        
-        std::cout << "Best possible vertex DR: " << bestVertexOffset << " with DX: " << bestVertexOffsetX << " DY: " << bestVertexOffsetY << " DZ: " << bestVertexOffsetZ << std::endl;
-        std::cout << "DU: " << DeltaU << " DV: " << DeltaV << " DW: " << DeltaW << std::endl;
     }
-
 //---------------------------------------------------------TOP 5--------------------------------------------------------------------
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "minimalHitToMCVertexDistance", minimalHitToMCVertexDistance));
