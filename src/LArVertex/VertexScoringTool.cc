@@ -96,31 +96,25 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
 
 void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, const VertexList* pInputVertexList, VertexScoreList &vertexScoreList)
 {
-    HitKDTree2D kdTreeU, kdTreeV, kdTreeW;
-    this->InitializeKDTrees(pAlgorithm, kdTreeU, kdTreeV, kdTreeW);
-
-    VertexList filteredVertexList;
-    this->FilterVertexList(pInputVertexList, kdTreeU, kdTreeV, kdTreeW, filteredVertexList);
-
-    if (filteredVertexList.empty())
-        return;
-
+    std::cout << "A" << std::endl;
+    
+    std::vector<const ClusterList*> clusterLists;
+    
     const ClusterList *pClusterListU = NULL;
     PandoraContentApi::GetList(*pAlgorithm, "ClustersU", pClusterListU);
-    const ClusterList clusterListU = *pClusterListU;
+    clusterLists.push_back(pClusterListU);
+    
+    std::cout << "A2" << std::endl;
     
     const ClusterList *pClusterListV = NULL;
     PandoraContentApi::GetList(*pAlgorithm, "ClustersV", pClusterListV);
-    const ClusterList clusterListV = *pClusterListV;
+    clusterLists.push_back(pClusterListV);
     
     const ClusterList *pClusterListW = NULL;
     PandoraContentApi::GetList(*pAlgorithm, "ClustersW", pClusterListW);
-    const ClusterList clusterListW = *pClusterListW;
+    clusterLists.push_back(pClusterListW);
     
-    std::vector<ClusterList> clusterLists;
-    clusterLists.push_back(clusterListU);
-    clusterLists.push_back(clusterListV);
-    clusterLists.push_back(clusterListW);
+    std::cout << "B" << std::endl;
     
     float bestFinalScore(0.f);
     
@@ -132,9 +126,14 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
         const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V));
         const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W));
         
-        for (const ClusterList &clusterList : clusterLists)
+        std::cout << "C" << std::endl;
+        
+        for (const ClusterList* pClusterList : clusterLists)
         {
-            for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = clusterList.end(); iter1 != iter1End; ++iter1)
+            if (pClusterList == NULL)
+                continue;
+            
+            for (ClusterList::const_iterator iter1 = pClusterList->begin(), iter1End = pClusterList->end(); iter1 != iter1End; ++iter1)
             {
                 const Cluster *const pCluster = *iter1;
                 const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
@@ -144,7 +143,9 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
             
                 const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
                 int nHitsFirstParticle(0), nHitsSecondParticle(0);
-                const TwoDSlidingFitResult slidingFitResult(pCluster, 20, slidingFitPitch); 
+                const TwoDSlidingFitResult slidingFitResult(pCluster, 20, slidingFitPitch);
+                
+                std::cout << "D" << std::endl;
                 
                 OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
                 CaloHitList caloHitList;
@@ -158,6 +159,8 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
                     slidingFitResult.GetLocalPosition(vertexProjectionV, vertexL, vertexT);
                 else if (hitType == TPC_VIEW_W)
                     slidingFitResult.GetLocalPosition(vertexProjectionW, vertexL, vertexT);
+                    
+                std::cout << "E" << std::endl;
                 
                 for (const CaloHit* pCaloHit : caloHitList)
                 {
@@ -179,6 +182,8 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
                     }
                 }
                 
+                std::cout << "F" << std::endl;
+                
                 firstParticleAverageEnergy /= nHitsFirstParticle;
                 secondParticleAverageEnergy /= nHitsSecondParticle;
                 
@@ -191,10 +196,12 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
                         energyRatio = 1.0/energyRatio;
     
                     finalScore += energyRatio;
-                    std::cout << finalScore << std::endl;
+                    //std::cout << finalScore << std::endl;
                 }
             }
         }
+        
+        std::cout << "G" << std::endl;
         
         if (finalScore > bestFinalScore)
         {
@@ -205,6 +212,9 @@ void VertexScoringTool::ScoreEnergyVertices(const Algorithm *const pAlgorithm, c
     }
     
     std::sort(vertexScoreList.begin(), vertexScoreList.end());
+    
+    if (!pInputVertexList->empty() && vertexScoreList.empty())
+        std::cout << "Energy vertex scoring worked incorrectly." << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
