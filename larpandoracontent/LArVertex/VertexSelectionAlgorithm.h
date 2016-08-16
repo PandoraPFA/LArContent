@@ -8,6 +8,8 @@
 #ifndef LAR_VERTEX_SELECTION_ALGORITHM_H
 #define LAR_VERTEX_SELECTION_ALGORITHM_H 1
 
+#define JACK_COUT(a) std::cout << "\033[1;36m" << a << "\033[0m" << std::endl;
+
 #include "Pandora/Algorithm.h"
 
 namespace lar_content
@@ -222,6 +224,14 @@ private:
      */
     void GetVertexScoreList(const pandora::VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
         HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const;
+        
+    /**
+     *  @brief  ...
+     * 
+     */
+    float GetEnergyKick(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
+    
+    float GetBisectionLength(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
 
     /**
      *  @brief  Get the score for a trio of kernel estimations, using fast histogram approach
@@ -336,6 +346,15 @@ private:
     bool            m_fastScoreCheck;               ///< Whether to use the fast histogram based score to selectively avoid calling full or midway scores
     bool            m_fastScoreOnly;                ///< Whether to use the fast histogram based score only
     bool            m_fullScore;                    ///< Whether to use the full kernel density estimation score, as opposed to the midway score
+    bool            m_jackScore;                    ///< ...
+    bool            m_jackScoreOnly;                ///< ...
+    unsigned int    m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    float           m_rOffset;                      ///< ...
+    float           m_xOffset;                      ///< ...
+    float           m_epsilon;                      ///< ...
+    bool            m_bisectionScore;               ///< ...
+    float           m_bisectionConstant;            ///< ...
+    int             m_minNHits;                     ///< ...
 
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
     float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span

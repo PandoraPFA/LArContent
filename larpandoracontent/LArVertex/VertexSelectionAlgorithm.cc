@@ -10,9 +10,13 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 #include "larpandoracontent/LArVertex/VertexSelectionAlgorithm.h"
+
+#include <fstream>
 
 using namespace pandora;
 
@@ -24,6 +28,14 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_fastScoreCheck(true),
     m_fastScoreOnly(false),
     m_fullScore(false),
+    m_jackScore(false),
+    m_jackScoreOnly(false),
+    m_slidingFitWindow(20),
+    m_rOffset(1.0),
+    m_xOffset(1.0),
+    m_epsilon(1.0),
+    m_bisectionScore(false),
+    m_bisectionConstant(10.0),
     m_beamMode(false),
     m_nDecayLengthsInZSpan(2.f),
     m_kappa(0.42f),
@@ -166,7 +178,11 @@ void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, Be
     const float zSpan(maxZCoordinate - minZCoordinate);
     const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
 
+    JACK_COUT("Setting min z coord as " << minZCoordinate)
+
     beamConstants.SetConstants(minZCoordinate, decayConstant);
+    
+    JACK_COUT("Min z coord is " << beamConstants.GetMinZCoordinate())
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -178,42 +194,307 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
     std::sort(vertexVector.begin(), vertexVector.end(), SortByVertexZPosition);
 
     float bestFastScore(0.f);
-
+    
     for (const Vertex *const pVertex : vertexVector)
     {
-        KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
-        KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
-        KernelEstimate kernelEstimateW(m_kernelEstimateSigma);
+        float finalScore(0.f);
 
-        this->FillKernelEstimate(pVertex, TPC_VIEW_U, kdTreeU, kernelEstimateU);
-        this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
-        this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
-
-        const float vertexMinZ(std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
-        const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
-
-        if (m_fastScoreCheck || m_fastScoreOnly)
+        if (m_jackScoreOnly)
         {
-            const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
-
-            if (m_fastScoreOnly)
+            const float vertexMinZ(!m_beamMode ? 0.f : std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
+            const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
+            float totalEnergyKick = this->GetEnergyKick(pVertex, TPC_VIEW_U) + this->GetEnergyKick(pVertex, TPC_VIEW_V) + this->GetEnergyKick(pVertex, TPC_VIEW_W);
+            
+            finalScore = multiplier * std::exp(-totalEnergyKick / this->m_epsilon);
+            
+            // Get the cluster bisection score.
+            
+            if (this->m_bisectionScore)
             {
-                vertexScoreList.push_back(VertexScore(pVertex, fastScore));
-                continue;
+                float totalBisectionLength = this->GetBisectionLength(pVertex, TPC_VIEW_U) + this->GetBisectionLength(pVertex, TPC_VIEW_V) + this->GetBisectionLength(pVertex, TPC_VIEW_W);
+                finalScore *= std::exp(-totalBisectionLength / this->m_bisectionConstant);
+            }            
+            JACK_COUT(" > Total energy kick: " << totalEnergyKick)
+            JACK_COUT(" > Beam deweighting score: " << multiplier)
+            JACK_COUT(" > Energy kick score: " << std::exp(-totalEnergyKick / this->m_epsilon))
+            JACK_COUT(" > Final score: " << finalScore << std::endl)
+        }
+        
+        else
+        {
+            KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
+            KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
+            KernelEstimate kernelEstimateW(m_kernelEstimateSigma);
+
+            this->FillKernelEstimate(pVertex, TPC_VIEW_U, kdTreeU, kernelEstimateU);
+            this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeV, kernelEstimateV);
+            this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
+
+            const float vertexMinZ(!m_beamMode ? 0.f : std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
+            const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
+            
+            if (m_fastScoreCheck || m_fastScoreOnly)
+            {
+                const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
+
+                if (m_fastScoreOnly)
+                {
+                    vertexScoreList.push_back(VertexScore(pVertex, fastScore));
+                    continue;
+                }
+
+                if (fastScore < m_minFastScoreFraction * bestFastScore)
+                    continue;
+
+                if (fastScore > bestFastScore)
+                    bestFastScore = fastScore;
             }
 
-            if (fastScore < m_minFastScoreFraction * bestFastScore)
-                continue;
-
-            if (fastScore > bestFastScore)
-                bestFastScore = fastScore;
+            finalScore = (multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
+                this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
+                
+            JACK_COUT("Score before JackScore multiplier: " << multiplier << " * " << this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) << " = " << finalScore);
+                
+            if (m_jackScore)
+            {
+                float totalEnergyKick = this->GetEnergyKick(pVertex, TPC_VIEW_U) + this->GetEnergyKick(pVertex, TPC_VIEW_V) + this->GetEnergyKick(pVertex, TPC_VIEW_W);
+                JACK_COUT("JackScore multiplier: " << std::exp(-totalEnergyKick / this->m_epsilon));
+                finalScore *= std::exp(-totalEnergyKick / this->m_epsilon);
+            }
+            
+            JACK_COUT("Score after JackScore multiplier: " << finalScore);
         }
-
-        const float finalScore(multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
-            this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
-
+        
         vertexScoreList.push_back(VertexScore(pVertex, finalScore));
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetEnergyKick(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const
+{    
+    // Get the relevant 2D cluster list.
+    std::string listName;
+    switch (hitType)
+    {
+        case TPC_VIEW_U:
+            listName = "ClustersU";
+            break;
+        case TPC_VIEW_V:
+            listName = "ClustersV";
+            break;
+        case TPC_VIEW_W:
+            listName = "ClustersW";
+            break;
+        default:
+            throw;
+    }
+    
+    const ClusterList *pClusterList(NULL);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pClusterList));
+
+    if (!pClusterList || pClusterList->empty())
+    {
+         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+             std::cout << "VertexSelectionAlgorithm: unable to find current cluster list " << std::endl;
+
+         return 1.f;
+    }
+    
+    // Project the candidate vertex to the 2D view.
+    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+    
+    // Loop over the clusters in the cluster list and add up all the individual metrics.
+    float totMetric(0.f);
+    float totEnergy(0.f);
+
+    unsigned int clusterCount(0);
+    for (const Cluster * const pCluster : *pClusterList)
+    {        
+        if (pCluster->GetNCaloHits() < this->m_minNHits)
+            continue;
+                
+        // Get the direction (unit) vector of the cluster (check if straight etc. - to do).
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
+        const CartesianVector axisDirection = slidingFitResult.GetAxisDirection();
+        
+        // Get the vector from the point to both of the ends of the cluster.
+        const CartesianVector pointToFitStartVector = slidingFitResult.GetGlobalMinLayerPosition() - vertexPosition2D;
+        const CartesianVector pointToFitEndVector   = slidingFitResult.GetGlobalMaxLayerPosition() - vertexPosition2D;
+        
+        // Find the norm of the cross product between this vector and the cluster's direction (unit) vector. This is the impact parameter.
+        const float impactParameter = pointToFitEndVector.GetCrossProduct(axisDirection).GetMagnitude();
+        
+        // Also get the closest distance from the vertex to the end of the cluster.
+        const float closestEndDistance = std::min(pointToFitStartVector.GetMagnitude(), pointToFitEndVector.GetMagnitude());
+        
+        // Work out the metric. Maybe the product of the inverse impact parameter and the total cluster energy.
+        totMetric += pCluster->GetElectromagneticEnergy() * (impactParameter + m_xOffset) / (closestEndDistance + m_rOffset);
+        totEnergy += pCluster->GetElectromagneticEnergy();
+        
+        ++clusterCount;
+    }
+    
+    totMetric /= totEnergy;
+    
+    static int vertexNumber(0);
+        
+    JACK_COUT(" > Vtx #" << vertexNumber << " - list " << listName)
+              
+    JACK_COUT("   --> Number of clusters considered: " << clusterCount)
+    JACK_COUT("   --> Total energy kick: " << totMetric)
+        
+    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexPosition2D,  std::to_string(vertexNumber), GREEN, 1)); // mah
+    //PANDORA_MONITORING_API(Pause(this->GetPandora()));
+    
+    ++vertexNumber;
+    
+    // Return the normalized total metric.
+    return totMetric;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetBisectionLength(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const
+{    
+    // Get the relevant 2D cluster list.
+    std::string listName;
+    switch (hitType)
+    {
+        case TPC_VIEW_U:
+            listName = "ClustersU";
+            break;
+        case TPC_VIEW_V:
+            listName = "ClustersV";
+            break;
+        case TPC_VIEW_W:
+            listName = "ClustersW";
+            break;
+        default:
+            throw;
+    }
+    
+    const ClusterList *pClusterList(NULL);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pClusterList));
+
+    if (!pClusterList || pClusterList->empty())
+    {
+         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+             std::cout << "VertexSelectionAlgorithm: unable to find current cluster list " << std::endl;
+
+         return 1.f;
+    }
+    
+    // Project the candidate vertex to the 2D view.
+    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+    
+    // Loop over the clusters in the cluster list and add up all the individual cluster bisection lengths.
+    float totLength(0.f);
+
+    std::vector<const Cluster *> candidateClusters;
+
+    for (const Cluster * const pCluster : *pClusterList)
+    {        
+        std::cout << "Cluster has hits with energy " << pCluster->GetElectromagneticEnergy() << " : " << pCluster->GetNCaloHits() << std::endl;
+        
+        if (pCluster->GetNCaloHits() < this->m_minNHits)
+            continue;
+            
+        // Get the direction (unit) vector of the cluster (check if straight etc. - to do).
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
+        const float closestDistance = LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster);
+        
+        std::cout << "Distance of cluster with energy " << pCluster->GetElectromagneticEnergy() << " : " << closestDistance << std::endl;
+        
+        if (closestDistance > 5.0)
+            continue;
+            
+        candidateClusters.push_back(pCluster);
+        
+        std::cout << "CANDIDATE SIZE: " << candidateClusters.size() << std::endl;
+    }
+
+    unsigned int clusterCount(0);
+    for (const Cluster * const pCluster : candidateClusters)
+    {        
+                
+        // Get the direction (unit) vector of the cluster (check if straight etc. - to do).
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);        
+        const CartesianVector axisDirection = slidingFitResult.GetAxisDirection();
+        
+        // Project the vertex onto the cluster.
+        const float projectedVertexPosition = vertexPosition2D.GetDotProduct(axisDirection);
+        const float projectedMinPosition = slidingFitResult.GetGlobalMinLayerPosition().GetDotProduct(axisDirection);
+        const float projectedMaxPosition = slidingFitResult.GetGlobalMaxLayerPosition().GetDotProduct(axisDirection);
+        
+        float startPosition, endPosition;
+        
+        if (projectedMinPosition <= projectedMaxPosition)
+        {
+            startPosition = projectedMinPosition;
+            endPosition = projectedMaxPosition;
+        }
+        
+        else
+        {
+            startPosition = projectedMaxPosition;
+            endPosition = projectedMinPosition;
+        }
+        
+        for (auto it = candidateClusters.begin(); it != candidateClusters.end(); ++it)
+        {
+            auto pOtherCluster = *it;
+            
+            if (pCluster == pOtherCluster)
+                continue;
+                
+            const TwoDSlidingFitResult otherSlidingFitResult(pOtherCluster, m_slidingFitWindow, slidingFitPitch);        
+            const CartesianVector otherAxisDirection = otherSlidingFitResult.GetAxisDirection();
+            
+            if (otherAxisDirection.GetDotProduct(axisDirection) < 0.995)
+                continue;
+                
+            candidateClusters.erase(it);
+            
+            const float projectedOtherMinPosition = otherSlidingFitResult.GetGlobalMinLayerPosition().GetDotProduct(axisDirection);
+            const float projectedOtherMaxPosition = otherSlidingFitResult.GetGlobalMaxLayerPosition().GetDotProduct(axisDirection);
+            
+            if (projectedOtherMinPosition < startPosition)
+                startPosition = projectedOtherMinPosition;
+                
+            if (projectedOtherMaxPosition > endPosition)
+                endPosition = projectedOtherMaxPosition;
+                
+            JACK_COUT("*************************** MERGED TWO CLUSTERS")
+            
+            if (it == candidateClusters.end())
+                break;
+        }
+
+        
+        if (projectedVertexPosition < startPosition || projectedVertexPosition > endPosition)
+            continue;
+            
+        totLength += std::min(projectedVertexPosition-startPosition, endPosition - projectedVertexPosition);
+        clusterCount++;
+        
+    }
+    
+    static int vertexNumber(0);
+        
+    JACK_COUT(" > Vtx #" << vertexNumber << " - list " << listName)
+              
+    JACK_COUT("   --> Number of clusters considered: " << clusterCount)
+    JACK_COUT("   --> Total bisection length: " << totLength)
+    
+    ++vertexNumber;
+    
+    // Return the normalized total metric.
+    return totLength;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -270,7 +551,7 @@ float VertexSelectionAlgorithm::GetMidwayScore(const KernelEstimate &kernelEstim
 
     for (int xBin = 0; xBin < histogramU.GetNBinsX(); ++xBin)
     {
-        const float binCenter(histogramU.GetXLow() + (static_cast<float>(xBin) + 0.5f) * histogramU.GetXBinWidth());
+        const float binCenter(histogramU.GetXLow() + (static_cast<float>(xBin) + 0.5f) * histogramU.GetXBinWidth());        
         figureOfMerit += histogramU.GetBinContent(xBin) * kernelEstimateU.Sample(binCenter);
         figureOfMerit += histogramV.GetBinContent(xBin) * kernelEstimateV.Sample(binCenter);
         figureOfMerit += histogramW.GetBinContent(xBin) * kernelEstimateW.Sample(binCenter);
@@ -481,6 +762,33 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FullScore", m_fullScore));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "JackScore", m_jackScore));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "JackScoreOnly", m_jackScoreOnly));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitWindow", m_slidingFitWindow));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ROffset", m_rOffset));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "XOffset", m_xOffset));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Epsilon", m_epsilon));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "BisectionScore", m_bisectionScore));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "BisectionConstant", m_bisectionConstant));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinNHits", m_minNHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BeamMode", m_beamMode));
