@@ -263,6 +263,8 @@ private:
      *  @return boolean
      */
     static bool SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs);
+    
+    bool IsVertexInGap(pandora::CartesianVector &vertexPosition3D, const pandora::HitType hitType) const;
 
     std::string         m_caloHitListName;          ///< Name of input calo hit list
     std::string         m_mcParticleListName;       ///< Name of input MC particle list
@@ -291,6 +293,8 @@ private:
     int                 m_eventNumber;              ///< The event number
     
     bool                m_showTrueNeutrinoVertex;
+    
+    float               m_gapTolerance;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

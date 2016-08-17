@@ -34,7 +34,8 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_vertexVisualizationDeltaR(1.f),
     m_fileIdentifier(0),
     m_eventNumber(0),
-    m_showTrueNeutrinoVertex(false)
+    m_showTrueNeutrinoVertex(false),
+    m_gapTolerance(0.f)
 {
 }
 
@@ -361,6 +362,20 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     float minimalHitToMCVertexDistance(-1.f);
     float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
     float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
+    int trueVertexInGap(0); //binary bool
+    int nViewsInGap(0);
+    
+    if (this->IsVertexInGap(mcNeutrinoVertexPosition, TPC_VIEW_U))
+        nViewsInGap++;
+    
+    if (this->IsVertexInGap(mcNeutrinoVertexPosition, TPC_VIEW_V))
+        nViewsInGap++;
+        
+    if (this->IsVertexInGap(mcNeutrinoVertexPosition, TPC_VIEW_W))
+        nViewsInGap++;
+        
+    if (nViewsInGap >= 2)
+        trueVertexInGap = 1;
     
     if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
@@ -449,6 +464,7 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
 //---------------------------------------------------------TOP 5--------------------------------------------------------------------
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "minimalHitToMCVertexDistance", minimalHitToMCVertexDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueVertexInGap", trueVertexInGap));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffset", bestVertexOffset));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffsetX", top5VertexOffsetX));
@@ -838,6 +854,11 @@ bool EventValidationAlgorithm::SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::IsVertexInGap(CartesianVector &vertexPosition3D, const HitType hitType) const
+{
+    return LArGeometryHelper::IsInGap3D(this->GetPandora(), vertexPosition3D, hitType, m_gapTolerance);
+}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 EventValidationAlgorithm::SimpleMCPrimary::SimpleMCPrimary() :
