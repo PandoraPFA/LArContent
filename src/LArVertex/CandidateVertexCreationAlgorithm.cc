@@ -35,7 +35,6 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_enableCrossingCandidates(false),
     m_enableEnergyCandidates(false),
     m_energyPlot(false),
-    m_energyDifferenceThreshold(0.5),
     m_minCrossingClusterSize(10),
     m_extrapolationLength(20.0),
     m_extrapolationStepSize(0.1)
@@ -841,9 +840,6 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnergyPlot", m_energyPlot));
-        
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EnergyDifferenceThreshold", m_energyDifferenceThreshold));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCrossingClusterSize", m_minCrossingClusterSize));

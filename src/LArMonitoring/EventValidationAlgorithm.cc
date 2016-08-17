@@ -362,9 +362,6 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
     float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
     
-    std::cout << "recoNeutrinoList size: " << recoNeutrinoList.size() << std::endl;
-    std::cout << "mcNeutrinoList size: " << mcNeutrinoList.size() << std::endl;
-    
     if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
         std::vector<float> top5VerticesDR;

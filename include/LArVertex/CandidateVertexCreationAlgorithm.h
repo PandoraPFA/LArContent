@@ -162,7 +162,6 @@ private:
     bool                        m_enableEnergyCandidates; 
     bool                        m_energyPlot;
     
-    float                       m_energyDifferenceThreshold;
     unsigned int                m_minCrossingClusterSize;
     
     float                       m_extrapolationLength;

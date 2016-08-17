@@ -59,57 +59,59 @@ std::vector<const VertexList*> VertexClusteringTool::ClusterVertices(const Verte
     VertexList usedVertices;
     
     VertexCluster *const pVertexClusterSeed = new VertexCluster();
-    const Vertex* pPreviousVertex(*(sortedVertexVector.begin()));
-
+    CartesianVector currentClusterCentroid(0., 0., 0.);
+    
     for (const Vertex *const pVertex : sortedVertexVector)
     {
-        if (usedVertices.count(pVertex) == 1)
+        if (usedVertices.count(pVertex) != 0)
             continue;
         
-        CartesianVector currentClusterCentroid(0., 0., 0.);
-
         if (pVertexClusterSeed->GetVertexList().size() == 0)
         {
             pVertexClusterSeed->AddVertex(pVertex);
             usedVertices.insert(pVertex);
-            continue;
         }
-        else
+
+        for (const Vertex *const pVertexIterator : sortedVertexVector)
+        {
+            if (usedVertices.count(pVertexIterator) != 0)
+                continue;
+            
             currentClusterCentroid = pVertexClusterSeed->GetCentroidPosition();
+            
+            if ((pVertexClusterSeed->GetVertexList().size() <= m_minClusterSize) && (CheckVertexToClusterDistance(pVertexIterator, pVertexClusterSeed)))
+            {
+                pVertexClusterSeed->AddVertex(pVertexIterator);
+                usedVertices.insert(pVertexIterator);
+            }
+            else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && ((((currentClusterCentroid - (pVertexIterator->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)) && (CheckVertexToClusterDistance(pVertexIterator, pVertexClusterSeed))))
+            {
+                pVertexClusterSeed->AddVertex(pVertexIterator);
+                usedVertices.insert(pVertexIterator);
+            }
+        }
         
-        if ((pVertexClusterSeed->GetVertexList().size() <= m_minClusterSize) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= m_clusteringRadius))
-        {
-            pVertexClusterSeed->AddVertex(pVertex);
-            usedVertices.insert(pVertex);
-        }
-        else if ((pVertexClusterSeed->GetVertexList().size() > m_minClusterSize) && ((((currentClusterCentroid - (pVertex->GetPosition())).GetMagnitude() <= m_maxVertexToCentroidDistance)) && (((pVertex->GetPosition() - pPreviousVertex->GetPosition()).GetMagnitude()) <= m_clusteringRadius)))
-        {
-            pVertexClusterSeed->AddVertex(pVertex);
-            usedVertices.insert(pVertex);
-        }
-        else
-        {
-            VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
-            vertexClusterList.push_back(pNewVertexCluster);
-
-            pVertexClusterSeed->ClearVertexCluster();
-            pVertexClusterSeed->AddVertex(pVertex);
-            usedVertices.insert(pVertex);
-        }
-
-        pPreviousVertex = pVertex;
+        VertexCluster *const pVertexCluster = new VertexCluster(*pVertexClusterSeed);
+        
+        vertexClusterList.push_back(pVertexCluster);
+        pVertexClusterSeed->ClearVertexCluster();
+        
+        //pVertexClusterSeed->AddVertex(pVertex);
+        //usedVertices.insert(pVertex);
     }
-
-    VertexCluster *const pNewVertexCluster = new VertexCluster(*pVertexClusterSeed);
-    vertexClusterList.push_back(pNewVertexCluster);
-
+    
+    if (pVertexClusterSeed->GetVertexList().size() != 0)
+    {
+        VertexCluster *const pLastVertexCluster = new VertexCluster(*pVertexClusterSeed);
+        vertexClusterList.push_back(pLastVertexCluster);
+    }
+    
     std::vector<const VertexList*> outputVertexListVector;
     
     for (VertexCluster* pVertexCluster : vertexClusterList)
         outputVertexListVector.push_back(&(pVertexCluster->GetVertexList())); //all for now: later m_nSelectedVerticesPerCluster
 
-    return outputVertexListVector;  
-
+    return outputVertexListVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,6 +128,19 @@ pandora::CartesianVector VertexClusteringTool::VertexCluster::GetCentroidPositio
 
     centroid *= static_cast<float>(1.f / this->GetVertexList().size());
     return centroid;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool VertexClusteringTool::CheckVertexToClusterDistance(const Vertex *const pVertex, VertexCluster *const pVertexCluster) const
+{
+    for (const Vertex *const pClusterVertex : (pVertexCluster->GetVertexList()))
+    {
+        if (((pVertex->GetPosition() - pClusterVertex->GetPosition()).GetMagnitude()) <= m_clusteringRadius)
+            return true;
+    }
+    
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

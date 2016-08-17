@@ -49,9 +49,18 @@ StatusCode VertexSelectionAlgorithm::Run()
 
         return STATUS_CODE_SUCCESS;
     }
+    
+    std::cout << "Vertices before clustering: " << pTopologyVertexList->size() << std::endl;
 
     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pTopologyVertexList);
-
+    
+    int nVertices(0);
+    
+    for (const VertexList* pVertexList : vertexListVector)
+        nVertices += pVertexList->size();
+    
+    std::cout << "Vertices after clustering: " << nVertices << std::endl;
+    
     std::vector<VertexScoringTool::VertexScoreList> scoredClusterCollection;
     m_pVertexScoringTool->ScoreVertices(this, pTopologyVertexList, vertexListVector, scoredClusterCollection);
     
@@ -84,9 +93,6 @@ StatusCode VertexSelectionAlgorithm::Run()
     
     this->StoreTopAllInformation(pTopologyVertexList, selectedVertexList, pEnergyVertexList, energyVerticesPresent);
     this->StoreTop5Information(scoredClusterCollection, energyVertexScoreList);
-    
-    std::cout << ">>> pTopologyVertexList size: " << pTopologyVertexList->size() << std::endl;
-    std::cout << ">>> selectedVertexList size: " << selectedVertexList.size() << std::endl;
     
     //--------------------------------------------------------------------------------------------------------------------------------------
     

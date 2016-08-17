@@ -96,6 +96,8 @@ public:
     typedef std::vector<VertexCluster*> VertexClusterList;
 
     std::vector<const pandora::VertexList*> ClusterVertices(const pandora::VertexList* pVertexList);
+    
+    bool CheckVertexToClusterDistance(const pandora::Vertex *const pVertex, VertexCluster *const pVertexCluster) const;
 
     static bool SortVerticesByZ(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
 
