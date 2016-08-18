@@ -699,7 +699,7 @@ void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mc
         const Vertex *const pThisVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
         const bool isThisGood(isGood || ((1 == mcNeutrinoVector.size()) && (pThisVertex == pBestVertex)));
         const std::string thisPrefix(isThisGood ? "Good" : "Displaced");
-        const Color thisColor(isThisGood ? CYAN : VIOLET);
+        const Color thisColor(isThisGood ? CYAN : DARKVIOLET);
 
         const CartesianVector recoVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pThisVertex->GetPosition(), hitType));
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &recoVertex2D, thisPrefix + "RecoNeutrinoVertex_" + TypeToString(displayIndex++) + hitTypeString, thisColor, 1);
@@ -724,7 +724,7 @@ void EventValidationAlgorithm::GetPrimaryDetails(const SimpleMCPrimary &thisSimp
         if (thisSimpleMCPrimary.m_id == mapSimpleMCPrimary.m_id)
         {
             if ((0 == nMuons) && (MU_MINUS == mapSimpleMCPrimary.m_pdgCode)) {name = "MUON"; color = RED;}
-            else if ((0 == nElectrons) && (E_MINUS == mapSimpleMCPrimary.m_pdgCode)) {name = "ELECTRON"; color = TEAL;}
+            else if ((0 == nElectrons) && (E_MINUS == mapSimpleMCPrimary.m_pdgCode)) {name = "ELECTRON"; color = ORANGE;}
             else if ((0 == nProtons) && (PROTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PROTON1"; color = BLUE;}
             else if ((1 == nProtons) && (PROTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PROTON2"; color = VIOLET;}
             else if ((0 == nPiPlus) && (PI_PLUS == mapSimpleMCPrimary.m_pdgCode)) {name = "PIPLUS"; color = MAGENTA;}
@@ -770,7 +770,10 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
     for (const std::string &clusterListName : m_clusterListNames)
     {
         const ClusterList *pClusterList = nullptr;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+        if (!pClusterList)
+            continue;
 
         for (const Cluster *const pCluster : *pClusterList)
         {
