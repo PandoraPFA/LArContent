@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -28,6 +30,9 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_printAllToScreen(false),
     m_printMatchingToScreen(false),
     m_visualizeMatching(false),
+    m_visualizeVertices(false),
+    m_visualizeRemnants(false),
+    m_visualizeGaps(false),
     m_writeToTree(true),
     m_matchingMinPrimaryHits(15),
     m_matchingMinSharedHits(5),
@@ -54,13 +59,13 @@ StatusCode EventValidationAlgorithm::Run()
     ++m_eventNumber;
 
     // Input collections
-    const MCParticleList *pMCParticleList = NULL;
+    const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
-    const CaloHitList *pCaloHitList = NULL;
+    const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    const PfoList *pPfoList = NULL;
+    const PfoList *pPfoList = nullptr;
     PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
 
     PfoList pfoList;
@@ -117,9 +122,10 @@ StatusCode EventValidationAlgorithm::Run()
 
         if (m_printMatchingToScreen)
             this->PrintMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
-
+#ifdef MONITORING
         if (m_visualizeMatching)
             this->VisualizeMatchingOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap, matchingDetailsMap);
+#endif
     }
 
     return STATUS_CODE_SUCCESS;
@@ -194,7 +200,7 @@ void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList
                 simpleMatchedPfo.m_id = pfoIdMap.at(pMatchedPfo);
 
                 // ATTN Assume pfos have either zero or one parents. Ignore parent neutrino.
-                const ParticleFlowObject *const pParentPfo(pMatchedPfo->GetParentPfoList().empty() ? NULL : *(pMatchedPfo->GetParentPfoList().begin()));
+                const ParticleFlowObject *const pParentPfo(pMatchedPfo->GetParentPfoList().empty() ? nullptr : *(pMatchedPfo->GetParentPfoList().begin()));
 
                 if (pParentPfo && !LArPfoHelper::IsNeutrino(pParentPfo))
                     simpleMatchedPfo.m_parentId = pfoIdMap.at(pParentPfo);
@@ -323,7 +329,7 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         const ParticleFlowObject *const pPfo = recoNeutrinoVector.front();
 
         recoNeutrinoPdg = pPfo->GetParticleId();
-        const Vertex *const pVertex(pPfo->GetVertexList().empty() ? NULL : *(pPfo->GetVertexList().begin()));
+        const Vertex *const pVertex(pPfo->GetVertexList().empty() ? nullptr : *(pPfo->GetVertexList().begin()));
         recoNeutrinoVtxX = pVertex->GetPosition().GetX();
         recoNeutrinoVtxY = pVertex->GetPosition().GetY();
         recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
@@ -573,72 +579,98 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+#ifdef MONITORING
 void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
-    this->VisualizeVertexMatches(mcNeutrinoVector, recoNeutrinoVector);
-    unsigned int displayIndex(0);
+    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), m_visualizeGaps, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
+    const HitTypeVector hitTypeVector {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
 
-    for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
+    for (const HitType hitType : hitTypeVector)
     {
-        const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
+        const std::string hitTypeString((TPC_VIEW_U == hitType) ? "_U" : (TPC_VIEW_V == hitType) ? "_V" : "_W");
 
-        if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
-            continue;
+        if (m_visualizeVertices)
+            this->VisualizeVertexMatches(mcNeutrinoVector, recoNeutrinoVector, hitType);
 
-        const std::string displayString(TypeToString(displayIndex));
-        PfoList primaryMatchedPfos, matchedPfos;
-
-        for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
+        for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
         {
-            if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
+            const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
+
+            if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
+                continue;
+
+            PfoVector primaryMatchedPfos;
+
+            for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
             {
-                primaryMatchedPfos.insert(simpleMatchedPfo.m_pPandoraAddress);
-                LArPfoHelper::GetAllDownstreamPfos(simpleMatchedPfo.m_pPandoraAddress, matchedPfos);
+                if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
+                    primaryMatchedPfos.push_back(simpleMatchedPfo.m_pPandoraAddress);
+            }
+
+            std::string name("UNKNOWN_"); Color color(BLACK);
+            this->GetPrimaryDetails(simpleMCPrimary, mcPrimaryMatchingMap, name, color);
+            name += hitTypeString;
+
+            if (primaryMatchedPfos.empty() && (NEUTRON != simpleMCPrimary.m_pdgCode))
+            {
+                const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), simpleMCPrimary.m_vertex, hitType));
+                const CartesianVector endpointPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), simpleMCPrimary.m_endpoint, hitType));
+                PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &vertexPosition2D, "MissingPrimaryVtx_" + name, RED, 1);
+                PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &endpointPosition2D, "MissingPrimaryEnd_" + name, RED, 1);
+            }
+
+            for (const ParticleFlowObject *const pPrimaryPfo : primaryMatchedPfos)
+            {
+                const bool isSplit(primaryMatchedPfos.size() > 1);
+                const bool isBestMatch(pPrimaryPfo == primaryMatchedPfos.front());
+                const std::string prefix(!isSplit ? "Matched" : isBestMatch ? "BestFragment" : "Fragment");
+
+                PfoList allPfos;
+                LArPfoHelper::GetAllDownstreamPfos(pPrimaryPfo, allPfos);
+
+                PfoVector allSortedPfos(allPfos.begin(), allPfos.end());
+                std::sort(allSortedPfos.begin(), allSortedPfos.end(), LArPfoHelper::SortByNHits);
+
+                for (const ParticleFlowObject *const pPfo : allSortedPfos)
+                {
+                    ClusterList clusterList;
+                    LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
+
+                    const std::string hierarchy((pPfo != pPrimaryPfo) ? "Daughter_" : "");
+                    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterList, prefix + "Clusters_" + hierarchy + name, color);
+
+                    if (isSplit && !isBestMatch && !clusterList.empty())
+                    {
+                        CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
+                        LArClusterHelper::GetExtremalCoordinates(*(clusterList.begin()), innerCoordinate, outerCoordinate);
+                        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &innerCoordinate, "SplitMarker_" + hierarchy + name, MAGENTA, 1);
+                        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &outerCoordinate, "SplitMarker_" + hierarchy + name, MAGENTA, 1);
+                    }
+                }
             }
         }
 
-#ifdef MONITORING
-        const std::string prefix((1 == primaryMatchedPfos.size()) ? "Matched" : "Split");
-        const Color color((1 == primaryMatchedPfos.size()) ? GREEN : RED);
+        if (m_visualizeRemnants)
+            this->VisualizeRemnants(hitType);
 
-        for (const ParticleFlowObject *const pPfo : matchedPfos)
-        {
-            ClusterList clusterList;
-            LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
-            //PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &matchedPfos, prefix + "Pfo_" + displayString, color, true, false));
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, prefix + "PfoClusters_" + displayString, color));
-            PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), &(pPfo->GetVertexList()), prefix + "PfoVertices_" + displayString, color));
-        }
-
-        if (matchedPfos.empty() && (NEUTRON != simpleMCPrimary.m_pdgCode))
-        {
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_vertex, "MissingPrimaryVtx_" + displayString, RED, 1));
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &simpleMCPrimary.m_endpoint, "MissingPrimaryEnd_" + displayString, RED, 1));
-        }
-#endif
-        ++displayIndex;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
     }
-
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector) const
+void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector, const HitType hitType) const
 {
-#ifdef MONITORING
     const Vertex *pBestVertex(nullptr);
     float closestDistance(m_vertexVisualizationDeltaR);
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
     {
-        const CartesianVector &mcVertexPosition(pMCNeutrino->GetEndpoint());
-
         for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoVector)
         {
             const Vertex *const pVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
-            const float distance((mcVertexPosition - pVertex->GetPosition()).GetMagnitude());
+            const float distance((pMCNeutrino->GetEndpoint() - pVertex->GetPosition()).GetMagnitude());
 
             if (distance < closestDistance)
             {
@@ -648,14 +680,16 @@ void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mc
         }
     }
 
+    const std::string hitTypeString((TPC_VIEW_U == hitType) ? "_U" : (TPC_VIEW_V == hitType) ? "_V" : "_W");
     const bool isGood((1 == mcNeutrinoVector.size()) && (1 == recoNeutrinoVector.size()) && pBestVertex);
-    const Color color(isGood ? GRAY : BLUE);
+    const Color color(isGood ? GRAY : ORANGE);
 
     unsigned int displayIndex(0);
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
     {
-        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &(pMCNeutrino->GetEndpoint()), "MCNeutrinoVertex_" + TypeToString(displayIndex++), color, 1));
+        const CartesianVector mcVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pMCNeutrino->GetEndpoint(), hitType));
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertex2D, "MCNeutrinoVertex_" + TypeToString(displayIndex++) + hitTypeString, color, 1);
     }
 
     displayIndex = 0;
@@ -663,21 +697,98 @@ void EventValidationAlgorithm::VisualizeVertexMatches(const MCParticleVector &mc
     for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinoVector)
     {
         const Vertex *const pThisVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
-
         const bool isThisGood(isGood || ((1 == mcNeutrinoVector.size()) && (pThisVertex == pBestVertex)));
         const std::string thisPrefix(isThisGood ? "Good" : "Displaced");
-        const Color thisColor(isThisGood ? CYAN : VIOLET);
+        const Color thisColor(isThisGood ? CYAN : DARKVIOLET);
 
-        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &(pThisVertex->GetPosition()), thisPrefix + "RecoNeutrinoVertex_" + TypeToString(displayIndex++), thisColor, 1));
+        const CartesianVector recoVertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pThisVertex->GetPosition(), hitType));
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &recoVertex2D, thisPrefix + "RecoNeutrinoVertex_" + TypeToString(displayIndex++) + hitTypeString, thisColor, 1);
     }
-#else
-    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoVector.size() << ", nRecoNeutrinos" << recoNeutrinoVector.size() << std::endl;
-#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::GetPfoIdMap(const pandora::PfoList &pfoList, PfoIdMap &pfoIdMap) const
+void EventValidationAlgorithm::GetPrimaryDetails(const SimpleMCPrimary &thisSimpleMCPrimary, const MCPrimaryMatchingMap &mcPrimaryMatchingMap,
+    std::string &name, Color &color) const
+{
+    // ATTN: Relies on fact that mcPrimaryMatchingMap is sorted by number of true hits
+    unsigned int nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPhotons(0), nNeutrons(0);
+
+    for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
+    {
+        const SimpleMCPrimary &mapSimpleMCPrimary(mapValue.first);
+
+        if (mapSimpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
+            continue;
+
+        if (thisSimpleMCPrimary.m_id == mapSimpleMCPrimary.m_id)
+        {
+            if ((0 == nMuons) && (MU_MINUS == mapSimpleMCPrimary.m_pdgCode)) {name = "MUON"; color = RED;}
+            else if ((0 == nElectrons) && (E_MINUS == mapSimpleMCPrimary.m_pdgCode)) {name = "ELECTRON"; color = ORANGE;}
+            else if ((0 == nProtons) && (PROTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PROTON1"; color = BLUE;}
+            else if ((1 == nProtons) && (PROTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PROTON2"; color = VIOLET;}
+            else if ((0 == nPiPlus) && (PI_PLUS == mapSimpleMCPrimary.m_pdgCode)) {name = "PIPLUS"; color = MAGENTA;}
+            else if ((0 == nPhotons) && (PHOTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PHOTON1"; color = GREEN;}
+            else if ((1 == nPhotons) && (PHOTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PHOTON2"; color = TEAL;}
+            else if (NEUTRON == mapSimpleMCPrimary.m_pdgCode) {name = "NEUTRON"; color = CYAN;}
+            return;
+        }
+
+        if (MU_MINUS == mapSimpleMCPrimary.m_pdgCode) ++nMuons;
+        else if (E_MINUS == mapSimpleMCPrimary.m_pdgCode) ++nElectrons;
+        else if (PROTON == mapSimpleMCPrimary.m_pdgCode) ++nProtons;
+        else if (PI_PLUS == mapSimpleMCPrimary.m_pdgCode) ++nPiPlus;
+        else if (PHOTON == mapSimpleMCPrimary.m_pdgCode) ++nPhotons;
+        else if (NEUTRON == mapSimpleMCPrimary.m_pdgCode) ++nNeutrons;
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
+{
+    const std::string hitTypeString((TPC_VIEW_U == hitType) ? "_U" : (TPC_VIEW_V == hitType) ? "_V" : "_W");
+
+    const CaloHitList *pCaloHitList = nullptr;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+
+    CaloHitList availableHits;
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        if (PandoraContentApi::IsAvailable(*this, pCaloHit) && (hitType == pCaloHit->GetHitType()))
+            availableHits.insert(pCaloHit);
+    }
+
+    if (!availableHits.empty())
+        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &availableHits, "RemnantHits" + hitTypeString, GRAY);
+
+    ClusterList availableClusters;
+
+    for (const std::string &clusterListName : m_clusterListNames)
+    {
+        const ClusterList *pClusterList = nullptr;
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+        if (!pClusterList)
+            continue;
+
+        for (const Cluster *const pCluster : *pClusterList)
+        {
+            if (PandoraContentApi::IsAvailable(*this, pCluster) && (hitType == LArClusterHelper::GetClusterHitType(pCluster)))
+                availableClusters.insert(pCluster);
+        }
+    }
+
+    if (!availableClusters.empty())
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &availableClusters, "RemnantClusters" + hitTypeString, GRAY);
+}
+#endif
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::GetPfoIdMap(const PfoList &pfoList, PfoIdMap &pfoIdMap) const
 {
     PfoVector pfoVector(pfoList.begin(), pfoList.end());
     std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
@@ -758,7 +869,7 @@ EventValidationAlgorithm::SimpleMCPrimary::SimpleMCPrimary() :
     m_vertex(-1.f, -1.f, -1.f),
     m_endpoint(-1.f, -1.f, -1.f),
     m_nMatchedPfos(0),
-    m_pPandoraAddress(NULL)
+    m_pPandoraAddress(nullptr)
 {
 }
 
@@ -791,7 +902,7 @@ EventValidationAlgorithm::SimpleMatchedPfo::SimpleMatchedPfo() :
     m_endpoint(0.f, 0.f, 0.f),
     m_vertexDirection(0.f, 0.f, 0.f),
     m_endDirection(0.f, 0.f, 0.f),
-    m_pPandoraAddress(NULL)
+    m_pPandoraAddress(nullptr)
 {
 }
 
@@ -813,6 +924,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+         "ClusterListNames", m_clusterListNames));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NeutrinoInducedOnly", m_neutrinoInducedOnly));
 
@@ -830,6 +944,15 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeMatching", m_visualizeMatching));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VisualizeVertices", m_visualizeVertices));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+         "VisualizeRemnants", m_visualizeRemnants));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VisualizeGaps", m_visualizeGaps));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "WriteToTree", m_writeToTree));

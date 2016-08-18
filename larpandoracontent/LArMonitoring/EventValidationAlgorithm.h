@@ -217,6 +217,7 @@ private:
      */
     void PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
 
+#ifdef MONITORING
     /**
      *  @brief  Use Pandora monitoring to visualize results of the matching procedure
      * 
@@ -233,9 +234,27 @@ private:
      * 
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  hitType the hitType to visualize (used for projections of 3D vertex positions)
      */
-    void VisualizeVertexMatches(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector) const;
+    void VisualizeVertexMatches(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector, const pandora::HitType hitType) const;
 
+    /**
+     *  @brief  Get name and color details for a given simple mc primary
+     *
+     *  @param  simpleMCPrimary the simple mc primary
+     *  @param  mcPrimaryMatchingMap the mc primary matching map
+     *  @param  name to receive the mc primary name
+     *  @param  colorto receive the mc primary color
+     */
+    void GetPrimaryDetails(const SimpleMCPrimary &simpleMCPrimary, const MCPrimaryMatchingMap &mcPrimaryMatchingMap, std::string &name, Color &color) const;
+
+    /**
+     *  @brief  Use Pandora monitoring to visualize left over hits and clusters
+     *
+     *  @param  hitType the hitType to visualize, will examine all remnants of given hit type in provided hit and cluster list name(s)
+     */
+    void VisualizeRemnants(const pandora::HitType hitType) const;
+#endif
     /**
      *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
      * 
@@ -274,29 +293,38 @@ private:
      */
     static bool SortRecoNeutrinos(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
 
-    std::string         m_caloHitListName;          ///< Name of input calo hit list
-    std::string         m_mcParticleListName;       ///< Name of input MC particle list
-    std::string         m_pfoListName;              ///< Name of input Pfo list
+    typedef std::vector<pandora::HitType> HitTypeVector;
 
-    bool                m_neutrinoInducedOnly;      ///< Whether to consider only mc particles that were neutrino induced
-    bool                m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
-    bool                m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
+    std::string             m_caloHitListName;          ///< Name of input calo hit list
+    std::string             m_mcParticleListName;       ///< Name of input MC particle list
+    std::string             m_pfoListName;              ///< Name of input Pfo list
 
-    bool                m_printAllToScreen;         ///< Whether to print all/raw matching details to screen
-    bool                m_printMatchingToScreen;    ///< Whether to print matching output to screen
-    bool                m_visualizeMatching;        ///< Whether to use Pandora monitoring to visualize matching output
-    bool                m_writeToTree;              ///< Whether to write all/raw matching details to tree
+    pandora::StringVector   m_clusterListNames;         ///< Optional list of cluster list names to examine to find left-over, remnant clusters
 
-    int                 m_matchingMinPrimaryHits;   ///< The minimum number of mc primary hits used in matching scheme
-    int                 m_matchingMinSharedHits;    ///< The minimum number of shared hits used in matching scheme
+    bool                    m_neutrinoInducedOnly;      ///< Whether to consider only mc particles that were neutrino induced
+    bool                    m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
+    bool                    m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
 
-    float               m_vertexVisualizationDeltaR;///< The vertex visualization delta r value, defining good and bad vertex matches
+    bool                    m_printAllToScreen;         ///< Whether to print all/raw matching details to screen
+    bool                    m_printMatchingToScreen;    ///< Whether to print matching output to screen
 
-    std::string         m_treeName;                 ///< Name of output tree
-    std::string         m_fileName;                 ///< Name of output file
+    bool                    m_visualizeMatching;        ///< Whether to use Pandora monitoring to visualize matching output
+    bool                    m_visualizeVertices;        ///< Whether to show vertices in visualization
+    bool                    m_visualizeRemnants;        ///< Whether to show remnants in visualization
+    bool                    m_visualizeGaps;            ///< Whether to show geometry (detector gaps) in visualization
 
-    int                 m_fileIdentifier;           ///< The input file identifier
-    int                 m_eventNumber;              ///< The event number
+    bool                    m_writeToTree;              ///< Whether to write all/raw matching details to tree
+
+    int                     m_matchingMinPrimaryHits;   ///< The minimum number of mc primary hits used in matching scheme
+    int                     m_matchingMinSharedHits;    ///< The minimum number of shared hits used in matching scheme
+
+    float                   m_vertexVisualizationDeltaR;///< The vertex visualization delta r value, defining good and bad vertex matches
+
+    std::string             m_treeName;                 ///< Name of output tree
+    std::string             m_fileName;                 ///< Name of output file
+
+    int                     m_fileIdentifier;           ///< The input file identifier
+    int                     m_eventNumber;              ///< The event number
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
