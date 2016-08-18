@@ -712,7 +712,7 @@ void EventValidationAlgorithm::GetPrimaryDetails(const SimpleMCPrimary &thisSimp
     std::string &name, Color &color) const
 {
     // ATTN: Relies on fact that mcPrimaryMatchingMap is sorted by number of true hits
-    unsigned int nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPhotons(0), nNeutrons(0);
+    unsigned int nLikeParticles(0);
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
     {
@@ -721,25 +721,27 @@ void EventValidationAlgorithm::GetPrimaryDetails(const SimpleMCPrimary &thisSimp
         if (mapSimpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
             continue;
 
+        if (thisSimpleMCPrimary.m_pdgCode == mapSimpleMCPrimary.m_pdgCode)
+            ++nLikeParticles;
+
         if (thisSimpleMCPrimary.m_id == mapSimpleMCPrimary.m_id)
         {
-            if ((0 == nMuons) && (MU_MINUS == mapSimpleMCPrimary.m_pdgCode)) {name = "MUON"; color = RED;}
-            else if ((0 == nElectrons) && (E_MINUS == mapSimpleMCPrimary.m_pdgCode)) {name = "ELECTRON"; color = ORANGE;}
-            else if ((0 == nProtons) && (PROTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PROTON1"; color = BLUE;}
-            else if ((1 == nProtons) && (PROTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PROTON2"; color = VIOLET;}
-            else if ((0 == nPiPlus) && (PI_PLUS == mapSimpleMCPrimary.m_pdgCode)) {name = "PIPLUS"; color = MAGENTA;}
-            else if ((0 == nPhotons) && (PHOTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PHOTON1"; color = GREEN;}
-            else if ((1 == nPhotons) && (PHOTON == mapSimpleMCPrimary.m_pdgCode)) {name = "PHOTON2"; color = TEAL;}
-            else if (NEUTRON == mapSimpleMCPrimary.m_pdgCode) {name = "NEUTRON"; color = CYAN;}
-            return;
-        }
+            const std::string index(TypeToString(nLikeParticles));
 
-        if (MU_MINUS == mapSimpleMCPrimary.m_pdgCode) ++nMuons;
-        else if (E_MINUS == mapSimpleMCPrimary.m_pdgCode) ++nElectrons;
-        else if (PROTON == mapSimpleMCPrimary.m_pdgCode) ++nProtons;
-        else if (PI_PLUS == mapSimpleMCPrimary.m_pdgCode) ++nPiPlus;
-        else if (PHOTON == mapSimpleMCPrimary.m_pdgCode) ++nPhotons;
-        else if (NEUTRON == mapSimpleMCPrimary.m_pdgCode) ++nNeutrons;
+            switch (mapSimpleMCPrimary.m_pdgCode)
+            {
+                case MU_MINUS: {name = "MU_MINUS" + index; color = RED;     return;}
+                case MU_PLUS:  {name = "MU_PLUS"  + index; color = RED;     return;}
+                case E_MINUS:  {name = "E_MINUS"  + index; color = ORANGE;  return;}
+                case E_PLUS:   {name = "E_PLUS"   + index; color = ORANGE;  return;}
+                case PROTON:   {name = "PROTON"   + index; color = (nLikeParticles % 2 == 0) ? VIOLET : BLUE;  return;}
+                case PI_MINUS: {name = "PI_MINUS" + index; color = MAGENTA; return;}
+                case PI_PLUS:  {name = "PI_PLUS"  + index; color = MAGENTA; return;}
+                case PHOTON:   {name = "PHOTON"   + index; color = (nLikeParticles % 2 == 0) ? TEAL   : GREEN; return;}
+                case NEUTRON:  {name = "NEUTRON"  + index; color = CYAN;    return;}
+                default: return;
+            }
+        }
     }
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
