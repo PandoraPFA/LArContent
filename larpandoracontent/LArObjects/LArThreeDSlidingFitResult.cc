@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Helpers/ClusterFitHelper.h"
+
 #include "Objects/Cluster.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -226,15 +228,30 @@ float ThreeDSlidingFitResult::GetLongitudinalDisplacement(const CartesianVector 
 
 TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
 {
-    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
-    return TrackState(innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector());
+    ClusterFitResult clusterFitResult;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitFullCluster(pCluster, clusterFitResult));
+
+    const CartesianVector &fitDirection(clusterFitResult.GetDirection()), &fitIntercept(clusterFitResult.GetIntercept());
+    float minProjection(std::numeric_limits<float>::max());
+
+    CartesianPointList coordinateList;
+    LArClusterHelper::GetCoordinateList(pCluster, coordinateList);
+
+    for (const CartesianVector &coordinate : coordinateList)
+    {
+        const float projection(fitDirection.GetDotProduct(coordinate - fitIntercept));
+
+        if (projection < minProjection)
+            minProjection = projection;
+    }
+
+    return TrackState(fitIntercept + (fitDirection * minProjection), fitDirection);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointList &coordinateList)
-{
+{   // TODO change as well
     CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
     LArClusterHelper::GetExtremalCoordinates(coordinateList, innerCoordinate, outerCoordinate);
     return TrackState(innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector());

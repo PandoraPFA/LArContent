@@ -87,6 +87,29 @@ private:
         pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
 
     /**
+     *  @brief  Compare the provided cluster slice and list of 3D clusters. Add next appropriate (nearby) cluster to the slice.
+     *
+     *  @param  clusterCandidates the sorted list of 3D candidate clusters
+     *  @param  clusterSlice the cluster slice
+     *  @param  usedClusters the list of clusters already added to slices
+     * 
+     *  @return whether an addition to the cluster slice has been made
+     */
+    bool AddNextProximity(const pandora::ClusterVector &clusterCandidates, pandora::ClusterVector &clusterSlice,
+        pandora::ClusterList &usedClusters) const;
+
+    /**
+     *  @brief  Add clusters to the slice if they lie in a cone defined by a shower already in the slice
+     *
+     *  @param  showersInSlice the list of showers already in the slice
+     *  @param  clusterCandidates the sorted list of 3D candidate clusters
+     *  @param  clusterSlice the cluster slice
+     *  @param  usedClusters the list of clusters already added to slices
+     */
+    void AddClustersInShowerCone(const pandora::ClusterVector &showersInSlice, const pandora::ClusterVector &clusterCandidates,
+        pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
+
+    /**
      *  @brief  Check closest approach metrics for a pair of pointing clusters
      *
      *  @param  cluster1 the first pointing cluster
@@ -125,18 +148,6 @@ private:
      *  @return whether the pointing clusters are declared to be in the same slice
      */
     bool IsEmission(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
-
-    /**
-     *  @brief  Compare the provided cluster slice and list of 3D clusters. Add next appropriate (nearby) cluster to the slice.
-     *
-     *  @param  clusterCandidates the sorted list of 3D candidate clusters
-     *  @param  clusterSlice the cluster slice
-     *  @param  usedClusters the list of clusters already added to slices
-     * 
-     *  @return whether an addition to the cluster slice has been made
-     */
-    bool AddNextProximity(const pandora::ClusterVector &clusterCandidates, pandora::ClusterVector &clusterSlice,
-        pandora::ClusterList &usedClusters) const;
 
     /**
      *  @brief  Check separation of hits in two 3D clusters

@@ -143,6 +143,16 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
 
         while (this->AddNextPointing(sortedTrackClusters3D, slidingFitResultMap, clusterSlice, usedClusters) ||
             this->AddNextProximity(sortedClusters3D, clusterSlice, usedClusters)) { /* Deliberately empty */ }
+
+        ClusterVector showersInSlice;
+
+        for (const Cluster *pCluster3DInSlice : clusterSlice)
+        {
+            if (showerClusters3D.count(pCluster3DInSlice))
+                showersInSlice.push_back(pCluster3DInSlice);
+        }
+
+        this->AddClustersInShowerCone(showersInSlice, sortedClusters3D, clusterSlice, usedClusters);
     }
 }
 
@@ -187,6 +197,94 @@ bool EventSlicingTool::AddNextPointing(const ClusterVector &trackCandidates, con
     }
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::AddNextProximity(const ClusterVector &clusterCandidates, ClusterVector &clusterSlice, ClusterList &usedClusters) const
+{
+    for (const Cluster *const pCandidateCluster : clusterCandidates)
+    {
+        if (usedClusters.count(pCandidateCluster))
+            continue;
+
+        for (const Cluster *const pClusterInSlice : clusterSlice)
+        {
+            if (this->CheckHitSeparation(pCandidateCluster, pClusterInSlice))
+            {
+                if (!usedClusters.insert(pCandidateCluster).second)
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                // ATTN Must return here, as have invalidated clusterSlice iterators
+                clusterSlice.push_back(pCandidateCluster);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventSlicingTool::AddClustersInShowerCone(const ClusterVector &showersInSlice, const ClusterVector &clusterCandidates,
+    ClusterVector &clusterSlice, ClusterList &usedClusters) const
+{
+    ClusterVector newShowersInSlice;
+    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+    for (const Cluster *const pShowerCluster3D : showersInSlice)
+    {
+        if (pShowerCluster3D->GetNCaloHits() < 20) // TODO
+            continue;
+
+        FloatVector cosThetaMinList, cosThetaMaxList;
+ClusterList temp, temp2;
+temp.insert(pShowerCluster3D);
+temp2.insert(clusterCandidates.begin(), clusterCandidates.end());
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp, "ShowerCluster", RED);
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp2, "clusterCandidates", BLUE);
+        try
+        {
+            const ThreeDSlidingFitResult slidingFitResult3D(pShowerCluster3D, m_halfWindowLayers, layerPitch);
+            const CartesianVector &minLayerPosition3D(slidingFitResult3D.GetGlobalMinLayerPosition());
+            const CartesianVector &maxLayerPosition3D(slidingFitResult3D.GetGlobalMaxLayerPosition());
+            const CartesianVector direction((maxLayerPosition3D - minLayerPosition3D).GetUnitVector());
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &minLayerPosition3D, "minLayerPosition3D", CYAN, 1);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxLayerPosition3D, "maxLayerPosition3D", MAGENTA, 1);
+            const float length((maxLayerPosition3D - minLayerPosition3D).GetMagnitude());
+            const int nSteps(static_cast<int>(length / layerPitch)); // TODO
+
+            for (int iStep = 0; iStep < nSteps; ++iStep)
+            {
+                try
+                {
+                    const float rL((static_cast<float>(iStep) + 0.5f) * layerPitch);
+
+                    CartesianVector fitPosition3D(0.f, 0.f, 0.f);
+                    if (STATUS_CODE_SUCCESS != slidingFitResult3D.GetGlobalFitPosition(rL, fitPosition3D))
+                        continue;
+
+const CartesianVector axis(minLayerPosition3D + direction * rL);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &axis, "axis", GRAY, 1);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &fitPosition3D, "fitPosition3D", ORANGE, 1);
+                    //const float rT((fitPosition3D - minLayerPosition3D).GetCrossProduct(direction).GetMagnitude());
+                    //const float cosThetaMin();
+                }
+                catch (StatusCodeException &) {continue;}
+            }
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            std::cout << "AddClustersInShowerCone - StatusCodeException caught " << statusCodeException.ToString() << std::endl;
+            continue;
+        }
+
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
+    
+    if (!newShowersInSlice.empty())
+        this->AddClustersInShowerCone(newShowersInSlice, clusterCandidates, clusterSlice, usedClusters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -240,32 +338,6 @@ bool EventSlicingTool::IsEmission(const LArPointingCluster &cluster1, const LArP
         LArPointingClusterHelper::IsEmission(cluster2.GetOuterVertex().GetPosition(), cluster1.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
         LArPointingClusterHelper::IsEmission(cluster2.GetInnerVertex().GetPosition(), cluster1.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
         LArPointingClusterHelper::IsEmission(cluster2.GetOuterVertex().GetPosition(), cluster1.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventSlicingTool::AddNextProximity(const ClusterVector &clusterCandidates, ClusterVector &clusterSlice, ClusterList &usedClusters) const
-{
-    for (const Cluster *const pCandidateCluster : clusterCandidates)
-    {
-        if (usedClusters.count(pCandidateCluster))
-            continue;
-
-        for (const Cluster *const pClusterInSlice : clusterSlice)
-        {
-            if (this->CheckHitSeparation(pCandidateCluster, pClusterInSlice))
-            {
-                if (!usedClusters.insert(pCandidateCluster).second)
-                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-
-                // ATTN Must return here, as have invalidated clusterSlice iterators
-                clusterSlice.push_back(pCandidateCluster);
-                return true;
-            }
-        }
-    }
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
