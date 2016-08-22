@@ -375,7 +375,10 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         nViewsInGap++;
         
     if (nViewsInGap >= 2)
+    {
         trueVertexInGap = 1;
+        std::cout << ">>> True vertex lies in a gap in at least 2 views." << std::endl;
+    }
     
     if (recoNeutrinoList.size() == 1 && mcNeutrinoList.size() == 1)
     {
