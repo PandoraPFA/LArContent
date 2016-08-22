@@ -19,6 +19,9 @@
 
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
+#include <iterator>
+#include <list>
+
 using namespace pandora;
 
 namespace lar_content
@@ -238,22 +241,24 @@ void EventSlicingTool::AddClustersInShowerCone(const ClusterVector &showersInSli
         if (pShowerCluster3D->GetNCaloHits() < 20) // TODO
             continue;
 
-        FloatVector cosThetaMinList, cosThetaMaxList;
+        typedef std::map<int, TrackState> TrackStateMap;
+        TrackStateMap trackStateMap;
 ClusterList temp, temp2;
 temp.insert(pShowerCluster3D);
 temp2.insert(clusterCandidates.begin(), clusterCandidates.end());
 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp, "ShowerCluster", RED);
 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp2, "clusterCandidates", BLUE);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
         try
         {
             const ThreeDSlidingFitResult slidingFitResult3D(pShowerCluster3D, m_halfWindowLayers, layerPitch);
-            const CartesianVector &minLayerPosition3D(slidingFitResult3D.GetGlobalMinLayerPosition());
-            const CartesianVector &maxLayerPosition3D(slidingFitResult3D.GetGlobalMaxLayerPosition());
-            const CartesianVector direction((maxLayerPosition3D - minLayerPosition3D).GetUnitVector());
+const CartesianVector &minLayerPosition3D(slidingFitResult3D.GetGlobalMinLayerPosition());
+const CartesianVector &maxLayerPosition3D(slidingFitResult3D.GetGlobalMaxLayerPosition());
+const CartesianVector direction((maxLayerPosition3D - minLayerPosition3D).GetUnitVector());
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp, "ShowerCluster", RED);
 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &minLayerPosition3D, "minLayerPosition3D", CYAN, 1);
 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxLayerPosition3D, "maxLayerPosition3D", MAGENTA, 1);
-            const float length((maxLayerPosition3D - minLayerPosition3D).GetMagnitude());
-            const int nSteps(static_cast<int>(length / layerPitch)); // TODO
+            const int nSteps(static_cast<int>((maxLayerPosition3D - minLayerPosition3D).GetMagnitude() / layerPitch));
 
             for (int iStep = 0; iStep < nSteps; ++iStep)
             {
@@ -261,18 +266,21 @@ PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxLayerPosi
                 {
                     const float rL((static_cast<float>(iStep) + 0.5f) * layerPitch);
 
-                    CartesianVector fitPosition3D(0.f, 0.f, 0.f);
-                    if (STATUS_CODE_SUCCESS != slidingFitResult3D.GetGlobalFitPosition(rL, fitPosition3D))
+                    CartesianVector fitPosition3D(0.f, 0.f, 0.f), fitDirection3D(0.f, 0.f, 0.f);
+                    if ((STATUS_CODE_SUCCESS != slidingFitResult3D.GetGlobalFitPosition(rL, fitPosition3D)) ||
+                        (STATUS_CODE_SUCCESS != slidingFitResult3D.GetGlobalFitDirection(rL, fitDirection3D)))
+                    {
                         continue;
+                    }
 
+                    (void) trackStateMap.insert(TrackStateMap::value_type(iStep, TrackState(fitPosition3D, fitDirection3D)));
 const CartesianVector axis(minLayerPosition3D + direction * rL);
 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &axis, "axis", GRAY, 1);
 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &fitPosition3D, "fitPosition3D", ORANGE, 1);
-                    //const float rT((fitPosition3D - minLayerPosition3D).GetCrossProduct(direction).GetMagnitude());
-                    //const float cosThetaMin();
                 }
-                catch (StatusCodeException &) {continue;}
+                catch (StatusCodeException &) {}
             }
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
         }
         catch (StatusCodeException &statusCodeException)
         {
@@ -280,11 +288,128 @@ PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &fitPosition3
             continue;
         }
 
+        const int nLayersForConeFit(20); // TODO
+
+        if (trackStateMap.size() < nLayersForConeFit)
+            continue;
+
+        const int nCones(5); // TODO, > 2
+
+        const float length((trackStateMap.begin()->second.GetPosition() - trackStateMap.rbegin()->second.GetPosition()).GetMagnitude());
+        const int coneInterval((nCones <= 2) ? 1 : static_cast<int>(trackStateMap.size()) / (nCones - 2));
+
+        typedef std::list<TrackState> TrackStateList;
+        TrackStateList trackStateList;
+        CartesianVector directionSum(0.f, 0.f, 0.f);
+
+        for (TrackStateMap::iterator iter = trackStateMap.begin(), iterEnd = trackStateMap.end(); iter != iterEnd; ++iter)
+        {
+            // TODO Estimate cone length and angle here too
+            const TrackState &maxLayerTrackState(iter->second);
+            trackStateList.push_back(maxLayerTrackState);
+            directionSum += maxLayerTrackState.GetMomentum();
+
+            const int beginDistance(std::distance(trackStateMap.begin(), iter));
+            const int endDistance(std::distance(iter, trackStateMap.end()));
+
+            if ((beginDistance >= nLayersForConeFit) && (endDistance >= nLayersForConeFit))
+            {
+                const TrackState &minLayerTrackState(trackStateList.front());
+
+                // Logic as to whether to use this pair of cones
+                if ((beginDistance == nLayersForConeFit) || (endDistance == nLayersForConeFit) || (beginDistance % coneInterval == 0))
+                {
+                    const CartesianVector &minLayerApex(minLayerTrackState.GetPosition());
+                    const CartesianVector &maxLayerApex(maxLayerTrackState.GetPosition());
+
+                    const CartesianVector minLayerDirection(directionSum.GetUnitVector());
+                    const CartesianVector maxLayerDirection(directionSum.GetUnitVector() * -1.f);
+std::cout << "beginDistance " << beginDistance << " endDistance " << endDistance << " beginDistance % coneInterval " << (beginDistance % coneInterval) << std::endl;
+ClusterList temp3; temp3.insert(pShowerCluster3D);
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "ShowerCluster!", RED);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &minLayerApex, "minLayerApex", GRAY, 1);
+const CartesianVector minBaseCentre(minLayerApex + minLayerDirection * length);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &minBaseCentre, "minBaseCentre", CYAN, 1);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "ShowerCluster!", RED);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxLayerApex, "maxLayerApex", GRAY, 1);
+const CartesianVector maxBaseCentre(maxLayerApex + maxLayerDirection * length);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxBaseCentre, "maxBaseCentre", CYAN, 1);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                    for (const Cluster *const pCandidateCluster : clusterCandidates)
+                    {
+                        if (usedClusters.count(pCandidateCluster)) // || (pCandidateCluster->GetNCaloHits() > 100)) // TODO
+                            continue;
+std::cout << " nHits " << pCandidateCluster->GetNCaloHits() << std::endl;
+std::cout << " length " << LArClusterHelper::GetLength(pCandidateCluster) << std::endl;
+                        if (!this->IsCandidateInShowerCone(pCandidateCluster, minLayerApex, minLayerDirection, length) &&
+                            !this->IsCandidateInShowerCone(pCandidateCluster, maxLayerApex, maxLayerDirection, length))
+                        {
+                            continue;
+                        }
+
+                        if (!usedClusters.insert(pCandidateCluster).second)
+                            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+ClusterList temp4; temp4.insert(pCandidateCluster);
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "ShowerCluster!", RED);
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "Added!", GREEN);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                        newShowersInSlice.push_back(pCandidateCluster);
+                    }
+                }
+
+                directionSum -= minLayerTrackState.GetMomentum();
+                trackStateList.pop_front();
+            }
+        }
     }
     
     if (!newShowersInSlice.empty())
         this->AddClustersInShowerCone(newShowersInSlice, clusterCandidates, clusterSlice, usedClusters);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::IsCandidateInShowerCone(const Cluster *const pCandidateCluster, const CartesianVector &coneApex,
+    const CartesianVector &coneDirection, const float coneLength) const
+{
+    const float coneTanTheta1(0.50f), coneTanTheta2(0.75f); // TODO
+
+    unsigned int nMatchedHits1(0), nMatchedHits2(0);
+    const unsigned int nHits(pCandidateCluster->GetNCaloHits());
+    const OrderedCaloHitList &orderedCaloHitList(pCandidateCluster->GetOrderedCaloHitList());
+
+    for (const auto &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *pCaloHit : *(mapEntry.second))
+        {
+            const CartesianVector displacement(pCaloHit->GetPositionVector() - coneApex);
+            const float rL(displacement.GetDotProduct(coneDirection));
+
+            if ((rL < 0.f) || (rL > 3.f * coneLength)) // TODO
+                continue;
+
+            const float rT(displacement.GetCrossProduct(coneDirection).GetMagnitude());
+            
+            if (rL * coneTanTheta1 > rT)
+                ++nMatchedHits1;
+
+            if (rL * coneTanTheta2 > rT)
+                ++nMatchedHits2;
+        }
+    }
+
+    const float boundedFraction1((nHits > 0) ? static_cast<float>(nMatchedHits1) / static_cast<float>(nHits) : 0.f);
+    const float boundedFraction2((nHits > 0) ? static_cast<float>(nMatchedHits2) / static_cast<float>(nHits) : 0.f);
+std::cout << " boundedFraction1 " << boundedFraction1 << " boundedFraction2 " << boundedFraction2 << std::endl;
+ClusterList temp4; temp4.insert(pCandidateCluster);
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "Should add?", GREEN);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    if (boundedFraction1 > 0.50f && boundedFraction2 > 0.75f) // TODO
+        return true;
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

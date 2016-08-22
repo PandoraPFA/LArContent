@@ -110,6 +110,19 @@ private:
         pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
 
     /**
+     *  @brief  Whether a provided candidate cluster lies within the specified cone to within tool tolerances
+     *
+     *  @param  pCandidateCluster the address of the candidate cluster
+     *  @param  coneApex the cone apex
+     *  @param  coneDirection the cone direction
+     *  @param  coneLength the cone length
+     * 
+     *  @return boolean
+     */
+    bool IsCandidateInShowerCone(const pandora::Cluster *const pCandidateCluster, const pandora::CartesianVector &coneApex,
+        const pandora::CartesianVector &coneDirection, const float coneLength) const;
+
+    /**
      *  @brief  Check closest approach metrics for a pair of pointing clusters
      *
      *  @param  cluster1 the first pointing cluster
