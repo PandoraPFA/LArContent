@@ -17,6 +17,7 @@ namespace lar_content
 
 template<typename, unsigned int> class KDTreeLinkerAlgo;
 template<typename, unsigned int> class KDTreeNodeInfoT;
+class SimpleCone;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -113,14 +114,11 @@ private:
      *  @brief  Whether a provided candidate cluster lies within the specified cone to within tool tolerances
      *
      *  @param  pCandidateCluster the address of the candidate cluster
-     *  @param  coneApex the cone apex
-     *  @param  coneDirection the cone direction
-     *  @param  coneLength the cone length
+     *  @param  simpleCone the simple cone
      * 
      *  @return boolean
      */
-    bool IsCandidateInShowerCone(const pandora::Cluster *const pCandidateCluster, const pandora::CartesianVector &coneApex,
-        const pandora::CartesianVector &coneDirection, const float coneLength) const;
+    bool IsCandidateInShowerCone(const pandora::Cluster *const pCandidateCluster, const SimpleCone &simpleCone) const;
 
     /**
      *  @brief  Check closest approach metrics for a pair of pointing clusters

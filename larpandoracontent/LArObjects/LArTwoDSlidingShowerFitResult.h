@@ -29,7 +29,7 @@ enum ShowerEdge
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  SlidingShowerFitResult class
+ *  @brief  TwoDSlidingShowerFitResult class
  */
 class TwoDSlidingShowerFitResult
 {
@@ -93,6 +93,7 @@ private:
     TwoDSlidingFitResult    m_positiveEdgeFitResult;        ///< The sliding fit result for the positive shower edge
 };
 
+typedef std::vector<TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultList;
 typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------

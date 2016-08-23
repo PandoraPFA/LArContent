@@ -20,40 +20,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointList &coordinateList, const unsigned int layerFitHalfWindow, const float layerPitch) :
-    m_pCluster(NULL),
-    m_layerFitHalfWindow(layerFitHalfWindow),
-    m_layerPitch(layerPitch),
-    m_axisIntercept(0.f, 0.f, 0.f),
-    m_axisDirection(0.f, 0.f, 0.f),
-    m_orthoDirection(0.f, 0.f, 0.f)
-{
-    // Calculate the sliding fit result
-    this->CalculateAxes(coordinateList);
-    this->FillLayerFitContributionMap(coordinateList);
-    this->PerformSlidingLinearFit();
-    this->FindSlidingFitSegments();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointList &coordinateList, const unsigned int layerFitHalfWindow, const float layerPitch,
-    const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
-    m_pCluster(NULL),
-    m_layerFitHalfWindow(layerFitHalfWindow),
-    m_layerPitch(layerPitch),
-    m_axisIntercept(axisIntercept),
-    m_axisDirection(axisDirection),
-    m_orthoDirection(orthoDirection)
-{
-    // Calculate the sliding fit result
-    this->FillLayerFitContributionMap(coordinateList);
-    this->PerformSlidingLinearFit();
-    this->FindSlidingFitSegments();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
