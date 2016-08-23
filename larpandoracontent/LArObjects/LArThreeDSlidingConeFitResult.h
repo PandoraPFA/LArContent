@@ -18,7 +18,15 @@
 namespace lar_content
 {
 
-typedef std::map<unsigned int, pandora::TrackState> TrackStateMap;
+/**
+ *  @brief  ConeSelection enum
+ */
+enum ConeSelection
+{
+    CONE_FORWARD_ONLY,
+    CONE_BACKWARD_ONLY,
+    CONE_BOTH_DIRECTIONS
+};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -67,13 +75,24 @@ public:
     float GetConeTanHalfAngle() const;
 
     /**
-     *  @brief  Get the fraction of hits in a provided cluster that are bounded within the cone
+     *  @brief  Get the fraction of hits in a provided cluster that are bounded within the cone, using fitted cone angle and length
      * 
      *  @param  pCluster the address of the cluster
      * 
      *  @return the bounded hit fraction
      */
     float GetBoundedHitFraction(const pandora::Cluster *const pCluster) const;
+
+    /**
+     *  @brief  Get the fraction of hits in a provided cluster that are bounded within the cone, using provided cone angle and length
+     * 
+     *  @param  pCluster the address of the cluster
+     *  @param  coneLength the provided cone length
+     *  @param  coneTanHalfAngle the provided tangent of the cone half-angle
+     * 
+     *  @return the bounded hit fraction
+     */
+    float GetBoundedHitFraction(const pandora::Cluster *const pCluster, const float coneLength, const float coneTanHalfAngle) const;
 
 private:
     pandora::CartesianVector        m_coneApex;                 ///< The cone apex
@@ -85,6 +104,8 @@ private:
 typedef std::vector<SimpleCone> SimpleConeList;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+typedef std::map<unsigned int, pandora::TrackState> TrackStateMap;
 
 /**
  *  @brief  ThreeDSlidingConeFitResult class
@@ -120,9 +141,11 @@ public:
      * 
      *  @param  nLayersForConeFit the number of layer to use to extract the cone direction
      *  @param  nCones the number of cones to extract from the cluster (spaced uniformly along the cluster)
+     *  @param  coneSelection whether to receive forwards or backwards (or both) cones
      *  @param  simpleConeList to receive the simple cone list
      */
-    void GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones, SimpleConeList &simpleConeList) const;
+    void GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones, const ConeSelection coneSelection,
+        SimpleConeList &simpleConeList) const;
 
 private:
     typedef std::list<pandora::TrackState> TrackStateLinkedList;    ///< The track state linked list typedef
@@ -170,6 +193,13 @@ inline float SimpleCone::GetConeLength() const
 inline float SimpleCone::GetConeTanHalfAngle() const
 {
     return m_coneTanHalfAngle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float SimpleCone::GetBoundedHitFraction(const pandora::Cluster *const pCluster) const
+{
+    return this->GetBoundedHitFraction(pCluster, this->GetConeLength(), this->GetConeTanHalfAngle());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

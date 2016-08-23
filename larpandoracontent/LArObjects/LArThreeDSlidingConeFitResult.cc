@@ -17,7 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster) const
+float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster, const float coneLength, const float coneTanHalfAngle) const
 {
     unsigned int nMatchedHits(0);
     const unsigned int nClusterHits(pCluster->GetNCaloHits());
@@ -31,12 +31,12 @@ float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster) const
             const CartesianVector displacement(pCaloHit->GetPositionVector() - this->GetConeApex());
             const float rL(displacement.GetDotProduct(this->GetConeDirection()));
 
-            if ((rL < 0.f) || (rL > this->GetConeLength()))
+            if ((rL < 0.f) || (rL > coneLength))
                 continue;
 
             const float rT(displacement.GetCrossProduct(this->GetConeDirection()).GetMagnitude());
             
-            if (rL * this->GetConeTanHalfAngle() > rT)
+            if (rL * coneTanHalfAngle > rT)
                 ++nMatchedHits;
         }
     }
@@ -80,7 +80,8 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const Cluster *const pClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones, SimpleConeList &simpleConeList) const
+void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones, const ConeSelection coneSelection,
+    SimpleConeList &simpleConeList) const
 {
     const TrackStateMap &trackStateMap(this->GetTrackStateMap());
     const unsigned int nLayers(trackStateMap.size());
@@ -88,9 +89,8 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersFor
     if (nLayers < nLayersForConeFit)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    //const unsigned int segmentLayers();
-    const unsigned int coneInterval((nCones <= 2) ? 1 : nLayers / (nCones - 2)); // TODO
     unsigned int nConeSamplingSteps(0);
+    const unsigned int coneInterval((nCones > 1) ? (nLayers - nLayersForConeFit) / (nCones - 1) : std::numeric_limits<unsigned int>::max());
 
     TrackStateLinkedList trackStateList;
     CartesianVector directionSum(0.f, 0.f, 0.f);
@@ -107,13 +107,13 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersFor
         const unsigned int beginDistance(static_cast<unsigned int>(std::distance(trackStateMap.begin(), iter)));
         const unsigned int endDistance(static_cast<unsigned int>(std::distance(iter, trackStateMap.end())));
 
-        if ((beginDistance < nLayersForConeFit) || (endDistance < nLayersForConeFit))
+        if (beginDistance < nLayersForConeFit)
             continue;
 
         const TrackState &maxLayerTrackState(trackStateList.back());
         const TrackState &minLayerTrackState(trackStateList.front());
 
-        if ((beginDistance == nLayersForConeFit) || (endDistance == nLayersForConeFit) || (beginDistance % coneInterval == 0))
+        if ((beginDistance == nLayersForConeFit) || (endDistance == 1) || ((beginDistance - nLayersForConeFit) % coneInterval == 0))
         {
             const CartesianVector &minLayerApex(minLayerTrackState.GetPosition());
             const CartesianVector &maxLayerApex(maxLayerTrackState.GetPosition());
@@ -121,10 +121,15 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersFor
             const CartesianVector minLayerDirection(directionSum.GetUnitVector());
             const CartesianVector maxLayerDirection(directionSum.GetUnitVector() * -1.f);
 
-            // TODO Estimate cone length and angle here too
+            // TODO Estimate cone length and angle here too, maybe by projecting positions onto direction and looking at rT distribution?
             ++nConeSamplingSteps;
-            simpleConeList.push_back(SimpleCone(minLayerApex, minLayerDirection, clusterLength * 3.f, 0.5f)); // TODO
-            simpleConeList.push_back(SimpleCone(maxLayerApex, maxLayerDirection, clusterLength * 3.f, 0.5f));
+            const float placeHolderTanHalfAngle(0.5f);
+
+            if ((CONE_FORWARD_ONLY == coneSelection) || (CONE_BOTH_DIRECTIONS == coneSelection))
+                simpleConeList.push_back(SimpleCone(minLayerApex, minLayerDirection, clusterLength, placeHolderTanHalfAngle));
+
+            if ((CONE_BACKWARD_ONLY == coneSelection) || (CONE_BOTH_DIRECTIONS == coneSelection))
+                simpleConeList.push_back(SimpleCone(maxLayerApex, maxLayerDirection, clusterLength, placeHolderTanHalfAngle));
          }
 
         directionSum -= minLayerTrackState.GetMomentum();

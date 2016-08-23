@@ -111,16 +111,6 @@ private:
         pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
 
     /**
-     *  @brief  Whether a provided candidate cluster lies within the specified cone to within tool tolerances
-     *
-     *  @param  pCandidateCluster the address of the candidate cluster
-     *  @param  simpleCone the simple cone
-     * 
-     *  @return boolean
-     */
-    bool IsCandidateInShowerCone(const pandora::Cluster *const pCandidateCluster, const SimpleCone &simpleCone) const;
-
-    /**
      *  @brief  Check closest approach metrics for a pair of pointing clusters
      *
      *  @param  cluster1 the first pointing cluster
@@ -273,15 +263,26 @@ private:
 
     unsigned int    m_halfWindowLayers;                 ///< The number of layers to use for half-window of sliding fit
 
+    bool            m_usePointingAssociation;           ///< Whether to use pointing association
     float           m_minVertexLongitudinalDistance;    ///< Pointing association check: min longitudinal distance cut
     float           m_maxVertexLongitudinalDistance;    ///< Pointing association check: max longitudinal distance cut
     float           m_maxVertexTransverseDistance;      ///< Pointing association check: max transverse distance cut
     float           m_vertexAngularAllowance;           ///< Pointing association check: pointing angular allowance in degrees
-
     float           m_maxClosestApproach;               ///< Pointing association: max distance of closest approach between straight line fits
     float           m_maxInterceptDistance;             ///< Pointing association: max distance from cluster vertex to point of closest approach
 
+    bool            m_useProximityAssociation;          ///< Whether to use proximity association
     float           m_maxHitSeparationSquared;          ///< Proximity association: max distance allowed between the closest pair of hits
+
+    bool            m_useShowerConeAssociation;         ///< Whether to use shower cone association
+    unsigned int    m_minShowerHits;                    ///< The minimum number of 3d hits in a shower to attempt shower cone fitting
+    unsigned int    m_nConeFitLayers;                   ///< The number of layers over which to sum fitted direction to obtain cone fit
+    unsigned int    m_nConeFits;                        ///< The number of cone fits to perform, spread roughly uniformly along the shower length
+    float           m_coneLengthMultiplier;             ///< The cone length multiplier to use when calculating bounded cluster fractions
+    float           m_coneTanHalfAngle1;                ///< The cone tan half angle to use when calculating bounded cluster fractions 1
+    float           m_coneBoundedFraction1;             ///< The minimum cluster bounded fraction for association 1
+    float           m_coneTanHalfAngle2;                ///< The cone tan half angle to use when calculating bounded cluster fractions 2
+    float           m_coneBoundedFraction2;             ///< The minimum cluster bounded fraction for association 2
 
     bool            m_use3DProjectionsInHitPickUp;      ///< Whether to include 3D cluster projections when assigning remaining clusters to slices
 };
