@@ -245,11 +245,7 @@ void EventSlicingTool::AddClustersInShowerCone(const ClusterVector &showersInSli
 {
     ClusterVector newShowersInSlice;
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-ClusterList temp1; temp1.insert(showersInSlice.begin(), showersInSlice.end());
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp1, "showersInSlice", RED);
-ClusterList temp2; temp2.insert(clusterCandidates.begin(), clusterCandidates.end());
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp2, "clusterCandidates", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
     for (const Cluster *const pShowerCluster3D : showersInSlice)
     {
         if (pShowerCluster3D->GetNCaloHits() < m_minShowerHits)
@@ -276,23 +272,13 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
             {
                 if (usedClusters.count(pCandidateCluster))
                     continue;
-ClusterList temp3; temp3.insert(pShowerCluster3D);
-ClusterList temp4; temp4.insert(pCandidateCluster);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "ShowerCluster", RED);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "CandidateCluster", BLUE);
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &simpleCone.GetConeApex(), "coneApex", GRAY, 1);
-const CartesianVector maxBaseCentre(simpleCone.GetConeApex() + simpleCone.GetConeDirection() * simpleCone.GetConeLength());
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxBaseCentre, "coneBaseCentre", CYAN, 1);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
                 if (simpleCone.GetBoundedHitFraction(pCandidateCluster, m_coneLengthMultiplier * coneLength, m_coneTanHalfAngle1) < m_coneBoundedFraction1)
                     continue;
 
                 if (simpleCone.GetBoundedHitFraction(pCandidateCluster, m_coneLengthMultiplier * coneLength, m_coneTanHalfAngle2) < m_coneBoundedFraction2)
                     continue;
-std::cout << " boundedFraction1 " << (simpleCone.GetBoundedHitFraction(pCandidateCluster, m_coneLengthMultiplier * coneLength, m_coneTanHalfAngle1)) << " boundedFraction2 " << (simpleCone.GetBoundedHitFraction(pCandidateCluster, m_coneLengthMultiplier * coneLength, m_coneTanHalfAngle2)) << std::endl;
-ClusterList temp5; temp5.insert(pCandidateCluster);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp5, "Added", GREEN);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
                 if (!usedClusters.insert(pCandidateCluster).second)
                     throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
