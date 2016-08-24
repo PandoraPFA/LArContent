@@ -18,6 +18,8 @@
 
 #include <fstream>
 
+//#define CONDOR_RUN 1 ///< Suppress visualization for condor purposes
+
 using namespace pandora;
 
 namespace lar_content
@@ -28,14 +30,15 @@ VertexSelectionAlgorithm::VertexSelectionAlgorithm() :
     m_fastScoreCheck(true),
     m_fastScoreOnly(false),
     m_fullScore(false),
-    m_jackScore(false),
-    m_jackScoreOnly(false),
-    m_slidingFitWindow(20),
-    m_rOffset(1.0),
-    m_xOffset(1.0),
-    m_epsilon(1.0),
-    m_bisectionScore(false),
-    m_bisectionConstant(10.0),
+    m_jackScore(true),
+    m_jackScoreOnly(true),
+    m_slidingFitWindow(350),
+    m_rOffset(10.f),
+    m_xOffset(0.06),
+    m_epsilon(0.06),
+    m_asymmetryScore(true),
+    m_asymmetryConstant(3.f),
+    m_useHitCountsOnly(false),
     m_beamMode(false),
     m_nDecayLengthsInZSpan(2.f),
     m_kappa(0.42f),
@@ -177,12 +180,7 @@ void VertexSelectionAlgorithm::GetBeamConstants(const VertexList &vertexList, Be
 
     const float zSpan(maxZCoordinate - minZCoordinate);
     const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
-
-    JACK_COUT("Setting min z coord as " << minZCoordinate)
-
     beamConstants.SetConstants(minZCoordinate, decayConstant);
-    
-    JACK_COUT("Min z coord is " << beamConstants.GetMinZCoordinate())
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -200,25 +198,7 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
         float finalScore(0.f);
 
         if (m_jackScoreOnly)
-        {
-            const float vertexMinZ(!m_beamMode ? 0.f : std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
-            const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
-            float totalEnergyKick = this->GetEnergyKick(pVertex, TPC_VIEW_U) + this->GetEnergyKick(pVertex, TPC_VIEW_V) + this->GetEnergyKick(pVertex, TPC_VIEW_W);
-            
-            finalScore = multiplier * std::exp(-totalEnergyKick / this->m_epsilon);
-            
-            // Get the cluster bisection score.
-            
-            if (this->m_bisectionScore)
-            {
-                float totalBisectionLength = this->GetBisectionLength(pVertex, TPC_VIEW_U) + this->GetBisectionLength(pVertex, TPC_VIEW_V) + this->GetBisectionLength(pVertex, TPC_VIEW_W);
-                finalScore *= std::exp(-totalBisectionLength / this->m_bisectionConstant);
-            }            
-            JACK_COUT(" > Total energy kick: " << totalEnergyKick)
-            JACK_COUT(" > Beam deweighting score: " << multiplier)
-            JACK_COUT(" > Energy kick score: " << std::exp(-totalEnergyKick / this->m_epsilon))
-            JACK_COUT(" > Final score: " << finalScore << std::endl)
-        }
+            finalScore = this->GetJackScore(pVertex, beamConstants);
         
         else
         {
@@ -250,23 +230,65 @@ void VertexSelectionAlgorithm::GetVertexScoreList(const VertexList &vertexList, 
                     bestFastScore = fastScore;
             }
 
-            finalScore = (multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
-                this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
-                
-            JACK_COUT("Score before JackScore multiplier: " << multiplier << " * " << this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) << " = " << finalScore);
-                
-            if (m_jackScore)
+            if (this->m_jackScore)
             {
-                float totalEnergyKick = this->GetEnergyKick(pVertex, TPC_VIEW_U) + this->GetEnergyKick(pVertex, TPC_VIEW_V) + this->GetEnergyKick(pVertex, TPC_VIEW_W);
-                JACK_COUT("JackScore multiplier: " << std::exp(-totalEnergyKick / this->m_epsilon));
-                finalScore *= std::exp(-totalEnergyKick / this->m_epsilon);
+                const float oldScore = m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
+                            this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW);
+                            
+                const float jackScore = this->GetJackScore(pVertex, beamConstants);
+                
+                finalScore = oldScore * jackScore;
+                
+                COUT_YELLOW("Old score (w/out beam dw): " << oldScore)
+                COUT_YELLOW("Jack score               : " << jackScore)
+                COUT_YELLOW("Total score              : " << finalScore)
             }
             
-            JACK_COUT("Score after JackScore multiplier: " << finalScore);
+            else
+            {
+                finalScore = (multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
+                            this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
+            }
         }
         
         vertexScoreList.push_back(VertexScore(pVertex, finalScore));
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionAlgorithm::GetJackScore(const pandora::Vertex *const pVertex, const BeamConstants &beamConstants) const
+{
+    const float vertexMinZ = std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate());
+    const float beamDeweightingScore = std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant());
+    
+    const float totalEnergyKick = this->GetEnergyKick(pVertex, TPC_VIEW_U) + 
+                                  this->GetEnergyKick(pVertex, TPC_VIEW_V) + 
+                                  this->GetEnergyKick(pVertex, TPC_VIEW_W);
+                                  
+    const float energyKickScore = std::exp(-totalEnergyKick / this->m_epsilon);
+    
+    COUT_BLUE(   "  - Energy kick score:      " << energyKickScore)
+    COUT_GREEN(  "  - Beam deweighting score: " << beamDeweightingScore)
+    
+    float jackScore = beamDeweightingScore * energyKickScore;
+
+    if (this->m_asymmetryScore)
+    {
+        const float energyAsymmetry = this->GetEnergyAsymmetry(pVertex, TPC_VIEW_U) + 
+                                      this->GetEnergyAsymmetry(pVertex, TPC_VIEW_V) + 
+                                      this->GetEnergyAsymmetry(pVertex, TPC_VIEW_W);
+                                      
+        const float energyAsymmetryScore = std::exp(energyAsymmetry / this->m_asymmetryConstant);
+        
+        COUT_MAGENTA("  - Energy asymmetry score: " << energyAsymmetryScore)
+        
+        jackScore *= energyAsymmetryScore;
+    }
+        
+    COUT_RED(    "  => Total jack score:     : " << jackScore << std::endl)
+    
+    return jackScore;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -304,9 +326,14 @@ float VertexSelectionAlgorithm::GetEnergyKick(const pandora::Vertex *const pVert
     // Project the candidate vertex to the 2D view.
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
     
-    // Loop over the clusters in the cluster list and add up all the individual metrics.
-    float totMetric(0.f);
+    // Loop over the clusters in the cluster list and add up all the individual metrics. Revert to hit-based approach if any clusters are zero-energy.
+    float totEnergyMetric(0.f);
     float totEnergy(0.f);
+    
+    float totHitMetric(0.f);
+    unsigned int totHits(0U);
+    
+    bool useEnergyMetric = !this->m_useHitCountsOnly;
 
     unsigned int clusterCount(0);
     for (const Cluster * const pCluster : *pClusterList)
@@ -316,48 +343,82 @@ float VertexSelectionAlgorithm::GetEnergyKick(const pandora::Vertex *const pVert
                 
         // Get the direction (unit) vector of the cluster (check if straight etc. - to do).
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const int window = std::min(static_cast<int>(pCluster->GetNCaloHits()), static_cast<int>(slidingFitPitch*m_slidingFitWindow));
         
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
-        const CartesianVector axisDirection = slidingFitResult.GetAxisDirection();
+        const TwoDSlidingFitResult slidingFitResult(pCluster, window, slidingFitPitch);
+        const CartesianVector minLayerDirection = slidingFitResult.GetGlobalMinLayerDirection();
+        const CartesianVector maxLayerDirection = slidingFitResult.GetGlobalMaxLayerDirection();
         
         // Get the vector from the point to both of the ends of the cluster.
         const CartesianVector pointToFitStartVector = slidingFitResult.GetGlobalMinLayerPosition() - vertexPosition2D;
         const CartesianVector pointToFitEndVector   = slidingFitResult.GetGlobalMaxLayerPosition() - vertexPosition2D;
         
+        const float distanceToStart = pointToFitStartVector.GetMagnitude();
+        const float distanceToEnd = pointToFitEndVector.GetMagnitude();
+        const CartesianVector axisDirection = distanceToStart < distanceToEnd ? minLayerDirection : maxLayerDirection;
+        
         // Find the norm of the cross product between this vector and the cluster's direction (unit) vector. This is the impact parameter.
-        const float impactParameter = pointToFitEndVector.GetCrossProduct(axisDirection).GetMagnitude();
+        const float impactParameter = distanceToStart < distanceToEnd ? pointToFitStartVector.GetCrossProduct(axisDirection).GetMagnitude() : pointToFitEndVector.GetCrossProduct(axisDirection).GetMagnitude();
         
         // Also get the closest distance from the vertex to the end of the cluster.
-        const float closestEndDistance = std::min(pointToFitStartVector.GetMagnitude(), pointToFitEndVector.GetMagnitude());
+        const float closestEndDistance = std::min(distanceToStart, distanceToEnd);
         
-        // Work out the metric. Maybe the product of the inverse impact parameter and the total cluster energy.
-        totMetric += pCluster->GetElectromagneticEnergy() * (impactParameter + m_xOffset) / (closestEndDistance + m_rOffset);
-        totEnergy += pCluster->GetElectromagneticEnergy();
+        // If any cluster apparently has zero energy, use a hit-count based metric instead of energy.
+        if (pCluster->GetElectromagneticEnergy() == 0.f)
+            useEnergyMetric = false;
+        
+        if (useEnergyMetric)
+        {
+            totEnergyMetric += pCluster->GetElectromagneticEnergy() * (impactParameter + m_xOffset) / (closestEndDistance + m_rOffset);
+            totEnergy += pCluster->GetElectromagneticEnergy();
+        }
+        
+        totHitMetric += static_cast<float>(pCluster->GetNCaloHits()) * (impactParameter + m_xOffset) / (closestEndDistance + m_rOffset);
+        totHits += pCluster->GetNCaloHits();
+        
+        if (false) // debugging
+        {
+#ifndef CONDOR_RUN
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &startPos,  "cluster dir", MAGENTA, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &endPos,  "cluster dir", MAGENTA, 1));
+#endif
+            COUT_RED("    > Cluster at distance:      " << closestEndDistance)
+            COUT_RED("    > Cluster impact param is:  " << impactParameter)
+            COUT_RED("    > Cluster energy is:        " << pCluster->GetElectromagneticEnergy())
+            COUT_RED("    > Num hits is:              " << pCluster->GetNCaloHits())
+            COUT_RED("    > Energy contribution is:   " << pCluster->GetElectromagneticEnergy() * (impactParameter + m_xOffset) / (closestEndDistance + m_rOffset))
+            COUT_RED("    > Hit contribution is:      " << pCluster->GetNCaloHits() * (impactParameter + m_xOffset) / (closestEndDistance + m_rOffset))
+        }
+        
+        //PANDORA_MONITORING_API(Pause(this->GetPandora()));
         
         ++clusterCount;
     }
     
-    totMetric /= totEnergy;
+    if (clusterCount == 0)
+        return 0.f;
     
-    static int vertexNumber(0);
+    // Normalize the metric.
+    float metric = useEnergyMetric ? (totEnergyMetric / totEnergy) : (totHitMetric / totHits);
+
+#ifndef CONDOR_RUN
+    if (true) // debugging
+    {
+        static int vertexNumber(0);
+        COUT_BLUE("    [energy kick] - vtx #" << vertexNumber << " from list " << listName)
+        COUT_BLUE("    [energy kick] - num clusters considered: " << clusterCount)
+        COUT_BLUE("    [energy kick] - used energy?: " << std::boolalpha << useEnergyMetric)
+        COUT_BLUE("    [energy kick] - total energy kick: " << metric << std::endl);
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexPosition2D,  std::to_string(vertexNumber++), GREEN, 1));
+    }
+#endif
         
-    JACK_COUT(" > Vtx #" << vertexNumber << " - list " << listName)
-              
-    JACK_COUT("   --> Number of clusters considered: " << clusterCount)
-    JACK_COUT("   --> Total energy kick: " << totMetric)
-        
-    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexPosition2D,  std::to_string(vertexNumber), GREEN, 1)); // mah
-    //PANDORA_MONITORING_API(Pause(this->GetPandora()));
-    
-    ++vertexNumber;
-    
-    // Return the normalized total metric.
-    return totMetric;
+    return metric;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexSelectionAlgorithm::GetBisectionLength(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const
+float VertexSelectionAlgorithm::GetEnergyAsymmetry(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const
 {    
     // Get the relevant 2D cluster list.
     std::string listName;
@@ -378,7 +439,7 @@ float VertexSelectionAlgorithm::GetBisectionLength(const pandora::Vertex *const 
     
     const ClusterList *pClusterList(NULL);
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pClusterList));
-
+    
     if (!pClusterList || pClusterList->empty())
     {
          if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
@@ -386,115 +447,137 @@ float VertexSelectionAlgorithm::GetBisectionLength(const pandora::Vertex *const 
 
          return 1.f;
     }
-    
+
     // Project the candidate vertex to the 2D view.
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
     
-    // Loop over the clusters in the cluster list and add up all the individual cluster bisection lengths.
-    float totLength(0.f);
-
-    std::vector<const Cluster *> candidateClusters;
+#ifndef CONDOR_RUN
+    if (true) // debugging
+    {
+        static int vertexNumber(0);
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexPosition2D,  std::to_string(vertexNumber++), GREEN, 1)); // mah
+    }
+#endif
+    
+    // Find the local event axis: an energy-weighted   
+    CartesianVector localEvtAxisDirEnergy(0.f, 0.f, 0.f);
+    CartesianVector localEvtAxisDirHits(0.f, 0.f, 0.f);
+    bool useEnergyAxisDir = !this->m_useHitCountsOnly;
+    
+    ClusterList consideredClusters;
 
     for (const Cluster * const pCluster : *pClusterList)
-    {        
-        std::cout << "Cluster has hits with energy " << pCluster->GetElectromagneticEnergy() << " : " << pCluster->GetNCaloHits() << std::endl;
-        
+    {       
         if (pCluster->GetNCaloHits() < this->m_minNHits)
             continue;
             
-        // Get the direction (unit) vector of the cluster (check if straight etc. - to do).
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
         const float closestDistance = LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster);
-        
-        std::cout << "Distance of cluster with energy " << pCluster->GetElectromagneticEnergy() << " : " << closestDistance << std::endl;
-        
         if (closestDistance > 5.0)
             continue;
-            
-        candidateClusters.push_back(pCluster);
-        
-        std::cout << "CANDIDATE SIZE: " << candidateClusters.size() << std::endl;
-    }
 
-    unsigned int clusterCount(0);
-    for (const Cluster * const pCluster : candidateClusters)
-    {        
-                
         // Get the direction (unit) vector of the cluster (check if straight etc. - to do).
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);        
-        const CartesianVector axisDirection = slidingFitResult.GetAxisDirection();
+        const int window = std::min(static_cast<int>(pCluster->GetNCaloHits()), static_cast<int>(slidingFitPitch*m_slidingFitWindow));
         
-        // Project the vertex onto the cluster.
-        const float projectedVertexPosition = vertexPosition2D.GetDotProduct(axisDirection);
-        const float projectedMinPosition = slidingFitResult.GetGlobalMinLayerPosition().GetDotProduct(axisDirection);
-        const float projectedMaxPosition = slidingFitResult.GetGlobalMaxLayerPosition().GetDotProduct(axisDirection);
+        const TwoDSlidingFitResult slidingFitResult(pCluster, window, slidingFitPitch);
+        const CartesianVector minLayerDirection = slidingFitResult.GetGlobalMinLayerDirection();
+        const CartesianVector maxLayerDirection = slidingFitResult.GetGlobalMaxLayerDirection();
+                
+        // Get the vector from the point to both of the ends of the cluster.
+        const CartesianVector pointToFitStartVector = slidingFitResult.GetGlobalMinLayerPosition() - vertexPosition2D;
+        const CartesianVector pointToFitEndVector   = slidingFitResult.GetGlobalMaxLayerPosition() - vertexPosition2D;
         
-        float startPosition, endPosition;
+        const float distanceToStart = pointToFitStartVector.GetMagnitude();
+        const float distanceToEnd = pointToFitEndVector.GetMagnitude();
         
-        if (projectedMinPosition <= projectedMaxPosition)
+        CartesianVector axisDirectionEnergy = distanceToStart < distanceToEnd ? minLayerDirection : maxLayerDirection;
+        CartesianVector axisDirectionHits = axisDirectionEnergy;
+        
+        // Switch to hit-based metric if apparent cluster energy is zero.
+        if (pCluster->GetElectromagneticEnergy() == 0.f)
+            useEnergyAxisDir = false;
+        
+        // If the new axis direction is at an angle of greater than 90 deg to the current axis direction, flip it 180 degs.
+        if (localEvtAxisDirEnergy == CartesianVector(0.f, 0.f, 0.f)) {}
+        else if (useEnergyAxisDir)
         {
-            startPosition = projectedMinPosition;
-            endPosition = projectedMaxPosition;
+            const float cosOpeningAngle = localEvtAxisDirEnergy.GetCosOpeningAngle(axisDirectionEnergy);
+                    
+            if (std::abs(cosOpeningAngle) > 0.9962) // cos(5 deg)
+            {
+                if (cosOpeningAngle < 0.f)
+                    axisDirectionEnergy *= -1.f;
+            }
+            
+            else
+                return 1.f;
         }
         
+        if (localEvtAxisDirHits == CartesianVector(0.f, 0.f, 0.f)) {}
         else
         {
-            startPosition = projectedMaxPosition;
-            endPosition = projectedMinPosition;
+            const float cosOpeningAngle = localEvtAxisDirHits.GetCosOpeningAngle(axisDirectionHits);
+                    
+            if (std::abs(cosOpeningAngle) > 0.9962) // cos(5 deg)
+            {
+                if (cosOpeningAngle < 0.f)
+                    axisDirectionHits *= -1.f;
+            }
+            
+            else
+                return 1.f;
         }
         
-        for (auto it = candidateClusters.begin(); it != candidateClusters.end(); ++it)
-        {
-            auto pOtherCluster = *it;
-            
-            if (pCluster == pOtherCluster)
-                continue;
-                
-            const TwoDSlidingFitResult otherSlidingFitResult(pOtherCluster, m_slidingFitWindow, slidingFitPitch);        
-            const CartesianVector otherAxisDirection = otherSlidingFitResult.GetAxisDirection();
-            
-            if (otherAxisDirection.GetDotProduct(axisDirection) < 0.995)
-                continue;
-                
-            candidateClusters.erase(it);
-            
-            const float projectedOtherMinPosition = otherSlidingFitResult.GetGlobalMinLayerPosition().GetDotProduct(axisDirection);
-            const float projectedOtherMaxPosition = otherSlidingFitResult.GetGlobalMaxLayerPosition().GetDotProduct(axisDirection);
-            
-            if (projectedOtherMinPosition < startPosition)
-                startPosition = projectedOtherMinPosition;
-                
-            if (projectedOtherMaxPosition > endPosition)
-                endPosition = projectedOtherMaxPosition;
-                
-            JACK_COUT("*************************** MERGED TWO CLUSTERS")
-            
-            if (it == candidateClusters.end())
-                break;
-        }
-
-        
-        if (projectedVertexPosition < startPosition || projectedVertexPosition > endPosition)
-            continue;
-            
-        totLength += std::min(projectedVertexPosition-startPosition, endPosition - projectedVertexPosition);
-        clusterCount++;
-        
+        if (useEnergyAxisDir)
+            localEvtAxisDirEnergy += axisDirectionEnergy * pCluster->GetElectromagneticEnergy();  
+      
+        localEvtAxisDirHits += axisDirectionHits * pCluster->GetNCaloHits(); 
+       
+        consideredClusters.insert(pCluster);
     }
     
-    static int vertexNumber(0);
+    if (consideredClusters.empty() || consideredClusters.size() > 2)
+        return 1.f;
+    
+    const CartesianVector localEvtAxisDir = useEnergyAxisDir ? localEvtAxisDirEnergy.GetUnitVector() : localEvtAxisDirHits.GetUnitVector();
+    
+    // Now project every hit of every considered cluster onto the local event axis direction and record on what side of the projected vtx position it falls.
+    const float evtProjectedVtxPos = vertexPosition2D.GetDotProduct(localEvtAxisDir);
+    float beforeVtxEnergy(0.f);
+    float afterVtxEnergy(0.f);
+    
+    for (const Cluster * const pCluster : consideredClusters)
+    {
+        for (const auto &orderedCaloHitList : pCluster->GetOrderedCaloHitList())
+        {
+            for (const CaloHit * const pCaloHit : *(orderedCaloHitList.second))
+            {
+                const float projectedPos = pCaloHit->GetPositionVector().GetDotProduct(localEvtAxisDir);
+                
+                if (projectedPos < evtProjectedVtxPos)
+                    beforeVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+                    
+                else if (projectedPos > evtProjectedVtxPos)
+                    afterVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+            }
+        }
+    }
+
+    const float totCaloHitEnergy = beforeVtxEnergy + afterVtxEnergy;    
+    const float energyAsymmetry = totCaloHitEnergy > 0.f ? std::abs((afterVtxEnergy - beforeVtxEnergy)) / totCaloHitEnergy : 0.f;
         
-    JACK_COUT(" > Vtx #" << vertexNumber << " - list " << listName)
-              
-    JACK_COUT("   --> Number of clusters considered: " << clusterCount)
-    JACK_COUT("   --> Total bisection length: " << totLength)
-    
-    ++vertexNumber;
-    
+    if (false) // debugging
+    {
+        static int vertexNumber(0);
+        COUT_MAGENTA("    [energy asymm] - vtx #" << vertexNumber << " from list " << listName)
+        COUT_MAGENTA("    [energy asymm] - number of clusters considered:    " << consideredClusters.size())
+        COUT_MAGENTA("    [energy asymm] - using energy weighting (not hit): " << std::boolalpha << useEnergyAxisDir);
+        COUT_MAGENTA("    [energy asymm] - total energy asymm:               " << energyAsymmetry << std::endl);
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexPosition2D,  std::to_string(vertexNumber++), GREEN, 1)); // mah
+    }
+        
     // Return the normalized total metric.
-    return totLength;
+    return energyAsymmetry;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -782,13 +865,16 @@ StatusCode VertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "Epsilon", m_epsilon));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BisectionScore", m_bisectionScore));
+        "AsymmetryScore", m_asymmetryScore));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BisectionConstant", m_bisectionConstant));
+        "AsymmetryConstant", m_asymmetryConstant));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNHits", m_minNHits));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseHitCountsOnly", m_useHitCountsOnly));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BeamMode", m_beamMode));

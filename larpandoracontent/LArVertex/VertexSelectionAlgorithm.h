@@ -8,7 +8,12 @@
 #ifndef LAR_VERTEX_SELECTION_ALGORITHM_H
 #define LAR_VERTEX_SELECTION_ALGORITHM_H 1
 
-#define JACK_COUT(a) std::cout << "\033[1;36m" << a << "\033[0m" << std::endl;
+#define COUT_RED(a) std::cout << "\033[1;31m" << a << "\033[0m" << std::endl;
+#define COUT_GREEN(a) std::cout << "\033[1;32m" << a << "\033[0m" << std::endl;
+#define COUT_YELLOW(a) std::cout << "\033[1;33m" << a << "\033[0m" << std::endl;
+#define COUT_BLUE(a) std::cout << "\033[1;34m" << a << "\033[0m" << std::endl;
+#define COUT_MAGENTA(a) std::cout << "\033[1;35m" << a << "\033[0m" << std::endl;
+#define COUT_CYAN(a) std::cout << "\033[1;36m" << a << "\033[0m" << std::endl;
 
 #include "Pandora/Algorithm.h"
 
@@ -224,14 +229,16 @@ private:
      */
     void GetVertexScoreList(const pandora::VertexList &vertexList, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
         HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const;
-        
+      
+    float GetJackScore(const pandora::Vertex *const pVertex, const BeamConstants &beamConstants) const;
+    
     /**
      *  @brief  ...
      * 
      */
     float GetEnergyKick(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
     
-    float GetBisectionLength(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
+    float GetEnergyAsymmetry(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
 
     /**
      *  @brief  Get the score for a trio of kernel estimations, using fast histogram approach
@@ -352,9 +359,10 @@ private:
     float           m_rOffset;                      ///< ...
     float           m_xOffset;                      ///< ...
     float           m_epsilon;                      ///< ...
-    bool            m_bisectionScore;               ///< ...
-    float           m_bisectionConstant;            ///< ...
+    bool            m_asymmetryScore;               ///< ...
+    float           m_asymmetryConstant;            ///< ...
     int             m_minNHits;                     ///< ...
+    bool            m_useHitCountsOnly;             ///< ...
 
     bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
     float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
