@@ -114,23 +114,48 @@ private:
      */
     bool AcceptVertexLocation(const pandora::Vertex *const pVertex, const pandora::VertexList &selectedVertexList) const;
 
-    void StoreTop5Information(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList);
+    /**
+     *  @brief  Finds the top 5 vertex candidates from a scored vertex cluster collection and an energy vertex score list
+     * 
+     *  @param  scoredClusterCollection the scored cluster collection by reference
+     *  @param  energyVertexScoreList the energy vertex score list by reference
+     *  @param  top5VertexScoreList the output vertex score list containing the top 5 vertices, by reference
+     *  
+     */
+    void FindTop5Vertices(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList, VertexScoringTool::VertexScoreList &top5VertexScoreList);
+
+    /**
+     *  @brief  Stores the top 5 vertices and outputs this list so it can be propagated to the next algorithm
+     * 
+     *  @param  top5VertexScoreList the input vertex score list containing the top 5 vertices that is to be stored
+     *  
+     */
+    void StoreTop5Information(VertexScoringTool::VertexScoreList &top5VertexScoreList);
     
-    void StoreTopAllInformation(const pandora::VertexList* pTopologyVertexList, pandora::VertexList selectedVertexList, const pandora::VertexList* pEnergyVertexList, bool &energyVerticesPresent);
-    //------------------------------------------------------------------------------------------------------------------------------
+    /**
+     *  @brief  Stores all vertex information and outputs this list so it can be propagated to the next algorithm
+     * 
+     *  @param  pTopologyVertexList the address of the topology vertex list
+     *  @param  selectedVertexList the list containing the single selected output vertex
+     *  @param  pEnergyVertexList the address of the energy vertex list
+     *  
+     */
+    void StoreTopAllInformation(const pandora::VertexList* pTopologyVertexList, pandora::VertexList selectedVertexList, const pandora::VertexList* pEnergyVertexList);
+    
+    //--------------------------------------------------------------------------------------------------------------------------------------
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     VertexClusteringTool *m_pVertexClusteringTool; ///< Vertex Tool 1
     VertexScoringTool    *m_pVertexScoringTool;    ///< Vertex Tool 2
 
-    std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
+    std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list of selected vertices
 
-    std::string     m_topologyVertexListName;
-    std::string     m_energyVertexListName;
+    std::string     m_topologyVertexListName;       ///< The name under which to save the output topology vertex list
+    std::string     m_energyVertexListName;         ///< The name under which to save the output energy vertex list
 
-    std::string     m_top5VertexListName;
-    std::string     m_allOtherVertexListName;
+    std::string     m_top5VertexListName;           ///< The name under which to save the output top 5vertex list
+    std::string     m_allOtherVertexListName;       ///< The name under which to save the output vertex list containing all created vertices
     
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 

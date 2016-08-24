@@ -95,19 +95,36 @@ public:
 
     typedef std::vector<VertexCluster*> VertexClusterList;
 
+    /**
+     *  @brief  Clusters vertices into vertex clusters
+     * 
+     *  @param  pVertexList the address of the vertex list to be divided into vertex clusters
+     */
     std::vector<const pandora::VertexList*> ClusterVertices(const pandora::VertexList* pVertexList);
     
+    /**
+     *  @brief  Checks the distance from one vertex to the closest vertex in a vertex cluster
+     * 
+     *  @param  pVertex the address of the vertex
+     *  @param  pVertexCluster the address of the vertex cluster
+     */
     bool CheckVertexToClusterDistance(const pandora::Vertex *const pVertex, VertexCluster *const pVertexCluster) const;
 
+    /**
+     *  @brief  Boolean intended to sue with std::sort in order to sort a vertex list by the Z coordinates of its vertices
+     * 
+     *  @param  pLhs the address of the first vertex
+     *  @param  pRhs the address of the second vertex
+     */
     static bool SortVerticesByZ(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
 
 private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float           m_clusteringRadius; ///< The distance between individual vertex candidates that guarantees them being in the same cluster
-    float           m_maxVertexToCentroidDistance; ///< The radius around the centroid within which vertices will be added to the current vertex cluster
-    unsigned int    m_minClusterSize;   ///< Minimum size of cluster before switching to centroid as part of the distance clustering measure
+    float           m_clusteringRadius;                 ///< The distance between individual vertex candidates that guarantees them being in the same cluster
+    float           m_maxVertexToCentroidDistance;      ///< The radius around the centroid within which vertices will be added to the current vertex cluster
+    unsigned int    m_minClusterSize;                   ///< Minimum size of cluster before switching to centroid as part of the distance clustering measure
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

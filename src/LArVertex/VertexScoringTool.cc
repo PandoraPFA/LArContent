@@ -89,7 +89,7 @@ void VertexScoringTool::ScoreVertices(const Algorithm *const pAlgorithm, const V
         scoredClusterCollection.push_back(clusterVertexScoreList);
     }
 
-    std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);  
+    std::sort(scoredClusterCollection.begin(), scoredClusterCollection.end(), SortClustersByScore);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -546,7 +546,7 @@ bool VertexScoringTool::SortClustersByScore(VertexScoreList &firstScoreList, Ver
     float firstTotalClusterScore(0.f);
     for (VertexScore &firstTempVertexScore : firstScoreList)
     {
-        if (counterOne == 5)
+        if (counterOne == 4)
             break;
 
         firstTotalClusterScore += firstTempVertexScore.GetScore();
@@ -556,12 +556,15 @@ bool VertexScoringTool::SortClustersByScore(VertexScoreList &firstScoreList, Ver
     float secondTotalClusterScore(0.f);
     for (VertexScore &secondTempVertexScore : secondScoreList)
     {
-        if (counterTwo == 5)
+        if (counterTwo == 4)
             break;
 
         secondTotalClusterScore += secondTempVertexScore.GetScore();
         counterTwo++;
     }
+    
+    firstTotalClusterScore /= 4.0;
+    secondTotalClusterScore /= 4.0;
     
     return firstTotalClusterScore > secondTotalClusterScore;
 }

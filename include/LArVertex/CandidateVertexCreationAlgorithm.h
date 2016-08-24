@@ -262,8 +262,8 @@ private:
     std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
     std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
-    std::string                 m_topologyVertexListName;         ///< The name under which to save the output vertex list
-    std::string                 m_energyVertexListName;
+    std::string                 m_topologyVertexListName;       ///< The name under which to save the output topology-based vertex list
+    std::string                 m_energyVertexListName;         ///< The name under which to save the output energy-based vertex list
 
     bool                        m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
@@ -275,18 +275,18 @@ private:
     float                       m_maxClusterXDiscrepancy;       ///< The max cluster end-point discrepancy
     float                       m_chiSquaredCut;                ///< The chi squared cut (accept only values below the cut value)
     
-    bool                        m_enableCrossingCandidates;
-    bool                        m_enableEnergyCandidates; 
-    bool                        m_energyPlot;
+    bool                        m_enableCrossingCandidates;     ///< Whether to create crossing vertex candidates
+    bool                        m_enableEnergyCandidates;       ///< Whether to create energy-based candidates
+    bool                        m_energyPlot;                   ///< Whether to draw 
     
-    unsigned int                m_minCrossingClusterSize;
+    unsigned int                m_minCrossingClusterSize;       ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
     
-    float                       m_extrapolationLength;
-    float                       m_extrapolationStepSize;
-    float                       m_minClusterCrossingApproach;
-    float                       m_postCrossingSkipDistance;
+    float                       m_extrapolationLength;          ///< How far in cm to extrapolate a cluster in order to look for 2D crossing points
+    float                       m_extrapolationStepSize;        ///< The distance between extrapolation points in cm
+    float                       m_minClusterCrossingApproach;   ///< The minimum impact parameter between two extrapolated clusters to be marked as crossing
+    float                       m_postCrossingSkipDistance;     ///< How far to skip along an exrapolated cluster after finding a crossing point (for speed)
     
-    unsigned int                m_minEnergyVertexClusterSize;
+    unsigned int                m_minEnergyVertexClusterSize;   ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

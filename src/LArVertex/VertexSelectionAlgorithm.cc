@@ -50,16 +50,28 @@ StatusCode VertexSelectionAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
     
-    std::cout << "Vertices before clustering: " << pTopologyVertexList->size() << std::endl;
-
     std::vector<const VertexList*> vertexListVector = m_pVertexClusteringTool->ClusterVertices(pTopologyVertexList);
     
     int nVertices(0);
     
     for (const VertexList* pVertexList : vertexListVector)
+    {
         nVertices += pVertexList->size();
-    
-    std::cout << "Vertices after clustering: " << nVertices << std::endl;
+        
+        //for (const Vertex *const pVertex : (*pVertexList))
+        //{
+        //    CartesianVector vertexPosition(pVertex->GetPosition());
+        //    
+        //    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), vertexPosition, TPC_VIEW_U));
+        //    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), vertexPosition, TPC_VIEW_V));
+        //    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), vertexPosition, TPC_VIEW_W));
+        //    
+        //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Top 5 Vertex U", RED, 1));
+        //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Top 5 Vertex V", RED, 1));
+        //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Top 5 Vertex W", RED, 1));
+        //}        
+        //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
     
     std::vector<VertexScoringTool::VertexScoreList> scoredClusterCollection;
     m_pVertexScoringTool->ScoreVertices(this, pTopologyVertexList, vertexListVector, scoredClusterCollection);
@@ -74,15 +86,11 @@ StatusCode VertexSelectionAlgorithm::Run()
     
     const VertexList *pEnergyVertexList(NULL);
     VertexScoringTool::VertexScoreList energyVertexScoreList;
-    bool energyVerticesPresent(false);
     
     try
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_energyVertexListName, pEnergyVertexList));
         m_pVertexScoringTool->ScoreEnergyVertices(this, pEnergyVertexList, energyVertexScoreList);
-        
-        if (!pEnergyVertexList->empty())
-            energyVerticesPresent = true;
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -91,8 +99,11 @@ StatusCode VertexSelectionAlgorithm::Run()
 
     //---------------------------------------------------------------------------------------------------------------------------------------
     
-    this->StoreTopAllInformation(pTopologyVertexList, selectedVertexList, pEnergyVertexList, energyVerticesPresent);
-    this->StoreTop5Information(scoredClusterCollection, energyVertexScoreList);
+    this->StoreTopAllInformation(pTopologyVertexList, selectedVertexList, pEnergyVertexList);
+    
+    VertexScoringTool::VertexScoreList top5VertexScoreList;
+    this->FindTop5Vertices(scoredClusterCollection, energyVertexScoreList, top5VertexScoreList);
+    this->StoreTop5Information(top5VertexScoreList);
     
     //--------------------------------------------------------------------------------------------------------------------------------------
     
@@ -158,10 +169,8 @@ bool VertexSelectionAlgorithm::AcceptVertexLocation(const Vertex *const pVertex,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::StoreTop5Information(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList)
+void VertexSelectionAlgorithm::FindTop5Vertices(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList, VertexScoringTool::VertexScoreList &top5VertexScoreList)
 {
-    VertexScoringTool::VertexScoreList top5VertexScoreList;
-    
     std::sort(energyVertexScoreList.begin(), energyVertexScoreList.end());
 
     unsigned int clusterCounter(0);
@@ -173,7 +182,9 @@ void VertexSelectionAlgorithm::StoreTop5Information(std::vector<VertexScoringToo
             top5VertexScoreList.push_back(*energyVertexScoreList.begin());
             clusterCounter++;
         }
-
+        
+        CartesianVector previousVertexPosition(0.f, 0.f, 0.f);
+        
         for (VertexScoringTool::VertexScoreList &vertexScoreList : scoredClusterCollection)
         {
             if (clusterCounter == 5)
@@ -181,9 +192,14 @@ void VertexSelectionAlgorithm::StoreTop5Information(std::vector<VertexScoringToo
                 
             if (vertexScoreList.size() == 0)
                 continue;
+                
+            if (previousVertexPosition.GetMagnitude() != 0.0 && (previousVertexPosition - ((*vertexScoreList.begin()).GetVertex()->GetPosition())).GetMagnitude() < 5.0)
+                continue;
             
             std::sort(vertexScoreList.begin(), vertexScoreList.end());
             top5VertexScoreList.push_back(*vertexScoreList.begin());
+            
+            previousVertexPosition = (*vertexScoreList.begin()).GetVertex()->GetPosition();
             clusterCounter++;
         }
         
@@ -231,6 +247,26 @@ void VertexSelectionAlgorithm::StoreTop5Information(std::vector<VertexScoringToo
     }
     
     std::sort(top5VertexScoreList.begin(), top5VertexScoreList.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionAlgorithm::StoreTop5Information(VertexScoringTool::VertexScoreList &top5VertexScoreList)
+{
+    //for (VertexScoringTool::VertexScore &vertexScore : top5VertexScoreList)
+    //{
+    //    CartesianVector vertexPosition(vertexScore.GetVertex()->GetPosition());
+    //    
+    //    const CartesianVector vertexProjectionU(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), vertexPosition, TPC_VIEW_U));
+    //    const CartesianVector vertexProjectionV(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), vertexPosition, TPC_VIEW_V));
+    //    const CartesianVector vertexProjectionW(lar_content::LArGeometryHelper::ProjectPosition(this->GetPandora(), vertexPosition, TPC_VIEW_W));
+    //    
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionU, "Top 5 Vertex U", RED, 1));
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionV, "Top 5 Vertex V", RED, 1));
+    //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Top 5 Vertex W", RED, 1));
+    //}
+    //
+    //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     
     const VertexList *pTop5TemporaryList(NULL);
     std::string top5TemporaryListName;
@@ -256,7 +292,7 @@ void VertexSelectionAlgorithm::StoreTop5Information(std::vector<VertexScoringToo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::StoreTopAllInformation(const VertexList* pTopologyVertexList, VertexList selectedVertexList, const VertexList* pEnergyVertexList, bool &energyVerticesPresent)
+void VertexSelectionAlgorithm::StoreTopAllInformation(const VertexList* pTopologyVertexList, VertexList selectedVertexList, const VertexList* pEnergyVertexList)
 {
     const VertexList *pAllVerticesTemporaryList(NULL);
     std::string allVerticesTemporaryList;
@@ -264,7 +300,7 @@ void VertexSelectionAlgorithm::StoreTopAllInformation(const VertexList* pTopolog
     
     VertexList allVerticesList;
     
-    if (!selectedVertexList.empty())
+    if (pTopologyVertexList != NULL)
     {
         for (const Vertex *const pVertex: (*pTopologyVertexList))
         {
@@ -296,7 +332,7 @@ void VertexSelectionAlgorithm::StoreTopAllInformation(const VertexList* pTopolog
         }
     }
     
-    if (energyVerticesPresent)
+    if (pEnergyVertexList != NULL)
     {
         for (const Vertex *const pVertex: (*pEnergyVertexList))
         {

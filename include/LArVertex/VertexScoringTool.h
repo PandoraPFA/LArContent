@@ -89,8 +89,23 @@ public:
 
     typedef std::vector<VertexScore> VertexScoreList;
 
+    /**
+     *  @brief  Scores vertices, ranking them according to how good they are likely to be, using a variety of scoring mechanicms
+     * 
+     *  @param  pAlgorithm the address of the algorithm in which this function is run
+     *  @param  pInputVertexList the address of the energy vertex list
+     *  @param  vertexListVector input list of vertex clusters
+     *  @param  scoredClusterCollection output list of scored vertex clusters
+     */
     void ScoreVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, const std::vector<const pandora::VertexList*> vertexListVector, std::vector<VertexScoreList> &scoredClusterCollection);
 
+    /**
+     *  @brief  Scores energy vertices, ranking them according to how good they are likely to be
+     * 
+     *  @param  pAlgorithm the address of the algorithm
+     *  @param  pInputVertexList the address of the energy vertex list
+     *  @param  vertexScoreList the output scored vertex list by reference
+     */
     void ScoreEnergyVertices(const pandora::Algorithm *const pAlgorithm, const pandora::VertexList* pInputVertexList, VertexScoreList &vertexScoreList);
 
 private:
