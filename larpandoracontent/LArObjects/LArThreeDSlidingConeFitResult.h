@@ -154,6 +154,7 @@ private:
     TrackStateMap                   m_trackStateMap;                ///< The track state map
 };
 
+typedef std::vector<ThreeDSlidingConeFitResult> ThreeDSlidingConeFitResultList;
 typedef std::unordered_map<const pandora::Cluster*, ThreeDSlidingConeFitResult> ThreeDSlidingConeFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
