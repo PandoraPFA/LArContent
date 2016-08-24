@@ -26,6 +26,7 @@ namespace lar_content
 {
 
 EventSlicingTool::EventSlicingTool() :
+    m_minHitsPer3DCluster(20),
     m_halfWindowLayers(20),
     m_usePointingAssociation(true),
     m_minVertexLongitudinalDistance(-7.5f),
@@ -35,12 +36,13 @@ EventSlicingTool::EventSlicingTool() :
     m_maxClosestApproach(15.f),
     m_maxInterceptDistance(60.f),
     m_useProximityAssociation(true),
-    m_maxHitSeparationSquared(30.f * 30.f),
+    m_maxHitSeparationSquared(20.f * 20.f),
     m_useShowerConeAssociation(true),
     m_minShowerHits(40),
     m_nConeFitLayers(20),
     m_nConeFits(5),
-    m_coneLengthMultiplier(4.f),
+    m_coneLengthMultiplier(7.f),
+    m_maxConeLength(126.f),
     m_coneTanHalfAngle1(0.75f),
     m_coneBoundedFraction1(0.75f),
     m_coneTanHalfAngle2(0.5f),
@@ -110,11 +112,12 @@ void EventSlicingTool::GetThreeDClusters(const Algorithm *const pAlgorithm, cons
 
         for (const Cluster *const pCluster3D : pfoClusters3D)
         {
-            if (!clusterToPfoMap.insert(ClusterToPfoMap::value_type(pCluster3D, pPfo)).second)
+            if (pCluster3D->GetNCaloHits() < m_minHitsPer3DCluster)
+                continue;
+
+            if (!clusterToPfoMap.insert(ClusterToPfoMap::value_type(pCluster3D, pPfo)).second || !clusters3D.insert(pCluster3D).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
-
-        clusters3D.insert(pfoClusters3D.begin(), pfoClusters3D.end());
     }
 }
 
@@ -135,12 +138,9 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
         catch (StatusCodeException &) {std::cout << "EventSlicingTool: ThreeDSlidingFitResult failure for track cluster." << std::endl;}
     }
 
-    ClusterVector sortedShowerClusters3D(showerClusters3D.begin(), showerClusters3D.end());
-    std::sort(sortedShowerClusters3D.begin(), sortedShowerClusters3D.end(), LArClusterHelper::SortByNHits);
-
-    ClusterVector sortedClusters3D;
+    ClusterVector sortedClusters3D(showerClusters3D.begin(), showerClusters3D.end());
     sortedClusters3D.insert(sortedClusters3D.end(), sortedTrackClusters3D.begin(), sortedTrackClusters3D.end());
-    sortedClusters3D.insert(sortedClusters3D.end(), sortedShowerClusters3D.begin(), sortedShowerClusters3D.end());
+    std::sort(sortedClusters3D.begin(), sortedClusters3D.end(), LArClusterHelper::SortByNHits);
 
     ClusterList usedClusters;
 
@@ -156,16 +156,18 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
         while ((m_usePointingAssociation && this->AddNextPointing(sortedTrackClusters3D, slidingFitResultMap, clusterSlice, usedClusters)) ||
             (m_useProximityAssociation && this->AddNextProximity(sortedClusters3D, clusterSlice, usedClusters)) ) { /* Deliberately empty */ }
 
-        ClusterVector showersInSlice;
-
-        for (const Cluster *pCluster3DInSlice : clusterSlice)
-        {
-            if (showerClusters3D.count(pCluster3DInSlice))
-                showersInSlice.push_back(pCluster3DInSlice);
-        }
-
         if (m_useShowerConeAssociation)
+        {
+            ClusterVector showersInSlice;
+
+            for (const Cluster *pCluster3DInSlice : clusterSlice)
+            {
+                if (showerClusters3D.count(pCluster3DInSlice))
+                    showersInSlice.push_back(pCluster3DInSlice);
+            }
+
             this->AddClustersInShowerCone(showersInSlice, sortedClusters3D, clusterSlice, usedClusters);
+        }
     }
 }
 
@@ -252,14 +254,14 @@ void EventSlicingTool::AddClustersInShowerCone(const ClusterVector &showersInSli
             continue;
 
         SimpleConeList simpleConeList;
-        float coneLength(0.f);
+        float clusterLength(0.f);
 
         try
         {
             const ThreeDSlidingConeFitResult slidingConeFitResult3D(pShowerCluster3D, m_halfWindowLayers, layerPitch);
             const ThreeDSlidingFitResult &slidingFitResult3D(slidingConeFitResult3D.GetSlidingFitResult());
             slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, CONE_BOTH_DIRECTIONS, simpleConeList);
-            coneLength = (slidingFitResult3D.GetGlobalMaxLayerPosition() - slidingFitResult3D.GetGlobalMinLayerPosition()).GetMagnitude();
+            clusterLength = (slidingFitResult3D.GetGlobalMaxLayerPosition() - slidingFitResult3D.GetGlobalMinLayerPosition()).GetMagnitude();
         }
         catch (const StatusCodeException &)
         {
@@ -270,13 +272,15 @@ void EventSlicingTool::AddClustersInShowerCone(const ClusterVector &showersInSli
         {
             for (const Cluster *const pCandidateCluster : clusterCandidates)
             {
-                if (usedClusters.count(pCandidateCluster))
+                if (usedClusters.count(pCandidateCluster) || (pShowerCluster3D == pCandidateCluster))
                     continue;
 
-                if (simpleCone.GetBoundedHitFraction(pCandidateCluster, m_coneLengthMultiplier * coneLength, m_coneTanHalfAngle1) < m_coneBoundedFraction1)
+                const float coneLength(std::min(m_coneLengthMultiplier * clusterLength, m_maxConeLength));
+
+                if (simpleCone.GetBoundedHitFraction(pCandidateCluster, coneLength, m_coneTanHalfAngle1) < m_coneBoundedFraction1)
                     continue;
 
-                if (simpleCone.GetBoundedHitFraction(pCandidateCluster, m_coneLengthMultiplier * coneLength, m_coneTanHalfAngle2) < m_coneBoundedFraction2)
+                if (simpleCone.GetBoundedHitFraction(pCandidateCluster, coneLength, m_coneTanHalfAngle2) < m_coneBoundedFraction2)
                     continue;
 
                 if (!usedClusters.insert(pCandidateCluster).second)
@@ -642,6 +646,9 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
         "ShowerPfoListName", m_showerPfoListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitsPer3DCluster", m_minHitsPer3DCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -687,6 +694,9 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ConeLengthMultiplier", m_coneLengthMultiplier));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxConeLength", m_maxConeLength));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ConeTanHalfAngle1", m_coneTanHalfAngle1));

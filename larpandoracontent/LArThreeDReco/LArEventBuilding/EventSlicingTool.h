@@ -261,6 +261,7 @@ private:
     std::string     m_trackPfoListName;                 ///< The name of the input track pfo list
     std::string     m_showerPfoListName;                ///< The name of the input shower pfo list
 
+    unsigned int    m_minHitsPer3DCluster;              ///< The minimum number of hits in a 3D cluster to warrant consideration in slicing
     unsigned int    m_halfWindowLayers;                 ///< The number of layers to use for half-window of sliding fit
 
     bool            m_usePointingAssociation;           ///< Whether to use pointing association
@@ -279,6 +280,7 @@ private:
     unsigned int    m_nConeFitLayers;                   ///< The number of layers over which to sum fitted direction to obtain cone fit
     unsigned int    m_nConeFits;                        ///< The number of cone fits to perform, spread roughly uniformly along the shower length
     float           m_coneLengthMultiplier;             ///< The cone length multiplier to use when calculating bounded cluster fractions
+    float           m_maxConeLength;                    ///< The maximum allowed cone length to use when calculating bounded cluster fractions
     float           m_coneTanHalfAngle1;                ///< The cone tan half angle to use when calculating bounded cluster fractions 1
     float           m_coneBoundedFraction1;             ///< The minimum cluster bounded fraction for association 1
     float           m_coneTanHalfAngle2;                ///< The cone tan half angle to use when calculating bounded cluster fractions 2
