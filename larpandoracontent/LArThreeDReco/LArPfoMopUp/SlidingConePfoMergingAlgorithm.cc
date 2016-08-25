@@ -123,10 +123,7 @@ void SlidingConePfoMergingAlgorithm::GetClusterMergeMap(const Vertex *const pVer
 
     for (const Cluster *const pShowerCluster : clusters3D)
     {
-        if (pShowerCluster->GetNCaloHits() < m_minHitsToConsider3DShower)
-            continue;
-
-        if (!LArPfoHelper::IsShower(clusterToPfoMap.at(pShowerCluster)))
+        if ((pShowerCluster->GetNCaloHits() < m_minHitsToConsider3DShower) || !LArPfoHelper::IsShower(clusterToPfoMap.at(pShowerCluster)))
             continue;
 
         float coneLength(0.f);
@@ -160,19 +157,7 @@ void SlidingConePfoMergingAlgorithm::GetClusterMergeMap(const Vertex *const pVer
                 const float boundedFraction1(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle1));
                 const float boundedFraction2(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle2));
                 const ClusterMerge clusterMerge(pShowerCluster, boundedFraction1, boundedFraction2);
-//if (boundedFraction1 > m_coneBoundedFraction1 && boundedFraction2 > m_coneBoundedFraction2)
-//{
-//std::cout << "ClosestDistance " << LArClusterHelper::GetClosestDistance(pShowerCluster, pNearbyCluster) << ", coneLength " << simpleCone.GetConeLength() << std::endl;
-//std::cout << " boundedFraction1 " << boundedFraction1 << " boundedFraction2 " << boundedFraction2 << std::endl;
-//ClusterList temp3; temp3.insert(pShowerCluster);
-//ClusterList temp4; temp4.insert(pNearbyCluster);
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "pShowerCluster", RED);
-//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "pNearbyCluster", BLUE);
-//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &simpleCone.GetConeApex(), "coneApex", GRAY, 1);
-//const CartesianVector maxBaseCentre(simpleCone.GetConeApex() + simpleCone.GetConeDirection() * coneLength);
-//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxBaseCentre, "coneBaseCentre", CYAN, 1);
-//PandoraMonitoringApi::ViewEvent(this->GetPandora());
-//}
+
                 if (clusterMerge < bestClusterMerge)
                     bestClusterMerge = clusterMerge;
             }
@@ -198,41 +183,38 @@ bool SlidingConePfoMergingAlgorithm::MakePfoMerges(const ClusterToPfoMap &cluste
     std::sort(daughterClusters.begin(), daughterClusters.end(), LArClusterHelper::SortByNHits);
 
     bool pfosMerged(false);
-    //ClusterReplacementMap clusterReplacementMap;
+    ClusterReplacementMap clusterReplacementMap;
 
     for (ClusterVector::const_reverse_iterator rIter = daughterClusters.rbegin(), rIterEnd = daughterClusters.rend(); rIter != rIterEnd; ++rIter)
     {
-std::cout << "FOR CONSIDERATION " << std::endl;
         const Cluster *const pDaughterCluster(*rIter);
-        const ClusterMerge &bestClusterMerge(clusterMergeMap.at(pDaughterCluster).at(0));
-        const Cluster *const pParentCluster(bestClusterMerge.GetParentCluster());
 
+        if (clusterReplacementMap.count(pDaughterCluster))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        const Cluster *pParentCluster(clusterMergeMap.at(pDaughterCluster).at(0).GetParentCluster());
+
+        if (clusterReplacementMap.count(pParentCluster))
+            pParentCluster = clusterReplacementMap.at(pParentCluster);
+
+        // ATTN Sign there was a reciprocal relationship in the cluster merge map (already actioned once)
+        if (pDaughterCluster == pParentCluster)
+            continue;
+
+        // Key book-keeping on clusters and use cluster->pfo lookup
         const Pfo *const pDaughterPfo(clusterToPfoMap.at(pDaughterCluster));
         const Pfo *const pParentPfo(clusterToPfoMap.at(pParentCluster));
-std::cout << " WILL MERGE boundedFraction1 " << bestClusterMerge.GetBoundedFraction1() << " boundedFraction2 " << bestClusterMerge.GetBoundedFraction2() << std::endl;
-std::cout << "To Enlarge Cluster " << pParentCluster << std::endl;
-std::cout << "To Delete Cluster " << pDaughterCluster << std::endl;
-std::cout << "To Enlarge Pfo " << pParentPfo << std::endl;
-std::cout << "To Delete Pfo " << pDaughterPfo << std::endl;
-ClusterList temp3; temp3.insert(pParentCluster);
-ClusterList temp4; temp4.insert(pDaughterCluster);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "pParentCluster", RED);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "pDaughterCluster", BLUE);
-PfoList temp5; temp5.insert(pParentPfo);
-PfoList temp6; temp6.insert(pDaughterPfo);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &temp5, "pParentPfo", RED);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &temp6, "pDaughterPfo", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-        // TODO
         this->MergeAndDeletePfos(pParentPfo, pDaughterPfo);
         pfosMerged = true;
-std::cout << "MERGED " << std::endl;
-std::cout << "Enlarged Cluster " << pParentCluster << std::endl;
-std::cout << "Deleted Cluster " << pDaughterCluster << std::endl;
-std::cout << "Enlarged Pfo " << pParentPfo << std::endl;
-std::cout << "Deleted Pfo " << pDaughterPfo << std::endl;
-return true;
+
+        // Simple/placeholder book-keeping for reciprocal relationships and progressive merges 
+        clusterReplacementMap[pDaughterCluster] = pParentCluster;
+
+        for (ClusterReplacementMap::value_type &mapEntry : clusterReplacementMap)
+        {
+            if (pDaughterCluster == mapEntry.second)
+                mapEntry.second = pParentCluster;
+        }
     }
 
     return pfosMerged;

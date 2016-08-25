@@ -19,6 +19,9 @@ namespace lar_content
 
 void PfoMergingBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const pPfoToEnlarge, const ParticleFlowObject *const pPfoToDelete) const
 {
+    if (pPfoToEnlarge == pPfoToDelete)
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
     const PfoList daughterPfos(pPfoToDelete->GetDaughterPfoList());
     const ClusterVector daughterClusters(pPfoToDelete->GetClusterList().begin(), pPfoToDelete->GetClusterList().end());
     const VertexVector daughterVertices(pPfoToDelete->GetVertexList().begin(), pPfoToDelete->GetVertexList().end());
