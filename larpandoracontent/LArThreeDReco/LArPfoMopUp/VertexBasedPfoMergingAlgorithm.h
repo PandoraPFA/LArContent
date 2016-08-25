@@ -8,9 +8,7 @@
 #ifndef LAR_VERTEX_BASED_PFO_MERGING_ALGORITHM_H
 #define LAR_VERTEX_BASED_PFO_MERGING_ALGORITHM_H 1
 
-#include "Objects/ParticleFlowObject.h"
-
-#include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMergingBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -18,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  VertexBasedPfoMergingAlgorithm::Algorithm class
+ *  @brief  VertexBasedPfoMergingAlgorithm class
  */
-class VertexBasedPfoMergingAlgorithm : public pandora::Algorithm
+class VertexBasedPfoMergingAlgorithm : public PfoMergingBaseAlgorithm
 {
 public:
     /**
@@ -349,34 +347,6 @@ protected:
      */
     void MergePfos(const PfoAssociation &pfoAssociation) const;
 
-    /**
-     *  @brief  Merge and delete a pair of pfos, with a specific set of conventions for cluster merging, vertex use, etc.
-     * 
-     *  @param  pPfoToEnlarge the address of the pfo to enlarge
-     *  @param  pPfoToDelete the address of the pfo to delete (will become a dangling pointer)
-     */
-    void MergeAndDeletePfos(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::ParticleFlowObject *const pPfoToDelete) const;
-
-    /**
-     *  @brief  Select the parent cluster (same hit type and most hits) using a provided cluster list and hit type
-     * 
-     *  @param  clusterList the cluster list
-     *  @param  hitType the hit type
-     * 
-     *  @return the address of the parent cluster
-     */
-    const pandora::Cluster *GetParentCluster(const pandora::ClusterList &clusterList, const pandora::HitType hitType) const;
-
-    /**
-     *  @brief  Find the name of the list hosting a specific object
-     * 
-     *  @param  pT the address of the object
-     * 
-     *  @return the name of the list
-     */
-    template <typename T>
-    const std::string GetListName(const T *const pT) const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::unordered_set<pandora::HitType, std::hash<unsigned int> > HitTypeSet;
@@ -384,7 +354,6 @@ protected:
 
     std::string             m_trackPfoListName;                 ///< The input track pfo list name
     std::string             m_showerPfoListName;                ///< The input shower pfo list name
-    pandora::StringVector   m_daughterListNames;                ///< The list of potential daughter object list names
 
     float                   m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
     float                   m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut

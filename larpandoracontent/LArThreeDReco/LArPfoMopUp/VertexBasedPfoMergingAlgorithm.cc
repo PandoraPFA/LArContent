@@ -287,91 +287,6 @@ void VertexBasedPfoMergingAlgorithm::MergePfos(const PfoAssociation &pfoAssociat
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-void VertexBasedPfoMergingAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const pPfoToEnlarge, const ParticleFlowObject *const pPfoToDelete) const
-{
-    const PfoList daughterPfos(pPfoToDelete->GetDaughterPfoList());
-    const ClusterVector daughterClusters(pPfoToDelete->GetClusterList().begin(), pPfoToDelete->GetClusterList().end());
-    const VertexVector daughterVertices(pPfoToDelete->GetVertexList().begin(), pPfoToDelete->GetVertexList().end());
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete, this->GetListName(pPfoToDelete)));
-
-    for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToEnlarge, pDaughterPfo));
-    }
-
-    for (const  Vertex *const pDaughterVertex : daughterVertices)
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pDaughterVertex, this->GetListName(pDaughterVertex)));
-    }
-
-    for (const Cluster *const pDaughterCluster : daughterClusters)
-    {
-        const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
-        const Cluster *pParentCluster(this->GetParentCluster(pPfoToEnlarge->GetClusterList(), daughterHitType));
-
-        if (pParentCluster)
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
-                this->GetListName(pParentCluster), this->GetListName(pDaughterCluster)));
-        }
-        else
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfoToEnlarge, pDaughterCluster));
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const Cluster *VertexBasedPfoMergingAlgorithm::GetParentCluster(const ClusterList &clusterList, const HitType hitType) const
-{
-    unsigned int mostHits(0);
-    const Cluster *pBestParentCluster(nullptr);
-
-    for (const Cluster *const pParentCluster : clusterList)
-    {
-        if (hitType != LArClusterHelper::GetClusterHitType(pParentCluster))
-            continue;
-
-        const unsigned int nParentHits(pParentCluster->GetNCaloHits());
-
-        if (nParentHits > mostHits)
-        {
-            mostHits = nParentHits;
-            pBestParentCluster = pParentCluster;
-        }
-    }
-
-    return pBestParentCluster;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-const std::string VertexBasedPfoMergingAlgorithm::GetListName(const T *const pT) const
-{
-    std::string currentListName;
-    const std::MANAGED_CONTAINER<const T*> *pCurrentList(nullptr);
-    (void) PandoraContentApi::GetCurrentList(*this, pCurrentList, currentListName);
-
-    if (pCurrentList && (pCurrentList->count(pT)))
-        return currentListName;
-
-    for (const std::string &listName : m_daughterListNames)
-    {
-        const std::MANAGED_CONTAINER<const T*> *pList(nullptr);
-        (void) PandoraContentApi::GetList(*this, listName, pList);
-
-        if (pList && (pList->count(pT)))
-            return listName;
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 VertexBasedPfoMergingAlgorithm::ClusterAssociation::ClusterAssociation() :
@@ -588,12 +503,6 @@ StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerPfoListName", m_showerPfoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "DaughterListNames", m_daughterListNames));
-
-    m_daughterListNames.push_back(m_trackPfoListName);
-    m_daughterListNames.push_back(m_showerPfoListName);
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
 
@@ -633,7 +542,10 @@ StatusCode VertexBasedPfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinConsistentDirectionsTrack", m_minConsistentDirectionsTrack));
 
-    return STATUS_CODE_SUCCESS;
+    m_daughterListNames.push_back(m_trackPfoListName);
+    m_daughterListNames.push_back(m_showerPfoListName);
+
+    return PfoMergingBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

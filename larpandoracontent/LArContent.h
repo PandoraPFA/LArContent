@@ -67,6 +67,7 @@
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMergingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoRecoveryAlgorithm.h"
@@ -172,6 +173,7 @@ public:
         d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \
         d("LArThreeDLongitudinalTracks",            lar_content::ThreeDLongitudinalTracksAlgorithm::Factory)                    \
         d("LArParticleRecovery",                    lar_content::ParticleRecoveryAlgorithm::Factory)                            \
+        d("LArSlidingConePfoMerging",               lar_content::SlidingConePfoMergingAlgorithm::Factory)                       \
         d("LArSplitShowerMerging",                  lar_content::SplitShowerMergingAlgorithm::Factory)                          \
         d("LArVertexBasedPfoMerging",               lar_content::VertexBasedPfoMergingAlgorithm::Factory)                       \
         d("LArVertexBasedPfoRecovery",              lar_content::VertexBasedPfoRecoveryAlgorithm::Factory)                      \
