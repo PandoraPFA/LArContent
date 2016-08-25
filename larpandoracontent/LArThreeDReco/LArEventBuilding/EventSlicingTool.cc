@@ -38,15 +38,14 @@ EventSlicingTool::EventSlicingTool() :
     m_useProximityAssociation(true),
     m_maxHitSeparationSquared(25.f * 25.f),
     m_useShowerConeAssociation(true),
-    m_minShowerHits(40),
     m_nConeFitLayers(20),
     m_nConeFits(5),
     m_coneLengthMultiplier(7.f),
     m_maxConeLength(126.f),
-    m_coneTanHalfAngle1(0.75f),
-    m_coneBoundedFraction1(0.75f),
-    m_coneTanHalfAngle2(0.5f),
-    m_coneBoundedFraction2(0.5f),
+    m_coneTanHalfAngle1(0.5f),
+    m_coneBoundedFraction1(0.5f),
+    m_coneTanHalfAngle2(0.75f),
+    m_coneBoundedFraction2(0.75f),
     m_use3DProjectionsInHitPickUp(true)
 {
 }
@@ -670,9 +669,6 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseShowerConeAssociation", m_useShowerConeAssociation));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinShowerHits", m_minShowerHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NConeFitLayers", m_nConeFitLayers));

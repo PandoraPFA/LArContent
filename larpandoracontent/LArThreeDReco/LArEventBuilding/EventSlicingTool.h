@@ -278,7 +278,6 @@ private:
     float           m_maxHitSeparationSquared;          ///< Proximity association: max distance allowed between the closest pair of hits
 
     bool            m_useShowerConeAssociation;         ///< Whether to use shower cone association
-    unsigned int    m_minShowerHits;                    ///< The minimum number of 3d hits in a shower to attempt shower cone fitting
     unsigned int    m_nConeFitLayers;                   ///< The number of layers over which to sum fitted direction to obtain cone fit
     unsigned int    m_nConeFits;                        ///< The number of cone fits to perform, spread roughly uniformly along the shower length
     float           m_coneLengthMultiplier;             ///< The cone length multiplier to use when calculating bounded cluster fractions
