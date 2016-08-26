@@ -31,8 +31,7 @@ ConeBasedMergingAlgorithm::ConeBasedMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
-    const ClusterToListNameMap &clusterToListNameMap) const
+void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     ClusterAssociationMap clusterAssociationMap;
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -158,7 +157,7 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
         }
     }
 
-    this->MakeClusterMerges(clusterAssociationMap, clusterToListNameMap);
+    this->MakeClusterMerges(clusterAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -187,7 +186,7 @@ StatusCode ConeBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinBoundedFraction", m_minBoundedFraction));
 
-    return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
+    return ClusterMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

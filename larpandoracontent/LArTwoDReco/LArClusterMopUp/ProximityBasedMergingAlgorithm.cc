@@ -28,8 +28,7 @@ ProximityBasedMergingAlgorithm::ProximityBasedMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
-    const ClusterToListNameMap &clusterToListNameMap) const
+void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     ClusterAssociationMap clusterAssociationMap;
 
@@ -84,7 +83,7 @@ void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
         }
     }
 
-    this->MakeClusterMerges(clusterAssociationMap, clusterToListNameMap);
+    this->MakeClusterMerges(clusterAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,7 +102,7 @@ StatusCode ProximityBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TouchingDistance", m_touchingDistance));
 
-    return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
+    return ClusterMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

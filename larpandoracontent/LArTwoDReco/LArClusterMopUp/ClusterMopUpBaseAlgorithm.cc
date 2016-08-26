@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.cc
  * 
  *  @brief  Implementation of the cluster mop up algorithm base class.
  * 
@@ -11,21 +11,21 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ClusterMopUpAlgorithm::ClusterMopUpAlgorithm() :
+ClusterMopUpBaseAlgorithm::ClusterMopUpBaseAlgorithm() :
     m_excludePfosContainingTracks(true)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterMopUpAlgorithm::Run()
+StatusCode ClusterMopUpBaseAlgorithm::Run()
 {
     ClusterList pfoClusterListU, pfoClusterListV, pfoClusterListW;
     this->GetPfoClusterLists(pfoClusterListU, pfoClusterListV, pfoClusterListW);
@@ -33,19 +33,16 @@ StatusCode ClusterMopUpAlgorithm::Run()
     ClusterList remnantClusterListU, remnantClusterListV, remnantClusterListW;
     this->GetRemnantClusterLists(remnantClusterListU, remnantClusterListV, remnantClusterListW);
 
-    ClusterToListNameMap clusterToListNameMap;
-    this->GetClusterToListNameMap(clusterToListNameMap);
-
-    this->ClusterMopUp(pfoClusterListU, remnantClusterListU, clusterToListNameMap);
-    this->ClusterMopUp(pfoClusterListV, remnantClusterListV, clusterToListNameMap);
-    this->ClusterMopUp(pfoClusterListW, remnantClusterListW, clusterToListNameMap);
+    this->ClusterMopUp(pfoClusterListU, remnantClusterListU);
+    this->ClusterMopUp(pfoClusterListV, remnantClusterListV);
+    this->ClusterMopUp(pfoClusterListW, remnantClusterListW);
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMopUpAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+void ClusterMopUpBaseAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     for (StringVector::const_iterator sIter = m_pfoListNames.begin(), sIterEnd = m_pfoListNames.end(); sIter != sIterEnd; ++sIter)
     {
@@ -67,7 +64,7 @@ void ClusterMopUpAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMopUpAlgorithm::GetRemnantClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+void ClusterMopUpBaseAlgorithm::GetRemnantClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     for (StringVector::const_iterator sIter = m_remnantClusterListNames.begin(), sIterEnd = m_remnantClusterListNames.end(); sIter != sIterEnd; ++sIter)
     {
@@ -81,7 +78,7 @@ void ClusterMopUpAlgorithm::GetRemnantClusterLists(ClusterList &clusterListU, Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMopUpAlgorithm::GetClusterLists(const ClusterList &inputClusterList, const bool availabilityFlag, ClusterList &clusterListU,
+void ClusterMopUpBaseAlgorithm::GetClusterLists(const ClusterList &inputClusterList, const bool availabilityFlag, ClusterList &clusterListU,
     ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     for (ClusterList::const_iterator cIter = inputClusterList.begin(), cIterEnd = inputClusterList.end(); cIter != cIterEnd; ++cIter)
@@ -103,20 +100,25 @@ void ClusterMopUpAlgorithm::GetClusterLists(const ClusterList &inputClusterList,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMopUpAlgorithm::MakeClusterMerges(const ClusterAssociationMap &clusterAssociationMap, const ClusterToListNameMap &clusterToListNameMap) const
+void ClusterMopUpBaseAlgorithm::MakeClusterMerges(const ClusterAssociationMap &clusterAssociationMap) const
 {
-    for (ClusterAssociationMap::const_iterator rIter = clusterAssociationMap.begin(), rIterEnd = clusterAssociationMap.end(); rIter != rIterEnd; ++rIter)
-    {
-        const Cluster *const pRemnantCluster(rIter->first);
-        const AssociationDetails associationDetails(rIter->second);
+    ClusterVector sortedRemnantClusters;
+    for (const auto &remnantMapEntry : clusterAssociationMap) sortedRemnantClusters.push_back(remnantMapEntry.first);
+    std::sort(sortedRemnantClusters.begin(), sortedRemnantClusters.end(), LArClusterHelper::SortByNHits);
 
-        const Cluster *pBestPfoCluster(NULL);
+    for (const Cluster *const pRemnantCluster : sortedRemnantClusters)
+    {
+        const AssociationDetails &associationDetails(clusterAssociationMap.at(pRemnantCluster));
+        const Cluster *pBestPfoCluster(nullptr);
         float bestFigureOfMerit(-std::numeric_limits<float>::max());
 
-        for (AssociationDetails::const_iterator pIter = associationDetails.begin(), pIterEnd = associationDetails.end(); pIter != pIterEnd; ++pIter)
+        ClusterVector sortedPfoClusters;
+        for (const auto &pfoMapEntry : associationDetails) sortedPfoClusters.push_back(pfoMapEntry.first);
+        std::sort(sortedPfoClusters.begin(), sortedPfoClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pPfoCluster : sortedPfoClusters)
         {
-            const Cluster *const pPfoCluster(pIter->first);
-            const float figureOfMerit(pIter->second);
+            const float figureOfMerit(associationDetails.at(pPfoCluster));
 
             if (figureOfMerit > bestFigureOfMerit)
             {
@@ -125,47 +127,50 @@ void ClusterMopUpAlgorithm::MakeClusterMerges(const ClusterAssociationMap &clust
             }
         }
 
-        if (NULL == pBestPfoCluster)
+        if (!pBestPfoCluster)
             continue;
 
-        ClusterToListNameMap::const_iterator listIterP = clusterToListNameMap.find(pBestPfoCluster);
-        ClusterToListNameMap::const_iterator listIterR = clusterToListNameMap.find(pRemnantCluster);
-
-        if ((clusterToListNameMap.end() == listIterP) || (clusterToListNameMap.end() == listIterR))
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        const std::string listNameP(this->GetListName(pBestPfoCluster));
+        const std::string listNameR(this->GetListName(pRemnantCluster));
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestPfoCluster, pRemnantCluster,
-            listIterP->second, listIterR->second));
+            listNameP, listNameR));
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMopUpAlgorithm::GetClusterToListNameMap(ClusterToListNameMap &clusterToListNameMap) const
+template <typename T>
+const std::string ClusterMopUpBaseAlgorithm::GetListName(const T *const pT) const
 {
-    StringSet stringSet;
-    stringSet.insert(m_remnantClusterListNames.begin(), m_remnantClusterListNames.end());
+    std::string currentListName;
+    const std::MANAGED_CONTAINER<const T*> *pCurrentList(nullptr);
+    (void) PandoraContentApi::GetCurrentList(*this, pCurrentList, currentListName);
 
-    for (StringSet::const_iterator sIter = stringSet.begin(), sIterEnd = stringSet.end(); sIter != sIterEnd; ++sIter)
+    if (pCurrentList && (pCurrentList->count(pT)))
+        return currentListName;
+
+    for (const std::string &listName : m_remnantClusterListNames)
     {
-        const ClusterList *pClusterList(NULL);
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *sIter, pClusterList))
-            continue;
+        const std::MANAGED_CONTAINER<const T*> *pList(nullptr);
+        (void) PandoraContentApi::GetList(*this, listName, pList);
 
-        for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
-        {
-            if (!clusterToListNameMap.insert(ClusterToListNameMap::value_type(*cIter, *sIter)).second)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
+        if (pList && (pList->count(pT)))
+            return listName;
     }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ClusterMopUpBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "RemnantClusterListNames", m_remnantClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "PfoListNames", m_pfoListNames));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "RemnantClusterListNames", m_remnantClusterListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ExcludePfosContainingTracks", m_excludePfosContainingTracks));

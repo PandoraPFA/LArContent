@@ -87,8 +87,9 @@ StatusCode NeutrinoParentAlgorithm::Run()
         StringVector algorithms;
         algorithms.insert(algorithms.end(), m_vertexAlgorithms.begin(), m_vertexAlgorithms.end());
         algorithms.insert(algorithms.end(), m_threeDAlgorithms.begin(), m_threeDAlgorithms.end());
-        algorithms.insert(algorithms.end(), m_mopUpAlgorithms.begin(), m_mopUpAlgorithms.end());
+        algorithms.insert(algorithms.end(), m_twoDMopUpAlgorithms.begin(), m_twoDMopUpAlgorithms.end());
         algorithms.insert(algorithms.end(), m_threeDHitAlgorithms.begin(), m_threeDHitAlgorithms.end());
+        algorithms.insert(algorithms.end(), m_threeDMopUpAlgorithms.begin(), m_threeDMopUpAlgorithms.end());
         algorithms.insert(algorithms.end(), m_neutrinoAlgorithms.begin(), m_neutrinoAlgorithms.end());
         algorithms.insert(algorithms.end(), m_listMovingAlgorithm);
 
@@ -233,7 +234,10 @@ StatusCode NeutrinoParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "VertexAlgorithms", m_vertexAlgorithms));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
-        "MopUpAlgorithms", m_mopUpAlgorithms));
+        "TwoDMopUpAlgorithms", m_twoDMopUpAlgorithms));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
+        "ThreeDMopUpAlgorithms", m_threeDMopUpAlgorithms));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
         "NeutrinoAlgorithms", m_neutrinoAlgorithms));

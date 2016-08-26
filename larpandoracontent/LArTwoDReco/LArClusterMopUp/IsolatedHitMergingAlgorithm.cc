@@ -26,11 +26,10 @@ IsolatedHitMergingAlgorithm::IsolatedHitMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void IsolatedHitMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters,
-    const ClusterToListNameMap &clusterToListNameMap) const
+void IsolatedHitMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     CaloHitList caloHitList;
-    this->DissolveClustersToHits(remnantClusters, clusterToListNameMap, caloHitList);
+    this->DissolveClustersToHits(remnantClusters, caloHitList);
 
     CaloHitToClusterMap caloHitToClusterMap;
     this->GetCaloHitToClusterMap(caloHitList, pfoClusters, caloHitToClusterMap);
@@ -43,22 +42,15 @@ void IsolatedHitMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void IsolatedHitMergingAlgorithm::DissolveClustersToHits(const ClusterList &clusterList, const ClusterToListNameMap &clusterToListNameMap,
-    CaloHitList &caloHitList) const
+void IsolatedHitMergingAlgorithm::DissolveClustersToHits(const ClusterList &clusterList, CaloHitList &caloHitList) const
 {
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pRemnantCluster : clusterList)
     {
-        const Cluster *const pRemnantCluster(*iter);
-
         if (pRemnantCluster->GetNCaloHits() < m_maxCaloHitsInCluster)
         {
-            ClusterToListNameMap::const_iterator nameIter = clusterToListNameMap.find(pRemnantCluster);
-
-            if (clusterToListNameMap.end() == nameIter)
-                throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
+            const std::string listNameR(this->GetListName(pRemnantCluster));
             pRemnantCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pRemnantCluster, nameIter->second));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pRemnantCluster, listNameR));
         }
     }
 }
@@ -146,7 +138,7 @@ StatusCode IsolatedHitMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxHitClusterDistance", m_maxHitClusterDistance));
 
-    return ClusterMopUpAlgorithm::ReadSettings(xmlHandle);
+    return ClusterMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

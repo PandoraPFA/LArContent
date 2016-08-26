@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h"
 
 namespace lar_content
 {
@@ -19,7 +19,7 @@ namespace lar_content
  *  @brief  ProximityBasedMergingAlgorithm class
  */
 
-class ProximityBasedMergingAlgorithm : public ClusterMopUpAlgorithm
+class ProximityBasedMergingAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -37,7 +37,7 @@ public:
     ProximityBasedMergingAlgorithm();
 
 private:
-    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

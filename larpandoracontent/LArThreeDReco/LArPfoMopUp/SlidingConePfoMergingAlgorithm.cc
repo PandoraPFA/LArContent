@@ -162,7 +162,7 @@ void SlidingConePfoMergingAlgorithm::GetClusterMergeMap(const Vertex *const pVer
                     bestClusterMerge = clusterMerge;
             }
 
-            if ((bestClusterMerge.GetBoundedFraction1() > m_coneBoundedFraction1) && (bestClusterMerge.GetBoundedFraction2() > m_coneBoundedFraction2))
+            if (bestClusterMerge.GetParentCluster() && (bestClusterMerge.GetBoundedFraction1() > m_coneBoundedFraction1) && (bestClusterMerge.GetBoundedFraction2() > m_coneBoundedFraction2))
                 clusterMergeMap[pNearbyCluster].push_back(bestClusterMerge);
         }
     }
@@ -176,10 +176,7 @@ void SlidingConePfoMergingAlgorithm::GetClusterMergeMap(const Vertex *const pVer
 bool SlidingConePfoMergingAlgorithm::MakePfoMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
 {
     ClusterVector daughterClusters;
-
-    for (const ClusterMergeMap::value_type &mapEntry : clusterMergeMap)
-        daughterClusters.push_back(mapEntry.first);
-
+    for (const ClusterMergeMap::value_type &mapEntry : clusterMergeMap) daughterClusters.push_back(mapEntry.first);
     std::sort(daughterClusters.begin(), daughterClusters.end(), LArClusterHelper::SortByNHits);
 
     bool pfosMerged(false);

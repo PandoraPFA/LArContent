@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h
  * 
  *  @brief  Header file for the cluster mop up algorithm base class.
  * 
  *  $Log: $
  */
-#ifndef LAR_CLUSTER_MOP_UP_ALGORITHM_H
-#define LAR_CLUSTER_MOP_UP_ALGORITHM_H 1
+#ifndef LAR_CLUSTER_MOP_UP_BASE_ALGORITHM_H
+#define LAR_CLUSTER_MOP_UP_BASE_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -16,10 +16,10 @@ namespace lar_content
 {
 
 /**
- *  @brief  ClusterMopUpAlgorithm class
+ *  @brief  ClusterMopUpBaseAlgorithm class
  */
 
-class ClusterMopUpAlgorithm : public pandora::Algorithm
+class ClusterMopUpBaseAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -34,7 +34,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    ClusterMopUpAlgorithm();
+    ClusterMopUpBaseAlgorithm();
 
 protected:
     virtual pandora::StatusCode Run();
@@ -69,23 +69,13 @@ protected:
     virtual void GetClusterLists(const pandora::ClusterList &inputClusterList, const bool availabilityFlag, pandora::ClusterList &clusterListU,
         pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
-    typedef std::unordered_map<const pandora::Cluster*, std::string> ClusterToListNameMap;
-
-    /**
-     *  @brief  Get the map from cluster to cluster list name
-     * 
-     *  @param  clusterToListNameMap to receive the cluster to list name map
-     */
-    virtual void GetClusterToListNameMap(ClusterToListNameMap &clusterToListNameMap) const;
-
     /**
      *  @brief  Cluster mop up for a single view. This function is responsible for instructing pandora to make cluster alterations
      * 
      *  @param  pfoClusters the list of pfo clusters
      *  @param  remnantClusters the list of remnant clusters
-     *  @param  clusterToListNameMap the cluster list name map
      */
-    virtual void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const = 0;
+    virtual void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const = 0;
 
     typedef std::unordered_map<const pandora::Cluster*, float> AssociationDetails;
     typedef std::unordered_map<const pandora::Cluster*, AssociationDetails> ClusterAssociationMap;
@@ -94,9 +84,18 @@ protected:
      *  @brief  Make the cluster merges specified in the cluster association map, using list name information in the cluster list name map
      * 
      *  @param  clusterAssociationMap the cluster association map
-     *  @param  clusterToListNameMap the cluster list name map
      */
-    virtual void MakeClusterMerges(const ClusterAssociationMap &clusterAssociationMap, const ClusterToListNameMap &clusterToListNameMap) const;
+    virtual void MakeClusterMerges(const ClusterAssociationMap &clusterAssociationMap) const;
+
+    /**
+     *  @brief  Find the name of the list hosting a specific object
+     * 
+     *  @param  pT the address of the object
+     * 
+     *  @return the name of the list
+     */
+    template <typename T>
+    const std::string GetListName(const T *const pT) const;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -108,4 +107,4 @@ protected:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_CLUSTER_MOP_UP_ALGORITHM_H
+#endif // #ifndef LAR_CLUSTER_MOP_UP_BASE_ALGORITHM_H

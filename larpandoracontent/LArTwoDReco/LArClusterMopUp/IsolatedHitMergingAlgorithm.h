@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -20,7 +20,7 @@ namespace lar_content
 /**
  *  @brief  IsolatedHitMergingAlgorithm class
  */
-class IsolatedHitMergingAlgorithm : public ClusterMopUpAlgorithm
+class IsolatedHitMergingAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -38,16 +38,15 @@ public:
     IsolatedHitMergingAlgorithm();
 
 private:
-    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
 
     /**
      *  @brief  Examine a list of clusters, identify and delete remnants; receive the list of newly available hits
      * 
      *  @param  clusterList the list of clusters to consider
-     *  @param  clusterToListNameMap the cluster to list name map
      *  @param  caloHitList to receive the list of newly available hits
      */
-    void DissolveClustersToHits(const pandora::ClusterList &clusterList, const ClusterToListNameMap &clusterToListNameMap, pandora::CaloHitList &caloHitList) const;
+    void DissolveClustersToHits(const pandora::ClusterList &clusterList, pandora::CaloHitList &caloHitList) const;
 
     typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> CaloHitToClusterMap;
 

@@ -12,7 +12,7 @@
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h"
 
 namespace lar_content
 {
@@ -21,7 +21,7 @@ namespace lar_content
  *  @brief  BoundedClusterMergingAlgorithm class
  */
 
-class BoundedClusterMergingAlgorithm : public ClusterMopUpAlgorithm
+class BoundedClusterMergingAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -64,7 +64,7 @@ private:
         int       m_nPoints;       ///< The number of sampling points to be used
     };
 
-    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
 
     /**
      *  @brief  Get the shower position map containing high and low edge z positions in bins of x
