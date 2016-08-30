@@ -8,7 +8,7 @@
 #ifndef PANDORA_STITCHING_ALGORITHM_H
 #define PANDORA_STITCHING_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -22,7 +22,7 @@ class StitchingTool;
 /**
  *  @brief  StitchingAlgorithm class
  */
-class StitchingAlgorithm : public pandora::Algorithm
+class StitchingAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
     /**
@@ -46,12 +46,37 @@ public:
         PfoToVolumeIdMap    m_pfoToVolumeIdMap;         ///< The pfo to volume id map
     };
 
+    /**
+     *  @brief  Get the new/recreated cluster list name
+     * 
+     *  @return the new/recreated cluster list name
+     */
+    const std::string &GetNewClusterListName() const;
+
+    /**
+     *  @brief  Get the new/recreated vertex list name
+     * 
+     *  @return the new/recreated vertex list name
+     */
+    const std::string &GetNewVertexListName() const;
+
+    /**
+     *  @brief  Get the new/recreated pfo list name
+     * 
+     *  @return the new/recreated pfo list name
+     */
+    const std::string &GetNewPfoListName() const;
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<StitchingTool*> StitchingToolList;
     StitchingToolList       m_algorithmToolList;        ///< The algorithm tool list
+
+    std::string             m_newClusterListName;       ///< The new/recreated cluster list name
+    std::string             m_newVertexListName;        ///< The new/recreated vertex list name
+    std::string             m_newPfoListName;           ///< The new/recreated pfo list name
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -72,10 +97,33 @@ public:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline pandora::Algorithm *StitchingAlgorithm::Factory::CreateAlgorithm() const
 {
     return new StitchingAlgorithm();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const std::string &StitchingAlgorithm::GetNewClusterListName() const
+{
+    return m_newClusterListName;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const std::string &StitchingAlgorithm::GetNewVertexListName() const
+{
+    return m_newVertexListName;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const std::string &StitchingAlgorithm::GetNewPfoListName() const
+{
+    return m_newPfoListName;
 }
 
 } // namespace lar_content

@@ -45,7 +45,26 @@ StatusCode StitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         m_algorithmToolList.push_back(pStitchingTool);
     }
 
-    return STATUS_CODE_SUCCESS;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NewClusterListName", m_newClusterListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NewVertexListName", m_newVertexListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NewPfoListName", m_newPfoListName));
+
+    if (m_newClusterListName.empty() || m_newVertexListName.empty() || m_newPfoListName.empty())
+    {
+        std::cout << "StitchingAlgorithm::ReadSettings - Invalid list name for new/recreated objects." << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    m_daughterListNames.push_back(m_newClusterListName);
+    m_daughterListNames.push_back(m_newVertexListName);
+    m_daughterListNames.push_back(m_newPfoListName);
+
+    return PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

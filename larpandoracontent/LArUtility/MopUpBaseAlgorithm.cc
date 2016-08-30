@@ -41,8 +41,14 @@ const std::string MopUpBaseAlgorithm::GetListName(const T *const pT) const
 
 StatusCode MopUpBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "DaughterListNames", m_daughterListNames));
+
+    if (m_daughterListNames.empty())
+    {
+        std::cout << "MopUpBaseAlgorithm::ReadSettings - Must provide names of daughter object lists for use in mop up." << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
