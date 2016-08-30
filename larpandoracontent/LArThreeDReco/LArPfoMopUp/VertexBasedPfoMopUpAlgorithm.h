@@ -1,14 +1,14 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h
  * 
- *  @brief  Header file for the vertex based pfo merging algorithm class.
+ *  @brief  Header file for the vertex based pfo mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_VERTEX_BASED_PFO_MERGING_ALGORITHM_H
-#define LAR_VERTEX_BASED_PFO_MERGING_ALGORITHM_H 1
+#ifndef LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H
+#define LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMergingBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -16,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  VertexBasedPfoMergingAlgorithm class
+ *  @brief  VertexBasedPfoMopUpAlgorithm class
  */
-class VertexBasedPfoMergingAlgorithm : public PfoMergingBaseAlgorithm
+class VertexBasedPfoMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
     /**
@@ -33,7 +33,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    VertexBasedPfoMergingAlgorithm();
+    VertexBasedPfoMopUpAlgorithm();
 
 protected:
     /**
@@ -376,36 +376,36 @@ protected:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *VertexBasedPfoMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *VertexBasedPfoMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new VertexBasedPfoMergingAlgorithm();
+    return new VertexBasedPfoMopUpAlgorithm();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster *VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetVertexCluster() const
+inline const pandora::Cluster *VertexBasedPfoMopUpAlgorithm::ClusterAssociation::GetVertexCluster() const
 {
     return m_pVertexCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster *VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetDaughterCluster() const
+inline const pandora::Cluster *VertexBasedPfoMopUpAlgorithm::ClusterAssociation::GetDaughterCluster() const
 {
     return m_pDaughterCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float VertexBasedPfoMergingAlgorithm::ClusterAssociation::GetBoundedFraction() const
+inline float VertexBasedPfoMopUpAlgorithm::ClusterAssociation::GetBoundedFraction() const
 {
     return m_boundedFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool VertexBasedPfoMergingAlgorithm::ClusterAssociation::IsConsistentDirection() const
+inline bool VertexBasedPfoMopUpAlgorithm::ClusterAssociation::IsConsistentDirection() const
 {
     return m_isConsistentDirection;
 }
@@ -413,39 +413,39 @@ inline bool VertexBasedPfoMergingAlgorithm::ClusterAssociation::IsConsistentDire
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Pfo *VertexBasedPfoMergingAlgorithm::PfoAssociation::GetVertexPfo() const
+inline const pandora::Pfo *VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetVertexPfo() const
 {
     return m_pVertexPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Pfo *VertexBasedPfoMergingAlgorithm::PfoAssociation::GetDaughterPfo() const
+inline const pandora::Pfo *VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetDaughterPfo() const
 {
     return m_pDaughterPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const VertexBasedPfoMergingAlgorithm::ClusterAssociation &VertexBasedPfoMergingAlgorithm::PfoAssociation::GetClusterAssociationU() const
+inline const VertexBasedPfoMopUpAlgorithm::ClusterAssociation &VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetClusterAssociationU() const
 {
     return m_clusterAssociationU;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const VertexBasedPfoMergingAlgorithm::ClusterAssociation &VertexBasedPfoMergingAlgorithm::PfoAssociation::GetClusterAssociationV() const
+inline const VertexBasedPfoMopUpAlgorithm::ClusterAssociation &VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetClusterAssociationV() const
 {
     return m_clusterAssociationV;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const VertexBasedPfoMergingAlgorithm::ClusterAssociation &VertexBasedPfoMergingAlgorithm::PfoAssociation::GetClusterAssociationW() const
+inline const VertexBasedPfoMopUpAlgorithm::ClusterAssociation &VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetClusterAssociationW() const
 {
     return m_clusterAssociationW;
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_VERTEX_BASED_PFO_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H

@@ -1,22 +1,22 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMergingBaseAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h
  * 
- *  @brief  Header file for the pfo merging algorithm base class.
+ *  @brief  Header file for the pfo mop up algorithm base class.
  * 
  *  $Log: $
  */
-#ifndef LAR_PFO_MERGING_BASE_ALGORITHM_H
-#define LAR_PFO_MERGING_BASE_ALGORITHM_H 1
+#ifndef LAR_PFO_MOP_UP_BASE_ALGORITHM_H
+#define LAR_PFO_MOP_UP_BASE_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArUtility/MopUpBaseAlgorithm.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  PfoMergingBaseAlgorithm class
+ *  @brief  PfoMopUpBaseAlgorithm class
  */
-class PfoMergingBaseAlgorithm : public pandora::Algorithm
+class PfoMopUpBaseAlgorithm : public MopUpBaseAlgorithm
 {
 public:
     /**
@@ -37,22 +37,10 @@ public:
      */
     virtual const pandora::Cluster *GetParentCluster(const pandora::ClusterList &clusterList, const pandora::HitType hitType) const;
 
-    /**
-     *  @brief  Find the name of the list hosting a specific object
-     * 
-     *  @param  pT the address of the object
-     * 
-     *  @return the name of the list
-     */
-    template <typename T>
-    const std::string GetListName(const T *const pT) const;
-
 protected:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    pandora::StringVector   m_daughterListNames;                ///< The list of potential daughter object list names
+    virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_PFO_MERGING_BASE_ALGORITHM_H
+#endif // #ifndef LAR_PFO_MOP_UP_BASE_ALGORITHM_H

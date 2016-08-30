@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/NearbyClusterMopUpAlgorithm.cc
  * 
- *  @brief  Implementation of the proximity based merging algorithm class.
+ *  @brief  Implementation of the nearby cluster mop up algorithm class.
  * 
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/NearbyClusterMopUpAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ProximityBasedMergingAlgorithm::ProximityBasedMergingAlgorithm() :
+NearbyClusterMopUpAlgorithm::NearbyClusterMopUpAlgorithm() :
     m_minHitsInCluster(5),
     m_vertexProximity(5.f),
     m_minClusterSeparation(2.5f),
@@ -28,7 +28,7 @@ ProximityBasedMergingAlgorithm::ProximityBasedMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
+void NearbyClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     ClusterAssociationMap clusterAssociationMap;
 
@@ -88,7 +88,7 @@ void ProximityBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ProximityBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode NearbyClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinHitsInCluster", m_minHitsInCluster));

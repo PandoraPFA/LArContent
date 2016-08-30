@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.h
  * 
- *  @brief  Header file for the isolated hit merging algorithm class.
+ *  @brief  Header file for the isolated cluster mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_ISOLATED_HIT_MERGING_ALGORITHM_H
-#define LAR_ISOLATED_HIT_MERGING_ALGORITHM_H 1
+#ifndef LAR_ISOLATED_CLUSTER_MOP_UP_ALGORITHM_H
+#define LAR_ISOLATED_CLUSTER_MOP_UP_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -18,9 +18,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  IsolatedHitMergingAlgorithm class
+ *  @brief  IsolatedClusterMopUpAlgorithm class
  */
-class IsolatedHitMergingAlgorithm : public ClusterMopUpBaseAlgorithm
+class IsolatedClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -35,7 +35,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    IsolatedHitMergingAlgorithm();
+    IsolatedClusterMopUpAlgorithm();
 
 private:
     void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
@@ -78,11 +78,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *IsolatedHitMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *IsolatedClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new IsolatedHitMergingAlgorithm();
+    return new IsolatedClusterMopUpAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_ISOLATED_HIT_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_ISOLATED_CLUSTER_MOP_UP_ALGORITHM_H

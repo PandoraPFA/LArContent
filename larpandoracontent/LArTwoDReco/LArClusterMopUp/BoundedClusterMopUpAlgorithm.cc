@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.cc
  * 
- *  @brief  Implementation of the bounded cluster merging algorithm class.
+ *  @brief  Implementation of the bounded cluster mop up algorithm class.
  * 
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-BoundedClusterMergingAlgorithm::BoundedClusterMergingAlgorithm() :
+BoundedClusterMopUpAlgorithm::BoundedClusterMopUpAlgorithm() :
     m_slidingFitWindow(20),
     m_showerEdgeMultiplier(1.5f),
     m_minBoundedFraction(0.5f)
@@ -27,7 +27,7 @@ BoundedClusterMergingAlgorithm::BoundedClusterMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
+void BoundedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     ClusterAssociationMap clusterAssociationMap;
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -65,7 +65,7 @@ void BoundedClusterMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowerFitResult &fitResult, const XSampling &xSampling,
+void BoundedClusterMopUpAlgorithm::GetShowerPositionMap(const TwoDSlidingShowerFitResult &fitResult, const XSampling &xSampling,
     ShowerPositionMap &showerPositionMap) const
 {
     for (int n=0; n <= xSampling.m_nPoints; ++n)
@@ -93,7 +93,7 @@ void BoundedClusterMergingAlgorithm::GetShowerPositionMap(const TwoDSlidingShowe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float BoundedClusterMergingAlgorithm::GetBoundedFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const
+float BoundedClusterMopUpAlgorithm::GetBoundedFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const
 {
   if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (0 >= xSampling.m_nPoints) || 
       (0 == pCluster->GetNCaloHits()))
@@ -133,7 +133,7 @@ float BoundedClusterMergingAlgorithm::GetBoundedFraction(const Cluster *const pC
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-BoundedClusterMergingAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitResult)
+BoundedClusterMopUpAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitResult)
 {
     fitResult.GetMinAndMaxX(m_minX, m_maxX);
 
@@ -145,7 +145,7 @@ BoundedClusterMergingAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int BoundedClusterMergingAlgorithm::XSampling::GetBin(const float x) const
+int BoundedClusterMopUpAlgorithm::XSampling::GetBin(const float x) const
 {
     if (((x - m_minX) < -std::numeric_limits<float>::epsilon()) || ((x - m_maxX) > +std::numeric_limits<float>::epsilon()))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -156,7 +156,7 @@ int BoundedClusterMergingAlgorithm::XSampling::GetBin(const float x) const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode BoundedClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode BoundedClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "SlidingFitWindow", m_slidingFitWindow));

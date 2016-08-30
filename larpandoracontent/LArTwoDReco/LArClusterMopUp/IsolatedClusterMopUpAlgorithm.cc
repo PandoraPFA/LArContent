@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.cc
  * 
- *  @brief  Implementation of the isolated hit merging algorithm class.
+ *  @brief  Implementation of the isolated cluster mop up algorithm class.
  * 
  *  $Log: $
  */
@@ -10,14 +10,14 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-IsolatedHitMergingAlgorithm::IsolatedHitMergingAlgorithm() :
+IsolatedClusterMopUpAlgorithm::IsolatedClusterMopUpAlgorithm() :
     m_maxCaloHitsInCluster(10),
     m_hitLayerSearchWindow(10),
     m_maxHitClusterDistance(10.f)
@@ -26,7 +26,7 @@ IsolatedHitMergingAlgorithm::IsolatedHitMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void IsolatedHitMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
+void IsolatedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     CaloHitList caloHitList;
     this->DissolveClustersToHits(remnantClusters, caloHitList);
@@ -42,7 +42,7 @@ void IsolatedHitMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void IsolatedHitMergingAlgorithm::DissolveClustersToHits(const ClusterList &clusterList, CaloHitList &caloHitList) const
+void IsolatedClusterMopUpAlgorithm::DissolveClustersToHits(const ClusterList &clusterList, CaloHitList &caloHitList) const
 {
     for (const Cluster *const pRemnantCluster : clusterList)
     {
@@ -57,7 +57,7 @@ void IsolatedHitMergingAlgorithm::DissolveClustersToHits(const ClusterList &clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void IsolatedHitMergingAlgorithm::GetCaloHitToClusterMap(const CaloHitList &caloHitList, const ClusterList &clusterList, CaloHitToClusterMap &caloHitToClusterMap) const
+void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(const CaloHitList &caloHitList, const ClusterList &clusterList, CaloHitToClusterMap &caloHitToClusterMap) const
 {
     for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
     {
@@ -86,7 +86,7 @@ void IsolatedHitMergingAlgorithm::GetCaloHitToClusterMap(const CaloHitList &calo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float IsolatedHitMergingAlgorithm::GetDistanceToHit(const Cluster *const pCluster, const CaloHit *const pCaloHit) const
+float IsolatedClusterMopUpAlgorithm::GetDistanceToHit(const Cluster *const pCluster, const CaloHit *const pCaloHit) const
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -127,7 +127,7 @@ float IsolatedHitMergingAlgorithm::GetDistanceToHit(const Cluster *const pCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode IsolatedHitMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode IsolatedClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MaxCaloHitsInCluster", m_maxCaloHitsInCluster));

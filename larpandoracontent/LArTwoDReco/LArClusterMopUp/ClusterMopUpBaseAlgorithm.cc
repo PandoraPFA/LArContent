@@ -30,12 +30,12 @@ StatusCode ClusterMopUpBaseAlgorithm::Run()
     ClusterList pfoClusterListU, pfoClusterListV, pfoClusterListW;
     this->GetPfoClusterLists(pfoClusterListU, pfoClusterListV, pfoClusterListW);
 
-    ClusterList remnantClusterListU, remnantClusterListV, remnantClusterListW;
-    this->GetRemnantClusterLists(remnantClusterListU, remnantClusterListV, remnantClusterListW);
+    ClusterList daughterClusterListU, daughterClusterListV, daughterClusterListW;
+    this->GetDaughterClusterLists(daughterClusterListU, daughterClusterListV, daughterClusterListW);
 
-    this->ClusterMopUp(pfoClusterListU, remnantClusterListU);
-    this->ClusterMopUp(pfoClusterListV, remnantClusterListV);
-    this->ClusterMopUp(pfoClusterListW, remnantClusterListW);
+    this->ClusterMopUp(pfoClusterListU, daughterClusterListU);
+    this->ClusterMopUp(pfoClusterListV, daughterClusterListV);
+    this->ClusterMopUp(pfoClusterListW, daughterClusterListW);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -64,12 +64,13 @@ void ClusterMopUpBaseAlgorithm::GetPfoClusterLists(ClusterList &clusterListU, Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMopUpBaseAlgorithm::GetRemnantClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+void ClusterMopUpBaseAlgorithm::GetDaughterClusterLists(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
-    for (StringVector::const_iterator sIter = m_remnantClusterListNames.begin(), sIterEnd = m_remnantClusterListNames.end(); sIter != sIterEnd; ++sIter)
+    for (const std::string &daughterListName : m_daughterListNames)
     {
-        const ClusterList *pClusterList(NULL);
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *sIter, pClusterList))
+        const ClusterList *pClusterList(nullptr);
+
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, daughterListName, pClusterList))
             continue;
 
         this->GetClusterLists(*pClusterList, true, clusterListU, clusterListV, clusterListW);
@@ -140,42 +141,15 @@ void ClusterMopUpBaseAlgorithm::MakeClusterMerges(const ClusterAssociationMap &c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-const std::string ClusterMopUpBaseAlgorithm::GetListName(const T *const pT) const
-{
-    std::string currentListName;
-    const std::MANAGED_CONTAINER<const T*> *pCurrentList(nullptr);
-    (void) PandoraContentApi::GetCurrentList(*this, pCurrentList, currentListName);
-
-    if (pCurrentList && (pCurrentList->count(pT)))
-        return currentListName;
-
-    for (const std::string &listName : m_remnantClusterListNames)
-    {
-        const std::MANAGED_CONTAINER<const T*> *pList(nullptr);
-        (void) PandoraContentApi::GetList(*this, listName, pList);
-
-        if (pList && (pList->count(pT)))
-            return listName;
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ClusterMopUpBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "PfoListNames", m_pfoListNames));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "RemnantClusterListNames", m_remnantClusterListNames));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ExcludePfosContainingTracks", m_excludePfosContainingTracks));
 
-    return STATUS_CODE_SUCCESS;
+    return MopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

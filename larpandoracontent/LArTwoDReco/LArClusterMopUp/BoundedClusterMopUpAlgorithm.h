@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h
  * 
- *  @brief  Header file for the bounded cluster merging algorithm class.
+ *  @brief  Header file for the bounded cluster mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_BOUNDED_CLUSTER_MERGING_ALGORITHM_H
-#define LAR_BOUNDED_CLUSTER_MERGING_ALGORITHM_H 1
+#ifndef LAR_BOUNDED_CLUSTER_MOP_UP_ALGORITHM_H
+#define LAR_BOUNDED_CLUSTER_MOP_UP_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -18,10 +18,10 @@ namespace lar_content
 {
 
 /**
- *  @brief  BoundedClusterMergingAlgorithm class
+ *  @brief  BoundedClusterMopUpAlgorithm class
  */
 
-class BoundedClusterMergingAlgorithm : public ClusterMopUpBaseAlgorithm
+class BoundedClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -36,7 +36,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    BoundedClusterMergingAlgorithm();
+    BoundedClusterMopUpAlgorithm();
 
 private:
     /**
@@ -95,11 +95,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *BoundedClusterMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *BoundedClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new BoundedClusterMergingAlgorithm();
+    return new BoundedClusterMopUpAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_BOUNDED_CLUSTER_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_BOUNDED_CLUSTER_MOP_UP_ALGORITHM_H

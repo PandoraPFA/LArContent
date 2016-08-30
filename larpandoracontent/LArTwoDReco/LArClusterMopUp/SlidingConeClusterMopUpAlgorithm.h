@@ -1,14 +1,14 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/SlidingConeClusterMopUpAlgorithm.h
  * 
- *  @brief  Header file for the sliding cone pfo merging algorithm class.
+ *  @brief  Header file for the sliding cone cluster mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_SLIDING_CONE_PFO_MERGING_ALGORITHM_H
-#define LAR_SLIDING_CONE_PFO_MERGING_ALGORITHM_H 1
+#ifndef LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H
+#define LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMergingBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -16,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  SlidingConePfoMergingAlgorithm class
+ *  @brief  SlidingConeClusterMopUpAlgorithm class
  */
-class SlidingConePfoMergingAlgorithm : public PfoMergingBaseAlgorithm
+class SlidingConeClusterMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
     /**
@@ -33,7 +33,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    SlidingConePfoMergingAlgorithm();
+    SlidingConeClusterMopUpAlgorithm();
 
 private:
     /**
@@ -153,15 +153,15 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *SlidingConePfoMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *SlidingConeClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new SlidingConePfoMergingAlgorithm();
+    return new SlidingConeClusterMopUpAlgorithm();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SlidingConePfoMergingAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2) :
+inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2) :
     m_pParentCluster(pParentCluster),
     m_boundedFraction1(boundedFraction1),
     m_boundedFraction2(boundedFraction2)
@@ -170,25 +170,25 @@ inline SlidingConePfoMergingAlgorithm::ClusterMerge::ClusterMerge(const pandora:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster *SlidingConePfoMergingAlgorithm::ClusterMerge::GetParentCluster() const
+inline const pandora::Cluster *SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetParentCluster() const
 {
     return m_pParentCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float SlidingConePfoMergingAlgorithm::ClusterMerge::GetBoundedFraction1() const
+inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetBoundedFraction1() const
 {
     return m_boundedFraction1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float SlidingConePfoMergingAlgorithm::ClusterMerge::GetBoundedFraction2() const
+inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetBoundedFraction2() const
 {
     return m_boundedFraction2;
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_SLIDING_CONE_PFO_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H

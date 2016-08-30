@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.cc
  * 
- *  @brief  Implementation of the cone based merging algorithm class.
+ *  @brief  Implementation of the cone cluster mop up algorithm class.
  * 
  *  $Log: $
  */
@@ -13,14 +13,14 @@
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ConeBasedMergingAlgorithm::ConeBasedMergingAlgorithm() :
+ConeClusterMopUpAlgorithm::ConeClusterMopUpAlgorithm() :
     m_slidingFitWindow(20),
     m_showerEdgeMultiplier(1.5f),
     m_coneAngleCentile(0.85f),
@@ -31,7 +31,7 @@ ConeBasedMergingAlgorithm::ConeBasedMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
+void ConeClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, const ClusterList &remnantClusters) const
 {
     ClusterAssociationMap clusterAssociationMap;
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -90,8 +90,8 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
             if (coordinateListP.empty() || coordinateListN.empty())
                 continue;
 
-            std::sort(coordinateListP.begin(), coordinateListP.end(), ConeBasedMergingAlgorithm::SortCoordinates);
-            std::sort(coordinateListN.begin(), coordinateListN.end(), ConeBasedMergingAlgorithm::SortCoordinates);
+            std::sort(coordinateListP.begin(), coordinateListP.end(), ConeClusterMopUpAlgorithm::SortCoordinates);
+            std::sort(coordinateListN.begin(), coordinateListN.end(), ConeClusterMopUpAlgorithm::SortCoordinates);
 
             const Coordinate maxP(coordinateListP.at(m_coneAngleCentile * coordinateListP.size()));
             const Coordinate minP(vertexAtMinL ? Coordinate(layerFitResultMapP.begin()->second.GetL(), layerFitResultMapP.begin()->second.GetFitT()) :
@@ -162,14 +162,14 @@ void ConeBasedMergingAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ConeBasedMergingAlgorithm::SortCoordinates(const Coordinate &lhs, const Coordinate &rhs)
+bool ConeClusterMopUpAlgorithm::SortCoordinates(const Coordinate &lhs, const Coordinate &rhs)
 {
     return (lhs.second < rhs.second);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ConeBasedMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ConeClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "SlidingFitWindow", m_slidingFitWindow));

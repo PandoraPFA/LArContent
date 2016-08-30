@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMopUpAlgorithm.cc
  * 
- *  @brief  Implementation of the sliding cone pfo merging algorithm class.
+ *  @brief  Implementation of the sliding cone pfo mop up algorithm class.
  * 
  *  $Log: $
  */
@@ -14,14 +14,14 @@
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMergingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMopUpAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-SlidingConePfoMergingAlgorithm::SlidingConePfoMergingAlgorithm() :
+SlidingConePfoMopUpAlgorithm::SlidingConePfoMopUpAlgorithm() :
     m_useVertex(true),
     m_maxIterations(1000),
     m_maxHitsToConsider3DTrack(100),
@@ -40,14 +40,14 @@ SlidingConePfoMergingAlgorithm::SlidingConePfoMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode SlidingConePfoMergingAlgorithm::Run()
+StatusCode SlidingConePfoMopUpAlgorithm::Run()
 {
     const Vertex *pVertex(nullptr);
     this->GetInteractionVertex(pVertex);
 
     if (m_useVertex && !pVertex)
     {
-        std::cout << "SlidingConePfoMergingAlgorithm - interaction vertex not available for use." << std::endl;
+        std::cout << "SlidingConePfoMopUpAlgorithm - interaction vertex not available for use." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -71,7 +71,7 @@ StatusCode SlidingConePfoMergingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SlidingConePfoMergingAlgorithm::GetInteractionVertex(const Vertex *&pVertex) const
+void SlidingConePfoMopUpAlgorithm::GetInteractionVertex(const Vertex *&pVertex) const
 {
     if (!m_useVertex)
         return;
@@ -84,7 +84,7 @@ void SlidingConePfoMergingAlgorithm::GetInteractionVertex(const Vertex *&pVertex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SlidingConePfoMergingAlgorithm::GetThreeDClusters(ClusterVector &clusters3D, ClusterToPfoMap &clusterToPfoMap) const
+void SlidingConePfoMopUpAlgorithm::GetThreeDClusters(ClusterVector &clusters3D, ClusterToPfoMap &clusterToPfoMap) const
 {
     for (const std::string &pfoListName : m_inputPfoListNames)
     {
@@ -116,7 +116,7 @@ void SlidingConePfoMergingAlgorithm::GetThreeDClusters(ClusterVector &clusters3D
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SlidingConePfoMergingAlgorithm::GetClusterMergeMap(const Vertex *const pVertex, const ClusterVector &clusters3D,
+void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVertex, const ClusterVector &clusters3D,
     const ClusterToPfoMap &clusterToPfoMap, ClusterMergeMap &clusterMergeMap) const
 {
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -173,7 +173,7 @@ void SlidingConePfoMergingAlgorithm::GetClusterMergeMap(const Vertex *const pVer
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SlidingConePfoMergingAlgorithm::MakePfoMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
+bool SlidingConePfoMopUpAlgorithm::MakePfoMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
 {
     ClusterVector daughterClusters;
     for (const ClusterMergeMap::value_type &mapEntry : clusterMergeMap) daughterClusters.push_back(mapEntry.first);
@@ -220,7 +220,7 @@ bool SlidingConePfoMergingAlgorithm::MakePfoMerges(const ClusterToPfoMap &cluste
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SlidingConePfoMergingAlgorithm::ClusterMerge::operator<(const ClusterMerge &rhs) const
+bool SlidingConePfoMopUpAlgorithm::ClusterMerge::operator<(const ClusterMerge &rhs) const
 {
     if (!this->GetParentCluster() && !rhs.GetParentCluster())
         return false;
@@ -243,7 +243,7 @@ bool SlidingConePfoMergingAlgorithm::ClusterMerge::operator<(const ClusterMerge 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode SlidingConePfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode SlidingConePfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "InputPfoListNames", m_inputPfoListNames));
@@ -289,7 +289,7 @@ StatusCode SlidingConePfoMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     m_daughterListNames.insert(m_daughterListNames.end(), m_inputPfoListNames.begin(), m_inputPfoListNames.end());
 
-    return PfoMergingBaseAlgorithm::ReadSettings(xmlHandle);
+    return PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

@@ -66,11 +66,11 @@
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMergingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoRecoveryAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMopUpAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h"
@@ -103,10 +103,11 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/NearbyClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/SlidingConeClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
@@ -172,10 +173,10 @@ public:
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
         d("LArThreeDHitCreation",                   lar_content::ThreeDHitCreationAlgorithm::Factory)                           \
         d("LArThreeDLongitudinalTracks",            lar_content::ThreeDLongitudinalTracksAlgorithm::Factory)                    \
+        d("LArSlidingConePfoMopUp",                 lar_content::SlidingConePfoMopUpAlgorithm::Factory)                         \
+        d("LArShowerPfoMopUp",                      lar_content::ShowerPfoMopUpAlgorithm::Factory)                              \
+        d("LArVertexBasedPfoMopUp",                 lar_content::VertexBasedPfoMopUpAlgorithm::Factory)                         \
         d("LArParticleRecovery",                    lar_content::ParticleRecoveryAlgorithm::Factory)                            \
-        d("LArSlidingConePfoMerging",               lar_content::SlidingConePfoMergingAlgorithm::Factory)                       \
-        d("LArSplitShowerMerging",                  lar_content::SplitShowerMergingAlgorithm::Factory)                          \
-        d("LArVertexBasedPfoMerging",               lar_content::VertexBasedPfoMergingAlgorithm::Factory)                       \
         d("LArVertexBasedPfoRecovery",              lar_content::VertexBasedPfoRecoveryAlgorithm::Factory)                      \
         d("LArThreeDRemnants",                      lar_content::ThreeDRemnantsAlgorithm::Factory)                              \
         d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
@@ -192,10 +193,11 @@ public:
         d("LArSimpleClusterCreation",               lar_content::SimpleClusterCreationAlgorithm::Factory)                       \
         d("LArTrackClusterCreation",                lar_content::TrackClusterCreationAlgorithm::Factory)                        \
         d("LArClusteringParent",                    lar_content::ClusteringParentAlgorithm::Factory)                            \
-        d("LArBoundedClusterMerging",               lar_content::BoundedClusterMergingAlgorithm::Factory)                       \
-        d("LArConeBasedMerging",                    lar_content::ConeBasedMergingAlgorithm::Factory)                            \
-        d("LArIsolatedHitMerging",                  lar_content::IsolatedHitMergingAlgorithm::Factory)                          \
-        d("LArProximityBasedMerging",               lar_content::ProximityBasedMergingAlgorithm::Factory)                       \
+        d("LArBoundedClusterMopUp",                 lar_content::BoundedClusterMopUpAlgorithm::Factory)                         \
+        d("LArConeClusterMopUp",                    lar_content::ConeClusterMopUpAlgorithm::Factory)                            \
+        d("LArIsolatedClusterMopUp",                lar_content::IsolatedClusterMopUpAlgorithm::Factory)                        \
+        d("LArNearbyClusterMopUp",                  lar_content::NearbyClusterMopUpAlgorithm::Factory)                          \
+        d("LArSlidingConeClusterMopUp",             lar_content::SlidingConeClusterMopUpAlgorithm::Factory)                     \
         d("LArCosmicRayExtension",                  lar_content::CosmicRayExtensionAlgorithm::Factory)                          \
         d("LArCosmicRaySplitting",                  lar_content::CosmicRaySplittingAlgorithm::Factory)                          \
         d("LArDeltaRayExtension",                   lar_content::DeltaRayExtensionAlgorithm::Factory)                           \

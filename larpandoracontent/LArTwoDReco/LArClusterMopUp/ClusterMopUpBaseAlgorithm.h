@@ -8,7 +8,7 @@
 #ifndef LAR_CLUSTER_MOP_UP_BASE_ALGORITHM_H
 #define LAR_CLUSTER_MOP_UP_BASE_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArUtility/MopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -19,7 +19,7 @@ namespace lar_content
  *  @brief  ClusterMopUpBaseAlgorithm class
  */
 
-class ClusterMopUpBaseAlgorithm : public pandora::Algorithm
+class ClusterMopUpBaseAlgorithm : public MopUpBaseAlgorithm
 {
 public:
     /**
@@ -49,13 +49,13 @@ protected:
     virtual void GetPfoClusterLists(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
     /**
-     *  @brief  Get the two dimensional clusters contained in the input remant cluster lists, divided into three different views
+     *  @brief  Get the two dimensional clusters contained in the input remant/daughter cluster lists, divided into three different views
      * 
      *  @param  clusterListU to receive the list of clusters in the u view
      *  @param  clusterListV to receive the list of clusters in the v view
      *  @param  clusterListW to receive the list of clusters in the w view
      */
-    virtual void GetRemnantClusterLists(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
+    virtual void GetDaughterClusterLists(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
     /**
      *  @brief  Get the two dimensional clusters contained in an input cluster list, divided into three different views
@@ -87,21 +87,9 @@ protected:
      */
     virtual void MakeClusterMerges(const ClusterAssociationMap &clusterAssociationMap) const;
 
-    /**
-     *  @brief  Find the name of the list hosting a specific object
-     * 
-     *  @param  pT the address of the object
-     * 
-     *  @return the name of the list
-     */
-    template <typename T>
-    const std::string GetListName(const T *const pT) const;
-
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector   m_pfoListNames;                 ///< The list of pfo list names
-    pandora::StringVector   m_remnantClusterListNames;      ///< The list of remnant cluster list names
-
     bool                    m_excludePfosContainingTracks;  ///< Whether to exclude any pfos containing clusters flagged as fixed tracks
 };
 

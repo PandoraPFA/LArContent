@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMergingBaseAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.cc
  * 
- *  @brief  Implementation of the pfo merging algorithm base class.
+ *  @brief  Implementation of the pfo mop up algorithm base class.
  * 
  *  $Log: $
  */
@@ -10,14 +10,14 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMergingBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-void PfoMergingBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const pPfoToEnlarge, const ParticleFlowObject *const pPfoToDelete) const
+void PfoMopUpBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const pPfoToEnlarge, const ParticleFlowObject *const pPfoToDelete) const
 {
     if (pPfoToEnlarge == pPfoToDelete)
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
@@ -57,7 +57,7 @@ void PfoMergingBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *PfoMergingBaseAlgorithm::GetParentCluster(const ClusterList &clusterList, const HitType hitType) const
+const Cluster *PfoMopUpBaseAlgorithm::GetParentCluster(const ClusterList &clusterList, const HitType hitType) const
 {
     unsigned int mostHits(0);
     const Cluster *pBestParentCluster(nullptr);
@@ -81,36 +81,9 @@ const Cluster *PfoMergingBaseAlgorithm::GetParentCluster(const ClusterList &clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-const std::string PfoMergingBaseAlgorithm::GetListName(const T *const pT) const
+StatusCode PfoMopUpBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    std::string currentListName;
-    const std::MANAGED_CONTAINER<const T*> *pCurrentList(nullptr);
-    (void) PandoraContentApi::GetCurrentList(*this, pCurrentList, currentListName);
-
-    if (pCurrentList && (pCurrentList->count(pT)))
-        return currentListName;
-
-    for (const std::string &listName : m_daughterListNames)
-    {
-        const std::MANAGED_CONTAINER<const T*> *pList(nullptr);
-        (void) PandoraContentApi::GetList(*this, listName, pList);
-
-        if (pList && (pList->count(pT)))
-            return listName;
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode PfoMergingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "DaughterListNames", m_daughterListNames));
-
-    return STATUS_CODE_SUCCESS;
+    return MopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

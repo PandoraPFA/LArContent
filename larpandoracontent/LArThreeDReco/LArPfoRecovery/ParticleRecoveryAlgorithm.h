@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/ParticleRecoveryAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h
  * 
  *  @brief  Header file for the track recovery algorithm class.
  * 
