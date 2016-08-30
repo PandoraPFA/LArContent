@@ -48,8 +48,10 @@ private:
          *  @param  pParentCluster the address of the candidate parent (shower) cluster
          *  @param  boundedFraction1 the bounded fraction for algorithm-specified cone angle 1
          *  @param  boundedFraction2 the bounded fraction for algorithm-specified cone angle 2
+         *  @param  meanRT the mean transverse distance of all hits (whether contained or not)
          */
-        ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2);
+        ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2,
+            const float meanRT);
 
         /**
          *  @brief  Get the address of the candidate parent (shower) cluster
@@ -73,6 +75,13 @@ private:
         float GetBoundedFraction2() const;
 
         /**
+         *  @brief  Get the mean transverse distance of all hits (whether contained or not)
+         *
+         *  @return the mean transverse distance of all hits (whether contained or not)
+         */
+        float GetMeanRT() const;
+
+        /**
          *  @brief  operator <
          * 
          *  @param  rhs object for comparison
@@ -85,6 +94,7 @@ private:
         const pandora::Cluster *m_pParentCluster;       ///< The address of the candidate parent (shower) cluster
         float                   m_boundedFraction1;     ///< The bounded fraction for algorithm-specified cone angle 1
         float                   m_boundedFraction2;     ///< The bounded fraction for algorithm-specified cone angle 2
+        float                   m_meanRT;               ///< The mean transverse distance of all hits (whether contained or not)
     };
 
     typedef std::vector<ClusterMerge> ClusterMergeList;
@@ -108,6 +118,13 @@ private:
      */
     void GetThreeDClusters(pandora::ClusterVector &clusters3D, ClusterToPfoMap &clusterToPfoMap) const;
 
+    /**
+     *  @brief  Get all available 2d clusters contained in the input cluster lists
+     * 
+     *  @param  availableClusters2D to receive the sorted list of available 2d clusters
+     */
+    void GetAvailableTwoDClusters(pandora::ClusterVector &availableClusters2D) const;
+
     typedef std::unordered_map<const pandora::Cluster*, ClusterMergeList> ClusterMergeMap;
 
     /**
@@ -115,21 +132,21 @@ private:
      * 
      *  @param  pVertex the neutrino interaction vertex, if available
      *  @param  clusters3D the sorted list of 3d clusters
-     *  @param  clusterToPfoMap the mapping from 3d cluster to pfo
+     *  @param  availableClusters2D the sorted list of available 2d clusters
      *  @param  clusterMergeMap to receive the populated cluster merge map
      */
-    void GetClusterMergeMap(const pandora::Vertex *const pVertex, const pandora::ClusterVector &clusters3D, const ClusterToPfoMap &clusterToPfoMap,
+    void GetClusterMergeMap(const pandora::Vertex *const pVertex, const pandora::ClusterVector &clusters3D, const pandora::ClusterVector &availableClusters2D,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
-     *  @brief  Make pfo merges based on the provided cluster merge map
+     *  @brief  Make cluster merges based on the provided cluster merge map
      * 
      *  @param  clusterToPfoMap the mapping from 3d cluster to pfo
      *  @param  clusterMergeMap the populated cluster merge map
      * 
-     *  @return whether a pfo merge has been made
+     *  @return whether a cluster merge has been made
      */
-    bool MakePfoMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const;
+    bool MakeClusterMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -161,10 +178,12 @@ inline pandora::Algorithm *SlidingConeClusterMopUpAlgorithm::Factory::CreateAlgo
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2) :
+inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1,
+        const float boundedFraction2, const float meanRT) :
     m_pParentCluster(pParentCluster),
     m_boundedFraction1(boundedFraction1),
-    m_boundedFraction2(boundedFraction2)
+    m_boundedFraction2(boundedFraction2),
+    m_meanRT(meanRT)
 {
 }
 
@@ -187,6 +206,13 @@ inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetBoundedFraction1
 inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetBoundedFraction2() const
 {
     return m_boundedFraction2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetMeanRT() const
+{
+    return m_meanRT;
 }
 
 } // namespace lar_content

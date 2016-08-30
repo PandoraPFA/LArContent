@@ -53,20 +53,17 @@ StatusCode SlidingConeClusterMopUpAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    unsigned int nIterations(0);
+    ClusterVector clusters3D;
+    ClusterToPfoMap clusterToPfoMap;
+    this->GetThreeDClusters(clusters3D, clusterToPfoMap);
 
-    while (nIterations++ < m_maxIterations)
-    {
-        ClusterVector clusters3D;
-        ClusterToPfoMap clusterToPfoMap;
-        this->GetThreeDClusters(clusters3D, clusterToPfoMap);
+    ClusterVector availableClusters2D;
+    this->GetAvailableTwoDClusters(availableClusters2D);
 
-        ClusterMergeMap clusterMergeMap;
-        this->GetClusterMergeMap(pVertex, clusters3D, clusterToPfoMap, clusterMergeMap);
+    ClusterMergeMap clusterMergeMap;
+    this->GetClusterMergeMap(pVertex, clusters3D, availableClusters2D, clusterMergeMap);
 
-        if (!this->MakePfoMerges(clusterToPfoMap, clusterMergeMap))
-            break;
-    }
+    (void) this->MakeClusterMerges(clusterToPfoMap, clusterMergeMap);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -105,6 +102,9 @@ void SlidingConeClusterMopUpAlgorithm::GetThreeDClusters(ClusterVector &clusters
                 if (LArPfoHelper::IsTrack(pPfo) && (pCluster3D->GetNCaloHits() > m_maxHitsToConsider3DTrack))
                     continue;
 
+                if (LArPfoHelper::IsShower(pPfo) && (pCluster3D->GetNCaloHits() < m_minHitsToConsider3DShower))
+                    continue;
+
                 if (!clusterToPfoMap.insert(ClusterToPfoMap::value_type(pCluster3D, pPfo)).second)
                     throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
@@ -118,16 +118,36 @@ void SlidingConeClusterMopUpAlgorithm::GetThreeDClusters(ClusterVector &clusters
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void SlidingConeClusterMopUpAlgorithm::GetAvailableTwoDClusters(ClusterVector &availableClusters2D) const
+{
+    for (const std::string &clusterListName : m_daughterListNames)
+    {
+        const ClusterList *pClusterList(nullptr);
+
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, clusterListName, pClusterList))
+            continue;
+
+        for (const Cluster *const pCluster : *pClusterList)
+        {
+            if (!PandoraContentApi::IsAvailable(*this, pCluster))
+                continue;
+
+            availableClusters2D.push_back(pCluster);
+        }
+    }
+
+    std::sort(availableClusters2D.begin(), availableClusters2D.end(), LArClusterHelper::SortByNHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVertex, const ClusterVector &clusters3D,
-    const ClusterToPfoMap &clusterToPfoMap, ClusterMergeMap &clusterMergeMap) const
+    const ClusterVector &availableClusters2D, ClusterMergeMap &clusterMergeMap) const
 {
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (const Cluster *const pShowerCluster : clusters3D)
     {
-        if ((pShowerCluster->GetNCaloHits() < m_minHitsToConsider3DShower) || !LArPfoHelper::IsShower(clusterToPfoMap.at(pShowerCluster)))
-            continue;
-
         float coneLength(0.f);
         SimpleConeList simpleConeList;
 
@@ -147,18 +167,56 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
         }
         catch (const StatusCodeException &) {continue;}
 
-        for (const Cluster *const pNearbyCluster : clusters3D)
+        // TODO - refactor
+        for (const Cluster *const pNearbyCluster : availableClusters2D)
         {
-            if (pNearbyCluster == pShowerCluster)
-                continue;
-
-            ClusterMerge bestClusterMerge(nullptr, 0.f, 0.f);
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pNearbyCluster));
+            ClusterMerge bestClusterMerge(nullptr, 0.f, 0.f, 0.f);
 
             for (const SimpleCone &simpleCone : simpleConeList)
             {
-                const float boundedFraction1(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle1));
-                const float boundedFraction2(simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle2));
-                const ClusterMerge clusterMerge(pShowerCluster, boundedFraction1, boundedFraction2);
+                // TODO quick way of avoiding calculation
+                const CartesianVector &coneApex3D(simpleCone.GetConeApex());
+                const CartesianVector coneBaseCentre3D(simpleCone.GetConeApex() + simpleCone.GetConeDirection() * coneLength);
+
+                const CartesianVector coneApex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), coneApex3D, hitType));
+                const CartesianVector coneBaseCentre2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), coneBaseCentre3D, hitType));
+                const CartesianVector coneDirection2D((coneBaseCentre2D - coneApex2D).GetUnitVector());
+
+                float rTSum(0.f);
+                unsigned int nMatchedHits1(0), nMatchedHits2(0);
+                const unsigned int nClusterHits(pNearbyCluster->GetNCaloHits());
+
+                const OrderedCaloHitList &orderedCaloHitList(pNearbyCluster->GetOrderedCaloHitList());
+
+                for (const auto &mapEntry : orderedCaloHitList)
+                {
+                    for (const CaloHit *pCaloHit : *(mapEntry.second))
+                    {
+                        if (hitType != pCaloHit->GetHitType())
+                            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                        const CartesianVector displacement(pCaloHit->GetPositionVector() - coneApex2D);
+                        const float rL(displacement.GetDotProduct(coneDirection2D));
+                        const float rT(displacement.GetCrossProduct(coneDirection2D).GetMagnitude());
+                        rTSum += rT;
+
+                        if ((rL < 0.f) || (rL > coneLength))
+                            continue;
+
+                        if (rL * m_coneTanHalfAngle1 > rT)
+                            ++nMatchedHits1;
+
+                        if (rL * m_coneTanHalfAngle2 > rT)
+                            ++nMatchedHits2;
+                    }
+                }
+
+                const float boundedFraction1((nClusterHits > 0) ? static_cast<float>(nMatchedHits1) / static_cast<float>(nClusterHits) : 0.f);
+                const float boundedFraction2((nClusterHits > 0) ? static_cast<float>(nMatchedHits2) / static_cast<float>(nClusterHits) : 0.f);
+                const float meanRT((nClusterHits > 0) ? rTSum / static_cast<float>(nClusterHits) : 0.f);
+
+                const ClusterMerge clusterMerge(pShowerCluster, boundedFraction1, boundedFraction2, meanRT);
 
                 if (clusterMerge < bestClusterMerge)
                     bestClusterMerge = clusterMerge;
@@ -175,48 +233,63 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SlidingConeClusterMopUpAlgorithm::MakePfoMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
+bool SlidingConeClusterMopUpAlgorithm::MakeClusterMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
 {
     ClusterVector daughterClusters;
     for (const ClusterMergeMap::value_type &mapEntry : clusterMergeMap) daughterClusters.push_back(mapEntry.first);
     std::sort(daughterClusters.begin(), daughterClusters.end(), LArClusterHelper::SortByNHits);
-
-    bool pfosMerged(false);
-    ClusterReplacementMap clusterReplacementMap;
+typedef std::map<const Cluster*, ClusterList> HackMap;
+HackMap hackMap;
+for (ClusterVector::const_reverse_iterator rIter = daughterClusters.rbegin(), rIterEnd = daughterClusters.rend(); rIter != rIterEnd; ++rIter)
+{
+    const Cluster *const pDaughterCluster(*rIter);
+    const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
+    const Cluster *pParentCluster3D(clusterMergeMap.at(pDaughterCluster).at(0).GetParentCluster());
+    const Cluster *pParentCluster(this->GetParentCluster(clusterToPfoMap.at(pParentCluster3D)->GetClusterList(), daughterHitType));
+    hackMap[pParentCluster].insert(pDaughterCluster);
+}
+for (const auto &hackMapEntry : hackMap)
+{
+    std::cout << "MakeClusterMerges, nParents " << hackMap.size() << ", thisHitType " << (hackMapEntry.first ? LArClusterHelper::GetClusterHitType(hackMapEntry.first) : ECAL) << std::endl;
+    ClusterList temp3; if (hackMapEntry.first) temp3.insert(hackMapEntry.first);
+    ClusterList temp4; temp4.insert(hackMapEntry.second.begin(), hackMapEntry.second.end());
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "ParentCluster", RED);
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "DaughterClusters", BLUE);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+}
+    bool clustersMerged(false);
 
     for (ClusterVector::const_reverse_iterator rIter = daughterClusters.rbegin(), rIterEnd = daughterClusters.rend(); rIter != rIterEnd; ++rIter)
     {
         const Cluster *const pDaughterCluster(*rIter);
+        const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
 
-        if (clusterReplacementMap.count(pDaughterCluster))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+        const Cluster *const pParentCluster3D(clusterMergeMap.at(pDaughterCluster).at(0).GetParentCluster());
+        const Pfo *const pParentPfo(clusterToPfoMap.at(pParentCluster3D));
+        const Cluster *const pParentCluster(this->GetParentCluster(pParentPfo->GetClusterList(), daughterHitType));
 
-        const Cluster *pParentCluster(clusterMergeMap.at(pDaughterCluster).at(0).GetParentCluster());
-
-        if (clusterReplacementMap.count(pParentCluster))
-            pParentCluster = clusterReplacementMap.at(pParentCluster);
-
-        // ATTN Sign there was a reciprocal relationship in the cluster merge map (already actioned once)
-        if (pDaughterCluster == pParentCluster)
-            continue;
-
-        // Key book-keeping on clusters and use cluster->pfo lookup
-        const Pfo *const pDaughterPfo(clusterToPfoMap.at(pDaughterCluster));
-        const Pfo *const pParentPfo(clusterToPfoMap.at(pParentCluster));
-        this->MergeAndDeletePfos(pParentPfo, pDaughterPfo);
-        pfosMerged = true;
-
-        // Simple/placeholder book-keeping for reciprocal relationships and progressive merges 
-        clusterReplacementMap[pDaughterCluster] = pParentCluster;
-
-        for (ClusterReplacementMap::value_type &mapEntry : clusterReplacementMap)
+        if (pParentCluster)
         {
-            if (pDaughterCluster == mapEntry.second)
-                mapEntry.second = pParentCluster;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
+                this->GetListName(pParentCluster), this->GetListName(pDaughterCluster)));
         }
+        else
+        {
+            std::cout << "Adding missing cluster! " << std::endl;
+PfoList pfoList; pfoList.insert(pParentPfo);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "pParentPfo", RED);
+ClusterList clusterList; clusterList.insert(pDaughterCluster);
+PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterList, "pDaughterCluster", BLUE);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pParentPfo, pDaughterCluster));
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "pParentPfo", RED);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        }
+
+        clustersMerged = true;
     }
 
-    return pfosMerged;
+    return clustersMerged;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,6 +311,9 @@ bool SlidingConeClusterMopUpAlgorithm::ClusterMerge::operator<(const ClusterMerg
 
     if (std::fabs(this->GetBoundedFraction2() - rhs.GetBoundedFraction2()) > std::numeric_limits<float>::epsilon())
         return (this->GetBoundedFraction2() > rhs.GetBoundedFraction2());
+
+    if (std::fabs(this->GetMeanRT() - rhs.GetMeanRT()) > std::numeric_limits<float>::epsilon())
+        return (this->GetMeanRT() < rhs.GetMeanRT());
 
     return LArClusterHelper::SortByNHits(this->GetParentCluster(), rhs.GetParentCluster());
 }
