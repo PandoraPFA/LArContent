@@ -361,9 +361,11 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     //---------------------------------------------------------TOP 5--------------------------------------------------------------------
     float minimalHitToMCVertexDistance(-1.f);
     float top5VertexOffset(-1.f), top5VertexOffsetX(-1.f), top5VertexOffsetY(-1.f), top5VertexOffsetZ(-1.f);
+    float worstTop5VertexOffset(-1.f), worstTop5VertexOffsetX(-1.f), worstTop5VertexOffsetY(-1.f), worstTop5VertexOffsetZ(-1.f);
     float bestVertexOffset(-1.f), bestVertexOffsetX(-1.f), bestVertexOffsetY(-1.f), bestVertexOffsetZ(-1.f);
     int trueVertexInGap(0); //binary bool
     int nViewsInGap(0);
+    int nVerticesInTop(0);
     
     if (this->IsVertexInGap(mcNeutrinoVertexPosition, TPC_VIEW_U))
         nViewsInGap++;
@@ -385,7 +387,7 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         std::vector<float> top5VerticesDR;
         std::vector<float> allVerticesDR;
         
-        if (!pTop5VertexList->empty())
+        if (pTop5VertexList != NULL)
         {
             for (const Vertex *const pVertex : (*pTop5VertexList))
             {
@@ -402,7 +404,11 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             }
             
             if (!top5VerticesDR.empty())
+            {
                 top5VertexOffset = (*std::min_element(top5VerticesDR.begin(), top5VerticesDR.end()));
+                worstTop5VertexOffset = (*std::max_element(top5VerticesDR.begin(), top5VerticesDR.end()));
+                nVerticesInTop = top5VerticesDR.size();
+            }
             
             for (const Vertex *const pVertex : (*pTop5VertexList))
             {
@@ -413,12 +419,19 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
                     top5VertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
                     top5VertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
                 }
+                
+                if (vertexDR == worstTop5VertexOffset)
+                {
+                    worstTop5VertexOffsetX = (mcNeutrinoVertexPosition.GetX() - pVertex->GetPosition().GetX());
+                    worstTop5VertexOffsetY = (mcNeutrinoVertexPosition.GetY() - pVertex->GetPosition().GetY());
+                    worstTop5VertexOffsetZ = (mcNeutrinoVertexPosition.GetZ() - pVertex->GetPosition().GetZ());
+                }
             }
             
             std::cout << "Top 5 vertex DR: " << top5VertexOffset << " with DX: " << top5VertexOffsetX << " DY: " << top5VertexOffsetY << " DZ: " << top5VertexOffsetZ << std::endl;
         }
         
-        if (!pAllVerticesList->empty())
+        if (pAllVerticesList != NULL)
         {
             
             for (const Vertex *const pVertex : (*pAllVerticesList))
@@ -467,12 +480,17 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
 //---------------------------------------------------------TOP 5--------------------------------------------------------------------
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "minimalHitToMCVertexDistance", minimalHitToMCVertexDistance));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nVerticesInTop", nVerticesInTop));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueVertexInGap", trueVertexInGap));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffset", top5VertexOffset));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "worstTop5VertexOffset", worstTop5VertexOffset));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffset", bestVertexOffset));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffsetX", top5VertexOffsetX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffsetY", top5VertexOffsetY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "top5VertexOffsetZ", top5VertexOffsetZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "worstTop5VertexOffsetX", worstTop5VertexOffsetX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "worstTop5VertexOffsetY", worstTop5VertexOffsetY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "worstTop5VertexOffsetZ", worstTop5VertexOffsetZ));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffsetX", bestVertexOffsetX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffsetY", bestVertexOffsetY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestVertexOffsetZ", bestVertexOffsetZ));
