@@ -31,11 +31,11 @@ SlidingConeClusterMopUpAlgorithm::SlidingConeClusterMopUpAlgorithm() :
     m_halfWindowLayers(20),
     m_nConeFitLayers(20),
     m_nConeFits(5),
-    m_coneLengthMultiplier(7.f),
+    m_coneLengthMultiplier(3.f),
     m_maxConeLength(126.f),
-    m_coneTanHalfAngle1(0.5f),
+    m_coneTanHalfAngle1(0.4f),
     m_coneBoundedFraction1(0.5f),
-    m_coneTanHalfAngle2(0.75f),
+    m_coneTanHalfAngle2(0.5f),
     m_coneBoundedFraction2(0.75f)
 {
 }
@@ -181,7 +181,9 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
 
                 const CartesianVector coneApex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), coneApex3D, hitType));
                 const CartesianVector coneBaseCentre2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), coneBaseCentre3D, hitType));
+
                 const CartesianVector coneDirection2D((coneBaseCentre2D - coneApex2D).GetUnitVector());
+                const float coneLength2D((coneBaseCentre2D - coneApex2D).GetMagnitude());
 
                 float rTSum(0.f);
                 unsigned int nMatchedHits1(0), nMatchedHits2(0);
@@ -201,7 +203,7 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
                         const float rT(displacement.GetCrossProduct(coneDirection2D).GetMagnitude());
                         rTSum += rT;
 
-                        if ((rL < 0.f) || (rL > coneLength))
+                        if ((rL < 0.f) || (rL > coneLength2D))
                             continue;
 
                         if (rL * m_coneTanHalfAngle1 > rT)

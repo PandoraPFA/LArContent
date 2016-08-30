@@ -19,8 +19,8 @@ namespace lar_content
 
 IsolatedClusterMopUpAlgorithm::IsolatedClusterMopUpAlgorithm() :
     m_maxCaloHitsInCluster(10),
-    m_hitLayerSearchWindow(10),
-    m_maxHitClusterDistance(10.f)
+    m_hitLayerSearchWindow(500),
+    m_maxHitClusterDistance(500.f)
 {
 }
 
