@@ -131,11 +131,8 @@ void ClusterMopUpBaseAlgorithm::MakeClusterMerges(const ClusterAssociationMap &c
         if (!pBestPfoCluster)
             continue;
 
-        const std::string listNameP(this->GetListName(pBestPfoCluster));
-        const std::string listNameR(this->GetListName(pRemnantCluster));
-
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestPfoCluster, pRemnantCluster,
-            listNameP, listNameR));
+            this->GetListName(pBestPfoCluster), this->GetListName(pRemnantCluster)));
     }
 }
 

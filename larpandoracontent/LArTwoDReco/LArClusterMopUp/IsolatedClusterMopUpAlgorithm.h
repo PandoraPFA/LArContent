@@ -17,6 +17,11 @@
 namespace lar_content
 {
 
+template<typename, unsigned int> class KDTreeLinkerAlgo;
+template<typename, unsigned int> class KDTreeNodeInfoT;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  IsolatedClusterMopUpAlgorithm class
  */
@@ -59,21 +64,17 @@ private:
      */
     void GetCaloHitToClusterMap(const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList, CaloHitToClusterMap &caloHitToClusterMap) const;
 
-    /**
-     *  @brief  Get closest distance between a specified calo hit and a non-isolated hit in a specified cluster
-     * 
-     *  @param  pCluster address of the cluster
-     *  @param  pCaloHit address of the calo hit
-     * 
-     *  @return The closest distance between the calo hit and a non-isolated hit in the cluster
-     */
-    float GetDistanceToHit(const pandora::Cluster *const pCluster, const pandora::CaloHit *const pCaloHit) const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef std::vector<HitKDNode2D> HitKDNode2DList;
+
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+
     unsigned int    m_maxCaloHitsInCluster;     ///< The maximum number of hits in a cluster to be dissolved
-    int             m_hitLayerSearchWindow;     ///< The layer search window used (for speed) when calculating hit to cluster distances
     float           m_maxHitClusterDistance;    ///< The maximum hit to cluster distance for isolated hit merging
+    bool            m_addHitsAsIsolated;        ///< Whether to add hits to clusters as "isolated" (don't contribute to spatial properties)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
