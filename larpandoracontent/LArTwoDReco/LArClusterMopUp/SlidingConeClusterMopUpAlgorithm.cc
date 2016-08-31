@@ -63,7 +63,7 @@ StatusCode SlidingConeClusterMopUpAlgorithm::Run()
     ClusterMergeMap clusterMergeMap;
     this->GetClusterMergeMap(pVertex, clusters3D, availableClusters2D, clusterMergeMap);
 
-    (void) this->MakeClusterMerges(clusterToPfoMap, clusterMergeMap);
+    this->MakeClusterMerges(clusterToPfoMap, clusterMergeMap);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -235,38 +235,88 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SlidingConeClusterMopUpAlgorithm::MakeClusterMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
+void SlidingConeClusterMopUpAlgorithm::MakeClusterMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
 {
     ClusterVector daughterClusters;
     for (const ClusterMergeMap::value_type &mapEntry : clusterMergeMap) daughterClusters.push_back(mapEntry.first);
     std::sort(daughterClusters.begin(), daughterClusters.end(), LArClusterHelper::SortByNHits);
-typedef std::map<const Cluster*, ClusterList> HackMap;
-HackMap hackMap;
+
+typedef std::map<const Cluster*, ClusterList> ClusterToClusterListMap; ClusterToClusterListMap parentTo2DDaughters;
+typedef std::map<const Cluster*, const Cluster*> ClusterToClusterMap; ClusterToClusterMap parent2DToParent3D;
 for (ClusterVector::const_reverse_iterator rIter = daughterClusters.rbegin(), rIterEnd = daughterClusters.rend(); rIter != rIterEnd; ++rIter)
 {
     const Cluster *const pDaughterCluster(*rIter);
     const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
     const Cluster *pParentCluster3D(clusterMergeMap.at(pDaughterCluster).at(0).GetParentCluster());
     const Cluster *pParentCluster(this->GetParentCluster(clusterToPfoMap.at(pParentCluster3D)->GetClusterList(), daughterHitType));
-    hackMap[pParentCluster].insert(pDaughterCluster);
+    parentTo2DDaughters[pParentCluster].insert(pDaughterCluster);
+    parent2DToParent3D[pParentCluster] = pParentCluster3D;
 }
-for (const auto &hackMapEntry : hackMap)
+for (const auto &mapEntry : parentTo2DDaughters)
 {
-    std::cout << "MakeClusterMerges, nParents " << hackMap.size() << ", thisHitType " << (hackMapEntry.first ? LArClusterHelper::GetClusterHitType(hackMapEntry.first) : ECAL) << std::endl;
-    ClusterList temp3; if (hackMapEntry.first) temp3.insert(hackMapEntry.first);
-    ClusterList temp4; temp4.insert(hackMapEntry.second.begin(), hackMapEntry.second.end());
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "ParentCluster", RED);
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "DaughterClusters", BLUE);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    const Cluster *const pParentCluster3d(parent2DToParent3D.at(mapEntry.first));
+    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const ThreeDSlidingConeFitResult slidingConeFitResult3D(pParentCluster3d, m_halfWindowLayers, layerPitch);
+
+    const CartesianVector &minLayerPosition(slidingConeFitResult3D.GetSlidingFitResult().GetGlobalMinLayerPosition());
+    const CartesianVector &maxLayerPosition(slidingConeFitResult3D.GetSlidingFitResult().GetGlobalMaxLayerPosition());
+    const float coneLength = std::min(m_coneLengthMultiplier * (maxLayerPosition - minLayerPosition).GetMagnitude(), m_maxConeLength);
+
+    const Vertex *pVertex(nullptr);
+    this->GetInteractionVertex(pVertex);
+    const float vertexToMinLayer(!pVertex ? 0.f : (pVertex->GetPosition() - minLayerPosition).GetMagnitude());
+    const float vertexToMaxLayer(!pVertex ? 0.f : (pVertex->GetPosition() - maxLayerPosition).GetMagnitude());
+    const ConeSelection coneSelection(!pVertex ? CONE_BOTH_DIRECTIONS : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY : CONE_BACKWARD_ONLY);
+
+    SimpleConeList simpleConeList;
+    slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList);
+
+    const HitType hitType(mapEntry.first ? LArClusterHelper::GetClusterHitType(mapEntry.first) : LArClusterHelper::GetClusterHitType(*(mapEntry.second.begin())));
+
+    for (const SimpleCone &simpleCone : simpleConeList)
+    {
+        const CartesianVector &coneApex3D(simpleCone.GetConeApex());
+        const CartesianVector coneBaseCentre3D(simpleCone.GetConeApex() + simpleCone.GetConeDirection() * coneLength);
+        const CartesianVector baseDir3D(simpleCone.GetConeDirection().GetCrossProduct(CartesianVector(0.f, 1.f, 0.f)).GetUnitVector());
+        const float baseDisp3D(coneLength * m_coneTanHalfAngle2);
+        const CartesianVector baseMarkerA3D(coneBaseCentre3D + (baseDir3D * baseDisp3D));
+        const CartesianVector baseMarkerB3D(coneBaseCentre3D + (baseDir3D * (-1.f * baseDisp3D)));
+
+        const CartesianVector coneApex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), coneApex3D, hitType));
+        const CartesianVector coneBaseCentre2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), coneBaseCentre3D, hitType));
+
+        const CartesianVector coneDirection2D((coneBaseCentre2D - coneApex2D).GetUnitVector());
+        const float coneLength2D((coneBaseCentre2D - coneApex2D).GetMagnitude());
+        const CartesianVector baseDir2D(coneDirection2D.GetCrossProduct(CartesianVector(0.f, 1.f, 0.f)).GetUnitVector());
+        const float baseDisp2D(coneLength2D * m_coneTanHalfAngle2);
+        const CartesianVector baseMarkerA2D(coneBaseCentre2D + (baseDir2D * baseDisp2D));
+        const CartesianVector baseMarkerB2D(coneBaseCentre2D + (baseDir2D * (-1.f * baseDisp2D)));
+
+        std::cout << "MakeClusterMerges, nParents " << parentTo2DDaughters.size() << ", thisHitType " << (mapEntry.first ? LArClusterHelper::GetClusterHitType(mapEntry.first) : ECAL) << std::endl;
+        ClusterList temp3; if (mapEntry.first) temp3.insert(mapEntry.first);
+        ClusterList temp4; temp4.insert(mapEntry.second.begin(), mapEntry.second.end());
+        ClusterList temp5; temp5.insert(pParentCluster3d);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "ParentCluster2D", RED);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp5, "ParentCluster3D", GREEN);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "DaughterClusters", BLUE);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &coneApex3D, "coneApex3D", CYAN, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &coneBaseCentre3D, "coneBaseCentre3D", CYAN, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &baseMarkerA3D, "baseMarkerA3D", CYAN, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &baseMarkerB3D, "baseMarkerB3D", CYAN, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &coneApex2D, "coneApex2D", MAGENTA, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &coneBaseCentre2D, "coneBaseCentre2D", MAGENTA, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &baseMarkerA2D, "baseMarkerA2D", MAGENTA, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &baseMarkerB2D, "baseMarkerB2D", MAGENTA, 1);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
 }
-    bool clustersMerged(false);
 
     for (ClusterVector::const_reverse_iterator rIter = daughterClusters.rbegin(), rIterEnd = daughterClusters.rend(); rIter != rIterEnd; ++rIter)
     {
         const Cluster *const pDaughterCluster(*rIter);
         const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
-
         const Cluster *const pParentCluster3D(clusterMergeMap.at(pDaughterCluster).at(0).GetParentCluster());
+
         const Pfo *const pParentPfo(clusterToPfoMap.at(pParentCluster3D));
         const Cluster *const pParentCluster(this->GetParentCluster(pParentPfo->GetClusterList(), daughterHitType));
 
@@ -277,21 +327,9 @@ for (const auto &hackMapEntry : hackMap)
         }
         else
         {
-            std::cout << "Adding missing cluster! " << std::endl;
-PfoList pfoList; pfoList.insert(pParentPfo);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "pParentPfo", RED);
-ClusterList clusterList; clusterList.insert(pDaughterCluster);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterList, "pDaughterCluster", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pParentPfo, pDaughterCluster));
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "pParentPfo", RED);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
         }
-
-        clustersMerged = true;
     }
-
-    return clustersMerged;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -143,10 +143,8 @@ private:
      * 
      *  @param  clusterToPfoMap the mapping from 3d cluster to pfo
      *  @param  clusterMergeMap the populated cluster merge map
-     * 
-     *  @return whether a cluster merge has been made
      */
-    bool MakeClusterMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const;
+    void MakeClusterMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
