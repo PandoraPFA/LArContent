@@ -54,6 +54,12 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const Cluster *const pClu
     const CartesianVector &minLayerPosition3D(m_slidingFitResult.GetGlobalMinLayerPosition());
     const CartesianVector &maxLayerPosition3D(m_slidingFitResult.GetGlobalMaxLayerPosition());
 
+    const TwoDSlidingFitResult &fitResult1(m_slidingFitResult.GetFirstFitResult());
+    const TwoDSlidingFitResult &fitResult2(m_slidingFitResult.GetSecondFitResult());
+
+    const LayerFitContributionMap &contributionMap1(fitResult1.GetLayerFitContributionMap());
+    const LayerFitContributionMap &contributionMap2(fitResult2.GetLayerFitContributionMap());
+
     const unsigned int nSteps(static_cast<unsigned int>((maxLayerPosition3D - minLayerPosition3D).GetMagnitude() / slidingFitLayerPitch));
 
     for (unsigned int iStep = 0; iStep < nSteps; ++iStep)
@@ -68,6 +74,10 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const Cluster *const pClu
             {
                 continue;
             }
+
+            // ATTN Do not include layers without contributions in track state map (contain only interpolations)
+            if (!contributionMap1.count(fitResult1.GetLayer(rL)) && !contributionMap2.count(fitResult2.GetLayer(rL)))
+                continue;
 
             (void) m_trackStateMap.insert(TrackStateMap::value_type(iStep, TrackState(fitPosition3D, fitDirection3D)));
         }
