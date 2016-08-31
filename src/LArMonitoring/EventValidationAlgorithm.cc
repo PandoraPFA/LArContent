@@ -428,7 +428,7 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
                 }
             }
             
-            std::cout << "Top 5 vertex DR: " << top5VertexOffset << " with DX: " << top5VertexOffsetX << " DY: " << top5VertexOffsetY << " DZ: " << top5VertexOffsetZ << std::endl;
+            std::cout << "Top " << top5VerticesDR.size() << " vertex DR: " << top5VertexOffset << " with DX: " << top5VertexOffsetX << " DY: " << top5VertexOffsetY << " DZ: " << top5VertexOffsetZ << std::endl;
         }
         
         if (pAllVerticesList != NULL)

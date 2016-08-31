@@ -142,6 +142,11 @@ private:
      */
     void StoreTopAllInformation(const pandora::VertexList* pTopologyVertexList, pandora::VertexList selectedVertexList, const pandora::VertexList* pEnergyVertexList);
     
+    
+    void GetClusters(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW);
+    const pandora::Cluster* GetLongestCluster(pandora::ClusterList &clusterList);
+    void FilterTop5Vertices(VertexScoringTool::VertexScoreList &top5VertexScoreList, VertexScoringTool::VertexScoreList &filteredTop5VertexScoreList);
+    
     //--------------------------------------------------------------------------------------------------------------------------------------
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -175,6 +180,9 @@ private:
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     
     bool            m_enableClustering;
+    
+    bool            m_directionFilter;
+    bool            m_beamWeightFilter;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

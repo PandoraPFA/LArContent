@@ -257,8 +257,8 @@ void VertexScoringTool::FilterVertexList(const VertexList *const pInputVertexLis
 
 void VertexScoringTool::GetBeamConstants(const VertexList &vertexList, BeamConstants &beamConstants) const
 {
-//    if (!m_beamMode)
-//        return;
+    //if (!m_beamMode)
+    //    return;
 
     if (vertexList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
