@@ -75,6 +75,15 @@ public:
     float GetConeTanHalfAngle() const;
 
     /**
+     *  @brief  Get the mean transverse distance to all hits in a cluster (whether contained or not)
+     * 
+     *  @param  pCluster the address of the cluster
+     * 
+     *  @return the mean transverse distance to all hits (whether contained or not)
+     */
+    float GetMeanRT(const pandora::Cluster *const pCluster) const;
+
+    /**
      *  @brief  Get the fraction of hits in a provided cluster that are bounded within the cone, using fitted cone angle and length
      * 
      *  @param  pCluster the address of the cluster

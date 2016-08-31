@@ -17,11 +17,31 @@ using namespace pandora;
 namespace lar_content
 {
 
+float SimpleCone::GetMeanRT(const Cluster *const pCluster) const
+{
+    float rTSum(0.f);
+    const unsigned int nClusterHits(pCluster->GetNCaloHits());
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    for (const auto &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *pCaloHit : *(mapEntry.second))
+        {
+            const CartesianVector displacement(pCaloHit->GetPositionVector() - this->GetConeApex());
+            const float rT(displacement.GetCrossProduct(this->GetConeDirection()).GetMagnitude());
+            rTSum += rT;
+        }
+    }
+
+    return ((nClusterHits > 0) ? rTSum / static_cast<float>(nClusterHits) : 0.f);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster, const float coneLength, const float coneTanHalfAngle) const
 {
     unsigned int nMatchedHits(0);
     const unsigned int nClusterHits(pCluster->GetNCaloHits());
-
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (const auto &mapEntry : orderedCaloHitList)
@@ -41,8 +61,7 @@ float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster, const flo
         }
     }
 
-    const float boundedFraction((nClusterHits > 0) ? static_cast<float>(nMatchedHits) / static_cast<float>(nClusterHits) : 0.f);
-    return boundedFraction;
+    return ((nClusterHits > 0) ? static_cast<float>(nMatchedHits) / static_cast<float>(nClusterHits) : 0.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

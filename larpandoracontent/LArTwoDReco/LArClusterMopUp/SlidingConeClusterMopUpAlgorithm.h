@@ -46,12 +46,10 @@ private:
          *  @brief  Constructor
          * 
          *  @param  pParentCluster the address of the candidate parent (shower) cluster
-         *  @param  boundedFraction1 the bounded fraction for algorithm-specified cone angle 1
-         *  @param  boundedFraction2 the bounded fraction for algorithm-specified cone angle 2
+         *  @param  boundedFraction1 the bounded fraction for algorithm-specified cone angle
          *  @param  meanRT the mean transverse distance of all hits (whether contained or not)
          */
-        ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2,
-            const float meanRT);
+        ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction, const float meanRT);
 
         /**
          *  @brief  Get the address of the candidate parent (shower) cluster
@@ -61,18 +59,11 @@ private:
         const pandora::Cluster *GetParentCluster() const;
 
         /**
-         *  @brief  Get the bounded fraction for algorithm-specified cone angle 1
+         *  @brief  Get the bounded fraction for algorithm-specified cone angle
          *
-         *  @return the bounded fraction for algorithm-specified cone angle 1
+         *  @return the bounded fraction for algorithm-specified cone angle
          */
-        float GetBoundedFraction1() const;
-
-        /**
-         *  @brief  Get the bounded fraction for algorithm-specified cone angle 2
-         *
-         *  @return the bounded fraction for algorithm-specified cone angle 2
-         */
-        float GetBoundedFraction2() const;
+        float GetBoundedFraction() const;
 
         /**
          *  @brief  Get the mean transverse distance of all hits (whether contained or not)
@@ -92,8 +83,7 @@ private:
 
     private:
         const pandora::Cluster *m_pParentCluster;       ///< The address of the candidate parent (shower) cluster
-        float                   m_boundedFraction1;     ///< The bounded fraction for algorithm-specified cone angle 1
-        float                   m_boundedFraction2;     ///< The bounded fraction for algorithm-specified cone angle 2
+        float                   m_boundedFraction;      ///< The bounded fraction for algorithm-specified cone angle
         float                   m_meanRT;               ///< The mean transverse distance of all hits (whether contained or not)
     };
 
@@ -150,20 +140,19 @@ private:
 
     typedef std::unordered_map<const pandora::Cluster*, const pandora::Cluster*> ClusterReplacementMap;
 
-    pandora::StringVector   m_inputPfoListNames;        ///< The input pfo list names
-    bool                    m_useVertex;                ///< Whether to use the interaction vertex to select useful cone directions
-    unsigned int            m_maxIterations;            ///< The maximum allowed number of algorithm iterations
-    unsigned int            m_maxHitsToConsider3DTrack; ///< The maximum number of hits in a 3d track cluster to warrant inclusion in algorithm
-    unsigned int            m_minHitsToConsider3DShower;///< The minimum number of hits in a 3d shower cluster to attempt cone fits
-    unsigned int            m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
-    unsigned int            m_nConeFitLayers;           ///< The number of layers over which to sum fitted direction to obtain cone fit
-    unsigned int            m_nConeFits;                ///< The number of cone fits to perform, spread roughly uniformly along the shower length
-    float                   m_coneLengthMultiplier;     ///< The cone length multiplier to use when calculating bounded cluster fractions
-    float                   m_maxConeLength;            ///< The maximum allowed cone length to use when calculating bounded cluster fractions
-    float                   m_coneTanHalfAngle1;        ///< The cone tan half angle to use when calculating bounded cluster fractions 1
-    float                   m_coneBoundedFraction1;     ///< The minimum cluster bounded fraction for association 1
-    float                   m_coneTanHalfAngle2;        ///< The cone tan half angle to use when calculating bounded cluster fractions 2
-    float                   m_coneBoundedFraction2;     ///< The minimum cluster bounded fraction for association 2
+    pandora::StringVector   m_inputPfoListNames;            ///< The input pfo list names
+    bool                    m_useVertex;                    ///< Whether to use the interaction vertex to select useful cone directions
+    unsigned int            m_maxIterations;                ///< The maximum allowed number of algorithm iterations
+    unsigned int            m_maxHitsToConsider3DTrack;     ///< The maximum number of hits in a 3d track cluster to warrant inclusion in algorithm
+    unsigned int            m_minHitsToConsider3DShower;    ///< The minimum number of hits in a 3d shower cluster to attempt cone fits
+    unsigned int            m_maxHitsToConsider2DCluster;   ///< The maximum number of hits in a 2d cluster to allow pick-up via sliding cone fits
+    unsigned int            m_halfWindowLayers;             ///< The number of layers to use for half-window of sliding fit
+    unsigned int            m_nConeFitLayers;               ///< The number of layers over which to sum fitted direction to obtain cone fit
+    unsigned int            m_nConeFits;                    ///< The number of cone fits to perform, spread roughly uniformly along the shower length
+    float                   m_coneLengthMultiplier;         ///< The cone length multiplier to use when calculating bounded cluster fractions
+    float                   m_maxConeLength;                ///< The maximum allowed cone length to use when calculating bounded cluster fractions
+    float                   m_coneTanHalfAngle;             ///< The cone tan half angle to use when calculating bounded cluster fractions
+    float                   m_coneBoundedFraction;          ///< The minimum cluster bounded fraction for association
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,11 +165,9 @@ inline pandora::Algorithm *SlidingConeClusterMopUpAlgorithm::Factory::CreateAlgo
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1,
-        const float boundedFraction2, const float meanRT) :
+inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction, const float meanRT) :
     m_pParentCluster(pParentCluster),
-    m_boundedFraction1(boundedFraction1),
-    m_boundedFraction2(boundedFraction2),
+    m_boundedFraction(boundedFraction),
     m_meanRT(meanRT)
 {
 }
@@ -194,16 +181,9 @@ inline const pandora::Cluster *SlidingConeClusterMopUpAlgorithm::ClusterMerge::G
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetBoundedFraction1() const
+inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetBoundedFraction() const
 {
-    return m_boundedFraction1;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float SlidingConeClusterMopUpAlgorithm::ClusterMerge::GetBoundedFraction2() const
-{
-    return m_boundedFraction2;
+    return m_boundedFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
