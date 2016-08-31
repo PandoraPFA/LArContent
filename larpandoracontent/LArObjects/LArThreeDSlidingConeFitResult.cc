@@ -142,7 +142,7 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersFor
         const TrackState &maxLayerTrackState(trackStateList.back());
         const TrackState &minLayerTrackState(trackStateList.front());
 
-        if ((beginDistance == nLayersForConeFit) || (endDistance == 1) || ((beginDistance - nLayersForConeFit) % coneInterval == 0))
+        if ((beginDistance == nLayersForConeFit) || (endDistance == 1) || ((coneInterval > 0) && ((beginDistance - nLayersForConeFit) % coneInterval == 0)))
         {
             const CartesianVector &minLayerApex(minLayerTrackState.GetPosition());
             const CartesianVector &maxLayerApex(maxLayerTrackState.GetPosition());

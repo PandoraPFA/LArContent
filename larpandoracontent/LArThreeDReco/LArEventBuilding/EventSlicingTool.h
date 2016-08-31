@@ -264,6 +264,7 @@ private:
     std::string     m_showerPfoListName;                ///< The name of the input shower pfo list
 
     unsigned int    m_minHitsPer3DCluster;              ///< The minimum number of hits in a 3D cluster to warrant consideration in slicing
+    unsigned int    m_min3DHitsToSeedNewSlice;          ///< The minimum number of hits in a 3D cluster to seed a new slice
     unsigned int    m_halfWindowLayers;                 ///< The number of layers to use for half-window of sliding fit
 
     bool            m_usePointingAssociation;           ///< Whether to use pointing association

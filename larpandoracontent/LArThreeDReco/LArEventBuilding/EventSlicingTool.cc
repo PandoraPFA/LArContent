@@ -27,6 +27,7 @@ namespace lar_content
 
 EventSlicingTool::EventSlicingTool() :
     m_minHitsPer3DCluster(20),
+    m_min3DHitsToSeedNewSlice(50),
     m_halfWindowLayers(20),
     m_usePointingAssociation(true),
     m_minVertexLongitudinalDistance(-7.5f),
@@ -152,6 +153,9 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
     for (const Cluster *const pCluster3D : sortedClusters3D)
     {
         if (usedClusters.count(pCluster3D))
+            continue;
+
+        if (pCluster3D->GetNCaloHits() < m_min3DHitsToSeedNewSlice)
             continue;
 
         clusterSliceList.push_back(ClusterVector(1, pCluster3D));
@@ -634,6 +638,9 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinHitsPer3DCluster", m_minHitsPer3DCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Min3DHitsToSeedNewSlice", m_min3DHitsToSeedNewSlice));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
