@@ -198,6 +198,16 @@ float ThreeDSlidingFitResult::GetLongitudinalDisplacement(const CartesianVector 
 
 TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
 {
+    if (pCluster->GetNCaloHits() < 2)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    if (pCluster->GetOrderedCaloHitList().size() < 2)
+    {
+        CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
+        LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
+        return TrackState(innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector());
+    }
+
     ClusterFitResult clusterFitResult;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitFullCluster(pCluster, clusterFitResult));
 
