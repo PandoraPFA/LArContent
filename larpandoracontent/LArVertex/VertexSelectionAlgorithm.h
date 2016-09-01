@@ -346,21 +346,24 @@ private:
     /**
      *  @brief  Increment the parameters used to calculate the energy asymmetry for a given cluster and a given vertex
      * 
+     *  @param  vertexPosition2D the projection of the vertex's position into this view
      *  @param  axisDirection the cluster axis direction
      *  @param  useEnergyMetrics whether to use the energy metrics, or to revert to hit-based metrics
      *  @param  localEvtAxisDirEnergy current local event axis using energy weighting
      *  @param  localEvtAxisDirHits the current local event axis using hit weighting
      *  @param  pCluster pointer to the vertex
      *  @param  isViable whether a set of clusters is producing a viable energy asymmetry score (i.e. at no more than 5 deg angle)
+     *  @param  asymmetryConsideredClusters the clusters considered in the asymmetry calculation (either one or two)
      */
-    void IncrementEnergyAsymmetryParameters(const pandora::CartesianVector &axisDirection, bool &useEnergyMetrics, 
-                                            pandora::CartesianVector &localEvtAxisDirEnergy, pandora::CartesianVector &localEvtAxisDirHits, 
-                                            const pandora::Cluster * const pCluster, bool &isViable) const;
+    void IncrementEnergyAsymmetryParameters(const pandora::CartesianVector &vertexPosition2D, const pandora::CartesianVector &axisDirection, 
+                                            bool &useEnergyMetrics, pandora::CartesianVector &localEvtAxisDirEnergy, 
+                                            pandora::CartesianVector &localEvtAxisDirHits, const pandora::Cluster * const pCluster, 
+                                            bool &isViable, pandora::ClusterList &asymmetryConsideredClusters) const;
     
     /**
      *  @brief  Calculate the energy asymmetry for a vertex in a given view using the calculated parameters
      * 
-     *  @param  consideredClusters the list of pointers to the clusters considered
+     *  @param  consideredClusters the list of clusters considered for the energy asymmetry calculation
      *  @param  vertexPosition2D the projection of the vertex's position into this view
      *  @param  useEnergyMetrics whether to use the energy metrics, or to revert to hit-based metrics
      *  @param  localEvtAxisDirEnergy current local event axis using energy weighting

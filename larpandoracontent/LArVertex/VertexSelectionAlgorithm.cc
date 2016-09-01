@@ -16,8 +16,6 @@
 
 #include "larpandoracontent/LArVertex/VertexSelectionAlgorithm.h"
 
-#include <fstream>
-
 using namespace pandora;
 
 namespace lar_content
@@ -332,7 +330,7 @@ void VertexSelectionAlgorithm::IncrementEnergyScoresForView(const pandora::Verte
     // Find the local event axis: the energy-weighted average axis direction. If any clusters have zero energy, revert to hit-weighted. 
     CartesianVector localEvtAxisDirEnergy(0.f, 0.f, 0.f);
     CartesianVector localEvtAxisDirHits(0.f, 0.f, 0.f);
-    ClusterList consideredClusters;
+    ClusterList asymmetryConsideredClusters;
     
     bool asymmetryScoreIsViable = true;
     bool useEnergyMetrics = true;
@@ -353,11 +351,11 @@ void VertexSelectionAlgorithm::IncrementEnergyScoresForView(const pandora::Verte
         
         if (asymmetryScoreIsViable)
         {
-            this->IncrementEnergyAsymmetryParameters(axisDirection, useEnergyMetrics, localEvtAxisDirEnergy, localEvtAxisDirHits, 
-                                                     slidingFitData.GetCluster(), asymmetryScoreIsViable);
+            this->IncrementEnergyAsymmetryParameters(vertexPosition2D, axisDirection, useEnergyMetrics, localEvtAxisDirEnergy, 
+                                                     localEvtAxisDirHits, slidingFitData.GetCluster(), asymmetryScoreIsViable, 
+                                                     asymmetryConsideredClusters);
         }
         
-        consideredClusters.insert(slidingFitData.GetCluster());
         ++clusterCount;
     }
     
@@ -368,7 +366,7 @@ void VertexSelectionAlgorithm::IncrementEnergyScoresForView(const pandora::Verte
     }
     
     energyKick += useEnergyMetrics ? (totEnergyKick / totEnergy) : (totHitKick / totHits);
-    energyAsymmetry += this->CalculateEnergyAsymmetry(consideredClusters, vertexPosition2D, useEnergyMetrics, localEvtAxisDirEnergy, 
+    energyAsymmetry += this->CalculateEnergyAsymmetry(asymmetryConsideredClusters, vertexPosition2D, useEnergyMetrics, localEvtAxisDirEnergy, 
                                                       localEvtAxisDirHits, asymmetryScoreIsViable);    
 }
 
@@ -403,11 +401,17 @@ void VertexSelectionAlgorithm::IncrementEnergyKickParameters(const float distanc
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionAlgorithm::IncrementEnergyAsymmetryParameters(const CartesianVector &axisDirection, bool &useEnergyMetrics, 
+void VertexSelectionAlgorithm::IncrementEnergyAsymmetryParameters(const CartesianVector &vertexPosition2D, 
+                                                                  const CartesianVector &axisDirection, bool &useEnergyMetrics, 
                                                                   CartesianVector &localEvtAxisDirEnergy, 
                                                                   CartesianVector &localEvtAxisDirHits, const Cluster * const pCluster, 
-                                                                  bool &isViable) const
+                                                                  bool &isViable, ClusterList &asymmetryConsideredClusters) const
 {
+    if (LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster) > 5.0)
+        return;
+        
+    asymmetryConsideredClusters.insert(pCluster);
+    
     // The position is the direction of the fit at the end nearest to the vertex.
     CartesianVector axisDirectionEnergy = axisDirection;
     CartesianVector axisDirectionHits = axisDirection;
@@ -477,6 +481,9 @@ float VertexSelectionAlgorithm::CalculateEnergyAsymmetry(const ClusterList &cons
     float beforeVtxEnergy(0.f);
     float afterVtxEnergy(0.f);
     
+    unsigned int beforeVtxCount(0U);
+    unsigned int afterVtxCount(0U);
+    
     for (const Cluster * const pCluster : consideredClusters)
     {
         for (const std::pair<const unsigned int, std::unordered_set<const pandora::CaloHit*>*> &orderedCaloHitList : pCluster->GetOrderedCaloHitList())
@@ -486,18 +493,28 @@ float VertexSelectionAlgorithm::CalculateEnergyAsymmetry(const ClusterList &cons
                 const float projectedPos = pCaloHit->GetPositionVector().GetDotProduct(localEvtAxisDir);
                 
                 if (projectedPos < evtProjectedVtxPos)
+                {
                     beforeVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+                    ++beforeVtxCount;
+                }
                     
                 else if (projectedPos > evtProjectedVtxPos)
+                {
                     afterVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+                    ++afterVtxCount;
+                }
             }
         }
     }
 
     const float totCaloHitEnergy = beforeVtxEnergy + afterVtxEnergy;    
-        
-    // Return the normalized total metric.
-    return totCaloHitEnergy > 0.f ? std::abs((afterVtxEnergy - beforeVtxEnergy)) / totCaloHitEnergy : 1.f;
+    const unsigned int totCount = beforeVtxCount + afterVtxCount;    
+    
+    if (useEnergyMetrics && totCaloHitEnergy > 0.f)
+        return std::abs((afterVtxEnergy - beforeVtxEnergy)) / totCaloHitEnergy;
+    
+    // Otherwise fall back on hit counting.
+    return totCount > 0U ? std::abs(static_cast<float>((afterVtxCount - beforeVtxCount))) / static_cast<float>(totCount) : 1.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
