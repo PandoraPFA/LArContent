@@ -1,4 +1,19 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-07-03
+--------------------------------------------------------------------------------------------------------------------------------------------
+Allow CheatingNeutrinoCreation algorithm to deal with multiple mc neutrinos.
+Restructuring to allow support for both pandorabuildtools and cetbuildtools, hosted by both github and redmine remote repositories.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-07-02
+--------------------------------------------------------------------------------------------------------------------------------------------
+First, tentative restructuring to allow support for cetbuildtools.
+Add NeutrinoInducedOnly parameter to allow assessment of neutrino reconstruction after cosmic ray removal.
+Deal with multiple true or reco neutrinos in a better-defined manner in EventValidation algorithm.
+Change epsilon used for floating point comparisons in sliding linear fit. Protect against reported negative variances.
+Prevent tiny differences yielding macroscopic changes in max and min layers (and hence positions) for sliding fits.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-07-01
 --------------------------------------------------------------------------------------------------------------------------------------------
 Modifications to help ensure algorithm reproducibility for cosmic and neutrino reconstruction paths.

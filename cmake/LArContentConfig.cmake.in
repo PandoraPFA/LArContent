@@ -34,8 +34,8 @@ SET( LArContent_INCLUDE_DIRS LArContent_INCLUDE_DIRS-NOTFOUND )
 MARK_AS_ADVANCED( LArContent_INCLUDE_DIRS )
 
 FIND_PATH( LArContent_INCLUDE_DIRS
-	NAMES LArCheating/CheatingClusterCreationAlgorithm.h
-	PATHS ${LArContent_ROOT}/include
+	NAMES larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h
+	PATHS ${LArContent_ROOT} ${LArContent_ROOT}/include
 	NO_DEFAULT_PATH
 )
 

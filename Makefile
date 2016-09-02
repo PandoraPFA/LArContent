@@ -19,7 +19,7 @@ ifdef BUILD_32BIT_COMPATIBLE
     LIBS += -m32
 endif
 
-PROJECT_INCLUDE_DIR = $(PROJECT_DIR)/include/
+PROJECT_INCLUDE_DIR = $(PROJECT_DIR)
 PROJECT_LIBRARY = $(PROJECT_LIBRARY_DIR)/libLArContent.so
 
 INCLUDES  = -I$(PROJECT_INCLUDE_DIR)
@@ -34,35 +34,35 @@ ifdef MONITORING
     DEFINES = -DMONITORING=1
 endif
 
-SOURCES  = $(wildcard $(PROJECT_DIR)/src/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArCheating/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArCustomParticles/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArHelpers/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArMonitoring/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArObjects/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArPersistency/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArPlugins/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArStitching/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArCosmicRay/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArEventBuilding/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArHitCreation/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArLongitudinalTrackMatching/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArPfoMopUp/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArShowerFragments/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArShowerMatching/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArTrackFragments/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArTransverseTrackMatching/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArThreeDReco/LArThreeDBase/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArClusterAssociation/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArClusterCreation/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArClusterMopUp/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArClusterSplitting/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArCosmicRay/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArTwoDReco/LArSeedFinding/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArUtility/*.cc)
-SOURCES += $(wildcard $(PROJECT_DIR)/src/LArVertex/*.cc)
+SOURCES  = $(wildcard $(PROJECT_DIR)/larpandoracontent/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArCheating/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArCustomParticles/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArHelpers/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArMonitoring/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArObjects/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArPersistency/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArPlugins/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArStitching/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArCosmicRay/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArEventBuilding/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArHitCreation/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArPfoMopUp/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArShowerFragments/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArShowerMatching/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArTrackFragments/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArThreeDReco/LArThreeDBase/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArTwoDReco/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArTwoDReco/LArClusterAssociation/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArTwoDReco/LArClusterCreation/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArTwoDReco/LArClusterMopUp/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArTwoDReco/LArClusterSplitting/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArTwoDReco/LArCosmicRay/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArTwoDReco/LArSeedFinding/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArUtility/*.cc)
+SOURCES += $(wildcard $(PROJECT_DIR)/larpandoracontent/LArVertex/*.cc)
 OBJECTS = $(SOURCES:.cc=.o)
 DEPENDS = $(OBJECTS:.o=.d)
 
@@ -83,7 +83,7 @@ clean:
 
 install:
 ifdef INCLUDE_TARGET
-	rsync -r --exclude=.svn $(PROJECT_INCLUDE_DIR) ${INCLUDE_TARGET}
+	rsync -r --include '*/' --include '*.h' --exclude '*' --prune-empty-dirs $(PROJECT_INCLUDE_DIR)/ ${INCLUDE_TARGET}
 endif
 ifdef LIB_TARGET
 	cp $(PROJECT_LIBRARY) ${LIB_TARGET}
