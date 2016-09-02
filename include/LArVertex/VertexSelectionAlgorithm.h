@@ -142,11 +142,6 @@ private:
      */
     void StoreTopAllInformation(const pandora::VertexList* pTopologyVertexList, pandora::VertexList selectedVertexList, const pandora::VertexList* pEnergyVertexList);
     
-    
-    void GetClusters(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW);
-    const pandora::Cluster* GetLongestCluster(pandora::ClusterList &clusterList);
-    void FilterTopNVertices(VertexScoringTool::VertexScoreList &topNVertexScoreList, VertexScoringTool::VertexScoreList &filteredTopNVertexScoreList);
-    
     //--------------------------------------------------------------------------------------------------------------------------------------
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
