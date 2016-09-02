@@ -119,18 +119,18 @@ private:
      * 
      *  @param  scoredClusterCollection the scored cluster collection by reference
      *  @param  energyVertexScoreList the energy vertex score list by reference
-     *  @param  top5VertexScoreList the output vertex score list containing the top 5 vertices, by reference
+     *  @param  topNVertexScoreList the output vertex score list containing the top 5 vertices, by reference
      *  
      */
-    void FindTop5Vertices(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList, VertexScoringTool::VertexScoreList &top5VertexScoreList);
+    void FindTopNVertices(std::vector<VertexScoringTool::VertexScoreList> &scoredClusterCollection, VertexScoringTool::VertexScoreList &energyVertexScoreList, VertexScoringTool::VertexScoreList &topNVertexScoreList);
 
     /**
      *  @brief  Stores the top 5 vertices and outputs this list so it can be propagated to the next algorithm
      * 
-     *  @param  top5VertexScoreList the input vertex score list containing the top 5 vertices that is to be stored
+     *  @param  topNVertexScoreList the input vertex score list containing the top 5 vertices that is to be stored
      *  
      */
-    void StoreTop5Information(VertexScoringTool::VertexScoreList &top5VertexScoreList);
+    void StoreTopNInformation(VertexScoringTool::VertexScoreList &topNVertexScoreList);
     
     /**
      *  @brief  Stores all vertex information and outputs this list so it can be propagated to the next algorithm
@@ -145,7 +145,7 @@ private:
     
     void GetClusters(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW);
     const pandora::Cluster* GetLongestCluster(pandora::ClusterList &clusterList);
-    void FilterTop5Vertices(VertexScoringTool::VertexScoreList &top5VertexScoreList, VertexScoringTool::VertexScoreList &filteredTop5VertexScoreList);
+    void FilterTopNVertices(VertexScoringTool::VertexScoreList &topNVertexScoreList, VertexScoringTool::VertexScoreList &filteredTopNVertexScoreList);
     
     //--------------------------------------------------------------------------------------------------------------------------------------
 
@@ -159,7 +159,7 @@ private:
     std::string     m_topologyVertexListName;       ///< The name under which to save the output topology vertex list
     std::string     m_energyVertexListName;         ///< The name under which to save the output energy vertex list
 
-    std::string     m_top5VertexListName;           ///< The name under which to save the output top 5vertex list
+    std::string     m_topNVertexListName;           ///< The name under which to save the output top 5vertex list
     std::string     m_allOtherVertexListName;       ///< The name under which to save the output vertex list containing all created vertices
     
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
@@ -183,6 +183,8 @@ private:
     
     bool            m_directionFilter;
     bool            m_beamWeightFilter;
+    
+    unsigned int    m_nVerticesToSelect;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

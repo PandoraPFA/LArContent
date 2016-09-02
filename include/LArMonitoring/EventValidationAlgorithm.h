@@ -178,7 +178,7 @@ private:
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      */
     void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoList, const pandora::PfoList &recoNeutrinoList,
-        const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const pandora::VertexList* pTop5VertexList, const pandora::VertexList* pAllVerticesList) const;
+        const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const pandora::VertexList* pTopNVertexList, const pandora::VertexList* pAllVerticesList) const;
 
     /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
@@ -269,7 +269,7 @@ private:
     std::string         m_caloHitListName;          ///< Name of input calo hit list
     std::string         m_mcParticleListName;       ///< Name of input MC particle list
     std::string         m_pfoListName;              ///< Name of input Pfo list
-    std::string         m_top5VertexListName;
+    std::string         m_topNVertexListName;
     std::string         m_allVerticesListName;
     
 
