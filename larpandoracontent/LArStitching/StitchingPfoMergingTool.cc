@@ -83,7 +83,7 @@ void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, St
                 PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &deletePfoList, "deletePfoList", GREEN));
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
-                this->MergeAndDeletePfos(pAlgorithm, pPfoToEnlarge, pPfoToDelete);
+                pAlgorithm->MergeAndDeletePfos(pPfoToEnlarge, pPfoToDelete);
 
                 PfoList mergedPfoList;
                 mergedPfoList.insert(pPfoToEnlarge);
@@ -97,67 +97,6 @@ void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, St
             }
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void StitchingPfoMergingTool::MergeAndDeletePfos(const StitchingAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfoToEnlarge,
-    const ParticleFlowObject *const pPfoToDelete) const
-{
-    const PfoList daughterPfos(pPfoToDelete->GetDaughterPfoList());
-    const ClusterVector daughterClusters(pPfoToDelete->GetClusterList().begin(), pPfoToDelete->GetClusterList().end());
-    const VertexVector daughterVertices(pPfoToDelete->GetVertexList().begin(), pPfoToDelete->GetVertexList().end());
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*pAlgorithm, pPfoToDelete));
-
-    for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*pAlgorithm, pPfoToEnlarge, pDaughterPfo));
-    }
-
-    for (const  Vertex *const pDaughterVertex : daughterVertices)
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*pAlgorithm, pDaughterVertex));
-    }
-
-    for (const Cluster *const pDaughterCluster : daughterClusters)
-    {
-        const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
-        const Cluster *pParentCluster(this->GetParentCluster(pPfoToEnlarge->GetClusterList(), daughterHitType));
-
-        if (pParentCluster)
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pParentCluster, pDaughterCluster));
-        }
-        else
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*pAlgorithm, pPfoToEnlarge, pDaughterCluster));
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const Cluster *StitchingPfoMergingTool::GetParentCluster(const ClusterList &clusterList, const HitType hitType) const
-{
-    unsigned int mostHits(0);
-    const Cluster *pBestParentCluster(nullptr);
-
-    for (const Cluster *const pParentCluster : clusterList)
-    {
-        if (hitType != LArClusterHelper::GetClusterHitType(pParentCluster))
-            continue;
-
-        const unsigned int nParentHits(pParentCluster->GetNCaloHits());
-
-        if (nParentHits > mostHits)
-        {
-            mostHits = nParentHits;
-            pBestParentCluster = pParentCluster;
-        }
-    }
-
-    return pBestParentCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

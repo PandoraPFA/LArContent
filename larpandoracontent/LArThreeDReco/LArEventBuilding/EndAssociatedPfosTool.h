@@ -38,6 +38,7 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    float       m_minNeutrinoVertexDistance;            ///< Min distance between candidate parent endpoint and neutrino vertex
     float       m_minVertexLongitudinalDistance;        ///< Vertex association check: min longitudinal distance cut
     float       m_maxVertexLongitudinalDistance;        ///< Vertex association check: max longitudinal distance cut
     float       m_maxVertexTransverseDistance;          ///< Vertex association check: max transverse distance cut

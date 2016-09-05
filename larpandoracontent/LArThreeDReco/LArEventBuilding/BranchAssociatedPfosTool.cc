@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
@@ -24,7 +25,8 @@ typedef NeutrinoHierarchyAlgorithm::PfoInfo PfoInfo;
 typedef NeutrinoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 
 BranchAssociatedPfosTool::BranchAssociatedPfosTool() :
-    m_minNeutrinoVertexDistance(3.5),
+    m_minNeutrinoVertexDistance(5.f),
+    m_trackBranchAdditionFraction(0.4f),
     m_maxParentClusterDistance(3.5f)
 {
 }
@@ -55,6 +57,13 @@ void BranchAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm,
             PfoInfo *const pParentPfoInfo(pfoInfoMap.at(pParentPfo));
             const Cluster *const pParentCluster3D(pParentPfoInfo->GetCluster3D());
 
+            const bool parentIsTrack(LArPfoHelper::IsTrack(pParentPfo));
+            const ThreeDSlidingFitResult &parentFitResult(*(pParentPfoInfo->GetSlidingFitResult3D()));
+
+            const float parentLength3D((parentFitResult.GetGlobalMinLayerPosition() - parentFitResult.GetGlobalMaxLayerPosition()).GetMagnitude());
+            const CartesianVector &parentVertexPosition(pParentPfoInfo->IsInnerLayerAssociated() ? parentFitResult.GetGlobalMinLayerPosition() :
+                parentFitResult.GetGlobalMaxLayerPosition());
+
             for (const ParticleFlowObject *const pPfo : unassignedPfos)
             {
                 if (recentlyAssigned.count(pPfo))
@@ -62,9 +71,17 @@ void BranchAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm,
 
                 PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
                 const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
-                const float dNeutrinoVertex(LArClusterHelper::GetClosestDistance(pNeutrinoVertex->GetPosition(), pPfoInfo->GetCluster3D()));
+
+                const float dNeutrinoVertex(std::min((pointingCluster.GetInnerVertex().GetPosition() - pNeutrinoVertex->GetPosition()).GetMagnitude(),
+                    (pointingCluster.GetOuterVertex().GetPosition() - pNeutrinoVertex->GetPosition()).GetMagnitude()));
 
                 if (dNeutrinoVertex < m_minNeutrinoVertexDistance)
+                    continue;
+
+                const float dParentVertex(std::min((pointingCluster.GetInnerVertex().GetPosition() - parentVertexPosition).GetMagnitude(),
+                    (pointingCluster.GetOuterVertex().GetPosition() - parentVertexPosition).GetMagnitude()));
+
+                if (parentIsTrack && (dParentVertex < m_trackBranchAdditionFraction * parentLength3D))
                     continue;
 
                 const float dInnerVertex(LArClusterHelper::GetClosestDistance(pointingCluster.GetInnerVertex().GetPosition(), pParentCluster3D));
@@ -89,6 +106,9 @@ StatusCode BranchAssociatedPfosTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNeutrinoVertexDistance", m_minNeutrinoVertexDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TrackBranchAdditionFraction", m_trackBranchAdditionFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxParentClusterDistance", m_maxParentClusterDistance));

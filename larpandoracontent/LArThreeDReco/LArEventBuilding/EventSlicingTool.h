@@ -8,6 +8,8 @@
 #ifndef LAR_EVENT_SLICING_TOOL_H
 #define LAR_EVENT_SLICING_TOOL_H 1
 
+#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
+
 #include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
 
 #include <unordered_map>
@@ -17,6 +19,8 @@ namespace lar_content
 
 template<typename, unsigned int> class KDTreeLinkerAlgo;
 template<typename, unsigned int> class KDTreeNodeInfoT;
+
+class SimpleCone;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -74,17 +78,49 @@ private:
         ClusterSliceList &clusterSliceList) const;
 
     /**
-     *  @brief  Compare the provided cluster slice and list of 3D track clusters. Add next appropriate (pointing) cluster to the slice.
+     *  @brief  Collect all clusters associated with a provided cluster
      *
-     *  @param  trackCandidates the sorted list of 3D candidate track clusters
-     *  @param  slidingFitResultMap the map from 3D track clusters to 3D sliding fit results
+     *  @param  pClusterInSlice the address of the cluster already in a slice
+     *  @param  candidateClusters the list of candidate clusters
+     *  @param  trackFitResults the map of sliding fit results for track candidate clusters
+     *  @param  showerConeFitResults the map of sliding const fit results for shower candidate clusters
      *  @param  clusterSlice the cluster slice
      *  @param  usedClusters the list of clusters already added to slices
-     * 
-     *  @return whether an addition to the cluster slice has been made
      */
-    bool AddNextPointing(const pandora::ClusterVector &trackCandidates, const ThreeDSlidingFitResultMap &slidingFitResultMap,
-        pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
+    void CollectAssociatedClusters(const pandora::Cluster *const pClusterInSlice, const pandora::ClusterVector &candidateClusters, const ThreeDSlidingFitResultMap &trackFitResults,
+        const ThreeDSlidingConeFitResultMap &showerConeFitResults, pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
+
+    /**
+     *  @brief  Compare the provided clusters to assess whether they are associated via pointing (checks association "both ways")
+     *
+     *  @param  pClusterInSlice address of a cluster already in the slice
+     *  @param  pCandidateCluster address of the candidate cluster
+     *  @param  trackFitResults the map of sliding fit results for track candidate clusters
+     * 
+     *  @return whether an addition to the cluster slice should be made
+     */
+    bool PassPointing(const pandora::Cluster *const pClusterInSlice, const pandora::Cluster *const pCandidateCluster, const ThreeDSlidingFitResultMap &trackFitResults) const;
+
+    /**
+     *  @brief  Compare the provided clusters to assess whether they are associated via pointing
+     *
+     *  @param  pClusterInSlice address of a cluster already in the slice
+     *  @param  pCandidateCluster address of the candidate cluster
+     * 
+     *  @return whether an addition to the cluster slice should be made
+     */
+    bool PassProximity(const pandora::Cluster *const pClusterInSlice, const pandora::Cluster *const pCandidateCluster) const;
+
+    /**
+     *  @brief  Compare the provided clusters to assess whether they are associated via cone fits to the shower cluster (single "direction" check)
+     *
+     *  @param  pClusterInSlice address of a cluster already in the slice
+     *  @param  pCandidateCluster address of the candidate cluster
+     *  @param  showerConeFitResults the map of sliding cone fit results for shower candidate clusters
+     * 
+     *  @return whether an addition to the cluster slice should be made
+     */
+    bool PassShowerCone(const pandora::Cluster *const pConeCluster, const pandora::Cluster *const pNearbyCluster, const ThreeDSlidingConeFitResultMap &showerConeFitResults) const;
 
     /**
      *  @brief  Check closest approach metrics for a pair of pointing clusters
@@ -125,28 +161,6 @@ private:
      *  @return whether the pointing clusters are declared to be in the same slice
      */
     bool IsEmission(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
-
-    /**
-     *  @brief  Compare the provided cluster slice and list of 3D clusters. Add next appropriate (nearby) cluster to the slice.
-     *
-     *  @param  clusterCandidates the sorted list of 3D candidate clusters
-     *  @param  clusterSlice the cluster slice
-     *  @param  usedClusters the list of clusters already added to slices
-     * 
-     *  @return whether an addition to the cluster slice has been made
-     */
-    bool AddNextProximity(const pandora::ClusterVector &clusterCandidates, pandora::ClusterVector &clusterSlice,
-        pandora::ClusterList &usedClusters) const;
-
-    /**
-     *  @brief  Check separation of hits in two 3D clusters
-     *
-     *  @param  pCluster1 the address of the first cluster
-     *  @param  pCluster2 the address of the second cluster
-     * 
-     *  @return whether the clusters are declared to be in the same slice
-     */
-    bool CheckHitSeparation(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterToSliceIndexMap;
 
@@ -249,17 +263,30 @@ private:
     std::string     m_trackPfoListName;                 ///< The name of the input track pfo list
     std::string     m_showerPfoListName;                ///< The name of the input shower pfo list
 
+    unsigned int    m_minHitsPer3DCluster;              ///< The minimum number of hits in a 3D cluster to warrant consideration in slicing
+    unsigned int    m_min3DHitsToSeedNewSlice;          ///< The minimum number of hits in a 3D cluster to seed a new slice
     unsigned int    m_halfWindowLayers;                 ///< The number of layers to use for half-window of sliding fit
 
+    bool            m_usePointingAssociation;           ///< Whether to use pointing association
     float           m_minVertexLongitudinalDistance;    ///< Pointing association check: min longitudinal distance cut
     float           m_maxVertexLongitudinalDistance;    ///< Pointing association check: max longitudinal distance cut
     float           m_maxVertexTransverseDistance;      ///< Pointing association check: max transverse distance cut
     float           m_vertexAngularAllowance;           ///< Pointing association check: pointing angular allowance in degrees
-
     float           m_maxClosestApproach;               ///< Pointing association: max distance of closest approach between straight line fits
     float           m_maxInterceptDistance;             ///< Pointing association: max distance from cluster vertex to point of closest approach
 
+    bool            m_useProximityAssociation;          ///< Whether to use proximity association
     float           m_maxHitSeparationSquared;          ///< Proximity association: max distance allowed between the closest pair of hits
+
+    bool            m_useShowerConeAssociation;         ///< Whether to use shower cone association
+    unsigned int    m_nConeFitLayers;                   ///< The number of layers over which to sum fitted direction to obtain cone fit
+    unsigned int    m_nConeFits;                        ///< The number of cone fits to perform, spread roughly uniformly along the shower length
+    float           m_coneLengthMultiplier;             ///< The cone length multiplier to use when calculating bounded cluster fractions
+    float           m_maxConeLength;                    ///< The maximum allowed cone length to use when calculating bounded cluster fractions
+    float           m_coneTanHalfAngle1;                ///< The cone tan half angle to use when calculating bounded cluster fractions 1
+    float           m_coneBoundedFraction1;             ///< The minimum cluster bounded fraction for association 1
+    float           m_coneTanHalfAngle2;                ///< The cone tan half angle to use when calculating bounded cluster fractions 2
+    float           m_coneBoundedFraction2;             ///< The minimum cluster bounded fraction for association 2
 
     bool            m_use3DProjectionsInHitPickUp;      ///< Whether to include 3D cluster projections when assigning remaining clusters to slices
 };

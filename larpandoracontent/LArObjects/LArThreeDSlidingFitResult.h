@@ -23,16 +23,6 @@ namespace lar_content
 class ThreeDSlidingFitResult
 {
 public:
-
-    /**
-     *  @brief  Constructor
-     *
-     *  @param  coordinateList address of the candidate cluster
-     *  @param  slidingFitWindow the sliding fit window
-     *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
-     */
-    ThreeDSlidingFitResult(const pandora::CartesianPointList &coordinateList, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
-
     /**
      *  @brief  Constructor
      *
@@ -179,15 +169,6 @@ public:
      *  @return pandora::TrackState object containing the position and direction
      */
     static pandora::TrackState GetPrimaryAxis(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Calculate the position and direction of the primary axis
-     *
-     *  @param  coordinateList the input list of hit coordinates
-     *
-     *  @return pandora::TrackState object containing the position and direction
-     */
-    static pandora::TrackState GetPrimaryAxis(const pandora::CartesianPointList &coordinateList);
 
     /**
      *  @brief  Generate a seed vector to be used in calculating the orthogonal axes

@@ -1,4 +1,35 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-08-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added ThreeDSlidingConeFitResult and exploit in EventSlicing tool, SlidingConePfoMopUp and SlidingConeClusterMopUp algorithms.
+Refactored Pfo and Cluster MopUp algorithms, moved PfoRecovery algorithms into a separate directory.
+Separate (loosely grouped) 2D- and 3D-based MopUp algorithms in NeutrinoParent algorithm.
+Overhaul IsolatedClusterMopUp algorithm and use kd trees to provide nearest neighbour search.
+Tweaked logic for making Pfo parent-daughter associations.
+Added CheatingPfoCharacterisation algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-07-08 (v02-07-09 metadata changes only)
+--------------------------------------------------------------------------------------------------------------------------------------------
+Improved visualization of neutrino event reconstruction problems.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-07-07
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tweak EventValidation algorithm screen printout.
+Add new functionality to EventWriting algorithm, allowing filtration by final state mc particles and neutrino interaction vertex position.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-07-06
+--------------------------------------------------------------------------------------------------------------------------------------------
+Remove unused variable (assigned to in constructor, but still ultimately unused).
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-07-04 (v02-07-05 metadata changes only)
+--------------------------------------------------------------------------------------------------------------------------------------------
+Cosmetic change to LArContent header, more flexible functionality for TwoDParticleCreation algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-07-03
 --------------------------------------------------------------------------------------------------------------------------------------------
 Allow CheatingNeutrinoCreation algorithm to deal with multiple mc neutrinos.

@@ -1,24 +1,24 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.h
  * 
- *  @brief  Header file for the cone based merging algorithm class.
+ *  @brief  Header file for the cone cluster mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_CONE_BASED_MERGING_ALGORITHM_H
-#define LAR_CONE_BASED_MERGING_ALGORITHM_H 1
+#ifndef LAR_CONE_CLUSTER_MOP_UP_ALGORITHM_H
+#define LAR_CONE_CLUSTER_MOP_UP_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  ConeBasedMergingAlgorithm class
+ *  @brief  ConeClusterMopUpAlgorithm class
  */
-class ConeBasedMergingAlgorithm : public ClusterMopUpAlgorithm
+class ConeClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -33,10 +33,10 @@ public:
     /**
      *  @brief  Default constructor
      */
-    ConeBasedMergingAlgorithm();
+    ConeClusterMopUpAlgorithm();
 
 private:
-    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
 
     typedef std::pair<float, float> Coordinate;
     typedef std::vector<Coordinate> CoordinateList;
@@ -62,11 +62,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ConeBasedMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ConeClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ConeBasedMergingAlgorithm();
+    return new ConeClusterMopUpAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_CONE_BASED_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_CONE_CLUSTER_MOP_UP_ALGORITHM_H

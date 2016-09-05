@@ -1,25 +1,25 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ProximityBasedMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/NearbyClusterMopUpAlgorithm.h
  * 
- *  @brief  Header file for the proximity based cluster merging algorithm class.
+ *  @brief  Header file for the nearby cluster mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_PROXIMITY_BASED_MERGING_ALGORITHM_H
-#define LAR_PROXIMITY_BASED_MERGING_ALGORITHM_H 1
+#ifndef LAR_NEARBY_CLUSTER_MOP_UP_ALGORITHM_H
+#define LAR_NEARBY_CLUSTER_MOP_UP_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  ProximityBasedMergingAlgorithm class
+ *  @brief  NearbyClusterMopUpAlgorithm class
  */
 
-class ProximityBasedMergingAlgorithm : public ClusterMopUpAlgorithm
+class NearbyClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -34,10 +34,10 @@ public:
     /**
      *  @brief  Default constructor
      */
-    ProximityBasedMergingAlgorithm();
+    NearbyClusterMopUpAlgorithm();
 
 private:
-    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -49,11 +49,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *ProximityBasedMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *NearbyClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new ProximityBasedMergingAlgorithm();
+    return new NearbyClusterMopUpAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_PROXIMITY_BASED_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_NEARBY_CLUSTER_MOP_UP_ALGORITHM_H

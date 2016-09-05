@@ -97,7 +97,8 @@ private:
     pandora::StringVector       m_threeDAlgorithms;                 ///< The names of the three dimensional reconstruction algorithms
     pandora::StringVector       m_threeDHitAlgorithms;              ///< The names of the three dimensional hit creation algorithms
     pandora::StringVector       m_vertexAlgorithms;                 ///< The names of the vertex reconstruction algorithms
-    pandora::StringVector       m_mopUpAlgorithms;                  ///< The names of the mop-up algorithms
+    pandora::StringVector       m_twoDMopUpAlgorithms;              ///< The names of the two dimensional mop-up algorithms
+    pandora::StringVector       m_threeDMopUpAlgorithms;            ///< The names of the three dimensional mop-up algorithms
     pandora::StringVector       m_neutrinoAlgorithms;               ///< The names of the neutrino building algorithms
 };
 

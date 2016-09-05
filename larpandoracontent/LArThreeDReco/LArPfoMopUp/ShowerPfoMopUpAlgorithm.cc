@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.cc
  * 
- *  @brief  Implementation of the split shower merging algorithm class.
+ *  @brief  Implementation of the shower pfo mop up algorithm class.
  * 
  *  $Log: $
  */
@@ -14,15 +14,15 @@
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-SplitShowerMergingAlgorithm::SplitShowerMergingAlgorithm() :
-    VertexBasedPfoMergingAlgorithm(),
+ShowerPfoMopUpAlgorithm::ShowerPfoMopUpAlgorithm() :
+    VertexBasedPfoMopUpAlgorithm(),
     m_maxVertexLongitudinalDistance(20.f),
     m_vertexAngularAllowance(3.f)
 {
@@ -37,7 +37,7 @@ SplitShowerMergingAlgorithm::SplitShowerMergingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowerMergingAlgorithm::IsVertexAssociated(const CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const
+bool ShowerPfoMopUpAlgorithm::IsVertexAssociated(const CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const
 {
     return (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
         LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
@@ -47,7 +47,7 @@ bool SplitShowerMergingAlgorithm::IsVertexAssociated(const CartesianVector &vert
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-SplitShowerMergingAlgorithm::PfoAssociation SplitShowerMergingAlgorithm::GetPfoAssociation(const Pfo *const pVertexPfo, const Pfo *const pDaughterPfo,
+ShowerPfoMopUpAlgorithm::PfoAssociation ShowerPfoMopUpAlgorithm::GetPfoAssociation(const Pfo *const pVertexPfo, const Pfo *const pDaughterPfo,
     HitTypeToAssociationMap &hitTypeToAssociationMap) const
 {
     return PfoAssociation(pVertexPfo, pDaughterPfo, hitTypeToAssociationMap[TPC_VIEW_U], hitTypeToAssociationMap[TPC_VIEW_V], hitTypeToAssociationMap[TPC_VIEW_W]);
@@ -55,7 +55,7 @@ SplitShowerMergingAlgorithm::PfoAssociation SplitShowerMergingAlgorithm::GetPfoA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode SplitShowerMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ShowerPfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
@@ -63,7 +63,7 @@ StatusCode SplitShowerMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexAngularAllowance", m_vertexAngularAllowance));
 
-    return VertexBasedPfoMergingAlgorithm::ReadSettings(xmlHandle);
+    return VertexBasedPfoMopUpAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content
