@@ -126,15 +126,6 @@ private:
     void CreateEnergyAlongRLVector(const pandora::Cluster *const pCluster, std::vector<pandora::CartesianVector> &energyAlongRLvector);
     
     /**
-     *  @brief  Draws a plot where the X coordinate is the longitudinal distance along a 2D sliding fit of a hit and the Z cooridnate is the hit energy
-     *
-     *  @param  energyAlongRLvector the RL vector to be drawn
-     *  @param  pCluster address of the cluster from which the vector was made
-     * 
-     */
-    void DrawEnergyVector(std::vector<pandora::CartesianVector> &energyAlongRLvector, const pandora::Cluster* pCluster);
-    
-    /**
      *  @brief  Filters out hits with outlying hit energies from an RL, hit energy Cartesian vector
      *
      *  @param  unfilteredEnergyVector the unfiltered input RL, hit energy vector
@@ -275,6 +266,11 @@ private:
     float                       m_postCrossingSkipDistance;     ///< How far to skip along an exrapolated cluster after finding a crossing point (for speed)
     
     unsigned int                m_minEnergyVertexClusterSize;   ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
+    float                       m_oneBinDistanceFractionalDeviationThreshold;
+    float                       m_twoBinDistanceFractionalDeviationThreshold;
+    float                       m_threeBinDistanceFractionalDeviationThreshold;
+    float                       m_minAverageBinEnergy;
+    float                       m_maxAverageBinEnergy;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
