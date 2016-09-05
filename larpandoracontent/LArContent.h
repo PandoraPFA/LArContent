@@ -15,6 +15,7 @@
 #include "larpandoracontent/LArCheating/CheatingEventSlicingTool.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
 
@@ -155,6 +156,7 @@ public:
         d("LArCheatingCosmicRayShowerMatching",     lar_content::CheatingCosmicRayShowerMatchingAlg::Factory)                   \
         d("LArCheatingNeutrinoCreation",            lar_content::CheatingNeutrinoCreationAlgorithm::Factory)                    \
         d("LArCheatingNeutrinoDaughterVertices",    lar_content::CheatingNeutrinoDaughterVerticesAlgorithm::Factory)            \
+        d("LArCheatingPfoCharacterisation",         lar_content::CheatingPfoCharacterisationAlgorithm::Factory)                 \
         d("LArCheatingPfoCreation",                 lar_content::CheatingPfoCreationAlgorithm::Factory)                         \
         d("LArCheatingVertexCreation",              lar_content::CheatingVertexCreationAlgorithm::Factory)                      \
         d("LArShowerParticleBuilding",              lar_content::ShowerParticleBuildingAlgorithm::Factory)                      \
