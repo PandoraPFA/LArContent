@@ -48,8 +48,6 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
 
 StatusCode CandidateVertexCreationAlgorithm::Run()
 {
-    //std::cout << "Cluster list sizes: " << clusterListU.size() << " " << clusterListV.size() << " " << clusterListW.size() << std::endl;
-
     try
     {
         ClusterList clusterListU, clusterListV, clusterListW;
@@ -142,6 +140,9 @@ void CandidateVertexCreationAlgorithm::CreateCrossingVertices(ClusterList &clust
 
 void CandidateVertexCreationAlgorithm::CreateEnergyVertices(const ClusterList &clusterList1, const ClusterList &clusterList2, const ClusterList &clusterList3)
 {
+    if (clusterList1.empty())
+        return;
+    
     for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
     {
         const Cluster *const pCluster = *iter1;
@@ -257,7 +258,10 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
 
 void CandidateVertexCreationAlgorithm::Find2DClusterCrossings(const ClusterList &clusterList, std::vector<CartesianVector> &crossingsVector)
 {
-for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = clusterList.end(); iter1 != iter1End; ++iter1)
+    if (clusterList.emtpy())
+        return;
+    
+    for (ClusterList::const_iterator iter1 = clusterList.begin(), iter1End = clusterList.end(); iter1 != iter1End; ++iter1)
     {
         const Cluster *const pCluster1 = *iter1;
         
