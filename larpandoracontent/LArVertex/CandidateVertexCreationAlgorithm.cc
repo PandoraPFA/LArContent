@@ -573,10 +573,10 @@ void CandidateVertexCreationAlgorithm::FindBinWithSpike(const std::vector<Cartes
         float nextNextNextBinFractionalDeviation(std::fabs(1 - (std::fabs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))));
         float previousPreviousPreviousBinFractionalDeviation(std::fabs(1 - std::fabs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy)));
         
-        if ((nextBinFractionalDeviation > m_oneBinDistanceFractionalDeviationThreshold && nextNextBinFractionalDeviation > m_twoBinDistanceFractionalDeviationThreshold && nextNextNextBinFractionalDeviation > m_threeBinDistanceFractionalDeviationThreshold
-        && previousBinFractionalDeviation < m_oneBinDistanceFractionalDeviationThreshold && previousPreviousBinFractionalDeviation < m_twoBinDistanceFractionalDeviationThreshold)
-        || previousBinFractionalDeviation > m_oneBinDistanceFractionalDeviationThreshold && previousPreviousBinFractionalDeviation > m_twoBinDistanceFractionalDeviationThreshold && previousPreviousPreviousBinFractionalDeviation > m_threeBinDistanceFractionalDeviationThreshold
-        && nextBinFractionalDeviation < m_oneBinDistanceFractionalDeviationThreshold && nextNextBinFractionalDeviation < m_twoBinDistanceFractionalDeviationThreshold))
+        if (((nextBinFractionalDeviation > m_oneBinDistanceFractionalDeviationThreshold) && (nextNextBinFractionalDeviation > m_twoBinDistanceFractionalDeviationThreshold) && (nextNextNextBinFractionalDeviation > m_threeBinDistanceFractionalDeviationThreshold)
+        && (previousBinFractionalDeviation < m_oneBinDistanceFractionalDeviationThreshold) && (previousPreviousBinFractionalDeviation < m_twoBinDistanceFractionalDeviationThreshold))
+        || ((previousBinFractionalDeviation > m_oneBinDistanceFractionalDeviationThreshold) && (previousPreviousBinFractionalDeviation > m_twoBinDistanceFractionalDeviationThreshold) && (previousPreviousPreviousBinFractionalDeviation > m_threeBinDistanceFractionalDeviationThreshold)
+        && (nextBinFractionalDeviation < m_oneBinDistanceFractionalDeviationThreshold) && (nextNextBinFractionalDeviation < m_twoBinDistanceFractionalDeviationThreshold)))
         {
             if (thisBinAverageEnergy < m_minAverageBinEnergy || thisBinAverageEnergy > m_maxAverageBinEnergy) //this is because currently the energy is capped at a certain level
                 continue;
