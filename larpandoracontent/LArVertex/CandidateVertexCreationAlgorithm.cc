@@ -40,7 +40,12 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_extrapolationStepSize(0.1f),
     m_minClusterCrossingApproach(0.25f),
     m_postCrossingSkipDistance(5.0f),
-    m_minEnergyVertexClusterSize(60)
+    m_minEnergyVertexClusterSize(60),
+    m_oneBinDistanceFractionalDeviationThreshold(0.15),
+    m_twoBinDistanceFractionalDeviationThreshold(0.5),
+    m_threeBinDistanceFractionalDeviationThreshold(0.7),
+    m_minAverageBinEnergy(0.25),
+    m_maxAverageBinEnergy(4.3)
 {
 }
 
@@ -48,8 +53,6 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
 
 StatusCode CandidateVertexCreationAlgorithm::Run()
 {
-    //std::cout << "Cluster list sizes: " << clusterListU.size() << " " << clusterListV.size() << " " << clusterListW.size() << std::endl;
-
     try
     {
         ClusterList clusterListU, clusterListV, clusterListW;
@@ -244,8 +247,6 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
 
     if (chiSquared > m_chiSquaredCut)
         return;
-        
-    //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexProjectionW, "Old Vertex", RED, 1));
 
     PandoraContentApi::Vertex::Parameters parameters;
     parameters.m_position = position3D;
@@ -460,33 +461,6 @@ void CandidateVertexCreationAlgorithm::CreateEnergyAlongRLVector(const Cluster *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::DrawEnergyVector(std::vector<CartesianVector> &energyAlongRLvector, const Cluster* pCluster)
-{
-    std::sort(energyAlongRLvector.begin(), energyAlongRLvector.end(), SortEnergyVectorByRL);
-    
-    TGraph *HitEnergy_vs_rL = new TGraph(energyAlongRLvector.size());
-    ClusterList tempClusterList;
-    tempClusterList.insert(pCluster);
-    
-    PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &tempClusterList, "Visualised Cluster", BLUE, 1));
-    
-    int n(0);
-    
-    for (std::vector<CartesianVector>::const_iterator pairIter = energyAlongRLvector.begin(), pairIterEnd = std::prev(energyAlongRLvector.end(), 4); pairIter != pairIterEnd; ++pairIter)
-    {
-        HitEnergy_vs_rL->SetPoint(n, (*pairIter).GetX(), (*pairIter).GetZ());
-        n++;
-    }
-    
-    TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
-    canvas1->cd();
-    HitEnergy_vs_rL->SetMarkerStyle(6);
-    HitEnergy_vs_rL->Draw("AP");
-    PANDORA_MONITORING_API(Pause(this->GetPandora()));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void CandidateVertexCreationAlgorithm::FilterEnergyVector(const std::vector<CartesianVector> &unfilteredEnergyVector, std::vector<CartesianVector> &filteredEnergyVector)
 {
     for (std::vector<CartesianVector>::const_iterator pairIter = std::next(unfilteredEnergyVector.begin(), 1), pairIterEnd = std::prev(unfilteredEnergyVector.end(), 1); pairIter != pairIterEnd; ++pairIter)
@@ -562,7 +536,7 @@ void CandidateVertexCreationAlgorithm::FindBinWithSpike(const std::vector<Cartes
     {
         float thisBinAverageEnergy((*pairIter).GetZ());
         float nextBinAverageEnergy((*std::next(pairIter, 1)).GetZ());
-        float energyDifference(std::abs(nextBinAverageEnergy / thisBinAverageEnergy));
+        float energyDifference(std::fabs(nextBinAverageEnergy / thisBinAverageEnergy));
         averageEnergyDifference += (energyDifference);
     }
     
@@ -590,29 +564,28 @@ void CandidateVertexCreationAlgorithm::FindBinWithSpike(const std::vector<Cartes
         float previousPreviousPreviousPreviousBinAverageEnergy((*std::prev(pairIter, 4)).GetZ());
         float nextNextNextNextBinAverageEnergy((*std::next(pairIter, 4)).GetZ());
         
-
-        //std::cout << "Jump position: " << thisBinAveragePosition << std::endl;
-        //std::cout << "Jump ratio: " << std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-        //std::cout << "Next jump ratio: " << std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) << std::endl;
-        //std::cout << "Previous jump ratio: " << std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
-        //std::cout << "Previous previous jump ratio: " << std::abs(1 - std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)) << std::endl;
+        float nextBinFractionalDeviation(std::fabs(1 - std::fabs(nextBinAverageEnergy / thisBinAverageEnergy)));
+        float previousBinFractionalDeviation(std::fabs(1 - std::fabs(previousBinAverageEnergy / thisBinAverageEnergy)));
         
-        //This if statement means: can we find a bin from which one one side the bin energies steadily rise and on the other side there are two bins close together in energy in either the + or - RL direction?
-        if ((std::abs(1 - std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))) > 0.7
-        && std::abs(1 - (std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) < 0.3)
-        || (std::abs(1 - std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) > 0.15 && std::abs(1 - (std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.5 && std::abs(1 - (std::abs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))) > 0.7
-        && std::abs(1 - (std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) < 0.15 && std::abs(1 - (std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy))) < 0.3))
+        float nextNextBinFractionalDeviation(std::fabs(1 - (std::fabs(nextNextBinAverageEnergy / thisBinAverageEnergy))));
+        float previousPreviousBinFractionalDeviation(std::fabs(1 - std::fabs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)));
+        
+        float nextNextNextBinFractionalDeviation(std::fabs(1 - (std::fabs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))));
+        float previousPreviousPreviousBinFractionalDeviation(std::fabs(1 - std::fabs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy)));
+        
+        if ((nextBinFractionalDeviation > m_oneBinDistanceFractionalDeviationThreshold && nextNextBinFractionalDeviation > m_twoBinDistanceFractionalDeviationThreshold && nextNextNextBinFractionalDeviation > m_threeBinDistanceFractionalDeviationThreshold
+        && previousBinFractionalDeviation < m_oneBinDistanceFractionalDeviationThreshold && previousPreviousBinFractionalDeviation < m_twoBinDistanceFractionalDeviationThreshold)
+        || previousBinFractionalDeviation > m_oneBinDistanceFractionalDeviationThreshold && previousPreviousBinFractionalDeviation > m_twoBinDistanceFractionalDeviationThreshold && previousPreviousPreviousBinFractionalDeviation > m_threeBinDistanceFractionalDeviationThreshold
+        && nextBinFractionalDeviation < m_oneBinDistanceFractionalDeviationThreshold && nextNextBinFractionalDeviation < m_twoBinDistanceFractionalDeviationThreshold))
         {
-            if (thisBinAverageEnergy < 0.25 || thisBinAverageEnergy == 4.375)
+            if (thisBinAverageEnergy < m_minAverageBinEnergy || thisBinAverageEnergy > m_maxAverageBinEnergy) //this is because currently the energy is capped at a certain level
                 continue;
             
-            float score((std::abs(std::abs(nextBinAverageEnergy / thisBinAverageEnergy)) + std::abs((std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy)))
-            + std::abs((std::abs(nextNextNextBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(nextNextNextNextBinAverageEnergy / thisBinAverageEnergy)))) 
-            / (std::abs((std::abs(previousBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))));
+            float score((nextBinAverageEnergy / thisBinAverageEnergy + nextNextBinAverageEnergy / thisBinAverageEnergy + nextNextNextBinAverageEnergy / thisBinAverageEnergy + nextNextNextNextBinAverageEnergy / thisBinAverageEnergy)
+                / (previousBinAverageEnergy / thisBinAverageEnergy + previousPreviousBinAverageEnergy / thisBinAverageEnergy));
             
-            float scoreTwo((std::abs(std::abs(previousBinAverageEnergy / thisBinAverageEnergy)) + std::abs((std::abs(previousPreviousBinAverageEnergy / thisBinAverageEnergy)))
-            + std::abs((std::abs(previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(previousPreviousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy))))
-            / (std::abs((std::abs(nextBinAverageEnergy / thisBinAverageEnergy))) + std::abs((std::abs(nextNextBinAverageEnergy / thisBinAverageEnergy)))));
+            float scoreTwo((previousBinAverageEnergy / thisBinAverageEnergy + previousPreviousBinAverageEnergy / thisBinAverageEnergy + previousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy + previousPreviousPreviousPreviousBinAverageEnergy / thisBinAverageEnergy)
+                / (nextBinAverageEnergy / thisBinAverageEnergy + nextNextBinAverageEnergy / thisBinAverageEnergy));
             
             float workingScore(0.f);
             
@@ -620,21 +593,15 @@ void CandidateVertexCreationAlgorithm::FindBinWithSpike(const std::vector<Cartes
                 workingScore = score;
             else
                 workingScore = scoreTwo;
-                
-            //std::cout << "workingScore: " << workingScore << std::endl;
             
             if (workingScore > bestScore)
             {
                 binRLvector.clear();
                 binRLvector.push_back(thisBinAveragePosition);
-                //binRLvector.push_back(nextBinAveragePosition);
-                //binRLvector.push_back(previousBinAveragePosition);
                 bestScore = workingScore;
             }
         }
     }
-    
-    //std::cout << "Number of spikes: " << binRLvector.size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -648,9 +615,9 @@ void CandidateVertexCreationAlgorithm::ConvertBinRLToSpikeRL(const std::vector<f
         
         for (const CartesianVector &energyRL : energyAlongRLvector)
         {
-            if (std::abs(energyRL.GetX() - binRL) < closestApproach)
+            if (std::fabs(energyRL.GetX() - binRL) < closestApproach)
             {
-                closestApproach = std::abs(energyRL.GetX() - binRL);
+                closestApproach = std::fabs(energyRL.GetX() - binRL);
                 closestMatchingRL = energyRL.GetX();
             }
         }
