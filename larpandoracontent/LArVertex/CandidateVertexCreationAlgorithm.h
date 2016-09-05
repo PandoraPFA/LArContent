@@ -226,7 +226,7 @@ private:
      * 
      *  @param  pCluster address of the relevant cluster
      */
-    void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
+    void AddToSlidingFitCache(const pandora::Cluster *const pCluster); 
 
     /**
      *  @brief  Get a sliding fit result from the algorithm cache

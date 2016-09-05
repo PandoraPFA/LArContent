@@ -476,7 +476,7 @@ void CandidateVertexCreationAlgorithm::DrawEnergyVector(std::vector<CartesianVec
         n++;
     }
     
-    TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600);
+    TCanvas *canvas1 = new TCanvas("HitEnergy_vs_rL", "HitEnergy_vs_rL", 900, 600); 
     canvas1->cd();
     HitEnergy_vs_rL->SetMarkerStyle(6);
     HitEnergy_vs_rL->Draw("AP");
