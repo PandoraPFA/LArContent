@@ -35,8 +35,8 @@ HitAngleVertexSelectionAlgorithm::HitAngleVertexSelectionAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HitAngleVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
-    HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
+void HitAngleVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
+    HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
     float bestFastScore(0.f);
 
@@ -51,11 +51,11 @@ void HitAngleVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &ve
         this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeW, kernelEstimateW);
 
         const float vertexMinZ(std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
-        const float multiplier(!m_beamMode ? 1.f : std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()));
+        const float beamDeweightingScore(this->IsBeamModeOn() ? std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()) : 1.f);
 
         if (m_fastScoreCheck || m_fastScoreOnly)
         {
-            const float fastScore(multiplier * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
+            const float fastScore(beamDeweightingScore * this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
 
             if (m_fastScoreOnly)
             {
@@ -70,7 +70,7 @@ void HitAngleVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &ve
                 bestFastScore = fastScore;
         }
 
-        const float finalScore(multiplier * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
+        const float finalScore(beamDeweightingScore * (m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
             this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)));
 
         vertexScoreList.push_back(VertexScore(pVertex, finalScore));

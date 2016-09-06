@@ -225,8 +225,8 @@ public:
         d("LArNeutrinoParent",                      lar_content::NeutrinoParentAlgorithm::Factory)                              \
         d("LArCandidateVertexCreation",             lar_content::CandidateVertexCreationAlgorithm::Factory)                     \
         d("LArEnergyKickVertexSelection",           lar_content::EnergyKickVertexSelectionAlgorithm::Factory)                   \
-        d("LArVertexSelection",             lar_content::HitAngleVertexSelectionAlgorithm::Factory)
-// TODO RENAME LArHitAngleVertexSelection
+        d("LArHitAngleVertexSelection",             lar_content::HitAngleVertexSelectionAlgorithm::Factory)
+
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
         d("LArStitchingObjectCreation",             lar_content::StitchingObjectCreationTool::Factory)                          \
         d("LArStitchingPfoMerging",                 lar_content::StitchingPfoMergingTool::Factory)                              \

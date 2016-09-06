@@ -9,8 +9,6 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
-
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 #include "larpandoracontent/LArVertex/VertexSelectionBaseAlgorithm.h"
@@ -21,8 +19,8 @@ namespace lar_content
 {
 
 VertexSelectionBaseAlgorithm::VertexSelectionBaseAlgorithm() :
-    m_beamMode(false),
     m_replaceCurrentVertexList(true),
+    m_beamMode(false),
     m_nDecayLengthsInZSpan(2.f),
     m_selectSingleVertex(true),
     m_maxTopScoreSelections(3),
@@ -257,10 +255,10 @@ StatusCode VertexSelectionBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BeamMode", m_beamMode));
+        "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
+        "BeamMode", m_beamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));

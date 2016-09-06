@@ -31,8 +31,8 @@ EnergyKickVertexSelectionAlgorithm::EnergyKickVertexSelectionAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EnergyKickVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants, HitKDTree2D &/*kdTreeU*/,
-    HitKDTree2D &/*kdTreeV*/, HitKDTree2D &/*kdTreeW*/, VertexScoreList &vertexScoreList) const
+void EnergyKickVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
+    HitKDTree2D &/*kdTreeU*/, HitKDTree2D &/*kdTreeV*/, HitKDTree2D &/*kdTreeW*/, VertexScoreList &vertexScoreList) const
 {   
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -94,22 +94,18 @@ void EnergyKickVertexSelectionAlgorithm::CalculateClusterSlidingFits(const HitTy
 float EnergyKickVertexSelectionAlgorithm::GetEnergyScore(const Vertex *const pVertex, const BeamConstants &beamConstants, 
     const SlidingFitDataList &slidingFitDataListU, const SlidingFitDataList &slidingFitDataListV, const SlidingFitDataList &slidingFitDataListW) const
 {
-    // Calculate the beam deweighting score.
-    const float vertexMinZ = std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate());
-    const float beamDeweightingScore = std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant());
-    
-    // Calculate the energy kick and energy asymmetry scores.
-    float energyKick(0.f);
-    float energyAsymmetry(0.f);
-    
+    const float vertexMinZ(std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
+    const float beamDeweightingScore(this->IsBeamModeOn() ? std::exp(-(vertexMinZ - beamConstants.GetMinZCoordinate()) * beamConstants.GetDecayConstant()) : 1.f);
+
+    float energyKick(0.f), energyAsymmetry(0.f);
     this->IncrementEnergyScoresForView(pVertex, energyKick, energyAsymmetry, TPC_VIEW_U, slidingFitDataListU);
     this->IncrementEnergyScoresForView(pVertex, energyKick, energyAsymmetry, TPC_VIEW_V, slidingFitDataListV);
     this->IncrementEnergyScoresForView(pVertex, energyKick, energyAsymmetry, TPC_VIEW_W, slidingFitDataListW);
                                   
-    const float energyKickScore = std::exp(-energyKick / this->m_epsilon);                    
-    const float energyAsymmetryScore = std::exp(energyAsymmetry / this->m_asymmetryConstant);
+    const float energyKickScore(std::exp(-energyKick / m_epsilon));
+    const float energyAsymmetryScore(std::exp(energyAsymmetry / m_asymmetryConstant));
         
-    return beamDeweightingScore * energyKickScore * energyAsymmetryScore;
+    return (beamDeweightingScore * energyKickScore * energyAsymmetryScore);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

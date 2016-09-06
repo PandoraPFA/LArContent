@@ -144,6 +144,13 @@ protected:
     virtual void GetVertexScoreList(const pandora::VertexVector &vertexVector, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
         HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const = 0;
 
+    /**
+     *  @brief  Whether algorithm is running in beam mode, assuming neutrinos travel in positive z-direction
+     *
+     *  @return boolean
+     */
+    bool IsBeamModeOn() const;
+
 private:
     pandora::StatusCode Run();
 
@@ -215,8 +222,6 @@ private:
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-// TODO
-    bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
 
 private:
     std::string     m_inputCaloHitListNameU;        ///< The name of the view U calo hit list
@@ -226,6 +231,7 @@ private:
 
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
+    bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
     float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
    
     bool            m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
@@ -242,6 +248,13 @@ private:
     bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
     unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool VertexSelectionBaseAlgorithm::IsBeamModeOn() const
+{
+    return m_beamMode;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
