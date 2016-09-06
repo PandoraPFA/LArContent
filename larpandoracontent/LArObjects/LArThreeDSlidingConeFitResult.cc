@@ -8,6 +8,8 @@
 
 #include "Objects/Cluster.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+
 #include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
 #include <iterator>
@@ -19,18 +21,17 @@ namespace lar_content
 
 float SimpleCone::GetMeanRT(const Cluster *const pCluster) const
 {
+    CartesianPointList hitPositionList;
+    LArClusterHelper::GetCoordinateList(pCluster, hitPositionList);
+
     float rTSum(0.f);
     const unsigned int nClusterHits(pCluster->GetNCaloHits());
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
-    for (const auto &mapEntry : orderedCaloHitList)
+    for (const CartesianVector &hitPosition : hitPositionList)
     {
-        for (const CaloHit *pCaloHit : *(mapEntry.second))
-        {
-            const CartesianVector displacement(pCaloHit->GetPositionVector() - this->GetConeApex());
-            const float rT(displacement.GetCrossProduct(this->GetConeDirection()).GetMagnitude());
-            rTSum += rT;
-        }
+        const CartesianVector displacement(hitPosition - this->GetConeApex());
+        const float rT(displacement.GetCrossProduct(this->GetConeDirection()).GetMagnitude());
+        rTSum += rT;
     }
 
     return ((nClusterHits > 0) ? rTSum / static_cast<float>(nClusterHits) : 0.f);
@@ -40,25 +41,24 @@ float SimpleCone::GetMeanRT(const Cluster *const pCluster) const
 
 float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster, const float coneLength, const float coneTanHalfAngle) const
 {
+    CartesianPointList hitPositionList;
+    LArClusterHelper::GetCoordinateList(pCluster, hitPositionList);
+
     unsigned int nMatchedHits(0);
     const unsigned int nClusterHits(pCluster->GetNCaloHits());
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
-    for (const auto &mapEntry : orderedCaloHitList)
+    for (const CartesianVector &hitPosition : hitPositionList)
     {
-        for (const CaloHit *pCaloHit : *(mapEntry.second))
-        {
-            const CartesianVector displacement(pCaloHit->GetPositionVector() - this->GetConeApex());
-            const float rL(displacement.GetDotProduct(this->GetConeDirection()));
+        const CartesianVector displacement(hitPosition - this->GetConeApex());
+        const float rL(displacement.GetDotProduct(this->GetConeDirection()));
 
-            if ((rL < 0.f) || (rL > coneLength))
-                continue;
+        if ((rL < 0.f) || (rL > coneLength))
+            continue;
 
-            const float rT(displacement.GetCrossProduct(this->GetConeDirection()).GetMagnitude());
-            
-            if (rL * coneTanHalfAngle > rT)
-                ++nMatchedHits;
-        }
+        const float rT(displacement.GetCrossProduct(this->GetConeDirection()).GetMagnitude());
+
+        if (rL * coneTanHalfAngle > rT)
+            ++nMatchedHits;
     }
 
     return ((nClusterHits > 0) ? static_cast<float>(nMatchedHits) / static_cast<float>(nClusterHits) : 0.f);

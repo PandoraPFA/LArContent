@@ -111,7 +111,7 @@ int TwoDSlidingFitResult::GetLayer(const float rL) const
     if (m_layerPitch < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    return std::floor(rL / m_layerPitch);
+    return static_cast<int>(std::floor(rL / m_layerPitch));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

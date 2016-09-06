@@ -88,6 +88,10 @@ private:
     static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
         const float showerEdgeMultiplier);
 
+    typedef std::pair<float, float> FitCoordinate;
+    typedef std::vector<FitCoordinate> FitCoordinateList;
+    typedef std::map<int, FitCoordinateList> FitCoordinateMap;
+
     TwoDSlidingFitResult    m_showerFitResult;              ///< The sliding fit result for the full shower cluster
     TwoDSlidingFitResult    m_negativeEdgeFitResult;        ///< The sliding fit result for the negative shower edge
     TwoDSlidingFitResult    m_positiveEdgeFitResult;        ///< The sliding fit result for the positive shower edge
