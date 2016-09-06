@@ -8,6 +8,8 @@
 
 #include "Objects/Cluster.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include <algorithm>
@@ -86,64 +88,56 @@ void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, const bool widenI
 TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
     const float showerEdgeMultiplier)
 {
-    LayerFitContributionMap layerFitContributionMap;
-
     // Examine all possible fit contributions
-    typedef std::pair<float, float> FitCoordinate;
-    typedef std::vector<FitCoordinate> FitCoordinateList;
-    typedef std::map<int, FitCoordinateList> FitCoordinateMap;
-
     FitCoordinateMap fitCoordinateMap;
-    const OrderedCaloHitList &orderedCaloHitList(fullShowerFit.GetCluster()->GetOrderedCaloHitList());
 
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    CartesianPointList hitPositionList;
+    LArClusterHelper::GetCoordinateList(fullShowerFit.GetCluster(), hitPositionList);
+
+    for (const CartesianVector &hitPosition : hitPositionList)
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            float rL(0.f), rT(0.f);
-            fullShowerFit.GetLocalPosition((*hitIter)->GetPositionVector(), rL, rT);
-            rT *= showerEdgeMultiplier;
+        float rL(0.f), rT(0.f);
+        fullShowerFit.GetLocalPosition(hitPosition, rL, rT);
+        rT *= showerEdgeMultiplier;
 
-            CartesianVector fullShowerFitPosition(0.f, 0.f, 0.f);
-            if (STATUS_CODE_SUCCESS != fullShowerFit.GetGlobalFitPosition(rL, fullShowerFitPosition))
-                continue;
+        CartesianVector fullShowerFitPosition(0.f, 0.f, 0.f);
+        if (STATUS_CODE_SUCCESS != fullShowerFit.GetGlobalFitPosition(rL, fullShowerFitPosition))
+            continue;
 
-            float rLFit(0.f), rTFit(0.f);
-            fullShowerFit.GetLocalPosition(fullShowerFitPosition, rLFit, rTFit);
+        float rLFit(0.f), rTFit(0.f);
+        fullShowerFit.GetLocalPosition(fullShowerFitPosition, rLFit, rTFit);
 
-            const float rTDiff(rT - rTFit);
-            if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rTDiff < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rTDiff > 0.f)))
-                rT = rTFit;
+        const float rTDiff(rT - rTFit);
+        if (((POSITIVE_SHOWER_EDGE == showerEdge) && (rTDiff < 0.f)) || ((NEGATIVE_SHOWER_EDGE == showerEdge) && (rTDiff > 0.f)))
+            rT = rTFit;
 
-            const int layer(fullShowerFit.GetLayer(rL));
-            fitCoordinateMap[layer].push_back(FitCoordinate(rL, rT));
-        }
+        const int layer(fullShowerFit.GetLayer(rL));
+        fitCoordinateMap[layer].push_back(FitCoordinate(rL, rT));
     }
 
     // Select fit contributions representing relevant shower edge
-    for (FitCoordinateMap::const_iterator iter = fitCoordinateMap.begin(), iterEnd = fitCoordinateMap.end(); iter != iterEnd; ++iter)
-    {
-        const int layer(iter->first);
-        const FitCoordinateList &fitCoordinateList(iter->second);
+    LayerFitContributionMap layerFitContributionMap;
 
+    for (const FitCoordinateMap::value_type &mapEntry : fitCoordinateMap)
+    {
         // ATTN Could modify this hit selection, e.g. add inertia to edge positions
         bool bestFitCoordinateFound(false);
         FitCoordinate bestFitCoordinate = (POSITIVE_SHOWER_EDGE == showerEdge) ?
             FitCoordinate(0.f, -std::numeric_limits<float>::max()) :
             FitCoordinate(0.f, +std::numeric_limits<float>::max());
 
-        for (FitCoordinateList::const_iterator fIter = fitCoordinateList.begin(), fIterEnd = fitCoordinateList.end(); fIter != fIterEnd; ++fIter)
+        for (const FitCoordinate &fitCoordinate : mapEntry.second)
         {
-            if (((POSITIVE_SHOWER_EDGE == showerEdge) && (fIter->second > bestFitCoordinate.second)) ||
-                ((NEGATIVE_SHOWER_EDGE == showerEdge) && (fIter->second < bestFitCoordinate.second)))
+            if (((POSITIVE_SHOWER_EDGE == showerEdge) && (fitCoordinate.second > bestFitCoordinate.second)) ||
+                ((NEGATIVE_SHOWER_EDGE == showerEdge) && (fitCoordinate.second < bestFitCoordinate.second)))
             {
-                bestFitCoordinate = *fIter;
+                bestFitCoordinate = fitCoordinate;
                 bestFitCoordinateFound = true;
             }
         }
 
         if (bestFitCoordinateFound)
-            layerFitContributionMap[layer].AddPoint(bestFitCoordinate.first, bestFitCoordinate.second);
+            layerFitContributionMap[mapEntry.first].AddPoint(bestFitCoordinate.first, bestFitCoordinate.second);
     }
 
     return TwoDSlidingFitResult(fullShowerFit.GetCluster(), fullShowerFit.GetLayerFitHalfWindow(), fullShowerFit.GetLayerPitch(),

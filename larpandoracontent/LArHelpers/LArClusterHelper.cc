@@ -475,6 +475,7 @@ void LArClusterHelper::GetExtremalCoordinates(const OrderedCaloHitList &orderedC
         }
     }
 
+    std::sort(coordinateList.begin(), coordinateList.end(), LArClusterHelper::SortCoordinatesByPosition);
     return LArClusterHelper::GetExtremalCoordinates(coordinateList, innerCoordinate, outerCoordinate);
 }
 
@@ -598,6 +599,8 @@ void LArClusterHelper::GetCoordinateList(const Cluster *const pCluster, Cartesia
             coordinateList.push_back(pCaloHit->GetPositionVector());
         }
     }
+
+    std::sort(coordinateList.begin(), coordinateList.end(), LArClusterHelper::SortCoordinatesByPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -703,6 +706,21 @@ bool LArClusterHelper::SortHitsByPulseHeight(const CaloHit *const pLhs, const Ca
 {
     // TODO: Think about the correct energy to use here (should they ever be different)
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortCoordinatesByPosition(const CartesianVector &lhs, const CartesianVector &rhs)
+{
+    const CartesianVector deltaPosition(rhs - lhs);
+
+    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+
+    return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
 }
 
 } // namespace lar_content
