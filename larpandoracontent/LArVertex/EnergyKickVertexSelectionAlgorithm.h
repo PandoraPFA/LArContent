@@ -107,91 +107,69 @@ private:
     void CalculateClusterSlidingFits(SlidingFitDataList &slidingFitDataListU, SlidingFitDataList &slidingFitDataListV, SlidingFitDataList &slidingFitDataListW) const;
 
     /**
-     *  @brief  Get the energy score for a given vertex
-     * 
-     *  @param  pVertex pointer to the vertex
-     *  @param  beamConstants the beam constants
-     *  @param  slidingFitDataListU the list of sliding fit data objects in the U view
-     *  @param  slidingFitDataListV the list of sliding fit data objects in the V view
-     *  @param  slidingFitDataListW the list of sliding fit data objects in the W view
-     *  
-     *  @return the energy score
-     */
-    float GetEnergyScore(const pandora::Vertex *const pVertex, const BeamConstants &beamConstants, const SlidingFitDataList &slidingFitDataListU,
-        const SlidingFitDataList &slidingFitDataListV, const SlidingFitDataList &slidingFitDataListW) const;
-    
-    /**
      *  @brief  Increment the energy kick and energy asymmetry for a given vertex in a given view
      * 
-     *  @param  pVertex pointer to the vertex
+     *  @param  vertexPosition2D the projection of the vertex's position into this view
      *  @param  energyKick the energy kick to increment
      *  @param  energyAsymmetry the energy asymmetry to increment
-     *  @param  hitType the view hit type
      *  @param  slidingFitDataList the list of sliding fit data objects in this view
      *  
      *  @return the energy score
      */
-    void IncrementEnergyScoresForView(const pandora::Vertex *const pVertex, float &energyKick, float &energyAsymmetry, const pandora::HitType hitType,
+    void IncrementEnergyScoresForView(const pandora::CartesianVector &vertexPosition2D, float &energyKick, float &energyAsymmetry,
         const SlidingFitDataList &slidingFitDataList) const;
-                                                      
+
     /**
-     *  @brief  Increment the parameters used to calculate the energy kick for a given cluster and a given vertex
+     *  @brief  Increment the parameters used to calculate the energy kick for a given cluster
      * 
-     *  @param  distanceToStart distance from the vertex to the min layer of the cluster's sliding fit
-     *  @param  distanceToEnd distance from the vertex to the max layer of the cluster's sliding fit
-     *  @param  pointToFitStartVector vector from vertex position to min layer of cluster's sliding fit
-     *  @param  pointToFitEndVector vector from vertex position to max layer of cluster's sliding fit
-     *  @param  axisDirection the cluster axis direction
-     *  @param  useEnergyMetrics whether to use the energy metrics, or to revert to hit-based metrics
+     *  @param  pCluster address of the cluster
+     *  @param  clusterDisplacement distance from the vertex to the closest cluster endpoint (max or min layer of sliding fit)
+     *  @param  clusterDirection the cluster direction at closest endpoint (max or min layer of sliding fit)
      *  @param  totEnergyKick the total energy kick to increment
      *  @param  totEnergy the total energy to increment
      *  @param  totHitKick the total hit kick to increment
      *  @param  totHits the total number of hits to increment
-     *  @param  pCluster pointer to the vertex
      */
-    void IncrementEnergyKickParameters(const float distanceToStart, const float distanceToEnd, const pandora::CartesianVector &pointToFitStartVector, 
-        const pandora::CartesianVector &pointToFitEndVector, const pandora::CartesianVector &axisDirection, bool &useEnergyMetrics, float &totEnergyKick,
-        float &totEnergy, float &totHitKick, unsigned int &totHits, const pandora::Cluster *const pCluster) const;
-                                                 
+    void IncrementEnergyKickParameters(const pandora::Cluster *const pCluster, const pandora::CartesianVector &clusterDisplacement,
+        const pandora::CartesianVector &clusterDirection, float &totEnergyKick, float &totEnergy, float &totHitKick, unsigned int &totHits) const;
+
     /**
      *  @brief  Increment the parameters used to calculate the energy asymmetry for a given cluster and a given vertex
      * 
-     *  @param  vertexPosition2D the projection of the vertex's position into this view
-     *  @param  axisDirection the cluster axis direction
-     *  @param  useEnergyMetrics whether to use the energy metrics, or to revert to hit-based metrics
-     *  @param  localEvtAxisDirEnergy current local event axis using energy weighting
-     *  @param  localEvtAxisDirHits the current local event axis using hit weighting
-     *  @param  pCluster pointer to the vertex
-     *  @param  isViable whether a set of clusters is producing a viable energy asymmetry score (i.e. at no more than 5 deg angle)
-     *  @param  asymmetryConsideredClusters the clusters considered in the asymmetry calculation (either one or two)
+     *  @param  weight the weight to apply to the local direction measure (cluster energy or number of hits)
+     *  @param  clusterDirection the cluster direction at closest endpoint (max or min layer of sliding fit)
+     *  @param  localWeightedDirectionSum current local event axis sum using energy or hit weighting
+     * 
+     *  @return whether the asymmetry calculation is viable
      */
-    void IncrementEnergyAsymmetryParameters(const pandora::CartesianVector &vertexPosition2D, const pandora::CartesianVector &axisDirection, 
-        bool &useEnergyMetrics, pandora::CartesianVector &localEvtAxisDirEnergy, pandora::CartesianVector &localEvtAxisDirHits,
-        const pandora::Cluster *const pCluster, bool &isViable, pandora::ClusterList &asymmetryConsideredClusters) const;
-    
+    bool IncrementEnergyAsymmetryParameters(const float weight, const pandora::CartesianVector &clusterDirection,
+        pandora::CartesianVector &localWeightedDirectionSum) const;
+
     /**
      *  @brief  Calculate the energy asymmetry for a vertex in a given view using the calculated parameters
      * 
-     *  @param  consideredClusters the list of clusters considered for the energy asymmetry calculation
-     *  @param  vertexPosition2D the projection of the vertex's position into this view
      *  @param  useEnergyMetrics whether to use the energy metrics, or to revert to hit-based metrics
-     *  @param  localEvtAxisDirEnergy current local event axis using energy weighting
-     *  @param  localEvtAxisDirHits the current local event axis using hit weighting
-     *  @param  isViable whether a set of clusters is producing a viable energy asymmetry score (i.e. at no more than 5 deg angle)
+     *  @param  vertexPosition2D the projection of the vertex's position into this view
+     *  @param  asymmetryClusters the list of clusters considered for the energy asymmetry calculation
+     *  @param  localWeightedDirection current local event axis using energy or hit weighting
      */
-    float CalculateEnergyAsymmetry(const pandora::ClusterList &consideredClusters, const pandora::CartesianVector &vertexPosition2D, 
-        const bool useEnergyMetrics, const pandora::CartesianVector &localEvtAxisDirEnergy, const pandora::CartesianVector &localEvtAxisDirHits,
-        bool isViable) const;
+    float CalculateEnergyAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
+        const pandora::ClusterVector &asymmetryClusters, const pandora::CartesianVector &localWeightedDirection) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector   m_inputClusterListNames;        ///< The list of cluster list names
+    unsigned int            m_minClusterCaloHits;           ///< The min number of hits parameter in the energy score
     unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+
     float                   m_rOffset;                      ///< The r offset parameter in the energy score
     float                   m_xOffset;                      ///< The x offset parameter in the energy score
     float                   m_epsilon;                      ///< The epsilon parameter in the energy score
+
     float                   m_asymmetryConstant;            ///< The asymmetry constant parameter in the energy score
-    unsigned int            m_minClusterCaloHits;           ///< The min number of hits parameter in the energy score
+    float                   m_maxAsymmetryDistance;         ///< The max distance between cluster (any hit) and vertex to calculate asymmetry score
+    float                   m_minAsymmetryCosAngle;         ///< The min opening angle cosine used to determine viability of asymmetry score
+    unsigned int            m_maxAsymmetryNClusters;        ///< The max number of associated clusters to calculate the asymmetry
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
