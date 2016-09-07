@@ -134,7 +134,8 @@
 #include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
-#include "larpandoracontent/LArVertex/VertexSelectionAlgorithm.h"
+#include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
+#include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
 
 /**
  *  @brief  LArContent class
@@ -223,7 +224,8 @@ public:
         d("LArListPreparation",                     lar_content::ListPreparationAlgorithm::Factory)                             \
         d("LArNeutrinoParent",                      lar_content::NeutrinoParentAlgorithm::Factory)                              \
         d("LArCandidateVertexCreation",             lar_content::CandidateVertexCreationAlgorithm::Factory)                     \
-        d("LArVertexSelection",                     lar_content::VertexSelectionAlgorithm::Factory)
+        d("LArEnergyKickVertexSelection",           lar_content::EnergyKickVertexSelectionAlgorithm::Factory)                   \
+        d("LArHitAngleVertexSelection",             lar_content::HitAngleVertexSelectionAlgorithm::Factory)
 
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
         d("LArStitchingObjectCreation",             lar_content::StitchingObjectCreationTool::Factory)                          \

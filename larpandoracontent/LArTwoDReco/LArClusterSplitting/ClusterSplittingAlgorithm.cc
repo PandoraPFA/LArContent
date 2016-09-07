@@ -19,23 +19,38 @@ namespace lar_content
 
 StatusCode ClusterSplittingAlgorithm::Run()
 {
+    if (m_inputClusterListNames.empty())
+        return this->RunUsingCurrentList();
+
     std::string originalListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, originalListName));
 
-    if (!m_inputClusterList.empty())
+    for (const std::string &clusterListName : m_inputClusterListNames)
     {
-        const StatusCode statusCode(PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_inputClusterList));
+        const StatusCode listChangeStatusCode(PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
 
-        if (STATUS_CODE_NOT_FOUND == statusCode)
+        if (STATUS_CODE_NOT_FOUND == listChangeStatusCode)
         {
-            std::cout << "ClusterSplittingAlgorithm: cluster list not found " << m_inputClusterList << std::endl;
-            return STATUS_CODE_SUCCESS;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ClusterSplittingAlgorithm: cluster list not found " << clusterListName << std::endl;
+
+            continue;
         }
 
-        if (STATUS_CODE_SUCCESS != statusCode)
-            return statusCode;
+        if (STATUS_CODE_SUCCESS != listChangeStatusCode)
+            return listChangeStatusCode;
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunUsingCurrentList());
     }
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, originalListName));
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ClusterSplittingAlgorithm::RunUsingCurrentList() const
+{
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
@@ -53,9 +68,6 @@ StatusCode ClusterSplittingAlgorithm::Run()
         internalClusterList.splice(internalClusterList.end(), clusterSplittingList);
         *iter = NULL;
     }
-
-    if (!m_inputClusterList.empty())
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, originalListName));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -99,8 +111,8 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(const Cluster *const pCluster
 
 StatusCode ClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputClusterList", m_inputClusterList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputClusterListNames", m_inputClusterListNames));
 
     return STATUS_CODE_SUCCESS;
 }

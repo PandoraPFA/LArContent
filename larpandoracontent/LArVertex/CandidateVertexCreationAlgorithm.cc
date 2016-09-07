@@ -34,15 +34,15 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 {
     try
     {
-        ClusterList clusterListU, clusterListV, clusterListW;
-        this->SelectClusters(clusterListU, clusterListV, clusterListW);
+        ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
+        this->SelectClusters(clusterVectorU, clusterVectorV, clusterVectorW);
 
         const VertexList *pVertexList(NULL); std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
-        this->ClusterEndPointComparison(clusterListU, clusterListV);
-        this->ClusterEndPointComparison(clusterListU, clusterListW);
-        this->ClusterEndPointComparison(clusterListV, clusterListW);
+        this->ClusterEndPointComparison(clusterVectorU, clusterVectorV);
+        this->ClusterEndPointComparison(clusterVectorU, clusterVectorW);
+        this->ClusterEndPointComparison(clusterVectorV, clusterVectorW);
 
         if (!pVertexList->empty())
         {
@@ -65,32 +65,73 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::SelectClusters(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW)
+void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVectorU, ClusterVector &clusterVectorV, ClusterVector &clusterVectorW)
 {
-    this->SelectClusters(m_inputClusterListNameU, clusterListU);
-    this->SelectClusters(m_inputClusterListNameV, clusterListV);
-    this->SelectClusters(m_inputClusterListNameW, clusterListW);
+    for (const std::string &clusterListName : m_inputClusterListNames)
+    {
+        const ClusterList *pClusterList(NULL);
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+        if (!pClusterList || pClusterList->empty())
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "CandidateVertexCreationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
+
+            continue;
+        }
+
+        const HitType hitType(LArClusterHelper::GetClusterHitType(*(pClusterList->begin())));
+
+        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType) ? clusterVectorU : (TPC_VIEW_V == hitType) ? clusterVectorV : clusterVectorW);
+
+        if (!selectedClusterVector.empty())
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        ClusterVector sortedClusters(pClusterList->begin(), pClusterList->end());
+        std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pCluster : sortedClusters)
+        {
+            if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+                continue;
+
+            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+                continue;
+
+            try
+            {
+                this->AddToSlidingFitCache(pCluster);
+                selectedClusterVector.push_back(pCluster);
+            }
+            catch (StatusCodeException &statusCodeException)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                    throw statusCodeException;
+            }
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::ClusterEndPointComparison(const ClusterList &clusterList1, const ClusterList &clusterList2) const
+void CandidateVertexCreationAlgorithm::ClusterEndPointComparison(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2) const
 {
-    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
+    for (const Cluster *const pCluster1 : clusterVector1)
     {
-        const Cluster *const pCluster1(*iter1);
         const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
 
         const TwoDSlidingFitResult &fitResult1(this->GetCachedSlidingFitResult(pCluster1));
         const CartesianVector minLayerPosition1(fitResult1.GetGlobalMinLayerPosition());
         const CartesianVector maxLayerPosition1(fitResult1.GetGlobalMaxLayerPosition());
 
-        for (ClusterList::const_iterator iter2 = clusterList2.begin(), iter2End = clusterList2.end(); iter2 != iter2End; ++iter2)
+        for (const Cluster *const pCluster2 : clusterVector2)
         {
-            const Cluster *const pCluster2(*iter2);
             const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
 
-            const TwoDSlidingFitResult &fitResult2(this->GetCachedSlidingFitResult(*iter2));
+            const TwoDSlidingFitResult &fitResult2(this->GetCachedSlidingFitResult(pCluster2));
             const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
             const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
 
@@ -141,44 +182,6 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::SelectClusters(const std::string &clusterListName, ClusterList &selectedClusterList)
-{
-    const ClusterList *pInputClusterList(NULL);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pInputClusterList));
-
-    if (!pInputClusterList || pInputClusterList->empty())
-    {
-        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "CandidateVertexCreationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
-
-        return;
-    }
-
-    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
-    {
-        try
-        {
-            const Cluster *const pCluster = *iter;
-
-            if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
-                continue;
-
-            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
-                continue;
-
-            this->AddToSlidingFitCache(pCluster);
-            selectedClusterList.insert(pCluster);
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void CandidateVertexCreationAlgorithm::AddToSlidingFitCache(const Cluster *const pCluster)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -211,10 +214,11 @@ void CandidateVertexCreationAlgorithm::TidyUp()
 
 StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputClusterListNames", m_inputClusterListNames));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
