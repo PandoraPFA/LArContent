@@ -92,23 +92,29 @@ template <typename T>
 bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
     const Cluster *&pHighXCluster) const
 {
-    pLowXCluster = NULL;
-    pHighXCluster = NULL;
+    CartesianVector lowXEnd(0.f, 0.f, 0.f), highXEnd(0.f, 0.f, 0.f);
+
+    try
+    {
+        LArPointingCluster pointingCluster(pCurrentCluster);
+        const bool innerIsLowX(pointingCluster.GetInnerVertex().GetPosition().GetX() < pointingCluster.GetOuterVertex().GetPosition().GetX());
+        lowXEnd = (innerIsLowX ? pointingCluster.GetInnerVertex().GetPosition() : pointingCluster.GetOuterVertex().GetPosition());
+        highXEnd = (innerIsLowX ? pointingCluster.GetOuterVertex().GetPosition() : pointingCluster.GetInnerVertex().GetPosition());
+    }
+    catch (const StatusCodeException &) {return false;}
+
+    const CartesianVector lowXUnitVector((lowXEnd - splitPosition).GetUnitVector());
+    const CartesianVector highXUnitVector((highXEnd - splitPosition).GetUnitVector());
+
+    CaloHitList caloHitList;
+    pCurrentCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
 
     std::string originalListName, fragmentListName;
     ClusterList clusterList; clusterList.insert(pCurrentCluster);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, originalListName, fragmentListName));
 
-    CaloHitList caloHitList;
-    pCurrentCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
-
-    LArPointingCluster pointingCluster(pCurrentCluster);
-    const bool innerIsLowX(pointingCluster.GetInnerVertex().GetPosition().GetX() < pointingCluster.GetOuterVertex().GetPosition().GetX());
-    const CartesianVector &lowXEnd(innerIsLowX ? pointingCluster.GetInnerVertex().GetPosition() : pointingCluster.GetOuterVertex().GetPosition());
-    const CartesianVector &highXEnd(innerIsLowX ? pointingCluster.GetOuterVertex().GetPosition() : pointingCluster.GetInnerVertex().GetPosition());
-
-    const CartesianVector lowXUnitVector((lowXEnd - splitPosition).GetUnitVector());
-    const CartesianVector highXUnitVector((highXEnd - splitPosition).GetUnitVector());
+    pLowXCluster = NULL;
+    pHighXCluster = NULL;
 
     for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
     {
