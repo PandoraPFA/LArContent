@@ -164,14 +164,6 @@ private:
     void InitializeKDTrees(HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const;
 
     /**
-     *  @brief  Initialize a kd trees with details of hits in a named list
-     * 
-     *  @param  caloHitListName the calo hit list name
-     *  @param  kdTree the kd tree
-     */
-    void InitializeKDTree(const std::string &caloHitListName, HitKDTree2D &kdTree) const;
-
-    /**
      *  @brief  Whether the vertex lies on a hit in the specified view
      * 
      *  @param  pVertex the address of the vertex
@@ -224,29 +216,27 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
-    std::string     m_inputCaloHitListNameU;        ///< The name of the view U calo hit list
-    std::string     m_inputCaloHitListNameV;        ///< The name of the view V calo hit list
-    std::string     m_inputCaloHitListNameW;        ///< The name of the view W calo hit list
-    std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
+    pandora::StringVector   m_inputCaloHitListNames;        ///< The list of calo hit list names
+    std::string             m_outputVertexListName;         ///< The name under which to save the output vertex list
 
-    bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
+    bool                    m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 
-    bool            m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
-    float           m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
+    bool                    m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
+    float                   m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
    
-    bool            m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
-    unsigned int    m_maxTopScoreSelections;        ///< Max number of top-scoring vertex candidate to select for output
+    bool                    m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
+    unsigned int            m_maxTopScoreSelections;        ///< Max number of top-scoring vertex candidate to select for output
 
-    float           m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
+    float                   m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
 
-    float           m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
-    float           m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
+    float                   m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
+    float                   m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
 
-    bool            m_useDetectorGaps;              ///< Whether to account for registered detector gaps in vertex selection
-    float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
+    bool                    m_useDetectorGaps;              ///< Whether to account for registered detector gaps in vertex selection
+    float                   m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 
-    bool            m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
-    unsigned int    m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
+    bool                    m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
+    unsigned int            m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

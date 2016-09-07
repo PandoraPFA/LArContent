@@ -25,6 +25,11 @@ protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
+     *  @brief  Run the algorithm using the current cluster list as input
+     */
+    pandora::StatusCode RunUsingCurrentList() const;
+
+    /**
      *  @brief  Divide calo hits in a cluster into two lists, each associated with a separate fragment cluster
      *
      *  @param  pCluster address of the cluster
@@ -45,7 +50,7 @@ private:
      */
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, ClusterSplittingList &clusterSplittingList) const;
 
-    std::string     m_inputClusterList;         ///< The name of the input cluster list - if empty, use the current cluster list
+    pandora::StringVector   m_inputClusterListNames;    ///< The list of input cluster list names - if empty, use the current cluster list
 };
 
 } // namespace lar_content

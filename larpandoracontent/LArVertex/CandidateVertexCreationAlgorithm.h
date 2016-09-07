@@ -41,19 +41,19 @@ private:
     /**
      *  @brief  Select a subset of input clusters (contained in the input list names) for processing in this algorithm
      *
-     *  @param  clusterListU to receive the selected clusters in the u view
-     *  @param  clusterListV to receive the selected clusters in the v view
-     *  @param  clusterListW to receive the selected clusters in the w view
+     *  @param  clusterVectorU to receive the selected clusters in the u view
+     *  @param  clusterVectorV to receive the selected clusters in the v view
+     *  @param  clusterVectorW to receive the selected clusters in the w view
      */
-    void SelectClusters(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW);
+    void SelectClusters(pandora::ClusterVector &clusterVectorU, pandora::ClusterVector &clusterVectorV, pandora::ClusterVector &clusterVectorW);
 
     /**
      *  @brief  Create candidate vertex positions by comparing pairs of cluster end positions
      *
-     *  @param  clusterList1 the list of clusters in view 1
-     *  @param  clusterList1 the list of clusters in view 2
+     *  @param  clusterVector1 the clusters in view 1
+     *  @param  clusterVector1 the clusters in view 2
      */
-    void ClusterEndPointComparison(const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2) const;
+    void ClusterEndPointComparison(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2) const;
 
     /**
      *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
@@ -63,14 +63,6 @@ private:
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
     void CreateVertex(const pandora::CartesianVector &position1, const pandora::HitType hitType1, const TwoDSlidingFitResult &fitResult2) const;
-
-    /**
-     *  @brief  Select a subset of input clusters for processing in this algorithm
-     *
-     *  @param  clusterListName the cluster list name
-     *  @param  selectedClusterList to receive the selected cluster list
-     */
-    void SelectClusters(const std::string &clusterListName, pandora::ClusterList &selectedClusterList);
 
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
@@ -93,9 +85,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
+    pandora::StringVector       m_inputClusterListNames;        ///< The list of cluster list names
     std::string                 m_outputVertexListName;         ///< The name under which to save the output vertex list
     bool                        m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
 

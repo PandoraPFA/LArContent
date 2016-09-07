@@ -100,11 +100,11 @@ private:
     /**
      *  @brief  Calculate the sliding fits data objects for the clusters in a given view
      * 
-     *  @param  hitType the view hit type
-     *  @param  slidingFitPitch the sliding fit pitch
-     *  @param  slidingFitDataList to receive the list of sliding fit data objects
+     *  @param  slidingFitDataListU to receive the list of sliding fit data objects for u clusters
+     *  @param  slidingFitDataListV to receive the list of sliding fit data objects for v clusters
+     *  @param  slidingFitDataListW to receive the list of sliding fit data objects for w clusters
      */
-    void CalculateClusterSlidingFits(const pandora::HitType hitType, const float slidingFitPitch, SlidingFitDataList &slidingFitDataList) const;
+    void CalculateClusterSlidingFits(SlidingFitDataList &slidingFitDataListU, SlidingFitDataList &slidingFitDataListV, SlidingFitDataList &slidingFitDataListW) const;
 
     /**
      *  @brief  Get the energy score for a given vertex
@@ -184,13 +184,14 @@ private:
         bool isViable) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    
-    unsigned int    m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    float           m_rOffset;                      ///< The r offset parameter in the energy score
-    float           m_xOffset;                      ///< The x offset parameter in the energy score
-    float           m_epsilon;                      ///< The epsilon parameter in the energy score
-    float           m_asymmetryConstant;            ///< The asymmetry constant parameter in the energy score
-    unsigned int    m_minNHits;                     ///< The min number of hits parameter in the energy score
+
+    pandora::StringVector   m_inputClusterListNames;        ///< The list of cluster list names
+    unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    float                   m_rOffset;                      ///< The r offset parameter in the energy score
+    float                   m_xOffset;                      ///< The x offset parameter in the energy score
+    float                   m_epsilon;                      ///< The epsilon parameter in the energy score
+    float                   m_asymmetryConstant;            ///< The asymmetry constant parameter in the energy score
+    unsigned int            m_minClusterCaloHits;           ///< The min number of hits parameter in the energy score
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

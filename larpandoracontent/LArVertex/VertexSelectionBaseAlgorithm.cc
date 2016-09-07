@@ -133,29 +133,33 @@ StatusCode VertexSelectionBaseAlgorithm::Run()
 
 void VertexSelectionBaseAlgorithm::InitializeKDTrees(HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW) const
 {
-    this->InitializeKDTree(m_inputCaloHitListNameU, kdTreeU);
-    this->InitializeKDTree(m_inputCaloHitListNameV, kdTreeV);
-    this->InitializeKDTree(m_inputCaloHitListNameW, kdTreeW);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void VertexSelectionBaseAlgorithm::InitializeKDTree(const std::string &caloHitListName, HitKDTree2D &kdTree) const
-{
-    const CaloHitList *pCaloHitList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, caloHitListName, pCaloHitList));
-
-    if (!pCaloHitList || pCaloHitList->empty())
+    for (const std::string &caloHitListName : m_inputCaloHitListNames)
     {
-        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "VertexSelectionBaseAlgorithm: unable to find calo hit list " << caloHitListName << std::endl;
+        const CaloHitList *pCaloHitList = NULL;
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, caloHitListName, pCaloHitList));
 
-        return;
+        if (!pCaloHitList || pCaloHitList->empty())
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "VertexSelectionBaseAlgorithm: unable to find calo hit list " << caloHitListName << std::endl;
+
+            continue;
+        }
+
+        const HitType hitType((*(pCaloHitList->begin()))->GetHitType());
+
+        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        HitKDTree2D &kdTree((TPC_VIEW_U == hitType) ? kdTreeU : (TPC_VIEW_V == hitType) ? kdTreeV : kdTreeW);
+
+        if (!kdTree.empty())
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        HitKDNode2DList hitKDNode2DList;
+        KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, *pCaloHitList, hitKDNode2DList, true);
+        kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
     }
-
-    HitKDNode2DList hitKDNode2DList;
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, *pCaloHitList, hitKDNode2DList, true);
-    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -249,10 +253,11 @@ bool VertexSelectionBaseAlgorithm::SortByVertexZPosition(const pandora::Vertex *
 
 StatusCode VertexSelectionBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameU", m_inputCaloHitListNameU));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameV", m_inputCaloHitListNameV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameW", m_inputCaloHitListNameW));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputCaloHitListNames", m_inputCaloHitListNames));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentVertexList", m_replaceCurrentVertexList));

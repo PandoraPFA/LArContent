@@ -25,7 +25,7 @@ EnergyKickVertexSelectionAlgorithm::EnergyKickVertexSelectionAlgorithm() :
     m_xOffset(0.06),
     m_epsilon(0.06),
     m_asymmetryConstant(3.f),
-    m_minNHits(12)
+    m_minClusterCaloHits(12)
 {
 }
 
@@ -33,14 +33,10 @@ EnergyKickVertexSelectionAlgorithm::EnergyKickVertexSelectionAlgorithm() :
 
 void EnergyKickVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
     HitKDTree2D &/*kdTreeU*/, HitKDTree2D &/*kdTreeV*/, HitKDTree2D &/*kdTreeW*/, VertexScoreList &vertexScoreList) const
-{   
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-
+{
     SlidingFitDataList slidingFitDataListU, slidingFitDataListV, slidingFitDataListW;
-    this->CalculateClusterSlidingFits(TPC_VIEW_U, slidingFitPitch, slidingFitDataListU);
-    this->CalculateClusterSlidingFits(TPC_VIEW_V, slidingFitPitch, slidingFitDataListV);
-    this->CalculateClusterSlidingFits(TPC_VIEW_W, slidingFitPitch, slidingFitDataListW);
-   
+    this->CalculateClusterSlidingFits(slidingFitDataListU, slidingFitDataListV, slidingFitDataListW);
+
     for (const Vertex *const pVertex : vertexVector)
     {
         const float energyScore(this->GetEnergyScore(pVertex, beamConstants, slidingFitDataListU, slidingFitDataListV, slidingFitDataListW));
@@ -50,42 +46,46 @@ void EnergyKickVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EnergyKickVertexSelectionAlgorithm::CalculateClusterSlidingFits(const HitType hitType, const float slidingFitPitch, SlidingFitDataList &slidingFitDataList) const
+void EnergyKickVertexSelectionAlgorithm::CalculateClusterSlidingFits(SlidingFitDataList &slidingFitDataListU, SlidingFitDataList &slidingFitDataListV,
+    SlidingFitDataList &slidingFitDataListW) const
 {
-    // Get the relevant 2D cluster list - TODO, replace this, not flexible...
-    std::string listName;
-    switch (hitType)
-    {
-        case TPC_VIEW_U:
-            listName = "ClustersU";
-            break;
-        case TPC_VIEW_V:
-            listName = "ClustersV";
-            break;
-        case TPC_VIEW_W:
-            listName = "ClustersW";
-            break;
-        default:
-            throw;
-    }
-    
-    const ClusterList *pClusterList(NULL);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, listName, pClusterList));
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
-    if (!pClusterList || pClusterList->empty())
+    for (const std::string &clusterListName : m_inputClusterListNames)
     {
-         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-             std::cout << "EnergyKickVertexSelectionAlgorithm: unable to find current cluster list " << std::endl;
-    }
+        const ClusterList *pClusterList(NULL);
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
-    for (const Cluster * const pCluster : *pClusterList)
-    {
-        if (pCluster->GetNCaloHits() < this->m_minNHits)
+        if (!pClusterList || pClusterList->empty())
+        {
+             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                 std::cout << "EnergyKickVertexSelectionAlgorithm: unable to find cluster list " << clusterListName << std::endl;
+
             continue;
-        
-        // Make sure the window size is such that there are not more layers than hits (following TwoDSlidingLinearFit calculation).
-        const int slidingFitWindow = std::min(static_cast<int>(pCluster->GetNCaloHits()), static_cast<int>(slidingFitPitch*m_slidingFitWindow));
-        slidingFitDataList.emplace_back(pCluster, slidingFitWindow, slidingFitPitch);
+        }
+
+        const HitType hitType(LArClusterHelper::GetClusterHitType(*(pClusterList->begin())));
+
+        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        SlidingFitDataList &slidingFitDataList((TPC_VIEW_U == hitType) ? slidingFitDataListU : (TPC_VIEW_V == hitType) ? slidingFitDataListV : slidingFitDataListW);
+
+        if (!slidingFitDataListW.empty())
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        ClusterVector sortedClusters(pClusterList->begin(), pClusterList->end());
+        std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster * const pCluster : sortedClusters)
+        {
+            if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+                continue;
+            
+            // Make sure the window size is such that there are not more layers than hits (following TwoDSlidingLinearFit calculation).
+            const int slidingFitWindow(std::min(static_cast<int>(pCluster->GetNCaloHits()), static_cast<int>(slidingFitPitch * m_slidingFitWindow)));
+            slidingFitDataList.emplace_back(pCluster, slidingFitWindow, slidingFitPitch);
+        }
     }
 }
 
@@ -222,7 +222,6 @@ void EnergyKickVertexSelectionAlgorithm::IncrementEnergyAsymmetryParameters(cons
             if (cosOpeningAngle < 0.f)
                 axisDirectionEnergy *= -1.f;
         }
-        
         else
         {
             isViable = false;
@@ -241,7 +240,6 @@ void EnergyKickVertexSelectionAlgorithm::IncrementEnergyAsymmetryParameters(cons
             if (cosOpeningAngle < 0.f)
                 axisDirectionHits *= -1.f;
         }
-        
         else
         {
             isViable = false;
@@ -287,7 +285,6 @@ float EnergyKickVertexSelectionAlgorithm::CalculateEnergyAsymmetry(const Cluster
                     beforeVtxEnergy += pCaloHit->GetElectromagneticEnergy();
                     ++beforeVtxCount;
                 }
-                    
                 else if (projectedPos > evtProjectedVtxPos)
                 {
                     afterVtxEnergy += pCaloHit->GetElectromagneticEnergy();
@@ -330,23 +327,26 @@ EnergyKickVertexSelectionAlgorithm::SlidingFitData::SlidingFitData(const pandora
 
 StatusCode EnergyKickVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputClusterListNames", m_inputClusterListNames));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
-        
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ROffset", m_rOffset));
-        
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "XOffset", m_xOffset));
-        
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Epsilon", m_epsilon));
-        
+// TODO sanity check parameters and add more options
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "AsymmetryConstant", m_asymmetryConstant));
-        
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinNHits", m_minNHits));
+        "MinClusterCaloHits", m_minClusterCaloHits));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
