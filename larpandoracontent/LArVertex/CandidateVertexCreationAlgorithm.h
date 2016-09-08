@@ -12,6 +12,8 @@
 
 #include "Pandora/Algorithm.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -53,168 +55,62 @@ private:
      *  @param  clusterVector1 the clusters in view 1
      *  @param  clusterVector1 the clusters in view 2
      */
-    void CreateClusterEndPointComparisonVertices(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2) const;
+    void CreateEndpointCandidates(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2) const;
 
     /**
-     *  @brief  Extrapolates 2D clusters, finds where they cross, and matches these crossing points between views to create vertex candidates
-     *
-     *  @param  clusterVectorU the clusters in the u view
-     *  @param  clusterVectorV the clusters in the v view
-     *  @param  clusterVectorW the clusters in the w view
-     */
-    void CreateCrossingVertices(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
-        const pandora::ClusterVector &clusterVectorW) const;
-
-    /**
-     *  @brief  Looks at long 2D clusters to see if a proton and muon cluster have been merged, creating vertex candidates where energy deposition changes significantly
-     *
-     *  @param  clusterVectorU the clusters in the u view
-     *  @param  clusterVectorV the clusters in the v view
-     *  @param  clusterVectorW the clusters in the w view
-     */
-    void CreateEnergyVertices(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
-        const pandora::ClusterVector &clusterVectorW) const;
-
-    /**
-     *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
+     *  @brief  Create a candidate vertex position, using an end-point position from one cluster and sliding fit to a second cluster
      *
      *  @param  position1 an end-point position for the first cluster
      *  @param  hitType1 the hit type of the first cluster
      *  @param  fitResult2 the two dimensional sliding fit result for the second cluster
      */
-    void CreateVertex(const pandora::CartesianVector &position1, const pandora::HitType hitType1, const TwoDSlidingFitResult &fitResult2) const;
+    void CreateEndpointVertex(const pandora::CartesianVector &position1, const pandora::HitType hitType1, const TwoDSlidingFitResult &fitResult2) const;
 
     /**
-     *  @brief  Extrapolates 2D clusters and finds where the clusters cross in 2D
+     *  @brief  Extrapolate 2D clusters, find where they cross, and match crossing points between views to create vertex candidates
+     *
+     *  @param  clusterVectorU the clusters in the u view
+     *  @param  clusterVectorV the clusters in the v view
+     *  @param  clusterVectorW the clusters in the w view
+     */
+    void CreateCrossingCandidates(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV, const pandora::ClusterVector &clusterVectorW) const;
+
+    /**
+     *  @brief  Identify where (extrapolated) clusters plausibly cross in 2D
      *
      *  @param  clusterVector the input clusters
-     *  @param  crossingsVector stores the crossing points in 2D
+     *  @param  crossingPoints to receive the 2D crossing points
      */
-    void Find2DClusterCrossings(const pandora::ClusterVector &clusterVector, pandora::CartesianPointList &crossingsVector) const;
+    void FindCrossingPoints(const pandora::ClusterVector &clusterVector, pandora::CartesianPointList &crossingPoints) const;
 
     /**
-     *  @brief  The method for extrapolating the clusters in 2D using 2D sliding linear fits
+     *  @brief  Get a list of spacepoints representing cluster 2D hit positions and extrapolated positions
      *
-     *  @param  pCluster address of the cluster to be extrapolated
-     *  @param  spacePointVector the list containing all cluster 2D hit positions as well as extrapolated positions
+     *  @param  pCluster address of the cluster
+     *  @param  spacePoints to receive the list of spacepoints
      */
-    void GetExtrapolatedClusterSpacepoints(const pandora::Cluster *const pCluster, pandora::CartesianPointList &spacePointVector) const;
+    void GetSpacepoints(const pandora::Cluster *const pCluster, pandora::CartesianPointList &spacePoints) const;
 
     /**
-     *  @brief  The method for finding where the extrapolated clusters cross
+     *  @brief  Identify where (extrapolated) clusters plausibly cross in 2D
      *
-     *  @param  spacePointVector1 the list containing all extrapolated cluster 2D hit positions of cluster 1
-     *  @param  spacePointVector2 the list containing all extrapolated cluster 2D hit positions of cluster 2
-     *  @param  crossingsVector stores the crossing points in 2D
+     *  @param  spacepoints1 space points for cluster 1
+     *  @param  spacepoints2 space points for cluster 2
+     *  @param  crossingPoints to receive the list of plausible 2D crossing points
      */
-    void FindCrossingsFromSpacepoints(const pandora::CartesianPointList &spacePointVector1, const pandora::CartesianPointList &spacePointVector2,
-        pandora::CartesianPointList &crossingsVector) const;
+    void FindCrossingPoints(const pandora::CartesianPointList &spacepoints1, const pandora::CartesianPointList &spacepoints2,
+        pandora::CartesianPointList &crossingPoints) const;
 
     /**
-     *  @brief  Create a candidate vertex position, using 2D crossing points in 2 views, by attempting to match these crossing points between the two views
+     *  @brief  Attempt to create candidate vertex positions, using 2D crossing points in 2 views
      *
-     *  @param  crossingsVector1 the crossing points in 2D in view 1
-     *  @param  crossingsVector2 the crossing points in 2D in view 2
-     *  @param  hitType1 the view in which the points in crossingsVector1 exist
-     *  @param  hitType2 the view in which the points in crossingsVector2 exist
+     *  @param  crossingPoints1 the crossing points in view 1
+     *  @param  crossingPoints2 the crossing points in view 2
+     *  @param  hitType1 the hit type of crossing points 1
+     *  @param  hitType2 the hit type of crossing points 2
      */
-    void CreateMatchedVertices(pandora::CartesianPointList &crossingsVector1, pandora::CartesianPointList &crossingsVector2,
-        pandora::HitType hitType1, pandora::HitType hitType2) const;
-
-    /**
-     *  @brief  Creates a Cartesian vector where the X coordinate is the longitudinal distance along a 2D sliding fit of a hit
-     *          and the Z cooridnate is the hit energy
-     *
-     *  @param  pCluster address of the cluster for which the vector is to be made
-     *  @param  energyAlongRLvector the output vector by reference
-     */
-    void CreateEnergyAlongRLVector(const pandora::Cluster *const pCluster, pandora::CartesianPointList &energyAlongRLvector) const;
-
-    /**
-     *  @brief  Filters out hits with outlying hit energies from an RL, hit energy Cartesian vector
-     *
-     *  @param  unfilteredEnergyVector the unfiltered input RL, hit energy vector
-     *  @param  filteredEnergyVector the filtered output vector by reference
-     * 
-     */
-    void FilterEnergyVector(const pandora::CartesianPointList &unfilteredEnergyVector, pandora::CartesianPointList &filteredEnergyVector) const;
-
-    /**
-     *  @brief  Bins an input RL, hit energy vector into bins 1cm wide, with X coordinate the average RL cooridnate of the bin,
-     *          and as Z coordinate the average hit energy of the bin
-     *
-     *  @param  energyAlongRLvector the unbinned input RL, hit energy vector
-     *  @param  binnedEnergyAlongRLvector the binned output vector by reference
-     * 
-     */
-    void BinEnergyRLVector(const pandora::CartesianPointList &energyAlongRLvector, pandora::CartesianPointList &binnedEnergyAlongRLvector) const;
-
-    /**
-     *  @brief  Attempts to find the longitudinal coordinate along a 2D sliding lionear fit of an energy spike
-     *
-     *  @param  energyAlongRLvector the input RL, hit energy vector
-     *  @param  spikeRLvector the vector containing all the RL coordinates of the energy jumps
-     * 
-     */
-    void FindEnergySpike(const pandora::CartesianPointList &energyAlongRLvector, pandora::FloatVector &spikeRLvector) const;
-
-    /**
-     *  @brief  Attempts to find the bin in which there is an energy jump in a binned RL, hit energy vector
-     *
-     *  @param  energyAlongRLvector the input binned RL, hit energy vector
-     *  @param  spikeRLvector the vector containing all the average RL coordinates of the bins in which there are energy jumps
-     * 
-     */
-    void FindBinWithSpike(const pandora::CartesianPointList &binnedEnergyAlongRLvector, pandora::FloatVector &binRLvector) const;
-
-    /**
-     *  @brief  Converts an average bin RL coordinate to the RL coordinate of the hit that best matches the energy jump
-     *
-     *  @param  binRLvector the vector containing all the average RL coordinates of the bins in which there are energy jumps
-     *  @param  spikeRLvector the vector containing all the RL coordinates of the energy jumps
-     *  @param  energyAlongRLvector the original energy along RL vector
-     * 
-     */
-    void ConvertBinRLToSpikeRL(const pandora::FloatVector &binRLvector, pandora::FloatVector &spikeRLvector,
-        const pandora::CartesianPointList &energyAlongRLvector) const;
-
-    /**
-     *  @brief  Converts an RL coordinate along a 2D sliding linear fit to a 2D hit position in the corresponding cluster
-     *
-     *  @param  filteredEnergyAlongRLvector the RL, hit energy vector that was used to find the energy jump
-     *  @param  caloHitList the caloHitList of the cluster used to form the RL, hit energy vector
-     *  @param  hitPosition the output hit position in 2D by reference
-     * 
-     */
-    void ConvertRLtoCaloHit(const float spikeRL, const pandora::CartesianPointList &filteredEnergyAlongRLvector, const pandora::CaloHitList &caloHitList,
-        pandora::CartesianVector &hitPosition) const;
-
-    /**
-     *  @brief  When a hit corresponding to an energy jump has been found, this method find corresponding hits in the other two views
-     *          by matching the hits very narrowly by their X coordinates (drift times)
-     *
-     *  @param  clusterVector all the clusters in the target view
-     *  @param  energySpikeVector the vector containing the 2D hit positions of the energy spikes
-     *  @param  matchedHits the output matched hits by reference
-     * 
-     */
-    void FindMatchingHitsInDifferentView(const pandora::ClusterVector &clusterVector, const pandora::CartesianVector &energySpikeVector,
-        pandora::CartesianPointList &matchedHits) const;
-
-    /**
-     *  @brief  The final step that creates energy vertex candidates using the output from the previous methods
-     *
-     *  @param  energySpikeRLvector vector containing all the RL positions of the energy spikes
-     *  @param  filteredEnergyAlongRLvector the filtered RL, hit energy vector used to find the energy spikes
-     *  @param  caloHitList the calo hits corresponding to the cluster used to find the energy spikes
-     *  @param  clusterVector1 all the clusters in view 1
-     *  @param  clusterVector2 all the clusters in view 2
-     *  @param  clusterVector3 all the clusters in view 3
-     * 
-     */
-    void CreateVerticesFromSpikes(const pandora::FloatVector &energySpikeRLvector, const pandora::CartesianPointList &filteredEnergyAlongRLvector,
-        const pandora::CaloHitList &caloHitList, const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2,
-        const pandora::ClusterVector &clusterVector3) const;
+    void CreateCrossingVertices(const pandora::CartesianPointList &crossingPoints1, const pandora::CartesianPointList &crossingPoints2,
+        const pandora::HitType hitType1, const pandora::HitType hitType2) const;
 
     /**
      *  @brief  Creates a 2D sliding fit of a cluster and stores it for later use
@@ -235,53 +131,31 @@ private:
      */
     void TidyUp();
 
-    /**
-     *  @brief  Sorts 2D positions in two Cartesian vectors by their Z coordinates
-     * 
-     *  @param  vector1 the first vector to be sorted
-     *  @param  vector2 the second vector to be sorted
-     */
-    static bool SortSpacePointsByZ(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
-
-    /**
-     *  @brief  Sorts 2D positions in two Cartesian vectors by their X coordinates
-     * 
-     *  @param  vector1 the first vector to be sorted
-     *  @param  vector2 the second vector to be sorted
-     */
-    static bool SortEnergyVectorByRL(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector       m_inputClusterListNames;        ///< The list of cluster list names
-    std::string                 m_outputVertexListName;         ///< The name under which to save the output vertex list
+    typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointList> ClusterToSpacepointsMap;
 
-    bool                        m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
+    pandora::StringVector   m_inputClusterListNames;            ///< The list of cluster list names
+    std::string             m_outputVertexListName;             ///< The name under which to save the output vertex list
+    bool                    m_replaceCurrentVertexList;         ///< Whether to replace the current vertex list with the output list
 
-    unsigned int                m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    TwoDSlidingFitResultMap     m_slidingFitResultMap;          ///< The sliding fit result map
+    unsigned int            m_slidingFitWindow;                 ///< The layer window for the sliding linear fits
+    TwoDSlidingFitResultMap m_slidingFitResultMap;              ///< The sliding fit result map
 
-    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
-    float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
-    float                       m_maxClusterXDiscrepancy;       ///< The max cluster end-point discrepancy
-    float                       m_chiSquaredCut;                ///< The chi squared cut (accept only values below the cut value)
+    unsigned int            m_minClusterCaloHits;               ///< The min number of hits in base cluster selection method
+    float                   m_minClusterLengthSquared;          ///< The min length (squared) in base cluster selection method
+    float                   m_chiSquaredCut;                    ///< The chi squared cut (accept only 3D vertex positions with values below cut)
 
-    bool                        m_enableCrossingCandidates;     ///< Whether to create crossing vertex candidates
-    bool                        m_enableEnergyCandidates;       ///< Whether to create energy-based candidates
+    bool                    m_enableEndpointCandidates;         ///< Whether to create endpoint-based candidates
+    float                   m_maxEndpointXDiscrepancy;          ///< The max cluster endpoint discrepancy
 
-    unsigned int                m_minCrossingClusterSize;       ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
-
-    float                       m_extrapolationLength;          ///< How far in cm to extrapolate a cluster in order to look for 2D crossing points
-    float                       m_extrapolationStepSize;        ///< The distance between extrapolation points in cm
-    float                       m_minClusterCrossingApproach;   ///< The minimum impact parameter between two extrapolated clusters to be marked as crossing
-    float                       m_postCrossingSkipDistance;     ///< How far to skip along an exrapolated cluster after finding a crossing point (for speed)
-
-    unsigned int                m_minEnergyVertexClusterSize;   ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
-    float                       m_oneBinDistanceFractionalDeviationThreshold;
-    float                       m_twoBinDistanceFractionalDeviationThreshold;
-    float                       m_threeBinDistanceFractionalDeviationThreshold;
-    float                       m_minAverageBinEnergy;
-    float                       m_maxAverageBinEnergy;
+    bool                    m_enableCrossingCandidates;         ///< Whether to create crossing vertex candidates
+    float                   m_maxCrossingXDiscrepancy;          ///< The max cluster endpoint discrepancy
+    unsigned int            m_minCrossingClusterCaloHits;       ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
+    unsigned int            m_extrapolationNSteps;              ///< Number of extrapolation steps, at each end of cluster, of specified size
+    float                   m_extrapolationStepSize;            ///< The extrapolation step size in cm
+    float                   m_maxCrossingSeparationSquared;     ///< The separation (squared) between spacepoints below which a crossing can be identified
+    float                   m_autoCrossingSeparationSquared;    ///< The separation (squared) between spacepoints below which a crossing is automatically added
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
