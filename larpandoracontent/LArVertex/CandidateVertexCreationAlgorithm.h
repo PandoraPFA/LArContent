@@ -53,25 +53,27 @@ private:
      *  @param  clusterVector1 the clusters in view 1
      *  @param  clusterVector1 the clusters in view 2
      */
-    void ClusterEndPointComparison(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2) const;
-    
+    void CreateClusterEndPointComparisonVertices(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2) const;
+
     /**
      *  @brief  Extrapolates 2D clusters, finds where they cross, and matches these crossing points between views to create vertex candidates
      *
-     *  @param  clusterListU the clusters in the u view
-     *  @param  clusterListV the clusters in the v view
-     *  @param  clusterListW the clusters in the w view
+     *  @param  clusterVectorU the clusters in the u view
+     *  @param  clusterVectorV the clusters in the v view
+     *  @param  clusterVectorW the clusters in the w view
      */
-    void CreateCrossingVertices(pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW);
-    
+    void CreateCrossingVertices(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
+        const pandora::ClusterVector &clusterVectorW) const;
+
     /**
-     *  @brief  Looks at long 2D clusters to see if a proton and muon cluster have been merged. It looks at a jump in hit energy and matches these jumps between views to crate energy-based vertex candidates.
+     *  @brief  Looks at long 2D clusters to see if a proton and muon cluster have been merged, creating vertex candidates where energy deposition changes significantly
      *
-     *  @param  clusterListU the clusters in the u view
-     *  @param  clusterListV the clusters in the v view
-     *  @param  clusterListW the clusters in the w view
+     *  @param  clusterVectorU the clusters in the u view
+     *  @param  clusterVectorV the clusters in the v view
+     *  @param  clusterVectorW the clusters in the w view
      */
-    void CreateEnergyVertices(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW);
+    void CreateEnergyVertices(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
+        const pandora::ClusterVector &clusterVectorW) const;
 
     /**
      *  @brief  Create a candidate vertex position, using an end-point position from one cluster and the fit for a second cluster
@@ -85,19 +87,19 @@ private:
     /**
      *  @brief  Extrapolates 2D clusters and finds where the clusters cross in 2D
      *
-     *  @param  clusterList the list of input clusters
+     *  @param  clusterVector the input clusters
      *  @param  crossingsVector stores the crossing points in 2D
      */
-    void Find2DClusterCrossings(const pandora::ClusterList &clusterList, std::vector<pandora::CartesianVector> &crossingsVector);
-    
+    void Find2DClusterCrossings(const pandora::ClusterVector &clusterVector, pandora::CartesianPointList &crossingsVector) const;
+
     /**
      *  @brief  The method for extrapolating the clusters in 2D using 2D sliding linear fits
      *
-     *  @param  spacePointVector the list containing all cluster 2D hit positions as well as extrapolated positions
      *  @param  pCluster address of the cluster to be extrapolated
+     *  @param  spacePointVector the list containing all cluster 2D hit positions as well as extrapolated positions
      */
-    void GetExtrapolatedClusterSpacepoints(std::vector<pandora::CartesianVector> &spacePointVector, const pandora::Cluster *const pCluster);
-    
+    void GetExtrapolatedClusterSpacepoints(const pandora::Cluster *const pCluster, pandora::CartesianPointList &spacePointVector) const;
+
     /**
      *  @brief  The method for finding where the extrapolated clusters cross
      *
@@ -105,8 +107,9 @@ private:
      *  @param  spacePointVector2 the list containing all extrapolated cluster 2D hit positions of cluster 2
      *  @param  crossingsVector stores the crossing points in 2D
      */
-    void FindCrossingsFromSpacepoints(std::vector<pandora::CartesianVector> &spacePointVector1, std::vector<pandora::CartesianVector> &spacePointVector2, std::vector<pandora::CartesianVector> &crossingsVector);
-    
+    void FindCrossingsFromSpacepoints(const pandora::CartesianPointList &spacePointVector1, const pandora::CartesianPointList &spacePointVector2,
+        pandora::CartesianPointList &crossingsVector) const;
+
     /**
      *  @brief  Create a candidate vertex position, using 2D crossing points in 2 views, by attempting to match these crossing points between the two views
      *
@@ -115,16 +118,18 @@ private:
      *  @param  hitType1 the view in which the points in crossingsVector1 exist
      *  @param  hitType2 the view in which the points in crossingsVector2 exist
      */
-    void CreateMatchedVertices(std::vector<pandora::CartesianVector> &crossingsVector1, std::vector<pandora::CartesianVector> &crossingsVector2, pandora::HitType hitType1, pandora::HitType hitType2) const;
-    
+    void CreateMatchedVertices(pandora::CartesianPointList &crossingsVector1, pandora::CartesianPointList &crossingsVector2,
+        pandora::HitType hitType1, pandora::HitType hitType2) const;
+
     /**
-     *  @brief  Creates a Cartesian vector where the X coordinate is the longitudinal distance along a 2D sliding fit of a hit and the Z cooridnate is the hit energy
+     *  @brief  Creates a Cartesian vector where the X coordinate is the longitudinal distance along a 2D sliding fit of a hit
+     *          and the Z cooridnate is the hit energy
      *
      *  @param  pCluster address of the cluster for which the vector is to be made
      *  @param  energyAlongRLvector the output vector by reference
      */
-    void CreateEnergyAlongRLVector(const pandora::Cluster *const pCluster, std::vector<pandora::CartesianVector> &energyAlongRLvector);
-    
+    void CreateEnergyAlongRLVector(const pandora::Cluster *const pCluster, pandora::CartesianPointList &energyAlongRLvector) const;
+
     /**
      *  @brief  Filters out hits with outlying hit energies from an RL, hit energy Cartesian vector
      *
@@ -132,17 +137,18 @@ private:
      *  @param  filteredEnergyVector the filtered output vector by reference
      * 
      */
-    void FilterEnergyVector(const std::vector<pandora::CartesianVector> &unfilteredEnergyVector, std::vector<pandora::CartesianVector> &filteredEnergyVector);
-    
+    void FilterEnergyVector(const pandora::CartesianPointList &unfilteredEnergyVector, pandora::CartesianPointList &filteredEnergyVector) const;
+
     /**
-     *  @brief  Bins an input RL, hit energy vector into bins 1cm wide, with X coordinate the average RL cooridnate of the bin, and as Z coordinate the average hit energy of the bin
+     *  @brief  Bins an input RL, hit energy vector into bins 1cm wide, with X coordinate the average RL cooridnate of the bin,
+     *          and as Z coordinate the average hit energy of the bin
      *
      *  @param  energyAlongRLvector the unbinned input RL, hit energy vector
      *  @param  binnedEnergyAlongRLvector the binned output vector by reference
      * 
      */
-    void BinEnergyRLVector(const std::vector<pandora::CartesianVector> &energyAlongRLvector, std::vector<pandora::CartesianVector> &binnedEnergyAlongRLvector);
-    
+    void BinEnergyRLVector(const pandora::CartesianPointList &energyAlongRLvector, pandora::CartesianPointList &binnedEnergyAlongRLvector) const;
+
     /**
      *  @brief  Attempts to find the longitudinal coordinate along a 2D sliding lionear fit of an energy spike
      *
@@ -150,8 +156,8 @@ private:
      *  @param  spikeRLvector the vector containing all the RL coordinates of the energy jumps
      * 
      */
-    void FindEnergySpike(const std::vector<pandora::CartesianVector> &energyAlongRLvector, std::vector<float> &spikeRLvector);
-    
+    void FindEnergySpike(const pandora::CartesianPointList &energyAlongRLvector, pandora::FloatVector &spikeRLvector) const;
+
     /**
      *  @brief  Attempts to find the bin in which there is an energy jump in a binned RL, hit energy vector
      *
@@ -159,8 +165,8 @@ private:
      *  @param  spikeRLvector the vector containing all the average RL coordinates of the bins in which there are energy jumps
      * 
      */
-    void FindBinWithSpike(const std::vector<pandora::CartesianVector> &binnedEnergyAlongRLvector, std::vector<float> &binRLvector);
-    
+    void FindBinWithSpike(const pandora::CartesianPointList &binnedEnergyAlongRLvector, pandora::FloatVector &binRLvector) const;
+
     /**
      *  @brief  Converts an average bin RL coordinate to the RL coordinate of the hit that best matches the energy jump
      *
@@ -169,8 +175,9 @@ private:
      *  @param  energyAlongRLvector the original energy along RL vector
      * 
      */
-    void ConvertBinRLToSpikeRL(const std::vector<float> &binRLvector, std::vector<float> &spikeRLvector, const std::vector<pandora::CartesianVector> &energyAlongRLvector);
-    
+    void ConvertBinRLToSpikeRL(const pandora::FloatVector &binRLvector, pandora::FloatVector &spikeRLvector,
+        const pandora::CartesianPointList &energyAlongRLvector) const;
+
     /**
      *  @brief  Converts an RL coordinate along a 2D sliding linear fit to a 2D hit position in the corresponding cluster
      *
@@ -179,31 +186,36 @@ private:
      *  @param  hitPosition the output hit position in 2D by reference
      * 
      */
-    void ConvertRLtoCaloHit(const float &spikeRL, std::vector<pandora::CartesianVector> &filteredEnergyAlongRLvector, const pandora::CaloHitList &caloHitList, pandora::CartesianVector &hitPosition);
-    
+    void ConvertRLtoCaloHit(const float spikeRL, const pandora::CartesianPointList &filteredEnergyAlongRLvector, const pandora::CaloHitList &caloHitList,
+        pandora::CartesianVector &hitPosition) const;
+
     /**
-     *  @brief  When a hit corresponding to an energy jump has been found, this method find corresponding hits in the other two views by matching the hits very narrowly by their X coordinates (drift times)
+     *  @brief  When a hit corresponding to an energy jump has been found, this method find corresponding hits in the other two views
+     *          by matching the hits very narrowly by their X coordinates (drift times)
      *
-     *  @param  clusterList all the clusters in the target view
+     *  @param  clusterVector all the clusters in the target view
      *  @param  energySpikeVector the vector containing the 2D hit positions of the energy spikes
      *  @param  matchedHits the output matched hits by reference
      * 
      */
-    void FindMatchingHitsInDifferentView(const pandora::ClusterList &clusterList, pandora::CartesianVector &energySpikeVector, std::vector<pandora::CartesianVector> &matchedHits);
-    
+    void FindMatchingHitsInDifferentView(const pandora::ClusterVector &clusterVector, const pandora::CartesianVector &energySpikeVector,
+        pandora::CartesianPointList &matchedHits) const;
+
     /**
      *  @brief  The final step that creates energy vertex candidates using the output from the previous methods
      *
      *  @param  energySpikeRLvector vector containing all the RL positions of the energy spikes
      *  @param  filteredEnergyAlongRLvector the filtered RL, hit energy vector used to find the energy spikes
      *  @param  caloHitList the calo hits corresponding to the cluster used to find the energy spikes
-     *  @param  clusterList1 all the clusters in view 1
-     *  @param  clusterList2 all the clusters in view 2
-     *  @param  clusterList3 all the clusters in view 3
+     *  @param  clusterVector1 all the clusters in view 1
+     *  @param  clusterVector2 all the clusters in view 2
+     *  @param  clusterVector3 all the clusters in view 3
      * 
      */
-    void CreateVerticesFromSpikes(const std::vector<float>energySpikeRLvector, std::vector<pandora::CartesianVector> filteredEnergyAlongRLvector, pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2, const pandora::ClusterList &clusterList3);
-    
+    void CreateVerticesFromSpikes(const pandora::FloatVector &energySpikeRLvector, const pandora::CartesianPointList &filteredEnergyAlongRLvector,
+        const pandora::CaloHitList &caloHitList, const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2,
+        const pandora::ClusterVector &clusterVector3) const;
+
     /**
      *  @brief  Creates a 2D sliding fit of a cluster and stores it for later use
      * 
@@ -222,7 +234,7 @@ private:
      *  @brief  Clear relevant algorithm member variables between events
      */
     void TidyUp();
-    
+
     /**
      *  @brief  Sorts 2D positions in two Cartesian vectors by their Z coordinates
      * 
@@ -230,7 +242,7 @@ private:
      *  @param  vector2 the second vector to be sorted
      */
     static bool SortSpacePointsByZ(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
-    
+
     /**
      *  @brief  Sorts 2D positions in two Cartesian vectors by their X coordinates
      * 
@@ -238,7 +250,7 @@ private:
      *  @param  vector2 the second vector to be sorted
      */
     static bool SortEnergyVectorByRL(pandora::CartesianVector &vector1, pandora::CartesianVector &vector2);
-    
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector       m_inputClusterListNames;        ///< The list of cluster list names
@@ -253,18 +265,17 @@ private:
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
     float                       m_maxClusterXDiscrepancy;       ///< The max cluster end-point discrepancy
     float                       m_chiSquaredCut;                ///< The chi squared cut (accept only values below the cut value)
-    
+
     bool                        m_enableCrossingCandidates;     ///< Whether to create crossing vertex candidates
     bool                        m_enableEnergyCandidates;       ///< Whether to create energy-based candidates
-    bool                        m_energyPlot;                   ///< Whether to draw 
-    
+
     unsigned int                m_minCrossingClusterSize;       ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
-    
+
     float                       m_extrapolationLength;          ///< How far in cm to extrapolate a cluster in order to look for 2D crossing points
     float                       m_extrapolationStepSize;        ///< The distance between extrapolation points in cm
     float                       m_minClusterCrossingApproach;   ///< The minimum impact parameter between two extrapolated clusters to be marked as crossing
     float                       m_postCrossingSkipDistance;     ///< How far to skip along an exrapolated cluster after finding a crossing point (for speed)
-    
+
     unsigned int                m_minEnergyVertexClusterSize;   ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
     float                       m_oneBinDistanceFractionalDeviationThreshold;
     float                       m_twoBinDistanceFractionalDeviationThreshold;
