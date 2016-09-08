@@ -155,7 +155,7 @@ private:
     unsigned int            m_extrapolationNSteps;              ///< Number of extrapolation steps, at each end of cluster, of specified size
     float                   m_extrapolationStepSize;            ///< The extrapolation step size in cm
     float                   m_maxCrossingSeparationSquared;     ///< The separation (squared) between spacepoints below which a crossing can be identified
-    float                   m_autoCrossingSeparationSquared;    ///< The separation (squared) between spacepoints below which a crossing is automatically added
+    float                   m_minNearbyCrossingDistanceSquared; ///< The minimum allowed distance between identified crossing positions
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -29,12 +29,12 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_enableEndpointCandidates(true),
     m_maxEndpointXDiscrepancy(4.f),
     m_enableCrossingCandidates(true),
-    m_maxCrossingXDiscrepancy(1.f),
+    m_maxCrossingXDiscrepancy(0.5f),
     m_minCrossingClusterCaloHits(10),
     m_extrapolationNSteps(200),
     m_extrapolationStepSize(0.1f),
-    m_maxCrossingSeparationSquared(2.5f * 2.5f),
-    m_autoCrossingSeparationSquared(0.5f * 0.5f)
+    m_maxCrossingSeparationSquared(2.f * 2.f),
+    m_minNearbyCrossingDistanceSquared(0.5f * 0.5f)
 {
 }
 
@@ -210,6 +210,32 @@ void CandidateVertexCreationAlgorithm::CreateCrossingCandidates(const ClusterVec
     this->CreateCrossingVertices(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
     this->CreateCrossingVertices(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
     this->CreateCrossingVertices(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
+//    for (const CartesianVector &crossingPoint : crossingsU)
+//    {
+//        for (const Cluster *const pCluster : clusterVectorV)
+//            this->CreateEndpointVertex(crossingPoint, TPC_VIEW_U, this->GetCachedSlidingFitResult(pCluster));
+//
+//        for (const Cluster *const pCluster : clusterVectorW)
+//            this->CreateEndpointVertex(crossingPoint, TPC_VIEW_U, this->GetCachedSlidingFitResult(pCluster));
+//    }
+//
+//    for (const CartesianVector &crossingPoint : crossingsV)
+//    {
+//        for (const Cluster *const pCluster : clusterVectorU)
+//            this->CreateEndpointVertex(crossingPoint, TPC_VIEW_V, this->GetCachedSlidingFitResult(pCluster));
+//
+//        for (const Cluster *const pCluster : clusterVectorW)
+//            this->CreateEndpointVertex(crossingPoint, TPC_VIEW_V, this->GetCachedSlidingFitResult(pCluster));
+//    }
+//
+//    for (const CartesianVector &crossingPoint : crossingsW)
+//    {
+//        for (const Cluster *const pCluster : clusterVectorU)
+//            this->CreateEndpointVertex(crossingPoint, TPC_VIEW_W, this->GetCachedSlidingFitResult(pCluster));
+//
+//        for (const Cluster *const pCluster : clusterVectorV)
+//            this->CreateEndpointVertex(crossingPoint, TPC_VIEW_W, this->GetCachedSlidingFitResult(pCluster));
+//    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,9 +253,12 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const ClusterVector &c
         this->GetSpacepoints(pCluster, mapIter->second);
     }
 
-    for (const Cluster *const pCluster1 : clusterVector)
+    ClusterVector selectedClusters;
+    for (const ClusterToSpacepointsMap::value_type &mapEntry : clusterToSpacepointsMap) selectedClusters.push_back(mapEntry.first);
+
+    for (const Cluster *const pCluster1 : selectedClusters)
     {
-        for (const Cluster *const pCluster2 : clusterVector)
+        for (const Cluster *const pCluster2 : selectedClusters)
         {
             if (pCluster1 == pCluster2)
                 continue;
@@ -269,7 +298,7 @@ void CandidateVertexCreationAlgorithm::GetSpacepoints(const Cluster *const pClus
 void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointList &spacepoints1, const CartesianPointList &spacepoints2,
     CartesianPointList &crossingPoints) const
 {
-    bool bestCrossingFound(false), autoCrossingFound(false);
+    bool bestCrossingFound(false);
     float bestSeparationSquared(m_maxCrossingSeparationSquared);
     CartesianVector bestPosition1(0.f, 0.f, 0.f), bestPosition2(0.f, 0.f, 0.f);
 
@@ -286,21 +315,36 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointLi
                 bestPosition1 = position1;
                 bestPosition2 = position2;
             }
-
-            if (separationSquared < m_autoCrossingSeparationSquared)
-            {
-                autoCrossingFound = true;
-                crossingPoints.push_back(position1);
-                crossingPoints.push_back(position2);
-            }
         }
     }
 
-    if (bestCrossingFound && !autoCrossingFound)
+    if (bestCrossingFound)
     {
-        crossingPoints.push_back(bestPosition1);
-        crossingPoints.push_back(bestPosition2);
+        bool alreadyPopulated(false);
+
+        for (const CartesianVector &existingPosition: crossingPoints)
+        {
+            if (((existingPosition - bestPosition1).GetMagnitudeSquared() < m_minNearbyCrossingDistanceSquared) || // TODO config, plus make more efficient
+                ((existingPosition - bestPosition2).GetMagnitudeSquared() < m_minNearbyCrossingDistanceSquared))
+            {
+                alreadyPopulated = true;
+                break;
+            }
+        }
+        
+        if (!alreadyPopulated)
+        {
+            crossingPoints.push_back(bestPosition1);
+            crossingPoints.push_back(bestPosition2);
+//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &bestPosition1, "bestPosition1", MAGENTA, 1);
+//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &bestPosition2, "bestPosition2", MAGENTA, 1);
+        }
     }
+//std::cout << " crossingPoints.size() " << crossingPoints.size() << std::endl;
+//for (const auto &point :spacepoints1) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "SpacePoint1", ORANGE, 1);
+//for (const auto &point :spacepoints2) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "SpacePoint2", CYAN, 1);
+//for (const auto &point :crossingPoints) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "CrossingPoint", RED, 1);
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -308,6 +352,11 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointLi
 void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPointList &crossingPoints1, const CartesianPointList &crossingPoints2,
     const HitType hitType1, const HitType hitType2) const
 {
+//std::cout << " hitType1 " << hitType1 << ", " << crossingPoints1.size() << std::endl;
+//std::cout << " hitType2 " << hitType2 << ", " << crossingPoints2.size() << std::endl;
+//for (const auto &point :crossingPoints1) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "crossingPoints1", GREEN, 1);
+//for (const auto &point :crossingPoints2) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "crossingPoints2", BLUE, 1);
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
     for (const CartesianVector &position1: crossingPoints1)
     {
         for (const CartesianVector &position2: crossingPoints2)
@@ -420,10 +469,10 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
         "MaxCrossingSeparation", maxCrossingSeparation));
     m_maxCrossingSeparationSquared = maxCrossingSeparation * maxCrossingSeparation;
 
-    float autoCrossingSeparation = std::sqrt(m_autoCrossingSeparationSquared);
+    float minNearbyCrossingDistance = std::sqrt(m_minNearbyCrossingDistanceSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AutoCrossingSeparation", autoCrossingSeparation));
-    m_autoCrossingSeparationSquared = autoCrossingSeparation * autoCrossingSeparation;
+        "MinNearbyCrossingDistance", minNearbyCrossingDistance));
+    m_minNearbyCrossingDistanceSquared = minNearbyCrossingDistance * minNearbyCrossingDistance;
 
     return STATUS_CODE_SUCCESS;
 }
