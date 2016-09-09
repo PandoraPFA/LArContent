@@ -151,7 +151,6 @@ private:
 
     bool                    m_enableCrossingCandidates;         ///< Whether to create crossing vertex candidates
     float                   m_maxCrossingXDiscrepancy;          ///< The max cluster endpoint discrepancy
-    unsigned int            m_minCrossingClusterCaloHits;       ///< The minimum number of hits a cluster needs to have to be considered in the crossing vertex procedure
     unsigned int            m_extrapolationNSteps;              ///< Number of extrapolation steps, at each end of cluster, of specified size
     float                   m_extrapolationStepSize;            ///< The extrapolation step size in cm
     float                   m_maxCrossingSeparationSquared;     ///< The separation (squared) between spacepoints below which a crossing can be identified
