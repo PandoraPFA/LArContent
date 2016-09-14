@@ -316,7 +316,10 @@ private:
     bool                    m_writeToTree;              ///< Whether to write all/raw matching details to tree
 
     int                     m_matchingMinPrimaryHits;   ///< The minimum number of mc primary hits used in matching scheme
+    bool                    m_useSmallPrimaries;        ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
     int                     m_matchingMinSharedHits;    ///< The minimum number of shared hits used in matching scheme
+    float                   m_matchingMinCompleteness;  ///< The minimum particle completeness to declare a match
+    float                   m_matchingMinPurity;        ///< The minimum particle purity to declare a match
 
     float                   m_vertexVisualizationDeltaR;///< The vertex visualization delta r value, defining good and bad vertex matches
 
