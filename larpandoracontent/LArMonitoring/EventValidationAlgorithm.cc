@@ -35,7 +35,10 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_visualizeGaps(false),
     m_writeToTree(true),
     m_matchingMinPrimaryHits(15),
+    m_useSmallPrimaries(true),
     m_matchingMinSharedHits(5),
+    m_matchingMinCompleteness(0.1f),
+    m_matchingMinPurity(0.5f),
     m_vertexVisualizationDeltaR(1.f),
     m_fileIdentifier(0),
     m_eventNumber(0)
@@ -469,7 +472,7 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCPrimaryMatchingMap &
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
-        if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
+        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits))
             continue;
 
         if (usedMCIds.count(simpleMCPrimary.m_id))
@@ -477,7 +480,7 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCPrimaryMatchingMap &
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
         {
-            if (usedPfoIds.count(simpleMatchedPfo.m_id) || (simpleMatchedPfo.m_nMatchedHitsTotal < m_matchingMinSharedHits))
+            if (usedPfoIds.count(simpleMatchedPfo.m_id))
                 continue;
 
             if (simpleMatchedPfo.m_nMatchedHitsTotal > bestMatchingDetails.m_nMatchedHits)
@@ -485,7 +488,6 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCPrimaryMatchingMap &
                 bestPfoMatchId = simpleMatchedPfo.m_id;
                 bestMatchingDetails.m_matchedPrimaryId = simpleMCPrimary.m_id;
                 bestMatchingDetails.m_nMatchedHits = simpleMatchedPfo.m_nMatchedHitsTotal;
-                bestMatchingDetails.m_completeness = static_cast<float>(simpleMatchedPfo.m_nMatchedHitsTotal) / static_cast<float>(simpleMCPrimary.m_nMCHitsTotal);
             }
         }
     }
@@ -510,12 +512,12 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
-        if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
+        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits))
             continue;
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
         {
-            if (usedPfoIds.count(simpleMatchedPfo.m_id) || (simpleMatchedPfo.m_nMatchedHitsTotal < m_matchingMinSharedHits))
+            if (usedPfoIds.count(simpleMatchedPfo.m_id))
                 continue;
 
             MatchingDetails &matchingDetails(matchingDetailsMap[simpleMatchedPfo.m_id]);
@@ -524,7 +526,6 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
             {
                 matchingDetails.m_matchedPrimaryId = simpleMCPrimary.m_id;
                 matchingDetails.m_nMatchedHits = simpleMatchedPfo.m_nMatchedHitsTotal;
-                matchingDetails.m_completeness = static_cast<float>(simpleMatchedPfo.m_nMatchedHitsTotal) / static_cast<float>(simpleMCPrimary.m_nMCHitsTotal);
             }
         }
     }
@@ -535,17 +536,23 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
 void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
     std::cout << "---PROCESSED-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
+    std::cout << "MinPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
+              << m_useSmallPrimaries << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl;
+
     bool isCorrect(true), isCalculable(false);
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
+        const bool hasMatch(this->HasMatch(simpleMCPrimary, mapValue.second, matchingDetailsMap));
+        const bool isTargetPrimary((simpleMCPrimary.m_nMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
 
-        if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
+        if (!hasMatch && !isTargetPrimary)
             continue;
 
-        std::cout << std::endl << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
-            << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
+        std::cout << std::endl << (!isTargetPrimary ? "(Non target) " : "")
+                  << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
+                  << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
         if (NEUTRON != simpleMCPrimary.m_pdgCode)
             isCalculable = true;
@@ -556,20 +563,21 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
         {
             if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
             {
-                std::cout << "-MatchedPfo " << simpleMatchedPfo.m_id;
-                ++nMatches;
+                const bool isGoodMatch(this->IsGoodMatch(simpleMCPrimary, simpleMatchedPfo));
 
-                if (simpleMatchedPfo.m_parentId >= 0)
-                    std::cout << ", ParentPfo " << simpleMatchedPfo.m_parentId;
+                if (isGoodMatch) ++nMatches;
+                std::cout << "-" << (!isGoodMatch ? "(Below threshold) " : "") << "MatchedPfo " << simpleMatchedPfo.m_id;
+
+                if (simpleMatchedPfo.m_parentId >= 0) std::cout << ", ParentPfo " << simpleMatchedPfo.m_parentId;
 
                 std::cout << ", PDG " << simpleMatchedPfo.m_pdgCode << ", nMatchedHits " << simpleMatchedPfo.m_nMatchedHitsTotal
-                    << " (" << simpleMatchedPfo.m_nMatchedHitsU << ", " << simpleMatchedPfo.m_nMatchedHitsV << ", " << simpleMatchedPfo.m_nMatchedHitsW << ")"
-                    << ", nPfoHits " << simpleMatchedPfo.m_nPfoHitsTotal << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", "
-                    << simpleMatchedPfo.m_nPfoHitsW << ")" << std::endl;
+                          << " (" << simpleMatchedPfo.m_nMatchedHitsU << ", " << simpleMatchedPfo.m_nMatchedHitsV << ", " << simpleMatchedPfo.m_nMatchedHitsW << ")"
+                          << ", nPfoHits " << simpleMatchedPfo.m_nPfoHitsTotal
+                          << " (" << simpleMatchedPfo.m_nPfoHitsU << ", " << simpleMatchedPfo.m_nPfoHitsV << ", " << simpleMatchedPfo.m_nPfoHitsW << ")" << std::endl;
             }
         }
 
-        if ((1 != nMatches) && !((0 == nMatches) && (NEUTRON == simpleMCPrimary.m_pdgCode)))
+        if (isTargetPrimary && (1 != nMatches))
             isCorrect = false;
     }
 
@@ -583,8 +591,12 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
 void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
+    std::cout << "---VISUALIZE-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
+    std::cout << "MinPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
+              << m_useSmallPrimaries << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl << std::endl;
+
     PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), m_visualizeGaps, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-    const HitTypeVector hitTypeVector {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
+    const HitTypeVector hitTypeVector{TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
 
     for (const HitType hitType : hitTypeVector)
     {
@@ -596,23 +608,32 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
         for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
         {
             const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
+            bool hasMatch(this->HasMatch(simpleMCPrimary, mapValue.second, matchingDetailsMap));
+            const bool isTargetPrimary((simpleMCPrimary.m_nMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
 
-            if (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
+            if (!hasMatch && !isTargetPrimary)
                 continue;
 
+            PfoList belowThresholdPfos;
             PfoVector primaryMatchedPfos;
 
             for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
             {
                 if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
+                {
                     primaryMatchedPfos.push_back(simpleMatchedPfo.m_pPandoraAddress);
+
+                    if (!this->IsGoodMatch(simpleMCPrimary, simpleMatchedPfo))
+                        belowThresholdPfos.insert(simpleMatchedPfo.m_pPandoraAddress);
+                }
             }
 
             std::string name("UNKNOWN_"); Color color(BLACK);
             this->GetPrimaryDetails(simpleMCPrimary, mcPrimaryMatchingMap, name, color);
+            name.insert(0, !isTargetPrimary ? "NonTarget" : "");
             name += hitTypeString;
 
-            if (primaryMatchedPfos.empty() && (NEUTRON != simpleMCPrimary.m_pdgCode))
+            if (isTargetPrimary && primaryMatchedPfos.empty())
             {
                 const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), simpleMCPrimary.m_vertex, hitType));
                 const CartesianVector endpointPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), simpleMCPrimary.m_endpoint, hitType));
@@ -622,13 +643,13 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
 
             for (const ParticleFlowObject *const pPrimaryPfo : primaryMatchedPfos)
             {
-                const bool isSplit(primaryMatchedPfos.size() > 1);
+                const bool isSplit((static_cast<int>(primaryMatchedPfos.size()) - static_cast<int>(belowThresholdPfos.size())) > 1);
                 const bool isBestMatch(pPrimaryPfo == primaryMatchedPfos.front());
-                const std::string prefix(!isSplit ? "Matched" : isBestMatch ? "BestFragment" : "Fragment");
+                const bool isBelowThreshold(belowThresholdPfos.count(pPrimaryPfo));
+                const std::string prefix(isBelowThreshold ? "BelowThreshold" : !isSplit ? "Matched" : isBestMatch ? "BestFragment" : "Fragment");
 
                 PfoList allPfos;
                 LArPfoHelper::GetAllDownstreamPfos(pPrimaryPfo, allPfos);
-
                 PfoVector allSortedPfos(allPfos.begin(), allPfos.end());
                 std::sort(allSortedPfos.begin(), allSortedPfos.end(), LArPfoHelper::SortByNHits);
 
@@ -636,11 +657,10 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
                 {
                     ClusterList clusterList;
                     LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
-
                     const std::string hierarchy((pPfo != pPrimaryPfo) ? "Daughter_" : "");
                     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &clusterList, prefix + "Clusters_" + hierarchy + name, color);
 
-                    if (isSplit && !isBestMatch && !clusterList.empty())
+                    if (!isBelowThreshold && isSplit && !isBestMatch && !clusterList.empty())
                     {
                         CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
                         LArClusterHelper::GetExtremalCoordinates(*(clusterList.begin()), innerCoordinate, outerCoordinate);
@@ -718,9 +738,6 @@ void EventValidationAlgorithm::GetPrimaryDetails(const SimpleMCPrimary &thisSimp
     {
         const SimpleMCPrimary &mapSimpleMCPrimary(mapValue.first);
 
-        if (mapSimpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits)
-            continue;
-
         if (thisSimpleMCPrimary.m_pdgCode == mapSimpleMCPrimary.m_pdgCode)
             ++nLikeParticles;
 
@@ -743,8 +760,6 @@ void EventValidationAlgorithm::GetPrimaryDetails(const SimpleMCPrimary &thisSimp
             }
         }
     }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -788,6 +803,30 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &availableClusters, "RemnantClusters" + hitTypeString, GRAY);
 }
 #endif
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::HasMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfoList &simpleMatchedPfoList,
+    const MatchingDetailsMap &matchingDetailsMap) const
+{
+    for (const SimpleMatchedPfo &simpleMatchedPfo : simpleMatchedPfoList)
+    {
+        if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
+                return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::IsGoodMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfo &simpleMatchedPfo) const
+{
+    const float purity((simpleMatchedPfo.m_nPfoHitsTotal > 0) ? static_cast<float>(simpleMatchedPfo.m_nMatchedHitsTotal) / static_cast<float>(simpleMatchedPfo.m_nPfoHitsTotal) : 0.f);
+    const float completeness((simpleMCPrimary.m_nMCHitsTotal > 0) ? static_cast<float>(simpleMatchedPfo.m_nMatchedHitsTotal) / static_cast<float>(simpleMCPrimary.m_nMCHitsTotal) : 0.f);
+
+    return ((simpleMatchedPfo.m_nMatchedHitsTotal >= m_matchingMinSharedHits) && (purity >= m_matchingMinPurity) && (completeness >= m_matchingMinCompleteness));
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::GetPfoIdMap(const PfoList &pfoList, PfoIdMap &pfoIdMap) const
@@ -913,8 +952,7 @@ EventValidationAlgorithm::SimpleMatchedPfo::SimpleMatchedPfo() :
 
 EventValidationAlgorithm::MatchingDetails::MatchingDetails() :
     m_matchedPrimaryId(-1),
-    m_nMatchedHits(0),
-    m_completeness(0.f)
+    m_nMatchedHits(0)
 {
 }
 
@@ -963,7 +1001,16 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "MatchingMinPrimaryHits", m_matchingMinPrimaryHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseSmallPrimaries", m_useSmallPrimaries));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MatchingMinSharedHits", m_matchingMinSharedHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MatchingMinCompleteness", m_matchingMinCompleteness));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MatchingMinPurity", m_matchingMinPurity));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexVisualizationDeltaR", m_vertexVisualizationDeltaR));
