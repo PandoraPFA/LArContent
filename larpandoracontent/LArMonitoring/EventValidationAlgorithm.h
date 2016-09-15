@@ -123,9 +123,8 @@ private:
          */
         MatchingDetails();
 
-        int                     m_matchedPrimaryId;         ///< The total number of occurences
-        int                     m_nMatchedHits;             ///< The number of times the primary has 0 pfo matches
-        float                   m_completeness;             ///< The completeness of the match
+        int                                 m_matchedPrimaryId;         ///< The total number of occurences
+        int                                 m_nMatchedHits;             ///< The number of times the primary has 0 pfo matches
     };
 
     typedef std::map<int, MatchingDetails> MatchingDetailsMap;
@@ -255,6 +254,27 @@ private:
      */
     void VisualizeRemnants(const pandora::HitType hitType) const;
 #endif
+    /**
+     *  @brief  Whether a provided mc primary has a match, of any quality (use simple matched pfo list and information in matching details map)
+     * 
+     *  @param  simpleMCPrimary the simple mc primary
+     *  @param  simpleMatchedPfoList the list of simple matched pfos
+     *  @param  matchingDetailsMap the matching details map
+     * 
+     *  @return boolean
+     */
+    bool HasMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfoList &simpleMatchedPfoList, const MatchingDetailsMap &matchingDetailsMap) const;
+
+    /**
+     *  @brief  Whether a provided mc primary and pfo are deemed to be a good match
+     * 
+     *  @param  simpleMCPrimary the simple mc primary
+     *  @param  simpleMatchedPfo the simple matched pfo
+     * 
+     *  @return boolean
+     */
+    bool IsGoodMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfo &simpleMatchedPfo) const;
+
     /**
      *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
      * 
