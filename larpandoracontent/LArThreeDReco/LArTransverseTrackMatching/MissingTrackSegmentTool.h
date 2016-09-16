@@ -105,7 +105,7 @@ private:
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to long track-like elements
      */
-    void SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
+    void SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
 
     /**
      *  @brief  Whether a provided tensor element can be used to construct a pfo
@@ -115,7 +115,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    bool PassesParticleChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, pandora::ClusterList &usedClusters,
+    bool PassesParticleChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, pandora::ClusterSet &usedClusters,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
@@ -160,7 +160,7 @@ private:
      *  @return whether to make the particle
      */
     bool MakeDecisions(const Particle &particle, const SlidingFitResultMap &slidingFitResultMap, const SegmentOverlapMap &segmentOverlapMap,
-        pandora::ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const;
+        pandora::ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Whether the segment overlap object passes cuts on matched sampling points, etc.

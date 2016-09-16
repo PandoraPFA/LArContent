@@ -72,13 +72,11 @@ StatusCode ClusterGrowingAlgorithm::Run()
 void ClusterGrowingAlgorithm::GetListOfNonSeedClusters(const ClusterVector &inputClusters, const ClusterVector &seedClusters,
     ClusterVector &nonSeedClusters) const
 {
-    const ClusterList seedList(seedClusters.begin(), seedClusters.end());
-
     for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
 
-        if (seedList.count(pCluster))
+        if (seedClusters.end() != std::find(seedClusters.begin(), seedClusters.end(), pCluster))
             continue;
 
         nonSeedClusters.push_back(pCluster);
@@ -112,7 +110,7 @@ void ClusterGrowingAlgorithm::PopulateClusterMergeMap(const ClusterVector &seedC
         }
 
         if (pBestSeedCluster)
-            clusterMergeMap[pBestSeedCluster].insert(pNonSeedCluster);
+            clusterMergeMap[pBestSeedCluster].push_back(pNonSeedCluster);
     }
 }
 

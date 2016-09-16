@@ -171,7 +171,11 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     {
         CaloHitList allNewThreeDHits;
 
+<<<<<<< HEAD
         for (HitCreationBaseTool *const pHitCreationTool : m_algorithmToolList)
+=======
+        for (HitCreationToolVector::const_iterator tIter = m_algorithmToolVector.begin(), tIterEnd = m_algorithmToolVector.end(); tIter != tIterEnd; ++tIter)
+>>>>>>> Update to reflect change to managed container and Pandora typedefs.
         {
             CaloHitVector usedTwoDHits, remainingTwoDHits;
             this->SeparateTwoDHits(pPfo, usedTwoDHits, remainingTwoDHits);
@@ -186,7 +190,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
             {
                 const Cluster *pCluster3D(nullptr);
                 this->AddThreeDHitsToPfo(pPfo, newThreeDHits, pCluster3D);
-                allNewThreeDHits.insert(newThreeDHits.begin(), newThreeDHits.end());
+                allNewThreeDHits.insert(allNewThreeDHits.end(), newThreeDHits.begin(), newThreeDHits.end());
             }
         }
 
@@ -220,18 +224,18 @@ void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitVector &caloHi
 
 StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "HitCreationTools", algorithmToolList));
+        "HitCreationTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         HitCreationBaseTool *const pHitCreationTool(dynamic_cast<HitCreationBaseTool*>(*iter));
 
         if (!pHitCreationTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pHitCreationTool);
+        m_algorithmToolVector.push_back(pHitCreationTool);
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));

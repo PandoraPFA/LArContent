@@ -40,7 +40,7 @@ ThreeDKinkBaseTool::~ThreeDKinkBaseTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDKinkBaseTool::PassesElementCuts(TensorType::ElementList::const_iterator eIter, const ClusterList &usedClusters) const
+bool ThreeDKinkBaseTool::PassesElementCuts(TensorType::ElementList::const_iterator eIter, const ClusterSet &usedClusters) const
 {
     if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))
         return false;
@@ -139,7 +139,7 @@ bool ThreeDKinkBaseTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, 
 
 void ThreeDKinkBaseTool::GetModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ModificationList &modificationList) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -202,13 +202,13 @@ bool ThreeDKinkBaseTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *const pAl
             }
 
             ClusterList &targetClusterList(consolidatedMergeMap[cIter->first]);
-            targetClusterList.insert(daughterClusters.begin(), daughterClusters.end());
+            targetClusterList.insert(targetClusterList.end(), daughterClusters.begin(), daughterClusters.end());
         }
 
         for (SplitPositionMap::const_iterator cIter = iter->m_splitPositionMap.begin(), cIterEnd = iter->m_splitPositionMap.end(); cIter != cIterEnd; ++cIter)
         {
-            CartesianPointList &cartesianPointList(consolidatedSplitMap[cIter->first]);
-            cartesianPointList.insert(cartesianPointList.end(), cIter->second.begin(), cIter->second.end());
+            CartesianPointVector &cartesianPointVector(consolidatedSplitMap[cIter->first]);
+            cartesianPointVector.insert(cartesianPointVector.end(), cIter->second.begin(), cIter->second.end());
         }
     }
 
@@ -222,7 +222,7 @@ bool ThreeDKinkBaseTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *const pAl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDKinkBaseTool::SelectTensorElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
-    const ClusterList &usedClusters, IteratorList &iteratorList) const
+    const ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     iteratorList.push_back(eIter);
 

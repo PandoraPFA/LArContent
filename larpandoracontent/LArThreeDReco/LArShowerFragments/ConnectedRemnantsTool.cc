@@ -43,7 +43,7 @@ bool ConnectedRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, Tenso
 void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
     ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -73,9 +73,9 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
         const Cluster *const pClusterW = clusterVectorW.front();
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.insert(pClusterU);
-        protoParticle.m_clusterListV.insert(pClusterV);
-        protoParticle.m_clusterListW.insert(pClusterW);
+        protoParticle.m_clusterListU.push_back(pClusterU);
+        protoParticle.m_clusterListV.push_back(pClusterV);
+        protoParticle.m_clusterListW.push_back(pClusterW);
         protoParticleVector.push_back(protoParticle);
 
         this->FillMergeMap(pClusterU, clusterVectorU, clusterMergeMap);
@@ -86,7 +86,7 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConnectedRemnantsTool::GetClusters(const TensorType::ElementList &elementList, const ClusterList &usedClusters,
+void ConnectedRemnantsTool::GetClusters(const TensorType::ElementList &elementList, const ClusterSet &usedClusters,
     ClusterVector &clusterVectorU, ClusterVector &clusterVectorV, ClusterVector &clusterVectorW) const
 {
     for (const TensorType::Element &element : elementList)
@@ -112,7 +112,7 @@ void ConnectedRemnantsTool::FillMergeMap(const Cluster *const pFirstCluster, con
         if (pFirstCluster == pSecondCluster)
             continue;
 
-        clusterMergeMap[pFirstCluster].insert(pSecondCluster);
+        clusterMergeMap[pFirstCluster].push_back(pSecondCluster);
     }
 }
 

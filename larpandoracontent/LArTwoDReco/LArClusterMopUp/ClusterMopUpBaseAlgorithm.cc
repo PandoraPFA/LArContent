@@ -95,7 +95,7 @@ void ClusterMopUpBaseAlgorithm::GetClusterLists(const ClusterList &inputClusterL
             continue;
 
         ClusterList &target((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
-        target.insert(pCluster);
+        target.push_back(pCluster);
     }
 }
 

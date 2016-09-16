@@ -200,7 +200,7 @@ void CandidateVertexCreationAlgorithm::CreateEndpointVertex(const CartesianVecto
 void CandidateVertexCreationAlgorithm::CreateCrossingCandidates(const ClusterVector &clusterVectorU, const ClusterVector &clusterVectorV,
     const ClusterVector &clusterVectorW) const
 {
-    CartesianPointList crossingsU, crossingsV, crossingsW;
+    CartesianPointVector crossingsU, crossingsV, crossingsW;
     this->FindCrossingPoints(clusterVectorU, crossingsU);
     this->FindCrossingPoints(clusterVectorV, crossingsV);
     this->FindCrossingPoints(clusterVectorW, crossingsW);
@@ -212,13 +212,13 @@ void CandidateVertexCreationAlgorithm::CreateCrossingCandidates(const ClusterVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::FindCrossingPoints(const ClusterVector &clusterVector, CartesianPointList &crossingPoints) const
+void CandidateVertexCreationAlgorithm::FindCrossingPoints(const ClusterVector &clusterVector, CartesianPointVector &crossingPoints) const
 {
     ClusterToSpacepointsMap clusterToSpacepointsMap;
 
     for (const Cluster *const pCluster : clusterVector)
     {
-        ClusterToSpacepointsMap::iterator mapIter(clusterToSpacepointsMap.emplace(pCluster, CartesianPointList()).first);
+        ClusterToSpacepointsMap::iterator mapIter(clusterToSpacepointsMap.emplace(pCluster, CartesianPointVector()).first);
         this->GetSpacepoints(pCluster, mapIter->second);
     }
 
@@ -236,9 +236,9 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const ClusterVector &c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::GetSpacepoints(const Cluster *const pCluster, CartesianPointList &spacepoints) const
+void CandidateVertexCreationAlgorithm::GetSpacepoints(const Cluster *const pCluster, CartesianPointVector &spacepoints) const
 {
-    LArClusterHelper::GetCoordinateList(pCluster, spacepoints);
+    LArClusterHelper::GetCoordinateVector(pCluster, spacepoints);
 
     const TwoDSlidingFitResult &fitResult(this->GetCachedSlidingFitResult(pCluster));
     const float minLayerRL(fitResult.GetL(fitResult.GetMinLayer()));
@@ -261,8 +261,8 @@ void CandidateVertexCreationAlgorithm::GetSpacepoints(const Cluster *const pClus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointList &spacepoints1, const CartesianPointList &spacepoints2,
-    CartesianPointList &crossingPoints) const
+void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointVector &spacepoints1, const CartesianPointVector &spacepoints2,
+    CartesianPointVector &crossingPoints) const
 {
     bool bestCrossingFound(false);
     float bestSeparationSquared(m_maxCrossingSeparationSquared);
@@ -308,7 +308,7 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPointList &crossingPoints1, const CartesianPointList &crossingPoints2,
+void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPointVector &crossingPoints1, const CartesianPointVector &crossingPoints2,
     const HitType hitType1, const HitType hitType2) const
 {
     for (const CartesianVector &position1: crossingPoints1)

@@ -52,7 +52,7 @@ public:
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      */
     static bool IsLongerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
-        const unsigned int minMatchedSamplingPointRatio, const pandora::ClusterList &usedClusters);
+        const unsigned int minMatchedSamplingPointRatio, const pandora::ClusterSet &usedClusters);
 
     bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
@@ -74,7 +74,7 @@ private:
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to long track-like elements
      */
-    void SelectLongElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters,
+    void SelectLongElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters,
         IteratorList &iteratorList) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation

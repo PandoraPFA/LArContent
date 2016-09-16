@@ -60,9 +60,9 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *con
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.insert(iter->GetClusterU());
-        protoParticle.m_clusterListV.insert(iter->GetClusterV());
-        protoParticle.m_clusterListW.insert(iter->GetClusterW());
+        protoParticle.m_clusterListU.push_back(iter->GetClusterU());
+        protoParticle.m_clusterListV.push_back(iter->GetClusterV());
+        protoParticle.m_clusterListW.push_back(iter->GetClusterW());
         protoParticleVector.push_back(protoParticle);
     }
 

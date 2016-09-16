@@ -82,7 +82,7 @@ void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMap(const std::string &cl
     {
         CaloHitList daughterHits;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
-        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+        allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
             (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
@@ -111,7 +111,7 @@ void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMap(const std::string &cl
             kdTree.search(searchRegionHits, found);
 
             for (const auto &hit : found)
-                (void) nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
+                (void) nearbyClusters[pCluster].push_back(hitToClusterMap.at(hit.data));
         }
     }
 }
@@ -388,19 +388,19 @@ void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList
         ClusterList clusterList;
 
         if (NULL != pClusterU)
-            clusterList.insert(pClusterU);
+            clusterList.push_back(pClusterU);
 
         if (NULL != pClusterV)
-            clusterList.insert(pClusterV);
+            clusterList.push_back(pClusterV);
 
         if (NULL != pClusterW)
-            clusterList.insert(pClusterW);
+            clusterList.push_back(pClusterW);
 
-        if (parentList.count(pParentPfo))
+        if (parentList.end() != std::find(parentList.begin(), parentList.end(), pParentPfo))
         {
             this->CreateDaughterPfo(clusterList, pParentPfo);
         }
-        else if(daughterList.count(pParentPfo))
+        else if (daughterList.end() != std::find(daughterList.begin(), daughterList.end(), pParentPfo))
         {
             this->AddToDaughterPfo(clusterList, pParentPfo);
         }
@@ -582,8 +582,13 @@ float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pC
 
     for (const Cluster *const pPfoCluster : pfoClusterList)
     {
-        if (nearbyClusters.count(pCluster) && nearbyClusters.at(pCluster).count(pPfoCluster))
-            comparisonList.insert(pPfoCluster);
+        if (nearbyClusters.count(pCluster))
+        {
+            const ClusterList &clusterList(nearbyClusters.at(pCluster));
+
+            if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pPfoCluster))
+                comparisonList.push_back(pPfoCluster);
+        }
     }
 
     if (comparisonList.empty())

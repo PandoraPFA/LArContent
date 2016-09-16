@@ -165,9 +165,9 @@ void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFi
         cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = cIter->first;
-        const CartesianPointList &inputPositionList = cIter->second;
+        const CartesianPointVector &inputPositionVector = cIter->second;
 
-        if (inputPositionList.empty())
+        if (inputPositionVector.empty())
             continue;
 
         TwoDSlidingFitResultMap::const_iterator sIter = slidingFitResultMap.find(pCluster);
@@ -177,7 +177,7 @@ void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFi
         const TwoDSlidingFitResult &slidingFitResult = sIter->second;
 
         MyTrajectoryPointList trajectoryPointList;
-        for (CartesianPointList::const_iterator pIter = inputPositionList.begin(), pIterEnd = inputPositionList.end();
+        for (CartesianPointVector::const_iterator pIter = inputPositionVector.begin(), pIterEnd = inputPositionVector.end();
             pIter != pIterEnd; ++pIter)
         {
             const CartesianVector &position = *pIter;
@@ -209,9 +209,9 @@ void OvershootSplittingAlgorithm::PopulateSplitPositionMap(const ClusterPosition
         cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = cIter->first;
-        const CartesianPointList &inputPositionList = cIter->second;
+        const CartesianPointVector &inputPositionVector = cIter->second;
 
-        if (inputPositionList.empty())
+        if (inputPositionVector.empty())
             continue;
 
         // Select pairs of positions within a given separation, and calculate their average position
@@ -220,7 +220,7 @@ void OvershootSplittingAlgorithm::PopulateSplitPositionMap(const ClusterPosition
         bool foundPrevPosition(false);
         CartesianVector prevPosition(0.f, 0.f, 0.f);
 
-        for (CartesianPointList::const_iterator pIter = inputPositionList.begin(), pIterEnd = inputPositionList.end();
+        for (CartesianPointVector::const_iterator pIter = inputPositionVector.begin(), pIterEnd = inputPositionVector.end();
              pIter != pIterEnd; ++pIter)
         {
             const CartesianVector &nextPosition = *pIter;

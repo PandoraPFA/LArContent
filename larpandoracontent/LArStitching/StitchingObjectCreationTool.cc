@@ -109,10 +109,10 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
         pInputCluster->GetOrderedCaloHitList().GetCaloHitList(inputCaloHitList);
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
-            newCaloHitList.insert(this->CreateCaloHit(pAlgorithm, pInputCaloHit, pInputPfo, volumeInfo));
+            newCaloHitList.push_back(this->CreateCaloHit(pAlgorithm, pInputCaloHit, pInputPfo, volumeInfo));
 
         if (!newCaloHitList.empty())
-            newClusterList.insert(this->CreateCluster(pAlgorithm, pInputCluster, newCaloHitList));
+            newClusterList.push_back(this->CreateCluster(pAlgorithm, pInputCluster, newCaloHitList));
     }
 
     VertexList newVertexList;
@@ -120,7 +120,7 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
     for (const Vertex *const pInputVertex : pInputPfo->GetVertexList())
     {
         if (VERTEX_3D == pInputVertex->GetVertexType())
-            newVertexList.insert(this->CreateVertex(pAlgorithm, pInputVertex, pInputPfo, volumeInfo));
+            newVertexList.push_back(this->CreateVertex(pAlgorithm, pInputVertex, pInputPfo, volumeInfo));
     }
 
     const ParticleFlowObject *const pNewPfo = this->CreatePfo(pAlgorithm, pInputPfo, newClusterList, newVertexList);

@@ -47,11 +47,11 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
     this->BuildSlidingFitResultMap(clusterVector, slidingFitResultMap);
 
     // Loop over clusters, identify and perform splits
-    ClusterList splitClusterList;
+    ClusterSet splitClusters;
 
     for (ClusterVector::const_iterator bIter = clusterVector.begin(), bIterEnd1 = clusterVector.end(); bIter != bIterEnd1; ++bIter)
     {
-        if (splitClusterList.count(*bIter) > 0)
+        if (splitClusters.count(*bIter) > 0)
             continue;
 
         TwoDSlidingFitResultMap::const_iterator bFitIter = slidingFitResultMap.find(*bIter);
@@ -78,7 +78,7 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
 
         for (ClusterVector::const_iterator rIter = clusterVector.begin(), rIterEnd = clusterVector.end(); rIter != rIterEnd; ++rIter)
         {
-            if (splitClusterList.count(*rIter) > 0)
+            if (splitClusters.count(*rIter) > 0)
                 continue;
 
             TwoDSlidingFitResultMap::const_iterator rFitIter = slidingFitResultMap.find(*rIter);
@@ -148,12 +148,12 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
 
         // Choose not to re-use clusters (for now)
         if (pReplacementCluster1)
-            splitClusterList.insert(pReplacementCluster1);
+            splitClusters.insert(pReplacementCluster1);
 
         if (pReplacementCluster2)
-            splitClusterList.insert(pReplacementCluster2);
+            splitClusters.insert(pReplacementCluster2);
 
-        splitClusterList.insert(pBranchCluster);
+        splitClusters.insert(pBranchCluster);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -411,11 +411,11 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
 
         if (forwardDirection.GetDotProduct(pCaloHit->GetPositionVector() - forwardPosition) > 0.f)
         {
-            caloHitListToMove.insert(pCaloHit);
+            caloHitListToMove.push_back(pCaloHit);
         }
         else if(forwardDirection.GetDotProduct(pCaloHit->GetPositionVector() - vtxPosition) > -1.25f)
         {
-            caloHitListToCheck.insert(pCaloHit);
+            caloHitListToCheck.push_back(pCaloHit);
         }
     }
 
@@ -440,7 +440,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
         const CaloHit *const pCaloHit = *iter;
 
         if ((pCaloHit->GetPositionVector() - vtxPosition).GetMagnitudeSquared() >= closestLengthSquared)
-            caloHitListToMove.insert(pCaloHit);
+            caloHitListToMove.push_back(pCaloHit);
     }
 }
 
@@ -461,11 +461,11 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListsToMove(const Cluster *const pBr
 
         if (displacement1 > displacement2)
         {
-            caloHitListToMove1.insert(pCaloHit);
+            caloHitListToMove1.push_back(pCaloHit);
         }
         else
         {
-            caloHitListToMove2.insert(pCaloHit);
+            caloHitListToMove2.push_back(pCaloHit);
         }
     }
 }
@@ -501,8 +501,8 @@ StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(const Cluster *cons
     {
         const CaloHit *const pCaloHit = *iter;
 
-        if (!caloHitListToMove.count(pCaloHit))
-            caloHitListToKeep.insert(pCaloHit);
+        if (caloHitListToMove.end() == std::find(caloHitListToMove.begin(), caloHitListToMove.end(), pCaloHit))
+            caloHitListToKeep.push_back(pCaloHit);
     }
 
     return STATUS_CODE_SUCCESS;

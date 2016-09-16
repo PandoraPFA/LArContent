@@ -82,7 +82,7 @@ void CheatingEventSlicingTool::FillSlices(const NeutrinoParentAlgorithm *const p
 
             NeutrinoParentAlgorithm::Slice &slice(mapIter->second);
             CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-            caloHitList.insert(pCaloHit);
+            caloHitList.push_back(pCaloHit);
         }
         catch (StatusCodeException &statusCodeException)
         {

@@ -71,8 +71,8 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<StitchingTool*> StitchingToolList;
-    StitchingToolList       m_algorithmToolList;        ///< The algorithm tool list
+    typedef std::vector<StitchingTool*> StitchingToolVector;
+    StitchingToolVector     m_algorithmToolVector;      ///< The algorithm tool vector
 
     std::string             m_newClusterListName;       ///< The new/recreated cluster list name
     std::string             m_newVertexListName;        ///< The new/recreated vertex list name

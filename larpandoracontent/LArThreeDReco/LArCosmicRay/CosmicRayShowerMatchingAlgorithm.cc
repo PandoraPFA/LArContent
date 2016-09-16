@@ -111,9 +111,9 @@ bool CosmicRayShowerMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *con
 void CosmicRayShowerMatchingAlgorithm::SetPfoParameters(const Particle &particle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
     ClusterList clusterList;
-    if (particle.m_pClusterU) clusterList.insert(particle.m_pClusterU);
-    if (particle.m_pClusterV) clusterList.insert(particle.m_pClusterV);
-    if (particle.m_pClusterW) clusterList.insert(particle.m_pClusterW);
+    if (particle.m_pClusterU) clusterList.push_back(particle.m_pClusterU);
+    if (particle.m_pClusterV) clusterList.push_back(particle.m_pClusterV);
+    if (particle.m_pClusterW) clusterList.push_back(particle.m_pClusterW);
 
     // TODO Correct these placeholder parameters
     pfoParameters.m_particleId = E_MINUS; // SHOWER

@@ -621,7 +621,7 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
             if (!hasMatch && !isTargetPrimary)
                 continue;
 
-            PfoList belowThresholdPfos;
+            PfoSet belowThresholdPfos;
             PfoVector primaryMatchedPfos;
 
             for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
@@ -783,7 +783,7 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         if (PandoraContentApi::IsAvailable(*this, pCaloHit) && (hitType == pCaloHit->GetHitType()))
-            availableHits.insert(pCaloHit);
+            availableHits.push_back(pCaloHit);
     }
 
     if (!availableHits.empty())
@@ -803,10 +803,10 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
         for (const Cluster *const pCluster : *pClusterList)
         {
             if (PandoraContentApi::IsAvailable(*this, pCluster) && (hitType == LArClusterHelper::GetClusterHitType(pCluster)))
-                availableClusters.insert(pCluster);
+                availableClusters.push_back(pCluster);
 
             if (!PandoraContentApi::IsAvailable(*this, pCluster) && (hitType == LArClusterHelper::GetClusterHitType(pCluster)))
-                isolatedHits.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+                isolatedHits.push_back(isolatedHits.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
         }
     }
 

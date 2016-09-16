@@ -115,9 +115,9 @@ void OverlapTensor<T>::SetOverlapResult(const pandora::Cluster *const pClusterU,
     if (!overlapList.insert(typename OverlapList::value_type(pClusterW, overlapResult)).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
-    m_clusterNavigationMapUV[pClusterU].insert(pClusterV);
-    m_clusterNavigationMapVW[pClusterV].insert(pClusterW);
-    m_clusterNavigationMapWU[pClusterW].insert(pClusterU);
+    m_clusterNavigationMapUV[pClusterU].push_back(pClusterV);
+    m_clusterNavigationMapVW[pClusterV].push_back(pClusterW);
+    m_clusterNavigationMapWU[pClusterW].push_back(pClusterU);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,13 +161,13 @@ void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
         for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapWU.begin(); navIter != m_clusterNavigationMapWU.end(); )
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
-            ClusterList::iterator listIter = thisIter->second.find(pCluster);
+            ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
 
             if (thisIter->second.end() != listIter)
                 thisIter->second.erase(listIter);
 
             if (thisIter->second.empty())
-                additionalRemovals.insert(thisIter->first);
+                additionalRemovals.push_back(thisIter->first);
         }
     }
 
@@ -184,13 +184,13 @@ void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
         for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapUV.begin(); navIter != m_clusterNavigationMapUV.end(); )
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
-            ClusterList::iterator listIter = thisIter->second.find(pCluster);
+            ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
 
             if (thisIter->second.end() != listIter)
                 thisIter->second.erase(listIter);
 
             if (thisIter->second.empty())
-                additionalRemovals.insert(thisIter->first);
+                additionalRemovals.push_back(thisIter->first);
         }
     }
 
@@ -210,13 +210,13 @@ void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
         for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapVW.begin(); navIter != m_clusterNavigationMapVW.end(); )
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
-            ClusterList::iterator listIter = thisIter->second.find(pCluster);
+            ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
 
             if (thisIter->second.end() != listIter)
                 thisIter->second.erase(listIter);
 
             if (thisIter->second.empty())
-                additionalRemovals.insert(thisIter->first);
+                additionalRemovals.push_back(thisIter->first);
         }
     }
 
@@ -240,7 +240,7 @@ void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const
 
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
-        if (0 == localClusterListU.count(iterU->first))
+        if (localClusterListU.end() == std::find(localClusterListU.begin(), localClusterListU.end(), iterU->first))
             continue;
 
         for (typename OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
@@ -253,9 +253,9 @@ void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const
                 Element element(iterU->first, iterV->first, iterW->first, iterW->second);
                 elementList.push_back(element);
 
-                clusterListU.insert(iterU->first);
-                clusterListV.insert(iterV->first);
-                clusterListW.insert(iterW->first);
+                clusterListU.push_back(iterU->first);
+                clusterListV.push_back(iterV->first);
+                clusterListW.push_back(iterW->first);
             }
         }
     }
@@ -280,9 +280,10 @@ void OverlapTensor<T>::ExploreConnections(const Cluster *const pCluster, const b
     ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
     const ClusterNavigationMap &navigationMap((TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
 
-    if (!clusterList.insert(pCluster).second)
+    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
         return;
 
+    clusterList.push_back(pCluster);
     ClusterNavigationMap::const_iterator iter = navigationMap.find(pCluster);
 
     if (navigationMap.end() == iter)

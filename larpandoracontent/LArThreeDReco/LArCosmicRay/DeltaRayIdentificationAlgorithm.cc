@@ -77,7 +77,7 @@ void DeltaRayIdentificationAlgorithm::GetPfos(const std::string inputPfoListName
 void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoVector &parentPfos, const PfoVector &daughterPfos,
     PfoAssociationMap &pfoAssociationMap) const
 {
-    PfoList parentPfoList, daughterPfoList;
+    PfoSet parentPfoList, daughterPfoList;
     parentPfoList.insert(parentPfos.begin(), parentPfos.end());
     daughterPfoList.insert(daughterPfos.begin(), daughterPfos.end());
 
@@ -187,10 +187,10 @@ bool DeltaRayIdentificationAlgorithm::IsAssociated(const ParticleFlowObject *con
 
 float DeltaRayIdentificationAlgorithm::GetTwoDSeparation(const ParticleFlowObject *const pDaughterPfo, const ParticleFlowObject *const pParentPfo) const
 {
-    CartesianPointList vertexListU, vertexListV, vertexListW;
-    this->GetTwoDVertexList(pDaughterPfo, TPC_VIEW_U, vertexListU);
-    this->GetTwoDVertexList(pDaughterPfo, TPC_VIEW_V, vertexListV);
-    this->GetTwoDVertexList(pDaughterPfo, TPC_VIEW_W, vertexListW);
+    CartesianPointVector vertexVectorU, vertexVectorV, vertexVectorW;
+    this->GetTwoDVertices(pDaughterPfo, TPC_VIEW_U, vertexVectorU);
+    this->GetTwoDVertices(pDaughterPfo, TPC_VIEW_V, vertexVectorV);
+    this->GetTwoDVertices(pDaughterPfo, TPC_VIEW_W, vertexVectorW);
 
     ClusterList clusterListU, clusterListV, clusterListW;
     LArPfoHelper::GetClusters(pParentPfo, TPC_VIEW_U, clusterListU);
@@ -200,23 +200,23 @@ float DeltaRayIdentificationAlgorithm::GetTwoDSeparation(const ParticleFlowObjec
     float sumViews(0.f);
     float sumDisplacementSquared(0.f);
 
-    if (!vertexListU.empty())
+    if (!vertexVectorU.empty())
     {
-        const float thisDisplacement(this->GetClosestDistance(vertexListU, clusterListU));
+        const float thisDisplacement(this->GetClosestDistance(vertexVectorU, clusterListU));
         sumDisplacementSquared += thisDisplacement * thisDisplacement;
         sumViews += 1.f;
     }
 
-    if (!vertexListV.empty())
+    if (!vertexVectorV.empty())
     {
-        const float thisDisplacement(this->GetClosestDistance(vertexListV, clusterListV));
+        const float thisDisplacement(this->GetClosestDistance(vertexVectorV, clusterListV));
         sumDisplacementSquared += thisDisplacement * thisDisplacement;
         sumViews += 1.f;
     }
 
-    if (!vertexListW.empty())
+    if (!vertexVectorW.empty())
     {
-        const float thisDisplacement(this->GetClosestDistance(vertexListW, clusterListW));
+        const float thisDisplacement(this->GetClosestDistance(vertexVectorW, clusterListW));
         sumDisplacementSquared += thisDisplacement * thisDisplacement;
         sumViews += 1.f;
     }
@@ -229,7 +229,7 @@ float DeltaRayIdentificationAlgorithm::GetTwoDSeparation(const ParticleFlowObjec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayIdentificationAlgorithm::GetTwoDVertexList(const ParticleFlowObject *const pPfo, const HitType &hitType, CartesianPointList &vertexList) const
+void DeltaRayIdentificationAlgorithm::GetTwoDVertices(const ParticleFlowObject *const pPfo, const HitType &hitType, CartesianPointVector &vertexVector) const
 {
     ClusterList clusterList;
     LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
@@ -241,21 +241,21 @@ void DeltaRayIdentificationAlgorithm::GetTwoDVertexList(const ParticleFlowObject
         CartesianVector firstCoordinate(0.f,0.f,0.f), secondCoordinate(0.f,0.f,0.f);
         LArClusterHelper::GetExtremalCoordinates(pCluster, firstCoordinate, secondCoordinate);
 
-        vertexList.push_back(firstCoordinate);
-        vertexList.push_back(secondCoordinate);
+        vertexVector.push_back(firstCoordinate);
+        vertexVector.push_back(secondCoordinate);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float DeltaRayIdentificationAlgorithm::GetClosestDistance(const CartesianPointList &vertexList, const ClusterList &clusterList) const
+float DeltaRayIdentificationAlgorithm::GetClosestDistance(const CartesianPointVector &vertexVector, const ClusterList &clusterList) const
 {
-    if (vertexList.empty() || clusterList.empty())
+    if (vertexVector.empty() || clusterList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float bestDisplacement(std::numeric_limits<float>::max());
 
-    for (CartesianPointList::const_iterator iter1 = vertexList.begin(), iterEnd1 = vertexList.end(); iter1 != iterEnd1; ++iter1)
+    for (CartesianPointVector::const_iterator iter1 = vertexVector.begin(), iterEnd1 = vertexVector.end(); iter1 != iterEnd1; ++iter1)
     {
         const CartesianVector &thisVertex = *iter1;
 
@@ -295,7 +295,7 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
         metadata.m_particleId = E_MINUS;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pDaughterPfo, metadata));
 
-        daughterPfoList.insert(pDaughterPfo);
+        daughterPfoList.push_back(pDaughterPfo);
     }
 }
 

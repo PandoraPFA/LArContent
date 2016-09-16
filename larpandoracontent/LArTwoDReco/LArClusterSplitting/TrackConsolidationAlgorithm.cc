@@ -106,7 +106,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult 
                 maxL = std::max(maxL, rL);
             }
 
-            associatedHits.insert(pCaloHitJ);
+            associatedHits.push_back(pCaloHitJ);
         }
     }
 
@@ -118,12 +118,13 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult 
         for (CaloHitList::const_iterator iterK = associatedHits.begin(), iterEndK = associatedHits.end(); iterK != iterEndK; ++iterK)
         {
             const CaloHit *const pCaloHit = *iterK;
+            const CaloHitList &caloHitList(caloHitsToRemoveJ[pClusterJ]);
 
-            if (caloHitsToRemoveJ[pClusterJ].count(pCaloHit))
+            if (caloHitList.end() != std::find(caloHitList.begin(), caloHitList.end(), pCaloHit))
                 continue;
 
-            caloHitsToAddI[pClusterI].insert(pCaloHit);
-            caloHitsToRemoveJ[pClusterJ].insert(pCaloHit);
+            caloHitsToAddI[pClusterI].push_back(pCaloHit);
+            caloHitsToRemoveJ[pClusterJ].push_back(pCaloHit);
         }
     }
 }

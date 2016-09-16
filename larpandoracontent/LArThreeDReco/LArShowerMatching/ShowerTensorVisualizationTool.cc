@@ -30,7 +30,7 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
 
-    ClusterList usedKeyClusters;
+    ClusterSet usedKeyClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -58,9 +58,9 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
-            allClusterListU.insert(eIter->GetClusterU());
-            allClusterListV.insert(eIter->GetClusterV());
-            allClusterListW.insert(eIter->GetClusterW());
+            allClusterListU.push_back(eIter->GetClusterU());
+            allClusterListV.push_back(eIter->GetClusterV());
+            allClusterListW.push_back(eIter->GetClusterW());
             usedKeyClusters.insert(eIter->GetClusterU());
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
@@ -75,11 +75,7 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm
 
             if (m_showEachIndividualElement)
             {
-                ClusterList clusterListU, clusterListV, clusterListW;
-                clusterListU.insert(eIter->GetClusterU());
-                clusterListV.insert(eIter->GetClusterV());
-                clusterListW.insert(eIter->GetClusterW());
-
+                const ClusterList clusterListU(1, eIter->GetClusterU()), clusterListV(1, eIter->GetClusterV()), clusterListW(1, eIter->GetClusterW());
                 PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListU, "UCluster", RED));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListV, "VCluster", GREEN));

@@ -85,7 +85,7 @@ void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(const CaloHit 
         pMCParticle = primaryIter->second;
     }
 
-    mcParticleToHitListMap[pMCParticle].insert(pCaloHit);
+    mcParticleToHitListMap[pMCParticle].push_back(pCaloHit);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

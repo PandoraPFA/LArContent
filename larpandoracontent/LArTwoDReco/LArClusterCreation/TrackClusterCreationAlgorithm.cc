@@ -62,7 +62,7 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *cons
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         if (PandoraContentApi::IsAvailable(*this, pCaloHit))
-            availableHitList.insert(pCaloHit);
+            availableHitList.push_back(pCaloHit);
     }
 
     if (availableHitList.empty())
@@ -111,7 +111,7 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloH
         CaloHitList *pCaloHitList = NULL;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, selectedCaloHitList.GetCaloHitsInPseudoLayer(iter->first, pCaloHitList));
 
-        CaloHitList unavailableHits;
+        CaloHitSet unavailableHits;
 
         CaloHitVector inputAvailableHits(iter->second->begin(), iter->second->end());
         std::sort(inputAvailableHits.begin(), inputAvailableHits.end(), LArClusterHelper::SortHitsByPosition);
@@ -287,7 +287,7 @@ void TrackClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &ord
             if (hitToClusterMap.end() == mapIter)
             {
                 PandoraContentApi::Cluster::Parameters parameters;
-                parameters.m_caloHitList.insert(pCaloHit);
+                parameters.m_caloHitList.push_back(pCaloHit);
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
                 hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
             }

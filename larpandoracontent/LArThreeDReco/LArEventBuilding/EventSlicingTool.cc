@@ -79,7 +79,7 @@ void EventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgorithm, co
         ClusterToSliceIndexMap clusterToSliceIndexMap;        
         this->CreateSlices(clusterSliceList, sliceList, clusterToSliceIndexMap);
 
-        ClusterList assignedClusters;
+        ClusterSet assignedClusters;
         this->CopyPfoHitsToSlices(clusterToSliceIndexMap, clusterToPfoMap, sliceList, assignedClusters);
 
         ClusterList remainingClusters;
@@ -115,8 +115,13 @@ void EventSlicingTool::GetThreeDClusters(const Algorithm *const pAlgorithm, cons
             if (pCluster3D->GetNCaloHits() < m_minHitsPer3DCluster)
                 continue;
 
-            if (!clusterToPfoMap.insert(ClusterToPfoMap::value_type(pCluster3D, pPfo)).second || !clusters3D.insert(pCluster3D).second)
+            if (!clusterToPfoMap.insert(ClusterToPfoMap::value_type(pCluster3D, pPfo)).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            if (clusters3D.end() != std::find(clusters3D.begin(), clusters3D.end(), pCluster3D))
+                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            clusters3D.push_back(pCluster3D);
         }
     }
 }
@@ -148,7 +153,7 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
     sortedClusters3D.insert(sortedClusters3D.end(), showerClusters3D.begin(), showerClusters3D.end());
     std::sort(sortedClusters3D.begin(), sortedClusters3D.end(), LArClusterHelper::SortByNHits);
 
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
 
     for (const Cluster *const pCluster3D : sortedClusters3D)
     {
@@ -170,7 +175,7 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
 
 void EventSlicingTool::CollectAssociatedClusters(const Cluster *const pClusterInSlice, const ClusterVector &candidateClusters,
     const ThreeDSlidingFitResultMap &trackFitResults, const ThreeDSlidingConeFitResultMap &showerConeFitResults, ClusterVector &clusterSlice,
-    ClusterList &usedClusters) const
+    ClusterSet &usedClusters) const
 {
     ClusterVector addedClusters;
 
@@ -359,7 +364,7 @@ void EventSlicingTool::CreateSlices(const ClusterSliceList &clusterSliceList, Sl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventSlicingTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap,
-    SliceList &sliceList, ClusterList &assignedClusters) const
+    SliceList &sliceList, ClusterSet &assignedClusters) const
 {
     for (const ClusterToSliceIndexMap::value_type &mapValue : clusterToSliceIndexMap)
     {
@@ -382,7 +387,7 @@ void EventSlicingTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &cluster
             CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
 
             pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
-            targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+            targetList.insert(targetList.end(), pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
 
             if (!assignedClusters.insert(pCluster2D).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -393,7 +398,7 @@ void EventSlicingTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &cluster
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventSlicingTool::GetRemainingClusters(const Algorithm *const pAlgorithm, const HitTypeToNameMap &clusterListNames,
-    const ClusterList &assignedClusters, ClusterList &remainingClusters) const
+    const ClusterSet &assignedClusters, ClusterList &remainingClusters) const
 {
     this->GetRemainingClusters(pAlgorithm, clusterListNames.at(TPC_VIEW_U), assignedClusters, remainingClusters);
     this->GetRemainingClusters(pAlgorithm, clusterListNames.at(TPC_VIEW_V), assignedClusters, remainingClusters);
@@ -403,7 +408,7 @@ void EventSlicingTool::GetRemainingClusters(const Algorithm *const pAlgorithm, c
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventSlicingTool::GetRemainingClusters(const Algorithm *const pAlgorithm, const std::string &clusterListName,
-    const ClusterList &assignedClusters, ClusterList &remainingClusters) const
+    const ClusterSet &assignedClusters, ClusterList &remainingClusters) const
 {
     const ClusterList *pClusterList(nullptr);
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm, clusterListName, pClusterList));
@@ -426,8 +431,10 @@ void EventSlicingTool::GetRemainingClusters(const Algorithm *const pAlgorithm, c
         if (assignedClusters.count(pCluster2D))
             continue;
 
-        if (!remainingClusters.insert(pCluster2D).second)
+        if (remainingClusters.end() != std::find(remainingClusters.begin(), remainingClusters.end(), pCluster2D))
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+        remainingClusters.push_back(pCluster2D);
     }
 }
 
@@ -480,7 +487,7 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
             CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
 
             pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
-            targetList.insert(pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
+            targetList.insert(targetList.end(), pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
         }
     }
     catch (...)
@@ -574,6 +581,7 @@ const EventSlicingTool::PointKDNode2D *EventSlicingTool::MatchClusterToSlice(con
         clusterPointVector.push_back(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer())));
         clusterPointVector.push_back(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())));
         clusterPointVector.push_back(new CartesianVector((pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer()) + pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())) * 0.5f));
+
         float bestDistance(std::numeric_limits<float>::max());
 
         for (const CartesianVector *const pClusterPoint : clusterPointVector)

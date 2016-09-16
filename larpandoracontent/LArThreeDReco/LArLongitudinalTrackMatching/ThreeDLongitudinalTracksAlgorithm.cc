@@ -101,7 +101,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *co
         // Merge start and end positions (two views)
         float chi2(0.f);
         CartesianVector position3D(0.f,0.f,0.f);
-        CartesianPointList vtxList3D, endList3D;
+        CartesianPointVector vtxList3D, endList3D;
 
         LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, vtxU, vtxV, position3D, chi2);
         vtxList3D.push_back(position3D);
@@ -122,11 +122,11 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *co
         endList3D.push_back(position3D);
 
         // Find best matched 3D trajactory
-        for (CartesianPointList::const_iterator iterI = vtxList3D.begin(), iterEndI = vtxList3D.end(); iterI != iterEndI; ++iterI)
+        for (CartesianPointVector::const_iterator iterI = vtxList3D.begin(), iterEndI = vtxList3D.end(); iterI != iterEndI; ++iterI)
         {
             const CartesianVector &vtxMerged3D(*iterI);
 
-            for (CartesianPointList::const_iterator iterJ = endList3D.begin(), iterEndJ = endList3D.end(); iterJ != iterEndJ; ++iterJ)
+            for (CartesianPointVector::const_iterator iterJ = endList3D.begin(), iterEndJ = endList3D.end(); iterJ != iterEndJ; ++iterJ)
             {
                 const CartesianVector &endMerged3D(*iterJ);
 
@@ -201,11 +201,11 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
-    for (TensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
-            iter = m_algorithmToolList.begin();
+            iter = m_algorithmToolVector.begin();
 
             if (++repeatCounter > m_nMaxTensorToolRepeats)
                 break;
@@ -221,18 +221,18 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 
 StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolList));
+        "TrackTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         LongitudinalTensorTool *const pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
 
         if (NULL == pLongitudinalTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pLongitudinalTensorTool);
+        m_algorithmToolVector.push_back(pLongitudinalTensorTool);
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

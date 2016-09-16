@@ -96,7 +96,7 @@ void CosmicRayBaseMatchingAlgorithm::MatchClusters(const ClusterVector &clusterV
         {
             if (this->MatchClusters(pCluster1, pCluster2))
             {
-                matchedClusters12[pCluster1].insert(pCluster2);
+                matchedClusters12[pCluster1].push_back(pCluster2);
             }
         }
     }
@@ -133,9 +133,8 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
 
                 const ClusterList &clusterList1 = iter31->second;
                 const Cluster *const pCluster1check = pCluster1;
-                ClusterList::const_iterator iter1 = clusterList1.find(pCluster1check);
 
-                if (clusterList1.end() == iter1)
+                if (clusterList1.end() == std::find(clusterList1.begin(), clusterList1.end(), pCluster1check))
                     continue;
 
                 const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));

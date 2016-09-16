@@ -112,8 +112,8 @@ private:
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<TransverseTensorTool*> TensorToolList;
-    TensorToolList              m_algorithmToolList;        ///< The algorithm tool list
+    typedef std::vector<TransverseTensorTool*> TensorToolVector;
+    TensorToolVector            m_algorithmToolVector;      ///< The algorithm tool vector
 
     unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points

@@ -85,18 +85,18 @@ private:
      *
      *  @param pPfo the input daughter Pfo
      *  @param hitType the hit type
-     *  @param vertexList the list of possible vertex positions
+     *  @param vertexVector the vector of possible vertex positions
      */
-    void GetTwoDVertexList(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType,
-        pandora::CartesianPointList &vertexList) const;
+    void GetTwoDVertices(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType,
+        pandora::CartesianPointVector &vertexVector) const;
 
     /**
      *  @brief Calculate closest 2D separation between a set of vertices and a set of clusters
      *
-     *  @param vertexList the list of possible vertex positions
+     *  @param vertexVector the vector of possible vertex positions
      *  @param clusterList the list of clusters
      */
-    float GetClosestDistance(const pandora::CartesianPointList &vertexList, const pandora::ClusterList &clusterList) const;
+    float GetClosestDistance(const pandora::CartesianPointVector &vertexVector, const pandora::ClusterList &clusterList) const;
 
     /**
      *  @brief Build the parent/daughter links from the map of parent/daughter associations

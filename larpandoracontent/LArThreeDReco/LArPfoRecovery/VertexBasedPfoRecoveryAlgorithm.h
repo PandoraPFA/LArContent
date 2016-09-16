@@ -99,7 +99,7 @@ private:
      *  @param  particleList the output list of matched clusters
      */
     void MatchThreeViews(const pandora::Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-        const pandora::ClusterVector &selectedClusters, pandora::ClusterList &vetoList, ParticleList &particleList) const;
+        const pandora::ClusterVector &selectedClusters, pandora::ClusterSet &vetoList, ParticleList &particleList) const;
 
     /**
      *  @brief  Match clusters from two views
@@ -111,7 +111,7 @@ private:
      *  @param  particleList  the output list of matched clusters
      */
     void MatchTwoViews(const pandora::Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-        const pandora::ClusterVector &selectedClusters, pandora::ClusterList &vetoList, ParticleList &particleList) const;
+        const pandora::ClusterVector &selectedClusters, pandora::ClusterSet &vetoList, ParticleList &particleList) const;
 
     /**
      *  @brief  Get best-matched triplet of clusters from a set of input cluster vectors
@@ -174,7 +174,7 @@ private:
      *  @param  inputVector  the input vector of clusters
      *  @param  outputVector  the output vector of clusters
      */
-    void SelectAvailableClusters(const pandora::ClusterList &vetoList, const pandora::ClusterVector &inputVector,
+    void SelectAvailableClusters(const pandora::ClusterSet &vetoList, const pandora::ClusterVector &inputVector,
         pandora::ClusterVector &outputVector) const;
 
     /**

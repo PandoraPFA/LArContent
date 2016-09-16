@@ -37,7 +37,7 @@ bool MopUpRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorTyp
 
 void MopUpRemnantsTool::FindBestShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -51,34 +51,34 @@ void MopUpRemnantsTool::FindBestShowers(const TensorType &overlapTensor, ProtoPa
 
         TensorType::ElementList::const_iterator eIter = connectedElements.end();
         this->SelectBestElement(connectedElements, usedClusters, eIter);
-        this->GetClusters(connectedElements, usedClusters);
+        this->GetUsedClusters(connectedElements, usedClusters);
 
         if (connectedElements.end() == eIter)
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.insert(eIter->GetClusterU());
-        protoParticle.m_clusterListV.insert(eIter->GetClusterV());
-        protoParticle.m_clusterListW.insert(eIter->GetClusterW());
+        protoParticle.m_clusterListU.push_back(eIter->GetClusterU());
+        protoParticle.m_clusterListV.push_back(eIter->GetClusterV());
+        protoParticle.m_clusterListW.push_back(eIter->GetClusterW());
         protoParticleVector.push_back(protoParticle);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MopUpRemnantsTool::GetClusters(const TensorType::ElementList &elementList, ClusterList &clusterList) const
+void MopUpRemnantsTool::GetUsedClusters(const TensorType::ElementList &elementList, ClusterSet &usedClusters) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
-        clusterList.insert(eIter->GetClusterU());
-        clusterList.insert(eIter->GetClusterV());
-        clusterList.insert(eIter->GetClusterW());
+        usedClusters.insert(eIter->GetClusterU());
+        usedClusters.insert(eIter->GetClusterV());
+        usedClusters.insert(eIter->GetClusterW());
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MopUpRemnantsTool::SelectBestElement(const TensorType::ElementList &elementList, const ClusterList &usedClusters,
+void MopUpRemnantsTool::SelectBestElement(const TensorType::ElementList &elementList, const ClusterSet &usedClusters,
     TensorType::ElementList::const_iterator &bestIter) const
 {
     float bestFigureOfMerit(0.f);

@@ -325,14 +325,14 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
 
         if (pBestInner)
         {
-            clusterMergeMap[pParentCluster].insert(pBestInner);
-            clusterMergeMap[pBestInner].insert(pParentCluster);
+            clusterMergeMap[pParentCluster].push_back(pBestInner);
+            clusterMergeMap[pBestInner].push_back(pParentCluster);
         }
 
         if (pBestOuter)
         {
-            clusterMergeMap[pParentCluster].insert(pBestOuter);
-            clusterMergeMap[pBestOuter].insert(pParentCluster);
+            clusterMergeMap[pParentCluster].push_back(pBestOuter);
+            clusterMergeMap[pBestOuter].push_back(pParentCluster);
         }
     }
 }

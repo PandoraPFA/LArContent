@@ -152,7 +152,7 @@ private:
      *  @param particleList the current list of candidate particles
      *  @param vetoList the list of clusters that belong to the candidate particles
      */
-    void BuildVetoList(const ParticleList &particleList, pandora::ClusterList &vetoList) const;
+    void BuildVetoList(const ParticleList &particleList, pandora::ClusterSet &vetoList) const;
 
     /**
      *  @brief Remove particles with duplicate clusters

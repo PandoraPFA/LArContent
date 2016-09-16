@@ -60,7 +60,7 @@ bool MissingTrackSegmentTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgori
 void MissingTrackSegmentTool::FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
     ProtoParticleVector &protoParticleVector, ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -88,9 +88,9 @@ void MissingTrackSegmentTool::FindTracks(ThreeDTransverseTracksAlgorithm *const 
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.insert((*iIter)->GetClusterU());
-            protoParticle.m_clusterListV.insert((*iIter)->GetClusterV());
-            protoParticle.m_clusterListW.insert((*iIter)->GetClusterW());
+            protoParticle.m_clusterListU.push_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterListV.push_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterListW.push_back((*iIter)->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
@@ -102,7 +102,7 @@ void MissingTrackSegmentTool::FindTracks(ThreeDTransverseTracksAlgorithm *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const
+void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
@@ -134,7 +134,7 @@ void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elem
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool MissingTrackSegmentTool::PassesParticleChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
-    ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const
+    ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
     try
     {
@@ -184,7 +184,7 @@ void MissingTrackSegmentTool::GetCandidateClusters(ThreeDTransverseTracksAlgorit
         if (pCluster->GetNCaloHits() < m_minCaloHitsInCandidateCluster)
             continue;
 
-        candidateClusters.insert(pCluster);
+        candidateClusters.push_back(pCluster);
     }
 }
 
@@ -281,7 +281,7 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const SlidingFitResultMap &slidingFitResultMap,
-    const SegmentOverlapMap &segmentOverlapMap, ClusterList &usedClusters, ClusterMergeMap &clusterMergeMap) const
+    const SegmentOverlapMap &segmentOverlapMap, ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterVector possibleMerges;
     float shortMinX(particle.m_shortMinX), shortMaxX(particle.m_shortMaxX);
@@ -321,7 +321,8 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const Slid
     if (((shortMaxX - shortMinX) / (particle.m_longMaxX - particle.m_longMinX)) < m_minFinalXOverlapFraction)
         return false;
 
-    clusterMergeMap[particle.m_pShortCluster].insert(possibleMerges.begin(), possibleMerges.end());
+    ClusterList &clusterList(clusterMergeMap[particle.m_pShortCluster]);
+    clusterList.insert(clusterList.end(), possibleMerges.begin(), possibleMerges.end());
     return true;
 }
 

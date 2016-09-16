@@ -78,7 +78,7 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(const CaloHitList &ca
     {
         CaloHitList daughterHits;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
-        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+        allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
             (void) hitToParentClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));

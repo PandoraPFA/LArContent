@@ -63,7 +63,7 @@ StatusCode CustomParticleCreationAlgorithm::Run()
 
         const Vertex *const pInputVertex = LArPfoHelper::GetVertex(pInputPfo);
 
-        if (0 == vertexList.count(pInputVertex))
+        if (vertexList.end() == std::find(vertexList.begin(), vertexList.end(), pInputVertex))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         // Build a new pfo and vertex from the old pfo

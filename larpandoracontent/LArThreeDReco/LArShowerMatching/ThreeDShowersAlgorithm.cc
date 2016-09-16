@@ -89,7 +89,7 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
             continue;
 
-        selectedClusterList.insert(pCluster);
+        selectedClusterList.push_back(pCluster);
     }
 }
 
@@ -103,9 +103,9 @@ void ThreeDShowersAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -123,15 +123,16 @@ void ThreeDShowersAlgorithm::PreparationStep(ClusterList &clusterList)
 {
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
     {
-        const Cluster *const pCluster = *(iter++);
+        const Cluster *const pCluster(*iter);
 
         try
         {
             this->AddToSlidingFitCache(pCluster);
+            ++iter;
         }
         catch (StatusCodeException &statusCodeException)
         {
-            clusterList.erase(pCluster);
+            clusterList.erase(iter++);
 
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
@@ -329,11 +330,11 @@ void ThreeDShowersAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
-    for (TensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
-            iter = m_algorithmToolList.begin();
+            iter = m_algorithmToolVector.begin();
 
             if (++repeatCounter > m_nMaxTensorToolRepeats)
                 break;
@@ -384,18 +385,18 @@ StatusCode ThreeDShowersAlgorithm::XSampling::GetBin(const float x, int &xBin) c
 
 StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "ShowerTools", algorithmToolList));
+        "ShowerTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         ShowerTensorTool *const pShowerTensorTool(dynamic_cast<ShowerTensorTool*>(*iter));
 
         if (NULL == pShowerTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pShowerTensorTool);
+        m_algorithmToolVector.push_back(pShowerTensorTool);
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

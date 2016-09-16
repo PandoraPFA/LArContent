@@ -19,7 +19,7 @@ StatusCode StitchingAlgorithm::Run()
 {
     StitchingInfo stitchingInfo;
 
-    for (StitchingTool *const pStitchingTool : m_algorithmToolList)
+    for (StitchingTool *const pStitchingTool : m_algorithmToolVector)
     {
         pStitchingTool->Run(this, stitchingInfo);
     }
@@ -31,18 +31,18 @@ StatusCode StitchingAlgorithm::Run()
 
 StatusCode StitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "StitchingTools", algorithmToolList));
+        "StitchingTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         StitchingTool *const pStitchingTool(dynamic_cast<StitchingTool*>(*iter));
 
         if (NULL == pStitchingTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pStitchingTool);
+        m_algorithmToolVector.push_back(pStitchingTool);
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,

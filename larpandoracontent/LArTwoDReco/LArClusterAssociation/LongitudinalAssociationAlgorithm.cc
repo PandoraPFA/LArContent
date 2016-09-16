@@ -66,8 +66,8 @@ void LongitudinalAssociationAlgorithm::PopulateClusterAssociationMap(const Clust
             if (!this->AreClustersAssociated(pInnerCluster, pOuterCluster))
                 continue;
 
-            clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
-            clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
+            clusterAssociationMap[pInnerCluster].m_forwardAssociations.push_back(pOuterCluster);
+            clusterAssociationMap[pOuterCluster].m_backwardAssociations.push_back(pInnerCluster);
         }
     }
 }

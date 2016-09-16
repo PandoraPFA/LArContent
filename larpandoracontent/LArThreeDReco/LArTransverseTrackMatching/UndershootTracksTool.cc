@@ -103,13 +103,13 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
                     const bool vertexAIsLowX(vertexA.GetPosition().GetX() < vertexB.GetPosition().GetX());
                     const Cluster *const pLowXCluster(vertexAIsLowX ? particle.m_pClusterA : particle.m_pClusterB);
                     const Cluster *const pHighXCluster(vertexAIsLowX ? particle.m_pClusterB : particle.m_pClusterA);
-                    modification.m_clusterMergeMap[pLowXCluster].insert(pHighXCluster);
+                    modification.m_clusterMergeMap[pLowXCluster].push_back(pHighXCluster);
                 }
 
-                modification.m_affectedClusters.insert(particle.m_pClusterA);
-                modification.m_affectedClusters.insert(particle.m_pClusterB);
-                modification.m_affectedClusters.insert(particle.m_pCommonCluster1);
-                modification.m_affectedClusters.insert(particle.m_pCommonCluster2);
+                modification.m_affectedClusters.push_back(particle.m_pClusterA);
+                modification.m_affectedClusters.push_back(particle.m_pClusterB);
+                modification.m_affectedClusters.push_back(particle.m_pCommonCluster1);
+                modification.m_affectedClusters.push_back(particle.m_pCommonCluster2);
 
                 modificationList.push_back(modification);
             }

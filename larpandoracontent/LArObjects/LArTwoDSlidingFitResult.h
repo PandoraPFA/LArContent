@@ -320,14 +320,14 @@ public:
     pandora::StatusCode GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
 
     /**
-     *  @brief Get a list of projected positions for a given input x coordinate
+     *  @brief  Get a list of projected positions for a given input x coordinate
      *
-     *  @param x the input x coordinate
-     *  @param positionList the output list of positions
+     *  @param  x the input x coordinate
+     *  @param  positionList the output list of positions
      * 
      *  @return status code, faster than throwing in regular use-cases
      */
-    pandora::StatusCode GetGlobalFitPositionListAtX(const float x, pandora::CartesianPointList &positionList) const;
+    pandora::StatusCode GetGlobalFitPositionListAtX(const float x, pandora::CartesianPointVector &positionList) const;
 
     /**
      *  @brief Get projected position for a given input x coordinate and fit segment
@@ -394,12 +394,12 @@ private:
     /**
      *  @brief  Calculate the longitudinal and transverse axes
      */
-    void CalculateAxes(const pandora::CartesianPointList &coordinateList);
+    void CalculateAxes(const pandora::CartesianPointVector &coordinateVector);
 
     /**
      *  @brief  Fill the layer fit contribution map
      */
-    void FillLayerFitContributionMap(const pandora::CartesianPointList &coordinateList);
+    void FillLayerFitContributionMap(const pandora::CartesianPointVector &coordinateVector);
 
     /**
      *  @brief  Perform the sliding linear fit

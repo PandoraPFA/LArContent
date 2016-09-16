@@ -45,7 +45,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
     this->GetReclusteredHits(slidingFitResultList, showerClusters, clustersToExpand, clustersToContract);
 
     // Consolidate and re-build clusters
-    ClusterList unavailableClusters;
+    ClusterSet unavailableClusters;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromClusters(clustersToContract, unavailableClusters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToClusters(clustersToExpand, unavailableClusters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(clustersToContract, unavailableClusters));
@@ -98,7 +98,7 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterSet &unavailableClusters) const
 {
     for (const ClusterToHitMap::value_type &mapEntry : clustersToContract)
     {
@@ -116,8 +116,8 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 
         for (const CaloHit *const pCaloHit : caloHitList)
         {
-            if (!caloHitListToRemove.count(pCaloHit))
-                caloHitListToKeep.insert(pCaloHit);
+            if (caloHitListToRemove.end() == std::find(caloHitListToRemove.begin(), caloHitListToRemove.end(), pCaloHit))
+                caloHitListToKeep.push_back(pCaloHit);
         }
 
         if (caloHitListToKeep.empty())
@@ -139,7 +139,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterSet &unavailableClusters) const
 {
     for (const ClusterToHitMap::value_type &mapEntry : clustersToExpand)
     {
@@ -165,7 +165,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersToRebuild, const ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersToRebuild, const ClusterSet &unavailableClusters) const
 {
     if (clustersToRebuild.empty())
         return STATUS_CODE_SUCCESS;

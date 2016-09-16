@@ -152,18 +152,24 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
         if (TPC_VIEW_U == (*hitIter)->GetHitType())
         {
-            if (!selectedCaloHitListU.insert(*hitIter).second)
+            if (selectedCaloHitListU.end() != std::find(selectedCaloHitListU.begin(), selectedCaloHitListU.end(), *hitIter))
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            selectedCaloHitListU.push_back(*hitIter);
         }
         else if (TPC_VIEW_V == (*hitIter)->GetHitType())
         {
-            if (!selectedCaloHitListV.insert(*hitIter).second)
+            if (selectedCaloHitListV.end() != std::find(selectedCaloHitListV.begin(), selectedCaloHitListV.end(), *hitIter))
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            selectedCaloHitListV.push_back(*hitIter);
         }
         else if (TPC_VIEW_W == (*hitIter)->GetHitType())
         {
-            if (!selectedCaloHitListW.insert(*hitIter).second)
+            if (selectedCaloHitListW.end() != std::find(selectedCaloHitListW.begin(), selectedCaloHitListW.end(), *hitIter))
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            selectedCaloHitListW.push_back(*hitIter);
         }
     }
 
@@ -175,9 +181,9 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
     // Group together views into overall lists
     CaloHitList filteredInputList;
-    filteredInputList.insert(filteredCaloHitListU.begin(), filteredCaloHitListU.end());
-    filteredInputList.insert(filteredCaloHitListV.begin(), filteredCaloHitListV.end());
-    filteredInputList.insert(filteredCaloHitListW.begin(), filteredCaloHitListW.end());
+    filteredInputList.insert(filteredInputList.end(), filteredCaloHitListU.begin(), filteredCaloHitListU.end());
+    filteredInputList.insert(filteredInputList.end(), filteredCaloHitListV.begin(), filteredCaloHitListV.end());
+    filteredInputList.insert(filteredInputList.end(), filteredCaloHitListW.begin(), filteredCaloHitListW.end());
 
     // Save the lists
     if (!filteredInputList.empty() && !m_filteredCaloHitListName.empty())
@@ -236,7 +242,7 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
 
         if (isUnique)
         {
-            outputList.insert(pCaloHit1);
+            outputList.push_back(pCaloHit1);
         }
         else
         {
@@ -276,23 +282,31 @@ void ListPreparationAlgorithm::ProcessMCParticles()
 
         if (MC_VIEW_U == (*mcIter)->GetMCParticleType())
         {
-            if (!mcParticleListU.insert(*mcIter).second)
+            if (mcParticleListU.end() != std::find(mcParticleListU.begin(), mcParticleListU.end(), *mcIter))
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            mcParticleListU.push_back(*mcIter);
         }
         else if (MC_VIEW_V == (*mcIter)->GetMCParticleType())
         {
-            if (!mcParticleListV.insert(*mcIter).second)
+            if (mcParticleListV.end() != std::find(mcParticleListV.begin(), mcParticleListV.end(), *mcIter))
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            mcParticleListV.push_back(*mcIter);
         }
         else if (MC_VIEW_W == (*mcIter)->GetMCParticleType())
         {
-            if (!mcParticleListW.insert(*mcIter).second)
+            if (mcParticleListW.end() != std::find(mcParticleListW.begin(), mcParticleListW.end(), *mcIter))
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            mcParticleListW.push_back(*mcIter);
         }
         else if (MC_3D == (*mcIter)->GetMCParticleType())
         {
-            if (!mcParticleList3D.insert(*mcIter).second)
+            if (mcParticleList3D.end() != std::find(mcParticleList3D.begin(), mcParticleList3D.end(), *mcIter))
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+            mcParticleList3D.push_back(*mcIter);
         }
     }
 

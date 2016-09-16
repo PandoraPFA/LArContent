@@ -64,9 +64,9 @@ void SimpleShowersTool::FindBestShower(const TensorType &overlapTensor, ProtoPar
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.insert(bestElement.GetClusterU());
-        protoParticle.m_clusterListV.insert(bestElement.GetClusterV());
-        protoParticle.m_clusterListW.insert(bestElement.GetClusterW());
+        protoParticle.m_clusterListU.push_back(bestElement.GetClusterU());
+        protoParticle.m_clusterListV.push_back(bestElement.GetClusterV());
+        protoParticle.m_clusterListW.push_back(bestElement.GetClusterW());
         protoParticleVector.push_back(protoParticle);
 
         return;

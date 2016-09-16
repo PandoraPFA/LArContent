@@ -34,11 +34,11 @@ TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pClu
 void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, const bool widenIfAmbiguity, FloatVector &edgePositions) const
 {
     edgePositions.clear();
-    CartesianPointList fitPositionList;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->GetNegativeEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList));
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->GetPositiveEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionList));
+    CartesianPointVector fitPositionVector;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->GetNegativeEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionVector));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->GetPositiveEdgeFitResult().GetGlobalFitPositionListAtX(x, fitPositionVector));
 
-    if (fitPositionList.size() < 2)
+    if (fitPositionVector.size() < 2)
     {
         float minXn(0.f), maxXn(0.f), minXp(0.f), maxXp(0.f);
         this->GetNegativeEdgeFitResult().GetMinAndMaxX(minXn, maxXn);
@@ -57,23 +57,23 @@ void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, const bool widenI
         {
             return;
         }
-        else if (fitPositionList.empty())
+        else if (fitPositionVector.empty())
         {
-            fitPositionList.push_back(CartesianVector(x, 0.f, minZ));
-            fitPositionList.push_back(CartesianVector(x, 0.f, maxZ));
+            fitPositionVector.push_back(CartesianVector(x, 0.f, minZ));
+            fitPositionVector.push_back(CartesianVector(x, 0.f, maxZ));
         }
-        else if (1 == fitPositionList.size())
+        else if (1 == fitPositionVector.size())
         {
             // ATTN Could improve sophistication of choice of second bounding edge
-            const float existingEdge(fitPositionList.front().GetZ());
+            const float existingEdge(fitPositionVector.front().GetZ());
             const float secondEdge((std::fabs(existingEdge - minZ) < std::fabs(existingEdge - maxZ)) ? minZ : maxZ);
-            fitPositionList.push_back(CartesianVector(x, 0.f, secondEdge));
+            fitPositionVector.push_back(CartesianVector(x, 0.f, secondEdge));
         }
     }
 
     FloatVector localEdgePositions;
-    for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
-        localEdgePositions.push_back(iter->GetZ());
+    for (const CartesianVector &fitPosition : fitPositionVector)
+        localEdgePositions.push_back(fitPosition.GetZ());
 
     if (localEdgePositions.size() < 2)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -91,10 +91,10 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
     // Examine all possible fit contributions
     FitCoordinateMap fitCoordinateMap;
 
-    CartesianPointList hitPositionList;
-    LArClusterHelper::GetCoordinateList(fullShowerFit.GetCluster(), hitPositionList);
+    CartesianPointVector hitPositionVector;
+    LArClusterHelper::GetCoordinateVector(fullShowerFit.GetCluster(), hitPositionVector);
 
-    for (const CartesianVector &hitPosition : hitPositionList)
+    for (const CartesianVector &hitPosition : hitPositionVector)
     {
         float rL(0.f), rT(0.f);
         fullShowerFit.GetLocalPosition(hitPosition, rL, rT);

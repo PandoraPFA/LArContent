@@ -97,7 +97,7 @@ StatusCode TwoDParticleCreationAlgorithm::CreatePFOs(const ClusterList *const pC
         pfoParameters.m_mass = 0.;
         pfoParameters.m_energy = clusterEnergy;
         pfoParameters.m_momentum = CartesianVector(fitToAllHitsResult.GetDirection() * clusterEnergy);
-        pfoParameters.m_clusterList.insert(pCluster);
+        pfoParameters.m_clusterList.push_back(pCluster);
 
         const ParticleFlowObject *pPfo(NULL);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));

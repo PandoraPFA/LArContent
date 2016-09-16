@@ -51,8 +51,10 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const pNe
 
     ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
 
-    if (!clusterList.insert(pNewCluster).second)
+    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pNewCluster))
         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+    clusterList.push_back(pNewCluster);
 
     const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
     const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
@@ -107,7 +109,7 @@ void ThreeDTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuildLi
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_reclusteringAlgorithmName,
         pNewClusterList, newClusterListName));
 
-    newClusters.insert(pNewClusterList->begin(), pNewClusterList->end());
+    newClusters.insert(newClusters.end(), pNewClusterList->begin(), pNewClusterList->end());
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndReclustering(*this, newClusterListName));
 }
 
@@ -229,7 +231,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidi
     if (xOverlap < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_NOT_FOUND;
 
-    CartesianPointList projectedPositions;
+    CartesianPointVector projectedPositions;
     const StatusCode statusCode1(this->GetProjectedPositions(fitResult1, fitResult2, projectedPositions));
 
     if (STATUS_CODE_SUCCESS != statusCode1)
@@ -264,7 +266,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
-    CartesianPointList &projectedPositions) const
+    CartesianPointVector &projectedPositions) const
 {
     const Cluster *const pCluster1(fitResult1.GetCluster());
     const Cluster *const pCluster2(fitResult2.GetCluster());
@@ -404,7 +406,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidin
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointList &projectedPositions,
+StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointVector &projectedPositions,
     HitToClusterMap &hitToClusterMap, CaloHitList &matchedHits) const
 {
     CaloHitVector availableCaloHits;
@@ -444,7 +446,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inpu
         }
 
         if ((closestDistanceSquared < m_maxPointDisplacementSquared) && (NULL != pClosestCaloHit))
-            matchedHits.insert(pClosestCaloHit);
+            matchedHits.push_back(pClosestCaloHit);
     }
 
     if (matchedHits.empty())
@@ -468,7 +470,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &
         if (hitToClusterMap.end() == cIter)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        matchedClusters.insert(cIter->second);
+        matchedClusters.push_back(cIter->second);
         ++clusterToMatchedHitsMap[cIter->second];
     }
 
@@ -503,7 +505,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPointList &projectedPositions, const CaloHitList &matchedHits,
+void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPointVector &projectedPositions, const CaloHitList &matchedHits,
     const ClusterList &matchedClusters, FragmentOverlapResult &fragmentOverlapResult) const
 {
     float chi2Sum(0.f);
@@ -536,7 +538,7 @@ void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPoin
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointList &projectedPositions, const ClusterList &matchedClusters) const
+bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointVector &projectedPositions, const ClusterList &matchedClusters) const
 {
     if (projectedPositions.empty() || matchedClusters.empty())
         return false;
@@ -609,11 +611,11 @@ void ThreeDTrackFragmentsAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
-    for (TensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
-            iter = m_algorithmToolList.begin();
+            iter = m_algorithmToolVector.begin();
 
             if (++repeatCounter > m_nMaxTensorToolRepeats)
                 break;
@@ -632,18 +634,18 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "ClusterRebuilding", m_reclusteringAlgorithmName));
 
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolList));
+        "TrackTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         FragmentTensorTool *const pFragmentTensorTool(dynamic_cast<FragmentTensorTool*>(*iter));
 
         if (NULL == pFragmentTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pFragmentTensorTool);
+        m_algorithmToolVector.push_back(pFragmentTensorTool);
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

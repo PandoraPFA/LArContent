@@ -53,7 +53,7 @@ void SimpleClusterCreationAlgorithm::SelectCaloHits(const CaloHitList *const pIn
     for (const CaloHit *const pCaloHit : *pInputList)
     {
         if (PandoraContentApi::IsAvailable(*this, pCaloHit))
-            outputList.insert(pCaloHit);
+            outputList.push_back(pCaloHit);
     }
 }
 
@@ -70,8 +70,8 @@ void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitList &calo
 
             if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_clusteringWindowSquared)
             {
-                hitAssociationMap[pCaloHitI].insert(pCaloHitJ);
-                hitAssociationMap[pCaloHitJ].insert(pCaloHitI);
+                hitAssociationMap[pCaloHitI].push_back(pCaloHitJ);
+                hitAssociationMap[pCaloHitJ].push_back(pCaloHitI);
             }
         }
     }
@@ -81,7 +81,7 @@ void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitList &calo
 
 void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitList, const HitAssociationMap &hitAssociationMap) const
 {
-    CaloHitList vetoList;
+    CaloHitSet vetoList;
     CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
     std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
 
@@ -95,7 +95,7 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitLi
 
         const Cluster *pCluster = NULL;
         PandoraContentApi::Cluster::Parameters parameters;
-        parameters.m_caloHitList.insert(pSeedCaloHit);
+        parameters.m_caloHitList.push_back(pSeedCaloHit);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
         vetoList.insert(pSeedCaloHit);
 
@@ -110,7 +110,7 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SimpleClusterCreationAlgorithm::CollectAssociatedHits(const CaloHit *const pSeedCaloHit, const CaloHit *const pCurrentCaloHit,
-    const HitAssociationMap &hitAssociationMap, const CaloHitList &vetoList, CaloHitList &mergeList) const
+    const HitAssociationMap &hitAssociationMap, const CaloHitSet &vetoList, CaloHitList &mergeList) const
 {
     if (vetoList.count(pCurrentCaloHit))
         return;
@@ -127,8 +127,10 @@ void SimpleClusterCreationAlgorithm::CollectAssociatedHits(const CaloHit *const 
         if (pAssociatedCaloHit == pSeedCaloHit)
             continue;
 
-        if (!mergeList.insert(pAssociatedCaloHit).second)
+        if (mergeList.end() != std::find(mergeList.begin(), mergeList.end(), pAssociatedCaloHit))
             continue;
+
+        mergeList.push_back(pAssociatedCaloHit);
 
         this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, vetoList, mergeList);
     }

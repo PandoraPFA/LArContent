@@ -105,9 +105,9 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(const TwoDSlidingFit
         cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = cIter->first;
-        const CartesianPointList &splitPositionList = cIter->second;
+        const CartesianPointVector &splitPositionVector = cIter->second;
 
-        if (splitPositionList.empty())
+        if (splitPositionVector.empty())
             continue;
 
         TwoDSlidingFitResultMap::const_iterator sIter = slidingFitResultMap.find(pCluster);
@@ -116,7 +116,7 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(const TwoDSlidingFit
 
         const TwoDSlidingFitResult &slidingFitResult = sIter->second;
 
-        StatusCode statusCode(this->SplitCluster(slidingFitResult, splitPositionList));
+        StatusCode statusCode(this->SplitCluster(slidingFitResult, splitPositionVector));
 
         if (STATUS_CODE_SUCCESS != statusCode)
             return statusCode;
@@ -128,14 +128,14 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(const TwoDSlidingFit
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitResult &slidingFitResult,
-    const CartesianPointList &splitPositionList) const
+    const CartesianPointVector &splitPositionVector) const
 {
     const Cluster *const pCluster = slidingFitResult.GetCluster();
 
     // Get split positions for this cluster
     FloatVector displacementVector;
 
-    for (CartesianPointList::const_iterator pIter = splitPositionList.begin(), pIterEnd = splitPositionList.end();
+    for (CartesianPointVector::const_iterator pIter = splitPositionVector.begin(), pIterEnd = splitPositionVector.end();
         pIter != pIterEnd; ++pIter)
     {
         const CartesianVector &splitPosition = *pIter;
@@ -152,8 +152,7 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
     std::sort(displacementVector.begin(), displacementVector.end());
 
     // Begin cluster fragmentation operations
-    ClusterList clusterList;
-    clusterList.insert(pCluster);
+    const ClusterList clusterList(1, pCluster);
     std::string clusterListToSave, clusterListToDelete;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,
@@ -182,7 +181,7 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
                 slidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), rL, rT);
 
                 if (rL >= prevL && rL < nextL)
-                    newCaloHitList.insert(pCaloHit);
+                    newCaloHitList.push_back(pCaloHit);
             }
 
             if (newCaloHitList.empty())

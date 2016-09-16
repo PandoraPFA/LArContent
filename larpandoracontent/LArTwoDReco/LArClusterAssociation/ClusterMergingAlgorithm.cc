@@ -122,9 +122,10 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSe
         if (pAssociatedCluster == pSeedCluster)
             continue;
 
-        if (!associatedClusterList.insert(pAssociatedCluster).second)
+        if (associatedClusterList.end() != std::find(associatedClusterList.begin(), associatedClusterList.end(), pAssociatedCluster))
             continue;
 
+        associatedClusterList.push_back(pAssociatedCluster);
         this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
     }
 }

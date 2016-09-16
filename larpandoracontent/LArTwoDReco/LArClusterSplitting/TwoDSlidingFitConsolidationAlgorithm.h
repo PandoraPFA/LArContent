@@ -71,7 +71,7 @@ private:
      *  @param clustersToRebuild  the list of hits to be removed from clusters
      *  @param unavailableClusters  the list of deleted clusters
      */
-    pandora::StatusCode RemoveHitsFromClusters(const ClusterToHitMap &clustersToRebuild, pandora::ClusterList &unavailableClusters) const;
+    pandora::StatusCode RemoveHitsFromClusters(const ClusterToHitMap &clustersToRebuild, pandora::ClusterSet &unavailableClusters) const;
 
     /**
      *  @brief Add hits to clusters
@@ -79,7 +79,7 @@ private:
      *  @param clustersToRebuild  the list of hits to be added to clusters
      *  @param unavailableClusters the list of modified clusters
      */
-    pandora::StatusCode AddHitsToClusters(const ClusterToHitMap &clustersToRebuild, pandora::ClusterList &unavailableClusters) const;
+    pandora::StatusCode AddHitsToClusters(const ClusterToHitMap &clustersToRebuild, pandora::ClusterSet &unavailableClusters) const;
 
     /**
      *  @brief Re-build clusters
@@ -87,7 +87,7 @@ private:
      *  @param clustersAtStart  the initial mapping of clusters to hits
      *  @param unavailableClusters  the list of unavailable clusters
      */
-    pandora::StatusCode RebuildClusters(const ClusterToHitMap &clustersAtStart, const pandora::ClusterList &unavailableClusters) const;
+    pandora::StatusCode RebuildClusters(const ClusterToHitMap &clustersAtStart, const pandora::ClusterSet &unavailableClusters) const;
 
     std::string  m_reclusteringAlgorithmName;  ///< Name of daughter algorithm to use for cluster re-building
     float        m_minTrackLength;             ///< Minimum length of track clusters to consolidate

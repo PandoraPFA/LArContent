@@ -45,7 +45,7 @@ private:
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterToClustersMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterSet> ClusterToClustersMap;
     typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -59,10 +59,10 @@ private:
      *
      *  @param pCluster1 the first cluster
      *  @param pCluster2 the second cluster
-     *  @param candidateList the output list to receive the average positions
+     *  @param candidateVector to receive the average positions
      */
     void FindCandidateSplitPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        pandora::CartesianPointList &candidateList) const;
+        pandora::CartesianPointVector &candidateVector) const;
 
     float                   m_maxClusterSeparation;             ///< maximum separation of two clusters
     float                   m_maxClusterSeparationSquared;      ///< maximum separation of two clusters (squared)

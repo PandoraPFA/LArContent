@@ -56,7 +56,7 @@ bool SplitShowersTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType 
 
 void SplitShowersTool::FindSplitShowers(ThreeDShowersAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -90,7 +90,7 @@ void SplitShowersTool::FindSplitShowers(ThreeDShowersAlgorithm *const pAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::PassesElementCuts(TensorType::ElementList::const_iterator eIter, const ClusterList &usedClusters) const
+bool SplitShowersTool::PassesElementCuts(TensorType::ElementList::const_iterator eIter, const ClusterSet &usedClusters) const
 {
     if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))
         return false;
@@ -107,7 +107,7 @@ bool SplitShowersTool::PassesElementCuts(TensorType::ElementList::const_iterator
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SplitShowersTool::SelectTensorElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
-    const ClusterList &usedClusters, IteratorList &iteratorList) const
+    const ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     iteratorList.push_back(eIter);
 
@@ -146,7 +146,7 @@ void SplitShowersTool::SelectTensorElements(TensorType::ElementList::const_itera
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ClusterList &usedClusters,
+void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ClusterSet &usedClusters,
     ClusterMergeMap &clusterMergeMap) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
@@ -162,9 +162,9 @@ void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm
                 const TensorType::Element &element2(*(*iIter2));
 
                 ClusterList clusterListU, clusterListV, clusterListW;
-                clusterListU.insert(element1.GetClusterU()); clusterListU.insert(element2.GetClusterU());
-                clusterListV.insert(element1.GetClusterV()); clusterListV.insert(element2.GetClusterV());
-                clusterListW.insert(element1.GetClusterW()); clusterListW.insert(element2.GetClusterW());
+                clusterListU.push_back(element1.GetClusterU()); clusterListU.push_back(element2.GetClusterU());
+                clusterListV.push_back(element1.GetClusterV()); clusterListV.push_back(element2.GetClusterV());
+                clusterListW.push_back(element1.GetClusterW()); clusterListW.push_back(element2.GetClusterW());
 
                 const unsigned int nClustersU(clusterListU.size()), nClustersV(clusterListV.size()), nClustersW(clusterListW.size());
                 const unsigned int nClustersProduct(nClustersU * nClustersV * nClustersW);
@@ -346,7 +346,7 @@ void SplitShowersTool::SpecifyClusterMerges(ThreeDShowersAlgorithm *const pAlgor
 
     const Cluster *const pLowXCluster((minXA < minXB) ? pClusterA : pClusterB);
     const Cluster *const pHighXCluster((minXA < minXB) ? pClusterB : pClusterA);
-    clusterMergeMap[pLowXCluster].insert(pHighXCluster);
+    clusterMergeMap[pLowXCluster].push_back(pHighXCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ bool SplitShowersTool::ApplyChanges(ThreeDShowersAlgorithm *const pAlgorithm, co
         }
 
         ClusterList &targetClusterList(consolidatedMergeMap[cIter->first]);
-        targetClusterList.insert(daughterClusters.begin(), daughterClusters.end());
+        targetClusterList.insert(targetClusterList.end(), daughterClusters.begin(), daughterClusters.end());
     }
 
     return pAlgorithm->MakeClusterMerges(consolidatedMergeMap);

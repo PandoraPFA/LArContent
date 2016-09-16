@@ -42,7 +42,7 @@ bool LongTracksTool::HasLongDirectConnections(IteratorList::const_iterator iIter
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LongTracksTool::IsLongerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
-    const unsigned int minMatchedSamplingPointRatio, const pandora::ClusterList &usedClusters)
+    const unsigned int minMatchedSamplingPointRatio, const pandora::ClusterSet &usedClusters)
 {
     const unsigned int nMatchedSamplingPoints((*iIter)->GetOverlapResult().GetNMatchedSamplingPoints());
 
@@ -82,7 +82,7 @@ bool LongTracksTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, Tens
 
 void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -108,9 +108,9 @@ void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoPartic
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.insert((*iIter)->GetClusterU());
-            protoParticle.m_clusterListV.insert((*iIter)->GetClusterV());
-            protoParticle.m_clusterListW.insert((*iIter)->GetClusterW());
+            protoParticle.m_clusterListU.push_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterListV.push_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterListW.push_back((*iIter)->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
@@ -122,7 +122,7 @@ void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoPartic
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LongTracksTool::SelectLongElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters,
+void LongTracksTool::SelectLongElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters,
     IteratorList &iteratorList) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)

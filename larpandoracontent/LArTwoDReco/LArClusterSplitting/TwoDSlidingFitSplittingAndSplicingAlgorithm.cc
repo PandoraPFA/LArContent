@@ -325,11 +325,11 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::SplitBranchCluster(const Clust
 
         if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
         {
-            branchCaloHitList.insert(pCaloHit);
+            branchCaloHitList.push_back(pCaloHit);
         }
         else
         {
-            principalCaloHitList.insert(pCaloHit);
+            principalCaloHitList.push_back(pCaloHit);
         }
     }
 
@@ -386,8 +386,8 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(const Clus
     const CartesianVector &branchSplitPosition, const CartesianVector &branchSplitDirection) const
 {
     ClusterList clusterList;
-    clusterList.insert(pBranchCluster);
-    clusterList.insert(pReplacementCluster);
+    clusterList.push_back(pBranchCluster);
+    clusterList.push_back(pReplacementCluster);
 
     std::string clusterListToSaveName, clusterListToDeleteName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,

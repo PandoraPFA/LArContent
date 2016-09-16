@@ -57,7 +57,7 @@ protected:
      *  @param  chiSquared to receive the chi squared value
      */
     virtual void GetBestPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::HitType hitType1, const pandora::HitType hitType2,
-        const pandora::CartesianPointList &fitPositionList1, const pandora::CartesianPointList &fitPositionList2, pandora::CartesianVector &position3D, float &chiSquared) const;
+        const pandora::CartesianPointVector &fitPositionList1, const pandora::CartesianPointVector &fitPositionList2, pandora::CartesianVector &position3D, float &chiSquared) const;
 
     /**
      *  @brief  Get the three dimensional position using a provided two dimensional calo hit and candidate fit positions from the other two views

@@ -48,7 +48,7 @@ StatusCode ClusterAssociationAlgorithm::Run()
             for (const Cluster *const pCluster : clusterVector)
             {
                 // ATTN The clusterVector may end up with dangling pointers; only protected by this check against managed cluster list
-                if (pClusterList->end() == pClusterList->find(pCluster))
+                if (pClusterList->end() == std::find(pClusterList->begin(), pClusterList->end(), pCluster))
                     continue;
 
                 this->UnambiguousPropagation(pCluster, true,  clusterAssociationMap);
@@ -135,7 +135,7 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pClu
     {
         for (ClusterList::const_iterator fIter = firstClusterList.begin(), fIterEnd = firstClusterList.end(); fIter != fIterEnd; ++fIter)
         {
-            if ((secondClusterList.end() != secondClusterList.find(*fIter)) && (pCluster != (*fIter)))
+            if ((secondClusterList.end() != std::find(secondClusterList.begin(), secondClusterList.end(), *fIter)) && (pCluster != (*fIter)))
                 daughterClusterVector.push_back(*fIter);
         }
     }
@@ -172,19 +172,19 @@ void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(const Cluster *const
         ClusterList &forwardClusters = iter->second.m_forwardAssociations;
         ClusterList &backwardClusters = iter->second.m_backwardAssociations;
 
-        ClusterList::iterator forwardIter = forwardClusters.find(pClusterToDelete);
-        ClusterList::iterator backwardIter = backwardClusters.find(pClusterToDelete);
+        ClusterList::iterator forwardIter = std::find(forwardClusters.begin(), forwardClusters.end(), pClusterToDelete);
+        ClusterList::iterator backwardIter = std::find(backwardClusters.begin(), backwardClusters.end(), pClusterToDelete);
 
         if (forwardClusters.end() != forwardIter)
         {
-            forwardClusters.erase(pClusterToDelete);
-            forwardClusters.insert(pClusterToEnlarge);
+            forwardClusters.erase(forwardIter);
+            forwardClusters.push_back(pClusterToEnlarge);
         }
 
         if (backwardClusters.end() != backwardIter)
         {
-            backwardClusters.erase(pClusterToDelete);
-            backwardClusters.insert(pClusterToEnlarge);
+            backwardClusters.erase(backwardIter);
+            backwardClusters.push_back(pClusterToEnlarge);
         }
     }
 }
@@ -214,7 +214,7 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
 
             ClusterList &associatedClusterList(isForwardMerge ? iterAssociation->second.m_backwardAssociations : iterAssociation->second.m_forwardAssociations);
 
-            ClusterList::iterator enlargeIter = associatedClusterList.find(pClusterToEnlarge);
+            ClusterList::iterator enlargeIter = std::find(associatedClusterList.begin(), associatedClusterList.end(), pClusterToEnlarge);
 
             if (associatedClusterList.end() == enlargeIter)
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -239,7 +239,7 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
 
             ClusterList &associatedClusterList(isForwardMerge ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
 
-            ClusterList::iterator deleteIter = associatedClusterList.find(pClusterToDelete);
+            ClusterList::iterator deleteIter = std::find(associatedClusterList.begin(), associatedClusterList.end(), pClusterToDelete);
 
             if (associatedClusterList.end() == deleteIter)
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -266,7 +266,7 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
     if (clusterAssociationMap.end() == iterAssociation)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    clusterList.insert(pCluster);
+    clusterList.push_back(pCluster);
 
     if ((pCluster != pExtremalCluster) && this->IsExtremalCluster(isForward, pExtremalCluster, pCluster))
           pExtremalCluster = pCluster;

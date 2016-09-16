@@ -37,9 +37,9 @@ void LArClusterHelper::GetClustersUVW(const ClusterList &inputClusters, ClusterL
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(*iter));
 
-        if (TPC_VIEW_U == hitType) clusterListU.insert(*iter);
-        else if (TPC_VIEW_V == hitType) clusterListV.insert(*iter);
-        else if (TPC_VIEW_W == hitType) clusterListW.insert(*iter);
+        if (TPC_VIEW_U == hitType) clusterListU.push_back(*iter);
+        else if (TPC_VIEW_V == hitType) clusterListV.push_back(*iter);
+        else if (TPC_VIEW_W == hitType) clusterListW.push_back(*iter);
         else throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 }
@@ -51,7 +51,7 @@ void LArClusterHelper::GetClustersByHitType(const ClusterList &inputClusters, co
     for (ClusterList::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
     {
         if (hitType == LArClusterHelper::GetClusterHitType(*iter))
-            clusterList.insert(*iter);
+            clusterList.push_back(*iter);
     }
 }
 
@@ -464,27 +464,27 @@ void LArClusterHelper::GetExtremalCoordinates(const OrderedCaloHitList &orderedC
     if (orderedCaloHitList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    CartesianPointList coordinateList;
+    CartesianPointVector coordinateVector;
 
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
             const CaloHit *const pCaloHit = *hitIter;
-            coordinateList.push_back(pCaloHit->GetPositionVector());
+            coordinateVector.push_back(pCaloHit->GetPositionVector());
         }
     }
 
-    std::sort(coordinateList.begin(), coordinateList.end(), LArClusterHelper::SortCoordinatesByPosition);
-    return LArClusterHelper::GetExtremalCoordinates(coordinateList, innerCoordinate, outerCoordinate);
+    std::sort(coordinateVector.begin(), coordinateVector.end(), LArClusterHelper::SortCoordinatesByPosition);
+    return LArClusterHelper::GetExtremalCoordinates(coordinateVector, innerCoordinate, outerCoordinate);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetExtremalCoordinates(const CartesianPointList &coordinateList, CartesianVector &innerCoordinate,
+void LArClusterHelper::GetExtremalCoordinates(const CartesianPointVector &coordinateVector, CartesianVector &innerCoordinate,
     CartesianVector &outerCoordinate)
 {
-    if (coordinateList.empty())
+    if (coordinateVector.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     // Find the extremal values of the X, Y and Z coordinates
@@ -495,7 +495,7 @@ void LArClusterHelper::GetExtremalCoordinates(const CartesianPointList &coordina
     float yMax(-std::numeric_limits<float>::max());
     float zMax(-std::numeric_limits<float>::max());
 
-    for (CartesianPointList::const_iterator pIter = coordinateList.begin(), pIterEnd = coordinateList.end(); pIter != pIterEnd; ++pIter)
+    for (CartesianPointVector::const_iterator pIter = coordinateVector.begin(), pIterEnd = coordinateVector.end(); pIter != pIterEnd; ++pIter)
     {
         const CartesianVector &pos = *pIter;
         xMin = std::min(pos.GetX(), xMin);
@@ -520,28 +520,28 @@ void LArClusterHelper::GetExtremalCoordinates(const CartesianPointList &coordina
     const bool useZ((zSpan > std::numeric_limits<float>::epsilon()) && (zSpan + std::numeric_limits<float>::epsilon() > std::max(xSpan, ySpan)));
 
     // Find the extremal hits separately for the chosen coordinates
-    CartesianPointList candidateList;
+    CartesianPointVector candidateVector;
 
-    for (CartesianPointList::const_iterator pIter = coordinateList.begin(), pIterEnd = coordinateList.end(); pIter != pIterEnd; ++pIter)
+    for (CartesianPointVector::const_iterator pIter = coordinateVector.begin(), pIterEnd = coordinateVector.end(); pIter != pIterEnd; ++pIter)
     {
         const CartesianVector &pos = *pIter;
 
         if (useX)
         {
             if (((pos.GetX() - xMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetX() - xMax) > -std::numeric_limits<float>::epsilon()))
-                candidateList.push_back(pos);
+                candidateVector.push_back(pos);
         }
 
         if (useY)
         {
             if (((pos.GetY() - yMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetY() - yMax) > -std::numeric_limits<float>::epsilon()))
-                candidateList.push_back(pos);
+                candidateVector.push_back(pos);
         }
 
         if (useZ)
         {
             if (((pos.GetZ() - zMin) < std::numeric_limits<float>::epsilon()) || ((pos.GetZ() - zMax) > -std::numeric_limits<float>::epsilon()))
-                candidateList.push_back(pos);
+                candidateVector.push_back(pos);
         }
     }
 
@@ -550,11 +550,11 @@ void LArClusterHelper::GetExtremalCoordinates(const CartesianPointList &coordina
     CartesianVector secondCoordinate(xAve, yAve, zAve);
     float maxDistanceSquared(+std::numeric_limits<float>::epsilon());
 
-    for (CartesianPointList::const_iterator iterI = candidateList.begin(), iterEndI = candidateList.end(); iterI != iterEndI; ++iterI)
+    for (CartesianPointVector::const_iterator iterI = candidateVector.begin(), iterEndI = candidateVector.end(); iterI != iterEndI; ++iterI)
     {
         const CartesianVector &posI = *iterI;
 
-        for (CartesianPointList::const_iterator iterJ = iterI, iterEndJ = candidateList.end(); iterJ != iterEndJ; ++iterJ)
+        for (CartesianPointVector::const_iterator iterJ = iterI, iterEndJ = candidateVector.end(); iterJ != iterEndJ; ++iterJ)
         {
             const CartesianVector &posJ = *iterJ;
 
@@ -587,7 +587,7 @@ void LArClusterHelper::GetExtremalCoordinates(const CartesianPointList &coordina
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetCoordinateList(const Cluster *const pCluster, CartesianPointList &coordinateList)
+void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, CartesianPointVector &coordinateVector)
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -596,11 +596,11 @@ void LArClusterHelper::GetCoordinateList(const Cluster *const pCluster, Cartesia
         for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
         {
             const CaloHit *const pCaloHit = *hitIter;
-            coordinateList.push_back(pCaloHit->GetPositionVector());
+            coordinateVector.push_back(pCaloHit->GetPositionVector());
         }
     }
 
-    std::sort(coordinateList.begin(), coordinateList.end(), LArClusterHelper::SortCoordinatesByPosition);
+    std::sort(coordinateVector.begin(), coordinateVector.end(), LArClusterHelper::SortCoordinatesByPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

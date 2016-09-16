@@ -216,13 +216,13 @@ public:
         pandora::CartesianVector &outerCoordinate);
 
   /**
-     *  @brief  Get positions of the two most distant calo hits in an ordered calo hit list (ordered by Z)
+     *  @brief  Get positions of the two most distant points in a provided list (ordered by Z)
      *
-     *  @param  coordinateList  the hit list
+     *  @param  coordinateVector the hit list
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
-    static void GetExtremalCoordinates(const pandora::CartesianPointList &coordinateList, pandora::CartesianVector &innerCoordinate,
+    static void GetExtremalCoordinates(const pandora::CartesianPointVector &coordinateVector, pandora::CartesianVector &innerCoordinate,
         pandora::CartesianVector &outerCoordinate);
 
     /**
@@ -256,12 +256,12 @@ public:
     static void GetClusterSpanZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &zmin, float &zmax);
 
     /**
-     *  @brief  Get list of hit coordinates from an input cluster
+     *  @brief  Get vector of hit coordinates from an input cluster
      *
      *  @param  pCluster address of the cluster
-     *  @param  coordinateList
+     *  @param  coordinateVector
      */
-    static void GetCoordinateList(const pandora::Cluster *const pCluster, pandora::CartesianPointList &coordinateList);
+    static void GetCoordinateVector(const pandora::Cluster *const pCluster, pandora::CartesianPointVector &coordinateVector);
 
     /**
      *  @brief  Get average Z positions of the calo hits in a cluster in range xmin to xmax

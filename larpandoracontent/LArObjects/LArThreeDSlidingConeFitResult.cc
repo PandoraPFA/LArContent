@@ -21,13 +21,13 @@ namespace lar_content
 
 float SimpleCone::GetMeanRT(const Cluster *const pCluster) const
 {
-    CartesianPointList hitPositionList;
-    LArClusterHelper::GetCoordinateList(pCluster, hitPositionList);
+    CartesianPointVector hitPositionVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, hitPositionVector);
 
     float rTSum(0.f);
     const unsigned int nClusterHits(pCluster->GetNCaloHits());
 
-    for (const CartesianVector &hitPosition : hitPositionList)
+    for (const CartesianVector &hitPosition : hitPositionVector)
     {
         const CartesianVector displacement(hitPosition - this->GetConeApex());
         const float rT(displacement.GetCrossProduct(this->GetConeDirection()).GetMagnitude());
@@ -41,13 +41,13 @@ float SimpleCone::GetMeanRT(const Cluster *const pCluster) const
 
 float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster, const float coneLength, const float coneTanHalfAngle) const
 {
-    CartesianPointList hitPositionList;
-    LArClusterHelper::GetCoordinateList(pCluster, hitPositionList);
+    CartesianPointVector hitPositionVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, hitPositionVector);
 
     unsigned int nMatchedHits(0);
     const unsigned int nClusterHits(pCluster->GetNCaloHits());
 
-    for (const CartesianVector &hitPosition : hitPositionList)
+    for (const CartesianVector &hitPosition : hitPositionVector)
     {
         const CartesianVector displacement(hitPosition - this->GetConeApex());
         const float rL(displacement.GetDotProduct(this->GetConeDirection()));

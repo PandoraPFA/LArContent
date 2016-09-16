@@ -52,7 +52,7 @@ bool TrackSplittingTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, 
 
 void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -91,7 +91,7 @@ void TrackSplittingTool::FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const
+void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
@@ -129,7 +129,7 @@ void TrackSplittingTool::SelectElements(const TensorType::ElementList &elementLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool isMinX,
-    ClusterList &usedClusters, SplitPositionMap &splitPositionMap) const
+    ClusterSet &usedClusters, SplitPositionMap &splitPositionMap) const
 {
     try
     {
@@ -190,11 +190,11 @@ bool TrackSplittingTool::PassesChecks(ThreeDTransverseTracksAlgorithm *const pAl
 
 bool TrackSplittingTool::CheckSplitPosition(const CartesianVector &splitPosition, const float splitX, const TwoDSlidingFitResult &longFitResult) const
 {
-    CartesianPointList fitPositionList;
+    CartesianPointVector fitPositionList;
     if (STATUS_CODE_SUCCESS != longFitResult.GetGlobalFitPositionListAtX(splitX, fitPositionList))
         return false;
 
-    for (CartesianPointList::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
+    for (CartesianPointVector::const_iterator iter = fitPositionList.begin(), iterEnd = fitPositionList.end(); iter != iterEnd; ++iter)
     {
         if ((splitPosition - *iter).GetMagnitude() < m_maxSplitVsFitPositionDistance)
             return true;

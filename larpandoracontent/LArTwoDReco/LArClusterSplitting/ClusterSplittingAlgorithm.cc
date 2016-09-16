@@ -86,8 +86,7 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(const Cluster *const pCluster
         return STATUS_CODE_NOT_ALLOWED;
 
     // Begin cluster fragmentation operations
-    ClusterList clusterList;
-    clusterList.insert(pCluster);
+    const ClusterList clusterList(1, pCluster);
     std::string clusterListToSaveName, clusterListToDeleteName;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,

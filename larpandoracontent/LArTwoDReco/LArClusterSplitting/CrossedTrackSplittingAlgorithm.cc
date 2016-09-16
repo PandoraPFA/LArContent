@@ -40,7 +40,7 @@ StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &
     {
         CaloHitList daughterHits;
         pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
-        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+        allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
             (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
@@ -117,10 +117,10 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
     if (LArClusterHelper::GetClosestDistance(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster()) > m_maxClusterSeparation)
         return STATUS_CODE_NOT_FOUND;
 
-    CartesianPointList candidateList;
-    this->FindCandidateSplitPositions(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster(), candidateList);
+    CartesianPointVector candidateVector;
+    this->FindCandidateSplitPositions(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster(), candidateVector);
 
-    if (candidateList.empty())
+    if (candidateVector.empty())
         return STATUS_CODE_NOT_FOUND;
 
 
@@ -131,7 +131,7 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
     const float halfWindowLength1(slidingFitResult1.GetLayerFitHalfWindowLength());
     const float halfWindowLength2(slidingFitResult2.GetLayerFitHalfWindowLength());
 
-    for (CartesianPointList::const_iterator iter = candidateList.begin(), iterEnd = candidateList.end(); iter != iterEnd; ++iter)
+    for (CartesianPointVector::const_iterator iter = candidateVector.begin(), iterEnd = candidateVector.end(); iter != iterEnd; ++iter)
     {
         const CartesianVector &candidatePosition(*iter);
 
@@ -238,7 +238,7 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    CartesianPointList &candidateList) const
+    CartesianPointVector &candidateVector) const
 {
     // ATTN The following is double-double counting
     CaloHitList caloHitList1, caloHitList2;
@@ -255,7 +255,7 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
         const CartesianVector position2(LArClusterHelper::GetClosestPosition(position1, pCluster2));
 
         if ((position1 - position2).GetMagnitudeSquared() < m_maxClusterSeparationSquared)
-            candidateList.push_back((position1 + position2) * 0.5);
+            candidateVector.push_back((position1 + position2) * 0.5);
     }
 
     for (const CaloHit *const pCaloHit : caloHitVector2)
@@ -264,7 +264,7 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
         const CartesianVector position1(LArClusterHelper::GetClosestPosition(position2, pCluster1));
 
         if ((position2 - position1).GetMagnitudeSquared() < m_maxClusterSeparationSquared)
-            candidateList.push_back((position2 + position1) * 0.5);
+            candidateVector.push_back((position2 + position1) * 0.5);
     }
 }
 

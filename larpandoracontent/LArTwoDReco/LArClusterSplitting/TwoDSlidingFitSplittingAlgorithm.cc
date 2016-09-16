@@ -74,11 +74,11 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const TwoDSlidingFit
 
             if (thisL < rL)
             {
-                firstCaloHitList.insert(pCaloHit);
+                firstCaloHitList.push_back(pCaloHit);
             }
             else
             {
-                secondCaloHitList.insert(pCaloHit);
+                secondCaloHitList.push_back(pCaloHit);
             }
         }
     }

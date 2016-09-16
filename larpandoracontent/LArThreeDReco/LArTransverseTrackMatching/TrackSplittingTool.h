@@ -78,7 +78,7 @@ private:
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to long track-like elements
      */
-    void SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
+    void SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
 
     /**
      *  @brief  Whether a provided tensor element can be used to construct a pfo
@@ -89,7 +89,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  splitPositionMap to receive the split position map
      */
-    bool PassesChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool isMinX, pandora::ClusterList &usedClusters,
+    bool PassesChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool isMinX, pandora::ClusterSet &usedClusters,
         SplitPositionMap &splitPositionMap) const;
 
     /**

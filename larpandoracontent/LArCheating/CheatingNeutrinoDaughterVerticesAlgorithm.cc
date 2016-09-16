@@ -71,7 +71,11 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoLi
     {
         PfoList daughterPfos;
         LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, daughterPfos);
-        daughterPfos.erase(pNeutrinoPfo);
+
+        PfoList::iterator neutrinoIter(std::find(daughterPfos.begin(), daughterPfos.end(), pNeutrinoPfo));
+
+        if (daughterPfos.end() != neutrinoIter)
+            daughterPfos.erase(neutrinoIter);
 
         for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
         {

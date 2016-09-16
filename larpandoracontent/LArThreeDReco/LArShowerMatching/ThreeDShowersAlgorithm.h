@@ -161,8 +161,8 @@ private:
     void ExamineTensor();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<ShowerTensorTool*> TensorToolList;
-    TensorToolList                  m_algorithmToolList;            ///< The algorithm tool list
+    typedef std::vector<ShowerTensorTool*> TensorToolVector;
+    TensorToolVector                m_algorithmToolVector;          ///< The algorithm tool vector
     unsigned int                    m_nMaxTensorToolRepeats;        ///< The maximum number of repeat loops over tensor tools
 
     unsigned int                    m_slidingFitWindow;             ///< The layer window for the sliding linear fits

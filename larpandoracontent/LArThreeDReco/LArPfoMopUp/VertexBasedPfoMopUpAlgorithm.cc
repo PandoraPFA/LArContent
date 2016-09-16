@@ -112,7 +112,7 @@ void VertexBasedPfoMopUpAlgorithm::GetInputPfos(const Vertex *const pVertex, Pfo
         for (const Pfo *const pPfo : *pPfoList)
         {
             PfoList &pfoTargetList(this->IsVertexAssociated(pPfo, pVertex) ? vertexPfos : nonVertexPfos);
-            pfoTargetList.insert(pPfo);
+            pfoTargetList.push_back(pPfo);
         }
     }
 }
@@ -236,12 +236,14 @@ bool VertexBasedPfoMopUpAlgorithm::ProcessPfoAssociations(const PfoAssociationLi
 
         if (pTrackPfoList)
         {
-            if ((pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) && (pTrackPfoList->count(pfoAssociation.GetDaughterPfo()) > 0))
+            if ((pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pfoAssociation.GetVertexPfo())) &&
+                (pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pfoAssociation.GetDaughterPfo())))
             {
                 continue;
             }
 
-            if (((pTrackPfoList->count(pfoAssociation.GetVertexPfo()) > 0) || (pTrackPfoList->count(pfoAssociation.GetDaughterPfo()) > 0)) &&
+            if (((pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pfoAssociation.GetVertexPfo())) ||
+                (pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pfoAssociation.GetDaughterPfo()))) &&
                 (pfoAssociation.GetNConsistentDirections() < m_minConsistentDirectionsTrack))
             {
                 continue;
@@ -267,16 +269,15 @@ void VertexBasedPfoMopUpAlgorithm::MergePfos(const PfoAssociation &pfoAssociatio
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const Pfo *const pVertexPfo(pfoAssociation.GetVertexPfo());
-    const bool isvertexTrack(pTrackPfoList && (pTrackPfoList->count(pVertexPfo) > 0));
+    const bool isvertexTrack(pTrackPfoList && (pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pVertexPfo)));
     const Pfo *pDaughterPfo(pfoAssociation.GetDaughterPfo());
-    const bool isDaughterShower(pShowerPfoList && (pShowerPfoList->count(pDaughterPfo) > 0));
+    const bool isDaughterShower(pShowerPfoList && (pShowerPfoList->end() != std::find(pShowerPfoList->begin(), pShowerPfoList->end(), pDaughterPfo)));
 
     this->MergeAndDeletePfos(pVertexPfo, pDaughterPfo);
 
     if (isvertexTrack && isDaughterShower)
     {
-        PfoList vertexPfoList;
-        vertexPfoList.insert(pVertexPfo);
+        const PfoList vertexPfoList(1, pVertexPfo);
 
         PandoraContentApi::ParticleFlowObject::Metadata metadata;
         metadata.m_particleId = E_MINUS;

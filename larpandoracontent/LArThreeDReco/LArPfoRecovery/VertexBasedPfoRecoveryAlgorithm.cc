@@ -58,7 +58,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::Run()
     this->SelectVertexClusters(pSelectedVertex, slidingFitResultMap, availableClusters, selectedClusters);
 
     // Match the cluster end points
-    ClusterList vetoList;
+    ClusterSet vetoList;
     ParticleList particleList;
     this->MatchThreeViews(pSelectedVertex, slidingFitResultMap, selectedClusters, vetoList, particleList);
     this->MatchTwoViews(pSelectedVertex, slidingFitResultMap, selectedClusters, vetoList, particleList);
@@ -182,7 +182,7 @@ void VertexBasedPfoRecoveryAlgorithm::SelectVertexClusters(const Vertex *const p
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-    const ClusterVector &inputClusters, ClusterList &vetoList, ParticleList &particleList) const
+    const ClusterVector &inputClusters, ClusterSet &vetoList, ParticleList &particleList) const
 {
     while (true)
     {
@@ -224,7 +224,7 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-    const ClusterVector &inputClusters, ClusterList &vetoList, ParticleList &particleList) const
+    const ClusterVector &inputClusters, ClusterSet &vetoList, ParticleList &particleList) const
 {
     while (true)
     {
@@ -419,7 +419,7 @@ float VertexBasedPfoRecoveryAlgorithm::GetChi2(const Vertex *const pVertex, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexBasedPfoRecoveryAlgorithm::SelectAvailableClusters(const ClusterList &vetoList, const ClusterVector &inputVector,
+void VertexBasedPfoRecoveryAlgorithm::SelectAvailableClusters(const ClusterSet &vetoList, const ClusterVector &inputVector,
     ClusterVector &outputVector) const
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
@@ -493,9 +493,9 @@ void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particl
         if(!(isAvailableU && isAvailableV && isAvailableW))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        if (pClusterU) clusterList.insert(pClusterU);
-        if (pClusterV) clusterList.insert(pClusterV);
-        if (pClusterW) clusterList.insert(pClusterW);
+        if (pClusterU) clusterList.push_back(pClusterU);
+        if (pClusterV) clusterList.push_back(pClusterV);
+        if (pClusterW) clusterList.push_back(pClusterW);
 
         // TODO Correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;

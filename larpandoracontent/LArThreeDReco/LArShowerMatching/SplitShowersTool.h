@@ -51,7 +51,7 @@ private:
      *  @param  eIter the iterator to the tensor element
      *  @param  usedClusters the list of used clusters
      */
-    bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
+    bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterSet &usedClusters) const;
 
     /**
      *  @brief  Select elements representing possible components of interest due to undershoots in clustering
@@ -62,7 +62,7 @@ private:
      *  @param  iteratorList to receive a list of iterators to relevant elements
      */
     void SelectTensorElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
-        const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
+        const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
 
     /**
      *  @brief  Get cluster merges specific elements of the tensor
@@ -72,7 +72,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to be populated with cluster merges
      */
-    void FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList, pandora::ClusterList &usedClusters,
+    void FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList, pandora::ClusterSet &usedClusters,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**

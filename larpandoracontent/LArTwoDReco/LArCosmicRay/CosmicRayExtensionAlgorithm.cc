@@ -306,7 +306,7 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
             if (parentToDaughterAssociation.GetParent() == daughterToParentAssociation.GetDaughter() &&
                 parentToDaughterAssociation.GetDaughter() == daughterToParentAssociation.GetParent())
             {
-                clusterMergeMap[pParentCluster].insert(pDaughterCluster);
+                clusterMergeMap[pParentCluster].push_back(pDaughterCluster);
             }
         }
     }

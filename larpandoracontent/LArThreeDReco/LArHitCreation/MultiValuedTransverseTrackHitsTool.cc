@@ -22,7 +22,7 @@ void MultiValuedTransverseTrackHitsTool::GetThreeDPosition(const CaloHit *const 
     const HitType hitType1((TPC_VIEW_U == hitType) ? TPC_VIEW_V : (TPC_VIEW_V == hitType) ? TPC_VIEW_W : TPC_VIEW_U);
     const HitType hitType2((TPC_VIEW_U == hitType) ? TPC_VIEW_W : (TPC_VIEW_V == hitType) ? TPC_VIEW_U : TPC_VIEW_V);
 
-    CartesianPointList fitPositionList1, fitPositionList2;
+    CartesianPointVector fitPositionList1, fitPositionList2;
 
     MatchedSlidingFitMap::const_iterator iter1 = matchedSlidingFitMap.find(hitType1);
 

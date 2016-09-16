@@ -81,7 +81,7 @@ private:
      *  @param  clusterVector the input clusters
      *  @param  crossingPoints to receive the 2D crossing points
      */
-    void FindCrossingPoints(const pandora::ClusterVector &clusterVector, pandora::CartesianPointList &crossingPoints) const;
+    void FindCrossingPoints(const pandora::ClusterVector &clusterVector, pandora::CartesianPointVector &crossingPoints) const;
 
     /**
      *  @brief  Get a list of spacepoints representing cluster 2D hit positions and extrapolated positions
@@ -89,7 +89,7 @@ private:
      *  @param  pCluster address of the cluster
      *  @param  spacePoints to receive the list of spacepoints
      */
-    void GetSpacepoints(const pandora::Cluster *const pCluster, pandora::CartesianPointList &spacePoints) const;
+    void GetSpacepoints(const pandora::Cluster *const pCluster, pandora::CartesianPointVector &spacePoints) const;
 
     /**
      *  @brief  Identify where (extrapolated) clusters plausibly cross in 2D
@@ -98,8 +98,8 @@ private:
      *  @param  spacepoints2 space points for cluster 2
      *  @param  crossingPoints to receive the list of plausible 2D crossing points
      */
-    void FindCrossingPoints(const pandora::CartesianPointList &spacepoints1, const pandora::CartesianPointList &spacepoints2,
-        pandora::CartesianPointList &crossingPoints) const;
+    void FindCrossingPoints(const pandora::CartesianPointVector &spacepoints1, const pandora::CartesianPointVector &spacepoints2,
+        pandora::CartesianPointVector &crossingPoints) const;
 
     /**
      *  @brief  Attempt to create candidate vertex positions, using 2D crossing points in 2 views
@@ -109,7 +109,7 @@ private:
      *  @param  hitType1 the hit type of crossing points 1
      *  @param  hitType2 the hit type of crossing points 2
      */
-    void CreateCrossingVertices(const pandora::CartesianPointList &crossingPoints1, const pandora::CartesianPointList &crossingPoints2,
+    void CreateCrossingVertices(const pandora::CartesianPointVector &crossingPoints1, const pandora::CartesianPointVector &crossingPoints2,
         const pandora::HitType hitType1, const pandora::HitType hitType2) const;
 
     /**
@@ -133,7 +133,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointList> ClusterToSpacepointsMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVector> ClusterToSpacepointsMap;
 
     pandora::StringVector   m_inputClusterListNames;            ///< The list of cluster list names
     std::string             m_outputVertexListName;             ///< The name under which to save the output vertex list

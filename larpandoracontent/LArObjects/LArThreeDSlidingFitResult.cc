@@ -214,10 +214,10 @@ TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
     const CartesianVector &fitDirection(clusterFitResult.GetDirection()), &fitIntercept(clusterFitResult.GetIntercept());
     float minProjection(std::numeric_limits<float>::max());
 
-    CartesianPointList coordinateList;
-    LArClusterHelper::GetCoordinateList(pCluster, coordinateList);
+    CartesianPointVector coordinateVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
 
-    for (const CartesianVector &coordinate : coordinateList)
+    for (const CartesianVector &coordinate : coordinateVector)
     {
         const float projection(fitDirection.GetDotProduct(coordinate - fitIntercept));
 

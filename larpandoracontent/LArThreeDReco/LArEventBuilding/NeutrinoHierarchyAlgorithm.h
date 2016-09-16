@@ -232,8 +232,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<PfoRelationTool*> PfoRelationToolList;
-    PfoRelationToolList             m_algorithmToolList;        ///< The algorithm tool list
+    typedef std::vector<PfoRelationTool*> PfoRelationToolVector;
+    PfoRelationToolVector           m_algorithmToolVector;      ///< The algorithm tool vector
 
     std::string                     m_neutrinoPfoListName;      ///< The neutrino pfo list name
     pandora::StringVector           m_daughterPfoListNames;     ///< The list of daughter pfo list names

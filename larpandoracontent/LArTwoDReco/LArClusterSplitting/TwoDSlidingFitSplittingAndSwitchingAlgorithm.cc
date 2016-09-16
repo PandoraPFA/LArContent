@@ -170,11 +170,11 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::SplitCluster(const Cluster *c
 
         if (splitDirection.GetDotProduct((pCaloHit->GetPositionVector() - splitPosition)) > 0.f)
         {
-            firstCaloHitList.insert(pCaloHit);
+            firstCaloHitList.push_back(pCaloHit);
         }
         else
         {
-            secondCaloHitList.insert(pCaloHit);
+            secondCaloHitList.push_back(pCaloHit);
         }
     }
 }
@@ -195,8 +195,8 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(const C
 
     // Begin cluster fragmentation operations
     ClusterList clusterList;
-    clusterList.insert(pCluster1);
-    clusterList.insert(pCluster2);
+    clusterList.push_back(pCluster1);
+    clusterList.push_back(pCluster2);
 
     std::string clusterListToSaveName, clusterListToDeleteName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,

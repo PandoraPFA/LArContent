@@ -207,7 +207,7 @@ void VertexSelectionBaseAlgorithm::SelectTopScoreVertices(VertexScoreList &verte
         if (!selectedVertexList.empty() && (vertexScore.GetScore() < m_minCandidateScoreFraction * bestScore))
             continue;
 
-        selectedVertexList.insert(vertexScore.GetVertex());
+        selectedVertexList.push_back(vertexScore.GetVertex());
 
         if (m_selectSingleVertex)
             return;

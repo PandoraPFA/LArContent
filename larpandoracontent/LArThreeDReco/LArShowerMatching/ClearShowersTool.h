@@ -53,7 +53,7 @@ public:
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      */
     static bool IsLargerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
-        const unsigned int minMatchedSamplingPointRatio, const float minXOverlapSpanRatio, const pandora::ClusterList &usedClusters);
+        const unsigned int minMatchedSamplingPointRatio, const float minXOverlapSpanRatio, const pandora::ClusterSet &usedClusters);
 
     bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
@@ -75,7 +75,7 @@ private:
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to large shower-like elements
      */
-    void SelectLargeShowerElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters,
+    void SelectLargeShowerElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters,
         IteratorList &iteratorList) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation

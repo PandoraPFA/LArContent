@@ -51,7 +51,7 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
             break;
 
         // ATTN May want to reconsider precise association mechanics for complex situations
-        PfoList recentlyAssigned;
+        PfoSet recentlyAssigned;
 
         for (const ParticleFlowObject *const pParentPfo : assignedPfos)
         {

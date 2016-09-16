@@ -60,7 +60,7 @@ StatusCode EventDisplayAlgorithm::Run()
             }
 
             if (pCluster->IsAvailable())
-                clusterList.insert(pCluster);
+                clusterList.push_back(pCluster);
         }
     }
 
@@ -85,7 +85,7 @@ StatusCode EventDisplayAlgorithm::Run()
                 const Cluster *const pCluster = *cIter;
 
                 if (hitType == LArClusterHelper::GetClusterHitType(pCluster))
-                    particleClusterList.insert(pCluster);
+                    particleClusterList.push_back(pCluster);
             }
 
             PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &particleClusterList, "Particles", GetColor(n++) ));
@@ -99,8 +99,7 @@ StatusCode EventDisplayAlgorithm::Run()
         for( ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter )
         {
             const Cluster *const pCluster = *iter;
-            ClusterList tempList;
-            tempList.insert(pCluster);
+            const ClusterList tempList(1, pCluster);
             PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &tempList, "Clusters", GetColor(n++) ));
         }
     }

@@ -62,17 +62,17 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
         if (isCosmicRay)
         {
-            outputPfoList.insert(pPfo);
+            outputPfoList.push_back(pPfo);
             const PfoList &daughterPfoList(pPfo->GetDaughterPfoList());
 
             for (PfoList::const_iterator dIter = daughterPfoList.begin(), dIterEnd = daughterPfoList.end(); dIter != dIterEnd; ++dIter)
             {
                 const ParticleFlowObject *const pDaughterPfo = *dIter;
 
-                if (outputPfoList.count(pDaughterPfo) || !pDaughterPfo->GetDaughterPfoList().empty())
+                if ((outputPfoList.end() != std::find(outputPfoList.begin(), outputPfoList.end(), pDaughterPfo)) || !pDaughterPfo->GetDaughterPfoList().empty())
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                outputDaughterPfoList.insert(pDaughterPfo);
+                outputDaughterPfoList.push_back(pDaughterPfo);
             }
         }
     }

@@ -29,12 +29,12 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_orthoDirection(0.f, 0.f, 0.f)
 {
     // Get a list of hits coordinates from the cluster
-    CartesianPointList coordinateList;
-    LArClusterHelper::GetCoordinateList(pCluster, coordinateList);
+    CartesianPointVector coordinateVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
 
     // Calculate the sliding fit result
-    this->CalculateAxes(coordinateList);
-    this->FillLayerFitContributionMap(coordinateList);
+    this->CalculateAxes(coordinateVector);
+    this->FillLayerFitContributionMap(coordinateVector);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
@@ -51,11 +51,11 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_orthoDirection(orthoDirection)
 {
     // Get a list of hits coordinates from the cluster
-    CartesianPointList coordinateList;
-    LArClusterHelper::GetCoordinateList(pCluster, coordinateList);
+    CartesianPointVector coordinateVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
 
     // Calculate the sliding fit result
-    this->FillLayerFitContributionMap(coordinateList);
+    this->FillLayerFitContributionMap(coordinateVector);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
@@ -344,7 +344,7 @@ StatusCode TwoDSlidingFitResult::GetGlobalFitProjection(const CartesianVector &i
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, CartesianPointList &positionList) const
+StatusCode TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, CartesianPointVector &positionList) const
 {
     LayerInterpolationList layerInterpolationList;
     const StatusCode statusCode(this->TransverseInterpolation(x, layerInterpolationList));
@@ -515,11 +515,11 @@ const FitSegment &TwoDSlidingFitResult::GetFitSegment(const float rL) const
 // Private member functions start here
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::CalculateAxes(const CartesianPointList &coordinateList)
+void TwoDSlidingFitResult::CalculateAxes(const CartesianPointVector &coordinateVector)
 {
     // Use extremal coordinates to define axis intercept and direction
     CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(coordinateList, innerCoordinate, outerCoordinate);
+    LArClusterHelper::GetExtremalCoordinates(coordinateVector, innerCoordinate, outerCoordinate);
     m_axisIntercept = innerCoordinate;
     m_axisDirection = (outerCoordinate - innerCoordinate).GetUnitVector();
 
@@ -530,7 +530,7 @@ void TwoDSlidingFitResult::CalculateAxes(const CartesianPointList &coordinateLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::FillLayerFitContributionMap(const CartesianPointList &coordinateList)
+void TwoDSlidingFitResult::FillLayerFitContributionMap(const CartesianPointVector &coordinateVector)
 {
     if (m_layerPitch < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -542,7 +542,7 @@ void TwoDSlidingFitResult::FillLayerFitContributionMap(const CartesianPointList 
     if (!m_layerFitContributionMap.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    for (CartesianPointList::const_iterator iter = coordinateList.begin(), iterEnd = coordinateList.end(); iter != iterEnd; ++iter)
+    for (CartesianPointVector::const_iterator iter = coordinateVector.begin(), iterEnd = coordinateVector.end(); iter != iterEnd; ++iter)
     {
         float rL(0.f), rT(0.f);
         this->GetLocalPosition(*iter, rL, rT);
