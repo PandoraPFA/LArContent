@@ -133,10 +133,13 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pClu
 
     if (pCluster == pExtremalCluster)
     {
-        for (ClusterList::const_iterator fIter = firstClusterList.begin(), fIterEnd = firstClusterList.end(); fIter != fIterEnd; ++fIter)
+        for (const Cluster *const pFirstCluster : firstClusterList)
         {
-            if ((secondClusterList.end() != std::find(secondClusterList.begin(), secondClusterList.end(), *fIter)) && (pCluster != (*fIter)))
-                daughterClusterVector.push_back(*fIter);
+            if ((pCluster != pFirstCluster) && (secondClusterList.end() != std::find(secondClusterList.begin(), secondClusterList.end(), pFirstCluster)) &&
+                (daughterClusterVector.end() == std::find(daughterClusterVector.begin(), daughterClusterVector.end(), pFirstCluster)))
+            {
+                daughterClusterVector.push_back(pFirstCluster);
+            }
         }
     }
 

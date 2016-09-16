@@ -253,9 +253,9 @@ void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const
                 Element element(iterU->first, iterV->first, iterW->first, iterW->second);
                 elementList.push_back(element);
 
-                clusterListU.push_back(iterU->first);
-                clusterListV.push_back(iterV->first);
-                clusterListW.push_back(iterW->first);
+                if (clusterListU.end() == std::find(clusterListU.begin(), clusterListU.end(), iterU->first)) clusterListU.push_back(iterU->first);
+                if (clusterListV.end() == std::find(clusterListV.begin(), clusterListV.end(), iterV->first)) clusterListV.push_back(iterV->first);
+                if (clusterListW.end() == std::find(clusterListW.begin(), clusterListW.end(), iterW->first)) clusterListW.push_back(iterW->first);
             }
         }
     }

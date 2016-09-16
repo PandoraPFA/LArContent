@@ -58,9 +58,9 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
-            allClusterListU.push_back(eIter->GetClusterU());
-            allClusterListV.push_back(eIter->GetClusterV());
-            allClusterListW.push_back(eIter->GetClusterW());
+            if (allClusterListU.end() == std::find(allClusterListU.begin(), allClusterListU.end(), eIter->GetClusterU())) allClusterListU.push_back(eIter->GetClusterU());
+            if (allClusterListV.end() == std::find(allClusterListV.begin(), allClusterListV.end(), eIter->GetClusterV())) allClusterListV.push_back(eIter->GetClusterV());
+            if (allClusterListW.end() == std::find(allClusterListW.begin(), allClusterListW.end(), eIter->GetClusterW())) allClusterListW.push_back(eIter->GetClusterW());
             usedKeyClusters.insert(eIter->GetClusterU());
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()

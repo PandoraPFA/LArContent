@@ -445,7 +445,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inpu
             }
         }
 
-        if ((closestDistanceSquared < m_maxPointDisplacementSquared) && (NULL != pClosestCaloHit))
+        if ((closestDistanceSquared < m_maxPointDisplacementSquared) && (NULL != pClosestCaloHit) && (matchedHits.end() == std::find(matchedHits.begin(), matchedHits.end(), pClosestCaloHit)))
             matchedHits.push_back(pClosestCaloHit);
     }
 
