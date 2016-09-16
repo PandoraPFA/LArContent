@@ -115,9 +115,13 @@ void OverlapTensor<T>::SetOverlapResult(const pandora::Cluster *const pClusterU,
     if (!overlapList.insert(typename OverlapList::value_type(pClusterW, overlapResult)).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
-    m_clusterNavigationMapUV[pClusterU].push_back(pClusterV);
-    m_clusterNavigationMapVW[pClusterV].push_back(pClusterW);
-    m_clusterNavigationMapWU[pClusterW].push_back(pClusterU);
+    ClusterList &navigationUV(m_clusterNavigationMapUV[pClusterU]);
+    ClusterList &navigationVW(m_clusterNavigationMapVW[pClusterV]);
+    ClusterList &navigationWU(m_clusterNavigationMapWU[pClusterW]);
+
+    if (navigationUV.end() == std::find(navigationUV.begin(), navigationUV.end(), pClusterV)) navigationUV.push_back(pClusterV);
+    if (navigationVW.end() == std::find(navigationVW.begin(), navigationVW.end(), pClusterW)) navigationVW.push_back(pClusterW);
+    if (navigationWU.end() == std::find(navigationWU.begin(), navigationWU.end(), pClusterU)) navigationWU.push_back(pClusterU);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
