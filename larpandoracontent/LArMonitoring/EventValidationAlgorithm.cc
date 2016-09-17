@@ -780,8 +780,9 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
     }
 
     if (!availableHits.empty())
-        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &availableHits, "RemnantHits" + hitTypeString, GRAY);
+        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &availableHits, "RemnantHits" + hitTypeString, LIGHTCYAN);
 
+    CaloHitList isolatedHits;
     ClusterList availableClusters;
 
     for (const std::string &clusterListName : m_clusterListNames)
@@ -796,11 +797,17 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
         {
             if (PandoraContentApi::IsAvailable(*this, pCluster) && (hitType == LArClusterHelper::GetClusterHitType(pCluster)))
                 availableClusters.insert(pCluster);
+
+            if (!PandoraContentApi::IsAvailable(*this, pCluster) && (hitType == LArClusterHelper::GetClusterHitType(pCluster)))
+                isolatedHits.insert(pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
         }
     }
 
     if (!availableClusters.empty())
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &availableClusters, "RemnantClusters" + hitTypeString, GRAY);
+
+    if (!isolatedHits.empty())
+        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &isolatedHits, "IsolatedHitsInParticles" + hitTypeString, LIGHTYELLOW);
 }
 #endif
 //------------------------------------------------------------------------------------------------------------------------------------------
