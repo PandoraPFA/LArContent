@@ -73,29 +73,27 @@ StatusCode NeutrinoHierarchyAlgorithm::Run()
 
     try
     {
-        const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
-        this->GetInitialPfoInfoMap(candidateDaughterPfoList, pfoInfoMap);
+        if (!pNeutrinoPfo->GetVertexList().empty())
+        {
+            const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+            this->GetInitialPfoInfoMap(candidateDaughterPfoList, pfoInfoMap);
 
-        for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolList)
-            pPfoRelationTool->Run(this, pNeutrinoVertex, pfoInfoMap);
+            for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolList)
+                pPfoRelationTool->Run(this, pNeutrinoVertex, pfoInfoMap);
+        }
 
         this->ProcessPfoInfoMap(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap);
-
-        if (m_displayPfoInfoMap)
-            this->DisplayPfoInfoMap(pNeutrinoPfo, pfoInfoMap);
-
-        for (auto mapIter : pfoInfoMap)
-            delete mapIter.second;
     }
     catch (StatusCodeException &statusCodeException)
     {
         std::cout << "NeutrinoHierarchyAlgorithm: unable to process input neutrino pfo, " << statusCodeException.ToString() << std::endl;
-
-        for (auto mapIter : pfoInfoMap)
-            delete mapIter.second;
-
-        throw statusCodeException;
     }
+
+    if (m_displayPfoInfoMap)
+        this->DisplayPfoInfoMap(pNeutrinoPfo, pfoInfoMap);
+
+    for (auto &mapIter : pfoInfoMap)
+        delete mapIter.second;
 
     return STATUS_CODE_SUCCESS;
 }
