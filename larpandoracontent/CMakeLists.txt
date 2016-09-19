@@ -7,11 +7,13 @@ set( subdir_list LArCheating
 		 LArPersistency
 		 LArPlugins
 		 LArStitching
+		 LArThreeDReco
 		 LArThreeDReco/LArCosmicRay
 		 LArThreeDReco/LArEventBuilding
 		 LArThreeDReco/LArHitCreation
 		 LArThreeDReco/LArLongitudinalTrackMatching
 		 LArThreeDReco/LArPfoMopUp
+		 LArThreeDReco/LArPfoRecovery
 		 LArThreeDReco/LArShowerFragments
 		 LArThreeDReco/LArShowerMatching
 		 LArThreeDReco/LArThreeDBase
