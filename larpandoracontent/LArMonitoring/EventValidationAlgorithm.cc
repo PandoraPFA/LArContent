@@ -333,9 +333,13 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
 
         recoNeutrinoPdg = pPfo->GetParticleId();
         const Vertex *const pVertex(pPfo->GetVertexList().empty() ? nullptr : *(pPfo->GetVertexList().begin()));
-        recoNeutrinoVtxX = pVertex->GetPosition().GetX();
-        recoNeutrinoVtxY = pVertex->GetPosition().GetY();
-        recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
+
+        if (pVertex)
+        {
+            recoNeutrinoVtxX = pVertex->GetPosition().GetX();
+            recoNeutrinoVtxY = pVertex->GetPosition().GetY();
+            recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
+        }
     }
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
