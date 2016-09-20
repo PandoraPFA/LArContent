@@ -1,6 +1,8 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-08-00
 --------------------------------------------------------------------------------------------------------------------------------------------
+Added CrossingVertexCandidate creation algorithm.
+Added EnergyKickVertexSelection algorithm and factored common VertexSelection functionality into base class.
 Added ThreeDSlidingConeFitResult and exploit in EventSlicing tool, SlidingConePfoMopUp and SlidingConeClusterMopUp algorithms.
 Refactored Pfo and Cluster MopUp algorithms, moved PfoRecovery algorithms into a separate directory.
 Separate (loosely grouped) 2D- and 3D-based MopUp algorithms in NeutrinoParent algorithm.
