@@ -92,9 +92,11 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
             if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            this->UpdateUponMerge(pParentCluster, pDaughterCluster);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
             deletedClusters.insert(pDaughterCluster);
+
+            // ATTN Trouble if this function tries to derefence pDaughterCluster
+            this->UpdateUponMerge(pParentCluster, pDaughterCluster);
         }
     }
 
