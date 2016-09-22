@@ -13,6 +13,8 @@
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 
+#include <utility>
+
 using namespace pandora;
 
 namespace lar_content
@@ -23,8 +25,15 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_slidingFitWindow(20),
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f),
-    m_maxClusterXDiscrepancy(4.f),
-    m_chiSquaredCut(2.f)
+    m_chiSquaredCut(2.f),
+    m_enableEndpointCandidates(true),
+    m_maxEndpointXDiscrepancy(4.f),
+    m_enableCrossingCandidates(true),
+    m_maxCrossingXDiscrepancy(0.5f),
+    m_extrapolationNSteps(200),
+    m_extrapolationStepSize(0.1f),
+    m_maxCrossingSeparationSquared(2.f * 2.f),
+    m_minNearbyCrossingDistanceSquared(0.5f * 0.5f)
 {
 }
 
@@ -34,15 +43,21 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 {
     try
     {
-        ClusterList clusterListU, clusterListV, clusterListW;
-        this->SelectClusters(clusterListU, clusterListV, clusterListW);
+        ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
+        this->SelectClusters(clusterVectorU, clusterVectorV, clusterVectorW);
 
         const VertexList *pVertexList(NULL); std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
-        this->ClusterEndPointComparison(clusterListU, clusterListV);
-        this->ClusterEndPointComparison(clusterListU, clusterListW);
-        this->ClusterEndPointComparison(clusterListV, clusterListW);
+        if (m_enableEndpointCandidates)
+        {
+            this->CreateEndpointCandidates(clusterVectorU, clusterVectorV);
+            this->CreateEndpointCandidates(clusterVectorU, clusterVectorW);
+            this->CreateEndpointCandidates(clusterVectorV, clusterVectorW);
+        }
+
+        if (m_enableCrossingCandidates)
+            this->CreateCrossingCandidates(clusterVectorU, clusterVectorV, clusterVectorW);
 
         if (!pVertexList->empty())
         {
@@ -51,8 +66,6 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
             if (m_replaceCurrentVertexList)
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
         }
-
-        this->TidyUp();
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -60,59 +73,102 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         throw statusCodeException;
     }
 
+    this->TidyUp();
+
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::SelectClusters(ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW)
+void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVectorU, ClusterVector &clusterVectorV, ClusterVector &clusterVectorW)
 {
-    this->SelectClusters(m_inputClusterListNameU, clusterListU);
-    this->SelectClusters(m_inputClusterListNameV, clusterListV);
-    this->SelectClusters(m_inputClusterListNameW, clusterListW);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CandidateVertexCreationAlgorithm::ClusterEndPointComparison(const ClusterList &clusterList1, const ClusterList &clusterList2) const
-{
-    for (ClusterList::const_iterator iter1 = clusterList1.begin(), iter1End = clusterList1.end(); iter1 != iter1End; ++iter1)
+    for (const std::string &clusterListName : m_inputClusterListNames)
     {
-        const Cluster *const pCluster1(*iter1);
-        const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+        const ClusterList *pClusterList(NULL);
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
-        const TwoDSlidingFitResult &fitResult1(this->GetCachedSlidingFitResult(pCluster1));
-        const CartesianVector minLayerPosition1(fitResult1.GetGlobalMinLayerPosition());
-        const CartesianVector maxLayerPosition1(fitResult1.GetGlobalMaxLayerPosition());
-
-        for (ClusterList::const_iterator iter2 = clusterList2.begin(), iter2End = clusterList2.end(); iter2 != iter2End; ++iter2)
+        if (!pClusterList || pClusterList->empty())
         {
-            const Cluster *const pCluster2(*iter2);
-            const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "CandidateVertexCreationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
 
-            const TwoDSlidingFitResult &fitResult2(this->GetCachedSlidingFitResult(*iter2));
-            const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
-            const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
+            continue;
+        }
 
-            this->CreateVertex(maxLayerPosition1, hitType1, fitResult2);
-            this->CreateVertex(minLayerPosition1, hitType1, fitResult2);
-            this->CreateVertex(maxLayerPosition2, hitType2, fitResult1);
-            this->CreateVertex(minLayerPosition2, hitType2, fitResult1);
+        const HitType hitType(LArClusterHelper::GetClusterHitType(*(pClusterList->begin())));
+
+        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType) ? clusterVectorU : (TPC_VIEW_V == hitType) ? clusterVectorV : clusterVectorW);
+
+        if (!selectedClusterVector.empty())
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        ClusterVector sortedClusters(pClusterList->begin(), pClusterList->end());
+        std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pCluster : sortedClusters)
+        {
+            if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+                continue;
+
+            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+                continue;
+
+            try
+            {
+                this->AddToSlidingFitCache(pCluster);
+                selectedClusterVector.push_back(pCluster);
+            }
+            catch (StatusCodeException &statusCodeException)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                    throw statusCodeException;
+            }
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &position1, const HitType hitType1, const TwoDSlidingFitResult &fitResult2) const
+void CandidateVertexCreationAlgorithm::CreateEndpointCandidates(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2) const
+{
+    for (const Cluster *const pCluster1 : clusterVector1)
+    {
+        const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+
+        const TwoDSlidingFitResult &fitResult1(this->GetCachedSlidingFitResult(pCluster1));
+        const CartesianVector minLayerPosition1(fitResult1.GetGlobalMinLayerPosition());
+        const CartesianVector maxLayerPosition1(fitResult1.GetGlobalMaxLayerPosition());
+
+        for (const Cluster *const pCluster2 : clusterVector2)
+        {
+            const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
+
+            const TwoDSlidingFitResult &fitResult2(this->GetCachedSlidingFitResult(pCluster2));
+            const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
+            const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
+
+            this->CreateEndpointVertex(maxLayerPosition1, hitType1, fitResult2);
+            this->CreateEndpointVertex(minLayerPosition1, hitType1, fitResult2);
+            this->CreateEndpointVertex(maxLayerPosition2, hitType2, fitResult1);
+            this->CreateEndpointVertex(minLayerPosition2, hitType2, fitResult1);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::CreateEndpointVertex(const CartesianVector &position1, const HitType hitType1, const TwoDSlidingFitResult &fitResult2) const
 {
     const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
-
+    
     if ((((position1.GetX() < minLayerPosition2.GetX()) && (position1.GetX() < maxLayerPosition2.GetX())) ||
         ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
-        (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxClusterXDiscrepancy) &&
-        (std::fabs(position1.GetX() - maxLayerPosition2.GetX()) > m_maxClusterXDiscrepancy))
+        (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxEndpointXDiscrepancy) &&
+        (std::fabs(position1.GetX() - maxLayerPosition2.GetX()) > m_maxEndpointXDiscrepancy))
     {
         return;
     }
@@ -141,38 +197,141 @@ void CandidateVertexCreationAlgorithm::CreateVertex(const CartesianVector &posit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::SelectClusters(const std::string &clusterListName, ClusterList &selectedClusterList)
+void CandidateVertexCreationAlgorithm::CreateCrossingCandidates(const ClusterVector &clusterVectorU, const ClusterVector &clusterVectorV,
+    const ClusterVector &clusterVectorW) const
 {
-    const ClusterList *pInputClusterList(NULL);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pInputClusterList));
+    CartesianPointList crossingsU, crossingsV, crossingsW;
+    this->FindCrossingPoints(clusterVectorU, crossingsU);
+    this->FindCrossingPoints(clusterVectorV, crossingsV);
+    this->FindCrossingPoints(clusterVectorW, crossingsW);
 
-    if (!pInputClusterList || pInputClusterList->empty())
+    this->CreateCrossingVertices(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
+    this->CreateCrossingVertices(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
+    this->CreateCrossingVertices(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::FindCrossingPoints(const ClusterVector &clusterVector, CartesianPointList &crossingPoints) const
+{
+    ClusterToSpacepointsMap clusterToSpacepointsMap;
+
+    for (const Cluster *const pCluster : clusterVector)
     {
-        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "CandidateVertexCreationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
-
-        return;
+        ClusterToSpacepointsMap::iterator mapIter(clusterToSpacepointsMap.emplace(pCluster, CartesianPointList()).first);
+        this->GetSpacepoints(pCluster, mapIter->second);
     }
 
-    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster1 : clusterVector)
     {
-        try
+        for (const Cluster *const pCluster2 : clusterVector)
         {
-            const Cluster *const pCluster = *iter;
-
-            if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+            if (pCluster1 == pCluster2)
                 continue;
 
-            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
-                continue;
-
-            this->AddToSlidingFitCache(pCluster);
-            selectedClusterList.insert(pCluster);
+            this->FindCrossingPoints(clusterToSpacepointsMap.at(pCluster1), clusterToSpacepointsMap.at(pCluster2), crossingPoints);
         }
-        catch (StatusCodeException &statusCodeException)
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::GetSpacepoints(const Cluster *const pCluster, CartesianPointList &spacepoints) const
+{
+    LArClusterHelper::GetCoordinateList(pCluster, spacepoints);
+
+    const TwoDSlidingFitResult &fitResult(this->GetCachedSlidingFitResult(pCluster));
+    const float minLayerRL(fitResult.GetL(fitResult.GetMinLayer()));
+    const float maxLayerRL(fitResult.GetL(fitResult.GetMaxLayer()));
+
+    for (unsigned int iStep = 0; iStep < m_extrapolationNSteps; ++ iStep)
+    {
+        const float deltaRL(static_cast<float>(iStep) * m_extrapolationStepSize);
+
+        CartesianVector positionPositive(0.f, 0.f, 0.f), positionNegative(0.f, 0.f, 0.f);
+        fitResult.GetExtrapolatedPosition(maxLayerRL + deltaRL, positionPositive);
+        fitResult.GetExtrapolatedPosition(minLayerRL - deltaRL, positionNegative);
+
+        spacepoints.push_back(positionPositive);
+        spacepoints.push_back(positionNegative);
+    }
+
+    std::sort(spacepoints.begin(), spacepoints.end(), LArClusterHelper::SortCoordinatesByPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointList &spacepoints1, const CartesianPointList &spacepoints2,
+    CartesianPointList &crossingPoints) const
+{
+    bool bestCrossingFound(false);
+    float bestSeparationSquared(m_maxCrossingSeparationSquared);
+    CartesianVector bestPosition1(0.f, 0.f, 0.f), bestPosition2(0.f, 0.f, 0.f);
+
+    for (const CartesianVector &position1: spacepoints1)
+    {
+        for (const CartesianVector &position2: spacepoints2)
         {
-            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
+            const float separationSquared((position1 - position2).GetMagnitudeSquared());
+
+            if (separationSquared < bestSeparationSquared)
+            {
+                bestCrossingFound = true;
+                bestSeparationSquared = separationSquared;
+                bestPosition1 = position1;
+                bestPosition2 = position2;
+            }
+        }
+    }
+
+    if (bestCrossingFound)
+    {
+        bool alreadyPopulated(false);
+
+        for (const CartesianVector &existingPosition: crossingPoints)
+        {
+            if (((existingPosition - bestPosition1).GetMagnitudeSquared() < m_minNearbyCrossingDistanceSquared) ||
+                ((existingPosition - bestPosition2).GetMagnitudeSquared() < m_minNearbyCrossingDistanceSquared))
+            {
+                alreadyPopulated = true;
+                break;
+            }
+        }
+        
+        if (!alreadyPopulated)
+        {
+            crossingPoints.push_back(bestPosition1);
+            crossingPoints.push_back(bestPosition2);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPointList &crossingPoints1, const CartesianPointList &crossingPoints2,
+    const HitType hitType1, const HitType hitType2) const
+{
+    for (const CartesianVector &position1: crossingPoints1)
+    {
+        for (const CartesianVector &position2: crossingPoints2)
+        {
+            if (std::fabs(position1.GetX() - position2.GetX()) > m_maxCrossingXDiscrepancy)
+                continue;
+
+            float chiSquared(0.f);
+            CartesianVector position3D(0.f, 0.f, 0.f);
+            LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, position1, position2, position3D, chiSquared);
+
+            if (chiSquared > m_chiSquaredCut)
+                continue;
+
+            PandoraContentApi::Vertex::Parameters parameters;
+            parameters.m_position = position3D;
+            parameters.m_vertexLabel = VERTEX_INTERACTION;
+            parameters.m_vertexType = VERTEX_3D;
+
+            const Vertex *pVertex(NULL);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
         }
     }
 }
@@ -211,10 +370,11 @@ void CandidateVertexCreationAlgorithm::TidyUp()
 
 StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "InputClusterListNames", m_inputClusterListNames));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputVertexListName", m_outputVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
@@ -231,10 +391,35 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterXDiscrepancy", m_maxClusterXDiscrepancy));
+        "ChiSquaredCut", m_chiSquaredCut));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ChiSquaredCut", m_chiSquaredCut));
+        "EnableEndpointCandidates", m_enableEndpointCandidates));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxEndpointXDiscrepancy", m_maxEndpointXDiscrepancy));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "EnableCrossingCandidates", m_enableCrossingCandidates));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxCrossingXDiscrepancy", m_maxCrossingXDiscrepancy));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ExtrapolationNSteps", m_extrapolationNSteps));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ExtrapolationStepSize", m_extrapolationStepSize));
+
+    float maxCrossingSeparation = std::sqrt(m_maxCrossingSeparationSquared);
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxCrossingSeparation", maxCrossingSeparation));
+    m_maxCrossingSeparationSquared = maxCrossingSeparation * maxCrossingSeparation;
+
+    float minNearbyCrossingDistance = std::sqrt(m_minNearbyCrossingDistanceSquared);
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinNearbyCrossingDistance", minNearbyCrossingDistance));
+    m_minNearbyCrossingDistanceSquared = minNearbyCrossingDistance * minNearbyCrossingDistance;
 
     return STATUS_CODE_SUCCESS;
 }

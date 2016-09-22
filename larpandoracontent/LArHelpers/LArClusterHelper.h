@@ -338,6 +338,14 @@ public:
      *  @param  pRhs address of second calo hit
      */
     static bool SortHitsByPulseHeight(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+
+    /**
+     *  @brief  Sort cartesian vectors by their position (use Z, followed by X, followed by Y)
+     *
+     *  @param  lhs first point
+     *  @param  rhs second point
+     */
+    static bool SortCoordinatesByPosition(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
 };
 
 } // namespace lar_content

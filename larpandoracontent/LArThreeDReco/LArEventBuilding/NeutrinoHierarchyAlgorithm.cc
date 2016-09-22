@@ -50,7 +50,7 @@ void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoV
 
 StatusCode NeutrinoHierarchyAlgorithm::Run()
 {
-    const ParticleFlowObject *pNeutrinoPfo(NULL);
+    const ParticleFlowObject *pNeutrinoPfo(nullptr);
     PfoList candidateDaughterPfoList;
 
     try
@@ -73,29 +73,27 @@ StatusCode NeutrinoHierarchyAlgorithm::Run()
 
     try
     {
-        const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
-        this->GetInitialPfoInfoMap(candidateDaughterPfoList, pfoInfoMap);
+        if (!pNeutrinoPfo->GetVertexList().empty())
+        {
+            const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+            this->GetInitialPfoInfoMap(candidateDaughterPfoList, pfoInfoMap);
 
-        for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolList)
-            pPfoRelationTool->Run(this, pNeutrinoVertex, pfoInfoMap);
+            for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolList)
+                pPfoRelationTool->Run(this, pNeutrinoVertex, pfoInfoMap);
+        }
 
         this->ProcessPfoInfoMap(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap);
-
-        if (m_displayPfoInfoMap)
-            this->DisplayPfoInfoMap(pNeutrinoPfo, pfoInfoMap);
-
-        for (auto mapIter : pfoInfoMap)
-            delete mapIter.second;
     }
     catch (StatusCodeException &statusCodeException)
     {
         std::cout << "NeutrinoHierarchyAlgorithm: unable to process input neutrino pfo, " << statusCodeException.ToString() << std::endl;
-
-        for (auto mapIter : pfoInfoMap)
-            delete mapIter.second;
-
-        throw statusCodeException;
     }
+
+    if (m_displayPfoInfoMap)
+        this->DisplayPfoInfoMap(pNeutrinoPfo, pfoInfoMap);
+
+    for (auto &mapIter : pfoInfoMap)
+        delete mapIter.second;
 
     return STATUS_CODE_SUCCESS;
 }
@@ -104,7 +102,7 @@ StatusCode NeutrinoHierarchyAlgorithm::Run()
 
 void NeutrinoHierarchyAlgorithm::GetNeutrinoPfo(const ParticleFlowObject *&pNeutrinoPfo) const
 {
-    const PfoList *pPfoList = NULL;
+    const PfoList *pPfoList = nullptr;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoPfoListName, pPfoList));
 
     if (!pPfoList || pPfoList->empty())
@@ -116,7 +114,7 @@ void NeutrinoHierarchyAlgorithm::GetNeutrinoPfo(const ParticleFlowObject *&pNeut
     }
 
     // ATTN Enforces that only one pfo, of neutrino-type, be in the specified input list
-    pNeutrinoPfo = ((1 == pPfoList->size()) ? *(pPfoList->begin()) : NULL);
+    pNeutrinoPfo = ((1 == pPfoList->size()) ? *(pPfoList->begin()) : nullptr);
 
     if (!pNeutrinoPfo || !LArPfoHelper::IsNeutrino(pNeutrinoPfo))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -128,7 +126,7 @@ void NeutrinoHierarchyAlgorithm::GetCandidateDaughterPfoList(PfoList &candidateD
 {
     for (const std::string &daughterPfoListName : m_daughterPfoListNames)
     {
-        const PfoList *pCandidatePfoList(NULL);
+        const PfoList *pCandidatePfoList(nullptr);
 
         if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, daughterPfoListName, pCandidatePfoList))
         {
@@ -152,7 +150,7 @@ void NeutrinoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, Pf
 
     for (const ParticleFlowObject *const pPfo : pfoList)
     {
-        PfoInfo *pPfoInfo(NULL);
+        PfoInfo *pPfoInfo(nullptr);
 
         try
         {
@@ -161,8 +159,10 @@ void NeutrinoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, Pf
         }
         catch (StatusCodeException &)
         {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "NeutrinoHierarchyAlgorithm: Unable to calculate pfo information " << std::endl;
+
             delete pPfoInfo;
-            std::cout << "Unable to calculate pfo information " << std::endl;
         }
     }
 }
@@ -269,12 +269,12 @@ void NeutrinoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *con
 NeutrinoHierarchyAlgorithm::PfoInfo::PfoInfo(const pandora::ParticleFlowObject *const pPfo, const unsigned int halfWindowLayers,
         const float layerPitch) :
     m_pThisPfo(pPfo),
-    m_pCluster3D(NULL),
-    m_pVertex3D(NULL),
-    m_pSlidingFitResult3D(NULL),
+    m_pCluster3D(nullptr),
+    m_pVertex3D(nullptr),
+    m_pSlidingFitResult3D(nullptr),
     m_isNeutrinoVertexAssociated(false),
     m_isInnerLayerAssociated(false),
-    m_pParentPfo(NULL)
+    m_pParentPfo(nullptr)
 {
     ClusterList clusterList3D;
     LArPfoHelper::GetThreeDClusterList(pPfo, clusterList3D);
@@ -292,7 +292,7 @@ NeutrinoHierarchyAlgorithm::PfoInfo::PfoInfo(const PfoInfo &rhs) :
     m_pThisPfo(rhs.m_pThisPfo),
     m_pCluster3D(rhs.m_pCluster3D),
     m_pVertex3D(rhs.m_pVertex3D),
-    m_pSlidingFitResult3D(NULL),
+    m_pSlidingFitResult3D(nullptr),
     m_isNeutrinoVertexAssociated(rhs.m_isNeutrinoVertexAssociated),
     m_isInnerLayerAssociated(rhs.m_isInnerLayerAssociated),
     m_pParentPfo(rhs.m_pParentPfo),
@@ -365,7 +365,7 @@ void NeutrinoHierarchyAlgorithm::PfoInfo::SetParentPfo(const pandora::ParticleFl
 
 void NeutrinoHierarchyAlgorithm::PfoInfo::RemoveParentPfo()
 {
-    m_pParentPfo = NULL;
+    m_pParentPfo = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -397,7 +397,7 @@ StatusCode NeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         PfoRelationTool *const pPfoRelationTool(dynamic_cast<PfoRelationTool*>(*iter));
 
-        if (NULL == pPfoRelationTool)
+        if (!pPfoRelationTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolList.push_back(pPfoRelationTool);

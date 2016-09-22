@@ -1,22 +1,22 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SplitShowerMergingAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.h
  * 
- *  @brief  Header file for the split shower merging algorithm class.
+ *  @brief  Header file for the shower pfo mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_SPLIT_SHOWER_MERGING_ALGORITHM_H
-#define LAR_SPLIT_SHOWER_MERGING_ALGORITHM_H 1
+#ifndef LAR_SHOWER_PFO_MOP_UP_ALGORITHM_H
+#define LAR_SHOWER_PFO_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  SplitShowerMergingAlgorithm::Algorithm class
+ *  @brief  ShowerPfoMopUpAlgorithm::Algorithm class
  */
-class SplitShowerMergingAlgorithm : public VertexBasedPfoMergingAlgorithm
+class ShowerPfoMopUpAlgorithm : public VertexBasedPfoMopUpAlgorithm
 {
 public:
     /**
@@ -31,7 +31,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    SplitShowerMergingAlgorithm();
+    ShowerPfoMopUpAlgorithm();
 
 private:
     bool IsVertexAssociated(const pandora::CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const;
@@ -44,11 +44,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *SplitShowerMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ShowerPfoMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new SplitShowerMergingAlgorithm();
+    return new ShowerPfoMopUpAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_SPLIT_SHOWER_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_SHOWER_PFO_MOP_UP_ALGORITHM_H

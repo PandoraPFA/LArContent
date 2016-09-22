@@ -127,10 +127,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_newClusterListName;           ///< The new cluster list name
-    std::string     m_newVertexListName;            ///< The new vertex list name
-    std::string     m_newPfoListName;               ///< The new pfo list name
-
     bool            m_recreateTwoDContent;          ///< Whether to also recreate two dimensional hits and clusters
 };
 

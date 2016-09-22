@@ -17,15 +17,21 @@ namespace lar_content
 
 StatusCode CheatingClusterCharacterisationAlgorithm::Run()
 {
-    for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
+    for (const std::string &clusterListName : m_inputClusterListNames)
     {
-        const ClusterList *pClusterList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
+        const ClusterList *pClusterList(nullptr);
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
-        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+        if (!pClusterList || pClusterList->empty())
         {
-            const Cluster *const pCluster(*iter);
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "CheatingClusterCharacterisationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
 
+            continue;
+        }
+
+        for (const Cluster *const pCluster : *pClusterList)
+        {
             if (this->IsClearTrack(pCluster))
             {
                 PandoraContentApi::Cluster::Metadata metadata;

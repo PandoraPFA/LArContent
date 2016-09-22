@@ -1,27 +1,27 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h
  * 
- *  @brief  Header file for the bounded cluster merging algorithm class.
+ *  @brief  Header file for the bounded cluster mop up algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_BOUNDED_CLUSTER_MERGING_ALGORITHM_H
-#define LAR_BOUNDED_CLUSTER_MERGING_ALGORITHM_H 1
+#ifndef LAR_BOUNDED_CLUSTER_MOP_UP_ALGORITHM_H
+#define LAR_BOUNDED_CLUSTER_MOP_UP_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  BoundedClusterMergingAlgorithm class
+ *  @brief  BoundedClusterMopUpAlgorithm class
  */
 
-class BoundedClusterMergingAlgorithm : public ClusterMopUpAlgorithm
+class BoundedClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
@@ -36,7 +36,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    BoundedClusterMergingAlgorithm();
+    BoundedClusterMopUpAlgorithm();
 
 private:
     /**
@@ -64,7 +64,7 @@ private:
         int       m_nPoints;       ///< The number of sampling points to be used
     };
 
-    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters, const ClusterToListNameMap &clusterToListNameMap) const;
+    void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
 
     /**
      *  @brief  Get the shower position map containing high and low edge z positions in bins of x
@@ -95,11 +95,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *BoundedClusterMergingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *BoundedClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new BoundedClusterMergingAlgorithm();
+    return new BoundedClusterMopUpAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_BOUNDED_CLUSTER_MERGING_ALGORITHM_H
+#endif // #ifndef LAR_BOUNDED_CLUSTER_MOP_UP_ALGORITHM_H

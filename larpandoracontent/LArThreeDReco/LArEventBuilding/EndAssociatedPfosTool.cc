@@ -24,6 +24,7 @@ typedef NeutrinoHierarchyAlgorithm::PfoInfo PfoInfo;
 typedef NeutrinoHierarchyAlgorithm::PfoInfoMap PfoInfoMap;
 
 EndAssociatedPfosTool::EndAssociatedPfosTool() :
+    m_minNeutrinoVertexDistance(5.f),
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
     m_maxVertexTransverseDistance(3.5f),
@@ -33,7 +34,7 @@ EndAssociatedPfosTool::EndAssociatedPfosTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const Vertex *const /*pNeutrinoVertex*/, PfoInfoMap &pfoInfoMap)
+void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const Vertex *const pNeutrinoVertex, PfoInfoMap &pfoInfoMap)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -56,7 +57,12 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
         {
             PfoInfo *const pParentPfoInfo(pfoInfoMap.at(pParentPfo));
             const LArPointingCluster parentPointingCluster(*(pParentPfoInfo->GetSlidingFitResult3D()));
+
             const LArPointingCluster::Vertex &parentVertex(pParentPfoInfo->IsInnerLayerAssociated() ? parentPointingCluster.GetOuterVertex() : parentPointingCluster.GetInnerVertex());
+            const float neutrinoVertexDistance((parentVertex.GetPosition() - pNeutrinoVertex->GetPosition()).GetMagnitude());
+
+            if (neutrinoVertexDistance < m_minNeutrinoVertexDistance)
+                continue;
 
             for (const ParticleFlowObject *const pPfo : unassignedPfos)
             {
@@ -91,6 +97,9 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
 
 StatusCode EndAssociatedPfosTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinNeutrinoVertexDistance", m_minNeutrinoVertexDistance));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
 

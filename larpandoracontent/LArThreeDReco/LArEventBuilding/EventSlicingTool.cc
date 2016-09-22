@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 
@@ -25,14 +26,27 @@ namespace lar_content
 {
 
 EventSlicingTool::EventSlicingTool() :
+    m_minHitsPer3DCluster(20),
+    m_min3DHitsToSeedNewSlice(50),
     m_halfWindowLayers(20),
+    m_usePointingAssociation(true),
     m_minVertexLongitudinalDistance(-7.5f),
     m_maxVertexLongitudinalDistance(60.f),
     m_maxVertexTransverseDistance(10.5f),
     m_vertexAngularAllowance(9.f),
     m_maxClosestApproach(15.f),
     m_maxInterceptDistance(60.f),
-    m_maxHitSeparationSquared(30.f * 30.f),
+    m_useProximityAssociation(true),
+    m_maxHitSeparationSquared(25.f * 25.f),
+    m_useShowerConeAssociation(true),
+    m_nConeFitLayers(20),
+    m_nConeFits(5),
+    m_coneLengthMultiplier(7.f),
+    m_maxConeLength(126.f),
+    m_coneTanHalfAngle1(0.5f),
+    m_coneBoundedFraction1(0.5f),
+    m_coneTanHalfAngle2(0.75f),
+    m_coneBoundedFraction2(0.75f),
     m_use3DProjectionsInHitPickUp(true)
 {
 }
@@ -98,11 +112,12 @@ void EventSlicingTool::GetThreeDClusters(const Algorithm *const pAlgorithm, cons
 
         for (const Cluster *const pCluster3D : pfoClusters3D)
         {
-            if (!clusterToPfoMap.insert(ClusterToPfoMap::value_type(pCluster3D, pPfo)).second)
+            if (pCluster3D->GetNCaloHits() < m_minHitsPer3DCluster)
+                continue;
+
+            if (!clusterToPfoMap.insert(ClusterToPfoMap::value_type(pCluster3D, pPfo)).second || !clusters3D.insert(pCluster3D).second)
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
-
-        clusters3D.insert(pfoClusters3D.begin(), pfoClusters3D.end());
     }
 }
 
@@ -111,24 +126,27 @@ void EventSlicingTool::GetThreeDClusters(const Algorithm *const pAlgorithm, cons
 void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, const ClusterList &showerClusters3D,
     ClusterSliceList &clusterSliceList) const
 {
-    ClusterVector sortedTrackClusters3D(trackClusters3D.begin(), trackClusters3D.end());
-    std::sort(sortedTrackClusters3D.begin(), sortedTrackClusters3D.end(), LArClusterHelper::SortByNHits);
-
-    ThreeDSlidingFitResultMap slidingFitResultMap;
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
-    for (const Cluster *const pCluster3D : sortedTrackClusters3D)
+    ThreeDSlidingFitResultMap trackFitResults;
+
+    for (const Cluster *const pCluster3D : trackClusters3D)
     {
-        try {slidingFitResultMap.insert(ThreeDSlidingFitResultMap::value_type(pCluster3D, ThreeDSlidingFitResult(pCluster3D, m_halfWindowLayers, layerPitch)));}
+        try {trackFitResults.insert(ThreeDSlidingFitResultMap::value_type(pCluster3D, ThreeDSlidingFitResult(pCluster3D, m_halfWindowLayers, layerPitch)));}
         catch (StatusCodeException &) {std::cout << "EventSlicingTool: ThreeDSlidingFitResult failure for track cluster." << std::endl;}
     }
 
-    ClusterVector sortedShowerClusters3D(showerClusters3D.begin(), showerClusters3D.end());
-    std::sort(sortedShowerClusters3D.begin(), sortedShowerClusters3D.end(), LArClusterHelper::SortByNHits);
+    ThreeDSlidingConeFitResultMap showerConeFitResults;
 
-    ClusterVector sortedClusters3D;
-    sortedClusters3D.insert(sortedClusters3D.end(), sortedTrackClusters3D.begin(), sortedTrackClusters3D.end());
-    sortedClusters3D.insert(sortedClusters3D.end(), sortedShowerClusters3D.begin(), sortedShowerClusters3D.end());
+    for (const Cluster *const pCluster3D : showerClusters3D)
+    {
+        try {showerConeFitResults.insert(ThreeDSlidingConeFitResultMap::value_type(pCluster3D, ThreeDSlidingConeFitResult(pCluster3D, m_halfWindowLayers, layerPitch)));}
+        catch (StatusCodeException &) {std::cout << "EventSlicingTool: ThreeDSlidingConeFitResult failure for shower cluster." << std::endl;}
+    }
+
+    ClusterVector sortedClusters3D(trackClusters3D.begin(), trackClusters3D.end());
+    sortedClusters3D.insert(sortedClusters3D.end(), showerClusters3D.begin(), showerClusters3D.end());
+    std::sort(sortedClusters3D.begin(), sortedClusters3D.end(), LArClusterHelper::SortByNHits);
 
     ClusterList usedClusters;
 
@@ -137,53 +155,158 @@ void EventSlicingTool::GetClusterSliceList(const ClusterList &trackClusters3D, c
         if (usedClusters.count(pCluster3D))
             continue;
 
+        if (pCluster3D->GetNCaloHits() < m_min3DHitsToSeedNewSlice)
+            continue;
+
         clusterSliceList.push_back(ClusterVector(1, pCluster3D));
-        ClusterVector &clusterSlice(clusterSliceList.back());
         usedClusters.insert(pCluster3D);
 
-        while (this->AddNextPointing(sortedTrackClusters3D, slidingFitResultMap, clusterSlice, usedClusters) ||
-            this->AddNextProximity(sortedClusters3D, clusterSlice, usedClusters)) { /* Deliberately empty */ }
+        ClusterVector &clusterSlice(clusterSliceList.back());
+        this->CollectAssociatedClusters(pCluster3D, sortedClusters3D, trackFitResults, showerConeFitResults, clusterSlice, usedClusters);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool EventSlicingTool::AddNextPointing(const ClusterVector &trackCandidates, const ThreeDSlidingFitResultMap &slidingFitResultMap,
-    ClusterVector &clusterSlice, ClusterList &usedClusters) const
+void EventSlicingTool::CollectAssociatedClusters(const Cluster *const pClusterInSlice, const ClusterVector &candidateClusters,
+    const ThreeDSlidingFitResultMap &trackFitResults, const ThreeDSlidingConeFitResultMap &showerConeFitResults, ClusterVector &clusterSlice,
+    ClusterList &usedClusters) const
 {
-    for (const Cluster *const pCandidateCluster : trackCandidates)
+    ClusterVector addedClusters;
+
+    for (const Cluster *const pCandidateCluster : candidateClusters)
     {
-        if (usedClusters.count(pCandidateCluster))
+        if (usedClusters.count(pCandidateCluster) || (pClusterInSlice == pCandidateCluster))
             continue;
 
-        ThreeDSlidingFitResultMap::const_iterator candidateIter = slidingFitResultMap.find(pCandidateCluster);
-
-        if (slidingFitResultMap.end() == candidateIter)
-            continue;
-
-        const LArPointingCluster candidatePointingCluster(candidateIter->second);
-
-        for (const Cluster *const pClusterInSlice : clusterSlice)
+        if ((m_usePointingAssociation && this->PassPointing(pClusterInSlice, pCandidateCluster, trackFitResults)) ||
+            (m_useProximityAssociation && this->PassProximity(pClusterInSlice, pCandidateCluster)) ||
+            (m_useShowerConeAssociation && (this->PassShowerCone(pClusterInSlice, pCandidateCluster, showerConeFitResults) || this->PassShowerCone(pCandidateCluster, pClusterInSlice, showerConeFitResults))) )
         {
-            ThreeDSlidingFitResultMap::const_iterator inSliceIter = slidingFitResultMap.find(pClusterInSlice);
+            addedClusters.push_back(pCandidateCluster);
+            (void) usedClusters.insert(pCandidateCluster);
+        }
+    }
 
-            if (slidingFitResultMap.end() == inSliceIter)
-                continue;
+    clusterSlice.insert(clusterSlice.end(), addedClusters.begin(), addedClusters.end());
 
-            const LArPointingCluster inSlicePointingCluster(inSliceIter->second);
+    for (const Cluster *const pAddedCluster : addedClusters)
+        this->CollectAssociatedClusters(pAddedCluster, candidateClusters, trackFitResults, showerConeFitResults, clusterSlice, usedClusters);
+}
 
-            if (this->CheckClosestApproach(inSlicePointingCluster, candidatePointingCluster) ||
-                this->IsEmission(inSlicePointingCluster, candidatePointingCluster) ||
-                this->IsNode(inSlicePointingCluster, candidatePointingCluster))
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::PassPointing(const Cluster *const pClusterInSlice, const Cluster *const pCandidateCluster, const ThreeDSlidingFitResultMap &trackFitResults) const
+{
+    ThreeDSlidingFitResultMap::const_iterator inSliceIter = trackFitResults.find(pClusterInSlice);
+    ThreeDSlidingFitResultMap::const_iterator candidateIter = trackFitResults.find(pCandidateCluster);
+
+    if ((trackFitResults.end() == inSliceIter) || (trackFitResults.end() == candidateIter))
+        return false;
+
+    const LArPointingCluster inSlicePointingCluster(inSliceIter->second);
+    const LArPointingCluster candidatePointingCluster(candidateIter->second);
+
+    if (this->CheckClosestApproach(inSlicePointingCluster, candidatePointingCluster) ||
+        this->IsEmission(inSlicePointingCluster, candidatePointingCluster) ||
+        this->IsNode(inSlicePointingCluster, candidatePointingCluster))
+    {
+//std::cout << " PassPointing " << std::endl;
+//ClusterList temp3; temp3.insert(pClusterInSlice);
+//ClusterList temp4; temp4.insert(pCandidateCluster);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "pClusterInSlice", RED);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "CandidateCluster", BLUE);
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::PassProximity(const Cluster *const pClusterInSlice, const Cluster *const pCandidateCluster) const
+{
+    for (const auto &orderedList1 : pClusterInSlice->GetOrderedCaloHitList())
+    {
+        for (const CaloHit *const pCaloHit1 : *(orderedList1.second))
+        {
+            const CartesianVector &positionVector1(pCaloHit1->GetPositionVector());
+
+            for (const auto &orderedList2 : pCandidateCluster->GetOrderedCaloHitList())
             {
-                if (!usedClusters.insert(pCandidateCluster).second)
-                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+                for (const CaloHit *const pCaloHit2 : *(orderedList2.second))
+                {
+                    const CartesianVector &positionVector2(pCaloHit2->GetPositionVector());
 
-                // ATTN Must return here, as have invalidated clusterSlice iterators
-                clusterSlice.push_back(pCandidateCluster);
-                return true;
+                    if ((positionVector1 - positionVector2).GetMagnitudeSquared() < m_maxHitSeparationSquared)
+                    {
+//std::cout << " PassProximity " << std::endl;
+//ClusterList temp3; temp3.insert(pClusterInSlice);
+//ClusterList temp4; temp4.insert(pCandidateCluster);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "pClusterInSlice", RED);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "CandidateCluster", BLUE);
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                        return true;
+                    }
+                }
             }
         }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventSlicingTool::PassShowerCone(const Cluster *const pConeCluster, const Cluster *const pNearbyCluster, const ThreeDSlidingConeFitResultMap &showerConeFitResults) const
+{
+    ThreeDSlidingConeFitResultMap::const_iterator fitIter = showerConeFitResults.find(pConeCluster);
+
+    if (showerConeFitResults.end() == fitIter)
+        return false;
+
+    float clusterLength(0.f);
+    SimpleConeList simpleConeList;
+
+    try
+    {
+        const ThreeDSlidingConeFitResult &slidingConeFitResult3D(fitIter->second);
+        const ThreeDSlidingFitResult &slidingFitResult3D(slidingConeFitResult3D.GetSlidingFitResult());
+        slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, CONE_BOTH_DIRECTIONS, simpleConeList);
+        clusterLength = (slidingFitResult3D.GetGlobalMaxLayerPosition() - slidingFitResult3D.GetGlobalMinLayerPosition()).GetMagnitude();
+    }
+    catch (const StatusCodeException &)
+    {
+        return false;
+    }
+//ClusterList temp1; temp1.insert(pConeCluster);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp1, "pConeCluster", RED);
+//ClusterList temp2; temp2.insert(pNearbyCluster);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp2, "pNearbyCluster", BLUE);
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    for (const SimpleCone &simpleCone : simpleConeList)
+    {
+        const float coneLength(std::min(m_coneLengthMultiplier * clusterLength, m_maxConeLength));
+//std::cout << "ClosestDistance " << LArClusterHelper::GetClosestDistance(pConeCluster, pNearbyCluster) << ", coneLength " << simpleCone.GetConeLength() << std::endl;
+//std::cout << " boundedFraction1 " << (simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle1)) << " boundedFraction2 " << (simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle2)) << std::endl;
+//ClusterList temp3; temp3.insert(pConeCluster);
+//ClusterList temp4; temp4.insert(pNearbyCluster);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp3, "pConeCluster", RED);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp4, "pNearbyCluster", BLUE);
+//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &simpleCone.GetConeApex(), "coneApex", GRAY, 1);
+//const CartesianVector maxBaseCentre(simpleCone.GetConeApex() + simpleCone.GetConeDirection() * simpleCone.GetConeLength());
+//PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &maxBaseCentre, "coneBaseCentre", CYAN, 1);
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        if (simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle1) < m_coneBoundedFraction1)
+            continue;
+
+        if (simpleCone.GetBoundedHitFraction(pNearbyCluster, coneLength, m_coneTanHalfAngle2) < m_coneBoundedFraction2)
+            continue;
+//ClusterList temp5; temp5.insert(pNearbyCluster);
+//PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &temp5, "Added", GREEN);
+//PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        return true;
     }
 
     return false;
@@ -240,58 +363,6 @@ bool EventSlicingTool::IsEmission(const LArPointingCluster &cluster1, const LArP
         LArPointingClusterHelper::IsEmission(cluster2.GetOuterVertex().GetPosition(), cluster1.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
         LArPointingClusterHelper::IsEmission(cluster2.GetInnerVertex().GetPosition(), cluster1.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
         LArPointingClusterHelper::IsEmission(cluster2.GetOuterVertex().GetPosition(), cluster1.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventSlicingTool::AddNextProximity(const ClusterVector &clusterCandidates, ClusterVector &clusterSlice, ClusterList &usedClusters) const
-{
-    for (const Cluster *const pCandidateCluster : clusterCandidates)
-    {
-        if (usedClusters.count(pCandidateCluster))
-            continue;
-
-        for (const Cluster *const pClusterInSlice : clusterSlice)
-        {
-            if (this->CheckHitSeparation(pCandidateCluster, pClusterInSlice))
-            {
-                if (!usedClusters.insert(pCandidateCluster).second)
-                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-
-                // ATTN Must return here, as have invalidated clusterSlice iterators
-                clusterSlice.push_back(pCandidateCluster);
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventSlicingTool::CheckHitSeparation(const Cluster *const pCluster1, const Cluster *const pCluster2) const
-{
-    for (const auto &orderedList1 : pCluster1->GetOrderedCaloHitList())
-    {
-        for (const CaloHit *const pCaloHit1 : *(orderedList1.second))
-        {
-            const CartesianVector &positionVector1(pCaloHit1->GetPositionVector());
-
-            for (const auto &orderedList2 : pCluster2->GetOrderedCaloHitList())
-            {
-                for (const CaloHit *const pCaloHit2 : *(orderedList2.second))
-                {
-                    const CartesianVector &positionVector2(pCaloHit2->GetPositionVector());
-
-                    if ((positionVector1 - positionVector2).GetMagnitudeSquared() < m_maxHitSeparationSquared)
-                        return true;
-                }
-            }
-        }
-    }
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -566,7 +637,16 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
         "ShowerPfoListName", m_showerPfoListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitsPer3DCluster", m_minHitsPer3DCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Min3DHitsToSeedNewSlice", m_min3DHitsToSeedNewSlice));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UsePointingAssociation", m_usePointingAssociation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
@@ -586,10 +666,40 @@ StatusCode EventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxInterceptDistance", m_maxInterceptDistance));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseProximityAssociation", m_useProximityAssociation));
+
     float maxHitSeparation = std::sqrt(m_maxHitSeparationSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxHitSeparation", maxHitSeparation));
     m_maxHitSeparationSquared = maxHitSeparation * maxHitSeparation;
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseShowerConeAssociation", m_useShowerConeAssociation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NConeFitLayers", m_nConeFitLayers));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NConeFits", m_nConeFits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ConeLengthMultiplier", m_coneLengthMultiplier));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxConeLength", m_maxConeLength));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ConeTanHalfAngle1", m_coneTanHalfAngle1));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ConeBoundedFraction1", m_coneBoundedFraction1));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ConeTanHalfAngle2", m_coneTanHalfAngle2));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ConeBoundedFraction2", m_coneBoundedFraction2));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Use3DProjectionsInHitPickUp", m_use3DProjectionsInHitPickUp));
