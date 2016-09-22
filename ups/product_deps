@@ -13,7 +13,7 @@ flcdir  -
 # Add the dependent product and version
 
 product		version
-pandora		v02_07_00b
+pandora		v02_09_02
 gcc		v4_9_3a
 cetbuildtools	v5_04_03	-	only_for_build
 end_product_list
