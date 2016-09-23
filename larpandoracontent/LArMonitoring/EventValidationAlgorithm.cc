@@ -487,6 +487,9 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCPrimaryMatchingMap &
             if (usedPfoIds.count(simpleMatchedPfo.m_id))
                 continue;
 
+            if (!this->IsGoodMatch(simpleMCPrimary, simpleMatchedPfo))
+                continue;
+
             if (simpleMatchedPfo.m_nMatchedHitsTotal > bestMatchingDetails.m_nMatchedHits)
             {
                 bestPfoMatchId = simpleMatchedPfo.m_id;
