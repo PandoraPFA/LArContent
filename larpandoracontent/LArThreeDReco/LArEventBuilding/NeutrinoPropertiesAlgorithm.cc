@@ -52,11 +52,12 @@ void NeutrinoPropertiesAlgorithm::SetNeutrinoId(const ParticleFlowObject *const 
     unsigned int nPrimaryTwoDHits(0);
     const ParticleFlowObject *pPrimaryDaughter(NULL);
 
-    for (PfoList::const_iterator dIter = pNeutrinoPfo->GetDaughterPfoList().begin(), dIterEnd = pNeutrinoPfo->GetDaughterPfoList().end();
-        dIter != dIterEnd; ++dIter)
+    PfoVector daughterPfoVector(pNeutrinoPfo->GetDaughterPfoList().begin(), pNeutrinoPfo->GetDaughterPfoList().end());
+    std::sort(daughterPfoVector.begin(), daughterPfoVector.end(), LArPfoHelper::SortByNHits);
+
+    for (const ParticleFlowObject *const pDaughterPfo : daughterPfoVector)
     {
-        const ParticleFlowObject *const pDaughterPfo(*dIter);
-        const unsigned int nTwoDHits(this->GetNTwoDHitsInPfo(pDaughterPfo));
+        const unsigned int nTwoDHits(this->GetNTwoDHitsInPfoChain(pDaughterPfo));
 
         if (!pPrimaryDaughter || (nTwoDHits > nPrimaryTwoDHits))
         {
@@ -89,27 +90,21 @@ void NeutrinoPropertiesAlgorithm::SetNeutrinoId(const ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int NeutrinoPropertiesAlgorithm::GetNTwoDHitsInPfo(const ParticleFlowObject *const pPfo) const
+unsigned int NeutrinoPropertiesAlgorithm::GetNTwoDHitsInPfoChain(const ParticleFlowObject *const pPfo) const
 {
     unsigned int nTwoDHits(0);
 
-    const ClusterList &pfoClusterList(pPfo->GetClusterList());
-
-    for (ClusterList::const_iterator iter = pfoClusterList.begin(), iterEnd = pfoClusterList.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pCluster(*iter);
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-        if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
-            continue;
-
-        nTwoDHits += pCluster->GetNCaloHits();
+        if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
+            nTwoDHits += pCluster->GetNCaloHits();
     }
 
-    const PfoList &daughterList(pPfo->GetDaughterPfoList());
-
-    for (PfoList::const_iterator iter = daughterList.begin(), iterEnd = daughterList.end(); iter != iterEnd; ++iter)
+    for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
     {
-        nTwoDHits += this->GetNTwoDHitsInPfo(*iter);
+        nTwoDHits += this->GetNTwoDHitsInPfoChain(pDaughterPfo);
     }
 
     return nTwoDHits;
