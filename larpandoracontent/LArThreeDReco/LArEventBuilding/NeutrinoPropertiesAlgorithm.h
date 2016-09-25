@@ -32,28 +32,6 @@ private:
     pandora::StatusCode Run();
 
     /**
-     *  @brief  Get the list of daughter pfos to be added to the new neutrino pfo
-     *
-     *  @param  pfoList to receive the list of daughter pfos
-     */
-    void GetNeutrinoPfo(const pandora::ParticleFlowObject *&pNeutrinoPfo) const;
-
-    /**
-     *  @brief  Get the list of daughter pfos to be added to the new neutrino pfo
-     *
-     *  @param  pfoList to receive the list of daughter pfos
-     */
-    void GetDaughterPfoList(pandora::PfoList &pfoList) const;
-
-    /**
-     *  @brief  Add a provided list of daughters to the neutrino pfo
-     *
-     *  @param  pNeutrinoPfo address of the neutrino pfo
-     *  @param  daughterPfoList the list of pfos to be added as daughters of the neutrino
-     */
-    void AddDaughters(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::PfoList &daughterPfoList) const;
-
-    /**
      *  @brief  identifying the primary daughter of a neutrino pfo and set the particle id accordingly
      *
      *  @param  pNeutrinoPfo address of the neutrino pfo
@@ -67,7 +45,7 @@ private:
      *
      *  @return the number of two dimensional hits
      */
-    unsigned int GetNTwoDHitsInPfo(const pandora::ParticleFlowObject *const pPfo) const;
+    unsigned int GetNTwoDHitsInPfoChain(const pandora::ParticleFlowObject *const pPfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
