@@ -18,9 +18,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+NeutrinoPropertiesAlgorithm::NeutrinoPropertiesAlgorithm() :
+    m_includeIsolatedHits(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode NeutrinoPropertiesAlgorithm::Run()
 {
-    const PfoList *pPfoList(NULL);
+    const PfoList *pPfoList(nullptr);
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoPfoListName, pPfoList));
 
     if (!pPfoList || pPfoList->empty())
@@ -32,7 +39,7 @@ StatusCode NeutrinoPropertiesAlgorithm::Run()
     }
 
     // ATTN Enforces that only one pfo, of neutrino-type, be in the specified input list
-    const ParticleFlowObject *const pNeutrinoPfo((1 == pPfoList->size()) ? *(pPfoList->begin()) : NULL);
+    const ParticleFlowObject *const pNeutrinoPfo((1 == pPfoList->size()) ? *(pPfoList->begin()) : nullptr);
 
     if (!pNeutrinoPfo || !LArPfoHelper::IsNeutrino(pNeutrinoPfo))
         return STATUS_CODE_FAILURE;
@@ -50,7 +57,7 @@ void NeutrinoPropertiesAlgorithm::SetNeutrinoId(const ParticleFlowObject *const 
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     unsigned int nPrimaryTwoDHits(0);
-    const ParticleFlowObject *pPrimaryDaughter(NULL);
+    const ParticleFlowObject *pPrimaryDaughter(nullptr);
 
     PfoVector daughterPfoVector(pNeutrinoPfo->GetDaughterPfoList().begin(), pNeutrinoPfo->GetDaughterPfoList().end());
     std::sort(daughterPfoVector.begin(), daughterPfoVector.end(), LArPfoHelper::SortByNHits);
@@ -99,7 +106,12 @@ unsigned int NeutrinoPropertiesAlgorithm::GetNTwoDHitsInPfoChain(const ParticleF
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if ((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType))
+        {
             nTwoDHits += pCluster->GetNCaloHits();
+
+            if (m_includeIsolatedHits)
+                nTwoDHits += pCluster->GetNIsolatedCaloHits();
+        }
     }
 
     for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
@@ -114,7 +126,11 @@ unsigned int NeutrinoPropertiesAlgorithm::GetNTwoDHitsInPfoChain(const ParticleF
 
 StatusCode NeutrinoPropertiesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NeutrinoPfoListName", m_neutrinoPfoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IncludeIsolatedHits", m_includeIsolatedHits));
 
     return STATUS_CODE_SUCCESS;
 }
