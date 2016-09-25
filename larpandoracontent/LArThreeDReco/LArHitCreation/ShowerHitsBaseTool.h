@@ -28,8 +28,8 @@ public:
      */
     ShowerHitsBaseTool();
 
-    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
-        pandora::CaloHitList &newThreeDHits);
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
+        pandora::CaloHitVector &newThreeDHits);
 
 protected:
     /**
@@ -38,34 +38,34 @@ protected:
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  inputTwoDHits the list of input two dimensional hits
-     *  @param  caloHitList1 the first
-     *  @param  caloHitList2 the second
+     *  @param  caloHitVector1 hits in the first alternate view
+     *  @param  caloHitVector2 hits in the second alternate view
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList1,
-        const pandora::CaloHitList &caloHitList2, pandora::CaloHitList &newThreeDHits) const;
+    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &caloHitVector1,
+        const pandora::CaloHitVector &caloHitVector2, pandora::CaloHitVector &newThreeDHits) const;
 
     /**
      *  @brief  Filter a list of calo hits to find those within a specified tolerance of a give x position
      *
      *  @param  x the x position
      *  @param  xTolerance the x tolerance
-     *  @param  inputCaloHitList the input calo hit list
-     *  @param  outputCaloHitList to receive the output calo hit list
+     *  @param  inputCaloHitVector the input calo hit vector
+     *  @param  outputCaloHitVector to receive the output calo hit vector
      */
-    virtual void FilterCaloHits(const float x, const float xTolerance, const pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList) const;
+    virtual void FilterCaloHits(const float x, const float xTolerance, const pandora::CaloHitVector &inputCaloHitVector, pandora::CaloHitVector &outputCaloHitVector) const;
 
     /**
      *  @brief  Get the three dimensional position for to a two dimensional calo hit, using the hit and a list of candidate matched
      *          hits in the other two views
      *
      *  @param  pCaloHit2D address of the two dimensional calo hit
-     *  @param  caloHitList1 the list of candidate hits in view 1
-     *  @param  caloHitList2 the list of candidate hits in view 2
+     *  @param  caloHitVector1 the vector of candidate hits in view 1
+     *  @param  caloHitVector2 the vector of candidate hits in view 2
      *  @param  position3D to receive the three dimensional position
      *  @param  chiSquared to receive the chi squared value
      */
-    virtual void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitList &caloHitList1, const pandora::CaloHitList &caloHitList2,
+    virtual void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2,
         pandora::CartesianVector &position3D, float &chiSquared) const = 0;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

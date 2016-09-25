@@ -24,28 +24,28 @@ ThreeViewShowerHitsTool::ThreeViewShowerHitsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitList &caloHitList1, const CaloHitList &caloHitList2,
+void ThreeViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2,
     CartesianVector &position3D, float &chiSquared) const
 {
-    if (caloHitList1.empty() || caloHitList2.empty())
+    if (caloHitVector1.empty() || caloHitVector2.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const HitType hitType1((*caloHitList1.begin())->GetHitType());
-    const HitType hitType2((*caloHitList2.begin())->GetHitType());
+    const HitType hitType1(caloHitVector1.at(0)->GetHitType());
+    const HitType hitType2(caloHitVector2.at(0)->GetHitType());
 
     const HitType hitType2D(pCaloHit2D->GetHitType());
     const float position2D(pCaloHit2D->GetPositionVector().GetZ());
 
     bool positionFound(false);
 
-    for (CaloHitList::const_iterator iter1 = caloHitList1.begin(), iterEnd1 = caloHitList1.end(); iter1 != iterEnd1; ++iter1)
+    for (const CaloHit *const pCaloHit1 : caloHitVector1)
     {
-        const CartesianVector &position1((*iter1)->GetPositionVector());
+        const CartesianVector &position1(pCaloHit1->GetPositionVector());
         const float prediction(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType2D, hitType1, position2D, position1.GetZ()));
 
-        for (CaloHitList::const_iterator iter2 = caloHitList2.begin(), iterEnd2 = caloHitList2.end(); iter2 != iterEnd2; ++iter2)
+        for (const CaloHit *const pCaloHit2 : caloHitVector2)
         {
-            const CartesianVector &position2((*iter2)->GetPositionVector());
+            const CartesianVector &position2(pCaloHit2->GetPositionVector());
 
             if (std::fabs(position2.GetZ() - prediction) > m_zTolerance)
                 continue;

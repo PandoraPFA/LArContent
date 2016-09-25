@@ -26,8 +26,8 @@ ShowerHitsBaseTool::ShowerHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
-    CaloHitList &newThreeDHits)
+void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
+    CaloHitVector &newThreeDHits)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -37,14 +37,14 @@ void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const
         if (!LArPfoHelper::IsShower(pPfo))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        CaloHitList caloHitListU, caloHitListV, caloHitListW;
-        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_U, caloHitListU);
-        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_V, caloHitListV);
-        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_W, caloHitListW);
+        CaloHitVector caloHitVectorU, caloHitVectorV, caloHitVectorW;
+        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_U, caloHitVectorU);
+        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_V, caloHitVectorV);
+        pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_W, caloHitVectorW);
 
-        this->CreateThreeDHits(pAlgorithm, caloHitListU, caloHitListV, caloHitListW, newThreeDHits);
-        this->CreateThreeDHits(pAlgorithm, caloHitListV, caloHitListU, caloHitListW, newThreeDHits);
-        this->CreateThreeDHits(pAlgorithm, caloHitListW, caloHitListU, caloHitListV, newThreeDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitVectorU, caloHitVectorV, caloHitVectorW, newThreeDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitVectorV, caloHitVectorU, caloHitVectorW, newThreeDHits);
+        this->CreateThreeDHits(pAlgorithm, caloHitVectorW, caloHitVectorU, caloHitVectorV, newThreeDHits);
     }
     catch (StatusCodeException &)
     {
@@ -53,30 +53,29 @@ void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitList &inputTwoDHits,
-    const CaloHitList &caloHitList1, const CaloHitList &caloHitList2, CaloHitList &newThreeDHits) const
+void ShowerHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitVector &inputTwoDHits,
+    const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2, CaloHitVector &newThreeDHits) const
 {
-    for (CaloHitList::const_iterator iter = inputTwoDHits.begin(), iterEnd = inputTwoDHits.end(); iter != iterEnd; ++iter)
+    for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
         try
         {
-            const CaloHit *const pCaloHit2D(*iter);
             const float x(pCaloHit2D->GetPositionVector().GetX());
 
-            CaloHitList filteredList1, filteredList2;
-            this->FilterCaloHits(x, m_xTolerance, caloHitList1, filteredList1);
-            this->FilterCaloHits(x, m_xTolerance, caloHitList2, filteredList2);
+            CaloHitVector filteredHits1, filteredHits2;
+            this->FilterCaloHits(x, m_xTolerance, caloHitVector1, filteredHits1);
+            this->FilterCaloHits(x, m_xTolerance, caloHitVector2, filteredHits2);
 
             CartesianVector position3D(0.f, 0.f, 0.f);
             float chiSquared(std::numeric_limits<float>::max());
-            this->GetThreeDPosition(pCaloHit2D, filteredList1, filteredList2, position3D, chiSquared);
+            this->GetThreeDPosition(pCaloHit2D, filteredHits1, filteredHits2, position3D, chiSquared);
 
             if (chiSquared > m_chiSquaredCut)
                 throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
             const CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
-            newThreeDHits.insert(pCaloHit3D);
+            newThreeDHits.push_back(pCaloHit3D);
         }
         catch (StatusCodeException &)
         {
@@ -86,17 +85,14 @@ void ShowerHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlg
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, const CaloHitList &inputCaloHitList, CaloHitList &outputCaloHitList) const
+void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, const CaloHitVector &inputCaloHitVector, CaloHitVector &outputCaloHitVector) const
 {
-    outputCaloHitList.clear();
-
-    for (CaloHitList::const_iterator iter = inputCaloHitList.begin(), iterEnd = inputCaloHitList.end(); iter != iterEnd; ++iter)
+    for (const CaloHit *const pCaloHit : inputCaloHitVector)
     {
-        const CaloHit *const pCaloHit = *iter;
         const float deltaX(pCaloHit->GetPositionVector().GetX() - x);
 
         if (std::fabs(deltaX) < xTolerance)
-            outputCaloHitList.insert(pCaloHit);
+            outputCaloHitVector.push_back(pCaloHit);
     }
 }
 

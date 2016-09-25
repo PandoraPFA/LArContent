@@ -32,20 +32,20 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
-        pandora::CaloHitList &newThreeDHits);
+    void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
+        pandora::CaloHitVector &newThreeDHits);
 
 private:
      /**
      *  @brief  Create three dimensional hits, using a list of input two dimensional hits and the 3D hits from the parent particle
      * 
      *  @param  pAlgorithm address of the calling algorithm
-     *  @param  inputTwoDHits the list of input two dimensional hits
-     *  @param  caloHitList3D the list of 3D hits from the parent particle
+     *  @param  inputTwoDHits the vector of input two dimensional hits
+     *  @param  caloHitList3D the vector of 3D hits from the parent particle
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitList &inputTwoDHits, const pandora::CaloHitList &caloHitList3D,
-        pandora::CaloHitList &newThreeDHits) const;
+    void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &caloHitList3D,
+        pandora::CaloHitVector &newThreeDHits) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

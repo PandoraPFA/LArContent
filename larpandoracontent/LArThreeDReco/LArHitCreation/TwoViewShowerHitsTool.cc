@@ -15,16 +15,16 @@ using namespace pandora;
 namespace lar_content
 {
 
-void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitList &caloHitList1, const CaloHitList &caloHitList2,
+void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2,
     CartesianVector &position3D, float &chiSquared) const
 {
-    if (!caloHitList1.empty() && caloHitList2.empty())
+    if (!caloHitVector1.empty() && caloHitVector2.empty())
     {
-        this->GetThreeDPosition(pCaloHit2D, caloHitList1, position3D, chiSquared);
+        this->GetThreeDPosition(pCaloHit2D, caloHitVector1, position3D, chiSquared);
     }
-    else if (caloHitList1.empty() && !caloHitList2.empty())
+    else if (caloHitVector1.empty() && !caloHitVector2.empty())
     {
-        this->GetThreeDPosition(pCaloHit2D, caloHitList2, position3D, chiSquared);
+        this->GetThreeDPosition(pCaloHit2D, caloHitVector2, position3D, chiSquared);
     }
     else
     {
@@ -34,23 +34,21 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitList &caloHitList, CartesianVector &position3D,
+void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitVector &caloHitVector, CartesianVector &position3D,
     float &chiSquared) const
 {
-    if (caloHitList.empty())
+    if (caloHitVector.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const HitType hitType((*caloHitList.begin())->GetHitType());
+    const HitType hitType(caloHitVector.at(0)->GetHitType());
 
     if (pCaloHit2D->GetHitType() == hitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     double Sqz(0.), Sqx(0.), Sq(0.);
 
-    for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
+    for (const CaloHit *const pCaloHit : caloHitVector)
     {
-        const CaloHit *const pCaloHit = *iter;
-
         Sqx += pCaloHit->GetMipEquivalentEnergy() * pCaloHit->GetPositionVector().GetX();
         Sqz += pCaloHit->GetMipEquivalentEnergy() * pCaloHit->GetPositionVector().GetZ();
         Sq  += pCaloHit->GetMipEquivalentEnergy();
@@ -60,7 +58,6 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const CartesianVector position(static_cast<float>(Sqx / Sq), 0.f, static_cast<float>(Sqz / Sq));
-
     this->GetPosition3D(pCaloHit2D, hitType, position, position3D, chiSquared);
 }
 

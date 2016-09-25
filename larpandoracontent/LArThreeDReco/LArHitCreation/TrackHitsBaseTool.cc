@@ -31,8 +31,8 @@ TrackHitsBaseTool::TrackHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
-    CaloHitList &newThreeDHits)
+void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
+    CaloHitVector &newThreeDHits)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -66,9 +66,8 @@ void TrackHitsBaseTool::BuildSlidingFitMap(const ParticleFlowObject *const pPfo,
     pfoClusterVector.insert(pfoClusterVector.end(), pfoClusterList.begin(), pfoClusterList.end());
     std::sort(pfoClusterVector.begin(), pfoClusterVector.end(), LArClusterHelper::SortByNHits);
 
-    for (ClusterVector::const_iterator iter = pfoClusterVector.begin(), iterEnd = pfoClusterVector.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : pfoClusterVector)
     {
-        const Cluster *const pCluster(*iter);
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
         if (TPC_3D == hitType)
