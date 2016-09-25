@@ -28,11 +28,11 @@ public:
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo the address of the pfo
-     *  @param  inputTwoDHits the list of input two dimensional hits
+     *  @param  inputTwoDHits the vector of input two dimensional hits
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitList &inputTwoDHits,
-        pandora::CaloHitList &newThreeDHits) = 0;
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
+        pandora::CaloHitVector &newThreeDHits) = 0;
 
     /**
      *  @brief  Default constructor

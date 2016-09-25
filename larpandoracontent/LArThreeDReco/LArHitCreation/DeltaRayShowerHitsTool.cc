@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -19,8 +20,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitList &inputTwoDHits,
-    CaloHitList &newThreeDHits)
+void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
+    CaloHitVector &newThreeDHits)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
@@ -41,7 +42,10 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, c
         if (caloHitList3D.empty())
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        this->CreateThreeDHits(pAlgorithm, inputTwoDHits, caloHitList3D, newThreeDHits);
+        CaloHitVector caloHitVector3D(caloHitList3D.begin(), caloHitList3D.end());
+        std::sort(caloHitVector3D.begin(), caloHitVector3D.end(), LArClusterHelper::SortHitsByPosition);
+
+        this->CreateThreeDHits(pAlgorithm, inputTwoDHits, caloHitVector3D, newThreeDHits);
     }
     catch (StatusCodeException &)
     {
@@ -50,15 +54,13 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitList &inputTwoDHits, const CaloHitList &caloHitList3D, 
-    CaloHitList &newThreeDHits) const
+void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitVector &inputTwoDHits, const CaloHitVector &caloHitList3D, 
+    CaloHitVector &newThreeDHits) const
 {
-    for (CaloHitList::const_iterator iter1 = inputTwoDHits.begin(), iterEnd1 = inputTwoDHits.end(); iter1 != iterEnd1; ++iter1)
+    for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
         try
         {
-            const CaloHit *const pCaloHit2D(*iter1);
-
             const HitType hitType(pCaloHit2D->GetHitType());
             const HitType hitType1((TPC_VIEW_U == hitType) ? TPC_VIEW_V : (TPC_VIEW_V == hitType) ? TPC_VIEW_W : TPC_VIEW_U);
             const HitType hitType2((TPC_VIEW_U == hitType) ? TPC_VIEW_W : (TPC_VIEW_V == hitType) ? TPC_VIEW_U : TPC_VIEW_V);
@@ -67,9 +69,9 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const 
             float closestDistanceSquared(std::numeric_limits<float>::max());
             CartesianVector closestPosition3D(0.f, 0.f, 0.f);
 
-            for (CaloHitList::const_iterator iter2 = caloHitList3D.begin(), iterEnd2 = caloHitList3D.end(); iter2 != iterEnd2; ++iter2)
+            for (const CaloHit *const pCaloHit3D : caloHitList3D)
             {
-                const CartesianVector thisPosition3D((*iter2)->GetPositionVector());
+                const CartesianVector thisPosition3D(pCaloHit3D->GetPositionVector());
                 const CartesianVector thisPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), thisPosition3D, hitType));
                 const float thisDistanceSquared((pCaloHit2D->GetPositionVector() - thisPosition2D).GetMagnitudeSquared());
 
@@ -93,7 +95,7 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const 
 
             const CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
-            newThreeDHits.insert(pCaloHit3D);
+            newThreeDHits.push_back(pCaloHit3D);
         }
         catch (StatusCodeException &)
         {

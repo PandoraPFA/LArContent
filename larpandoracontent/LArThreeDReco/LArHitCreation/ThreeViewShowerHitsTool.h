@@ -34,7 +34,7 @@ public:
     ThreeViewShowerHitsTool();
 
 private:
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitList &caloHitList1, const pandora::CaloHitList &caloHitList2,
+    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2,
         pandora::CartesianVector &position3D, float &chiSquared) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

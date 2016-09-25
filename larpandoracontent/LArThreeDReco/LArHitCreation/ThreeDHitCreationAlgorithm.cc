@@ -19,82 +19,39 @@ using namespace pandora;
 namespace lar_content
 {
 
-void ThreeDHitCreationAlgorithm::GetRemainingTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &remainingHits) const
+void ThreeDHitCreationAlgorithm::FilterCaloHitsByType(const CaloHitVector &inputCaloHitVector, const HitType hitType, CaloHitVector &outputCaloHitVector) const
 {
-    CaloHitList usedHits;
-    this->SeparateTwoDHits(pPfo, usedHits, remainingHits);
+    for (const CaloHit *const pCaloHit : inputCaloHitVector)
+    {
+        if (hitType == pCaloHit->GetHitType())
+            outputCaloHitVector.push_back(pCaloHit);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::GetUsedTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &usedHits) const
+void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(const ParticleFlowObject *const pPfo, const CaloHitVector &caloHitVector, const Cluster *&pCluster3D) const
 {
-    CaloHitList remainingHits;
-    this->SeparateTwoDHits(pPfo, usedHits, remainingHits);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *const pPfo, CaloHitList &usedHits, CaloHitList &remainingHits) const
-{
-    ClusterList twoDClusterList, threeDClusterList;
-    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
+    ClusterList threeDClusterList;
     LArPfoHelper::GetThreeDClusterList(pPfo, threeDClusterList);
 
-    for (ClusterList::const_iterator iter = twoDClusterList.begin(), iterEnd = twoDClusterList.end(); iter != iterEnd; ++iter)
+    if (threeDClusterList.empty())
     {
-        if (TPC_3D == LArClusterHelper::GetClusterHitType(*iter))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        (*iter)->GetOrderedCaloHitList().GetCaloHitList(remainingHits);
+        this->CreateThreeDCluster(caloHitVector, pCluster3D);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster3D));
     }
-
-    for (ClusterList::const_iterator iter = threeDClusterList.begin(), iterEnd = threeDClusterList.end(); iter != iterEnd; ++iter)
+    else if (1 == threeDClusterList.size())
     {
-        CaloHitList localCaloHitList;
-        (*iter)->GetOrderedCaloHitList().GetCaloHitList(localCaloHitList);
-
-        for (CaloHitList::const_iterator hIter = localCaloHitList.begin(), hIterEnd = localCaloHitList.end(); hIter != hIterEnd; ++hIter)
-        {
-            const CaloHit *const pTargetCaloHit = static_cast<const CaloHit*>((*hIter)->GetParentCaloHitAddress());
-            CaloHitList::iterator eraseIter = remainingHits.find(pTargetCaloHit);
-
-            if (remainingHits.end() == eraseIter)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            usedHits.insert(pTargetCaloHit);
-            remainingHits.erase(eraseIter);
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDHitCreationAlgorithm::FilterCaloHitsByType(const CaloHitList &inputCaloHitList, const HitType hitType, CaloHitList &outputCaloHitList) const
-{
-    for (CaloHitList::const_iterator iter = inputCaloHitList.begin(), iterEnd = inputCaloHitList.end(); iter != iterEnd; ++iter)
-    {
-        if (hitType == (*iter)->GetHitType())
-            outputCaloHitList.insert(*iter);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList, const Cluster *&pCluster3D) const
-{
-    try
-    {
-        pCluster3D = this->GetThreeDCluster(pPfo);
+        pCluster3D = *(threeDClusterList.begin());
+        const CaloHitList caloHitList(caloHitVector.begin(), caloHitVector.end());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster3D, &caloHitList));
     }
-    catch (StatusCodeException &statusCodeException)
+    else
     {
-        if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
-            throw statusCodeException;
+        if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
+           std::cout << "ThreeDHitCreationAlgorithm: Pfo present with multiple 3D Clusters." << std::endl;
 
-        this->CreateThreeDCluster(caloHitList, pCluster3D);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster3D));
+        throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
     }
 }
 
@@ -135,9 +92,9 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHit(const CaloHit *const pCaloHit2D
 
 bool ThreeDHitCreationAlgorithm::CheckThreeDHit(const CartesianVector &position3D) const
 {
-    // Check that corresponding pseudo layer is within range
     try
     {
+        // Check that corresponding pseudo layer is within range
         (void) PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayer(position3D);
     }
     catch (StatusCodeException &)
@@ -146,15 +103,57 @@ bool ThreeDHitCreationAlgorithm::CheckThreeDHit(const CartesianVector &position3
     }
 
     // TODO Check against detector geometry
-
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *const pPfo, CaloHitVector &usedHitVector, CaloHitVector &remainingHitVector) const
+{
+    ClusterList twoDClusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
+    CaloHitList remainingHitList;
+
+    for (const Cluster *const pCluster : twoDClusterList)
+    {
+        if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(remainingHitList);
+    }
+
+    ClusterList threeDClusterList;
+    LArPfoHelper::GetThreeDClusterList(pPfo, threeDClusterList);
+
+    for (const Cluster *const pCluster : threeDClusterList)
+    {
+        CaloHitList localCaloHitList;
+        pCluster->GetOrderedCaloHitList().GetCaloHitList(localCaloHitList);
+
+        for (const CaloHit *const pCaloHit : localCaloHitList)
+        {
+            const CaloHit *const pTargetCaloHit = static_cast<const CaloHit*>(pCaloHit->GetParentCaloHitAddress());
+            CaloHitList::iterator eraseIter = remainingHitList.find(pTargetCaloHit);
+
+            if (remainingHitList.end() == eraseIter)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            usedHitVector.push_back(pTargetCaloHit);
+            remainingHitList.erase(eraseIter);
+        }
+    }
+
+    remainingHitVector.insert(remainingHitVector.end(), remainingHitList.begin(), remainingHitList.end());
+
+    std::sort(usedHitVector.begin(), usedHitVector.end(), LArClusterHelper::SortHitsByPosition);
+    std::sort(remainingHitVector.begin(), remainingHitVector.end(), LArClusterHelper::SortHitsByPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDHitCreationAlgorithm::Run()
 {
-    const PfoList *pPfoList = NULL;
+    const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     if (!pPfoList || pPfoList->empty())
@@ -165,25 +164,27 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
-    {
-        const ParticleFlowObject *const pPfo = *pIter;
+    PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
+    std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
 
+    for (const ParticleFlowObject *const pPfo : pfoVector)
+    {
         CaloHitList allNewThreeDHits;
 
-        for (HitCreationToolList::const_iterator tIter = m_algorithmToolList.begin(), tIterEnd = m_algorithmToolList.end(); tIter != tIterEnd; ++tIter)
+        for (HitCreationBaseTool *const pHitCreationTool : m_algorithmToolList)
         {
-            CaloHitList remainingTwoDHits, newThreeDHits;
-            this->GetRemainingTwoDHits(pPfo, remainingTwoDHits);
+            CaloHitVector usedTwoDHits, remainingTwoDHits;
+            this->SeparateTwoDHits(pPfo, usedTwoDHits, remainingTwoDHits);
 
             if (remainingTwoDHits.empty())
                 break;
 
-            (*tIter)->Run(this, pPfo, remainingTwoDHits, newThreeDHits);
+            CaloHitVector newThreeDHits;
+            pHitCreationTool->Run(this, pPfo, remainingTwoDHits, newThreeDHits);
 
             if (!newThreeDHits.empty())
             {
-                const Cluster *pCluster3D(NULL);
+                const Cluster *pCluster3D(nullptr);
                 this->AddThreeDHitsToPfo(pPfo, newThreeDHits, pCluster3D);
                 allNewThreeDHits.insert(newThreeDHits.begin(), newThreeDHits.end());
             }
@@ -197,42 +198,16 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *ThreeDHitCreationAlgorithm::GetThreeDCluster(const ParticleFlowObject *const pThreeDPfo) const
+void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitVector &caloHitVector, const Cluster *&pCluster) const
 {
-    const Cluster *pCluster3D(NULL);
-    const ClusterList &clusterList(pThreeDPfo->GetClusterList());
-
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
-    {
-        const Cluster *const pCluster = *iter;
-
-        if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
-            continue;
-        
-        if (NULL != pCluster3D)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        pCluster3D = pCluster;
-    }
-
-    if (NULL == pCluster3D)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    return pCluster3D;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitList &caloHitList, const Cluster *&pCluster) const
-{
-    if (caloHitList.empty())
+    if (caloHitVector.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    const ClusterList *pClusterList = NULL; std::string clusterListName;
+    const ClusterList *pClusterList(nullptr); std::string clusterListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, clusterListName));
 
     PandoraContentApi::Cluster::Parameters parameters;
-    parameters.m_caloHitList = caloHitList;
+    parameters.m_caloHitList.insert(caloHitVector.begin(), caloHitVector.end());
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
 
     if (pClusterList->empty())
@@ -253,7 +228,7 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         HitCreationBaseTool *const pHitCreationTool(dynamic_cast<HitCreationBaseTool*>(*iter));
 
-        if (NULL == pHitCreationTool)
+        if (!pHitCreationTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolList.push_back(pHitCreationTool);

@@ -34,38 +34,22 @@ public:
     };
 
     /**
-     *  @brief  Get the list of two dimensional calo hits (in a specified pfo) for which three dimensional hits have been created
+     *  @brief  Get the subset of a provided calo hit vector corresponding to a specified hit type
      *
-     *  @param  pPfo the address of the pfo
-     *  @param  caloHitList to receive the list of two dimensional calo hits for which three dimensional hits have been created
-     */
-    void GetUsedTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList) const;
-
-    /**
-     *  @brief  Get the list of two dimensional calo hits (in a specified pfo) for which no three dimensional hits have been created
-     *
-     *  @param  pPfo the address of the pfo
-     *  @param  caloHitList to receive the list of two dimensional calo hits for which no three dimensional hits have been created
-     */
-    void GetRemainingTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList) const;
-
-    /**
-     *  @brief  Get the subset of a provided calo hit list corresponding to a specified hit type
-     *
-     *  @param  inputCaloHitList the input calo hit list
+     *  @param  inputCaloHitVector the input calo hit vector
      *  @param  hitType the hit type to filter upon
-     *  @param  outputCaloHitList to receive the output calo hit list
+     *  @param  outputCaloHitVector to receive the output calo hit vector
      */
-    void FilterCaloHitsByType(const pandora::CaloHitList &inputCaloHitList, const pandora::HitType hitType, pandora::CaloHitList &outputCaloHitList) const;
+    void FilterCaloHitsByType(const pandora::CaloHitVector &inputCaloHitVector, const pandora::HitType hitType, pandora::CaloHitVector &outputCaloHitVector) const;
 
     /**
-     *  @brief  Add a specified list of three dimensional hits to a cluster in a pfo, creating the new cluster if required
+     *  @brief  Add a specified vector of three dimensional hits to a cluster in a pfo, creating the new cluster if required
      *
      *  @param  pPfo the address of the pfo
-     *  @param  caloHitList the list of three dimensional hits
+     *  @param  caloHitVector the vector of three dimensional hits
      *  @param  pCluster3D to receive the address of the (new) three dimensional cluster
      */
-    void AddThreeDHitsToPfo(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &caloHitList, const pandora::Cluster *&pCluster3D) const;
+    void AddThreeDHitsToPfo(const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &caloHitVector, const pandora::Cluster *&pCluster3D) const;
 
     /**
      *  @brief  Create a new three dimensional hit from a two dimensional hit
@@ -87,34 +71,26 @@ public:
 
 private:
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Get the address of the three dimensional cluster in a specified pfo
+     *  @brief  Create a new three dimensional cluster, using a vector of provided three dimensional hits, and add it to a specified pfo
      *
-     *  @param  pPfo the address of the pfo
-     *
-     *  @return the address of the three dimensional cluster
-     */
-    const pandora::Cluster *GetThreeDCluster(const pandora::ParticleFlowObject *const pPfo) const;
-
-    /**
-     *  @brief  Create a new three dimensional cluster, using a list of provided three dimensional hits, and add it to a specified pfo
-     *
-     *  @param  caloHitList the list of three dimensional hits
+     *  @param  caloHitVector the vector of three dimensional hits
      *  @param  pCluster to receive the address of the new cluster
      */
-    void CreateThreeDCluster(const pandora::CaloHitList &caloHitList, const pandora::Cluster *&pCluster) const;
+    void CreateThreeDCluster(const pandora::CaloHitVector &caloHitVector, const pandora::Cluster *&pCluster) const;
 
     /**
      *  @brief  Get the list of 2D calo hits in a pfo for which 3D hits have and have not been created
      *
      *  @param  pPfo the address of the pfo
-     *  @param  usedHits to receive the list of two dimensional calo hits for which three dimensional hits have been created
-     *  @param  remainingHits to receive the list of two dimensional calo hits for which three dimensional hits have not been created
+     *  @param  usedHitVector to receive the vector of two dimensional calo hits for which three dimensional hits have been created
+     *  @param  remainingHitVector to receive the vector of two dimensional calo hits for which three dimensional hits have not been created
      */
-    void SeparateTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitList &usedHits,
-        pandora::CaloHitList &remainingHits) const;
+    void SeparateTwoDHits(const pandora::ParticleFlowObject *const pPfo, pandora::CaloHitVector &usedHitVector,
+        pandora::CaloHitVector &remainingHitVector) const;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<HitCreationBaseTool*> HitCreationToolList;
     HitCreationToolList     m_algorithmToolList;        ///< The algorithm tool list

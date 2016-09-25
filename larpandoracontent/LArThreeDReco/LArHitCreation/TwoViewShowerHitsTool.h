@@ -29,7 +29,7 @@ public:
     };
 
 private:
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitList &caloHitList1, const pandora::CaloHitList &caloHitList2,
+    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2,
         pandora::CartesianVector &position3D, float &chiSquared) const;
 
     /**
@@ -37,11 +37,11 @@ private:
      *          hits in one of the other two views
      *
      *  @param  pCaloHit2D address of the two dimensional calo hit
-     *  @param  caloHitList the list of candidate hits in another view
+     *  @param  caloHitVector the vector of candidate hits in another view
      *  @param  position3D to receive the three dimensional position
      *  @param  chiSquared to receive the chi squared value
      */
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitList &caloHitList, pandora::CartesianVector &position3D,
+    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitVector &caloHitVector, pandora::CartesianVector &position3D,
         float &chiSquared) const;
 };
 

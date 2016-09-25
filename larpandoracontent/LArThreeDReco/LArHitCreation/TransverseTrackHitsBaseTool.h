@@ -27,8 +27,8 @@ protected:
      *  @param  matchedSlidingFitMap map of sliding fit results from each view
      *  @param  newThreeDHits to receive the new three dimensional hits
      */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitList &inputTwoDHits, 
-        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitList &newThreeDHits) const;
+    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitVector &inputTwoDHits, 
+        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitVector &newThreeDHits) const;
 
     /**
      *  @brief  Get the three dimensional position using a provided two dimensional calo hit and sliding linear fits in the other two views

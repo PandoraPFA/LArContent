@@ -18,15 +18,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitList &inputTwoDHits, 
-    const MatchedSlidingFitMap &matchedSlidingFitMap, CaloHitList &newThreeDHits) const
+void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitVector &inputTwoDHits, 
+    const MatchedSlidingFitMap &matchedSlidingFitMap, CaloHitVector &newThreeDHits) const
 {   
-    for (CaloHitList::const_iterator iter = inputTwoDHits.begin(), iterEnd = inputTwoDHits.end(); iter != iterEnd; ++iter)
+    for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
         try
         {
-            const CaloHit *const pCaloHit2D(*iter);
-
             CartesianVector position3D(0.f, 0.f, 0.f);
             float chiSquared1(std::numeric_limits<float>::max()), chiSquared2(0.f);
             this->GetThreeDPosition(pCaloHit2D, matchedSlidingFitMap, position3D, chiSquared1);
@@ -37,7 +35,7 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *c
 
             const CaloHit *pCaloHit3D(NULL);
             pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
-            newThreeDHits.insert(pCaloHit3D);
+            newThreeDHits.push_back(pCaloHit3D);
         }
         catch (StatusCodeException &)
         {
@@ -53,17 +51,15 @@ void TransverseTrackHitsBaseTool::GetTransverseChi2(const CaloHit *const pCaloHi
     // TODO Develop a proper treatment of the |dz/dx| * sigmaX uncertainty
     chiSquared = 0.f;
 
-    for (MatchedSlidingFitMap::const_iterator iter = matchedSlidingFitMap.begin(), iterEnd = matchedSlidingFitMap.end();
-        iter != iterEnd; ++iter)
+    for (const MatchedSlidingFitMap::value_type &mapEntry : matchedSlidingFitMap)
     {
-        const HitType hitType(iter->first);
+        const HitType hitType(mapEntry.first);
 
         if (pCaloHit2D->GetHitType() == hitType)
             continue;
 
         const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, hitType));
-        const TwoDSlidingFitResult &fitResult(iter->second);
-
+        const TwoDSlidingFitResult &fitResult(mapEntry.second);
         chiSquared += this->GetTransverseChi2(position2D, fitResult);
     }
 }
