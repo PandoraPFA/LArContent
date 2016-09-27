@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
@@ -196,14 +197,17 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
 void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputList, CaloHitList &outputList)
 {
-    // Initialize kd tree
+    CaloHitVector sortedCaloHits(inputList.begin(), inputList.end());
+    std::sort(sortedCaloHits.begin(), sortedCaloHits.end(), LArClusterHelper::SortHitsByPosition);
+
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, inputList, hitKDNode2DList, true);
+
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(sortedCaloHits, hitKDNode2DList);
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     // Remove hits that are in the same physical location!
-    for (const CaloHit *const pCaloHit1 : inputList)
+    for (const CaloHit *const pCaloHit1 : sortedCaloHits)
     {
         bool isUnique(true);
 
