@@ -84,10 +84,13 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(const CaloHitList &ca
             (void) hitToParentClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
+    CaloHitVector sortedAllCaloHits(allCaloHits.begin(), allCaloHits.end());
+    std::sort(sortedAllCaloHits.begin(), sortedAllCaloHits.end(), LArClusterHelper::SortHitsByPosition);
+
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
 
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList);
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(sortedAllCaloHits, hitKDNode2DList);
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     for (const CaloHit *const pCaloHit : caloHitList)
