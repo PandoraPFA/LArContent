@@ -132,18 +132,25 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
     ClusterAssociationMatrix daughterToParentMatrix;
 
     // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
-    for (ClusterAssociationMatrix::const_iterator iter1 = parentToDaughterMatrix.begin(), iterEnd1 = parentToDaughterMatrix.end(); iter1 != iterEnd1; ++iter1)
+    ClusterVector sortedParentClusters;
+    for (const auto &mapEntry : parentToDaughterMatrix) sortedParentClusters.push_back(mapEntry.first);
+    std::sort(sortedParentClusters.begin(), sortedParentClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : sortedParentClusters)
     {
-        const Cluster *const pParentCluster(iter1->first);
-        const ClusterAssociationMap &parentToDaughterMap(iter1->second);
+        const ClusterAssociationMap &daughterToAssociationMap(parentToDaughterMatrix.at(pParentCluster));
 
         float maxDisplacementInner(std::numeric_limits<float>::max());
         float maxDisplacementOuter(std::numeric_limits<float>::max());
 
         // Find the nearest parent cluster
-        for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
+        ClusterVector sortedLocalDaughterClusters;
+        for (const auto &mapEntry : daughterToAssociationMap) sortedLocalDaughterClusters.push_back(mapEntry.first);
+        std::sort(sortedLocalDaughterClusters.begin(), sortedLocalDaughterClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pDaughterCluster : sortedLocalDaughterClusters)
         {
-            const ClusterAssociation &clusterAssociation(iter2->second);
+            const ClusterAssociation &clusterAssociation(daughterToAssociationMap.at(pDaughterCluster));
 
             if (clusterAssociation.GetAssociation() == ClusterAssociation::WEAK)
             {
@@ -156,10 +163,9 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
         }
 
         // Select daughter clusters that are closer than the nearest parent cluster
-        for (ClusterAssociationMap::const_iterator iter2 = parentToDaughterMap.begin(), iterEnd2 = parentToDaughterMap.end(); iter2 != iterEnd2; ++iter2)
+        for (const Cluster *const pDaughterCluster : sortedLocalDaughterClusters)
         {
-            const Cluster *const pDaughterCluster(iter2->first);
-            const ClusterAssociation &clusterAssociation(iter2->second);
+            const ClusterAssociation &clusterAssociation(daughterToAssociationMap.at(pDaughterCluster));
 
             if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
             {
@@ -173,23 +179,30 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
     }
 
     // Loop over daughter clusters and select the nearest parent clusters
-    for (ClusterAssociationMatrix::const_iterator iter1 = daughterToParentMatrix.begin(), iterEnd1 = daughterToParentMatrix.end(); iter1 != iterEnd1; ++iter1)
-    {
-        const Cluster *const pDaughterCluster(iter1->first);
-        const ClusterAssociationMap &daughterToParentMap(iter1->second);
+    ClusterVector sortedDaughterClusters;
+    for (const auto &mapEntry : daughterToParentMatrix) sortedDaughterClusters.push_back(mapEntry.first);
+    std::sort(sortedDaughterClusters.begin(), sortedDaughterClusters.end(), LArClusterHelper::SortByNHits);
 
-        const Cluster *pParentCluster = NULL;
+    // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
+    for (const Cluster *const pDaughterCluster : sortedDaughterClusters)
+    {
+        const ClusterAssociationMap &parentToAssociationMap(daughterToParentMatrix.at(pDaughterCluster));
+
+        const Cluster *pParentCluster(nullptr);
         float minDisplacement(std::numeric_limits<float>::max());
 
-        for (ClusterAssociationMap::const_iterator iter2 = daughterToParentMap.begin(), iterEnd2 = daughterToParentMap.end(); iter2 != iterEnd2; ++iter2)
+        ClusterVector sortedLocalParentClusters;
+        for (const auto &mapEntry : parentToAssociationMap) sortedLocalParentClusters.push_back(mapEntry.first);
+        std::sort(sortedLocalParentClusters.begin(), sortedLocalParentClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pCandidateParentCluster : sortedLocalParentClusters)
         {
-            const Cluster *const pCandidateCluster(iter2->first);
-            const ClusterAssociation &clusterAssociation(iter2->second);
+            const ClusterAssociation &clusterAssociation(parentToAssociationMap.at(pCandidateParentCluster));
 
             if (clusterAssociation.GetFigureOfMerit() < minDisplacement)
             {
                 minDisplacement = clusterAssociation.GetFigureOfMerit();
-                pParentCluster = pCandidateCluster;
+                pParentCluster = pCandidateParentCluster;
             }
         }
 
