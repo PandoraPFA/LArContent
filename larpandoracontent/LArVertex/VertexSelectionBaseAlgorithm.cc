@@ -157,7 +157,7 @@ void VertexSelectionBaseAlgorithm::InitializeKDTrees(HitKDTree2D &kdTreeU, HitKD
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         HitKDNode2DList hitKDNode2DList;
-        KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, *pCaloHitList, hitKDNode2DList, true);
+        KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(*pCaloHitList, hitKDNode2DList);
         kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
     }
 }

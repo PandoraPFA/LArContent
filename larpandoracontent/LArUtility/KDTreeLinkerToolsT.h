@@ -49,7 +49,6 @@ public:
 
 typedef KDTreeBoxT<2> KDTreeBox;
 typedef KDTreeBoxT<3> KDTreeCube;
-typedef KDTreeBoxT<4> KDTreeTesseract;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -168,58 +167,6 @@ template<typename T>
 KDTreeCube fill_and_bound_3d_kd_tree(const std::unordered_set<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes);
 
 /**
- *  @brief  fill_and_bound_3d_kd_tree_by_index
- * 
- *  @param  points
- *  @param  nodes
- * 
- *  @return KDTreeCube
- */
-template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<T*> &points, std::vector<KDTreeNodeInfoT<unsigned, 3> > &nodes);
-
-/**
- *  @brief  fill_and_bound_3d_kd_tree
- * 
- *  @param  caller
- *  @param  points
- *  @param  nodes
- *  @param  passthru
- * 
- *  @return KDTreeCube
- */
-template<typename T>
-KDTreeBox fill_and_bound_2d_kd_tree(const pandora::Algorithm *const caller, const std::unordered_set<const T*> &points,
-    std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes, bool passthru = false);
-
-/**
- *  @brief  fill_and_bound_3d_kd_tree
- * 
- *  @param  caller
- *  @param  points
- *  @param  nodes
- *  @param  passthru
- * 
- *  @return KDTreeCube
- */
-template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, const std::unordered_set<const T*> &points,
-    std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes, bool passthru = false);
-
-/**
- *  @brief  fill_and_bound_4d_kd_tree
- * 
- *  @param  caller
- *  @param  points
- *  @param  nodes
- *  @param  passthru
- * 
- *  @return KDTreeTesseract
- */
-KDTreeTesseract fill_and_bound_4d_kd_tree(const pandora::Algorithm *const caller, const pandora::CaloHitList &points,
-    std::vector<KDTreeNodeInfoT<const pandora::CaloHit*, 4> > &nodes, bool passthru = false);
-
-/**
  *  @brief  build_2d_kd_search_region
  * 
  *  @param  point
@@ -264,32 +211,6 @@ KDTreeCube build_3d_kd_search_region(const pandora::CaloHit *const point, const 
  *  @return KDTreeCube
  */
 KDTreeCube build_3d_kd_search_region(const pandora::CartesianVector &pos, const float x_span, const float y_span, const float z_span);
-
-/**
- *  @brief  build_4d_kd_search_region
- * 
- *  @param  point
- *  @param  x_span
- *  @param  y_span
- *  @param  z_span
- *  @param  search_layer
- * 
- *  @return KDTreeTesseract
- */
-KDTreeTesseract build_4d_kd_search_region(const pandora::CaloHit *const point, const float x_span, const float y_span, const float z_span, const float search_layer);
-
-/**
- *  @brief  build_4d_kd_search_region
- * 
- *  @param  pos
- *  @param  x_span
- *  @param  y_span
- *  @param  z_span
- *  @param  search_layer
- * 
- *  @return KDTreeTesseract
- */
-KDTreeTesseract build_4d_kd_search_region(const pandora::CartesianVector &pos, const float x_span, const float y_span, const float z_span, const float search_layer);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -425,117 +346,6 @@ KDTreeCube fill_and_bound_3d_kd_tree(const std::unordered_set<const T*> &points,
 
     for (const T *const point : points)
     {
-        const pandora::CartesianVector &pos = kdtree_type_adaptor<const T>::position(point);
-        nodes.emplace_back(point, pos.GetX(), pos.GetY(), pos.GetZ());
-
-        if (0 == i)
-        {
-            minpos[0] = pos.GetX(); minpos[1] = pos.GetY(); minpos[2] = pos.GetZ();
-            maxpos[0] = pos.GetX(); maxpos[1] = pos.GetY(); maxpos[2] = pos.GetZ();
-        }
-        else
-        {
-            minpos[0] = std::min(pos.GetX(), minpos[0]);
-            minpos[1] = std::min(pos.GetY(), minpos[1]);
-            minpos[2] = std::min(pos.GetZ(), minpos[2]);
-            maxpos[0] = std::max(pos.GetX(), maxpos[0]);
-            maxpos[1] = std::max(pos.GetY(), maxpos[1]);
-            maxpos[2] = std::max(pos.GetZ(), maxpos[2]);
-        }
-
-        ++i;
-    }
-
-    return KDTreeCube(minpos[0], maxpos[0], minpos[1], maxpos[1], minpos[2], maxpos[2]);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree_by_index(const std::vector<T*> &points, std::vector<KDTreeNodeInfoT<unsigned, 3> > &nodes)
-{
-    std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
-
-    unsigned i = 0;
-
-    for (const T *const point : points)
-    {
-        const pandora::CartesianVector &pos = kdtree_type_adaptor<T>::position(point);
-        nodes.emplace_back(i, pos.GetX(), pos.GetY(), pos.GetZ());
-
-        if (0 == i)
-        {
-            minpos[0] = pos.GetX(); minpos[1] = pos.GetY(); minpos[2] = pos.GetZ();
-            maxpos[0] = pos.GetX(); maxpos[1] = pos.GetY(); maxpos[2] = pos.GetZ();
-        }
-        else
-        {
-            minpos[0] = std::min(pos.GetX(), minpos[0]);
-            minpos[1] = std::min(pos.GetY(), minpos[1]);
-            minpos[2] = std::min(pos.GetZ(), minpos[2]);
-            maxpos[0] = std::max(pos.GetX(), maxpos[0]);
-            maxpos[1] = std::max(pos.GetY(), maxpos[1]);
-            maxpos[2] = std::max(pos.GetZ(), maxpos[2]);
-        }
-
-        ++i;
-    }
-
-    return KDTreeCube(minpos[0], maxpos[0], minpos[1], maxpos[1], minpos[2], maxpos[2]);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-KDTreeBox fill_and_bound_2d_kd_tree(const pandora::Algorithm *const caller, const std::unordered_set<const T*> &points,
-    std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes, bool passthru)
-{
-    std::array<float, 2> minpos{ {0.f, 0.f} }, maxpos{ {0.f, 0.f} };
-
-    unsigned i = 0;
-
-    for (const T *const point : points)
-    {
-        if (!passthru && !PandoraContentApi::IsAvailable(*caller, point))
-            continue;
-
-        const pandora::CartesianVector &pos = kdtree_type_adaptor<const T>::position(point);
-        nodes.emplace_back(point, pos.GetX(), pos.GetZ());
-
-        if (0 == i)
-        {
-            minpos[0] = pos.GetX(); minpos[1] = pos.GetZ();
-            maxpos[0] = pos.GetX(); maxpos[1] = pos.GetZ();
-        }
-        else
-        {
-            minpos[0] = std::min(pos.GetX(), minpos[0]);
-            minpos[1] = std::min(pos.GetZ(), minpos[1]);
-            maxpos[0] = std::max(pos.GetX(), maxpos[0]);
-            maxpos[1] = std::max(pos.GetZ(), maxpos[1]);
-        }
-
-        ++i;
-    }
-
-    return KDTreeBox(minpos[0], maxpos[0], minpos[1], maxpos[1]);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const pandora::Algorithm *const caller, const std::unordered_set<const T*> &points,
-    std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes, bool passthru)
-{
-    std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
-
-    unsigned i = 0;
-
-    for (const T *const point : points)
-    {
-        if (!passthru && !PandoraContentApi::IsAvailable(*caller, point))
-            continue;
-
         const pandora::CartesianVector &pos = kdtree_type_adaptor<const T>::position(point);
         nodes.emplace_back(point, pos.GetX(), pos.GetY(), pos.GetZ());
 

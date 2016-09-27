@@ -199,7 +199,7 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
     // Initialize kd tree
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, inputList, hitKDNode2DList, true);
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(inputList, hitKDNode2DList);
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     // Remove hits that are in the same physical location!

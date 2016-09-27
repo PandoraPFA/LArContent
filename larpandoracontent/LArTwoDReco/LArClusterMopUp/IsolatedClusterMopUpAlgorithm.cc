@@ -87,7 +87,7 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(const CaloHitList &ca
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
 
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(this, allCaloHits, hitKDNode2DList, true);
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList);
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     for (const CaloHit *const pCaloHit : caloHitList)
