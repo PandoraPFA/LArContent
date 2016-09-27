@@ -60,26 +60,25 @@ StatusCode ClusterMergingAlgorithm::Run()
 
 void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterVetoMap clusterVetoMap;
+    ClusterList clusterVetoList;
 
-    for (ClusterVector::iterator iter1 = clusterVector.begin(), iterEnd1 = clusterVector.end(); iter1 != iterEnd1; ++iter1)
+    for (const Cluster *const pSeedCluster : clusterVector)
     {
-        const Cluster *const pSeedCluster = *iter1;
-
         ClusterList mergeList;
-        this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, mergeList);
+        this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, mergeList);
 
-        for (ClusterList::iterator iter2 = mergeList.begin(), iterEnd2 = mergeList.end(); iter2 != iterEnd2; ++iter2)
+        ClusterVector mergeVector(mergeList.begin(), mergeList.end());
+        std::sort(mergeVector.begin(), mergeVector.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pAssociatedCluster : mergeVector)
         {
-            const Cluster *const pAssociatedCluster = *iter2;
-
-            if (clusterVetoMap.end() != clusterVetoMap.find(pAssociatedCluster))
+            if (clusterVetoList.count(pAssociatedCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             if (!pAssociatedCluster->IsAvailable())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            (void) clusterVetoMap.insert(ClusterVetoMap::value_type(pAssociatedCluster, true));
+            (void) clusterVetoList.insert(pAssociatedCluster);
 
             if (m_inputClusterListName.empty())
             {
@@ -98,19 +97,16 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
 
 void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList& associatedClusterList) const
 {
-    ClusterVetoMap clusterVetoMap;
-
-    this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoMap, associatedClusterList);
+    ClusterList clusterVetoList;
+    this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-    const ClusterVetoMap &clusterVetoMap, ClusterList &associatedClusterList) const
+    const ClusterList &clusterVetoList, ClusterList &associatedClusterList) const
 {
-    ClusterVetoMap::const_iterator iter0 = clusterVetoMap.find(pCurrentCluster);
-
-    if (iter0 != clusterVetoMap.end())
+    if (clusterVetoList.count(pCurrentCluster))
         return;
 
     ClusterMergeMap::const_iterator iter1 = clusterMergeMap.find(pCurrentCluster);
@@ -118,17 +114,18 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSe
     if (iter1 == clusterMergeMap.end())
         return;
 
-    for (ClusterList::const_iterator iter2 = iter1->second.begin(), iterEnd2 = iter1->second.end(); iter2 != iterEnd2; ++iter2)
-    {
-        const Cluster *const pAssociatedCluster = *iter2;
+    ClusterVector associatedClusters(iter1->second.begin(), iter1->second.end());
+    std::sort(associatedClusters.begin(), associatedClusters.end(), LArClusterHelper::SortByNHits);
 
+    for (const Cluster *const pAssociatedCluster : associatedClusters)
+    {
         if (pAssociatedCluster == pSeedCluster)
             continue;
 
         if (!associatedClusterList.insert(pAssociatedCluster).second)
             continue;
 
-        this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoMap, associatedClusterList);
+        this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
     }
 }
 

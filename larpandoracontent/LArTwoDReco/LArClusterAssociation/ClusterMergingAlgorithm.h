@@ -24,7 +24,6 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, bool> ClusterVetoMap;
     typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
     /**
@@ -66,11 +65,11 @@ protected:
      *  @param  pSeedCluster pointer to the initial cluster
      *  @param  pCurrentCluster pointer to the current cluster
      *  @param  clusterMergeMap the map of cluster associations
-     *  @param  clusterVetoMap the map of clusters that have already been merged
+     *  @param  clusterVetoList the list of clusters that have already been merged
      *  @param  associatedClusterList the output list of associated clusters
      */
     void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const pandora::Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-        const ClusterVetoMap &clusterVetoMap, pandora::ClusterList& associatedClusterList) const;
+        const pandora::ClusterList &clusterVetoList, pandora::ClusterList& associatedClusterList) const;
 
     /**
      *  @brief  Sort the selected clusters, so that they have a well-defined ordering
