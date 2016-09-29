@@ -60,7 +60,7 @@ StatusCode ClusterMergingAlgorithm::Run()
 
 void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterList clusterVetoList;
+    ClusterSet clusterVetoList;
 
     for (const Cluster *const pSeedCluster : clusterVector)
     {
@@ -97,14 +97,14 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
 
 void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList& associatedClusterList) const
 {
-    ClusterList clusterVetoList;
+    ClusterSet clusterVetoList;
     this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-    const ClusterList &clusterVetoList, ClusterList &associatedClusterList) const
+    const ClusterSet &clusterVetoList, ClusterList &associatedClusterList) const
 {
     if (clusterVetoList.count(pCurrentCluster))
         return;

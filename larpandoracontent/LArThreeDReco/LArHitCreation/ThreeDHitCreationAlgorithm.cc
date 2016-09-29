@@ -14,6 +14,8 @@
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lar_content
@@ -133,7 +135,7 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
         for (const CaloHit *const pCaloHit : localCaloHitList)
         {
             const CaloHit *const pTargetCaloHit = static_cast<const CaloHit*>(pCaloHit->GetParentCaloHitAddress());
-            CaloHitList::iterator eraseIter = remainingHitList.find(pTargetCaloHit);
+            CaloHitList::iterator eraseIter = std::find(remainingHitList.begin(), remainingHitList.end(), pTargetCaloHit);
 
             if (remainingHitList.end() == eraseIter)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -171,11 +173,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     {
         CaloHitList allNewThreeDHits;
 
-<<<<<<< HEAD
-        for (HitCreationBaseTool *const pHitCreationTool : m_algorithmToolList)
-=======
-        for (HitCreationToolVector::const_iterator tIter = m_algorithmToolVector.begin(), tIterEnd = m_algorithmToolVector.end(); tIter != tIterEnd; ++tIter)
->>>>>>> Update to reflect change to managed container and Pandora typedefs.
+        for (HitCreationBaseTool *const pHitCreationTool : m_algorithmToolVector)
         {
             CaloHitVector usedTwoDHits, remainingTwoDHits;
             this->SeparateTwoDHits(pPfo, usedTwoDHits, remainingTwoDHits);
@@ -211,7 +209,7 @@ void ThreeDHitCreationAlgorithm::CreateThreeDCluster(const CaloHitVector &caloHi
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, clusterListName));
 
     PandoraContentApi::Cluster::Parameters parameters;
-    parameters.m_caloHitList.insert(caloHitVector.begin(), caloHitVector.end());
+    parameters.m_caloHitList.insert(parameters.m_caloHitList.end(), caloHitVector.begin(), caloHitVector.end());
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
 
     if (pClusterList->empty())

@@ -806,7 +806,7 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
                 availableClusters.push_back(pCluster);
 
             if (!PandoraContentApi::IsAvailable(*this, pCluster) && (hitType == LArClusterHelper::GetClusterHitType(pCluster)))
-                isolatedHits.push_back(isolatedHits.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+                isolatedHits.insert(isolatedHits.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
         }
     }
 
