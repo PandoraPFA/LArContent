@@ -16,6 +16,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lar_content
@@ -339,17 +341,23 @@ void ParticleRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(const Cluste
     if (pClusterU && pClusterV && !pClusterW)
     {
         m_clusterNavigationMapUV[pClusterU].push_back(pClusterV);
-        m_keyClusters.push_back(pClusterU);
+
+        if (m_keyClusters.end() == std::find(m_keyClusters.begin(), m_keyClusters.end(), pClusterU))
+            m_keyClusters.push_back(pClusterU);
     }
     else if (!pClusterU && pClusterV && pClusterW)
     {
         m_clusterNavigationMapVW[pClusterV].push_back(pClusterW);
-        m_keyClusters.push_back(pClusterV);
+
+        if (m_keyClusters.end() == std::find(m_keyClusters.begin(), m_keyClusters.end(), pClusterV))
+            m_keyClusters.push_back(pClusterV);
     }
     else if (pClusterU && !pClusterV && pClusterW)
     {
         m_clusterNavigationMapWU[pClusterW].push_back(pClusterU);
-        m_keyClusters.push_back(pClusterW);
+
+        if (m_keyClusters.end() == std::find(m_keyClusters.begin(), m_keyClusters.end(), pClusterW))
+            m_keyClusters.push_back(pClusterW);
     }
     else
     {

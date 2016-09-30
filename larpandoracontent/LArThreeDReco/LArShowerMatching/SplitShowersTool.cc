@@ -161,10 +161,17 @@ void SplitShowersTool::FindShowerMerges(ThreeDShowersAlgorithm *const pAlgorithm
                 const TensorType::Element &element1(*(*iIter1));
                 const TensorType::Element &element2(*(*iIter2));
 
-                ClusterList clusterListU, clusterListV, clusterListW;
-                clusterListU.push_back(element1.GetClusterU()); clusterListU.push_back(element2.GetClusterU());
-                clusterListV.push_back(element1.GetClusterV()); clusterListV.push_back(element2.GetClusterV());
-                clusterListW.push_back(element1.GetClusterW()); clusterListW.push_back(element2.GetClusterW());
+                ClusterList clusterListU(1, element1.GetClusterU());
+                if (element1.GetClusterU() != element2.GetClusterU())
+                    clusterListU.push_back(element2.GetClusterU());
+
+                ClusterList clusterListV(1, element1.GetClusterV());
+                if (element1.GetClusterV() != element2.GetClusterV())
+                    clusterListV.push_back(element2.GetClusterV());
+
+                ClusterList clusterListW(1, element1.GetClusterW());
+                if (element1.GetClusterW() != element2.GetClusterW())
+                    clusterListW.push_back(element2.GetClusterW());
 
                 const unsigned int nClustersU(clusterListU.size()), nClustersV(clusterListV.size()), nClustersW(clusterListW.size());
                 const unsigned int nClustersProduct(nClustersU * nClustersV * nClustersW);
