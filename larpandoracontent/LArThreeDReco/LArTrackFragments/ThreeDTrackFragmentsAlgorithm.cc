@@ -470,8 +470,10 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &
         if (hitToClusterMap.end() == cIter)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        matchedClusters.push_back(cIter->second);
         ++clusterToMatchedHitsMap[cIter->second];
+
+        if (matchedClusters.end() == std::find(matchedClusters.begin(), matchedClusters.end(), cIter->second))
+            matchedClusters.push_back(cIter->second);
     }
 
     if (matchedClusters.empty())

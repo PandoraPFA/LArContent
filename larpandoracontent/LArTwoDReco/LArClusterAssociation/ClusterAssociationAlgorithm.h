@@ -36,8 +36,8 @@ protected:
     class ClusterAssociation
     {
     public:
-        pandora::ClusterList    m_forwardAssociations;      ///< The list of forward associations
-        pandora::ClusterList    m_backwardAssociations;     ///< The list of backward associations
+        pandora::ClusterSet     m_forwardAssociations;      ///< The list of forward associations
+        pandora::ClusterSet     m_backwardAssociations;     ///< The list of backward associations
     };
 
     typedef std::unordered_map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
@@ -117,10 +117,10 @@ private:
      *  @param  pCluster address of cluster with which to begin search
      *  @param  isForward whether propagation direction is forward
      *  @param  pExtremalCluster to receive the extremal cluster
-     *  @param  clusterList to receive list of clusters traversed
+     *  @param  clusterSet to receive set of clusters traversed
      */
     void NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap, const pandora::Cluster *const pCluster, const bool isForward,
-        const pandora::Cluster *&pExtremalCluster, pandora::ClusterList &clusterList) const;
+        const pandora::Cluster *&pExtremalCluster, pandora::ClusterSet &clusterSet) const;
 
     mutable bool m_mergeMade;
 

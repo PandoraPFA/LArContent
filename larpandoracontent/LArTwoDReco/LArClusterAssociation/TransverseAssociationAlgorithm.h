@@ -104,7 +104,7 @@ private:
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterToClustersMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterSet> ClusterToClustersMap;
     typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

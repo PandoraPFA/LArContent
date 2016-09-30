@@ -70,8 +70,15 @@ void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitList &calo
 
             if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_clusteringWindowSquared)
             {
-                hitAssociationMap[pCaloHitI].push_back(pCaloHitJ);
-                hitAssociationMap[pCaloHitJ].push_back(pCaloHitI);
+                CaloHitList &caloHitListI(hitAssociationMap[pCaloHitI]);
+
+                if (caloHitListI.end() == std::find(caloHitListI.begin(), caloHitListI.end(), pCaloHitJ))
+                    caloHitListI.push_back(pCaloHitJ);
+
+                CaloHitList &caloHitListJ(hitAssociationMap[pCaloHitI]);
+
+                if (caloHitListJ.end() == std::find(caloHitListJ.begin(), caloHitListJ.end(), pCaloHitI))
+                    caloHitListJ.push_back(pCaloHitI);
             }
         }
     }
