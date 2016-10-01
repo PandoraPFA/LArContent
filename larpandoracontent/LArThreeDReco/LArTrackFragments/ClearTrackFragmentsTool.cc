@@ -275,7 +275,9 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
         if (daughterHits.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        modifiedClusters.push_back(pCluster);
+        if (modifiedClusters.end() == std::find(modifiedClusters.begin(), modifiedClusters.end(), pCluster))
+            modifiedClusters.push_back(pCluster);
+
         this->Recluster(pAlgorithm, pCluster, daughterHits, separateHits, deletedClusters, pFragmentCluster);
     }
 
@@ -398,13 +400,13 @@ void ClearTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTe
                     if (!unavailableClusters.count(*fIter))
                         continue;
 
-                    if (TPC_VIEW_U != fragmentHitType)
+                    if ((TPC_VIEW_U != fragmentHitType) && (affectedKeyClusters.end() == std::find(affectedKeyClusters.begin(), affectedKeyClusters.end(), tIterU->first)))
                         affectedKeyClusters.push_back(tIterU->first);
 
-                    if (TPC_VIEW_V != fragmentHitType)
+                    if ((TPC_VIEW_V != fragmentHitType) && (affectedKeyClusters.end() == std::find(affectedKeyClusters.begin(), affectedKeyClusters.end(), tIterV->first)))
                         affectedKeyClusters.push_back(tIterV->first);
 
-                    if (TPC_VIEW_W != fragmentHitType)
+                    if ((TPC_VIEW_W != fragmentHitType) && (affectedKeyClusters.end() == std::find(affectedKeyClusters.begin(), affectedKeyClusters.end(), tIterW->first)))
                         affectedKeyClusters.push_back(tIterW->first);
 
                     break;
