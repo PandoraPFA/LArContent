@@ -249,8 +249,15 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
 
     if (pBestCluster)
     {
-        clusterAssociationMap[pSeedCluster].push_back(pBestCluster);
-        clusterAssociationMap[pBestCluster].push_back(pSeedCluster);
+        ClusterList &seedList(clusterAssociationMap[pSeedCluster]);
+
+        if (seedList.end() == std::find(seedList.begin(), seedList.end(), pBestCluster))
+            seedList.push_back(pBestCluster);
+
+        ClusterList &bestList(clusterAssociationMap[pBestCluster]);
+
+        if (bestList.end() == std::find(bestList.begin(), bestList.end(), pSeedCluster))
+            bestList.push_back(pSeedCluster);
     }
     else if (pBestClusterInner && pBestClusterOuter)
     {
@@ -274,8 +281,15 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
         if (LArPointingClusterHelper::IsEmission(pointingVertexInner.GetPosition(), pointingVertexOuter, -1.f, 0.75f * rSpan, 5.f, 10.f) &&
             LArPointingClusterHelper::IsEmission(pointingVertexOuter.GetPosition(), pointingVertexInner, -1.f, 0.75f * rSpan, 5.f, 10.f))
         {
-            clusterAssociationMap[pBestClusterInner].push_back(pSeedCluster);
-            clusterAssociationMap[pBestClusterOuter].push_back(pSeedCluster);
+            ClusterList &bestInnerList(clusterAssociationMap[pBestClusterInner]);
+
+            if (bestInnerList.end() == std::find(bestInnerList.begin(), bestInnerList.end(), pSeedCluster))
+                bestInnerList.push_back(pSeedCluster);
+
+            ClusterList &bestOuterList(clusterAssociationMap[pBestClusterOuter]);
+
+            if (bestOuterList.end() == std::find(bestOuterList.begin(), bestOuterList.end(), pSeedCluster))
+                bestOuterList.push_back(pSeedCluster);
         }
     }
 }
@@ -573,17 +587,17 @@ void CosmicRayTrackRecoveryAlgorithm::RemoveAmbiguities(const ParticleList &inpu
                 const Particle &particle2 = *pIter2;
                 const ClusterList &clusterList2 = particle2.m_clusterList;
 
-                ClusterList duplicateList;
+                ClusterSet duplicateSet;
 
                 for (ClusterList::const_iterator cIter1 = clusterList1.begin(), cIterEnd1 = clusterList1.end(); cIter1 != cIterEnd1; ++cIter1)
                 {
                     const Cluster *pCluster = *cIter1;
 
                     if (clusterList2.end() != std::find(clusterList2.begin(), clusterList2.end(), pCluster))
-                        duplicateList.push_back(pCluster);
+                        duplicateSet.insert(pCluster);
                 }
 
-                if (duplicateList.size() > 0 && clusterList1.size() != clusterList2.size())
+                if (duplicateSet.size() > 0 && clusterList1.size() != clusterList2.size())
                 {
                     isUnique = false;
                     break;

@@ -317,11 +317,12 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
             (void) intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterOuter, bestAssociationOuter));
     }
 
+
+    // Third step: make the merge if A -> X and B -> Y is in fact A -> B and B -> A
     ClusterVector intermediateSortedClusters;
     for (const auto &mapEntry : intermediateAssociationMatrix) intermediateSortedClusters.push_back(mapEntry.first);
     std::sort(intermediateSortedClusters.begin(), intermediateSortedClusters.end(), LArClusterHelper::SortByNHits);
 
-    // Third step: make the merge if A -> X and B -> Y is in fact A -> B and B -> A
     for (const Cluster *const pParentCluster : intermediateSortedClusters)
     {
         const ClusterAssociationMap &parentAssociationMap(intermediateAssociationMatrix.at(pParentCluster));

@@ -104,14 +104,19 @@ void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMap(const std::string &cl
 
         for (const CaloHit *const pCaloHit : daughterHits)
         {
-            CaloHitList nearbyHits;
             KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D);
 
             HitKDNode2DList found;
             kdTree.search(searchRegionHits, found);
 
             for (const auto &hit : found)
-                (void) nearbyClusters[pCluster].push_back(hitToClusterMap.at(hit.data));
+            {
+                ClusterList  &nearbyClusterList(nearbyClusters[pCluster]);
+                const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
+
+                if (nearbyClusterList.end() == std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster))
+                    nearbyClusterList.push_back(pNearbyCluster);
+            }
         }
     }
 }
@@ -387,13 +392,13 @@ void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList
 
         ClusterList clusterList;
 
-        if (NULL != pClusterU)
+        if (pClusterU)
             clusterList.push_back(pClusterU);
 
-        if (NULL != pClusterV)
+        if (pClusterV)
             clusterList.push_back(pClusterV);
 
-        if (NULL != pClusterW)
+        if (pClusterW)
             clusterList.push_back(pClusterW);
 
         if (parentList.end() != std::find(parentList.begin(), parentList.end(), pParentPfo))
@@ -574,20 +579,23 @@ float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pC
     if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    ClusterList pfoClusterList;
-    LArPfoHelper::GetClusters(pPfo, hitType, pfoClusterList);
-
     ClusterList comparisonList;
     const ClusterToClustersMap &nearbyClusters((TPC_VIEW_U == hitType) ? m_nearbyClustersU : (TPC_VIEW_V == hitType) ? m_nearbyClustersV : m_nearbyClustersW);
 
+    if (!nearbyClusters.count(pCluster))
+        return std::numeric_limits<float>::max();
+
+    ClusterList pfoClusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, pfoClusterList);
+
     for (const Cluster *const pPfoCluster : pfoClusterList)
     {
-        if (nearbyClusters.count(pCluster))
-        {
-            const ClusterList &clusterList(nearbyClusters.at(pCluster));
+        const ClusterList &clusterList(nearbyClusters.at(pCluster));
 
-            if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pPfoCluster))
-                comparisonList.push_back(pPfoCluster);
+        if ((clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pPfoCluster)) &&
+            (comparisonList.end() == std::find(comparisonList.begin(), comparisonList.end(), pPfoCluster)))
+        {
+            comparisonList.push_back(pPfoCluster);
         }
     }
 

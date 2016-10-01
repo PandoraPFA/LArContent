@@ -112,7 +112,10 @@ void ConnectedRemnantsTool::FillMergeMap(const Cluster *const pFirstCluster, con
         if (pFirstCluster == pSecondCluster)
             continue;
 
-        clusterMergeMap[pFirstCluster].push_back(pSecondCluster);
+        ClusterList &clusterList(clusterMergeMap[pFirstCluster]);
+
+        if (clusterList.end() == std::find(clusterList.begin(), clusterList.end(), pSecondCluster))
+            clusterList.push_back(pSecondCluster);
     }
 }
 
