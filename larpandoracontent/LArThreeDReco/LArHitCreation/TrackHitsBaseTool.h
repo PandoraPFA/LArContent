@@ -36,7 +36,7 @@ public:
         pandora::CaloHitVector &newThreeDHits);
 
 protected:
-    typedef std::unordered_map<pandora::HitType, TwoDSlidingFitResult, std::hash<unsigned int> > MatchedSlidingFitMap;
+    typedef std::map<pandora::HitType, TwoDSlidingFitResult> MatchedSlidingFitMap;
 
     /**
      *  @brief  Calculate sliding fit results for clusters from each view

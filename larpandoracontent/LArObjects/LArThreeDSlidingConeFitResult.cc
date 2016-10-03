@@ -79,9 +79,9 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const Cluster *const pClu
     const LayerFitContributionMap &contributionMap1(fitResult1.GetLayerFitContributionMap());
     const LayerFitContributionMap &contributionMap2(fitResult2.GetLayerFitContributionMap());
 
-    const unsigned int nSteps(static_cast<unsigned int>((maxLayerPosition3D - minLayerPosition3D).GetMagnitude() / slidingFitLayerPitch));
+    const int nSteps(static_cast<int>((maxLayerPosition3D - minLayerPosition3D).GetMagnitude() / slidingFitLayerPitch));
 
-    for (unsigned int iStep = 0; iStep < nSteps; ++iStep)
+    for (int iStep = 0; iStep < nSteps; ++iStep)
     {
         try
         {

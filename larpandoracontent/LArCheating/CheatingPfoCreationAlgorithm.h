@@ -83,8 +83,8 @@ private:
      */
     unsigned int GetNHitTypesAboveThreshold(const pandora::ClusterList &clusterList, const unsigned int nHitsThreshold) const;
 
-    typedef std::unordered_map<pandora::HitType, unsigned int, std::hash<unsigned int> > HitTypeMap;
-    typedef std::unordered_set<int> ParticleIdList;
+    typedef std::map<pandora::HitType, unsigned int> HitTypeMap;
+    typedef std::set<int> ParticleIdList;
 
     std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
     std::string     m_inputClusterListNameV;        ///< The name of the view V cluster list
