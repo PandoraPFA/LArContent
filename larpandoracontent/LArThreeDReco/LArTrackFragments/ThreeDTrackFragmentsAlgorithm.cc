@@ -411,7 +411,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inpu
 {
     CaloHitVector availableCaloHits;
 
-    for(ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
 

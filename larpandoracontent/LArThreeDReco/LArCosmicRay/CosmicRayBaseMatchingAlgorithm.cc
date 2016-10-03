@@ -125,7 +125,7 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
 
             const ClusterList &clusterList3 = iter23->second;
 
-            for(const Cluster *const pCluster3 : clusterList3)
+            for (const Cluster *const pCluster3 : clusterList3)
             {
                 ClusterAssociationMap::const_iterator iter31 = matchedClusters31.find(pCluster3);
                 if (matchedClusters31.end() == iter31)

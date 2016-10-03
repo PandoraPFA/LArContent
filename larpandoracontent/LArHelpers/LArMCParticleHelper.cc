@@ -358,20 +358,6 @@ const MCParticle *LArMCParticleHelper::GetMainMCPrimary(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::SortBySource(const MCParticle *const pLhs, const MCParticle *const pRhs)
-{
-    // Put neutrino-induced particles first
-    const int parentLhs(LArMCParticleHelper::GetParentNeutrinoId(pLhs));
-    const int parentRhs(LArMCParticleHelper::GetParentNeutrinoId(pRhs));
-
-    if (parentLhs != parentRhs)
-        return (parentLhs > parentRhs);
-
-    return LArMCParticleHelper::SortByMomentum(pLhs, pRhs);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool LArMCParticleHelper::SortByMomentum(const MCParticle *const pLhs, const MCParticle *const pRhs)
 {
     // Sort by momentum (prefer higher momentum)

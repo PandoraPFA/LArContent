@@ -194,14 +194,6 @@ public:
     static const pandora::MCParticle *GetMainMCPrimary(const pandora::ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap);
 
     /**
-     *  @brief  Sort mc particles by their source
-     *
-     *  @param  pLhs address of first mc particle
-     *  @param  pRhs address of second mc particle
-     */
-    static bool SortBySource(const pandora::MCParticle *const pLhs, const pandora::MCParticle *const pRhs);
-
-    /**
      *  @brief  Sort mc particles by their momentum
      *
      *  @param  pLhs address of first mc particle

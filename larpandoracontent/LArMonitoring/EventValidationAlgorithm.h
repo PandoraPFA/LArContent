@@ -12,6 +12,10 @@
 
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
+#ifdef MONITORING
+#include "PandoraMonitoringApi.h"
+#endif
+
 #include <map>
 #include <set>
 #include <vector>

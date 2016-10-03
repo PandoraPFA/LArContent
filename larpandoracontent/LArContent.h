@@ -24,10 +24,7 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArMonitoring/EventDisplayAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
-#include "larpandoracontent/LArMonitoring/ParticleAnalysisAlgorithm.h"
-#include "larpandoracontent/LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
@@ -144,10 +141,7 @@ class LArContent
 {
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
-        d("LArEventDisplay",                        lar_content::EventDisplayAlgorithm::Factory)                                \
         d("LArEventValidation",                     lar_content::EventValidationAlgorithm::Factory)                             \
-        d("LArParticleAnalysis",                    lar_content::ParticleAnalysisAlgorithm::Factory)                            \
-        d("LArParticleMonitoring",                  lar_content::ParticleMonitoringAlgorithm::Factory)                          \
         d("LArVisualMonitoring",                    lar_content::VisualMonitoringAlgorithm::Factory)                            \
         d("LArEventReading",                        lar_content::EventReadingAlgorithm::Factory)                                \
         d("LArEventWriting",                        lar_content::EventWritingAlgorithm::Factory)                                \

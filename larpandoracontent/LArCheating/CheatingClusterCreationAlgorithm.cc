@@ -108,11 +108,13 @@ bool CheatingClusterCreationAlgorithm::SelectMCParticlesForClustering(const MCPa
 
 void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListMap &mcParticleToHitListMap) const
 {
-    for (MCParticleToHitListMap::const_iterator iter = mcParticleToHitListMap.begin(), iterEnd = mcParticleToHitListMap.end(); 
-         iter != iterEnd; ++iter)
+    MCParticleVector mcParticleVector;
+    for (const auto &mapEntry : mcParticleToHitListMap) mcParticleVector.push_back(mapEntry.first);
+    std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
+
+    for (const MCParticle *const pMCParticle : mcParticleVector)
     {
-        const MCParticle *const pMCParticle = iter->first;
-        const CaloHitList &caloHitList = iter->second;
+        const CaloHitList &caloHitList(mcParticleToHitListMap.at(pMCParticle));
 
         if (caloHitList.empty())
             continue;
