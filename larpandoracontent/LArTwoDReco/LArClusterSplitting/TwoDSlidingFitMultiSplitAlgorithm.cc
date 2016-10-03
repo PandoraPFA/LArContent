@@ -101,11 +101,13 @@ void TwoDSlidingFitMultiSplitAlgorithm::BuildSlidingFitResultMap(const ClusterVe
 StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(const TwoDSlidingFitResultMap &slidingFitResultMap,
     const ClusterPositionMap &clusterSplittingMap) const
 {
-    for (ClusterPositionMap::const_iterator cIter = clusterSplittingMap.begin(), cIterEnd = clusterSplittingMap.end();
-        cIter != cIterEnd; ++cIter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterSplittingMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster *const pCluster = cIter->first;
-        const CartesianPointVector &splitPositionVector = cIter->second;
+        const CartesianPointVector &splitPositionVector(clusterSplittingMap.at(pCluster));
 
         if (splitPositionVector.empty())
             continue;

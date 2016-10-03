@@ -38,7 +38,6 @@
 #include "larpandoracontent/LArStitching/StitchingObjectCreationTool.h"
 #include "larpandoracontent/LArStitching/StitchingPfoMergingTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
@@ -157,7 +156,6 @@ public:
         d("LArShowerParticleBuilding",              lar_content::ShowerParticleBuildingAlgorithm::Factory)                      \
         d("LArTrackParticleBuilding",               lar_content::TrackParticleBuildingAlgorithm::Factory)                       \
         d("LArStitching",                           lar_content::StitchingAlgorithm::Factory)                                   \
-        d("LArCosmicRayIdentification",             lar_content::CosmicRayIdentificationAlgorithm::Factory)                     \
         d("LArCosmicRayShowerMatching",             lar_content::CosmicRayShowerMatchingAlgorithm::Factory)                     \
         d("LArCosmicRayTrackMatching",              lar_content::CosmicRayTrackMatchingAlgorithm::Factory)                      \
         d("LArCosmicRayTrackRecovery",              lar_content::CosmicRayTrackRecoveryAlgorithm::Factory)                      \

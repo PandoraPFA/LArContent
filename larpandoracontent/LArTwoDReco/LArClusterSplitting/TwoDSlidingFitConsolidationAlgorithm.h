@@ -33,7 +33,6 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitMap;
-    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
      *  @brief Get the list of hits to be added or removed from clusters

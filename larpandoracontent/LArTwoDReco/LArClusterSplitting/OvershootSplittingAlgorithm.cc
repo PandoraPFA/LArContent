@@ -161,11 +161,13 @@ void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResul
 void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFitResultMap &slidingFitResultMap,
     const ClusterPositionMap &clusterIntersectionMap, ClusterPositionMap &sortedIntersectionMap) const
 {
-    for (ClusterPositionMap::const_iterator cIter = clusterIntersectionMap.begin(), cIterEnd = clusterIntersectionMap.end();
-        cIter != cIterEnd; ++cIter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterIntersectionMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster *const pCluster = cIter->first;
-        const CartesianPointVector &inputPositionVector = cIter->second;
+        const CartesianPointVector &inputPositionVector(clusterIntersectionMap.at(pCluster));
 
         if (inputPositionVector.empty())
             continue;
@@ -205,11 +207,13 @@ void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFi
 void OvershootSplittingAlgorithm::PopulateSplitPositionMap(const ClusterPositionMap &clusterIntersectionMap,
     ClusterPositionMap &clusterSplittingMap) const
 {
-    for (ClusterPositionMap::const_iterator cIter = clusterIntersectionMap.begin(), cIterEnd = clusterIntersectionMap.end();
-        cIter != cIterEnd; ++cIter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterIntersectionMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster *const pCluster = cIter->first;
-        const CartesianPointVector &inputPositionVector = cIter->second;
+        const CartesianPointVector &inputPositionVector(clusterIntersectionMap.at(pCluster));
 
         if (inputPositionVector.empty())
             continue;

@@ -100,10 +100,13 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 
 StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterSet &unavailableClusters) const
 {
-    for (const ClusterToHitMap::value_type &mapEntry : clustersToContract)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clustersToContract) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster *const pCluster = mapEntry.first;
-        const CaloHitList &caloHitListToRemove = mapEntry.second;
+        const CaloHitList &caloHitListToRemove(clustersToContract.at(pCluster));
 
         if (caloHitListToRemove.empty())
             continue;
@@ -141,10 +144,13 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 
 StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterSet &unavailableClusters) const
 {
-    for (const ClusterToHitMap::value_type &mapEntry : clustersToExpand)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clustersToExpand) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster *const pCluster = mapEntry.first;
-        const CaloHitList &caloHitList = mapEntry.second;
+        const CaloHitList &caloHitList(clustersToExpand.at(pCluster));
 
         if (caloHitList.empty())
             continue;

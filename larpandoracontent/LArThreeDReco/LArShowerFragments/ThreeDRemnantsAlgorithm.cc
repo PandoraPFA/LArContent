@@ -95,7 +95,9 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClust
     if (pseudoChi2 > m_pseudoChi2Cut)
         return;
 
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, true);
+    // ATTN Essentially a boolean result; actual value matters only so as to ensure that overlap results can be sorted
+    const float hackValue(pseudoChi2 + pClusterU->GetElectromagneticEnergy() + pClusterV->GetElectromagneticEnergy() + pClusterW->GetElectromagneticEnergy());
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

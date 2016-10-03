@@ -46,7 +46,7 @@ private:
      *  @param inputPfoListName the input Pfo list name
      *  @param outputPfoVector the output vector of Pfos
      */
-    void GetPfos(const std::string inputPfoListName, pandora::PfoVector &outputPfoVector) const;
+    void GetPfos(const std::string &inputPfoListName, pandora::PfoVector &outputPfoVector) const;
 
     /**
      *  @brief Build parent/daughter associations between PFOs

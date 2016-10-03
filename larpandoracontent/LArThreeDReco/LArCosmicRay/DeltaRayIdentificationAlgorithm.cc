@@ -59,7 +59,7 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayIdentificationAlgorithm::GetPfos(const std::string inputPfoListName, PfoVector &outputPfoVector) const
+void DeltaRayIdentificationAlgorithm::GetPfos(const std::string &inputPfoListName, PfoVector &outputPfoVector) const
 {
     const PfoList *pPfoList = NULL;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
@@ -276,14 +276,16 @@ float DeltaRayIdentificationAlgorithm::GetClosestDistance(const CartesianPointVe
 
 void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociationMap &pfoAssociationMap, PfoList &daughterPfoList) const
 {
-    for (PfoAssociationMap::const_iterator iter = pfoAssociationMap.begin(), iterEnd = pfoAssociationMap.end(); iter != iterEnd; ++iter)
-    {
-        const ParticleFlowObject *const pPfo = iter->first;
+    PfoList pfoList;
+    for (const auto &mapEntry : pfoAssociationMap) pfoList.push_back(mapEntry.first);
+    pfoList.sort(LArPfoHelper::SortByNHits);
 
+    for (const ParticleFlowObject *const pPfo : pfoList)
+    {
         const ParticleFlowObject *const pDaughterPfo = pPfo;
         const ParticleFlowObject *const pParentPfo(this->GetParent(pfoAssociationMap, pDaughterPfo));
 
-        if (NULL == pParentPfo)
+        if (!pParentPfo)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         if (!LArPfoHelper::IsTrack(pParentPfo))
@@ -304,7 +306,7 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
 const ParticleFlowObject *DeltaRayIdentificationAlgorithm::GetParent(const PfoAssociationMap &pfoAssociationMap,
     const ParticleFlowObject *const pPfo) const
 {
-    const ParticleFlowObject *pParentPfo = NULL;
+    const ParticleFlowObject *pParentPfo = nullptr;
     const ParticleFlowObject *pDaughterPfo = pPfo;
 
     while(1)

@@ -366,10 +366,13 @@ void EventSlicingTool::CreateSlices(const ClusterSliceList &clusterSliceList, Sl
 void EventSlicingTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap,
     SliceList &sliceList, ClusterSet &assignedClusters) const
 {
-    for (const ClusterToSliceIndexMap::value_type &mapValue : clusterToSliceIndexMap)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterToSliceIndexMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster3D : clusterList)
     {
-        const Cluster *const pCluster3D(mapValue.first);
-        const unsigned int index(mapValue.second);
+        const unsigned int index(clusterToSliceIndexMap.at(pCluster3D));
 
         const Pfo *const pPfo(clusterToPfoMap.at(pCluster3D));
         NeutrinoParentAlgorithm::Slice &slice(sliceList.at(index));
@@ -539,10 +542,13 @@ void EventSlicingTool::GetKDTreeEntries2D(const SliceList &sliceList, PointVecto
 void EventSlicingTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointVector &pointsU, PointVector &pointsV,
     PointVector &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
 {
-    for (const ClusterToSliceIndexMap::value_type &mapValue : clusterToSliceIndexMap)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterToSliceIndexMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster3D : clusterList)
     {
-        const Cluster *const pCluster3D(mapValue.first);
-        const unsigned int sliceIndex(mapValue.second);
+        const unsigned int sliceIndex(clusterToSliceIndexMap.at(pCluster3D));
 
         CaloHitList caloHitList;
         pCluster3D->GetOrderedCaloHitList().GetCaloHitList(caloHitList);

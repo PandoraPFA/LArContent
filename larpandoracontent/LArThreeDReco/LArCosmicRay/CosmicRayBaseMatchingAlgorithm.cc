@@ -104,22 +104,26 @@ void CosmicRayBaseMatchingAlgorithm::MatchClusters(const ClusterVector &clusterV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap &matchedClusters12,
-    const ClusterAssociationMap &matchedClusters23,  const ClusterAssociationMap &matchedClusters31, ParticleList &matchedParticles) const
+void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap &matchedClusters12, const ClusterAssociationMap &matchedClusters23,
+    const ClusterAssociationMap &matchedClusters31, ParticleList &matchedParticles) const
 {
     if (matchedClusters12.empty() || matchedClusters23.empty() || matchedClusters31.empty())
         return;
 
     ParticleList candidateParticles;
 
-    for (const ClusterAssociationMap::value_type &mapEntry12 : matchedClusters12)
+    ClusterList clusterList1;
+    for (const auto &mapEntry : matchedClusters12) clusterList1.push_back(mapEntry.first);
+    clusterList1.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster1 : clusterList1)
     {
-        const Cluster *const pCluster1 = mapEntry12.first;
-        const ClusterList &clusterList2 = mapEntry12.second;
+        const ClusterList &clusterList2(matchedClusters12.at(pCluster1));
 
         for (const Cluster *const pCluster2 : clusterList2)
         {
             ClusterAssociationMap::const_iterator iter23 = matchedClusters23.find(pCluster2);
+
             if (matchedClusters23.end() == iter23)
                 continue;
 
@@ -128,13 +132,11 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
             for (const Cluster *const pCluster3 : clusterList3)
             {
                 ClusterAssociationMap::const_iterator iter31 = matchedClusters31.find(pCluster3);
+
                 if (matchedClusters31.end() == iter31)
                     continue;
 
-                const ClusterList &clusterList1 = iter31->second;
-                const Cluster *const pCluster1check = pCluster1;
-
-                if (clusterList1.end() == std::find(clusterList1.begin(), clusterList1.end(), pCluster1check))
+                if (iter31->second.end() == std::find(iter31->second.begin(), iter31->second.end(), pCluster1))
                     continue;
 
                 const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
@@ -144,12 +146,9 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
                 if (!this->CheckMatchedClusters3D(pCluster1, pCluster2, pCluster3))
                     continue;
 
-                const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 :
-                                         (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
-                const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 :
-                                         (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
-                const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 :
-                                         (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
+                const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
+                const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
+                const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
 
                 candidateParticles.push_back(Particle(pClusterU, pClusterV, pClusterW));
             }
@@ -179,10 +178,13 @@ void CosmicRayBaseMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap &
     if (matchedClusters12.empty())
         return;
 
-    for (const ClusterAssociationMap::value_type &mapEntry12 : matchedClusters12)
+    ClusterList clusterList1;
+    for (const auto &mapEntry : matchedClusters12) clusterList1.push_back(mapEntry.first);
+    clusterList1.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster1 : clusterList1)
     {
-        const Cluster *const pCluster1 = mapEntry12.first;
-        const ClusterList &clusterList2 = mapEntry12.second;
+        const ClusterList &clusterList2(matchedClusters12.at(pCluster1));
 
         for (const Cluster *const pCluster2 : clusterList2)
         {
