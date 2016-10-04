@@ -39,7 +39,11 @@ void IsolatedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters,
     CaloHitToClusterMap caloHitToClusterMap;
     this->GetCaloHitToClusterMap(caloHitList, pfoClusters, caloHitToClusterMap);
 
-    for (const CaloHit *pCaloHit : caloHitList)
+    CaloHitList sortedCaloHitList;
+    for (const auto &mapEntry : caloHitToClusterMap) sortedCaloHitList.push_back(mapEntry.first);
+    sortedCaloHitList.sort(LArClusterHelper::SortHitsByPosition);
+
+    for (const CaloHit *pCaloHit : sortedCaloHitList)
     {
         if (m_addHitsAsIsolated)
         {
