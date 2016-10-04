@@ -56,10 +56,13 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 {
     bool changesMade(false);
 
-    for (SplitPositionMap::const_iterator iter = splitPositionMap.begin(), iterEnd = splitPositionMap.end(); iter != iterEnd; ++iter)
+    ClusterList splitClusters;
+    for (const auto &mapEntry : splitPositionMap) splitClusters.push_back(mapEntry.first);
+    splitClusters.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *pCurrentCluster : splitClusters)
     {
-        const Cluster *pCurrentCluster = iter->first;
-        CartesianPointVector splitPositions(iter->second);
+        CartesianPointVector splitPositions(splitPositionMap.at(pCurrentCluster));
         std::sort(splitPositions.begin(), splitPositions.end(), ThreeDTracksBaseAlgorithm::SortSplitPositions);
 
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCurrentCluster));

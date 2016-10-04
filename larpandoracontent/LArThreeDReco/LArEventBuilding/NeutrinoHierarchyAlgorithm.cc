@@ -28,9 +28,13 @@ NeutrinoHierarchyAlgorithm::NeutrinoHierarchyAlgorithm() :
 
 void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoVector &assignedPfos, PfoVector &unassignedPfos) const
 {
-    for (const PfoInfoMap::value_type mapIter : pfoInfoMap)
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : pfoInfoMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const Pfo *const pPfo : sortedPfos)
     {
-        const PfoInfo *const pPfoInfo(mapIter.second);
+        const PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
         if (pPfoInfo->IsNeutrinoVertexAssociated() || pPfoInfo->GetParentPfo())
         {
@@ -41,9 +45,6 @@ void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoV
             unassignedPfos.push_back(pPfoInfo->GetThisPfo());
         }
     }
-
-    std::sort(assignedPfos.begin(), assignedPfos.end(), LArPfoHelper::SortByNHits);
-    std::sort(unassignedPfos.begin(), unassignedPfos.end(), LArPfoHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

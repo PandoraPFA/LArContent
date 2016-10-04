@@ -69,20 +69,20 @@ void OvershootSplittingAlgorithm::FindBestSplitPositions(const TwoDSlidingFitRes
 void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResultMap &slidingFitResultMap,
     ClusterPositionMap &clusterIntersectionMap) const
 {
-    for (TwoDSlidingFitResultMap::const_iterator sIter1 = slidingFitResultMap.begin(), sIterEnd1 = slidingFitResultMap.end();
-        sIter1 != sIterEnd1; ++sIter1)
+    ClusterList clusterList;
+    for (const auto &mapEntry : slidingFitResultMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster1 : clusterList)
     {
-        const Cluster *const pCluster1 = sIter1->first;
-        const TwoDSlidingFitResult &slidingFitResult1 = sIter1->second;
+        const TwoDSlidingFitResult &slidingFitResult1(slidingFitResultMap.at(pCluster1));
 
-        for (TwoDSlidingFitResultMap::const_iterator sIter2 = slidingFitResultMap.begin(), sIterEnd2 = slidingFitResultMap.end();
-            sIter2 != sIterEnd2; ++sIter2)
+        for (const Cluster *const pCluster2 : clusterList)
         {
-            const Cluster *const pCluster2 = sIter2->first;
-            const TwoDSlidingFitResult &slidingFitResult2 = sIter2->second;
-
             if (pCluster1 == pCluster2)
                 continue;
+
+            const TwoDSlidingFitResult &slidingFitResult2(slidingFitResultMap.at(pCluster2));
 
             try
             {

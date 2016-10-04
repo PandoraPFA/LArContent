@@ -414,6 +414,8 @@ void ClearTrackFragmentsTool::GetAffectedKeyClusters(const TensorType &overlapTe
             }
         }
     }
+
+    affectedKeyClusters.sort(LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

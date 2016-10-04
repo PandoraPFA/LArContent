@@ -224,10 +224,10 @@ void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
         }
     }
 
+    additionalRemovals.sort(LArClusterHelper::SortByNHits);
+
     for (ClusterList::const_iterator iter = additionalRemovals.begin(), iterEnd = additionalRemovals.end(); iter != iterEnd; ++iter)
-    {
         this->RemoveCluster(*iter);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

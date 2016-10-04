@@ -189,26 +189,36 @@ bool ThreeDKinkBaseTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *const pAl
     ClusterMergeMap consolidatedMergeMap;
     SplitPositionMap consolidatedSplitMap;
 
-    for (ModificationList::const_iterator iter = modificationList.begin(), iterEnd = modificationList.end(); iter != iterEnd; ++iter)
+    for (const Modification &modification : modificationList)
     {
-        for (ClusterMergeMap::const_iterator cIter = iter->m_clusterMergeMap.begin(), cIterEnd = iter->m_clusterMergeMap.end(); cIter != cIterEnd; ++cIter)
-        {
-            const ClusterList &daughterClusters(cIter->second);
+        ClusterList parentClusters;
+        for (const auto &mapEntry : modification.m_clusterMergeMap) parentClusters.push_back(mapEntry.first);
+        parentClusters.sort(LArClusterHelper::SortByNHits);
 
-            for (ClusterList::const_iterator dIter = daughterClusters.begin(), dIterEnd = daughterClusters.end(); dIter != dIterEnd; ++dIter)
+        for (const Cluster *const pParentCluster : parentClusters)
+        {
+            const ClusterList &daughterClusters(modification.m_clusterMergeMap.at(pParentCluster));
+
+            for (const Cluster *const pDaughterCluster : daughterClusters)
             {
-                if (consolidatedMergeMap.count(*dIter))
+                if (consolidatedMergeMap.count(pDaughterCluster))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
             }
 
-            ClusterList &targetClusterList(consolidatedMergeMap[cIter->first]);
+            ClusterList &targetClusterList(consolidatedMergeMap[pParentCluster]);
             targetClusterList.insert(targetClusterList.end(), daughterClusters.begin(), daughterClusters.end());
         }
 
-        for (SplitPositionMap::const_iterator cIter = iter->m_splitPositionMap.begin(), cIterEnd = iter->m_splitPositionMap.end(); cIter != cIterEnd; ++cIter)
+        ClusterList splitClusters;
+        for (const auto &mapEntry : modification.m_splitPositionMap) splitClusters.push_back(mapEntry.first);
+        splitClusters.sort(LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pSplitCluster : splitClusters)
         {
-            CartesianPointVector &cartesianPointVector(consolidatedSplitMap[cIter->first]);
-            cartesianPointVector.insert(cartesianPointVector.end(), cIter->second.begin(), cIter->second.end());
+            const CartesianPointVector &splitPositions(modification.m_splitPositionMap.at(pSplitCluster));
+
+            CartesianPointVector &cartesianPointVector(consolidatedSplitMap[pSplitCluster]);
+            cartesianPointVector.insert(cartesianPointVector.end(), splitPositions.begin(), splitPositions.end());
         }
     }
 

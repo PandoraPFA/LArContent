@@ -66,11 +66,9 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
     {
         ClusterList mergeList;
         this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, mergeList);
+        mergeList.sort(LArClusterHelper::SortByNHits);
 
-        ClusterVector mergeVector(mergeList.begin(), mergeList.end());
-        std::sort(mergeVector.begin(), mergeVector.end(), LArClusterHelper::SortByNHits);
-
-        for (const Cluster *const pAssociatedCluster : mergeVector)
+        for (const Cluster *const pAssociatedCluster : mergeList)
         {
             if (clusterVetoList.count(pAssociatedCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);

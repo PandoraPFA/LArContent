@@ -287,10 +287,12 @@ void ShowerGrowingAlgorithm::CheckSeedAssociationList(SeedAssociationList::const
 
     if (betterConfigurationFound)
     {
-        for (SeedAssociationList::const_iterator iter = bestSeedAssociationList.begin(), iterEnd = bestSeedAssociationList.end(); iter != iterEnd; ++iter)
-        {
-            this->CheckSeedAssociationList(iter, finalSeedAssociationList);
-        }
+        ClusterList clusterList;
+        for (const auto &mapEntry : bestSeedAssociationList) clusterList.push_back(mapEntry.first);
+        clusterList.sort(LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pCluster : clusterList)
+            this->CheckSeedAssociationList(bestSeedAssociationList.find(pCluster), finalSeedAssociationList);
     }
     else
     {
@@ -441,29 +443,29 @@ float ShowerGrowingAlgorithm::GetMCFigureOfMerit(const SeedAssociationList &seed
 {
     unsigned int nMatchedClusters(0), nClusters(0);
 
-    for (SeedAssociationList::const_iterator iter1 = seedAssociationList.begin(), iter1End = seedAssociationList.end(); iter1 != iter1End; ++iter1)
+    ClusterList clusterList;
+    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : clusterList)
     {
-        const Cluster *const pParentCluster(iter1->first);
         ++nClusters;
 
         const MCParticle *pParentMCParticle(NULL);
         try {pParentMCParticle = MCParticleHelper::GetMainMCParticle(pParentCluster);} catch (StatusCodeException &) {}
 
         ++nMatchedClusters;
-        const ClusterVector &associatedClusters(iter1->second);
+        const ClusterVector &associatedClusters(seedAssociationList.at(pParentCluster));
 
-        for (ClusterVector::const_iterator iter2 = associatedClusters.begin(), iter2End = associatedClusters.end(); iter2 != iter2End; ++iter2)
+        for (const Cluster *const pBranchCluster : associatedClusters)
         {
-            const Cluster *const pBranchCluster = *iter2;
             ++nClusters;
 
             const MCParticle *pDaughterMCParticle(NULL);
             try {pDaughterMCParticle = MCParticleHelper::GetMainMCParticle(pBranchCluster);} catch (StatusCodeException &) {}
 
             if (pParentMCParticle == pDaughterMCParticle)
-            {
                 ++nMatchedClusters;
-            }
         }
     }
 
@@ -480,10 +482,13 @@ float ShowerGrowingAlgorithm::GetRecoFigureOfMerit(const Vertex *const pVertex, 
 {
     unsigned int nVertexAssociatedSeeds(0), nVertexAssociatedNonSeeds(0);
 
-    for (SeedAssociationList::const_iterator iter = seedAssociationList.begin(), iterEnd = seedAssociationList.end(); iter != iterEnd; ++iter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pSeedCluster : clusterList)
     {
-        const Cluster *const pSeedCluster(iter->first);
-        const ClusterVector &associatedClusters(iter->second);
+        const ClusterVector &associatedClusters(seedAssociationList.at(pSeedCluster));
 
         const HitType hitType(LArClusterHelper::GetClusterHitType(pSeedCluster));
         const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
@@ -492,9 +497,9 @@ float ShowerGrowingAlgorithm::GetRecoFigureOfMerit(const Vertex *const pVertex, 
         try {pointingClusterSeedList.push_back(LArPointingCluster(pSeedCluster));} catch (StatusCodeException &) {}
 
         LArPointingClusterList pointingClusterNonSeedList;
-        for (ClusterVector::const_iterator cIter = associatedClusters.begin(), cIterEnd = associatedClusters.end(); cIter != cIterEnd; ++cIter)
+        for (const Cluster *const pAssociatedCluster : associatedClusters)
         {
-            try {pointingClusterNonSeedList.push_back(LArPointingCluster(*cIter));} catch (StatusCodeException &) {}
+            try {pointingClusterNonSeedList.push_back(LArPointingCluster(pAssociatedCluster));} catch (StatusCodeException &) {}
         }
 
         nVertexAssociatedSeeds += this->GetNVertexConnections(vertex2D, pointingClusterSeedList);
@@ -569,10 +574,13 @@ void ShowerGrowingAlgorithm::GetInputPfoList(PfoList &pfoList) const
 void ShowerGrowingAlgorithm::ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
     PfoList &pfoList, ClusterSet &usedClusters, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const
 {
-    for (SeedAssociationList::const_iterator iter = seedAssociationList.begin(), iterEnd = seedAssociationList.end(); iter != iterEnd; ++iter)
+    ClusterList clusterList;
+    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : clusterList)
     {
-        const Cluster *const pParentCluster(iter->first);
-        const ClusterVector &branchClusters(iter->second);
+        const ClusterVector &branchClusters(seedAssociationList.at(pParentCluster));
 
         this->StoreNCaloHitsPerCluster(pParentCluster, nCaloHitsPerCluster);
         this->StoreNBranchesPerCluster(pParentCluster, branchClusters, nBranchesPerCluster);

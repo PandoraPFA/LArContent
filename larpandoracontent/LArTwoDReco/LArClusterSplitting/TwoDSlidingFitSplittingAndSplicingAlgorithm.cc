@@ -224,12 +224,16 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
 void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(const ClusterExtensionList &inputList,
     const TwoDSlidingFitResultMap &branchMap, const TwoDSlidingFitResultMap &replacementMap, ClusterExtensionList &outputList) const
 {
-    for (ClusterExtensionList::const_iterator eIter = inputList.begin(), eIterEnd = inputList.end(); eIter != eIterEnd; ++eIter)
-    {
-        const ClusterExtension &thisSplit = *eIter;
+    ClusterList branchList;
+    for (const auto &mapEntry : branchMap) branchList.push_back(mapEntry.first);
+    branchList.sort(LArClusterHelper::SortByNHits);
 
-        const Cluster *const pBranchCluster = thisSplit.GetBranchCluster();
-        const Cluster *const pReplacementCluster = thisSplit.GetReplacementCluster();
+    ClusterList replacementList;
+    for (const auto &mapEntry : replacementMap) replacementList.push_back(mapEntry.first);
+    replacementList.sort(LArClusterHelper::SortByNHits);
+
+    for (const ClusterExtension &thisSplit : inputList)
+    {
         const CartesianVector &branchVertex = thisSplit.GetBranchVertex();
         const CartesianVector &replacementVertex = thisSplit.GetReplacementVertex();
 
@@ -239,11 +243,11 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
         bool branchVeto(false), replacementVeto(false);
 
         // Veto the merge if another cluster is closer to the replacement vertex
-        for (TwoDSlidingFitResultMap::const_iterator iter = branchMap.begin(), iterEnd = branchMap.end(); iter != iterEnd; ++iter)
+        for (const Cluster *const pBranchCluster : branchList)
         {
-            const TwoDSlidingFitResult &slidingFit(iter->second);
+            const TwoDSlidingFitResult &slidingFit(branchMap.at(pBranchCluster));
 
-            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+            if (slidingFit.GetCluster() == thisSplit.GetReplacementCluster() || slidingFit.GetCluster() == thisSplit.GetBranchCluster())
                 continue;
 
             const float minDistanceSquared((replacementVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
@@ -257,11 +261,11 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
         }
 
         // Veto the merge if another cluster is closer to the branch vertex
-        for (TwoDSlidingFitResultMap::const_iterator iter = replacementMap.begin(), iterEnd = replacementMap.end(); iter != iterEnd; ++iter)
+        for (const Cluster *const pReplacementCluster : replacementList)
         {
-            const TwoDSlidingFitResult &slidingFit(iter->second);
+            const TwoDSlidingFitResult &slidingFit(replacementMap.at(pReplacementCluster));
 
-            if (slidingFit.GetCluster() == pReplacementCluster || slidingFit.GetCluster() == pBranchCluster)
+            if (slidingFit.GetCluster() == thisSplit.GetReplacementCluster() || slidingFit.GetCluster() == thisSplit.GetBranchCluster())
                 continue;
 
             const float minDistanceSquared((branchVertex - slidingFit.GetGlobalMinLayerPosition()).GetMagnitudeSquared());

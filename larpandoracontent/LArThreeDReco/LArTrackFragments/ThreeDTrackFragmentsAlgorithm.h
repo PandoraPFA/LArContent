@@ -73,7 +73,6 @@ protected:
         const pandora::ClusterList &inputClusterList, const pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
 
     typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
-    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
      *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results

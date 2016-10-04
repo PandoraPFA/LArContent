@@ -84,7 +84,7 @@ StatusCode CosmicRayTrackRecoveryAlgorithm::GetAvailableClusters(const std::stri
     if (!pClusterList || pClusterList->empty())
     { 
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "CosmicRayBaseMatchingAlgorithm: unable to find cluster list " << inputClusterListName << std::endl;
+            std::cout << "CosmicRayTrackRecoveryAlgorithm: unable to find cluster list " << inputClusterListName << std::endl;
 
         return STATUS_CODE_SUCCESS;
     }

@@ -83,7 +83,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingFitResult> SlidingFitResultMap;
     typedef std::unordered_map<const pandora::Cluster*, SegmentOverlap> SegmentOverlapMap;
     typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
 
@@ -135,7 +134,7 @@ private:
      *  @param  slidingFitResultMap to receive the sliding fit result map
      */
     void GetSlidingFitResultMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const pandora::ClusterList &candidateClusterList,
-        SlidingFitResultMap &slidingFitResultMap) const;
+        TwoDSlidingFitResultMap &slidingFitResultMap) const;
 
     /**
      *  @brief  Get a segment overlap map, describing overlap between a provided particle and all clusters in a sliding fit result map
@@ -146,7 +145,7 @@ private:
      *  @param  segmentOverlapMap to receive the segment overlap map
      */
     void GetSegmentOverlapMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
-        const SlidingFitResultMap &slidingFitResultMap, SegmentOverlapMap &segmentOverlapMap) const;
+        const TwoDSlidingFitResultMap &slidingFitResultMap, SegmentOverlapMap &segmentOverlapMap) const;
 
     /**
      *  @brief  Make decisions about whether to create a pfo for a provided particle and whether to make cluster merges
@@ -159,7 +158,7 @@ private:
      * 
      *  @return whether to make the particle
      */
-    bool MakeDecisions(const Particle &particle, const SlidingFitResultMap &slidingFitResultMap, const SegmentOverlapMap &segmentOverlapMap,
+    bool MakeDecisions(const Particle &particle, const TwoDSlidingFitResultMap &slidingFitResultMap, const SegmentOverlapMap &segmentOverlapMap,
         pandora::ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const;
 
     /**
@@ -182,7 +181,7 @@ private:
      *  @return boolean
      */
     bool IsPossibleMerge(const pandora::Cluster *const pCluster, const Particle &particle, const SegmentOverlap &segmentOverlap,
-        const SlidingFitResultMap &slidingFitResultMap) const;
+        const TwoDSlidingFitResultMap &slidingFitResultMap) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation

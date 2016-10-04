@@ -362,17 +362,21 @@ bool SplitShowersTool::ApplyChanges(ThreeDShowersAlgorithm *const pAlgorithm, co
 {
     ClusterMergeMap consolidatedMergeMap;
 
-    for (ClusterMergeMap::const_iterator cIter = clusterMergeMap.begin(), cIterEnd = clusterMergeMap.end(); cIter != cIterEnd; ++cIter)
-    {
-        const ClusterList &daughterClusters(cIter->second);
+    ClusterList clusterList;
+    for (const auto &mapEntry : clusterMergeMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
 
-        for (ClusterList::const_iterator dIter = daughterClusters.begin(), dIterEnd = daughterClusters.end(); dIter != dIterEnd; ++dIter)
+    for (const Cluster *const pParentCluster : clusterList)
+    {
+        const ClusterList &daughterClusters(clusterMergeMap.at(pParentCluster));
+
+        for (const Cluster *const pDaughterCluster : daughterClusters)
         {
-            if (consolidatedMergeMap.count(*dIter))
+            if (consolidatedMergeMap.count(pDaughterCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
-        ClusterList &targetClusterList(consolidatedMergeMap[cIter->first]);
+        ClusterList &targetClusterList(consolidatedMergeMap[pParentCluster]);
         targetClusterList.insert(targetClusterList.end(), daughterClusters.begin(), daughterClusters.end());
     }
 

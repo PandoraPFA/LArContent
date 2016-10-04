@@ -280,9 +280,8 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
     for (const auto &mapEntry : pfoAssociationMap) pfoList.push_back(mapEntry.first);
     pfoList.sort(LArPfoHelper::SortByNHits);
 
-    for (const ParticleFlowObject *const pPfo : pfoList)
+    for (const ParticleFlowObject *const pDaughterPfo : pfoList)
     {
-        const ParticleFlowObject *const pDaughterPfo = pPfo;
         const ParticleFlowObject *const pParentPfo(this->GetParent(pfoAssociationMap, pDaughterPfo));
 
         if (!pParentPfo)

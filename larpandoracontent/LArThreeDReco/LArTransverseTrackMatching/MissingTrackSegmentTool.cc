@@ -146,7 +146,7 @@ bool MissingTrackSegmentTool::PassesParticleChecks(ThreeDTransverseTracksAlgorit
         if (candidateClusters.empty())
             return false;
 
-        SlidingFitResultMap slidingFitResultMap;
+        TwoDSlidingFitResultMap slidingFitResultMap;
         this->GetSlidingFitResultMap(pAlgorithm, candidateClusters, slidingFitResultMap);
 
         if (slidingFitResultMap.empty())
@@ -191,7 +191,7 @@ void MissingTrackSegmentTool::GetCandidateClusters(ThreeDTransverseTracksAlgorit
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const ClusterList &candidateClusterList,
-    SlidingFitResultMap &slidingFitResultMap) const
+    TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
   const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -202,7 +202,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
         try
         {
             const TwoDSlidingFitResult &slidingFitResult(pAlgorithm->GetCachedSlidingFitResult(pCluster));
-            (void) slidingFitResultMap.insert(SlidingFitResultMap::value_type(pCluster, slidingFitResult));
+            (void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)
@@ -212,7 +212,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
         try
         {
             const TwoDSlidingFitResult slidingFitResult(pCluster, pAlgorithm->GetSlidingFitWindow(), slidingFitPitch);
-            (void) slidingFitResultMap.insert(SlidingFitResultMap::value_type(pCluster, slidingFitResult));
+            (void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)
@@ -224,7 +224,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
-    const SlidingFitResultMap &slidingFitResultMap, SegmentOverlapMap &segmentOverlapMap) const
+    const TwoDSlidingFitResultMap &slidingFitResultMap, SegmentOverlapMap &segmentOverlapMap) const
 {
     const TwoDSlidingFitResult &fitResult1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster1));
     const TwoDSlidingFitResult &fitResult2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster2));
@@ -233,6 +233,10 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
     const float nPoints2(std::fabs(static_cast<float>(fitResult2.GetMaxLayer() - fitResult2.GetMinLayer())));
 
     const unsigned int nPoints(static_cast<unsigned int>(1.f + (nPoints1 + nPoints2) / 2.f));
+
+    ClusterList clusterList;
+    for (const auto &mapEntry : slidingFitResultMap) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (unsigned n = 0; n <= nPoints; ++n)
     {
@@ -251,12 +255,13 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
 
         const float prediction(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
 
-        for (SlidingFitResultMap::const_iterator iter = slidingFitResultMap.begin(), iterEnd = slidingFitResultMap.end(); iter != iterEnd; ++iter)
+        for (const Cluster *const pCluster : clusterList)
         {
+            const TwoDSlidingFitResult &slidingFitResult(slidingFitResultMap.at(pCluster));
             CartesianVector fitVector(0.f, 0.f, 0.f), fitDirection(0.f, 0.f, 0.f);
 
-            if ((STATUS_CODE_SUCCESS != iter->second.GetGlobalFitPositionAtX(x, fitVector)) ||
-                (STATUS_CODE_SUCCESS != iter->second.GetGlobalFitDirectionAtX(x, fitDirection)))
+            if ((STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitPositionAtX(x, fitVector)) ||
+                (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitDirectionAtX(x, fitDirection)))
             {
                 continue;
             }
@@ -264,7 +269,7 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
             const float delta((prediction - fitVector.GetZ()) * fitDirection.GetX());
             const float pseudoChi2(delta * delta);
 
-            SegmentOverlap &segmentOverlap(segmentOverlapMap[iter->first]);
+            SegmentOverlap &segmentOverlap(segmentOverlapMap[pCluster]);
             ++segmentOverlap.m_nSamplingPoints;
             segmentOverlap.m_pseudoChi2Sum += pseudoChi2;
 
@@ -280,7 +285,7 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const SlidingFitResultMap &slidingFitResultMap,
+bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const TwoDSlidingFitResultMap &slidingFitResultMap,
     const SegmentOverlapMap &segmentOverlapMap, ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterVector possibleMerges;
@@ -345,12 +350,12 @@ bool MissingTrackSegmentTool::PassesSamplingCuts(const SegmentOverlap &segmentOv
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool MissingTrackSegmentTool::IsPossibleMerge(const Cluster *const pCluster, const Particle &particle, const SegmentOverlap &segmentOverlap,
-    const SlidingFitResultMap &slidingFitResultMap) const
+    const TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     if ((segmentOverlap.m_pseudoChi2Sum / static_cast<float>(segmentOverlap.m_nSamplingPoints)) > m_mergeMaxChi2PerSamplingPoint)
         return false;
 
-    SlidingFitResultMap::const_iterator fitIter = slidingFitResultMap.find(pCluster);
+    TwoDSlidingFitResultMap::const_iterator fitIter = slidingFitResultMap.find(pCluster);
 
     if (slidingFitResultMap.end() == fitIter)
         throw StatusCodeException(STATUS_CODE_FAILURE);

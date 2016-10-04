@@ -39,15 +39,15 @@ void IsolatedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters,
     CaloHitToClusterMap caloHitToClusterMap;
     this->GetCaloHitToClusterMap(caloHitList, pfoClusters, caloHitToClusterMap);
 
-    for (const CaloHitToClusterMap::value_type &mapEntry : caloHitToClusterMap)
+    for (const CaloHit *pCaloHit : caloHitList)
     {
         if (m_addHitsAsIsolated)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, mapEntry.second, mapEntry.first));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, caloHitToClusterMap.at(pCaloHit), pCaloHit));
         }
         else
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, mapEntry.second, mapEntry.first));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, caloHitToClusterMap.at(pCaloHit), pCaloHit));
         }
     }
 }
@@ -81,7 +81,7 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(const CaloHitList &ca
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
-            (void) hitToParentClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+            (void) hitToParentClusterMap.insert(CaloHitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
     CaloHitVector sortedAllCaloHits(allCaloHits.begin(), allCaloHits.end());
