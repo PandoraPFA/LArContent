@@ -282,7 +282,7 @@ void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVect
 
     PandoraContentApi::ParticleFlowObject::Metadata metadata;
     metadata.m_momentum = vtxDirection;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
 
     const VertexList *pVertexList = NULL; std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));

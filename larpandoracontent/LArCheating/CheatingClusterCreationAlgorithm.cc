@@ -140,7 +140,7 @@ void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListM
         }
 
         if (metadata.m_particleId.IsInitialized())
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pCluster, metadata));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
     }
 }
 

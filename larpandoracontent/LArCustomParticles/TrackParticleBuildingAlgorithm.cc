@@ -77,7 +77,7 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         // Now update vertex and direction
         PandoraContentApi::ParticleFlowObject::Metadata pfodata;
         pfodata.m_momentum = pLArPfo->GetVertexDirection();
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pOutputPfo, pfodata));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pOutputPfo, pfodata));
 
         const Vertex *pOutputVertex(NULL);
 
@@ -87,7 +87,7 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         vtxParameters.m_vertexType = pInputVertex->GetVertexType();
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, vtxParameters, pOutputVertex));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pOutputPfo, pOutputVertex));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pOutputPfo, pOutputVertex));
     }
     catch (StatusCodeException &statusCodeException)
     {

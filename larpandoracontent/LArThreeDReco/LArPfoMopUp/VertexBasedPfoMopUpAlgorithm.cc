@@ -281,7 +281,7 @@ void VertexBasedPfoMopUpAlgorithm::MergePfos(const PfoAssociation &pfoAssociatio
 
         PandoraContentApi::ParticleFlowObject::Metadata metadata;
         metadata.m_particleId = E_MINUS;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pVertexPfo, metadata));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pVertexPfo, metadata));
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_trackPfoListName, m_showerPfoListName, vertexPfoList));
     }

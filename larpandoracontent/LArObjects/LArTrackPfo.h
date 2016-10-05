@@ -12,6 +12,7 @@
 #include "Objects/CartesianVector.h"
 #include "Objects/ParticleFlowObject.h"
 
+#include "Pandora/ObjectCreation.h"
 #include "Pandora/ObjectFactory.h"
 
 namespace pandora {class CaloHit;}
@@ -92,7 +93,7 @@ typedef std::vector<LArTrackTrajectoryPoint> LArTrackTrajectory;
 /**
  *  @brief  lar pfo parameters
  */
-class LArTrackPfoParameters : public PandoraContentApi::ParticleFlowObject::Parameters
+class LArTrackPfoParameters : public object_creation::ParticleFlowObject::Parameters
 {
 public:
     LArTrackStateVector   m_trackStateVector;
@@ -143,7 +144,7 @@ private:
 /**
  *  @brief  lar pfo object factory responsible for pfo creation
  */
-class LArTrackPfoFactory : public pandora::ObjectFactory<PandoraContentApi::ParticleFlowObject::Parameters, pandora::ParticleFlowObject>
+class LArTrackPfoFactory : public pandora::ObjectFactory<object_creation::ParticleFlowObject::Parameters, pandora::ParticleFlowObject>
 {
 public:
     /**
@@ -175,7 +176,7 @@ public:
      *  @param  parameters the parameters to pass in constructor
      *  @param  pObject to receive the address of the object created
      */
-    pandora::StatusCode Create(const PandoraContentApi::ParticleFlowObject::Parameters &parameters, const pandora::ParticleFlowObject *&pObject) const;
+    pandora::StatusCode Create(const object_creation::ParticleFlowObject::Parameters &parameters, const pandora::ParticleFlowObject *&pObject) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

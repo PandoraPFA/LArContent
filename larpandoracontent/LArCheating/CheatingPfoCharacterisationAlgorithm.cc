@@ -39,13 +39,13 @@ StatusCode CheatingPfoCharacterisationAlgorithm::Run()
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
             else
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
     }

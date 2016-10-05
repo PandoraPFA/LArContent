@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Api/PandoraApi.h"
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -177,7 +179,7 @@ const CaloHit *StitchingObjectCreationTool::CreateCaloHit(const Algorithm *const
     PandoraContentApi::CaloHit::Metadata metadata;
     metadata.m_isIsolated = pInputCaloHit->IsIsolated();
     metadata.m_isPossibleMip = pInputCaloHit->IsPossibleMip();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*pAlgorithm, pNewCaloHit, metadata));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*pAlgorithm, pNewCaloHit, metadata));
 
     return pNewCaloHit;
 }
@@ -198,7 +200,7 @@ const Cluster *StitchingObjectCreationTool::CreateCluster(const Algorithm *const
 
     PandoraContentApi::Cluster::Metadata metadata;
     metadata.m_particleId = pInputCluster->GetParticleIdFlag();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*pAlgorithm, pNewCluster, metadata));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*pAlgorithm, pNewCluster, metadata));
 
     return pNewCluster;
 }

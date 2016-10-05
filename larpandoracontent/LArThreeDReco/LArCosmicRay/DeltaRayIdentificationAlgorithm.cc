@@ -294,7 +294,7 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
 
         PandoraContentApi::ParticleFlowObject::Metadata metadata;
         metadata.m_particleId = E_MINUS;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pDaughterPfo, metadata));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pDaughterPfo, metadata));
 
         daughterPfoList.push_back(pDaughterPfo);
     }

@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Api/PandoraApi.h"
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
