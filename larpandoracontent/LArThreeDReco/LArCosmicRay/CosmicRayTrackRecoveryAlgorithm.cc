@@ -271,7 +271,15 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
         const LArPointingCluster pointingClusterOuter(iterOuter->second);
 
         LArPointingCluster::Vertex pointingVertexInner, pointingVertexOuter;
-        LArPointingClusterHelper::GetClosestVertices(pointingClusterInner, pointingClusterOuter, pointingVertexInner, pointingVertexOuter);
+
+        try
+        {
+            LArPointingClusterHelper::GetClosestVertices(pointingClusterInner, pointingClusterOuter, pointingVertexInner, pointingVertexOuter);
+        }
+        catch (StatusCodeException &)
+        {
+            return;
+        }
 
         const LArPointingCluster::Vertex pointingEndInner(pointingVertexInner.IsInnerVertex() ? pointingClusterInner.GetOuterVertex() : pointingClusterInner.GetInnerVertex());
         const LArPointingCluster::Vertex pointingEndOuter(pointingVertexOuter.IsInnerVertex() ? pointingClusterOuter.GetOuterVertex() : pointingClusterOuter.GetInnerVertex());
