@@ -128,7 +128,7 @@ private:
      */
     void GetBestChi2(const pandora::Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
         const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2, const pandora::ClusterVector &clusters3,
-        pandora::Cluster *&pBestCluster1, pandora::Cluster *&pBestCluster2, pandora::Cluster *&pBestCluster3,
+        const pandora::Cluster *&pBestCluster1, const pandora::Cluster *&pBestCluster2, const pandora::Cluster *&pBestCluster3,
         float &chi2) const;
 
     /**
@@ -144,7 +144,7 @@ private:
      */
     void GetBestChi2(const pandora::Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
         const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
-        pandora::Cluster *&pBestCluster1, pandora::Cluster *&pBestCluster2, float &chi2) const;
+        const pandora::Cluster *&pBestCluster1, const pandora::Cluster *&pBestCluster2, float &chi2) const;
 
     /**
      *  @brief  Merge two pointing clusters and return chi-squared metric giving consistency of matching

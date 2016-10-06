@@ -46,18 +46,28 @@ void DeltaRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const
 
 void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
-    for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterEndI = clusterVector.end(); iterI != iterEndI; ++iterI)
+    ClusterToCoordinateMap innerCoordinateMap, outerCoordinateMap;
+
+    for (const Cluster *const pCluster : clusterVector)
     {
-        const Cluster *const pParentCluster = *iterI;
+        CartesianVector innerCoordinate(0.f,0.f,0.f), outerCoordinate(0.f,0.f,0.f);
+        LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
 
-        for (ClusterVector::const_iterator iterJ = clusterVector.begin(), iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
+        if (!innerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, innerCoordinate)).second ||
+            !outerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, outerCoordinate)).second)
         {
-            const Cluster *const pDaughterCluster = *iterJ;
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+        }
+    }
 
+    for (const Cluster *const pParentCluster : clusterVector)
+    {
+        for (const Cluster *const pDaughterCluster : clusterVector)
+        {
             if (pParentCluster == pDaughterCluster)
                 continue;
 
-            this->FillClusterAssociationMatrix(pParentCluster, pDaughterCluster, clusterAssociationMatrix);
+            this->FillClusterAssociationMatrix(pParentCluster, pDaughterCluster, innerCoordinateMap, outerCoordinateMap, clusterAssociationMatrix);
         }
     }
 }
@@ -65,19 +75,19 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVecto
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *const pParentCluster, const Cluster *const pDaughterCluster,
-    ClusterAssociationMatrix &clusterAssociationMatrix) const
+    const ClusterToCoordinateMap &innerCoordinateMap, const ClusterToCoordinateMap &outerCoordinateMap, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
     // Daughter cluster must be available for any association to proceed
-    if (!pDaughterCluster->IsAvailable())
+    if (!PandoraContentApi::IsAvailable(*this, pDaughterCluster))
         return;
 
     // Weak association:   between parent cosmic-ray muon and daughter delta ray
     // Strong association: between parent and daughter fragments of delta ray
     // Figure of merit:    distance between parent and daughter clusters
-    CartesianVector innerCoordinateP(0.f,0.f,0.f), outerCoordinateP(0.f,0.f,0.f);
-    CartesianVector innerCoordinateD(0.f,0.f,0.f), outerCoordinateD(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinates(pParentCluster, innerCoordinateP, outerCoordinateP);
-    LArClusterHelper::GetExtremalCoordinates(pDaughterCluster, innerCoordinateD, outerCoordinateD);
+    const CartesianVector &innerCoordinateP(innerCoordinateMap.at(pParentCluster));
+    const CartesianVector &outerCoordinateP(outerCoordinateMap.at(pParentCluster));
+    const CartesianVector &innerCoordinateD(innerCoordinateMap.at(pDaughterCluster));
+    const CartesianVector &outerCoordinateD(outerCoordinateMap.at(pDaughterCluster));
 
     for (unsigned int useInnerD = 0; useInnerD < 2; ++useInnerD)
     {
@@ -87,7 +97,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
         const float daughterLengthSquared((daughterEnd - daughterVertex).GetMagnitudeSquared());
 
         // Daughter cluster must be available and below a length cut for any association
-        if (!pDaughterCluster->IsAvailable() || daughterLengthSquared > m_maxClusterLength * m_maxClusterLength)
+        if (daughterLengthSquared > m_maxClusterLength * m_maxClusterLength)
             continue;
 
         const CartesianVector projectedVertex(LArClusterHelper::GetClosestPosition(daughterVertex, pParentCluster));
@@ -119,7 +129,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
                 parentVertexType = (useInnerP == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
 
             // Parent cluster must be available and below a length cut for a strong association
-            if (!pParentCluster->IsAvailable() || parentLengthSquared > m_maxClusterLength * m_maxClusterLength)
+            if (!PandoraContentApi::IsAvailable(*this, pParentCluster) || parentLengthSquared > m_maxClusterLength * m_maxClusterLength)
                 continue;
 
             // Require an end-to-end join between parent and daughter cluster
@@ -137,7 +147,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
             if (forwardDistance < 0.f || forwardDistance > m_maxLongitudinalDisplacement || sidewaysDistance > m_maxTransverseDisplacement)
                 continue;
 
-            if (-parentDirection.GetDotProduct(daughterDirection) < 0.25)
+            if (-parentDirection.GetDotProduct(daughterDirection) < 0.25f)
                 continue;
 
             associationType = ClusterAssociation::STRONG;
