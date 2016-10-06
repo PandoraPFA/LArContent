@@ -13,6 +13,8 @@
 #include "Objects/CaloHit.h"
 #include "Objects/CartesianVector.h"
 
+#include "Pandora/PandoraInternal.h"
+
 #include <array>
 #include <vector>
 
@@ -154,7 +156,7 @@ std::pair<float,float> minmax(const float a, const float b);
  *  @return KDTreeCube
  */
 template<typename T>
-KDTreeBox fill_and_bound_2d_kd_tree(const std::vector<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes);
+KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes);
 
 /**
  *  @brief  fill_and_bound_3d_kd_tree
@@ -165,7 +167,7 @@ KDTreeBox fill_and_bound_2d_kd_tree(const std::vector<const T*> &points, std::ve
  *  @return KDTreeCube
  */
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const std::vector<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes);
+KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes);
 
 /**
  *  @brief  build_2d_kd_search_region
@@ -306,7 +308,7 @@ inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::Cartes
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-KDTreeBox fill_and_bound_2d_kd_tree(const std::vector<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes)
+KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes)
 {
     std::array<float, 2> minpos{ {0.f, 0.f} }, maxpos{ {0.f, 0.f} };
 
@@ -339,7 +341,7 @@ KDTreeBox fill_and_bound_2d_kd_tree(const std::vector<const T*> &points, std::ve
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const std::vector<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes)
+KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes)
 {
     std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
 

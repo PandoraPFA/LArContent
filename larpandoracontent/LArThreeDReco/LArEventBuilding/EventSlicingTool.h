@@ -221,7 +221,7 @@ private:
     typedef KDTreeNodeInfoT<const pandora::CartesianVector*, 2> PointKDNode2D;
     typedef std::vector<PointKDNode2D> PointKDNode2DList;
 
-    typedef std::vector<const pandora::CartesianVector*> PointVector;
+    typedef std::list<const pandora::CartesianVector*> PointList;
     typedef std::unordered_map<const pandora::CartesianVector*, unsigned int> PointToSliceIndexMap;
 
     /**
@@ -233,7 +233,7 @@ private:
      *  @param  pointsW to receive the points in the w view
      *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
      */
-    void GetKDTreeEntries2D(const SliceList &sliceList, PointVector &pointsU, PointVector &pointsV, PointVector &pointsW,
+    void GetKDTreeEntries2D(const SliceList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
         PointToSliceIndexMap &pointToSliceIndexMap) const;
 
     /**
@@ -245,8 +245,8 @@ private:
      *  @param  pointsW to receive the points in the w view
      *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
      */
-    void GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointVector &pointsU, PointVector &pointsV,
-        PointVector &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const;
+    void GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointList &pointsU, PointList &pointsV,
+        PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const;
 
     /**
      *  @brief  Use the provided kd tree to efficiently identify the most appropriate slice for the provided 2D cluster

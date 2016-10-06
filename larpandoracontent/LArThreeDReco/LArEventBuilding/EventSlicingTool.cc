@@ -450,15 +450,15 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
 
     try
     {
-        PointVector pointsU, pointsV, pointsW;
+        PointList pointsU, pointsV, pointsW;
         this->GetKDTreeEntries2D(sliceList, pointsU, pointsV, pointsW, pointToSliceIndexMap);
 
         if (m_use3DProjectionsInHitPickUp)
             this->GetKDTreeEntries3D(clusterToSliceIndexMap, pointsU, pointsV, pointsW, pointToSliceIndexMap);
 
-        std::sort(pointsU.begin(), pointsU.end(), EventSlicingTool::SortPoints);
-        std::sort(pointsV.begin(), pointsV.end(), EventSlicingTool::SortPoints);
-        std::sort(pointsW.begin(), pointsW.end(), EventSlicingTool::SortPoints);
+        pointsU.sort(EventSlicingTool::SortPoints);
+        pointsV.sort(EventSlicingTool::SortPoints);
+        pointsW.sort(EventSlicingTool::SortPoints);
 
         PointKDNode2DList kDNode2DListU, kDNode2DListV, kDNode2DListW;
         KDTreeBox boundingRegionU = fill_and_bound_2d_kd_tree(pointsU, kDNode2DListU);
@@ -505,8 +505,8 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingTool::GetKDTreeEntries2D(const SliceList &sliceList, PointVector &pointsU, PointVector &pointsV,
-    PointVector &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
+void EventSlicingTool::GetKDTreeEntries2D(const SliceList &sliceList, PointList &pointsU, PointList &pointsV,
+    PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
 {
     unsigned int sliceIndex(0);
 
@@ -539,8 +539,8 @@ void EventSlicingTool::GetKDTreeEntries2D(const SliceList &sliceList, PointVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointVector &pointsU, PointVector &pointsV,
-    PointVector &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
+void EventSlicingTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointList &pointsU, PointList &pointsV,
+    PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
 {
     ClusterList clusterList;
     for (const auto &mapEntry : clusterToSliceIndexMap) clusterList.push_back(mapEntry.first);
@@ -579,18 +579,18 @@ void EventSlicingTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterT
 
 const EventSlicingTool::PointKDNode2D *EventSlicingTool::MatchClusterToSlice(const Cluster *const pCluster2D, PointKDTree2D &kdTree) const
 {
-    PointVector clusterPointVector;
+    PointList clusterPointList;
     const PointKDNode2D *pBestResultPoint(nullptr);
 
     try
     {
-        clusterPointVector.push_back(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer())));
-        clusterPointVector.push_back(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())));
-        clusterPointVector.push_back(new CartesianVector((pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer()) + pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())) * 0.5f));
+        clusterPointList.push_back(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer())));
+        clusterPointList.push_back(new CartesianVector(pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())));
+        clusterPointList.push_back(new CartesianVector((pCluster2D->GetCentroid(pCluster2D->GetInnerPseudoLayer()) + pCluster2D->GetCentroid(pCluster2D->GetOuterPseudoLayer())) * 0.5f));
 
         float bestDistance(std::numeric_limits<float>::max());
 
-        for (const CartesianVector *const pClusterPoint : clusterPointVector)
+        for (const CartesianVector *const pClusterPoint : clusterPointList)
         {
             const PointKDNode2D *pResultPoint(nullptr);
             float resultDistance(std::numeric_limits<float>::max());
@@ -607,11 +607,11 @@ const EventSlicingTool::PointKDNode2D *EventSlicingTool::MatchClusterToSlice(con
     catch (...)
     {
         std::cout << "EventSlicingTool::MatchClusterToSlice - exception " << std::endl;
-        for (const CartesianVector *const pPoint : clusterPointVector) delete pPoint;
+        for (const CartesianVector *const pPoint : clusterPointList) delete pPoint;
         throw;
     }
 
-    for (const CartesianVector *const pPoint : clusterPointVector) delete pPoint;
+    for (const CartesianVector *const pPoint : clusterPointList) delete pPoint;
 
     return pBestResultPoint;
 }

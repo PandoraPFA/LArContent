@@ -157,11 +157,8 @@ void VertexSelectionBaseAlgorithm::InitializeKDTrees(HitKDTree2D &kdTreeU, HitKD
         if (!kdTree.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        CaloHitVector sortedCaloHits(pCaloHitList->begin(), pCaloHitList->end());
-        std::sort(sortedCaloHits.begin(), sortedCaloHits.end(), LArClusterHelper::SortHitsByPosition);
-
         HitKDNode2DList hitKDNode2DList;
-        KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(sortedCaloHits, hitKDNode2DList);
+        KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(*pCaloHitList, hitKDNode2DList));
         kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
     }
 }
