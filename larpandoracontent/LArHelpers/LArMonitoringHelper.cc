@@ -61,6 +61,8 @@ void LArMonitoringHelper::ExtractTargetPfos(const PfoList &inputPfoList, const b
 void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitList, const PfoList &recoNeutrinos,
     const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &outputPrimaryMap)
 {
+    const CaloHitSet caloHitSet(pCaloHitList->begin(), pCaloHitList->end());
+
     for (const ParticleFlowObject *const pNeutrinoPfo : recoNeutrinos)
     {
         if (!LArPfoHelper::IsNeutrino(pNeutrinoPfo))
@@ -76,7 +78,7 @@ void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitLi
 
         for (const CaloHit *const pCaloHit : clusterHits)
         {
-            if (pCaloHitList->end() == std::find(pCaloHitList->begin(), pCaloHitList->end(), pCaloHit))
+            if (!caloHitSet.count(pCaloHit))
                 continue;
 
             CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
@@ -149,6 +151,8 @@ void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList, const bool collapseToPrimaryPfos,
     CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap)
 {
+    const CaloHitSet caloHitSet(pCaloHitList->begin(), pCaloHitList->end());
+
     for (const ParticleFlowObject *const pPfo : pfoList)
     {
         ClusterList clusterList;
@@ -182,7 +186,7 @@ void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloH
                 if (TPC_3D == pCaloHit->GetHitType())
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                if (pCaloHitList->end() == std::find(pCaloHitList->begin(), pCaloHitList->end(), pCaloHit))
+                if (!caloHitSet.count(pCaloHit))
                     continue;
 
                 hitToPfoMap[pCaloHit] = pPfo;
@@ -200,6 +204,8 @@ void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCa
     const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &mcToBestPfoMap, MCContributionMap &mcToBestPfoHitsMap,
     MCToPfoMatchingMap &mcToFullPfoMatchingMap)
 {
+    const CaloHitSet caloHitSet(pCaloHitList->begin(), pCaloHitList->end());
+
     PfoList pfoList;
     for (const auto &mapEntry : pfoToHitListMap) pfoList.push_back(mapEntry.first);
     pfoList.sort(LArPfoHelper::SortByNHits);
@@ -213,7 +219,7 @@ void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCa
             if (TPC_3D == pCaloHit->GetHitType())
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-            if (pCaloHitList->end() == std::find(pCaloHitList->begin(), pCaloHitList->end(), pCaloHit))
+            if (!caloHitSet.count(pCaloHit))
                 continue;
 
             CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
