@@ -121,7 +121,7 @@ void ThreeDShowersAlgorithm::PreparationStep()
 
 void ThreeDShowersAlgorithm::PreparationStep(ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
+    for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
     {
         const Cluster *const pCluster(*iter);
 
