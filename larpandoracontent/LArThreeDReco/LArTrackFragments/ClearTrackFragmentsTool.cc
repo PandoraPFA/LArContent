@@ -334,10 +334,10 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *const pAl
     }
     else
     {
-        if (deletedClusters.end() != std::find(deletedClusters.begin(), deletedClusters.end(), pDaughterCluster))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+        // ATTN During this process of deletion and reallocation, actually possible for same cluster address to be deleted multiple times!
+        if (deletedClusters.end() == std::find(deletedClusters.begin(), deletedClusters.end(), pDaughterCluster))
+            deletedClusters.push_back(pDaughterCluster);
 
-        deletedClusters.push_back(pDaughterCluster);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pFragmentCluster, pDaughterCluster));
     }
 }
