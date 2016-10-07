@@ -59,8 +59,7 @@ StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &
 
         for (const CaloHit *const pCaloHit : daughterHits)
         {
-            CaloHitList nearbyHits;
-            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D);
+            KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
 
             HitKDNode2DList found;
             kdTree.search(searchRegionHits, found);

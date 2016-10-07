@@ -126,6 +126,7 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
 
     ClusterList threeDClusterList;
     LArPfoHelper::GetThreeDClusterList(pPfo, threeDClusterList);
+    CaloHitSet remainingHitSet(remainingHitList.begin(), remainingHitList.end());
 
     for (const Cluster *const pCluster : threeDClusterList)
     {
@@ -135,18 +136,17 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
         for (const CaloHit *const pCaloHit : localCaloHitList)
         {
             const CaloHit *const pTargetCaloHit = static_cast<const CaloHit*>(pCaloHit->GetParentCaloHitAddress());
-            CaloHitList::iterator eraseIter = std::find(remainingHitList.begin(), remainingHitList.end(), pTargetCaloHit);
+            CaloHitSet::iterator eraseIter = remainingHitSet.find(pTargetCaloHit);
 
-            if (remainingHitList.end() == eraseIter)
+            if (remainingHitSet.end() == eraseIter)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             usedHitVector.push_back(pTargetCaloHit);
-            remainingHitList.erase(eraseIter);
+            remainingHitSet.erase(eraseIter);
         }
     }
 
-    remainingHitVector.insert(remainingHitVector.end(), remainingHitList.begin(), remainingHitList.end());
-
+    remainingHitVector.insert(remainingHitVector.end(), remainingHitSet.begin(), remainingHitSet.end());
     std::sort(usedHitVector.begin(), usedHitVector.end(), LArClusterHelper::SortHitsByPosition);
     std::sort(remainingHitVector.begin(), remainingHitVector.end(), LArClusterHelper::SortHitsByPosition);
 }
@@ -166,13 +166,13 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
+    CaloHitList allNewThreeDHits;
+
     PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
     std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
 
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {
-        CaloHitList allNewThreeDHits;
-
         for (HitCreationBaseTool *const pHitCreationTool : m_algorithmToolVector)
         {
             CaloHitVector usedTwoDHits, remainingTwoDHits;
@@ -191,9 +191,10 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
                 allNewThreeDHits.insert(allNewThreeDHits.end(), newThreeDHits.begin(), newThreeDHits.end());
             }
         }
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, allNewThreeDHits, m_outputCaloHitListName));
     }
+
+    if (!allNewThreeDHits.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, allNewThreeDHits, m_outputCaloHitListName));
 
     return STATUS_CODE_SUCCESS;
 }

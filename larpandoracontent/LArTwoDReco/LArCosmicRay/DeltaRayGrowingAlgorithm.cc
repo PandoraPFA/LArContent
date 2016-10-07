@@ -30,10 +30,8 @@ DeltaRayGrowingAlgorithm::DeltaRayGrowingAlgorithm() :
 
 void DeltaRayGrowingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : *pClusterList)
     {
-        const Cluster *const pCluster = *iter;
-
         if (!pCluster->IsAvailable() || (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster))
             continue;
 
@@ -50,58 +48,51 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
     if (inputClusters.empty())
         return;
 
-    // Get hit type
-    const Cluster *const pFirstCluster = *(inputClusters.begin());
-    const HitType clusterHitType(LArClusterHelper::GetClusterHitType(pFirstCluster));
+    const HitType clusterHitType(LArClusterHelper::GetClusterHitType(inputClusters.front()));
 
     // Get parent and daughter Pfos
     PfoVector parentPfos, daughterPfos;
     this->GetPfos(m_parentPfoListName, parentPfos);
     this->GetPfos(m_daughterPfoListName, daughterPfos);
 
-    // TODO Think about sorting of the seed cluster list; currently pfos with most hits contribute first, but their daughter clusters are unsorted
     ClusterList parentClusters, daughterClusters;
 
-    for (PfoVector::const_iterator iter = parentPfos.begin(), iterEnd = parentPfos.end(); iter != iterEnd; ++iter)
-        LArPfoHelper::GetClusters(*iter, clusterHitType, parentClusters);
+    for (const Pfo *const pParentPfo : parentPfos)
+        LArPfoHelper::GetClusters(pParentPfo, clusterHitType, parentClusters);
 
-    for (PfoVector::const_iterator iter = daughterPfos.begin(), iterEnd = daughterPfos.end(); iter != iterEnd; ++iter)
-        LArPfoHelper::GetClusters(*iter, clusterHitType, daughterClusters);
+    for (const Pfo *const pDaughterPfo : daughterPfos)
+        LArPfoHelper::GetClusters(pDaughterPfo, clusterHitType, daughterClusters);
 
      // Select short parent clusters
-    for (ClusterList::const_iterator cIter = parentClusters.begin(), cIterEnd = parentClusters.end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : parentClusters)
     {
-        const Cluster *const pCluster = *cIter;
-
-        if (LArClusterHelper::GetLengthSquared(pCluster) > m_maxSeedClusterLength  * m_maxSeedClusterLength)
-            continue;
-
-        seedClusters.push_back(pCluster);
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_maxSeedClusterLength  * m_maxSeedClusterLength)
+            seedClusters.push_back(pCluster);
     }
 
     // Select all secondary clusters
-    for (ClusterList::const_iterator cIter = daughterClusters.begin(), cIterEnd = daughterClusters.end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : daughterClusters)
     {
-        seedClusters.push_back(*cIter);
+        seedClusters.push_back(pCluster);
     }
 
     // Select other possible delta rays
-    for (ClusterVector::const_iterator cIter = inputClusters.begin(), cIterEnd = inputClusters.end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : inputClusters)
     {
-        const Cluster *const pCluster = *cIter;
- 
         if (pCluster->GetNCaloHits() < m_minSeedClusterCaloHits)
             continue;
 
-        const float parentDistance(parentClusters.empty() ? std::numeric_limits<float>::max() : 
-            LArClusterHelper::GetClosestDistance(pCluster, parentClusters));
-        const float daughterDistance(daughterClusters.empty() ? std::numeric_limits<float>::max() : 
-            LArClusterHelper::GetClosestDistance(pCluster, daughterClusters));
+        const float parentDistance(parentClusters.empty() ? std::numeric_limits<float>::max() : LArClusterHelper::GetClosestDistance(pCluster, parentClusters));
 
-        if (parentDistance < m_maxSeedClusterDisplacement && daughterDistance > m_maxSeedClusterDisplacement)
-        {
-            seedClusters.push_back(pCluster);
-        }
+        if (parentDistance > m_maxSeedClusterDisplacement)
+            continue;
+
+        const float daughterDistance(daughterClusters.empty() ? std::numeric_limits<float>::max() : LArClusterHelper::GetClosestDistance(pCluster, daughterClusters));
+
+        if (daughterDistance < m_maxSeedClusterDisplacement)
+            continue;
+
+        seedClusters.push_back(pCluster);
     }
 
     std::sort(seedClusters.begin(), seedClusters.end(), LArClusterHelper::SortByNHits);
@@ -111,15 +102,14 @@ void DeltaRayGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &inputC
 
 void DeltaRayGrowingAlgorithm::GetPfos(const std::string inputPfoListName, PfoVector &pfoVector) const
 {
-    const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputPfoListName, pPfoList));
+    const PfoList *pPfoList(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, inputPfoListName, pPfoList));
 
-    if (NULL == pPfoList)
+    if (!pPfoList)
         return;
 
-    for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter)
-        pfoVector.push_back(*pIter);
+    for (const Pfo *const pPfo : *pPfoList)
+        pfoVector.push_back(pPfo);
 
     std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
 }

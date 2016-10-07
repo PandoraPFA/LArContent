@@ -66,30 +66,27 @@ bool LArPointingClusterHelper::IsEmission(const CartesianVector &parentVertex, c
 CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVector &vertexPosition, const CartesianVector &vertexDirection,
     const pandora::Cluster *const pCluster, const float projectionAngularAllowance)
 {
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    const CaloHit *pClosestCaloHit(NULL);
+    const CaloHit *pClosestCaloHit(nullptr);
     float closestDistanceSquared(std::numeric_limits<float>::max());
+    const float minCosTheta(std::cos(M_PI * projectionAngularAllowance / 180.f));
 
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        for (const CaloHit *const pCaloHit : *layerEntry.second)
         {
-            const CaloHit *const pCaloHit = *hitIter;
-
             const CartesianVector hitProjection(pCaloHit->GetPositionVector() - vertexPosition);
             const float distanceSquared(hitProjection.GetMagnitudeSquared());
 
-            if (distanceSquared > 0.f)
+            if (distanceSquared > std::numeric_limits<float>::epsilon())
             {
-                const float cosTheta(-hitProjection.GetUnitVector().GetDotProduct(vertexDirection));
-                const float minCosTheta(std::cos(M_PI * projectionAngularAllowance / 180.f));
-
                 // TODO Try to give more weight to on-axis projections
-                if ((distanceSquared < closestDistanceSquared) && (cosTheta > minCosTheta))
+                if (distanceSquared < closestDistanceSquared)
                 {
-                    pClosestCaloHit = pCaloHit;
-                    closestDistanceSquared = distanceSquared;
+                    if (-hitProjection.GetUnitVector().GetDotProduct(vertexDirection) > minCosTheta)
+                    {
+                        pClosestCaloHit = pCaloHit;
+                        closestDistanceSquared = distanceSquared;
+                    }
                 }
             }
             else
@@ -99,7 +96,7 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVe
         }
     }
 
-    if(pClosestCaloHit)
+    if (pClosestCaloHit)
         return pClosestCaloHit->GetPositionVector();
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);

@@ -143,8 +143,7 @@ void TransverseAssociationAlgorithm::GetNearbyClusterMap(const ClusterVector &al
 
         for (const CaloHit *const pCaloHit : daughterHits)
         {
-            CaloHitList nearbyHits;
-            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegionX, m_searchRegionZ);
+            KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegionX, m_searchRegionZ));
 
             HitKDNode2DList found;
             kdTree.search(searchRegionHits, found);
