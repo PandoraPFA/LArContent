@@ -65,8 +65,8 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVecto
 void DeltaRayExtensionAlgorithm::GetExtremalCoordinatesFromCache(const Cluster *const pCluster, ClusterToCoordinateMap &innerCoordinateMap,
     ClusterToCoordinateMap &outerCoordinateMap, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate) const
 {
-    ClusterToCoordinateMap::iterator innerIter = innerCoordinateMap.find(pCluster);
-    ClusterToCoordinateMap::iterator outerIter = outerCoordinateMap.find(pCluster);
+    ClusterToCoordinateMap::const_iterator innerIter = innerCoordinateMap.find(pCluster);
+    ClusterToCoordinateMap::const_iterator outerIter = outerCoordinateMap.find(pCluster);
 
     if ((innerCoordinateMap.end() == innerIter) || (outerCoordinateMap.end() == outerIter))
     {

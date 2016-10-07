@@ -266,11 +266,6 @@ public:
      */
     static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, const LArTransformationPlugin *const pLArTransformationPlugin);
 
-    /**
-     *  @brief  Destructor
-     */
-    ~LArGeometryHelper();
-
 private:
     typedef std::unordered_map<const pandora::Pandora*, const LArPseudoLayerPlugin*>    PseudoLayerInstanceMap;
     typedef std::unordered_map<const pandora::Pandora*, const LArTransformationPlugin*> TransformationInstanceMap;

@@ -46,9 +46,12 @@ StatusCode DeltaRayMatchingAlgorithm::Run()
     }
 
     this->InitializeNearbyClusterMaps();
-    this->ThreeViewMatching();
-    this->TwoViewMatching();
-    this->OneViewMatching();
+
+    ClusterLengthMap clusterLengthMap;
+    this->ThreeViewMatching(clusterLengthMap);
+    this->TwoViewMatching(clusterLengthMap);
+    this->OneViewMatching(clusterLengthMap);
+
     this->ClearNearbyClusterMaps();
 
     return STATUS_CODE_SUCCESS;
@@ -190,58 +193,61 @@ void DeltaRayMatchingAlgorithm::GetClusters(const std::string &inputClusterListN
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::ThreeViewMatching() const
+void DeltaRayMatchingAlgorithm::ThreeViewMatching(ClusterLengthMap &clusterLengthMap) const
 {
     ClusterVector clustersU, clustersV, clustersW;
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
     this->GetClusters(m_inputClusterListNameW, clustersW);
 
+    PfoLengthMap pfoLengthMap;
     ParticleList initialParticleList, finalParticleList;
-    this->ThreeViewMatching(clustersU, clustersV, clustersW, initialParticleList);
-    this->SelectParticles(initialParticleList, finalParticleList);
+    this->ThreeViewMatching(clustersU, clustersV, clustersW, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->SelectParticles(initialParticleList, clusterLengthMap, finalParticleList);
     this->CreateParticles(finalParticleList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::TwoViewMatching() const
+void DeltaRayMatchingAlgorithm::TwoViewMatching(ClusterLengthMap &clusterLengthMap) const
 {
     ClusterVector clustersU, clustersV, clustersW;
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
     this->GetClusters(m_inputClusterListNameW, clustersW);
 
+    PfoLengthMap pfoLengthMap;
     ParticleList initialParticleList, finalParticleList;
-    this->TwoViewMatching(clustersU, clustersV, initialParticleList);
-    this->TwoViewMatching(clustersV, clustersW, initialParticleList);
-    this->TwoViewMatching(clustersW, clustersU, initialParticleList);
-    this->SelectParticles(initialParticleList, finalParticleList);
+    this->TwoViewMatching(clustersU, clustersV, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->TwoViewMatching(clustersV, clustersW, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->TwoViewMatching(clustersW, clustersU, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->SelectParticles(initialParticleList, clusterLengthMap, finalParticleList);
     this->CreateParticles(finalParticleList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::OneViewMatching() const
+void DeltaRayMatchingAlgorithm::OneViewMatching(ClusterLengthMap &clusterLengthMap) const
 {
     ClusterVector clustersU, clustersV, clustersW;
     this->GetClusters(m_inputClusterListNameU, clustersU);
     this->GetClusters(m_inputClusterListNameV, clustersV);
     this->GetClusters(m_inputClusterListNameW, clustersW);
 
+    PfoLengthMap pfoLengthMap;
     ParticleList initialParticleList, finalParticleList;
-    this->ThreeViewMatching(clustersU, clustersV, clustersW, initialParticleList);
-    this->OneViewMatching(clustersU, initialParticleList);
-    this->OneViewMatching(clustersV, initialParticleList);
-    this->OneViewMatching(clustersW, initialParticleList);
-    this->SelectParticles(initialParticleList, finalParticleList);
+    this->ThreeViewMatching(clustersU, clustersV, clustersW, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->OneViewMatching(clustersU, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->OneViewMatching(clustersV, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->OneViewMatching(clustersW, clusterLengthMap, pfoLengthMap, initialParticleList);
+    this->SelectParticles(initialParticleList, clusterLengthMap, finalParticleList);
     this->CreateParticles(finalParticleList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2, const ClusterVector &clusters3,
-    ParticleList &particleList) const
+    ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const
 {
     if (clusters1.empty() || clusters2.empty() || clusters3.empty())
         return;
@@ -265,7 +271,7 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
                     continue;
 
                 const ParticleFlowObject *pBestPfo = NULL;
-                this->FindBestParentPfo(pCluster1, pCluster2, pCluster3, pBestPfo);
+                this->FindBestParentPfo(pCluster1, pCluster2, pCluster3, clusterLengthMap, pfoLengthMap, pBestPfo);
 
                 // ATTN Need to record all matches when all three views are used
                 particleList.push_back(Particle(pCluster1, pCluster2, pCluster3, pBestPfo));
@@ -276,7 +282,8 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2, ParticleList &particleList) const
+void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2, ClusterLengthMap &clusterLengthMap,
+    PfoLengthMap &pfoLengthMap, ParticleList &particleList) const
 {
     if (clusters1.empty() || clusters2.empty())
         return;
@@ -295,7 +302,7 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, 
                 continue;
 
             const ParticleFlowObject *pBestPfo = NULL;
-            this->FindBestParentPfo(pCluster1, pCluster2, NULL, pBestPfo);
+            this->FindBestParentPfo(pCluster1, pCluster2, NULL, clusterLengthMap, pfoLengthMap, pBestPfo);
 
             if (NULL == pBestPfo)
                 continue;
@@ -307,7 +314,8 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters, ParticleList &particleList) const
+void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap,
+    ParticleList &particleList) const
 {
     if (clusters.empty())
         return;
@@ -318,7 +326,7 @@ void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters, P
             continue;
 
         const ParticleFlowObject *pBestPfo = NULL;
-        this->FindBestParentPfo(pCluster, NULL, NULL, pBestPfo);
+        this->FindBestParentPfo(pCluster, NULL, NULL, clusterLengthMap, pfoLengthMap, pBestPfo);
 
         if (NULL == pBestPfo)
             continue;
@@ -329,7 +337,7 @@ void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters, P
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::SelectParticles(const ParticleList &initialParticles, ParticleList &finalParticles) const
+void DeltaRayMatchingAlgorithm::SelectParticles(const ParticleList &initialParticles, ClusterLengthMap &clusterLengthMap, ParticleList &finalParticles) const
 {
     for (const Particle &particle1 : initialParticles)
     {
@@ -357,8 +365,10 @@ void DeltaRayMatchingAlgorithm::SelectParticles(const ParticleList &initialParti
                 else if (particle2.GetNViews() == particle1.GetNViews() && NULL != particle2.GetParentPfo())
                 {
                     if ((NULL == particle1.GetParentPfo()) || (particle2.GetNCaloHits() > particle1.GetNCaloHits()) ||
-                        (particle2.GetNCaloHits() == particle1.GetNCaloHits() && particle2.GetLengthSquared() >= particle1.GetLengthSquared()))
+                        (particle2.GetNCaloHits() == particle1.GetNCaloHits() && this->GetLength(particle2, clusterLengthMap) >= this->GetLength(particle1, clusterLengthMap)) )
+                    {
                             isGoodParticle = false;
+                    }
                 }
 
                 if (!isGoodParticle)
@@ -511,7 +521,7 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3,
-    const ParticleFlowObject *&pBestPfo) const
+    ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, const ParticleFlowObject *&pBestPfo) const
 {
     PfoVector pfoVector;
     this->GetTrackPfos(m_parentPfoListName, pfoVector);
@@ -525,19 +535,19 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1
 
     if (pCluster1)
     {
-        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster1);
+        lengthSquared += this->GetLengthFromCache(pCluster1, clusterLengthMap);
         ++numViews;
     }
 
     if (pCluster2)
     {
-        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster2);
+        lengthSquared += this->GetLengthFromCache(pCluster2, clusterLengthMap);
         ++numViews;
     }
 
     if (pCluster3)
     {
-        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster3);
+        lengthSquared += this->GetLengthFromCache(pCluster3, clusterLengthMap);
         ++numViews;
     }
 
@@ -545,7 +555,7 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1
 
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {
-        if (lengthSquared > LArPfoHelper::GetTwoDLengthSquared(pPfo))
+        if (lengthSquared > this->GetLengthFromCache(pPfo, pfoLengthMap))
             continue;
 
         try
@@ -573,6 +583,52 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1
                 throw statusCodeException;
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float DeltaRayMatchingAlgorithm::GetLengthFromCache(const Cluster *const pCluster, ClusterLengthMap &clusterLengthMap) const
+{
+    ClusterLengthMap::const_iterator iter = clusterLengthMap.find(pCluster);
+
+    if (clusterLengthMap.end() != iter)
+        return iter->second;
+
+    const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
+    (void) clusterLengthMap.insert(ClusterLengthMap::value_type(pCluster, lengthSquared));
+    return lengthSquared;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float DeltaRayMatchingAlgorithm::GetLengthFromCache(const ParticleFlowObject *const pPfo, PfoLengthMap &pfoLengthMap) const
+{
+    PfoLengthMap::const_iterator iter = pfoLengthMap.find(pPfo);
+
+    if (pfoLengthMap.end() != iter)
+        return iter->second;
+
+    const float lengthSquared(LArPfoHelper::GetTwoDLengthSquared(pPfo));
+    (void) pfoLengthMap.insert(PfoLengthMap::value_type(pPfo, lengthSquared));
+    return lengthSquared;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float DeltaRayMatchingAlgorithm::GetLength(const Particle &particle, ClusterLengthMap &clusterLengthMap) const
+{
+    float lengthSquared(0.f);
+
+    if (particle.GetClusterU())
+        lengthSquared += this->GetLengthFromCache(particle.GetClusterU(), clusterLengthMap);
+
+    if (particle.GetClusterV())
+        lengthSquared += this->GetLengthFromCache(particle.GetClusterV(), clusterLengthMap);
+
+    if (particle.GetClusterW())
+        lengthSquared += this->GetLengthFromCache(particle.GetClusterW(), clusterLengthMap);
+
+    return lengthSquared;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -716,24 +772,6 @@ unsigned int DeltaRayMatchingAlgorithm::Particle::GetNCaloHits() const
         numCaloHits += m_pClusterW->GetNCaloHits();
 
     return numCaloHits;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float DeltaRayMatchingAlgorithm::Particle::GetLengthSquared() const
-{
-    float lengthSquared(0.f);
-
-    if (NULL != m_pClusterU)
-        lengthSquared += LArClusterHelper::GetLengthSquared(m_pClusterU);
-
-    if (NULL != m_pClusterV)
-        lengthSquared += LArClusterHelper::GetLengthSquared(m_pClusterV);
-
-    if (NULL != m_pClusterW)
-        lengthSquared += LArClusterHelper::GetLengthSquared(m_pClusterW);
-
-    return lengthSquared;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
