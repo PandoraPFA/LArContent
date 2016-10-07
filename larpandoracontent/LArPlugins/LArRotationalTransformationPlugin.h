@@ -19,7 +19,6 @@ namespace lar_content
 class LArRotationalTransformationPlugin : public lar_content::LArTransformationPlugin
 {
 public:
-
     /**
      *  @brief  Constructor
      *
@@ -57,7 +56,6 @@ public:
         const PositionAndType &fitPositionAndType2, const double sigmaHit, const double sigmaFit, double &y, double &z, double &chiSquared) const;
 
 private:
-
     const double    m_thetaU;          ///< inclination of U wires (radians)
     const double    m_thetaV;          ///< inclination of V wires (radians)
     const double    m_sigmaUVW;        ///< resolution (cm), for calculation of chi2

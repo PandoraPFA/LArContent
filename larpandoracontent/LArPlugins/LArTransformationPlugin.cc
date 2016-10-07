@@ -11,6 +11,12 @@
 namespace lar_content
 {
 
+LArTransformationPlugin::~LArTransformationPlugin()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
 double LArTransformationPlugin::PUPVtoPW(const double pu, const double pv) const
 {
     return this->UVtoW(pu, pv); 

@@ -18,7 +18,11 @@ namespace lar_content
  */
 class LArTransformationPlugin
 {
-public:   
+public:
+    /**
+     *  @brief  Destructor
+     */
+    virtual ~LArTransformationPlugin();
 
     /** 
      *  @brief  Transform from (U,V) to W position
@@ -171,7 +175,6 @@ public:
      */
     virtual void GetProjectedYZ(const PositionAndType &hitPositionAndType, const PositionAndType &fitPositionAndType1,
         const PositionAndType &fitPositionAndType2, const double sigmaHit, const double sigmaFit, double &y, double &z, double &chiSquared) const = 0;
-    
 };
 
 } // namespace lar_content

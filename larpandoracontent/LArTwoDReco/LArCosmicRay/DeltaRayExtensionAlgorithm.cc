@@ -48,18 +48,6 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVecto
 {
     ClusterToCoordinateMap innerCoordinateMap, outerCoordinateMap;
 
-    for (const Cluster *const pCluster : clusterVector)
-    {
-        CartesianVector innerCoordinate(0.f,0.f,0.f), outerCoordinate(0.f,0.f,0.f);
-        LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
-
-        if (!innerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, innerCoordinate)).second ||
-            !outerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, outerCoordinate)).second)
-        {
-            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-        }
-    }
-
     for (const Cluster *const pParentCluster : clusterVector)
     {
         for (const Cluster *const pDaughterCluster : clusterVector)
@@ -74,8 +62,29 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void DeltaRayExtensionAlgorithm::GetExtremalCoordinatesFromCache(const Cluster *const pCluster, ClusterToCoordinateMap &innerCoordinateMap,
+    ClusterToCoordinateMap &outerCoordinateMap, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate) const
+{
+    ClusterToCoordinateMap::iterator innerIter = innerCoordinateMap.find(pCluster);
+    ClusterToCoordinateMap::iterator outerIter = outerCoordinateMap.find(pCluster);
+
+    if ((innerCoordinateMap.end() == innerIter) || (outerCoordinateMap.end() == outerIter))
+    {
+        LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
+        (void) innerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, innerCoordinate));
+        (void) outerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, outerCoordinate));
+    }
+    else
+    {
+        innerCoordinate = innerIter->second;
+        outerCoordinate = outerIter->second;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *const pParentCluster, const Cluster *const pDaughterCluster,
-    const ClusterToCoordinateMap &innerCoordinateMap, const ClusterToCoordinateMap &outerCoordinateMap, ClusterAssociationMatrix &clusterAssociationMatrix) const
+    ClusterToCoordinateMap &innerCoordinateMap, ClusterToCoordinateMap &outerCoordinateMap, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
     // Daughter cluster must be available for any association to proceed
     if (!PandoraContentApi::IsAvailable(*this, pDaughterCluster))
@@ -84,10 +93,11 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
     // Weak association:   between parent cosmic-ray muon and daughter delta ray
     // Strong association: between parent and daughter fragments of delta ray
     // Figure of merit:    distance between parent and daughter clusters
-    const CartesianVector &innerCoordinateP(innerCoordinateMap.at(pParentCluster));
-    const CartesianVector &outerCoordinateP(outerCoordinateMap.at(pParentCluster));
-    const CartesianVector &innerCoordinateD(innerCoordinateMap.at(pDaughterCluster));
-    const CartesianVector &outerCoordinateD(outerCoordinateMap.at(pDaughterCluster));
+    CartesianVector innerCoordinateP(0.f, 0.f, 0.f), outerCoordinateP(0.f, 0.f, 0.f);
+    this->GetExtremalCoordinatesFromCache(pParentCluster, innerCoordinateMap, outerCoordinateMap, innerCoordinateP, outerCoordinateP);
+
+    CartesianVector innerCoordinateD(0.f, 0.f, 0.f), outerCoordinateD(0.f, 0.f, 0.f);
+    this->GetExtremalCoordinatesFromCache(pDaughterCluster, innerCoordinateMap, outerCoordinateMap, innerCoordinateD, outerCoordinateD);
 
     for (unsigned int useInnerD = 0; useInnerD < 2; ++useInnerD)
     {

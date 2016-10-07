@@ -248,11 +248,17 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
 
     for (const Cluster *const pCluster1 : clusters1)
     {
+        if (!pCluster1->IsAvailable())
+            continue;
+
         for (const Cluster *const pCluster2 : clusters2)
         {
+            if (!pCluster2->IsAvailable())
+                continue;
+
             for (const Cluster *const pCluster3 : clusters3)
             {
-                if (!pCluster1->IsAvailable() || !pCluster2->IsAvailable() || !pCluster3->IsAvailable())
+                if (!pCluster3->IsAvailable())
                     continue;
 
                 if (!this->AreClustersMatched(pCluster1, pCluster2, pCluster3))
@@ -277,9 +283,12 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, 
 
     for (const Cluster *const pCluster1 : clusters1)
     {
+        if (!pCluster1->IsAvailable())
+            continue;
+
         for (const Cluster *const pCluster2 : clusters2)
         {
-            if (!pCluster1->IsAvailable() || !pCluster2->IsAvailable())
+            if (!pCluster2->IsAvailable())
                 continue;
 
             if (!this->AreClustersMatched(pCluster1, pCluster2, NULL))
@@ -503,7 +512,6 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
 
 void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3,
     const ParticleFlowObject *&pBestPfo) const
-
 {
     PfoVector pfoVector;
     this->GetTrackPfos(m_parentPfoListName, pfoVector);
@@ -512,28 +520,28 @@ void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1
     if (pfoVector.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    float numViews(0.f);
+    unsigned int numViews(0);
     float lengthSquared(0.f);
 
-    if (NULL != pCluster1)
+    if (pCluster1)
     {
         lengthSquared += LArClusterHelper::GetLengthSquared(pCluster1);
-        numViews += 1.f;
+        ++numViews;
     }
 
-    if (NULL != pCluster2)
+    if (pCluster2)
     {
         lengthSquared += LArClusterHelper::GetLengthSquared(pCluster2);
-        numViews += 1.f;
+        ++numViews;
     }
 
-    if (NULL != pCluster3)
+    if (pCluster3)
     {
         lengthSquared += LArClusterHelper::GetLengthSquared(pCluster3);
-        numViews += 1.f;
+        ++numViews;
     }
 
-    float bestDistanceSquared(numViews * m_distanceForMatching * m_distanceForMatching);
+    float bestDistanceSquared(static_cast<float>(numViews) * m_distanceForMatching * m_distanceForMatching);
 
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {

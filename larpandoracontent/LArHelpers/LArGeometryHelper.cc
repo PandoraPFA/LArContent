@@ -492,4 +492,13 @@ StatusCode LArGeometryHelper::SetLArTransformationPlugin(const Pandora &pandora,
     return STATUS_CODE_SUCCESS;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArGeometryHelper::~LArGeometryHelper()
+{
+    // ATTN Pseudo layer plugin instances will be deleted by Pandora. Transformation plugins are bolted-on in and must be deleted here
+    for (const TransformationInstanceMap::value_type &mapEntry : m_transformationInstanceMap)
+        delete mapEntry.second;
+}
+
 } // namespace lar_content
