@@ -91,10 +91,11 @@ private:
      *  @param  overlapResult the overlap result
      *  @param  modifiedClusters to receive the list of modified clusters
      *  @param  deletedClusters to receive the list of deleted clusters
+     *  @param  badClusters the set of clusters that should not be dereferenced
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
     void ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType::OverlapResult &overlapResult,
-        pandora::ClusterList &modifiedClusters, pandora::ClusterList &deletedClusters, const pandora::Cluster *&pFragmentCluster) const;
+        pandora::ClusterList &modifiedClusters, pandora::ClusterList &deletedClusters, pandora::ClusterSet &badClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
      *  @brief  Rearrange the hits in a cluster from the fragment list, using the Pandora fragmentation mechanism
@@ -104,10 +105,11 @@ private:
      *  @param  daughterHits the full list of hits to place in the new fragment cluster
      *  @param  separateHits the full list of hits that are not to be placed in the new fragment cluster
      *  @param  deletedClusters to receive the list of deleted clusters
+     *  @param  badClusters the set of clusters that should not be dereferenced
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
     void Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const pandora::CaloHitList &daughterHits,
-        const pandora::CaloHitList &separateHits, pandora::ClusterList &deletedClusters, const pandora::Cluster *&pFragmentCluster) const;
+        const pandora::CaloHitList &separateHits, pandora::ClusterList &deletedClusters, pandora::ClusterSet &badClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
      *  @brief  Rebuild clusters after fragmentation

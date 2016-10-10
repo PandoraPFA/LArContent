@@ -54,6 +54,7 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
 
         bool particlesMade(false);
         ClusterList deletedClusters, modifiedClusters, clustersToRemoveFromTensor, clustersToAddToTensor;
+        ClusterSet badClusters;
 
         for (IteratorList::const_iterator iIter = iteratorList.begin(), iIterEnd = iteratorList.end(); iIter != iIterEnd; ++iIter)
         {
@@ -63,7 +64,7 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
                 continue;
 
             const Cluster *pFragmentCluster(nullptr);
-            this->ProcessTensorElement(pAlgorithm, overlapResult, modifiedClusters, deletedClusters, pFragmentCluster);
+            this->ProcessTensorElement(pAlgorithm, overlapResult, modifiedClusters, deletedClusters, badClusters, pFragmentCluster);
 
             if (!pFragmentCluster)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -236,7 +237,7 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType::OverlapResult &overlapResult,
-    ClusterList &modifiedClusters, ClusterList &deletedClusters, const Cluster *&pFragmentCluster) const
+    ClusterList &modifiedClusters, ClusterList &deletedClusters, ClusterSet &badClusters, const Cluster *&pFragmentCluster) const
 {
     pFragmentCluster = nullptr;
 
@@ -277,9 +278,14 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
         if (daughterHits.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        this->Recluster(pAlgorithm, pCluster, daughterHits, separateHits, deletedClusters, pFragmentCluster);
-        ClusterList::iterator modifiedIter(std::find(modifiedClusters.begin(), modifiedClusters.end(), pCluster));
+        this->Recluster(pAlgorithm, pCluster, daughterHits, separateHits, deletedClusters, badClusters, pFragmentCluster);
 
+        if (badClusters.count(pFragmentCluster))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        // ATTN Keep track of modified clusters; does not include those for which address has been deleted at any time
+        // Note distinction between list of all deletions and the up-to-date list of bad clusters
+        ClusterList::iterator modifiedIter(std::find(modifiedClusters.begin(), modifiedClusters.end(), pCluster));
         if (deletedClusters.end() != std::find(deletedClusters.begin(), deletedClusters.end(), pCluster))
         {
             if (modifiedClusters.end() != modifiedIter)
@@ -298,47 +304,48 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const Cluster *const pCluster, const CaloHitList &daughterHits,
-    const CaloHitList &separateHits, ClusterList &deletedClusters, const Cluster *&pFragmentCluster) const
+    const CaloHitList &separateHits, ClusterList &deletedClusters, ClusterSet &badClusters, const Cluster *&pFragmentCluster) const
 {
-    const Cluster *pDaughterCluster(nullptr);
-
     if (separateHits.empty())
     {
-        pDaughterCluster = pCluster;
+        if (!pFragmentCluster)
+        {
+            pFragmentCluster = pCluster;
+        }
+        else
+        {
+            // ATTN Addresses can be re-used by new allocations, so can't just use list of all cluster deletions; keep track of "bad" clusters
+            if (!badClusters.insert(pCluster).second)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            if (deletedClusters.end() == std::find(deletedClusters.begin(), deletedClusters.end(), pCluster)) deletedClusters.push_back(pCluster);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pFragmentCluster, pCluster));
+        }
     }
     else
     {
-        // ATTN Can't delete these clusters yet
         for (const CaloHit *const pCaloHit : daughterHits)
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*pAlgorithm, pCluster, pCaloHit));
 
-        const ClusterList *pTemporaryList(nullptr);
-        std::string temporaryListName, currentListName;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*pAlgorithm, currentListName));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*pAlgorithm,
-            pTemporaryList, temporaryListName));
+        if (!pFragmentCluster)
+        {
+            const ClusterList *pTemporaryList(nullptr);
+            std::string temporaryListName, currentListName;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*pAlgorithm, currentListName));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*pAlgorithm, pTemporaryList, temporaryListName));
 
-        PandoraContentApi::Cluster::Parameters hitParameters;
-        hitParameters.m_caloHitList = daughterHits;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, hitParameters, pDaughterCluster));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*pAlgorithm, temporaryListName, currentListName));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
-    }
+            PandoraContentApi::Cluster::Parameters hitParameters;
+            hitParameters.m_caloHitList = daughterHits;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, hitParameters, pFragmentCluster));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*pAlgorithm, temporaryListName, currentListName));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
 
-    if (!pDaughterCluster)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    if (!pFragmentCluster)
-    {
-        pFragmentCluster = pDaughterCluster;
-    }
-    else
-    {
-        // ATTN During this process of deletion and reallocation, actually possible for same cluster address to be deleted multiple times!
-        if (deletedClusters.end() == std::find(deletedClusters.begin(), deletedClusters.end(), pDaughterCluster))
-            deletedClusters.push_back(pDaughterCluster);
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pFragmentCluster, pDaughterCluster));
+            (void) badClusters.erase(pFragmentCluster);
+        }
+        else
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*pAlgorithm, pFragmentCluster, &daughterHits));
+        }
     }
 }
 
