@@ -39,7 +39,7 @@ void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitTy
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        (*cIter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        (*cIter)->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
     }
 }
 

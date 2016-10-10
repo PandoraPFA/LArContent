@@ -321,7 +321,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::SplitBranchCluster(const Clust
 {
     // Distribute hits in branch cluster between new principal and residual clusters
     CaloHitList caloHitsToDistribute;
-    pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitsToDistribute);
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitsToDistribute);
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {
@@ -399,7 +399,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(const Clus
 
     // Entire replacement cluster goes into new principal cluster
     PandoraContentApi::Cluster::Parameters principalParameters;
-    pReplacementCluster->GetOrderedCaloHitList().GetCaloHitList(principalParameters.m_caloHitList);
+    pReplacementCluster->GetOrderedCaloHitList().FillCaloHitList(principalParameters.m_caloHitList);
 
     // Distribute hits in branch cluster between new principal and residual clusters
     PandoraContentApi::Cluster::Parameters residualParameters;

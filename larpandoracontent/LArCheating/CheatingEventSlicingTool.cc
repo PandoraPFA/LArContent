@@ -23,7 +23,7 @@ void CheatingEventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgor
     const HitTypeToNameMap &/*clusterListNames*/, NeutrinoParentAlgorithm::SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     const MCParticleList *pMCParticleList = NULL;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList));

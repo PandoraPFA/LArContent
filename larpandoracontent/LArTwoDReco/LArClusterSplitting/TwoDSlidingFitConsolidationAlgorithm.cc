@@ -115,7 +115,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
             continue;
 
         CaloHitList caloHitList, caloHitListToKeep;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
         for (const CaloHit *const pCaloHit : caloHitList)
         {

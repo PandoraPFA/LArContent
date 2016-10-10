@@ -65,7 +65,7 @@ void IsolatedClusterMopUpAlgorithm::DissolveClustersToHits(const ClusterList &cl
         if (pRemnantCluster->GetNCaloHits() < m_maxCaloHitsInCluster)
         {
             const std::string listNameR(this->GetListName(pRemnantCluster));
-            pRemnantCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+            pRemnantCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pRemnantCluster, listNameR));
         }
     }
@@ -81,7 +81,7 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(const CaloHitList &ca
     for (const Cluster *const pCluster : clusterList)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)

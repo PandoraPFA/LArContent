@@ -39,7 +39,7 @@ StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &
     for (const Cluster *const pCluster : clusterVector)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
@@ -55,7 +55,7 @@ StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &
     for (const Cluster *const pCluster : clusterVector)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
 
         for (const CaloHit *const pCaloHit : daughterHits)
         {
@@ -238,8 +238,8 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
 {
     // ATTN The following is double-double counting
     CaloHitList caloHitList1, caloHitList2;
-    pCluster1->GetOrderedCaloHitList().GetCaloHitList(caloHitList1);
-    pCluster2->GetOrderedCaloHitList().GetCaloHitList(caloHitList2);
+    pCluster1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
+    pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
 
     CaloHitVector caloHitVector1(caloHitList1.begin(), caloHitList1.end()), caloHitVector2(caloHitList2.begin(), caloHitList2.end());
     std::sort(caloHitVector1.begin(), caloHitVector1.end(), LArClusterHelper::SortHitsByPosition);

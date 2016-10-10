@@ -69,7 +69,7 @@ bool LongTracksTool::IsLongerThanDirectConnections(IteratorList::const_iterator 
 bool LongTracksTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindLongTracks(overlapTensor, protoParticleVector);

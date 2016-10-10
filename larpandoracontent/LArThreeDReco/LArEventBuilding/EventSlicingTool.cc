@@ -57,7 +57,7 @@ void EventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgorithm, co
     const HitTypeToNameMap &clusterListNames, SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ClusterToPfoMap clusterToPfoMap;
 
@@ -389,7 +389,7 @@ void EventSlicingTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &cluster
 
             CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
 
-            pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
+            pCluster2D->GetOrderedCaloHitList().FillCaloHitList(targetList);
             targetList.insert(targetList.end(), pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
 
             if (!assignedClusters.insert(pCluster2D).second)
@@ -489,7 +489,7 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
             NeutrinoParentAlgorithm::Slice &slice(sliceList.at(pointToSliceIndexMap.at(pBestResultPoint->data)));
             CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
 
-            pCluster2D->GetOrderedCaloHitList().GetCaloHitList(targetList);
+            pCluster2D->GetOrderedCaloHitList().FillCaloHitList(targetList);
             targetList.insert(targetList.end(), pCluster2D->GetIsolatedCaloHitList().begin(), pCluster2D->GetIsolatedCaloHitList().end());
         }
     }
@@ -551,7 +551,7 @@ void EventSlicingTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterT
         const unsigned int sliceIndex(clusterToSliceIndexMap.at(pCluster3D));
 
         CaloHitList caloHitList;
-        pCluster3D->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        pCluster3D->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
         for (const CaloHit *const pCaloHit3D : caloHitList)
         {

@@ -178,7 +178,7 @@ void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloH
         for (const Cluster *const pCluster : clusterList)
         {
             CaloHitList clusterHits;
-            pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHits);
+            pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHits);
             clusterHits.insert(clusterHits.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
 
             for (const CaloHit *const pCaloHit : clusterHits)
@@ -277,7 +277,7 @@ void LArMonitoringHelper::CollectCaloHits(const ParticleFlowObject *const pParen
         if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
         caloHitList.insert(caloHitList.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
     }
 }

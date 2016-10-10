@@ -143,7 +143,7 @@ void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowO
             const ThreeDSlidingFitResult slidingFitResult(pCluster, layerWindow, layerPitch);
 
             CaloHitList caloHitList;
-            pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+            pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
             for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
             {

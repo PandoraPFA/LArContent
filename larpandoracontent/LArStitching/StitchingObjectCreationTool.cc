@@ -31,7 +31,7 @@ StitchingObjectCreationTool::StitchingObjectCreationTool() :
 void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm, StitchingInfo &stitchingInfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     std::string clusterListName;
     const ClusterList *pClusterList(nullptr);
@@ -108,7 +108,7 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
     for (const Cluster *const pInputCluster : inputClusterList)
     {
         CaloHitList inputCaloHitList, newCaloHitList;
-        pInputCluster->GetOrderedCaloHitList().GetCaloHitList(inputCaloHitList);
+        pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
             newCaloHitList.push_back(this->CreateCaloHit(pAlgorithm, pInputCaloHit, pInputPfo, volumeInfo));

@@ -162,7 +162,7 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::SplitCluster(const Cluster *c
     const CartesianVector &splitDirection, CaloHitList &firstCaloHitList, CaloHitList &secondCaloHitList) const
 {
     CaloHitList caloHitsToDistribute;
-    pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitsToDistribute);
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitsToDistribute);
 
     for (CaloHitList::const_iterator iter = caloHitsToDistribute.begin(), iterEnd = caloHitsToDistribute.end(); iter != iterEnd; ++iter)
     {

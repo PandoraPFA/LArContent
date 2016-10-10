@@ -419,7 +419,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inpu
             continue;
 
         CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
         availableCaloHits.insert(availableCaloHits.end(), caloHitList.begin(), caloHitList.end());
 
         for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)

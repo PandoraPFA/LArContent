@@ -55,7 +55,7 @@ void TrackConsolidationAlgorithm::GetReclusteredHits(const TwoDSlidingFitResult 
     const Cluster *const pClusterI(slidingFitResultI.GetCluster());
 
     CaloHitList associatedHits, caloHitListJ;
-    pClusterJ->GetOrderedCaloHitList().GetCaloHitList(caloHitListJ);
+    pClusterJ->GetOrderedCaloHitList().FillCaloHitList(caloHitListJ);
 
     float minL(std::numeric_limits<float>::max());
     float maxL(std::numeric_limits<float>::max());

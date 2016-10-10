@@ -126,7 +126,7 @@ bool ThreeDKinkBaseTool::IsALowestInX(const LArPointingCluster &pointingClusterA
 bool ThreeDKinkBaseTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ModificationList modificationList;
     this->GetModifications(pAlgorithm, overlapTensor, modificationList);

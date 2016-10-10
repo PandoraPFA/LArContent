@@ -346,7 +346,7 @@ float CosmicRayExtensionAlgorithm::CalculateRms(const Cluster *const pCluster, c
     float totalHits(0.f);
 
     CaloHitList caloHitList;
-    pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
     for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
     {

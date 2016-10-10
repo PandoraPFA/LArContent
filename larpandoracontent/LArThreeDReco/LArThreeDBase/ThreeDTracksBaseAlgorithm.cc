@@ -110,7 +110,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
     const CartesianVector highXUnitVector((highXEnd - splitPosition).GetUnitVector());
 
     CaloHitList caloHitList;
-    pCurrentCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+    pCurrentCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
     std::string originalListName, fragmentListName;
     const ClusterList clusterList(1, pCurrentCluster);

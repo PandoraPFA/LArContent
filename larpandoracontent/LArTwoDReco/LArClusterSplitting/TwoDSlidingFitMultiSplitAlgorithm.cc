@@ -161,7 +161,7 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
         clusterListToDelete, clusterListToSave));
 
     CaloHitList oldCaloHitList;
-    pCluster->GetOrderedCaloHitList().GetCaloHitList(oldCaloHitList);
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(oldCaloHitList);
 
     bool foundPreviousL(false);
     float prevL(0.f);

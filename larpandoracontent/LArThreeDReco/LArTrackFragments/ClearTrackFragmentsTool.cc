@@ -28,7 +28,7 @@ ClearTrackFragmentsTool::ClearTrackFragmentsTool() :
 bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     return this->FindTrackFragments(pAlgorithm, overlapTensor);
 }
@@ -260,7 +260,7 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         CaloHitList clusterHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(clusterHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);
 
         CaloHitList daughterHits, separateHits;
         for (const CaloHit *const pCaloHit : clusterHitList)

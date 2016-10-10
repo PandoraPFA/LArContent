@@ -403,7 +403,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
     const CartesianVector vtxDirection((forwardPosition - vtxPosition).GetUnitVector());
 
     CaloHitList caloHitListToSort, caloHitListToCheck;
-    pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitListToSort);
+    pBranchCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitListToSort);
 
     for (CaloHitList::const_iterator iter = caloHitListToSort.begin(), iterEnd = caloHitListToSort.end(); iter != iterEnd; ++iter)
     {
@@ -450,7 +450,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListsToMove(const Cluster *const pBr
     const CartesianVector &splitDirection1, const CartesianVector &splitDirection2, CaloHitList &caloHitListToMove1, CaloHitList &caloHitListToMove2) const
 {
     CaloHitList caloHitListToSort;
-    pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitListToSort);
+    pBranchCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitListToSort);
 
     for (CaloHitList::const_iterator iter = caloHitListToSort.begin(), iterEnd = caloHitListToSort.end(); iter != iterEnd; ++iter)
     {
@@ -495,7 +495,7 @@ StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(const Cluster *cons
         return STATUS_CODE_FAILURE;
 
     CaloHitList caloHitList;
-    pBranchCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+    pBranchCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
     for (CaloHitList::const_iterator iter = caloHitList.begin(), iterEnd = caloHitList.end(); iter != iterEnd; ++iter)
     {

@@ -121,7 +121,7 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
         if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(remainingHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(remainingHitList);
     }
 
     ClusterList threeDClusterList;
@@ -131,7 +131,7 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
     for (const Cluster *const pCluster : threeDClusterList)
     {
         CaloHitList localCaloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(localCaloHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(localCaloHitList);
 
         for (const CaloHit *const pCaloHit : localCaloHitList)
         {

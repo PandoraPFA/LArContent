@@ -123,7 +123,7 @@ void TransverseAssociationAlgorithm::GetNearbyClusterMap(const ClusterVector &al
     for (const Cluster *const pCluster : allClusters)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
@@ -139,7 +139,7 @@ void TransverseAssociationAlgorithm::GetNearbyClusterMap(const ClusterVector &al
     for (const Cluster *const pCluster : allClusters)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
 
         for (const CaloHit *const pCaloHit : daughterHits)
         {
