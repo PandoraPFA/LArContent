@@ -148,7 +148,7 @@ void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowO
             for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
             {
                 const CaloHit *const pCaloHit3D = *hIter;
-                const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentCaloHitAddress());
+                const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentAddress());
 
                 try
                 {

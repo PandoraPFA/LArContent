@@ -158,7 +158,7 @@ bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClus
         if (usedClusters.count(pCluster))
             continue;
 
-        if (MU_MINUS == std::abs(pCluster->GetParticleIdFlag()))
+        if (MU_MINUS == std::abs(pCluster->GetParticleId()))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
@@ -187,7 +187,7 @@ void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const
 
     for (const Cluster *const pCluster : clusterVector)
     {
-        if (MU_MINUS == std::abs(pCluster->GetParticleIdFlag()))
+        if (MU_MINUS == std::abs(pCluster->GetParticleId()))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
@@ -224,7 +224,7 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particl
         if (particleSeedVector.end() != std::find(particleSeedVector.begin(), particleSeedVector.end(), pCandidateCluster))
             continue;
 
-        if (MU_MINUS == std::abs(pCandidateCluster->GetParticleIdFlag()))
+        if (MU_MINUS == std::abs(pCandidateCluster->GetParticleId()))
             continue;
 
         if (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster)

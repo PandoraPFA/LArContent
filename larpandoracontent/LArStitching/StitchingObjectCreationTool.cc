@@ -171,7 +171,7 @@ const CaloHit *StitchingObjectCreationTool::CreateCaloHit(const Algorithm *const
     parameters.m_hitRegion = pInputCaloHit->GetHitRegion();
     parameters.m_layer = pInputCaloHit->GetLayer();
     parameters.m_isInOuterSamplingLayer = pInputCaloHit->IsInOuterSamplingLayer();
-    parameters.m_pParentAddress = pInputCaloHit->GetParentCaloHitAddress();
+    parameters.m_pParentAddress = pInputCaloHit->GetParentAddress();
 
     const CaloHit *pNewCaloHit(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*pAlgorithm, parameters, pNewCaloHit));
@@ -199,7 +199,7 @@ const Cluster *StitchingObjectCreationTool::CreateCluster(const Algorithm *const
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, parameters, pNewCluster));
 
     PandoraContentApi::Cluster::Metadata metadata;
-    metadata.m_particleId = pInputCluster->GetParticleIdFlag();
+    metadata.m_particleId = pInputCluster->GetParticleId();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*pAlgorithm, pNewCluster, metadata));
 
     return pNewCluster;

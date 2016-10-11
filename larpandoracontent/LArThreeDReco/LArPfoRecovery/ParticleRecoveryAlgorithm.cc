@@ -116,7 +116,7 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
         if (!pCluster->IsAvailable())
             continue;
 
-        if ((!m_includeTracks && (MU_MINUS == std::abs(pCluster->GetParticleIdFlag()))) || (!m_includeShowers && (MU_MINUS != std::abs(pCluster->GetParticleIdFlag()))))
+        if ((!m_includeTracks && (MU_MINUS == std::abs(pCluster->GetParticleId()))) || (!m_includeShowers && (MU_MINUS != std::abs(pCluster->GetParticleId()))))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)

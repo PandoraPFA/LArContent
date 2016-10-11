@@ -135,7 +135,7 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
 
         for (const CaloHit *const pCaloHit : localCaloHitList)
         {
-            const CaloHit *const pTargetCaloHit = static_cast<const CaloHit*>(pCaloHit->GetParentCaloHitAddress());
+            const CaloHit *const pTargetCaloHit = static_cast<const CaloHit*>(pCaloHit->GetParentAddress());
             CaloHitSet::iterator eraseIter = remainingHitSet.find(pTargetCaloHit);
 
             if (remainingHitSet.end() == eraseIter)
