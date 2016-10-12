@@ -114,7 +114,7 @@ typedef std::vector<SimpleCone> SimpleConeList;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-typedef std::map<unsigned int, pandora::TrackState> TrackStateMap;
+typedef std::map<int, pandora::TrackState> TrackStateMap;
 
 /**
  *  @brief  ThreeDSlidingConeFitResult class

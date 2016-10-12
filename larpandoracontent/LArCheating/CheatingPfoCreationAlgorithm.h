@@ -43,8 +43,8 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef signed long long Id;
-    typedef std::unordered_map<Id, pandora::ClusterList> IdToClusterListMap;
-    typedef std::unordered_map<Id, const pandora::MCParticle*> IdToMCParticleMap;
+    typedef std::map<Id, pandora::ClusterList> IdToClusterListMap;
+    typedef std::map<Id, const pandora::MCParticle*> IdToMCParticleMap;
 
     /**
      *  @brief  Get a map relating three dimensional mc particle ids to a list of daughter clusters
@@ -83,8 +83,8 @@ private:
      */
     unsigned int GetNHitTypesAboveThreshold(const pandora::ClusterList &clusterList, const unsigned int nHitsThreshold) const;
 
-    typedef std::unordered_map<pandora::HitType, unsigned int, std::hash<unsigned int> > HitTypeMap;
-    typedef std::unordered_set<int> ParticleIdList;
+    typedef std::map<pandora::HitType, unsigned int> HitTypeMap;
+    typedef std::set<int> ParticleIdList;
 
     std::string     m_inputClusterListNameU;        ///< The name of the view U cluster list
     std::string     m_inputClusterListNameV;        ///< The name of the view V cluster list

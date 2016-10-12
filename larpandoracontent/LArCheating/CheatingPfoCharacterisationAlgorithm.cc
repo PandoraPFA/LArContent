@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
@@ -38,13 +39,13 @@ StatusCode CheatingPfoCharacterisationAlgorithm::Run()
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
             else
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
     }
@@ -72,12 +73,18 @@ bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject
     float bestWeight(0.f);
     const MCParticle *pBestMCParticle(nullptr);
 
-    for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : mcParticleWeightMap) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(LArMCParticleHelper::SortByMomentum);
+
+    for (const MCParticle *const pMCParticle : mcParticleList)
     {
-        if (mapEntry.second > bestWeight)
+        const float weight(mcParticleWeightMap.at(pMCParticle));
+
+        if (weight > bestWeight)
         {
-            pBestMCParticle = mapEntry.first;
-            bestWeight = mapEntry.second;
+            pBestMCParticle = pMCParticle;
+            bestWeight = weight;
         }
     }
 

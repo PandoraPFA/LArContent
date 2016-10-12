@@ -46,7 +46,6 @@ protected:
     };
 
     typedef std::vector<Particle> ParticleList;
-
     typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
 
     /**
@@ -89,7 +88,6 @@ protected:
         PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const = 0;
 
 private:
-
     /**
      *  @brief Get a vector of available clusters
      *

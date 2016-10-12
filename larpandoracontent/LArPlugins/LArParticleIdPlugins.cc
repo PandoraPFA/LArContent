@@ -12,6 +12,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
@@ -29,7 +30,8 @@ LArParticleIdPlugins::LArMuonId::LArMuonId() :
     m_layerFitHalfWindow(20),
     m_minLayerOccupancy (0.75f),
     m_maxTrackWidth(0.5f),
-    m_trackResidualQuantile(0.8f)
+    m_trackResidualQuantile(0.8f),
+    m_minClustersPassingId(2)
 {
 }
 
@@ -44,6 +46,30 @@ bool LArParticleIdPlugins::LArMuonId::IsMatch(const Cluster *const pCluster) con
     const TwoDSlidingFitResult twoDSlidingFitResult(pCluster, m_layerFitHalfWindow, slidingFitPitch);
 
     if (this->GetMuonTrackWidth(twoDSlidingFitResult) > m_maxTrackWidth)
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArParticleIdPlugins::LArMuonId::IsMatch(const ParticleFlowObject *const pPfo) const
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+
+    if (clusterList.empty())
+        return false;
+
+    unsigned int nClustersPassing(0);
+
+    for (const Cluster *const pCluster : clusterList)
+    {
+        if (this->IsMatch(pCluster))
+            ++nClustersPassing;
+    }
+
+    if (nClustersPassing < m_minClustersPassingId)
         return false;
 
     return true;
@@ -101,6 +127,9 @@ StatusCode LArParticleIdPlugins::LArMuonId::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrackResidualQuantile", m_trackResidualQuantile));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinClustersPassingId", m_minClustersPassingId));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -69,13 +69,13 @@ bool ThreeDBaseAlgorithm<T>::CreateThreeDParticles(const ProtoParticleVector &pr
 template <typename T>
 bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMergeMap)
 {
-    ClusterList deletedClusters;
+    ClusterSet deletedClusters;
 
-    ClusterVector sortedClusters;
-    for (const auto &mapEntry : clusterMergeMap) sortedClusters.push_back(mapEntry.first);
-    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+    ClusterList parentClusters;
+    for (const auto &mapEntry : clusterMergeMap) parentClusters.push_back(mapEntry.first);
+    parentClusters.sort(LArClusterHelper::SortByNHits);
 
-    for (const Cluster *const pParentCluster : sortedClusters)
+    for (const Cluster *const pParentCluster : parentClusters)
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pParentCluster));
         const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
@@ -83,11 +83,10 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
         if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        const ClusterList &daughterClusterList(clusterMergeMap.at(pParentCluster));
-        ClusterVector daughterClusterVector(daughterClusterList.begin(), daughterClusterList.end());
-        std::sort(daughterClusterVector.begin(), daughterClusterVector.end(), LArClusterHelper::SortByNHits);
+        ClusterList daughterClusters(clusterMergeMap.at(pParentCluster));
+        daughterClusters.sort(LArClusterHelper::SortByNHits);
 
-        for (const Cluster *const pDaughterCluster : daughterClusterVector)
+        for (const Cluster *const pDaughterCluster : daughterClusters)
         {
             if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -135,8 +134,10 @@ void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluste
 
     ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
 
-    if (!clusterList.insert(pNewCluster).second)
+    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pNewCluster))
         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+    clusterList.push_back(pNewCluster);
 
     const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
     const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
@@ -171,9 +172,9 @@ void ThreeDBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluste
 template <typename T>
 void ThreeDBaseAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
-    ClusterList::iterator iterU = m_clusterListU.find(pDeletedCluster);
-    ClusterList::iterator iterV = m_clusterListV.find(pDeletedCluster);
-    ClusterList::iterator iterW = m_clusterListW.find(pDeletedCluster);
+    ClusterList::iterator iterU = std::find(m_clusterListU.begin(), m_clusterListU.end(), pDeletedCluster);
+    ClusterList::iterator iterV = std::find(m_clusterListV.begin(), m_clusterListV.end(), pDeletedCluster);
+    ClusterList::iterator iterW = std::find(m_clusterListW.begin(), m_clusterListW.end(), pDeletedCluster);
 
     if (m_clusterListU.end() != iterU)
         m_clusterListU.erase(iterU);
@@ -200,25 +201,25 @@ void ThreeDBaseAlgorithm<T>::RemoveUnavailableTensorElements()
     for (typename TensorType::ClusterNavigationMap::const_iterator iter = navigationMapUV.begin(), iterEnd = navigationMapUV.end(); iter != iterEnd; ++iter)
     {
         if (!(iter->first->IsAvailable()))
-            usedClusters.insert(iter->first);
+            usedClusters.push_back(iter->first);
     }
 
     for (typename TensorType::ClusterNavigationMap::const_iterator iter = navigationMapVW.begin(), iterEnd = navigationMapVW.end(); iter != iterEnd; ++iter)
     {
         if (!(iter->first->IsAvailable()))
-            usedClusters.insert(iter->first);
+            usedClusters.push_back(iter->first);
     }
 
     for (typename TensorType::ClusterNavigationMap::const_iterator iter = navigationMapWU.begin(), iterEnd = navigationMapWU.end(); iter != iterEnd; ++iter)
     {
         if (!(iter->first->IsAvailable()))
-            usedClusters.insert(iter->first);
+            usedClusters.push_back(iter->first);
     }
 
+    usedClusters.sort(LArClusterHelper::SortByNHits);
+
     for (ClusterList::const_iterator iter = usedClusters.begin(), iterEnd = usedClusters.end(); iter != iterEnd; ++iter)
-    {
         this->UpdateUponDeletion(*iter);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -88,7 +88,7 @@ private:
      *  @param  usedClusters the list of clusters already added to slices
      */
     void CollectAssociatedClusters(const pandora::Cluster *const pClusterInSlice, const pandora::ClusterVector &candidateClusters, const ThreeDSlidingFitResultMap &trackFitResults,
-        const ThreeDSlidingConeFitResultMap &showerConeFitResults, pandora::ClusterVector &clusterSlice, pandora::ClusterList &usedClusters) const;
+        const ThreeDSlidingConeFitResultMap &showerConeFitResults, pandora::ClusterVector &clusterSlice, pandora::ClusterSet &usedClusters) const;
 
     /**
      *  @brief  Compare the provided clusters to assess whether they are associated via pointing (checks association "both ways")
@@ -183,7 +183,7 @@ private:
      *  @param  assignedClusters to receive the list of 2D clusters with hits assigned to slices
      */
     void CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap, SliceList &sliceList,
-        pandora::ClusterList &assignedClusters) const;
+        pandora::ClusterSet &assignedClusters) const;
 
     /**
      *  @brief  Get the list of 2D clusters with hits yets to be assigned to slices
@@ -194,7 +194,7 @@ private:
      *  @param  remainingClusters to receive the list of 2D clusters with hits yet to be assigned to slices
      */
     void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &clusterListNames,
-        const pandora::ClusterList &assignedClusters, pandora::ClusterList &remainingClusters) const;
+        const pandora::ClusterSet &assignedClusters, pandora::ClusterList &remainingClusters) const;
 
     /**
      *  @brief  Get the list of 2D clusters (from a named 2D cluster list) with hits yets to be assigned to slices
@@ -205,7 +205,7 @@ private:
      *  @param  remainingClusters to receive the list of 2D clusters with hits yet to be assigned to slices
      */
     void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const std::string &clusterListName,
-        const pandora::ClusterList &assignedClusters, pandora::ClusterList &remainingClusters) const;
+        const pandora::ClusterSet &assignedClusters, pandora::ClusterList &remainingClusters) const;
 
     /**
      *  @brief  Use the list of remaining 2D clusters to assign all remaining 2D hits to existing slices in the slice list
@@ -221,7 +221,7 @@ private:
     typedef KDTreeNodeInfoT<const pandora::CartesianVector*, 2> PointKDNode2D;
     typedef std::vector<PointKDNode2D> PointKDNode2DList;
 
-    typedef std::vector<const pandora::CartesianVector*> PointVector;
+    typedef std::list<const pandora::CartesianVector*> PointList;
     typedef std::unordered_map<const pandora::CartesianVector*, unsigned int> PointToSliceIndexMap;
 
     /**
@@ -233,7 +233,7 @@ private:
      *  @param  pointsW to receive the points in the w view
      *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
      */
-    void GetKDTreeEntries2D(const SliceList &sliceList, PointVector &pointsU, PointVector &pointsV, PointVector &pointsW,
+    void GetKDTreeEntries2D(const SliceList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
         PointToSliceIndexMap &pointToSliceIndexMap) const;
 
     /**
@@ -245,8 +245,8 @@ private:
      *  @param  pointsW to receive the points in the w view
      *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
      */
-    void GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointVector &pointsU, PointVector &pointsV,
-        PointVector &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const;
+    void GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointList &pointsU, PointList &pointsV,
+        PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const;
 
     /**
      *  @brief  Use the provided kd tree to efficiently identify the most appropriate slice for the provided 2D cluster

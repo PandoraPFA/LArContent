@@ -60,8 +60,8 @@ void SimpleClusterMergingAlgorithm::PopulateClusterMergeMap(const ClusterVector 
 
             if (this->IsAssociated(pClusterI, pClusterJ))
             {
-                clusterMergeMap[pClusterI].insert(pClusterJ);
-                clusterMergeMap[pClusterJ].insert(pClusterI);
+                clusterMergeMap[pClusterI].push_back(pClusterJ);
+                clusterMergeMap[pClusterJ].push_back(pClusterI);
             }
         }
     }

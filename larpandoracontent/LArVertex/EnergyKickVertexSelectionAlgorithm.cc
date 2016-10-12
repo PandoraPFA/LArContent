@@ -209,7 +209,7 @@ float EnergyKickVertexSelectionAlgorithm::CalculateEnergyAsymmetry(const bool us
     for (const Cluster *const pCluster : asymmetryClusters)
     {
         CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
         CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
         std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);

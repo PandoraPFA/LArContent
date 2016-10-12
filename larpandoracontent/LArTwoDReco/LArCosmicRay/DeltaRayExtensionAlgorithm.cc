@@ -46,38 +46,58 @@ void DeltaRayExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const
 
 void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
-    for (ClusterVector::const_iterator iterI = clusterVector.begin(), iterEndI = clusterVector.end(); iterI != iterEndI; ++iterI)
+    ClusterToCoordinateMap innerCoordinateMap, outerCoordinateMap;
+
+    for (const Cluster *const pParentCluster : clusterVector)
     {
-        const Cluster *const pParentCluster = *iterI;
-
-        for (ClusterVector::const_iterator iterJ = clusterVector.begin(), iterEndJ = clusterVector.end(); iterJ != iterEndJ; ++iterJ)
+        for (const Cluster *const pDaughterCluster : clusterVector)
         {
-            const Cluster *const pDaughterCluster = *iterJ;
-
             if (pParentCluster == pDaughterCluster)
                 continue;
 
-            this->FillClusterAssociationMatrix(pParentCluster, pDaughterCluster, clusterAssociationMatrix);
+            this->FillClusterAssociationMatrix(pParentCluster, pDaughterCluster, innerCoordinateMap, outerCoordinateMap, clusterAssociationMatrix);
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void DeltaRayExtensionAlgorithm::GetExtremalCoordinatesFromCache(const Cluster *const pCluster, ClusterToCoordinateMap &innerCoordinateMap,
+    ClusterToCoordinateMap &outerCoordinateMap, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate) const
+{
+    ClusterToCoordinateMap::const_iterator innerIter = innerCoordinateMap.find(pCluster);
+    ClusterToCoordinateMap::const_iterator outerIter = outerCoordinateMap.find(pCluster);
+
+    if ((innerCoordinateMap.end() == innerIter) || (outerCoordinateMap.end() == outerIter))
+    {
+        LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
+        (void) innerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, innerCoordinate));
+        (void) outerCoordinateMap.insert(ClusterToCoordinateMap::value_type(pCluster, outerCoordinate));
+    }
+    else
+    {
+        innerCoordinate = innerIter->second;
+        outerCoordinate = outerIter->second;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *const pParentCluster, const Cluster *const pDaughterCluster,
-    ClusterAssociationMatrix &clusterAssociationMatrix) const
+    ClusterToCoordinateMap &innerCoordinateMap, ClusterToCoordinateMap &outerCoordinateMap, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
     // Daughter cluster must be available for any association to proceed
-    if (!pDaughterCluster->IsAvailable())
+    if (!PandoraContentApi::IsAvailable(*this, pDaughterCluster))
         return;
 
     // Weak association:   between parent cosmic-ray muon and daughter delta ray
     // Strong association: between parent and daughter fragments of delta ray
     // Figure of merit:    distance between parent and daughter clusters
-    CartesianVector innerCoordinateP(0.f,0.f,0.f), outerCoordinateP(0.f,0.f,0.f);
-    CartesianVector innerCoordinateD(0.f,0.f,0.f), outerCoordinateD(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinates(pParentCluster, innerCoordinateP, outerCoordinateP);
-    LArClusterHelper::GetExtremalCoordinates(pDaughterCluster, innerCoordinateD, outerCoordinateD);
+    CartesianVector innerCoordinateP(0.f, 0.f, 0.f), outerCoordinateP(0.f, 0.f, 0.f);
+    this->GetExtremalCoordinatesFromCache(pParentCluster, innerCoordinateMap, outerCoordinateMap, innerCoordinateP, outerCoordinateP);
+
+    CartesianVector innerCoordinateD(0.f, 0.f, 0.f), outerCoordinateD(0.f, 0.f, 0.f);
+    this->GetExtremalCoordinatesFromCache(pDaughterCluster, innerCoordinateMap, outerCoordinateMap, innerCoordinateD, outerCoordinateD);
 
     for (unsigned int useInnerD = 0; useInnerD < 2; ++useInnerD)
     {
@@ -87,7 +107,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
         const float daughterLengthSquared((daughterEnd - daughterVertex).GetMagnitudeSquared());
 
         // Daughter cluster must be available and below a length cut for any association
-        if (!pDaughterCluster->IsAvailable() || daughterLengthSquared > m_maxClusterLength * m_maxClusterLength)
+        if (daughterLengthSquared > m_maxClusterLength * m_maxClusterLength)
             continue;
 
         const CartesianVector projectedVertex(LArClusterHelper::GetClosestPosition(daughterVertex, pParentCluster));
@@ -119,7 +139,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
                 parentVertexType = (useInnerP == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
 
             // Parent cluster must be available and below a length cut for a strong association
-            if (!pParentCluster->IsAvailable() || parentLengthSquared > m_maxClusterLength * m_maxClusterLength)
+            if (!PandoraContentApi::IsAvailable(*this, pParentCluster) || parentLengthSquared > m_maxClusterLength * m_maxClusterLength)
                 continue;
 
             // Require an end-to-end join between parent and daughter cluster
@@ -137,7 +157,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
             if (forwardDistance < 0.f || forwardDistance > m_maxLongitudinalDisplacement || sidewaysDistance > m_maxTransverseDisplacement)
                 continue;
 
-            if (-parentDirection.GetDotProduct(daughterDirection) < 0.25)
+            if (-parentDirection.GetDotProduct(daughterDirection) < 0.25f)
                 continue;
 
             associationType = ClusterAssociation::STRONG;
@@ -162,33 +182,36 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
     //   and the P <-- D association is the best X <-- D association).
     ClusterAssociationMatrix daughterToParentMatrix;
 
-    for (ClusterAssociationMatrix::const_iterator iter1 = parentToDaughterMatrix.begin(), iterEnd1 = parentToDaughterMatrix.end(); iter1 != iterEnd1; ++iter1)
+    ClusterVector sortedParentClusters;
+    for (const auto &mapEntry : parentToDaughterMatrix) sortedParentClusters.push_back(mapEntry.first);
+    std::sort(sortedParentClusters.begin(), sortedParentClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : sortedParentClusters)
     {
-        const Cluster *const pParentCluster(iter1->first);
-        const ClusterAssociationMap &associationMap(iter1->second);
+        const ClusterAssociationMap &daughterToAssociationMap(parentToDaughterMatrix.at(pParentCluster));
 
-        for (ClusterAssociationMap::const_iterator iter2 = associationMap.begin(), iterEnd2 = associationMap.end(); iter2 != iterEnd2; ++iter2)
+        ClusterVector sortedLocalDaughterClusters;
+        for (const auto &mapEntry : daughterToAssociationMap) sortedLocalDaughterClusters.push_back(mapEntry.first);
+        std::sort(sortedLocalDaughterClusters.begin(), sortedLocalDaughterClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pDaughterCluster : sortedLocalDaughterClusters)
         {
-            const Cluster *const pDaughterCluster(iter2->first);
-            const ClusterAssociation &association(iter2->second);
-
-            const ClusterAssociation::VertexType parentVertexType(association.GetParent());
-            const ClusterAssociation::VertexType daughterVertexType(association.GetDaughter());
-            const ClusterAssociation::AssociationType associationType(association.GetAssociation());
-            const float figureOfMerit(association.GetFigureOfMerit());
-
-            (void) daughterToParentMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster,
-                ClusterAssociation(daughterVertexType, parentVertexType, associationType, figureOfMerit)));
+            const ClusterAssociation &clusterAssociation(daughterToAssociationMap.at(pDaughterCluster));
+            (void) daughterToParentMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster, clusterAssociation));
         }
     }
 
 
     ClusterAssociationMatrix reducedParentToDaughterMatrix;
 
-    for (ClusterAssociationMatrix::const_iterator iter1 = daughterToParentMatrix.begin(), iterEnd1 = daughterToParentMatrix.end(); iter1 != iterEnd1; ++iter1)
+    ClusterVector sortedDaughterClusters;
+    for (const auto &mapEntry : daughterToParentMatrix) sortedDaughterClusters.push_back(mapEntry.first);
+    std::sort(sortedDaughterClusters.begin(), sortedDaughterClusters.end(), LArClusterHelper::SortByNHits);
+
+    // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
+    for (const Cluster *const pDaughterCluster : sortedDaughterClusters)
     {
-        const Cluster *const pDaughterCluster(iter1->first);
-        const ClusterAssociationMap &associationMap(iter1->second);
+        const ClusterAssociationMap &parentToAssociationMap(daughterToParentMatrix.at(pDaughterCluster));
 
         const Cluster *pBestInner(NULL);
         const Cluster *pBestOuter(NULL);
@@ -196,18 +219,21 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
         float bestFomInner(std::numeric_limits<float>::max());
         float bestFomOuter(std::numeric_limits<float>::max());
 
-        for (ClusterAssociationMap::const_iterator iter2 = associationMap.begin(), iterEnd2 = associationMap.end(); iter2 != iterEnd2; ++iter2)
+        ClusterVector sortedLocalParentClusters;
+        for (const auto &mapEntry : parentToAssociationMap) sortedLocalParentClusters.push_back(mapEntry.first);
+        std::sort(sortedLocalParentClusters.begin(), sortedLocalParentClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pParentCluster : sortedLocalParentClusters)
         {
-            const Cluster *const pParentCluster(iter2->first);
-            const ClusterAssociation &association(iter2->second);
+            const ClusterAssociation &clusterAssociation(parentToAssociationMap.at(pParentCluster));
 
-            if (association.GetParent() == ClusterAssociation::INNER)
+            if (clusterAssociation.GetParent() == ClusterAssociation::INNER)
             {
-                if (association.GetFigureOfMerit() < bestFomInner)
+                if (clusterAssociation.GetFigureOfMerit() < bestFomInner)
                 {
-                    bestFomInner = association.GetFigureOfMerit();
+                    bestFomInner = clusterAssociation.GetFigureOfMerit();
 
-                    if (association.GetAssociation() == ClusterAssociation::STRONG)
+                    if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
                     {
                         pBestInner = pParentCluster;
                     }
@@ -218,13 +244,13 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
                 }
             }
 
-            if (association.GetParent() == ClusterAssociation::OUTER)
+            if (clusterAssociation.GetParent() == ClusterAssociation::OUTER)
             {
-                if (association.GetFigureOfMerit() < bestFomOuter)
+                if (clusterAssociation.GetFigureOfMerit() < bestFomOuter)
                 {
-                    bestFomOuter = association.GetFigureOfMerit();
+                    bestFomOuter = clusterAssociation.GetFigureOfMerit();
 
-                    if (association.GetAssociation() == ClusterAssociation::STRONG)
+                    if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
                     {
                         pBestOuter = pParentCluster;
                     }
@@ -272,10 +298,13 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
     }
 
 
-    for (ClusterAssociationMatrix::const_iterator iter1 = reducedParentToDaughterMatrix.begin(), iterEnd1 = reducedParentToDaughterMatrix.end(); iter1 != iterEnd1; ++iter1)
+    ClusterVector sortedReducedParentClusters;
+    for (const auto &mapEntry : reducedParentToDaughterMatrix) sortedReducedParentClusters.push_back(mapEntry.first);
+    std::sort(sortedReducedParentClusters.begin(), sortedReducedParentClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : sortedReducedParentClusters)
     {
-        const Cluster *const pParentCluster(iter1->first);
-        const ClusterAssociationMap &associationMap(iter1->second);
+        const ClusterAssociationMap &daughterToAssociationMap(reducedParentToDaughterMatrix.at(pParentCluster));
 
         const Cluster *pBestInner(NULL);
         const Cluster *pBestOuter(NULL);
@@ -283,18 +312,21 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
         float bestFomInner(std::numeric_limits<float>::max());
         float bestFomOuter(std::numeric_limits<float>::max());
 
-        for (ClusterAssociationMap::const_iterator iter2 = associationMap.begin(), iterEnd2 = associationMap.end(); iter2 != iterEnd2; ++iter2)
+        ClusterVector sortedLocalDaughterClusters;
+        for (const auto &mapEntry : daughterToAssociationMap) sortedLocalDaughterClusters.push_back(mapEntry.first);
+        std::sort(sortedLocalDaughterClusters.begin(), sortedLocalDaughterClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pDaughterCluster : sortedLocalDaughterClusters)
         {
-            const Cluster *const pDaughterCluster(iter2->first);
-            const ClusterAssociation &association(iter2->second);
+            const ClusterAssociation &clusterAssociation(daughterToAssociationMap.at(pDaughterCluster));
 
-            if (association.GetParent() == ClusterAssociation::INNER)
+            if (clusterAssociation.GetParent() == ClusterAssociation::INNER)
             {
-                if (association.GetFigureOfMerit() < bestFomInner)
+                if (clusterAssociation.GetFigureOfMerit() < bestFomInner)
                 {
-                    bestFomInner = association.GetFigureOfMerit();
+                    bestFomInner = clusterAssociation.GetFigureOfMerit();
 
-                    if (association.GetAssociation() == ClusterAssociation::STRONG)
+                    if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
                     {
                         pBestInner = pDaughterCluster;
                     }
@@ -305,13 +337,13 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
                 }
             }
 
-            if (association.GetParent() == ClusterAssociation::OUTER)
+            if (clusterAssociation.GetParent() == ClusterAssociation::OUTER)
             {
-                if (association.GetFigureOfMerit() < bestFomOuter)
+                if (clusterAssociation.GetFigureOfMerit() < bestFomOuter)
                 {
-                    bestFomOuter = association.GetFigureOfMerit();
+                    bestFomOuter = clusterAssociation.GetFigureOfMerit();
 
-                    if (association.GetAssociation() == ClusterAssociation::STRONG)
+                    if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
                     {
                         pBestOuter = pDaughterCluster;
                     }
@@ -325,14 +357,28 @@ void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMat
 
         if (pBestInner)
         {
-            clusterMergeMap[pParentCluster].insert(pBestInner);
-            clusterMergeMap[pBestInner].insert(pParentCluster);
+            ClusterList &parentList(clusterMergeMap[pParentCluster]);
+
+            if (parentList.end() == std::find(parentList.begin(), parentList.end(), pBestInner))
+                parentList.push_back(pBestInner);
+
+            ClusterList &bestInnerList(clusterMergeMap[pBestInner]);
+
+            if (bestInnerList.end() == std::find(bestInnerList.begin(), bestInnerList.end(), pParentCluster))
+                bestInnerList.push_back(pParentCluster);
         }
 
         if (pBestOuter)
         {
-            clusterMergeMap[pParentCluster].insert(pBestOuter);
-            clusterMergeMap[pBestOuter].insert(pParentCluster);
+            ClusterList &parentList(clusterMergeMap[pParentCluster]);
+
+            if (parentList.end() == std::find(parentList.begin(), parentList.end(), pBestOuter))
+                parentList.push_back(pBestOuter);
+
+            ClusterList &bestOuterList(clusterMergeMap[pBestOuter]);
+
+            if (bestOuterList.end() == std::find(bestOuterList.begin(), bestOuterList.end(), pParentCluster))
+                bestOuterList.push_back(pParentCluster);
         }
     }
 }

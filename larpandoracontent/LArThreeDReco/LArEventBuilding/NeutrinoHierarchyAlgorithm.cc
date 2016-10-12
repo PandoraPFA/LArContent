@@ -28,9 +28,13 @@ NeutrinoHierarchyAlgorithm::NeutrinoHierarchyAlgorithm() :
 
 void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoVector &assignedPfos, PfoVector &unassignedPfos) const
 {
-    for (const PfoInfoMap::value_type mapIter : pfoInfoMap)
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : pfoInfoMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const Pfo *const pPfo : sortedPfos)
     {
-        const PfoInfo *const pPfoInfo(mapIter.second);
+        const PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
         if (pPfoInfo->IsNeutrinoVertexAssociated() || pPfoInfo->GetParentPfo())
         {
@@ -41,9 +45,6 @@ void NeutrinoHierarchyAlgorithm::SeparatePfos(const PfoInfoMap &pfoInfoMap, PfoV
             unassignedPfos.push_back(pPfoInfo->GetThisPfo());
         }
     }
-
-    std::sort(assignedPfos.begin(), assignedPfos.end(), LArPfoHelper::SortByNHits);
-    std::sort(unassignedPfos.begin(), unassignedPfos.end(), LArPfoHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -78,7 +79,7 @@ StatusCode NeutrinoHierarchyAlgorithm::Run()
             const Vertex *const pNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
             this->GetInitialPfoInfoMap(candidateDaughterPfoList, pfoInfoMap);
 
-            for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolList)
+            for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolVector)
                 pPfoRelationTool->Run(this, pNeutrinoVertex, pfoInfoMap);
         }
 
@@ -130,7 +131,7 @@ void NeutrinoHierarchyAlgorithm::GetCandidateDaughterPfoList(PfoList &candidateD
 
         if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, daughterPfoListName, pCandidatePfoList))
         {
-            candidateDaughterPfoList.insert(pCandidatePfoList->begin(), pCandidatePfoList->end());
+            candidateDaughterPfoList.insert(candidateDaughterPfoList.end(), pCandidatePfoList->begin(), pCandidatePfoList->end());
         }
         else if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         {
@@ -236,7 +237,7 @@ void NeutrinoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *con
         if (pPfoInfo->IsNeutrinoVertexAssociated())
         {
             display = true;
-            PfoList tempPfoList; tempPfoList.insert(pPfoInfo->GetThisPfo());
+            const PfoList tempPfoList(1, pPfoInfo->GetThisPfo());
             PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "VertexPfo", RED, true, false));
         }
     }
@@ -255,7 +256,7 @@ void NeutrinoHierarchyAlgorithm::DisplayPfoInfoMap(const ParticleFlowObject *con
         if (!pPfoInfo->GetDaughterPfoList().empty())
         {
             display = true;
-            PfoList tempPfoList; tempPfoList.insert(pPfoInfo->GetThisPfo());
+            const PfoList tempPfoList(1, pPfoInfo->GetThisPfo());
             PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &tempPfoList, "ParentPfo", RED, true, false));
             PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &(pPfoInfo->GetDaughterPfoList()), "DaughterPfos", BLUE, true, false));
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
@@ -372,16 +373,22 @@ void NeutrinoHierarchyAlgorithm::PfoInfo::RemoveParentPfo()
 
 void NeutrinoHierarchyAlgorithm::PfoInfo::AddDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo)
 {
-    if (!m_daughterPfoList.insert(pDaughterPfo).second)
+    if (m_daughterPfoList.end() != std::find(m_daughterPfoList.begin(), m_daughterPfoList.end(), pDaughterPfo))
         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+    m_daughterPfoList.push_back(pDaughterPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void NeutrinoHierarchyAlgorithm::PfoInfo::RemoveDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo)
 {
-    if (!m_daughterPfoList.erase(pDaughterPfo))
+    PfoList::iterator eraseIter = std::find(m_daughterPfoList.begin(), m_daughterPfoList.end(), pDaughterPfo);
+
+    if (m_daughterPfoList.end() == eraseIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    m_daughterPfoList.erase(eraseIter);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -389,18 +396,18 @@ void NeutrinoHierarchyAlgorithm::PfoInfo::RemoveDaughterPfo(const pandora::Parti
 
 StatusCode NeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "PfoRelationTools", algorithmToolList));
+        "PfoRelationTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         PfoRelationTool *const pPfoRelationTool(dynamic_cast<PfoRelationTool*>(*iter));
 
         if (!pPfoRelationTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pPfoRelationTool);
+        m_algorithmToolVector.push_back(pPfoRelationTool);
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,

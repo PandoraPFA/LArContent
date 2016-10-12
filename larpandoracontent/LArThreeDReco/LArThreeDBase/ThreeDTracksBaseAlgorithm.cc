@@ -56,10 +56,13 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 {
     bool changesMade(false);
 
-    for (SplitPositionMap::const_iterator iter = splitPositionMap.begin(), iterEnd = splitPositionMap.end(); iter != iterEnd; ++iter)
+    ClusterList splitClusters;
+    for (const auto &mapEntry : splitPositionMap) splitClusters.push_back(mapEntry.first);
+    splitClusters.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *pCurrentCluster : splitClusters)
     {
-        const Cluster *pCurrentCluster = iter->first;
-        CartesianPointList splitPositions(iter->second);
+        CartesianPointVector splitPositions(splitPositionMap.at(pCurrentCluster));
         std::sort(splitPositions.begin(), splitPositions.end(), ThreeDTracksBaseAlgorithm::SortSplitPositions);
 
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCurrentCluster));
@@ -70,7 +73,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
 
-        for (CartesianPointList::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
+        for (CartesianPointVector::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
         {
             const Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
 
@@ -107,10 +110,10 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
     const CartesianVector highXUnitVector((highXEnd - splitPosition).GetUnitVector());
 
     CaloHitList caloHitList;
-    pCurrentCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+    pCurrentCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
     std::string originalListName, fragmentListName;
-    ClusterList clusterList; clusterList.insert(pCurrentCluster);
+    const ClusterList clusterList(1, pCurrentCluster);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, originalListName, fragmentListName));
 
     pLowXCluster = NULL;
@@ -128,7 +131,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
         if (NULL == pClusterToModify)
         {
             PandoraContentApi::Cluster::Parameters parameters;
-            parameters.m_caloHitList.insert(pCaloHit);
+            parameters.m_caloHitList.push_back(pCaloHit);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pClusterToModify));
         }
         else
@@ -202,7 +205,7 @@ void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const 
         if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
             continue;
 
-        selectedClusterList.insert(pCluster);
+        selectedClusterList.push_back(pCluster);
     }
 }
 
@@ -217,11 +220,10 @@ void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoPa
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -238,17 +240,18 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
 template<typename T>
 void ThreeDTracksBaseAlgorithm<T>::PreparationStep(ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
+    for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
     {
-        const Cluster *const pCluster = *(iter++);
+        const Cluster *const pCluster(*iter);
 
         try
         {
             this->AddToSlidingFitCache(pCluster);
+            ++iter;
         }
         catch (StatusCodeException &statusCodeException)
         {
-            clusterList.erase(pCluster);
+            clusterList.erase(iter++);
 
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;

@@ -138,8 +138,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, const pandora::Cluster*> ClusterReplacementMap;
-
     pandora::StringVector   m_inputPfoListNames;            ///< The input pfo list names
     bool                    m_useVertex;                    ///< Whether to use the interaction vertex to select useful cone directions
     unsigned int            m_maxIterations;                ///< The maximum allowed number of algorithm iterations

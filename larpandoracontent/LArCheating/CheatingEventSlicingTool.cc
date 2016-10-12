@@ -23,7 +23,7 @@ void CheatingEventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgor
     const HitTypeToNameMap &/*clusterListNames*/, NeutrinoParentAlgorithm::SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     const MCParticleList *pMCParticleList = NULL;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList));
@@ -45,9 +45,13 @@ void CheatingEventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgor
     this->FillSlices(pAlgorithm, TPC_VIEW_V, caloHitListNames, mcParticleToSliceMap);
     this->FillSlices(pAlgorithm, TPC_VIEW_W, caloHitListNames, mcParticleToSliceMap);
 
-    for (const MCParticleToSliceMap::value_type &value : mcParticleToSliceMap)
+    MCParticleVector mcParticleVector;
+    for (const auto &mapEntry : mcParticleToSliceMap) mcParticleVector.push_back(mapEntry.first);
+    std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
+
+    for (const MCParticle *const pMCParticle : mcParticleVector)
     {
-        const NeutrinoParentAlgorithm::Slice &slice(value.second);
+        const NeutrinoParentAlgorithm::Slice &slice(mcParticleToSliceMap.at(pMCParticle));
 
         if (!slice.m_caloHitListU.empty() || !slice.m_caloHitListV.empty() || !slice.m_caloHitListW.empty())
             sliceList.push_back(slice);
@@ -82,7 +86,7 @@ void CheatingEventSlicingTool::FillSlices(const NeutrinoParentAlgorithm *const p
 
             NeutrinoParentAlgorithm::Slice &slice(mapIter->second);
             CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-            caloHitList.insert(pCaloHit);
+            caloHitList.push_back(pCaloHit);
         }
         catch (StatusCodeException &statusCodeException)
         {

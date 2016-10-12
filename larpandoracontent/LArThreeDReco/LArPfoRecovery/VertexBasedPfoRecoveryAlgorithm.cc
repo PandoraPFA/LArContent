@@ -58,7 +58,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::Run()
     this->SelectVertexClusters(pSelectedVertex, slidingFitResultMap, availableClusters, selectedClusters);
 
     // Match the cluster end points
-    ClusterList vetoList;
+    ClusterSet vetoList;
     ParticleList particleList;
     this->MatchThreeViews(pSelectedVertex, slidingFitResultMap, selectedClusters, vetoList, particleList);
     this->MatchTwoViews(pSelectedVertex, slidingFitResultMap, selectedClusters, vetoList, particleList);
@@ -182,7 +182,7 @@ void VertexBasedPfoRecoveryAlgorithm::SelectVertexClusters(const Vertex *const p
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-    const ClusterVector &inputClusters, ClusterList &vetoList, ParticleList &particleList) const
+    const ClusterVector &inputClusters, ClusterSet &vetoList, ParticleList &particleList) const
 {
     while (true)
     {
@@ -193,9 +193,9 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
         this->SelectClusters(TPC_VIEW_W, availableClusters, clustersW);
 
         float chi2(m_threeViewChi2Cut);
-        Cluster *pCluster1(NULL);
-        Cluster *pCluster2(NULL);
-        Cluster *pCluster3(NULL);
+        const Cluster *pCluster1(NULL);
+        const Cluster *pCluster2(NULL);
+        const Cluster *pCluster3(NULL);
 
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersU, clustersV, clustersW, pCluster1, pCluster2, pCluster3, chi2);
 
@@ -224,7 +224,7 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-    const ClusterVector &inputClusters, ClusterList &vetoList, ParticleList &particleList) const
+    const ClusterVector &inputClusters, ClusterSet &vetoList, ParticleList &particleList) const
 {
     while (true)
     {
@@ -235,8 +235,8 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
         this->SelectClusters(TPC_VIEW_W, availableClusters, clustersW);
 
         float chi2(m_twoViewChi2Cut);
-        Cluster *pCluster1(NULL);
-        Cluster *pCluster2(NULL);
+        const Cluster *pCluster1(NULL);
+        const Cluster *pCluster2(NULL);
 
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersU, clustersV, pCluster1, pCluster2, chi2);
         this->GetBestChi2(pVertex, slidingFitResultMap, clustersV, clustersW, pCluster1, pCluster2, chi2);
@@ -263,7 +263,7 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
 
 void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
     const ClusterVector &clusters1, const ClusterVector &clusters2, const ClusterVector &clusters3,
-    Cluster *&pBestCluster1, Cluster *&pBestCluster2, Cluster *&pBestCluster3, float &bestChi2) const
+    const Cluster *&pBestCluster1, const Cluster *&pBestCluster2, const Cluster *&pBestCluster3, float &bestChi2) const
 {
     if (clusters1.empty() || clusters2.empty() || clusters3.empty())
         return;
@@ -310,9 +310,9 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
                  if (thisChi2 < bestChi2)
                  {
                      bestChi2 = thisChi2;
-                     pBestCluster1 = const_cast<Cluster*>(pCluster1);
-                     pBestCluster2 = const_cast<Cluster*>(pCluster2);
-                     pBestCluster3 = const_cast<Cluster*>(pCluster3);
+                     pBestCluster1 = pCluster1;
+                     pBestCluster2 = pCluster2;
+                     pBestCluster3 = pCluster3;
                  }
             }
         }
@@ -322,7 +322,7 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-    const ClusterVector &clusters1, const ClusterVector &clusters2, Cluster *&pBestCluster1, Cluster *&pBestCluster2, float &bestChi2) const
+    const ClusterVector &clusters1, const ClusterVector &clusters2, const Cluster *&pBestCluster1, const Cluster *&pBestCluster2, float &bestChi2) const
 {
     if (clusters1.empty() || clusters2.empty())
         return;
@@ -357,8 +357,8 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
             if (thisChi2 < bestChi2)
             {
                 bestChi2 = thisChi2;
-                pBestCluster1 = const_cast<Cluster*>(pCluster1);
-                pBestCluster2 = const_cast<Cluster*>(pCluster2);
+                pBestCluster1 = pCluster1;
+                pBestCluster2 = pCluster2;
             }
         }
     }
@@ -419,7 +419,7 @@ float VertexBasedPfoRecoveryAlgorithm::GetChi2(const Vertex *const pVertex, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexBasedPfoRecoveryAlgorithm::SelectAvailableClusters(const ClusterList &vetoList, const ClusterVector &inputVector,
+void VertexBasedPfoRecoveryAlgorithm::SelectAvailableClusters(const ClusterSet &vetoList, const ClusterVector &inputVector,
     ClusterVector &outputVector) const
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
@@ -493,9 +493,9 @@ void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particl
         if(!(isAvailableU && isAvailableV && isAvailableW))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        if (pClusterU) clusterList.insert(pClusterU);
-        if (pClusterV) clusterList.insert(pClusterV);
-        if (pClusterW) clusterList.insert(pClusterW);
+        if (pClusterU) clusterList.push_back(pClusterU);
+        if (pClusterV) clusterList.push_back(pClusterV);
+        if (pClusterW) clusterList.push_back(pClusterW);
 
         // TODO Correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;

@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Api/PandoraApi.h"
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -29,7 +31,7 @@ StitchingObjectCreationTool::StitchingObjectCreationTool() :
 void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm, StitchingInfo &stitchingInfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     std::string clusterListName;
     const ClusterList *pClusterList(nullptr);
@@ -106,13 +108,13 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
     for (const Cluster *const pInputCluster : inputClusterList)
     {
         CaloHitList inputCaloHitList, newCaloHitList;
-        pInputCluster->GetOrderedCaloHitList().GetCaloHitList(inputCaloHitList);
+        pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
-            newCaloHitList.insert(this->CreateCaloHit(pAlgorithm, pInputCaloHit, pInputPfo, volumeInfo));
+            newCaloHitList.push_back(this->CreateCaloHit(pAlgorithm, pInputCaloHit, pInputPfo, volumeInfo));
 
         if (!newCaloHitList.empty())
-            newClusterList.insert(this->CreateCluster(pAlgorithm, pInputCluster, newCaloHitList));
+            newClusterList.push_back(this->CreateCluster(pAlgorithm, pInputCluster, newCaloHitList));
     }
 
     VertexList newVertexList;
@@ -120,7 +122,7 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
     for (const Vertex *const pInputVertex : pInputPfo->GetVertexList())
     {
         if (VERTEX_3D == pInputVertex->GetVertexType())
-            newVertexList.insert(this->CreateVertex(pAlgorithm, pInputVertex, pInputPfo, volumeInfo));
+            newVertexList.push_back(this->CreateVertex(pAlgorithm, pInputVertex, pInputPfo, volumeInfo));
     }
 
     const ParticleFlowObject *const pNewPfo = this->CreatePfo(pAlgorithm, pInputPfo, newClusterList, newVertexList);
@@ -169,7 +171,7 @@ const CaloHit *StitchingObjectCreationTool::CreateCaloHit(const Algorithm *const
     parameters.m_hitRegion = pInputCaloHit->GetHitRegion();
     parameters.m_layer = pInputCaloHit->GetLayer();
     parameters.m_isInOuterSamplingLayer = pInputCaloHit->IsInOuterSamplingLayer();
-    parameters.m_pParentAddress = pInputCaloHit->GetParentCaloHitAddress();
+    parameters.m_pParentAddress = pInputCaloHit->GetParentAddress();
 
     const CaloHit *pNewCaloHit(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*pAlgorithm, parameters, pNewCaloHit));
@@ -177,7 +179,7 @@ const CaloHit *StitchingObjectCreationTool::CreateCaloHit(const Algorithm *const
     PandoraContentApi::CaloHit::Metadata metadata;
     metadata.m_isIsolated = pInputCaloHit->IsIsolated();
     metadata.m_isPossibleMip = pInputCaloHit->IsPossibleMip();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*pAlgorithm, pNewCaloHit, metadata));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*pAlgorithm, pNewCaloHit, metadata));
 
     return pNewCaloHit;
 }
@@ -197,8 +199,8 @@ const Cluster *StitchingObjectCreationTool::CreateCluster(const Algorithm *const
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, parameters, pNewCluster));
 
     PandoraContentApi::Cluster::Metadata metadata;
-    metadata.m_particleId = pInputCluster->GetParticleIdFlag();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*pAlgorithm, pNewCluster, metadata));
+    metadata.m_particleId = pInputCluster->GetParticleId();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*pAlgorithm, pNewCluster, metadata));
 
     return pNewCluster;
 }

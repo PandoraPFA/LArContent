@@ -35,7 +35,7 @@ HitCreationBaseTool::~HitCreationBaseTool()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, const HitType hitType1, const HitType hitType2,
-    const CartesianPointList &fitPositionList1, const CartesianPointList &fitPositionList2, CartesianVector &position3D, float &chiSquared) const
+    const CartesianPointVector &fitPositionList1, const CartesianPointVector &fitPositionList2, CartesianVector &position3D, float &chiSquared) const
 {
     if (fitPositionList1.empty() && fitPositionList2.empty())
     {
@@ -61,10 +61,10 @@ void HitCreationBaseTool::GetBestPosition3D(const CaloHit *const pCaloHit2D, con
     {
         chiSquared = std::numeric_limits<float>::max();
 
-        for (CartesianPointList::const_iterator iter1 = fitPositionList1.begin(), iterEnd1 = fitPositionList1.end(); iter1 != iterEnd1; ++iter1)
+        for (CartesianPointVector::const_iterator iter1 = fitPositionList1.begin(), iterEnd1 = fitPositionList1.end(); iter1 != iterEnd1; ++iter1)
         {
             const CartesianVector &fitPosition1 = *iter1;
-            for (CartesianPointList::const_iterator iter2 = fitPositionList2.begin(), iterEnd2 = fitPositionList2.end(); iter2 != iterEnd2; ++iter2)
+            for (CartesianPointVector::const_iterator iter2 = fitPositionList2.begin(), iterEnd2 = fitPositionList2.end(); iter2 != iterEnd2; ++iter2)
             {
                 const CartesianVector &fitPosition2 = *iter2;
 

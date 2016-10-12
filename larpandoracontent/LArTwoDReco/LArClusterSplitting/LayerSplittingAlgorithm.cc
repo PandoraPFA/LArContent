@@ -163,11 +163,11 @@ StatusCode LayerSplittingAlgorithm::DivideCaloHits(const Cluster *const pCluster
 
             if (thisLayer < splitLayer)
             {
-                firstHitList.insert(pCaloHit);
+                firstHitList.push_back(pCaloHit);
             }
             else
             {
-                secondHitList.insert(pCaloHit);
+                secondHitList.push_back(pCaloHit);
             }
         }
     }

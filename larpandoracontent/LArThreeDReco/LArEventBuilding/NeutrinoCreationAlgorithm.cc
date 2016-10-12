@@ -58,7 +58,7 @@ StatusCode NeutrinoCreationAlgorithm::Run()
         // ATTN Placeholder properties to be set by a later neutrino properties algorithm
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
         this->FillDefaultNeutrinoParameters(pfoParameters);
-        pfoParameters.m_vertexList.insert(pVertex);
+        pfoParameters.m_vertexList.push_back(pVertex);
 
         const ParticleFlowObject *pNeutrinoPfo(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pNeutrinoPfo));

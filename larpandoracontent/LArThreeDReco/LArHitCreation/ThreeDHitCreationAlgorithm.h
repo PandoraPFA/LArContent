@@ -92,8 +92,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<HitCreationBaseTool*> HitCreationToolList;
-    HitCreationToolList     m_algorithmToolList;        ///< The algorithm tool list
+    typedef std::vector<HitCreationBaseTool*> HitCreationToolVector;
+    HitCreationToolVector   m_algorithmToolVector;      ///< The algorithm tool vector
 
     std::string             m_inputPfoListName;         ///< The name of the input pfo list
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list

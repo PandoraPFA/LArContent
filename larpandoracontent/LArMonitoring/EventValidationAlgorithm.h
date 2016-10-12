@@ -12,6 +12,10 @@
 
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
+#ifdef MONITORING
+#include "PandoraMonitoringApi.h"
+#endif
+
 #include <map>
 #include <set>
 #include <vector>
@@ -143,8 +147,8 @@ private:
     void GetSimpleMCPrimaryList(const pandora::MCParticleVector &mcPrimaryList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
         const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, SimpleMCPrimaryList &simpleMCPrimaryList) const;
 
-    typedef std::map<const pandora::ParticleFlowObject*, int> PfoIdMap;
-    typedef std::map<SimpleMCPrimary, SimpleMatchedPfoList> MCPrimaryMatchingMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, int> PfoIdMap;
+    typedef std::map<SimpleMCPrimary, SimpleMatchedPfoList> MCPrimaryMatchingMap; // SimpleMCPrimary has a defined operator<
 
     /**
      *  @brief  Obtain a sorted list of matched pfos for each mc primary

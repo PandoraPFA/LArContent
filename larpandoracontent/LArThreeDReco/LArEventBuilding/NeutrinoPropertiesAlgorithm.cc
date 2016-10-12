@@ -91,7 +91,7 @@ void NeutrinoPropertiesAlgorithm::SetNeutrinoId(const ParticleFlowObject *const 
     {
         metadata.m_charge = PdgTable::GetParticleCharge(metadata.m_particleId.Get());
         metadata.m_mass = PdgTable::GetParticleMass(metadata.m_particleId.Get());
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pNeutrinoPfo, metadata));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pNeutrinoPfo, metadata));
     }
 }
 

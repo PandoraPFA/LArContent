@@ -208,8 +208,15 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 
         if (pParentCluster)
         {
-            clusterMergeMap[pParentCluster].insert(pDaughterCluster);
-            clusterMergeMap[pDaughterCluster].insert(pParentCluster);
+            ClusterList &parentList(clusterMergeMap[pParentCluster]);
+
+            if (parentList.end() == std::find(parentList.begin(), parentList.end(), pDaughterCluster))
+                parentList.push_back(pDaughterCluster);
+
+            ClusterList &daughterList(clusterMergeMap[pDaughterCluster]);
+
+            if (daughterList.end() == std::find(daughterList.begin(), daughterList.end(), pParentCluster))
+                daughterList.push_back(pParentCluster);
         }
     }
 }

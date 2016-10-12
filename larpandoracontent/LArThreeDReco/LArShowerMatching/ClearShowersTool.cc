@@ -43,7 +43,7 @@ bool ClearShowersTool::HasLargeDirectConnections(IteratorList::const_iterator iI
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ClearShowersTool::IsLargerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
-    const unsigned int minMatchedSamplingPointRatio, const float minXOverlapSpanRatio, const pandora::ClusterList &usedClusters)
+    const unsigned int minMatchedSamplingPointRatio, const float minXOverlapSpanRatio, const ClusterSet &usedClusters)
 {
     const unsigned int nMatchedSamplingPoints((*iIter)->GetOverlapResult().GetNMatchedSamplingPoints());
     const unsigned int xOverlapSpan((*iIter)->GetOverlapResult().GetXOverlap().GetXOverlapSpan());
@@ -74,7 +74,7 @@ bool ClearShowersTool::IsLargerThanDirectConnections(IteratorList::const_iterato
 bool ClearShowersTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindClearShowers(overlapTensor, protoParticleVector);
@@ -87,7 +87,7 @@ bool ClearShowersTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType 
 
 void ClearShowersTool::FindClearShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -113,9 +113,9 @@ void ClearShowersTool::FindClearShowers(const TensorType &overlapTensor, ProtoPa
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.insert((*iIter)->GetClusterU());
-            protoParticle.m_clusterListV.insert((*iIter)->GetClusterV());
-            protoParticle.m_clusterListW.insert((*iIter)->GetClusterW());
+            protoParticle.m_clusterListU.push_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterListV.push_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterListW.push_back((*iIter)->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
@@ -127,7 +127,7 @@ void ClearShowersTool::FindClearShowers(const TensorType &overlapTensor, ProtoPa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearShowersTool::SelectLargeShowerElements(const TensorType::ElementList &elementList, const pandora::ClusterList &usedClusters,
+void ClearShowersTool::SelectLargeShowerElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters,
     IteratorList &iteratorList) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)

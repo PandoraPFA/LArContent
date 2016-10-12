@@ -28,9 +28,9 @@ TransverseTensorVisualizationTool::TransverseTensorVisualizationTool() :
 bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    ClusterList usedKeyClusters;
+    ClusterSet usedKeyClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -58,9 +58,9 @@ bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *con
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
-            allClusterListU.insert(eIter->GetClusterU());
-            allClusterListV.insert(eIter->GetClusterV());
-            allClusterListW.insert(eIter->GetClusterW());
+            if (allClusterListU.end() == std::find(allClusterListU.begin(), allClusterListU.end(), eIter->GetClusterU())) allClusterListU.push_back(eIter->GetClusterU());
+            if (allClusterListV.end() == std::find(allClusterListV.begin(), allClusterListV.end(), eIter->GetClusterV())) allClusterListV.push_back(eIter->GetClusterV());
+            if (allClusterListW.end() == std::find(allClusterListW.begin(), allClusterListW.end(), eIter->GetClusterW())) allClusterListW.push_back(eIter->GetClusterW());
             usedKeyClusters.insert(eIter->GetClusterU());
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
@@ -72,11 +72,7 @@ bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *con
 
             if (m_showEachIndividualElement)
             {
-                ClusterList clusterListU, clusterListV, clusterListW;
-                clusterListU.insert(eIter->GetClusterU());
-                clusterListV.insert(eIter->GetClusterV());
-                clusterListW.insert(eIter->GetClusterW());
-
+                const ClusterList clusterListU(1, eIter->GetClusterU()), clusterListV(1, eIter->GetClusterV()), clusterListW(1, eIter->GetClusterW());
                 PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListU, "UCluster", RED));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListV, "VCluster", GREEN));

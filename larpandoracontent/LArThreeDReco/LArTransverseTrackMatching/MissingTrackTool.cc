@@ -27,7 +27,7 @@ MissingTrackTool::MissingTrackTool() :
 bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindMissingTracks(overlapTensor, protoParticleVector);
@@ -40,7 +40,7 @@ bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, Te
 
 void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -98,13 +98,13 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
             ProtoParticle protoParticle;
 
             if (eIter->GetClusterU()->IsAvailable())
-                protoParticle.m_clusterListU.insert(eIter->GetClusterU());
+                protoParticle.m_clusterListU.push_back(eIter->GetClusterU());
 
             if (eIter->GetClusterV()->IsAvailable())
-                protoParticle.m_clusterListV.insert(eIter->GetClusterV());
+                protoParticle.m_clusterListV.push_back(eIter->GetClusterV());
 
             if (eIter->GetClusterW()->IsAvailable())
-                protoParticle.m_clusterListW.insert(eIter->GetClusterW());
+                protoParticle.m_clusterListW.push_back(eIter->GetClusterW());
 
             protoParticleVector.push_back(protoParticle);
             usedClusters.insert(eIter->GetClusterU());

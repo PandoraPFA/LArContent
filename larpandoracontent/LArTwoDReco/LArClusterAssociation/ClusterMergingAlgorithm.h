@@ -69,7 +69,7 @@ protected:
      *  @param  associatedClusterList the output list of associated clusters
      */
     void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const pandora::Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-        const pandora::ClusterList &clusterVetoList, pandora::ClusterList& associatedClusterList) const;
+        const pandora::ClusterSet &clusterVetoList, pandora::ClusterList& associatedClusterList) const;
 
     /**
      *  @brief  Sort the selected clusters, so that they have a well-defined ordering

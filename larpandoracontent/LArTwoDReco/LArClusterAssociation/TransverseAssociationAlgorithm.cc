@@ -123,31 +123,27 @@ void TransverseAssociationAlgorithm::GetNearbyClusterMap(const ClusterVector &al
     for (const Cluster *const pCluster : allClusters)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
-        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
+        allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
             (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
-    CaloHitVector sortedAllCaloHits(allCaloHits.begin(), allCaloHits.end());
-    std::sort(sortedAllCaloHits.begin(), sortedAllCaloHits.end(), LArClusterHelper::SortHitsByPosition);
-
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
 
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(sortedAllCaloHits, hitKDNode2DList);
+    KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     for (const Cluster *const pCluster : allClusters)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
 
         for (const CaloHit *const pCaloHit : daughterHits)
         {
-            CaloHitList nearbyHits;
-            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegionX, m_searchRegionZ);
+            KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegionX, m_searchRegionZ));
 
             HitKDNode2DList found;
             kdTree.search(searchRegionHits, found);
@@ -312,7 +308,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToCluste
     if (associationMap.end() == iterI)
         return;
 
-    for (ClusterList::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterSet::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
         const Cluster *const pClusterJ = *iterJ;
 
@@ -320,13 +316,15 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToCluste
             associatedVector.push_back(pClusterJ);
     }
 
-    for (ClusterList::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterSet::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
         const Cluster *const pClusterJ = *iterJ;
 
         if (this->IsTransverseAssociated(pClusterJ, pClusterI, nearbyClusters))
             associatedVector.push_back(pClusterJ);
     }
+
+    std::sort(associatedVector.begin(), associatedVector.end(), LArClusterHelper::SortByNHits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -775,9 +773,8 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
     double minX(std::numeric_limits<double>::max());
     double maxX(-std::numeric_limits<double>::max());
 
-    ClusterList clusterList;
-    clusterList.insert(pSeedCluster);
-    clusterList.insert(associatedClusters.begin(), associatedClusters.end());
+    ClusterList clusterList(1, pSeedCluster);
+    clusterList.insert(clusterList.end(), associatedClusters.begin(), associatedClusters.end());
 
     for (ClusterList::const_iterator iterI = clusterList.begin(), iterEndI = clusterList.end(); iterI != iterEndI; ++iterI)
     {

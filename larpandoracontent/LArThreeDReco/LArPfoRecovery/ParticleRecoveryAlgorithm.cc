@@ -16,6 +16,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lar_content
@@ -82,7 +84,7 @@ void ParticleRecoveryAlgorithm::GetInputClusters(ClusterList &inputClusterListU,
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
             ClusterList &clusterList((TPC_VIEW_U == hitType) ? inputClusterListU : (TPC_VIEW_V == hitType) ? inputClusterListV : inputClusterListW);
-            clusterList.insert(pCluster);
+            clusterList.push_back(pCluster);
         }
     }
 }
@@ -114,7 +116,7 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
         if (!pCluster->IsAvailable())
             continue;
 
-        if ((!m_includeTracks && (MU_MINUS == std::abs(pCluster->GetParticleIdFlag()))) || (!m_includeShowers && (MU_MINUS != std::abs(pCluster->GetParticleIdFlag()))))
+        if ((!m_includeTracks && (MU_MINUS == std::abs(pCluster->GetParticleId()))) || (!m_includeShowers && (MU_MINUS != std::abs(pCluster->GetParticleId()))))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
@@ -129,7 +131,7 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
         if ((xMax - xMin) < m_minClusterXSpan)
             continue;
 
-        selectedClusterList.insert(pCluster);
+        selectedClusterList.push_back(pCluster);
     }
 }
 
@@ -137,7 +139,7 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
 
 void ParticleRecoveryAlgorithm::VertexClusterSelection(const ClusterList &inputClusterList, ClusterList &selectedClusterList) const
 {
-    CartesianPointList vertexList;
+    CartesianPointVector vertexList;
 
     for (ClusterList::const_iterator iter = inputClusterList.begin(), iterEnd = inputClusterList.end(); iter != iterEnd; ++iter)
     {
@@ -164,12 +166,12 @@ void ParticleRecoveryAlgorithm::VertexClusterSelection(const ClusterList &inputC
 
             const LArPointingCluster pointingCluster(pCluster);
 
-            for (CartesianPointList::const_iterator vIter = vertexList.begin(), vIterEnd = vertexList.end(); vIter != vIterEnd; ++vIter)
+            for (CartesianPointVector::const_iterator vIter = vertexList.begin(), vIterEnd = vertexList.end(); vIter != vIterEnd; ++vIter)
             {
                 if (LArPointingClusterHelper::IsNode(*vIter, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
                     LArPointingClusterHelper::IsNode(*vIter, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance))
                 {
-                    selectedClusterList.insert(pCluster);
+                    selectedClusterList.push_back(pCluster);
                     break;
                 }
             }
@@ -237,9 +239,9 @@ void ParticleRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlap
             continue;
 
         ClusterList clusterListAll;
-        clusterListAll.insert(clusterListU.begin(), clusterListU.end());
-        clusterListAll.insert(clusterListV.begin(), clusterListV.end());
-        clusterListAll.insert(clusterListW.begin(), clusterListW.end());
+        clusterListAll.insert(clusterListAll.end(), clusterListU.begin(), clusterListU.end());
+        clusterListAll.insert(clusterListAll.end(), clusterListV.begin(), clusterListV.end());
+        clusterListAll.insert(clusterListAll.end(), clusterListW.begin(), clusterListW.end());
 
         if ((1 == nU * nV * nW) && this->CheckConsistency(*(clusterListU.begin()), *(clusterListV.begin()), *(clusterListW.begin())))
         {
@@ -338,18 +340,24 @@ void ParticleRecoveryAlgorithm::SimpleOverlapTensor::AddAssociation(const Cluste
 
     if (pClusterU && pClusterV && !pClusterW)
     {
-        m_clusterNavigationMapUV[pClusterU].insert(pClusterV);
-        m_keyClusters.insert(pClusterU);
+        m_clusterNavigationMapUV[pClusterU].push_back(pClusterV);
+
+        if (m_keyClusters.end() == std::find(m_keyClusters.begin(), m_keyClusters.end(), pClusterU))
+            m_keyClusters.push_back(pClusterU);
     }
     else if (!pClusterU && pClusterV && pClusterW)
     {
-        m_clusterNavigationMapVW[pClusterV].insert(pClusterW);
-        m_keyClusters.insert(pClusterV);
+        m_clusterNavigationMapVW[pClusterV].push_back(pClusterW);
+
+        if (m_keyClusters.end() == std::find(m_keyClusters.begin(), m_keyClusters.end(), pClusterV))
+            m_keyClusters.push_back(pClusterV);
     }
     else if (pClusterU && !pClusterV && pClusterW)
     {
-        m_clusterNavigationMapWU[pClusterW].insert(pClusterU);
-        m_keyClusters.insert(pClusterW);
+        m_clusterNavigationMapWU[pClusterW].push_back(pClusterU);
+
+        if (m_keyClusters.end() == std::find(m_keyClusters.begin(), m_keyClusters.end(), pClusterW))
+            m_keyClusters.push_back(pClusterW);
     }
     else
     {
@@ -373,8 +381,10 @@ void ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetConnectedElements(const 
     ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
     const ClusterNavigationMap &navigationMap((TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
 
-    if (!clusterList.insert(pCluster).second)
+    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
         return;
+
+    clusterList.push_back(pCluster);
 
     ClusterNavigationMap::const_iterator iter = navigationMap.find(pCluster);
 

@@ -79,7 +79,7 @@ private:
      * 
      *  @return whether a seed candidate has been found
      */
-    bool GetNextSeedCandidate(const pandora::ClusterList *const pClusterList, const pandora::ClusterList &usedClusters,
+    bool GetNextSeedCandidate(const pandora::ClusterList *const pClusterList, const pandora::ClusterSet &usedClusters,
         const pandora::Cluster *&pSeedCluster) const;
 
     /**
@@ -197,7 +197,7 @@ private:
      *  @param  nBranchesPerCluster the cluster info map
      */
     void ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
-        pandora::PfoList &pfoList, pandora::ClusterList &usedClusters, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
+        pandora::PfoList &pfoList, pandora::ClusterSet &usedClusters, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
 
     /**
      *  @brief  Store the number of calo hits per cluster in a cluster info map
@@ -230,9 +230,9 @@ private:
      *
      *  @param  pCluster address of the relevant cluster
      *  @param  pfoList the list of all input pfos
-     *  @param  pTargetPfo to receive the address of the target pfo
+     *  @param  targetIter to receive the relevant iterator
      */
-    void FindTargetPfo(const pandora::Cluster *const pCluster, const pandora::PfoList &pfoList, const pandora::Pfo *&pTargetPfo) const;
+    void FindTargetPfo(const pandora::Cluster *const pCluster, pandora::PfoList &pfoList, pandora::PfoList::iterator &targetIter) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

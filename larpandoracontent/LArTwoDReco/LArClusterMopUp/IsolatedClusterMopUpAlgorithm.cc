@@ -39,15 +39,19 @@ void IsolatedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters,
     CaloHitToClusterMap caloHitToClusterMap;
     this->GetCaloHitToClusterMap(caloHitList, pfoClusters, caloHitToClusterMap);
 
-    for (const CaloHitToClusterMap::value_type &mapEntry : caloHitToClusterMap)
+    CaloHitList sortedCaloHitList;
+    for (const auto &mapEntry : caloHitToClusterMap) sortedCaloHitList.push_back(mapEntry.first);
+    sortedCaloHitList.sort(LArClusterHelper::SortHitsByPosition);
+
+    for (const CaloHit *pCaloHit : sortedCaloHitList)
     {
         if (m_addHitsAsIsolated)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, mapEntry.second, mapEntry.first));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, caloHitToClusterMap.at(pCaloHit), pCaloHit));
         }
         else
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, mapEntry.second, mapEntry.first));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, caloHitToClusterMap.at(pCaloHit), pCaloHit));
         }
     }
 }
@@ -61,7 +65,7 @@ void IsolatedClusterMopUpAlgorithm::DissolveClustersToHits(const ClusterList &cl
         if (pRemnantCluster->GetNCaloHits() < m_maxCaloHitsInCluster)
         {
             const std::string listNameR(this->GetListName(pRemnantCluster));
-            pRemnantCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+            pRemnantCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pRemnantCluster, listNameR));
         }
     }
@@ -77,20 +81,17 @@ void IsolatedClusterMopUpAlgorithm::GetCaloHitToClusterMap(const CaloHitList &ca
     for (const Cluster *const pCluster : clusterList)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
-        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
+        allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
-            (void) hitToParentClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+            (void) hitToParentClusterMap.insert(CaloHitToClusterMap::value_type(pCaloHit, pCluster));
     }
-
-    CaloHitVector sortedAllCaloHits(allCaloHits.begin(), allCaloHits.end());
-    std::sort(sortedAllCaloHits.begin(), sortedAllCaloHits.end(), LArClusterHelper::SortHitsByPosition);
 
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
 
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(sortedAllCaloHits, hitKDNode2DList);
+    KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     for (const CaloHit *const pCaloHit : caloHitList)

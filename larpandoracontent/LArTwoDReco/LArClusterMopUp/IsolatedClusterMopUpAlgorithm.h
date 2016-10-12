@@ -70,8 +70,6 @@ private:
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
-
     unsigned int    m_maxCaloHitsInCluster;     ///< The maximum number of hits in a cluster to be dissolved
     float           m_maxHitClusterDistance;    ///< The maximum hit to cluster distance for isolated hit merging
     bool            m_addHitsAsIsolated;        ///< Whether to add hits to clusters as "isolated" (don't contribute to spatial properties)

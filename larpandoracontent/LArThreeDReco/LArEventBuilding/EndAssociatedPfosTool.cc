@@ -37,7 +37,7 @@ EndAssociatedPfosTool::EndAssociatedPfosTool() :
 void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const Vertex *const pNeutrinoVertex, PfoInfoMap &pfoInfoMap)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     bool associationsMade(true);
 
@@ -51,7 +51,7 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
             break;
 
         // ATTN May want to reconsider precise association mechanics for complex situations
-        PfoList recentlyAssigned;
+        PfoSet recentlyAssigned;
 
         for (const ParticleFlowObject *const pParentPfo : assignedPfos)
         {

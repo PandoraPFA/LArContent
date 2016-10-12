@@ -55,7 +55,7 @@ protected:
      *  @param  eIter the iterator to the tensor element
      *  @param  usedClusters the list of used clusters
      */
-    virtual bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterList &usedClusters) const;
+    virtual bool PassesElementCuts(TensorType::ElementList::const_iterator eIter, const pandora::ClusterSet &usedClusters) const;
 
     /**
      *  @brief  Get modification objects for a specific elements of the tensor, identifying required splits and merges for clusters
@@ -118,7 +118,7 @@ private:
      *  @param  iteratorList to receive a list of iterators to relevant elements
      */
     void SelectTensorElements(TensorType::ElementList::const_iterator eIter, const TensorType::ElementList &elementList,
-        const pandora::ClusterList &usedClusters, IteratorList &iteratorList) const;
+        const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
 
     /**
      *  @brief  Apply the changes cached in a modification list and update the tensor accordingly

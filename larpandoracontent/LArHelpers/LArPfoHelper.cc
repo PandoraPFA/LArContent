@@ -39,7 +39,7 @@ void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitTy
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        (*cIter)->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        (*cIter)->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
     }
 }
 
@@ -52,7 +52,7 @@ void LArPfoHelper::GetIsolatedCaloHits(const ParticleFlowObject *const pPfo, con
 
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
-        caloHitList.insert((*cIter)->GetIsolatedCaloHitList().begin(), (*cIter)->GetIsolatedCaloHitList().end());
+        caloHitList.insert(caloHitList.end(), (*cIter)->GetIsolatedCaloHitList().begin(), (*cIter)->GetIsolatedCaloHitList().end());
     }
 }
 
@@ -78,7 +78,7 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitTy
         if (hitType != LArClusterHelper::GetClusterHitType(pPfoCluster))
             continue;
 
-        clusterList.insert(pPfoCluster);
+        clusterList.push_back(pPfoCluster);
     }
 }
 
@@ -94,7 +94,7 @@ void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, Clus
         if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
-        clusterList.insert(pCluster);
+        clusterList.push_back(pCluster);
     }
 }
 
@@ -110,7 +110,7 @@ void LArPfoHelper::GetThreeDClusterList(const ParticleFlowObject *const pPfo, Cl
         if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
-        clusterList.insert(pCluster);
+        clusterList.push_back(pCluster);
     }
 }
 
@@ -128,10 +128,10 @@ void LArPfoHelper::GetAllConnectedPfos(const PfoList &inputPfoList, PfoList &out
 
 void LArPfoHelper::GetAllConnectedPfos(const ParticleFlowObject *const pPfo, PfoList &outputPfoList)
 {
-    if (outputPfoList.count(pPfo))
+    if (outputPfoList.end() != std::find(outputPfoList.begin(), outputPfoList.end(), pPfo))
         return;
 
-    outputPfoList.insert(pPfo);
+    outputPfoList.push_back(pPfo);
     LArPfoHelper::GetAllConnectedPfos(pPfo->GetParentPfoList(), outputPfoList);
     LArPfoHelper::GetAllConnectedPfos(pPfo->GetDaughterPfoList(), outputPfoList);
 }
@@ -150,10 +150,10 @@ void LArPfoHelper::GetAllDownstreamPfos(const PfoList &inputPfoList, PfoList &ou
 
 void LArPfoHelper::GetAllDownstreamPfos(const ParticleFlowObject *const pPfo, PfoList &outputPfoList)
 {
-    if (outputPfoList.count(pPfo))
+    if (outputPfoList.end() != std::find(outputPfoList.begin(), outputPfoList.end(), pPfo))
         return;
 
-    outputPfoList.insert(pPfo);
+    outputPfoList.push_back(pPfo);
     LArPfoHelper::GetAllDownstreamPfos(pPfo->GetDaughterPfoList(), outputPfoList);
 }
 
@@ -395,7 +395,7 @@ void LArPfoHelper::GetRecoNeutrinos(const PfoList *const pPfoList, PfoList &reco
         const ParticleFlowObject *const pPfo(*iter);
 
         if (LArPfoHelper::IsNeutrino(pPfo))
-            recoNeutrinos.insert(pPfo);
+            recoNeutrinos.push_back(pPfo);
     }
 }
 

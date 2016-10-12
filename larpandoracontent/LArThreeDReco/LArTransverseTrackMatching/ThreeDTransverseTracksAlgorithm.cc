@@ -283,11 +283,11 @@ void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
-    for (TensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
-            iter = m_algorithmToolList.begin();
+            iter = m_algorithmToolVector.begin();
 
             if (++repeatCounter > m_nMaxTensorToolRepeats)
                 break;
@@ -304,18 +304,18 @@ void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 
 StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolList));
+        "TrackTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         TransverseTensorTool *const pTransverseTensorTool(dynamic_cast<TransverseTensorTool*>(*iter));
 
         if (NULL == pTransverseTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pTransverseTensorTool);
+        m_algorithmToolVector.push_back(pTransverseTensorTool);
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

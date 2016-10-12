@@ -40,15 +40,13 @@ protected:
         pandora::CaloHitList &secondCaloHitList) const = 0;
 
 private:
-    typedef std::list<const pandora::Cluster*> ClusterSplittingList;
-
     /**
      *  @brief  Split cluster into two fragments
      *
      *  @param  pCluster address of the cluster
      *  @param  clusterSplittingList to receive the two cluster fragments
      */
-    pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, ClusterSplittingList &clusterSplittingList) const;
+    pandora::StatusCode SplitCluster(const pandora::Cluster *const pCluster, pandora::ClusterList &clusterSplittingList) const;
 
     pandora::StringVector   m_inputClusterListNames;    ///< The list of input cluster list names - if empty, use the current cluster list
 };

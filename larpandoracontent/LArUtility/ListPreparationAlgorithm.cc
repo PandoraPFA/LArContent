@@ -83,20 +83,28 @@ StatusCode ListPreparationAlgorithm::Run()
 
 void ListPreparationAlgorithm::ProcessCaloHits()
 {
-    // Split input calo hit list into different views
-    const CaloHitList *pCaloHitList = NULL;
+    const CaloHitList *pCaloHitList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitListName, pCaloHitList));
 
     if (pCaloHitList->empty())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+        return;
 
     const bool checkMC(!m_selectNeutrinos || !m_selectCosmics);
-
     CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW;
 
-    for (CaloHitList::const_iterator hitIter = pCaloHitList->begin(), hitIterEnd = pCaloHitList->end(); hitIter != hitIterEnd; ++hitIter)
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        const CaloHit *const pCaloHit = *hitIter;
+        if (checkMC)
+        {
+            try
+            {
+                const bool isSelected(LArMCParticleHelper::IsNeutrinoInduced(pCaloHit) ? m_selectNeutrinos : m_selectCosmics);
+
+                if (!isSelected)
+                    continue;
+            }
+            catch (StatusCodeException &) {}
+        }
 
         if (m_onlyAvailableCaloHits && !PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
@@ -108,78 +116,45 @@ void ListPreparationAlgorithm::ProcessCaloHits()
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "ListPreparationAlgorithm: found a hit with zero energy, will remove it" << std::endl;
+
             continue;
         }
 
-        if (pCaloHit->GetCellLengthScale() < m_minCellLengthScale)
-        {
-            if (pCaloHit->GetCellLengthScale() < std::numeric_limits<float>::epsilon())
-            {
-                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                    std::cout << "ListPreparationAlgorithm: found a hit with zero extent, will remove it" << std::endl;
-            }
-            else
-            {
-                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                    std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale()
-                              << " (<" << m_minCellLengthScale << "), will remove it" << std::endl;
-            }
-            continue;
-        }
-
-        if (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale)
+        if ((pCaloHit->GetCellLengthScale() < m_minCellLengthScale) || (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale))
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            {
                 std::cout << "ListPreparationAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale()
-                          << " (>" << m_maxCellLengthScale << "), will remove it" << std::endl;
+                          << ", require (" << m_minCellLengthScale << " - " << m_maxCellLengthScale << "), will remove it" << std::endl;
+            }
+
             continue;
         }
 
-        if (checkMC)
+        if (TPC_VIEW_U == pCaloHit->GetHitType())
         {
-            try
-            {
-                const bool isNeutrinoInduced(LArMCParticleHelper::IsNeutrinoInduced(pCaloHit));
-                const bool isSelected(isNeutrinoInduced ? m_selectNeutrinos : m_selectCosmics);
-
-                if (!isSelected)
-                    continue;
-            }
-            catch (StatusCodeException &)
-            {
-            }
+            selectedCaloHitListU.push_back(pCaloHit);
         }
-
-        if (TPC_VIEW_U == (*hitIter)->GetHitType())
+        else if (TPC_VIEW_V == pCaloHit->GetHitType())
         {
-            if (!selectedCaloHitListU.insert(*hitIter).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+            selectedCaloHitListV.push_back(pCaloHit);
         }
-        else if (TPC_VIEW_V == (*hitIter)->GetHitType())
+        else if (TPC_VIEW_W == pCaloHit->GetHitType())
         {
-            if (!selectedCaloHitListV.insert(*hitIter).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-        }
-        else if (TPC_VIEW_W == (*hitIter)->GetHitType())
-        {
-            if (!selectedCaloHitListW.insert(*hitIter).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+            selectedCaloHitListW.push_back(pCaloHit);
         }
     }
 
-    // Filter the selected hits
     CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW;
     this->GetFilteredCaloHitList(selectedCaloHitListU, filteredCaloHitListU);
     this->GetFilteredCaloHitList(selectedCaloHitListV, filteredCaloHitListV);
     this->GetFilteredCaloHitList(selectedCaloHitListW, filteredCaloHitListW);
 
-    // Group together views into overall lists
     CaloHitList filteredInputList;
-    filteredInputList.insert(filteredCaloHitListU.begin(), filteredCaloHitListU.end());
-    filteredInputList.insert(filteredCaloHitListV.begin(), filteredCaloHitListV.end());
-    filteredInputList.insert(filteredCaloHitListW.begin(), filteredCaloHitListW.end());
+    filteredInputList.insert(filteredInputList.end(), filteredCaloHitListU.begin(), filteredCaloHitListU.end());
+    filteredInputList.insert(filteredInputList.end(), filteredCaloHitListV.begin(), filteredCaloHitListV.end());
+    filteredInputList.insert(filteredInputList.end(), filteredCaloHitListW.begin(), filteredCaloHitListW.end());
 
-    // Save the lists
     if (!filteredInputList.empty() && !m_filteredCaloHitListName.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredInputList, m_filteredCaloHitListName));
 
@@ -197,46 +172,46 @@ void ListPreparationAlgorithm::ProcessCaloHits()
 
 void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputList, CaloHitList &outputList)
 {
-    CaloHitVector sortedCaloHits(inputList.begin(), inputList.end());
-    std::sort(sortedCaloHits.begin(), sortedCaloHits.end(), LArClusterHelper::SortHitsByPosition);
-
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
 
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(sortedCaloHits, hitKDNode2DList);
+    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(inputList, hitKDNode2DList);
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     // Remove hits that are in the same physical location!
-    for (const CaloHit *const pCaloHit1 : sortedCaloHits)
+    for (const CaloHit *const pCaloHit1 : inputList)
     {
         bool isUnique(true);
-
-        // Get nearby hits from kd tree
-        CaloHitList nearbyHits;
-        KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit1, m_searchRegion1D, m_searchRegion1D);
+        KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit1, m_searchRegion1D, m_searchRegion1D));
 
         HitKDNode2DList found;
         kdTree.search(searchRegionHits, found);
 
         for (const auto &hit : found)
         {
-            const CaloHit *const pCaloHit2 = hit.data;
+            const CaloHit *const pCaloHit2(hit.data);
 
             if (pCaloHit1 == pCaloHit2)
                 continue;
 
-            if (((pCaloHit2->GetPositionVector() - pCaloHit1->GetPositionVector()).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon()) &&
-                ((std::fabs(pCaloHit2->GetMipEquivalentEnergy() - pCaloHit1->GetMipEquivalentEnergy()) < std::numeric_limits<float>::epsilon()) ||
-                (pCaloHit2->GetMipEquivalentEnergy() > pCaloHit1->GetMipEquivalentEnergy())) )
+            const float displacementSquared((pCaloHit2->GetPositionVector() - pCaloHit1->GetPositionVector()).GetMagnitudeSquared());
+
+            if (displacementSquared < std::numeric_limits<float>::epsilon())
             {
-                isUnique = false;
-                break;
+                const float deltaMip(pCaloHit2->GetMipEquivalentEnergy() > pCaloHit1->GetMipEquivalentEnergy());
+
+                if ((deltaMip > std::numeric_limits<float>::epsilon()) ||
+                    ((std::fabs(deltaMip) < std::numeric_limits<float>::epsilon()) && (outputList.end() != std::find(outputList.begin(), outputList.end(), pCaloHit2))))
+                {
+                    isUnique = false;
+                    break;
+                }
             }
         }
 
         if (isUnique)
         {
-            outputList.insert(pCaloHit1);
+            outputList.push_back(pCaloHit1);
         }
         else
         {
@@ -244,61 +219,48 @@ void ListPreparationAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputLi
                 std::cout << "ListPreparationAlgorithm: found two hits in same location, will remove lowest pulse height" << std::endl;
         }
     }
-
-    // TODO Could merge these hits instead. Could also chop up long hits around this point
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ListPreparationAlgorithm::ProcessMCParticles()
 {
-    // Split input MC particles into different views
-    const MCParticleList *pMCParticleList = NULL;
+    const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputMCParticleListName, pMCParticleList));
 
     if (pMCParticleList->empty())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+        return;
 
     const bool checkMC(!m_selectNeutrinos || !m_selectCosmics);
-
     MCParticleList mcParticleListU, mcParticleListV, mcParticleListW, mcParticleList3D;
 
-    for (MCParticleList::const_iterator mcIter = pMCParticleList->begin(), mcIterEnd = pMCParticleList->end(); mcIter != mcIterEnd; ++mcIter)
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
         if (checkMC)
         {
-            const bool isNeutrinoInduced(LArMCParticleHelper::IsNeutrinoInduced(*mcIter));
-            const bool isSelected(isNeutrinoInduced ? m_selectNeutrinos : m_selectCosmics);
+            const bool isSelected(LArMCParticleHelper::IsNeutrinoInduced(pMCParticle) ? m_selectNeutrinos : m_selectCosmics);
 
             if (!isSelected)
                 continue;
         }
 
-        if (MC_VIEW_U == (*mcIter)->GetMCParticleType())
+        if (MC_VIEW_U == pMCParticle->GetMCParticleType())
         {
-            if (!mcParticleListU.insert(*mcIter).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+            mcParticleListU.push_back(pMCParticle);
         }
-        else if (MC_VIEW_V == (*mcIter)->GetMCParticleType())
+        else if (MC_VIEW_V == pMCParticle->GetMCParticleType())
         {
-            if (!mcParticleListV.insert(*mcIter).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+            mcParticleListV.push_back(pMCParticle);
         }
-        else if (MC_VIEW_W == (*mcIter)->GetMCParticleType())
+        else if (MC_VIEW_W == pMCParticle->GetMCParticleType())
         {
-            if (!mcParticleListW.insert(*mcIter).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+            mcParticleListW.push_back(pMCParticle);
         }
-        else if (MC_3D == (*mcIter)->GetMCParticleType())
+        else if (MC_3D == pMCParticle->GetMCParticleType())
         {
-            if (!mcParticleList3D.insert(*mcIter).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+            mcParticleList3D.push_back(pMCParticle);
         }
     }
-
-    // Save the lists
-    if (!mcParticleListU.empty() && !m_outputMCParticleListNameU.empty())
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleListU, m_outputMCParticleListNameU));
 
     if (!mcParticleListV.empty() && !m_outputMCParticleListNameV.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleListV, m_outputMCParticleListNameV));

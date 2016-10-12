@@ -73,7 +73,6 @@ protected:
         const pandora::ClusterList &inputClusterList, const pandora::Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const;
 
     typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
-    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitToHitMap;
 
     /**
      *  @brief  Get the list of projected positions, in the third view, corresponding to a pair of sliding fit results
@@ -85,7 +84,7 @@ protected:
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
-        pandora::CartesianPointList &projectedPositions) const;
+        pandora::CartesianPointVector &projectedPositions) const;
 
     /**
      *  @brief  Get the list of hits associated with the projected positions and a useful hit to cluster map
@@ -97,7 +96,7 @@ protected:
      * 
      *  @return statusCode, faster than throwing in regular use-cases
      */
-    pandora::StatusCode GetMatchedHits(const pandora::ClusterList &inputClusterList, const pandora::CartesianPointList &projectedPositions,
+    pandora::StatusCode GetMatchedHits(const pandora::ClusterList &inputClusterList, const pandora::CartesianPointVector &projectedPositions,
         HitToClusterMap &hitToClusterMap, pandora::CaloHitList &matchedCaloHits) const;
 
     /**
@@ -121,7 +120,7 @@ protected:
      *  @param  matchedClusters the list of matched clusters
      *  @param  fragmentOverlapResult to receive the populated fragment overlap result
      */
-    void GetFragmentOverlapResult(const pandora::CartesianPointList &projectedPositions, const pandora::CaloHitList &matchedHits,
+    void GetFragmentOverlapResult(const pandora::CartesianPointVector &projectedPositions, const pandora::CaloHitList &matchedHits,
         const pandora::ClusterList &matchedClusters, FragmentOverlapResult &fragmentOverlapResult) const;
 
     /**
@@ -132,7 +131,7 @@ protected:
      *
      *  @return boolean
      */
-    bool CheckMatchedClusters(const pandora::CartesianPointList &projectedPositions, const pandora::ClusterList &matchedClusters) const;
+    bool CheckMatchedClusters(const pandora::CartesianPointVector &projectedPositions, const pandora::ClusterList &matchedClusters) const;
 
     /**
      *  @brief  Whether the matched clusters and hits pass the algorithm quality cuts
@@ -150,8 +149,8 @@ protected:
 
     std::string         m_reclusteringAlgorithmName;        ///< Name of daughter algorithm to use for cluster re-building
 
-    typedef std::vector<FragmentTensorTool*> TensorToolList;
-    TensorToolList      m_algorithmToolList;                ///< The algorithm tool list
+    typedef std::vector<FragmentTensorTool*> TensorToolVector;
+    TensorToolVector    m_algorithmToolVector;              ///< The algorithm tool list
 
     unsigned int        m_nMaxTensorToolRepeats;            ///< The maximum number of repeat loops over tensor tools
 

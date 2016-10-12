@@ -56,7 +56,7 @@ private:
      *  @param  clusterVectorV the output vector of clusters for the V view
      *  @param  clusterVectorW the output vector of clusters for the W view
      */
-    void GetClusters(const TensorType::ElementList &connectedElements, const pandora::ClusterList &usedClusters,
+    void GetClusters(const TensorType::ElementList &connectedElements, const pandora::ClusterSet &usedClusters,
         pandora::ClusterVector &clusterVectorU, pandora::ClusterVector &clusterVectorV, pandora::ClusterVector &clusterVectorW) const;
 
     /**

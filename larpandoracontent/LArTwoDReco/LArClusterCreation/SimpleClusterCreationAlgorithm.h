@@ -74,8 +74,7 @@ private:
      *  @param mergeList the list of hits associated with the seed hit
      */
     void CollectAssociatedHits(const pandora::CaloHit *const pSeedCaloHit, const pandora::CaloHit *const pCurrentCaloHit,
-        const HitAssociationMap &hitAssociationMap, const pandora::CaloHitList &vetoList,
-        pandora::CaloHitList &mergeList) const;
+        const HitAssociationMap &hitAssociationMap, const pandora::CaloHitSet &vetoList, pandora::CaloHitList &mergeList) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

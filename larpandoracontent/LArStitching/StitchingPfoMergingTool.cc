@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Api/PandoraApi.h"
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -21,7 +23,7 @@ namespace lar_content
 void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &stitchingInfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     const PandoraInstanceList &pandoraInstances(MultiPandoraApi::GetDaughterPandoraInstanceList(&(this->GetPandora())));
 
@@ -47,7 +49,7 @@ void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, St
     PfoList primaryPfos;
 
     for (const ParticleFlowObject *const pPfo : *pNewPfoList)
-        primaryPfos.insert(LArPfoHelper::GetParentPfo(pPfo));
+        primaryPfos.push_back(LArPfoHelper::GetParentPfo(pPfo));
 
     if (2 != primaryPfos.size())
         return;
@@ -76,17 +78,14 @@ void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, St
                 pfoToVolumeIdMap[pPfoToEnlarge] = -1;
                 pfoToVolumeIdMap.erase(pPfoToDelete);
 
-                PfoList enlargePfoList, deletePfoList;
-                enlargePfoList.insert(pPfoToEnlarge);
-                deletePfoList.insert(pPfoToDelete);
+                const PfoList enlargePfoList(1, pPfoToEnlarge), deletePfoList(1, pPfoToDelete);
                 PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &enlargePfoList, "enlargePfoList", BLUE));
                 PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &deletePfoList, "deletePfoList", GREEN));
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
                 pAlgorithm->MergeAndDeletePfos(pPfoToEnlarge, pPfoToDelete);
 
-                PfoList mergedPfoList;
-                mergedPfoList.insert(pPfoToEnlarge);
+                const PfoList mergedPfoList(1, pPfoToEnlarge);
                 PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &mergedPfoList, "mergedPfoList", RED));
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 

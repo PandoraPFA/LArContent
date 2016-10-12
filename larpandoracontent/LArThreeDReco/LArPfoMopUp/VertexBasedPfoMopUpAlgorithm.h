@@ -264,7 +264,7 @@ protected:
      */
     virtual bool IsVertexAssociated(const pandora::CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const;
 
-    typedef std::unordered_map<pandora::HitType, ClusterAssociation, std::hash<unsigned int> > HitTypeToAssociationMap;
+    typedef std::map<pandora::HitType, ClusterAssociation> HitTypeToAssociationMap;
 
     /**
      *  @brief  Get pfo association details between a vertex-associated pfo and a non-vertex associated daughter candidate pfo
@@ -349,8 +349,8 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_set<pandora::HitType, std::hash<unsigned int> > HitTypeSet;
-    typedef std::unordered_map<pandora::HitType, const pandora::Cluster*, std::hash<unsigned int> > HitTypeToClusterMap;
+    typedef std::set<pandora::HitType> HitTypeSet;
+    typedef std::map<pandora::HitType, const pandora::Cluster*> HitTypeToClusterMap;
 
     std::string             m_trackPfoListName;                 ///< The input track pfo list name
     std::string             m_showerPfoListName;                ///< The input shower pfo list name

@@ -161,18 +161,20 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
     // i.e. if the map has A <-> B, B <-> C, A <-> C, then remove A <-> C
     ClusterAssociationMatrix clusterAssociationMatrix;
 
-    for (ClusterAssociationMatrix::const_iterator iter1 = inputAssociationMatrix.begin(), iterEnd1 = inputAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
+    ClusterVector sortedInputClusters;
+    for (const auto &mapEntry : inputAssociationMatrix) sortedInputClusters.push_back(mapEntry.first);
+    std::sort(sortedInputClusters.begin(), sortedInputClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster1 : sortedInputClusters)
     {
-        const Cluster *const pCluster1(iter1->first);
-        const ClusterAssociationMap &associationMap1(iter1->second);
+        const ClusterAssociationMap &associationMap1(inputAssociationMatrix.at(pCluster1));
 
-        for (ClusterAssociationMatrix::const_iterator iter2 = iter1, iterEnd2 = inputAssociationMatrix.end(); iter2 != iterEnd2; ++iter2)
+        for (const Cluster *const pCluster2 : sortedInputClusters)
         {
-            const Cluster *const pCluster2(iter2->first);
-            const ClusterAssociationMap &associationMap2(iter2->second);
-
             if (pCluster1 == pCluster2)
                 continue;
+
+            const ClusterAssociationMap &associationMap2(inputAssociationMatrix.at(pCluster2));
 
             ClusterAssociationMap::const_iterator iter12 = associationMap1.find(pCluster2);
             if (associationMap1.end() == iter12)
@@ -187,15 +189,18 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
             bool isAssociated(true);
 
-            for (ClusterAssociationMap::const_iterator iter13 = associationMap1.begin(), iterEnd13 = associationMap1.end(); iter13 != iterEnd13; ++iter13)
+            ClusterVector sortedAssociationClusters;
+            for (const auto &mapEntry : associationMap1) sortedAssociationClusters.push_back(mapEntry.first);
+            std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
+
+            for (const Cluster *const pCluster3 : sortedAssociationClusters)
             {
-                const Cluster *const pCluster3(iter13->first);
+                const ClusterAssociation &association13(associationMap1.at(pCluster3));
 
                 ClusterAssociationMap::const_iterator iter23 = associationMap2.find(pCluster3);
                 if (associationMap2.end() == iter23)
                     continue;
 
-                const ClusterAssociation &association13(iter13->second);
                 const ClusterAssociation &association23(iter23->second);
 
                 if (association12.GetParent() == association13.GetParent() &&
@@ -219,21 +224,27 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
     // Second step: find the best associations A -> X and B -> Y
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
-    for (ClusterAssociationMatrix::const_iterator iter1 = clusterAssociationMatrix.begin(), iterEnd1 = clusterAssociationMatrix.end(); iter1 != iterEnd1; ++iter1)
-    {
-        const Cluster *const pParentCluster(iter1->first);
-        const ClusterAssociationMap &clusterAssociationMap(iter1->second);
+    ClusterVector sortedClusters;
+    for (const auto &mapEntry : clusterAssociationMatrix) sortedClusters.push_back(mapEntry.first);
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
-        const Cluster *pBestClusterInner = NULL;
+    for (const Cluster *const pParentCluster : sortedClusters)
+    {
+        const ClusterAssociationMap &clusterAssociationMap(clusterAssociationMatrix.at(pParentCluster));
+
+        const Cluster *pBestClusterInner(nullptr);
         ClusterAssociation bestAssociationInner(ClusterAssociation::UNDEFINED, ClusterAssociation::UNDEFINED, ClusterAssociation::NONE, 0.f);
 
-        const Cluster *pBestClusterOuter = NULL;
+        const Cluster *pBestClusterOuter(nullptr);
         ClusterAssociation bestAssociationOuter(ClusterAssociation::UNDEFINED, ClusterAssociation::UNDEFINED, ClusterAssociation::NONE, 0.f);
 
-        for (ClusterAssociationMap::const_iterator iter2 = clusterAssociationMap.begin(), iterEnd2 = clusterAssociationMap.end(); iter2 != iterEnd2; ++iter2)
+        ClusterVector sortedAssociationClusters;
+        for (const auto &mapEntry : clusterAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
         {
-            const Cluster *const pDaughterCluster(iter2->first);
-            const ClusterAssociation &clusterAssociation(iter2->second);
+            const ClusterAssociation &clusterAssociation(clusterAssociationMap.at(pDaughterCluster));
 
             // Inner associations
             if (clusterAssociation.GetParent() == ClusterAssociation::INNER)
@@ -265,15 +276,21 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
 
     // Third step: make the merge if A -> X and B -> Y is in fact A -> B and B -> A
-    for (ClusterAssociationMatrix::const_iterator iter3 = intermediateAssociationMatrix.begin(), iterEnd3 = intermediateAssociationMatrix.end(); iter3 != iterEnd3; ++iter3)
-    {
-        const Cluster *const pParentCluster(iter3->first);
-        const ClusterAssociationMap &parentAssociationMap(iter3->second);
+    ClusterVector intermediateSortedClusters;
+    for (const auto &mapEntry : intermediateAssociationMatrix) intermediateSortedClusters.push_back(mapEntry.first);
+    std::sort(intermediateSortedClusters.begin(), intermediateSortedClusters.end(), LArClusterHelper::SortByNHits);
 
-        for (ClusterAssociationMap::const_iterator iter4 = parentAssociationMap.begin(), iterEnd4 = parentAssociationMap.end(); iter4 != iterEnd4; ++iter4)
+    for (const Cluster *const pParentCluster : intermediateSortedClusters)
+    {
+        const ClusterAssociationMap &parentAssociationMap(intermediateAssociationMatrix.at(pParentCluster));
+
+        ClusterVector sortedAssociationClusters;
+        for (const auto &mapEntry : parentAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
         {
-            const Cluster *const pDaughterCluster(iter4->first);
-            const ClusterAssociation &parentToDaughterAssociation(iter4->second);
+            const ClusterAssociation &parentToDaughterAssociation(parentAssociationMap.at(pDaughterCluster));
 
             ClusterAssociationMatrix::const_iterator iter5 = intermediateAssociationMatrix.find(pDaughterCluster);
 
@@ -292,7 +309,10 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
             if (parentToDaughterAssociation.GetParent() == daughterToParentAssociation.GetDaughter() &&
                 parentToDaughterAssociation.GetDaughter() == daughterToParentAssociation.GetParent())
             {
-                clusterMergeMap[pParentCluster].insert(pDaughterCluster);
+                ClusterList &parentList(clusterMergeMap[pParentCluster]);
+
+                if (parentList.end() == std::find(parentList.begin(), parentList.end(), pDaughterCluster))
+                    parentList.push_back(pDaughterCluster);
             }
         }
     }

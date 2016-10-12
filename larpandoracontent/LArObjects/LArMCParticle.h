@@ -10,7 +10,8 @@
 
 #include "Objects/MCParticle.h"
 
-#include "Pandora/ObjectFactory.h"
+#include "Pandora/ObjectCreation.h"
+#include "Pandora/PandoraObjectFactories.h"
 
 #include "Persistency/BinaryFileReader.h"
 #include "Persistency/BinaryFileWriter.h"
@@ -23,7 +24,7 @@ namespace lar_content
 /**
  *  @brief  LAr mc particle parameters
  */
-class LArMCParticleParameters : public PandoraApi::MCParticle::Parameters
+class LArMCParticleParameters : public object_creation::MCParticle::Parameters
 {
 public:
     pandora::InputInt   m_nuanceCode;               ///< The nuance code
@@ -34,7 +35,7 @@ public:
 /**
  *  @brief  LAr mc particle class
  */
-class LArMCParticle : public pandora::MCParticle
+class LArMCParticle : public object_creation::MCParticle::Object
 {
 public:
     /**
@@ -60,7 +61,7 @@ private:
 /**
  *  @brief  LArMCParticle responsible for object creation
  */
-class LArMCParticleFactory : public pandora::ObjectFactory<PandoraApi::MCParticle::Parameters, pandora::MCParticle>
+class LArMCParticleFactory : public pandora::ObjectFactory<object_creation::MCParticle::Parameters, object_creation::MCParticle::Object>
 {
 public:
     /**
@@ -84,7 +85,7 @@ public:
      *  @param  pObject the address of the object to persist
      *  @param  fileWriter the file writer
      */
-    pandora::StatusCode Write(const pandora::MCParticle *const pObject, pandora::FileWriter &fileWriter) const;
+    pandora::StatusCode Write(const Object *const pObject, pandora::FileWriter &fileWriter) const;
 
     /**
      *  @brief  Create an object with the given parameters
@@ -92,14 +93,14 @@ public:
      *  @param  parameters the parameters to pass in constructor
      *  @param  pObject to receive the address of the object created
      */
-    pandora::StatusCode Create(const PandoraApi::MCParticle::Parameters &parameters, const pandora::MCParticle *&pObject) const;
+    pandora::StatusCode Create(const Parameters &parameters, const Object *&pObject) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
-    pandora::MCParticle(parameters),
+    object_creation::MCParticle::Object(parameters),
     m_nuanceCode(parameters.m_nuanceCode.Get())
 {
 }
@@ -121,7 +122,7 @@ inline LArMCParticleFactory::Parameters *LArMCParticleFactory::NewParameters() c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArMCParticleFactory::Create(const Parameters &parameters, const pandora::MCParticle *&pObject) const
+inline pandora::StatusCode LArMCParticleFactory::Create(const Parameters &parameters, const Object *&pObject) const
 {
     const LArMCParticleParameters &larMCParticleParameters(dynamic_cast<const LArMCParticleParameters&>(parameters));
     pObject = new LArMCParticle(larMCParticleParameters);
@@ -159,7 +160,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArMCParticleFactory::Write(const pandora::MCParticle *const pObject, pandora::FileWriter &fileWriter) const
+inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObject, pandora::FileWriter &fileWriter) const
 {
     // ATTN: To receive this call-back must have already set file writer mc particle factory to this factory
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pObject));

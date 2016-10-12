@@ -40,7 +40,7 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
             continue;
 
-        selectedClusterList.insert(pCluster);
+        selectedClusterList.push_back(pCluster);
     }
 }
 
@@ -54,9 +54,9 @@ void ThreeDRemnantsAlgorithm::SetPfoParameters(const ProtoParticle &protoParticl
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
+    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -95,7 +95,9 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClust
     if (pseudoChi2 > m_pseudoChi2Cut)
         return;
 
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, true);
+    // ATTN Essentially a boolean result; actual value matters only so as to ensure that overlap results can be sorted
+    const float hackValue(pseudoChi2 + pClusterU->GetElectromagneticEnergy() + pClusterV->GetElectromagneticEnergy() + pClusterW->GetElectromagneticEnergy());
+    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -104,11 +106,11 @@ void ThreeDRemnantsAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
-    for (RemnantTensorToolList::const_iterator iter = m_algorithmToolList.begin(), iterEnd = m_algorithmToolList.end(); iter != iterEnd; )
+    for (RemnantTensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
         if ((*iter)->Run(this, m_overlapTensor))
         {
-            iter = m_algorithmToolList.begin();
+            iter = m_algorithmToolVector.begin();
 
             if (++repeatCounter > m_nMaxTensorToolRepeats)
                 break;
@@ -124,18 +126,18 @@ void ThreeDRemnantsAlgorithm::ExamineTensor()
 
 StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    AlgorithmToolList algorithmToolList;
+    AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolList));
+        "TrackTools", algorithmToolVector));
 
-    for (AlgorithmToolList::const_iterator iter = algorithmToolList.begin(), iterEnd = algorithmToolList.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         RemnantTensorTool *const pRemnantTensorTool(dynamic_cast<RemnantTensorTool*>(*iter));
 
         if (NULL == pRemnantTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
-        m_algorithmToolList.push_back(pRemnantTensorTool);
+        m_algorithmToolVector.push_back(pRemnantTensorTool);
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

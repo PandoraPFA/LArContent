@@ -36,12 +36,14 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
     // (2) Delta ray occurs where the vertex of the principal cluster meets the vertex of the branch cluster
     //     Method loops over the inner and outer positions of the principal and branch clusters, trying all
     //     possible assignments of vertex and end position until a split is found
-
     for (unsigned int principalForward = 0; principalForward < 2; ++principalForward)
     {
         const CartesianVector principalVertexPosition(1==principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
         const CartesianVector principalEndPosition(1!=principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
         const CartesianVector principalVertexDirection(1==principalForward ? principalSlidingFit.GetGlobalMinLayerDirection() : principalSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
+
+        CartesianVector projectedBranchPosition(0.f,0.f,0.f);
+        bool projectedPositionFound(false), projectedPositionFail(false);
 
         for (unsigned int branchForward = 0; branchForward < 2; ++branchForward)
         {
@@ -56,31 +58,38 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
                 continue;
 
             // Project the principal vertex onto the branch cluster
-            CartesianVector projectedBranchPosition(0.f,0.f,0.f);
-            float projectedDistanceSquared(std::numeric_limits<float>::max());
-            float branchDistanceSquared(0.f), replacementDistanceSquared(0.f), commonDistanceSquared(0.f);
-
             try
             {
-                projectedBranchPosition = LArPointingClusterHelper::GetProjectedPosition(principalVertexPosition, principalVertexDirection,
-                    branchSlidingFit.GetCluster(), m_projectionAngularAllowance);
-                projectedDistanceSquared   = (projectedBranchPosition - principalVertexPosition).GetMagnitudeSquared();
-                replacementDistanceSquared = (projectedBranchPosition - principalEndPosition).GetMagnitudeSquared();
-                branchDistanceSquared      = (projectedBranchPosition - branchVertexPosition).GetMagnitudeSquared(); 
-                commonDistanceSquared      = (projectedBranchPosition - branchEndPosition).GetMagnitudeSquared(); 
+                if (!projectedPositionFound && !projectedPositionFail)
+                {
+                    projectedBranchPosition = LArPointingClusterHelper::GetProjectedPosition(principalVertexPosition, principalVertexDirection, branchSlidingFit.GetCluster(), m_projectionAngularAllowance);
+                    projectedPositionFound = true;
+                }
             }
             catch (StatusCodeException &)
             {
+                projectedPositionFail = true;
             }
+
+            if (!projectedPositionFound || projectedPositionFail)
+                continue;
+
+            const float projectedDistanceSquared((projectedBranchPosition - principalVertexPosition).GetMagnitudeSquared());
 
             if (projectedDistanceSquared > m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement)
                 continue;
 
+            const float commonDistanceSquared((projectedBranchPosition - branchEndPosition).GetMagnitudeSquared());
+
             if (projectedDistanceSquared > commonDistanceSquared)
                 continue;
 
+            const float replacementDistanceSquared((projectedBranchPosition - principalEndPosition).GetMagnitudeSquared());
+
             if (replacementDistanceSquared < m_minLongitudinalExtension * m_minLongitudinalExtension)
                 continue;
+
+            const float branchDistanceSquared((projectedBranchPosition - branchVertexPosition).GetMagnitudeSquared());
 
             if (branchDistanceSquared > 4.f * replacementDistanceSquared)
                 continue;

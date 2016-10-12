@@ -189,7 +189,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
         if ((pCaloHit->GetElectromagneticEnergy() > m_thresholdEnergy) &&
             (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pCaloHit)))
         {
-            caloHitList.insert(pCaloHit);
+            caloHitList.push_back(pCaloHit);
         }
     }
 
@@ -230,7 +230,7 @@ void VisualMonitoringAlgorithm::VisualizeTrackList(const std::string &listName) 
         const Track *const pTrack = *iter;
 
         if (!m_showOnlyAvailable || pTrack->IsAvailable())
-            trackList.insert(pTrack);
+            trackList.push_back(pTrack);
     }
 
     PANDORA_MONITORING_API(VisualizeTracks(this->GetPandora(), &trackList, listName.empty() ? "CurrentTracks" : listName.c_str(), GRAY));
@@ -269,7 +269,7 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
         const Cluster *const pCluster = *iter;
 
         if (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pCluster))
-            clusterList.insert(pCluster);
+            clusterList.push_back(pCluster);
     }
 
     PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, listName.empty() ? "CurrentClusters" : listName.c_str(),
@@ -344,7 +344,7 @@ void VisualMonitoringAlgorithm::VisualizeVertexList(const std::string &listName)
         const Vertex *const pVertex = *iter;
 
         if (!m_showOnlyAvailable || pVertex->IsAvailable())
-            vertexList.insert(pVertex);
+            vertexList.push_back(pVertex);
     }
 
     PANDORA_MONITORING_API(VisualizeVertices(this->GetPandora(), &vertexList, listName.empty() ? "CurrentVertices" : listName.c_str(), AUTO));

@@ -64,7 +64,6 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
         return true;
 
     // TODO: What about ions or neutrons? Neutrons currently included - they are parents of what would otherwise be large numbers of primary photons
-
     return false;
 }
 
@@ -75,10 +74,8 @@ void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCPartic
     if (!pMCParticleList)
         return;
 
-    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        const MCParticle *const pMCParticle = *iter;
-
         if (pMCParticle->GetParentList().empty() && LArMCParticleHelper::IsNeutrino(pMCParticle))
             trueNeutrinos.push_back(pMCParticle);
     }
@@ -140,7 +137,7 @@ const MCParticle *LArMCParticleHelper::GetParentNeutrino(const MCParticle *const
 {
     const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
 
-    if(!LArMCParticleHelper::IsNeutrino(pParentMCParticle))
+    if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return pParentMCParticle;
@@ -182,14 +179,10 @@ float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
     float neutrinoWeight(0.f);
     float totalWeight(0.f);
 
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    for (const auto &layerEntry : pCluster->GetOrderedCaloHitList())
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
+        for (const CaloHit *const pCaloHit : *layerEntry.second)
         {
-            const CaloHit *const pCaloHit = *hitIter;
-
             try
             {
                 // note: order is important here
@@ -212,18 +205,21 @@ float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
 
 float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
 {
-    const MCParticleWeightMap &weights = pCaloHit->GetMCParticleWeightMap();
+    const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
 
-    if (weights.empty())
+    if (hitMCParticleWeightMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     float neutrinoWeight(0.f);
     float totalWeight(0.f);
 
-    for (MCParticleWeightMap::const_iterator iter = weights.begin(), iterEnd = weights.end(); iter != iterEnd; ++iter)
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : hitMCParticleWeightMap) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(LArMCParticleHelper::SortByMomentum);
+
+    for (const MCParticle *const pMCParticle : mcParticleList)
     {
-        const MCParticle *const pMCParticle = iter->first;
-        const float weight = iter->second;
+        const float weight(hitMCParticleWeightMap.at(pMCParticle));
 
         if (LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))
             neutrinoWeight += weight;
@@ -256,10 +252,8 @@ bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle
 
 void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap)
 {
-    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        const MCParticle *const pMCParticle = *iter;
-
         try
         {
             const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
@@ -275,10 +269,8 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
 
 void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcPrimaryVector)
 {
-    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        const MCParticle *const pMCParticle = *iter;
-
         if (LArMCParticleHelper::IsPrimary(pMCParticle))
             mcPrimaryVector.push_back(pMCParticle);
     }
@@ -290,10 +282,8 @@ void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const p
 
 void LArMCParticleHelper::GetNeutrinoMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcNeutrinoVector)
 {
-    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        const MCParticle *const pMCParticle = *iter;
-
         if (LArMCParticleHelper::IsNeutrino(pMCParticle) && pMCParticle->GetParentList().empty())
             mcNeutrinoVector.push_back(pMCParticle);
     }
@@ -307,11 +297,11 @@ const MCParticle *LArMCParticleHelper::GetMainMCParticle(const ParticleFlowObjec
 {
     ClusterList clusterList;
     LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
-    const MCParticle *pMainMCParticle(NULL);
+    const MCParticle *pMainMCParticle(nullptr);
 
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : clusterList)
     {
-        const MCParticle *const pThisMainMCParticle(MCParticleHelper::GetMainMCParticle(*iter));
+        const MCParticle *const pThisMainMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
 
         if (pMainMCParticle && (pThisMainMCParticle != pMainMCParticle))
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -332,11 +322,11 @@ const MCParticle *LArMCParticleHelper::GetMainMCPrimary(const ParticleFlowObject
 {
     ClusterList clusterList;
     LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
-    const MCParticle *pMainMCPrimary(NULL);
+    const MCParticle *pMainMCPrimary(nullptr);
 
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : clusterList)
     {
-        MCRelationMap::const_iterator primaryIter(mcPrimaryMap.find(MCParticleHelper::GetMainMCParticle(*iter)));
+        MCRelationMap::const_iterator primaryIter(mcPrimaryMap.find(MCParticleHelper::GetMainMCParticle(pCluster)));
 
         if (mcPrimaryMap.end() == primaryIter)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -354,20 +344,6 @@ const MCParticle *LArMCParticleHelper::GetMainMCPrimary(const ParticleFlowObject
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return pMainMCPrimary;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::SortBySource(const MCParticle *const pLhs, const MCParticle *const pRhs)
-{
-    // Put neutrino-induced particles first
-    const int parentLhs(LArMCParticleHelper::GetParentNeutrinoId(pLhs));
-    const int parentRhs(LArMCParticleHelper::GetParentNeutrinoId(pRhs));
-
-    if (parentLhs != parentRhs)
-        return (parentLhs > parentRhs);
-
-    return LArMCParticleHelper::SortByMomentum(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

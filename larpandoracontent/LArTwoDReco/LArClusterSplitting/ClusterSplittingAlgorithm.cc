@@ -54,13 +54,13 @@ StatusCode ClusterSplittingAlgorithm::RunUsingCurrentList() const
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
-    ClusterSplittingList internalClusterList(pClusterList->begin(), pClusterList->end());
+    ClusterList internalClusterList(pClusterList->begin(), pClusterList->end());
     internalClusterList.sort(LArClusterHelper::SortByNHits);
 
-    for (ClusterSplittingList::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
+    for (ClusterList::iterator iter = internalClusterList.begin(); iter != internalClusterList.end(); ++iter)
     {
         const Cluster *const pCluster = *iter;
-        ClusterSplittingList clusterSplittingList;
+        ClusterList clusterSplittingList;
 
         if (STATUS_CODE_SUCCESS != this->SplitCluster(pCluster, clusterSplittingList))
             continue;
@@ -74,7 +74,7 @@ StatusCode ClusterSplittingAlgorithm::RunUsingCurrentList() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, ClusterSplittingList &clusterSplittingList) const
+StatusCode ClusterSplittingAlgorithm::SplitCluster(const Cluster *const pCluster, ClusterList &clusterSplittingList) const
 {
     // Split cluster into two CaloHit lists
     PandoraContentApi::Cluster::Parameters firstParameters, secondParameters;
@@ -86,8 +86,7 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(const Cluster *const pCluster
         return STATUS_CODE_NOT_ALLOWED;
 
     // Begin cluster fragmentation operations
-    ClusterList clusterList;
-    clusterList.insert(pCluster);
+    const ClusterList clusterList(1, pCluster);
     std::string clusterListToSaveName, clusterListToDeleteName;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,

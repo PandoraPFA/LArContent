@@ -10,6 +10,7 @@
 
 #include "Objects/ParticleFlowObject.h"
 
+#include "Pandora/ObjectCreation.h"
 #include "Pandora/ObjectFactory.h"
 
 #include <string>
@@ -20,7 +21,7 @@ namespace lar_content
 /**
  *  @brief  lar pfo parameters
  */
-class LArShowerPfoParameters : public PandoraContentApi::ParticleFlowObject::Parameters
+class LArShowerPfoParameters : public object_creation::ParticleFlowObject::Parameters
 {
 public:
     std::string     m_additionalProperty;       ///< The additional property string
@@ -31,7 +32,7 @@ public:
 /**
  *  @brief  lar pfo object
  */
-class LArShowerPfo : public pandora::ParticleFlowObject
+class LArShowerPfo : public object_creation::ParticleFlowObject::Object
 {
 public:
     /**
@@ -55,7 +56,7 @@ private:
 /**
  *  @brief  lar pfo object factory responsible for pfo creation
  */
-class LArShowerPfoFactory : public pandora::ObjectFactory<PandoraContentApi::ParticleFlowObject::Parameters, pandora::ParticleFlowObject>
+class LArShowerPfoFactory : public pandora::ObjectFactory<object_creation::ParticleFlowObject::Parameters, object_creation::ParticleFlowObject::Object>
 {
 public:
     /**
@@ -79,7 +80,7 @@ public:
      *  @param  pObject the address of the object to persist
      *  @param  fileWriter the file writer
      */
-    pandora::StatusCode Write(const pandora::ParticleFlowObject *const pObject, pandora::FileWriter &fileWriter) const;
+    pandora::StatusCode Write(const Object *const pObject, pandora::FileWriter &fileWriter) const;
 
     /**
      *  @brief  Create an object with the given parameters
@@ -87,14 +88,14 @@ public:
      *  @param  parameters the parameters to pass in constructor
      *  @param  pObject to receive the address of the object created
      */
-    pandora::StatusCode Create(const PandoraContentApi::ParticleFlowObject::Parameters &parameters, const pandora::ParticleFlowObject *&pObject) const;
+    pandora::StatusCode Create(const Parameters &parameters, const Object *&pObject) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArShowerPfo::LArShowerPfo(const LArShowerPfoParameters &parameters) :
-    pandora::ParticleFlowObject(parameters),
+    object_creation::ParticleFlowObject::Object(parameters),
     m_additionalProperty(parameters.m_additionalProperty)
 {
 }
@@ -116,7 +117,7 @@ inline LArShowerPfoFactory::Parameters *LArShowerPfoFactory::NewParameters() con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArShowerPfoFactory::Create(const Parameters &parameters, const pandora::ParticleFlowObject *&pObject) const
+inline pandora::StatusCode LArShowerPfoFactory::Create(const Parameters &parameters, const Object *&pObject) const
 {
     const LArShowerPfoParameters &larPfoParameters(dynamic_cast<const LArShowerPfoParameters&>(parameters));
     pObject = new LArShowerPfo(larPfoParameters);

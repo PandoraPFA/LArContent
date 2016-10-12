@@ -39,31 +39,27 @@ StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &
     for (const Cluster *const pCluster : clusterVector)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
-        allCaloHits.insert(daughterHits.begin(), daughterHits.end());
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
+        allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
             (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
-    CaloHitVector sortedAllCaloHits(allCaloHits.begin(), allCaloHits.end());
-    std::sort(sortedAllCaloHits.begin(), sortedAllCaloHits.end(), LArClusterHelper::SortHitsByPosition);
-
     HitKDTree2D kdTree;
     HitKDNode2DList hitKDNode2DList;
 
-    KDTreeBox hitsBoundingRegion2D = fill_and_bound_2d_kd_tree(sortedAllCaloHits, hitKDNode2DList);
+    KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
     kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
 
     for (const Cluster *const pCluster : clusterVector)
     {
         CaloHitList daughterHits;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(daughterHits);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
 
         for (const CaloHit *const pCaloHit : daughterHits)
         {
-            CaloHitList nearbyHits;
-            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D);
+            KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
 
             HitKDNode2DList found;
             kdTree.search(searchRegionHits, found);
@@ -117,10 +113,10 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
     if (LArClusterHelper::GetClosestDistance(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster()) > m_maxClusterSeparation)
         return STATUS_CODE_NOT_FOUND;
 
-    CartesianPointList candidateList;
-    this->FindCandidateSplitPositions(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster(), candidateList);
+    CartesianPointVector candidateVector;
+    this->FindCandidateSplitPositions(slidingFitResult1.GetCluster(), slidingFitResult2.GetCluster(), candidateVector);
 
-    if (candidateList.empty())
+    if (candidateVector.empty())
         return STATUS_CODE_NOT_FOUND;
 
 
@@ -131,7 +127,7 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
     const float halfWindowLength1(slidingFitResult1.GetLayerFitHalfWindowLength());
     const float halfWindowLength2(slidingFitResult2.GetLayerFitHalfWindowLength());
 
-    for (CartesianPointList::const_iterator iter = candidateList.begin(), iterEnd = candidateList.end(); iter != iterEnd; ++iter)
+    for (CartesianPointVector::const_iterator iter = candidateVector.begin(), iterEnd = candidateVector.end(); iter != iterEnd; ++iter)
     {
         const CartesianVector &candidatePosition(*iter);
 
@@ -238,12 +234,12 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    CartesianPointList &candidateList) const
+    CartesianPointVector &candidateVector) const
 {
     // ATTN The following is double-double counting
     CaloHitList caloHitList1, caloHitList2;
-    pCluster1->GetOrderedCaloHitList().GetCaloHitList(caloHitList1);
-    pCluster2->GetOrderedCaloHitList().GetCaloHitList(caloHitList2);
+    pCluster1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
+    pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
 
     CaloHitVector caloHitVector1(caloHitList1.begin(), caloHitList1.end()), caloHitVector2(caloHitList2.begin(), caloHitList2.end());
     std::sort(caloHitVector1.begin(), caloHitVector1.end(), LArClusterHelper::SortHitsByPosition);
@@ -255,7 +251,7 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
         const CartesianVector position2(LArClusterHelper::GetClosestPosition(position1, pCluster2));
 
         if ((position1 - position2).GetMagnitudeSquared() < m_maxClusterSeparationSquared)
-            candidateList.push_back((position1 + position2) * 0.5);
+            candidateVector.push_back((position1 + position2) * 0.5);
     }
 
     for (const CaloHit *const pCaloHit : caloHitVector2)
@@ -264,7 +260,7 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
         const CartesianVector position1(LArClusterHelper::GetClosestPosition(position2, pCluster1));
 
         if ((position2 - position1).GetMagnitudeSquared() < m_maxClusterSeparationSquared)
-            candidateList.push_back((position2 + position1) * 0.5);
+            candidateVector.push_back((position2 + position1) * 0.5);
     }
 }
 

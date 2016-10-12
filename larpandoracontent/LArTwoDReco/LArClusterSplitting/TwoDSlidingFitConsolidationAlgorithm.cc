@@ -45,7 +45,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
     this->GetReclusteredHits(slidingFitResultList, showerClusters, clustersToExpand, clustersToContract);
 
     // Consolidate and re-build clusters
-    ClusterList unavailableClusters;
+    ClusterSet unavailableClusters;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RemoveHitsFromClusters(clustersToContract, unavailableClusters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddHitsToClusters(clustersToExpand, unavailableClusters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RebuildClusters(clustersToContract, unavailableClusters));
@@ -98,12 +98,15 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterSet &unavailableClusters) const
 {
-    for (const ClusterToHitMap::value_type &mapEntry : clustersToContract)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clustersToContract) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster *const pCluster = mapEntry.first;
-        const CaloHitList &caloHitListToRemove = mapEntry.second;
+        const CaloHitList &caloHitListToRemove(clustersToContract.at(pCluster));
 
         if (caloHitListToRemove.empty())
             continue;
@@ -112,12 +115,12 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
             continue;
 
         CaloHitList caloHitList, caloHitListToKeep;
-        pCluster->GetOrderedCaloHitList().GetCaloHitList(caloHitList);
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
         for (const CaloHit *const pCaloHit : caloHitList)
         {
-            if (!caloHitListToRemove.count(pCaloHit))
-                caloHitListToKeep.insert(pCaloHit);
+            if (caloHitListToRemove.end() == std::find(caloHitListToRemove.begin(), caloHitListToRemove.end(), pCaloHit))
+                caloHitListToKeep.push_back(pCaloHit);
         }
 
         if (caloHitListToKeep.empty())
@@ -139,12 +142,15 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterSet &unavailableClusters) const
 {
-    for (const ClusterToHitMap::value_type &mapEntry : clustersToExpand)
+    ClusterList clusterList;
+    for (const auto &mapEntry : clustersToExpand) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster *const pCluster = mapEntry.first;
-        const CaloHitList &caloHitList = mapEntry.second;
+        const CaloHitList &caloHitList(clustersToExpand.at(pCluster));
 
         if (caloHitList.empty())
             continue;
@@ -165,7 +171,7 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const Cluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersToRebuild, const ClusterList &unavailableClusters) const
+StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterToHitMap &clustersToRebuild, const ClusterSet &unavailableClusters) const
 {
     if (clustersToRebuild.empty())
         return STATUS_CODE_SUCCESS;

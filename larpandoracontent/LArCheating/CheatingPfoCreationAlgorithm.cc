@@ -92,7 +92,7 @@ void CheatingPfoCreationAlgorithm::GetIdToClusterListMap(const ClusterList *cons
                 continue;
 
             const Id id(intptr_t(pMCParticle->GetUid()) - idOffset);
-            idToClusterListMap[id].insert(pCluster);
+            idToClusterListMap[id].push_back(pCluster);
         }
         catch (StatusCodeException &)
         {
@@ -147,7 +147,7 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const IdToClusterListMap &idToClus
             pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
             pfoParameters.m_energy = pMCParticle->GetEnergy();
             pfoParameters.m_momentum = pMCParticle->GetMomentum();
-            pfoParameters.m_clusterList.insert(clusterList.begin(), clusterList.end());
+            pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), clusterList.begin(), clusterList.end());
 
             const ParticleFlowObject *pPfo(NULL);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));

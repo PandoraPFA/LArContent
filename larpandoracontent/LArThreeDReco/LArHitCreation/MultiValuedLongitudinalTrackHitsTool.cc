@@ -33,7 +33,7 @@ void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *cons
     const float frac((end2D - vtx2D).GetDotProduct(pCaloHit2D->GetPositionVector() - vtx2D) / (end2D - vtx2D).GetMagnitudeSquared());
     const CartesianVector projection3D(vtx3D + (end3D - vtx3D) * frac);
 
-    CartesianPointList fitPositionList1, fitPositionList2;
+    CartesianPointVector fitPositionList1, fitPositionList2;
 
     MatchedSlidingFitMap::const_iterator fIter1 = matchedSlidingFitMap.find(hitType1);
     if (matchedSlidingFitMap.end() != fIter1)

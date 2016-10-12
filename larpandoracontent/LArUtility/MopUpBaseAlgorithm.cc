@@ -19,18 +19,18 @@ template <typename T>
 const std::string MopUpBaseAlgorithm::GetListName(const T *const pT) const
 {
     std::string currentListName;
-    const std::MANAGED_CONTAINER<const T*> *pCurrentList(nullptr);
+    const MANAGED_CONTAINER<const T*> *pCurrentList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*this, pCurrentList, currentListName);
 
-    if (pCurrentList && (pCurrentList->count(pT)))
+    if (pCurrentList && (pCurrentList->end() != std::find(pCurrentList->begin(), pCurrentList->end(), pT)))
         return currentListName;
 
     for (const std::string &listName : m_daughterListNames)
     {
-        const std::MANAGED_CONTAINER<const T*> *pList(nullptr);
+        const MANAGED_CONTAINER<const T*> *pList(nullptr);
         (void) PandoraContentApi::GetList(*this, listName, pList);
 
-        if (pList && (pList->count(pT)))
+        if (pList && (pList->end() != std::find(pList->begin(), pList->end(), pT)))
             return listName;
     }
 

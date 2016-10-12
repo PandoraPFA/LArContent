@@ -17,7 +17,7 @@
 namespace lar_content
 {
 
-typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointList> SplitPositionMap;
+typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVector> SplitPositionMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

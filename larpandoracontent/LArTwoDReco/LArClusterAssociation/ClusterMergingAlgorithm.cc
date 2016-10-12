@@ -60,17 +60,15 @@ StatusCode ClusterMergingAlgorithm::Run()
 
 void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterList clusterVetoList;
+    ClusterSet clusterVetoList;
 
     for (const Cluster *const pSeedCluster : clusterVector)
     {
         ClusterList mergeList;
         this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, mergeList);
+        mergeList.sort(LArClusterHelper::SortByNHits);
 
-        ClusterVector mergeVector(mergeList.begin(), mergeList.end());
-        std::sort(mergeVector.begin(), mergeVector.end(), LArClusterHelper::SortByNHits);
-
-        for (const Cluster *const pAssociatedCluster : mergeVector)
+        for (const Cluster *const pAssociatedCluster : mergeList)
         {
             if (clusterVetoList.count(pAssociatedCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -97,14 +95,14 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
 
 void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList& associatedClusterList) const
 {
-    ClusterList clusterVetoList;
+    ClusterSet clusterVetoList;
     this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-    const ClusterList &clusterVetoList, ClusterList &associatedClusterList) const
+    const ClusterSet &clusterVetoList, ClusterList &associatedClusterList) const
 {
     if (clusterVetoList.count(pCurrentCluster))
         return;
@@ -122,9 +120,10 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSe
         if (pAssociatedCluster == pSeedCluster)
             continue;
 
-        if (!associatedClusterList.insert(pAssociatedCluster).second)
+        if (associatedClusterList.end() != std::find(associatedClusterList.begin(), associatedClusterList.end(), pAssociatedCluster))
             continue;
 
+        associatedClusterList.push_back(pAssociatedCluster);
         this->CollectAssociatedClusters(pSeedCluster, pAssociatedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
     }
 }

@@ -72,13 +72,11 @@ StatusCode ClusterGrowingAlgorithm::Run()
 void ClusterGrowingAlgorithm::GetListOfNonSeedClusters(const ClusterVector &inputClusters, const ClusterVector &seedClusters,
     ClusterVector &nonSeedClusters) const
 {
-    const ClusterList seedList(seedClusters.begin(), seedClusters.end());
-
     for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
     {
         const Cluster *const pCluster = *iter;
 
-        if (seedList.count(pCluster))
+        if (seedClusters.end() != std::find(seedClusters.begin(), seedClusters.end(), pCluster))
             continue;
 
         nonSeedClusters.push_back(pCluster);
@@ -112,7 +110,7 @@ void ClusterGrowingAlgorithm::PopulateClusterMergeMap(const ClusterVector &seedC
         }
 
         if (pBestSeedCluster)
-            clusterMergeMap[pBestSeedCluster].insert(pNonSeedCluster);
+            clusterMergeMap[pBestSeedCluster].push_back(pNonSeedCluster);
     }
 }
 
@@ -120,27 +118,26 @@ void ClusterGrowingAlgorithm::PopulateClusterMergeMap(const ClusterVector &seedC
 
 void ClusterGrowingAlgorithm::MergeClusters(const ClusterMergeMap &clusterMergeMap) const
 {
-    for (ClusterMergeMap::const_iterator sIter = clusterMergeMap.begin(), sIterEnd = clusterMergeMap.end(); sIter != sIterEnd; ++sIter)
+    ClusterList parentClusterList;
+    for (const auto &mapEntry : clusterMergeMap) parentClusterList.push_back(mapEntry.first);
+    parentClusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : parentClusterList)
     {
-        const Cluster *const pCluster = sIter->first;
-        const ClusterList &clusterList = sIter->second;
+        const ClusterList &clusterList(clusterMergeMap.at(pParentCluster));
 
         if (clusterList.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        const Cluster *const pSeedCluster = pCluster;
-
-        for (ClusterList::const_iterator nIter = clusterList.begin(), nIterEnd = clusterList.end(); nIter != nIterEnd; ++nIter)
+        for (const Cluster *const pAssociatedCluster : clusterList)
         {
-            const Cluster *const pAssociatedCluster = *nIter;
-
             if (m_inputClusterListName.empty())
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pAssociatedCluster));
             }
             else
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pAssociatedCluster,
                     m_inputClusterListName, m_inputClusterListName));
             }
         }

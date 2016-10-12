@@ -90,11 +90,6 @@ private:
          */
         unsigned int GetNCaloHits() const;
 
-        /**
-         *  @brief  Get the total energy
-         */
-        float GetLengthSquared() const;
-
     private:
         const pandora::Cluster             *m_pClusterU;    ///< Address of cluster in U view
         const pandora::Cluster             *m_pClusterV;    ///< Address of cluster in V view
@@ -154,20 +149,29 @@ private:
      */
     void GetClusters(const std::string &clusterListName, pandora::ClusterVector &clusterVector) const;
 
+    typedef std::unordered_map<const pandora::Cluster*, float> ClusterLengthMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, float> PfoLengthMap;
+
     /**
      *  @brief  Match clusters using all three views
+     * 
+     *  @param  clusterLengthMap the cluster length map
      */
-    void ThreeViewMatching() const;
+    void ThreeViewMatching(ClusterLengthMap &clusterLengthMap) const;
 
     /**
      *  @brief  Match clusters using pairs of views
+     * 
+     *  @param  clusterLengthMap the cluster length map
      */
-    void TwoViewMatching() const;
+    void TwoViewMatching(ClusterLengthMap &clusterLengthMap) const;
 
     /**
      *  @brief  Match clusters using single views
+     * 
+     *  @param  clusterLengthMap the cluster length map
      */
-    void OneViewMatching() const;
+    void OneViewMatching(ClusterLengthMap &clusterLengthMap) const;
 
     /**
      *  @brief  Match clusters using all three views
@@ -175,36 +179,43 @@ private:
      *  @param  clusters1 the list of clusters in the first view
      *  @param  clusters2 the list of clusters in the second view
      *  @param  clusters3 the list of clusters in the third view
+     *  @param  clusterLengthMap the cluster length map
+     *  @param  pfoLengthMap the pfo length map
      *  @param  particleList the output list of particles
      */
-    void ThreeViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
-        const pandora::ClusterVector &clusters3, ParticleList &particleList) const;
+    void ThreeViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2, const pandora::ClusterVector &clusters3,
+        ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
 
     /**
      *  @brief  Match clusters using a pair of views
      *
      *  @param  clusters1 the list of clusters in the first view
      *  @param  clusters2 the list of clusters in the second view
+     *  @param  clusterLengthMap the cluster length map
+     *  @param  pfoLengthMap the pfo length map
      *  @param  particleList the output list of particles
      */
-    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
-        ParticleList &particleList) const;
+    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2, ClusterLengthMap &clusterLengthMap,
+        PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
 
     /**
      *  @brief  Match clusters using a single view
      *
      *  @param  clusters the list of clusters in the provided view
+     *  @param  clusterLengthMap the cluster length map
+     *  @param  pfoLengthMap the pfo length map
      *  @param  particleList the output list of particles
      */
-    void OneViewMatching(const pandora::ClusterVector &clusters, ParticleList &particleList) const;
+    void OneViewMatching(const pandora::ClusterVector &clusters, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
 
     /**
      *  @brief Resolve any ambiguities between candidate particles
      *
      *  @param inputParticles the input list of candidate particles
+     *  @param  clusterLengthMap the cluster length map
      *  @param outputParticles the output list of candidate particles
      */
-    void SelectParticles(const ParticleList &inputParticles, ParticleList &outputParticles) const;
+    void SelectParticles(const ParticleList &inputParticles, ClusterLengthMap &clusterLengthMap, ParticleList &outputParticles) const;
 
     /**
      *  @brief Build new particle flow objects
@@ -216,13 +227,45 @@ private:
     /**
      *  @brief  Find best Pfo to associate a UVW triplet
      *
-     *  @param  pointer to U view cluster
-     *  @param  pointer to V view cluster
-     *  @param  pointer to W view cluster
-     *  @param  pointer to best Pfo
+     *  @param  pClusterU pointer to U view cluster
+     *  @param  pClusterV pointer to V view cluster
+     *  @param  pClusterW pointer to W view cluster
+     *  @param  clusterLengthMap the cluster length map
+     *  @param  pfoLengthMap the pfo length map
+     *  @param  pBestPfo to receive the address of the best Pfo
      */
     void FindBestParentPfo(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
-        const pandora::ParticleFlowObject *&pBestPfo) const;
+        ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, const pandora::ParticleFlowObject *&pBestPfo) const;
+
+    /**
+     *  @brief  Reduce number of length (squared) calculations by caching results when they are first obtained
+     *
+     *  @param  pCluster the cluster
+     *  @param  clusterLengthMap the cluster length map
+     * 
+     *  @return the length (squared)
+     */
+    float GetLengthFromCache(const pandora::Cluster *const pCluster, ClusterLengthMap &clusterLengthMap) const;
+
+    /**
+     *  @brief  Reduce number of length (squared) calculations by caching results when they are first obtained
+     *
+     *  @param  pPfo the pfo
+     *  @param  pfoLengthMap the pfo length map
+     * 
+     *  @return the length (squared)
+     */
+    float GetLengthFromCache(const pandora::ParticleFlowObject *const pPfo, PfoLengthMap &pfoLengthMap) const;
+
+    /**
+     *  @brief  Get the length (squared) of a candidate particle
+     *
+     *  @param  particle the particle
+     *  @param  clusterLengthMap the cluster length map
+     * 
+     *  @return the length (squared)
+     */
+    float GetLength(const Particle &particle, ClusterLengthMap &clusterLengthMap) const;
 
     /**
      *  @brief  Look at consistency of a combination of clusters

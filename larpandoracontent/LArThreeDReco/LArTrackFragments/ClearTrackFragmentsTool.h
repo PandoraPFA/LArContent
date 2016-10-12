@@ -91,10 +91,11 @@ private:
      *  @param  overlapResult the overlap result
      *  @param  modifiedClusters to receive the list of modified clusters
      *  @param  deletedClusters to receive the list of deleted clusters
+     *  @param  badClusters the set of clusters that should not be dereferenced
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
     void ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType::OverlapResult &overlapResult,
-        pandora::ClusterList &modifiedClusters, pandora::ClusterList &deletedClusters, const pandora::Cluster *&pFragmentCluster) const;
+        pandora::ClusterList &modifiedClusters, pandora::ClusterList &deletedClusters, pandora::ClusterSet &badClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
      *  @brief  Rearrange the hits in a cluster from the fragment list, using the Pandora fragmentation mechanism
@@ -104,41 +105,40 @@ private:
      *  @param  daughterHits the full list of hits to place in the new fragment cluster
      *  @param  separateHits the full list of hits that are not to be placed in the new fragment cluster
      *  @param  deletedClusters to receive the list of deleted clusters
+     *  @param  badClusters the set of clusters that should not be dereferenced
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
     void Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const pandora::CaloHitList &daughterHits,
-        const pandora::CaloHitList &separateHits, pandora::ClusterList &deletedClusters, const pandora::Cluster *&pFragmentCluster) const;
+        const pandora::CaloHitList &separateHits, pandora::ClusterList &deletedClusters, pandora::ClusterSet &badClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
      *  @brief  Rebuild clusters after fragmentation
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  modifiedClusters the list of clusters to rebuild
-     *  @param  deletedClusters the list of vetoed clusters
      *  @param  newClusters the list of new clusters
      */
-    void RebuildClusters(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::ClusterList &modifiedClusters,
-        const pandora::ClusterList &deletedClusters, pandora::ClusterList &newClusters) const;
+    void RebuildClusters(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::ClusterList &modifiedClusters, pandora::ClusterList &newClusters) const;
 
     /**
      *  @brief  Update the tensor following the fragmentation operations performed by this tool
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
-     *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
-     *  @param  newAvailableClusters the list of clusters newly made available for future particle reconstruction
+     *  @param  clustersToRemoveFromTensor the list of clusters to remove from the tensor
+     *  @param  clustersToAddToTensor the list of clusters newly made available for future particle reconstruction
      */
     void UpdateTensor(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
-        const pandora::ClusterList &unavailableClusters, const pandora::ClusterList &newAvailableClusters) const;
+        const pandora::ClusterList &clustersToRemoveFromTensor, const pandora::ClusterList &clustersToAddToTensor) const;
 
     /**
      *  @brief  Get a list of the tensor key clusters for which tensor elements have been impacted by fragmentation operations
      *
      *  @param  overlapTensor the overlap tensor
-     *  @param  unavailableClusters the list of clusters now unavailable for future particle reconstruction
+     *  @param  clustersToRemoveFromTensor the list of clusters removed from the tensor by fragmentation operations
      *  @param  affectedKeyClusters to receive the list of tensor key clusters that have been affected by fragmentation operations
      */
-    void GetAffectedKeyClusters(const TensorType &overlapTensor, const pandora::ClusterList &unavailableClusters,
+    void GetAffectedKeyClusters(const TensorType &overlapTensor, const pandora::ClusterList &clustersToRemoveFromTensor,
         pandora::ClusterList &affectedKeyClusters) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

@@ -27,7 +27,7 @@ ConnectedRemnantsTool::ConnectedRemnantsTool() :
 bool ConnectedRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this << ", " << this->GetType() << std::endl;
+       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector; ClusterMergeMap clusterMergeMap;
     this->FindConnectedShowers(overlapTensor, protoParticleVector, clusterMergeMap);
@@ -43,7 +43,7 @@ bool ConnectedRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, Tenso
 void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
     ClusterMergeMap &clusterMergeMap) const
 {
-    ClusterList usedClusters;
+    ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -73,9 +73,9 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
         const Cluster *const pClusterW = clusterVectorW.front();
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.insert(pClusterU);
-        protoParticle.m_clusterListV.insert(pClusterV);
-        protoParticle.m_clusterListW.insert(pClusterW);
+        protoParticle.m_clusterListU.push_back(pClusterU);
+        protoParticle.m_clusterListV.push_back(pClusterV);
+        protoParticle.m_clusterListW.push_back(pClusterW);
         protoParticleVector.push_back(protoParticle);
 
         this->FillMergeMap(pClusterU, clusterVectorU, clusterMergeMap);
@@ -86,7 +86,7 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConnectedRemnantsTool::GetClusters(const TensorType::ElementList &elementList, const ClusterList &usedClusters,
+void ConnectedRemnantsTool::GetClusters(const TensorType::ElementList &elementList, const ClusterSet &usedClusters,
     ClusterVector &clusterVectorU, ClusterVector &clusterVectorV, ClusterVector &clusterVectorW) const
 {
     for (const TensorType::Element &element : elementList)
@@ -112,7 +112,10 @@ void ConnectedRemnantsTool::FillMergeMap(const Cluster *const pFirstCluster, con
         if (pFirstCluster == pSecondCluster)
             continue;
 
-        clusterMergeMap[pFirstCluster].insert(pSecondCluster);
+        ClusterList &clusterList(clusterMergeMap[pFirstCluster]);
+
+        if (clusterList.end() == std::find(clusterList.begin(), clusterList.end(), pSecondCluster))
+            clusterList.push_back(pSecondCluster);
     }
 }
 
