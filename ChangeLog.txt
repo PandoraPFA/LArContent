@@ -1,5 +1,27 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-08-00
+TAG v03_00_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Updated to reflect sdk interface changes.
+Updated to reflect change to managed container and Pandora typedefs.
+Enforced object uniqueness in lists where it was previously implicit by use of std::unordered_set.
+Reviewed all unordered containers used by algorithms.
+Efficiency improvements motivated by performance tests.
+Improved clarity of reclustering in ClearTrackFragments tool.
+Provided well-defined overlap result in ThreeDRemnants algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02_08_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Switched kd tree interface to take a vector of points.
+Improved handling of unordered maps in extension algorithms.
+Ensured new tensor elements are calculated with modified, merged cluster.
+Reduced maximum distance to allow addition of isolated hits.
+Added option to include isolated hits in neutrino characterisation.
+ApplyPfoSelectionRules all matching criteria to define strong matches in event validation.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02_08_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Added CrossingVertexCandidate creation algorithm.
 Added EnergyKickVertexSelection algorithm and factored common VertexSelection functionality into base class.
@@ -11,34 +33,34 @@ Tweaked logic for making Pfo parent-daughter associations.
 Added CheatingPfoCharacterisation algorithm.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-07-08 (v02-07-09 metadata changes only)
+TAG v02_07_08 (v02_07_09 metadata changes only)
 --------------------------------------------------------------------------------------------------------------------------------------------
 Improved visualization of neutrino event reconstruction problems.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-07-07
+TAG v02_07_07
 --------------------------------------------------------------------------------------------------------------------------------------------
 Tweak EventValidation algorithm screen printout.
 Add new functionality to EventWriting algorithm, allowing filtration by final state mc particles and neutrino interaction vertex position.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-07-06
+TAG v02_07_06
 --------------------------------------------------------------------------------------------------------------------------------------------
 Remove unused variable (assigned to in constructor, but still ultimately unused).
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-07-04 (v02-07-05 metadata changes only)
+TAG v02_07_04 (v02_07_05 metadata changes only)
 --------------------------------------------------------------------------------------------------------------------------------------------
 Cosmetic change to LArContent header, more flexible functionality for TwoDParticleCreation algorithm.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-07-03
+TAG v02_07_03
 --------------------------------------------------------------------------------------------------------------------------------------------
 Allow CheatingNeutrinoCreation algorithm to deal with multiple mc neutrinos.
 Restructuring to allow support for both pandorabuildtools and cetbuildtools, hosted by both github and redmine remote repositories.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-07-02
+TAG v02_07_02
 --------------------------------------------------------------------------------------------------------------------------------------------
 First, tentative restructuring to allow support for cetbuildtools.
 Add NeutrinoInducedOnly parameter to allow assessment of neutrino reconstruction after cosmic ray removal.
