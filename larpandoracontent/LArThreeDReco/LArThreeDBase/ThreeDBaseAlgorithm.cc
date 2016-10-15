@@ -91,35 +91,16 @@ bool ThreeDBaseAlgorithm<T>::MakeClusterMerges(const ClusterMergeMap &clusterMer
             if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
+            this->UpdateUponDeletion(pDaughterCluster);
+            this->UpdateUponDeletion(pParentCluster);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
-            deletedClusters.insert(pDaughterCluster);
 
-            // ATTN Trouble if this function tries to derefence pDaughterCluster
-            this->UpdateUponMerge(pParentCluster, pDaughterCluster);
+            this->UpdateForNewCluster(pParentCluster);
+            deletedClusters.insert(pDaughterCluster);
         }
     }
 
     return !(deletedClusters.empty());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateUponMerge(const Cluster *const pEnlargedCluster, const Cluster *const pDeletedCluster)
-{
-    this->UpdateUponDeletion(pDeletedCluster);
-    this->UpdateUponDeletion(pEnlargedCluster);
-    this->UpdateForNewCluster(pEnlargedCluster);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-void ThreeDBaseAlgorithm<T>::UpdateUponSplit(const Cluster *const pSplitCluster1, const Cluster *const pSplitCluster2, const Cluster *const pDeletedCluster)
-{
-    this->UpdateUponDeletion(pDeletedCluster);
-    this->UpdateForNewCluster(pSplitCluster1);
-    this->UpdateForNewCluster(pSplitCluster2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

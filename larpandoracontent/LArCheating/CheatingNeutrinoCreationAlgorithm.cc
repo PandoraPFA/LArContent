@@ -36,6 +36,9 @@ StatusCode CheatingNeutrinoCreationAlgorithm::Run()
         const ParticleFlowObject *pNeutrinoPfo(NULL);
         this->CreateAndSaveNeutrinoPfo(pMCNeutrino, pNeutrinoPfo);
 
+        if (!pNeutrinoPfo)
+            return STATUS_CODE_FAILURE;
+
         this->AddNeutrinoVertex(pMCNeutrino, pNeutrinoPfo);
 
         LArMCParticleHelper::MCRelationMap mcPrimaryMap;
