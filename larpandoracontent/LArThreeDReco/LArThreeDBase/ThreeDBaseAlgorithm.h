@@ -81,24 +81,6 @@ public:
     virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
 
     /**
-     *  @brief  Update to reflect a cluster merge
-     *
-     *  @param  pEnlargedCluster address of the enlarged cluster
-     *  @param  pDeletedCluster address of the deleted cluster
-     */
-    virtual void UpdateUponMerge(const pandora::Cluster *const pEnlargedCluster, const pandora::Cluster *const pDeletedCluster);
-
-    /**
-     *  @brief  Update to reflect a cluster split
-     *
-     *  @param  pSplitCluster1 address of the first cluster fragment
-     *  @param  pSplitCluster2 address of the second cluster fragment
-     *  @param  pDeletedCluster address of the deleted cluster
-     */
-    virtual void UpdateUponSplit(const pandora::Cluster *const pSplitCluster1, const pandora::Cluster *const pSplitCluster2,
-        const pandora::Cluster *const pDeletedCluster);
-
-    /**
      *  @brief  Update to reflect addition of a new cluster to the problem space
      *
      *  @param  pNewCluster address of the new cluster

@@ -76,12 +76,18 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
         for (CartesianPointVector::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
         {
             const Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
+            this->UpdateUponDeletion(pCurrentCluster);
 
             if (this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster))
             {
                 changesMade = true;
-                this->UpdateUponSplit(pLowXCluster, pHighXCluster, pCurrentCluster);
+                this->UpdateForNewCluster(pLowXCluster);
+                this->UpdateForNewCluster(pHighXCluster);
                 pCurrentCluster = pHighXCluster;
+            }
+            else
+            {
+                this->UpdateForNewCluster(pCurrentCluster);
             }
         }
     }
