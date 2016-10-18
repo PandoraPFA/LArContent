@@ -14,7 +14,10 @@
 
 #include "Pandora/Pandora.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
 #include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
@@ -407,6 +410,43 @@ bool LArGeometryHelper::IsInGap3D(const Pandora &pandora, const CartesianVector 
 {
     const CartesianVector testPoint2D(LArGeometryHelper::ProjectPosition(pandora, testPoint3D, hitType));
     return LArGeometryHelper::IsInGap(pandora, testPoint2D, hitType, gapTolerance);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArGeometryHelper::IsXSamplingPointInGap(const Pandora &pandora, const float xSample, const TwoDSlidingFitResult &slidingFitResult,
+    const float gapTolerance)
+{
+    const HitType hitType(LArClusterHelper::GetClusterHitType(slidingFitResult.GetCluster()));
+    const CartesianVector minLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
+    const CartesianVector maxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+
+    const bool minLayerIsAtLowX(minLayerPosition.GetX() < maxLayerPosition.GetX());
+    const CartesianVector &lowXCoordinate(minLayerIsAtLowX ? minLayerPosition : maxLayerPosition);
+    const CartesianVector &highXCoordinate(minLayerIsAtLowX ? maxLayerPosition : minLayerPosition);
+
+    if ((xSample > lowXCoordinate.GetX()) && (xSample < highXCoordinate.GetX()))
+    {
+        CartesianVector slidingFitPosition(0.f, 0.f, 0.f);
+
+        if (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitPositionAtX(xSample, slidingFitPosition))
+            return (LArGeometryHelper::IsInGap(pandora, slidingFitPosition, hitType, gapTolerance));
+    }
+
+    const CartesianVector lowXDirection(minLayerIsAtLowX ? slidingFitResult.GetGlobalMinLayerDirection() : slidingFitResult.GetGlobalMaxLayerDirection());
+    const CartesianVector highXDirection(minLayerIsAtLowX ? slidingFitResult.GetGlobalMaxLayerDirection() : slidingFitResult.GetGlobalMinLayerDirection());
+
+    const bool sampleIsNearerToLowX(std::fabs(xSample - lowXCoordinate.GetX()) < std::fabs(xSample - highXCoordinate.GetX()));
+    const CartesianVector &startPosition(sampleIsNearerToLowX ? lowXCoordinate : highXCoordinate);
+    const CartesianVector &startDirection(sampleIsNearerToLowX ? lowXDirection : highXDirection);
+
+    if (std::fabs(startDirection.GetX()) < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float pathLength((xSample - startPosition.GetX()) / startDirection.GetX());
+    const CartesianVector samplingPoint(startPosition + startDirection * pathLength);
+
+    return (LArGeometryHelper::IsInGap(pandora, samplingPoint, hitType, gapTolerance));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
