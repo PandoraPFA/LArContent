@@ -21,9 +21,6 @@ end_product_list
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
 qualifier	pandora 	gcc	notes
-e10:r5:debug	e10:nu:r5:debug	-nq-
-e10:r5:opt	e10:nu:r5:opt	-nq-
-e10:r5:prof	e10:nu:r5:prof	-nq-
 e10:debug	e10:nu:debug	-nq-
 e10:opt		e10:nu:opt	-nq-
 e10:prof	e10:nu:prof	-nq-
