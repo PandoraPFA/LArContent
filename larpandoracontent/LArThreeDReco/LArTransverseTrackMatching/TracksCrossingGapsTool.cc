@@ -165,14 +165,14 @@ StatusCode TracksCrossingGapsTool::CalculateEffectiveOverlapFractions(ThreeDTran
   
   //  std::cout << "effXOverlapSpan=" << effXOverlapSpan << std::endl;
   //LORENA
-  /*  const CartesianVector startPointEff(xMinEff,0,-1000);
+  const CartesianVector startPointEff(xMinEff,0,-1000);
   const CartesianVector endPointEff(xMinEff,0,1000);
   const CartesianVector startPointEffmax(xMaxEff,0,-1000);
   const CartesianVector endPointEffmax(xMaxEff,0,1000);
 
   PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &startPointEff, &endPointEff, "MinEff", BLACK, 1,2));
   PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &startPointEffmax, &endPointEffmax, "MaxEff", BLACK, 1,1));
-  PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));*/
+  PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
   //Note: the XSpan in each view is now updated with the fraction in gaps, in principle should be less than 1
   //but xOverlap.GetXSpanView() sometimes gives a span smaller than the difference xMax-xMin
@@ -353,7 +353,7 @@ bool TracksCrossingGapsTool::CheckXPositionInGap(const float &xSample, const pan
       startCoordinate = ((std::fabs(innerCoordinate.GetX()-xSample) < std::fabs(outerCoordinate.GetX()-xSample))? innerCoordinate : outerCoordinate);
       const CartesianVector samplingPoint(xSample,startCoordinate.GetY(),first); //probably unnecesary, just set Y = 0?
 
-      //    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "SamplingPoint", ORANGE, 1));//LORENA
+      PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "SamplingPoint", ORANGE, 1));//LORENA
       gapInFirst = LArGeometryHelper::IsInGap(this->GetPandora(), samplingPoint, LArClusterHelper::GetClusterHitType(pClusterGap), m_maxGapTolerance);
       return(gapInFirst);
     }
@@ -437,7 +437,7 @@ bool TracksCrossingGapsTool::CheckGaps(const float &xSample, const pandora::Clus
   //visual debugging
   //LORENA
   //  PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-  //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "SamplingPointCheckGaps", BLACK, 1));
+  PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "SamplingPointCheckGaps", BLACK, 1));
      //PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
   //std::cout << "HitType:" << hitType << std::endl;
 
