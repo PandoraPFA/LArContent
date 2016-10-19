@@ -10,7 +10,6 @@
 
 #include "larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h"
-#include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
 #include "larpandoracontent/LArCheating/CheatingEventSlicingTool.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h"
@@ -24,10 +23,7 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArMonitoring/EventDisplayAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
-#include "larpandoracontent/LArMonitoring/ParticleAnalysisAlgorithm.h"
-#include "larpandoracontent/LArMonitoring/ParticleMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
@@ -41,7 +37,6 @@
 #include "larpandoracontent/LArStitching/StitchingObjectCreationTool.h"
 #include "larpandoracontent/LArStitching/StitchingPfoMergingTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
@@ -89,7 +84,6 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TracksCrossingGapsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
-//#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentGapsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
@@ -146,10 +140,7 @@ class LArContent
 {
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
-        d("LArEventDisplay",                        lar_content::EventDisplayAlgorithm::Factory)                                \
         d("LArEventValidation",                     lar_content::EventValidationAlgorithm::Factory)                             \
-        d("LArParticleAnalysis",                    lar_content::ParticleAnalysisAlgorithm::Factory)                            \
-        d("LArParticleMonitoring",                  lar_content::ParticleMonitoringAlgorithm::Factory)                          \
         d("LArVisualMonitoring",                    lar_content::VisualMonitoringAlgorithm::Factory)                            \
         d("LArEventReading",                        lar_content::EventReadingAlgorithm::Factory)                                \
         d("LArEventWriting",                        lar_content::EventWritingAlgorithm::Factory)                                \
