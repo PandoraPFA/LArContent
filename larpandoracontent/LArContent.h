@@ -82,6 +82,7 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TracksCrossingGapsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
@@ -246,6 +247,7 @@ public:
         d("LArMopUpRemnants",                       lar_content::MopUpRemnantsTool::Factory)                                    \
         d("LArClearTracks",                         lar_content::ClearTracksTool::Factory)                                      \
         d("LArLongTracks",                          lar_content::LongTracksTool::Factory)                                       \
+        d("LArTracksCrossingGaps",                  lar_content::TracksCrossingGapsTool::Factory)                                       \
         d("LArMissingTrack",                        lar_content::MissingTrackTool::Factory)                                     \
         d("LArMissingTrackSegment",                 lar_content::MissingTrackSegmentTool::Factory)                              \
         d("LArOvershootTracks",                     lar_content::OvershootTracksTool::Factory)                                  \
