@@ -22,6 +22,7 @@ namespace lar_content
 
 class LArPseudoLayerPlugin;
 class LArTransformationPlugin;
+class TwoDSlidingFitResult;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -204,6 +205,7 @@ public:
      *  @param  pandora the associated pandora instance
      *  @param  testPoint the test point
      *  @param  hitType the hit type
+     *  @param  gapTolerance the gap tolerance
      *
      *  @return boolean
      */
@@ -216,10 +218,24 @@ public:
      *  @param  pandora the associated pandora instance
      *  @param  testPoint the test point
      *  @param  hitType the hit type
+     *  @param  gapTolerance the gap tolerance
      *
      *  @return boolean
      */
     static bool IsInGap3D(const pandora::Pandora &pandora, const pandora::CartesianVector &testPoint3D, const pandora::HitType hitType,
+        const float gapTolerance = 0.f);
+
+    /**
+     *  @brief  Whether there is a gap in a cluster (described via its sliding fit result) at a specified x sampling position
+     * 
+     *  @param  pandora the associated pandora instance
+     *  @param  xSample the x sampling position
+     *  @param  slidingFitResult the sliding fit result for a cluster
+     *  @param  gapTolerance the gap tolerance
+     *
+     *  @return boolean
+     */
+    static bool IsXSamplingPointInGap(const pandora::Pandora &pandora, const float xSample, const TwoDSlidingFitResult &slidingFitResult,
         const float gapTolerance = 0.f);
 
     /**

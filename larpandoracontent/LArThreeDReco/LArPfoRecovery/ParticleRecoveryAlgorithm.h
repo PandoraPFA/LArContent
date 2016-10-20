@@ -131,6 +131,32 @@ private:
     bool IsOverlap(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
 
     /**
+     *  @brief Calculate effective overlap fractions taking into account gaps
+     *
+     *  @param  pCluster1 address of the first cluster
+     *  @param  xMin1 min x value of the first cluster
+     *  @param  xMax1 max x value of the first cluster
+     *  @param  pCluster2 address of the second cluster
+     *  @param  xMin2 min x value of the second cluster
+     *  @param  xMax2 max x value of the second cluster
+     *  @param  xOverlapFraction1 to receive the effective overlap fraction for the first cluster
+     *  @param  xOverlapFraction2 to receive the effective overlap fraction for the second cluster
+     */
+    void CalculateEffectiveOverlapFractions(const pandora::Cluster *const pCluster1, const float xMin1, const float xMax1,
+        const pandora::Cluster *const pCluster2, const float xMin2, const float xMax2, float &xOverlapFraction1, float &xOverlapFraction2) const;
+
+    /**
+     *  @brief  Calculate effective span for a given clsuter taking gaps into account
+     * 
+     *  @param  pCluster address of the cluster
+     *  @param  xMin the min x value above which checks for gaps will be performed
+     *  @param  xMax the max x value below which checks for gaps will be performed
+     *  @param  xMinEff to receive the effective min x value for the cluster, including adjacent gaps
+     *  @param  xMaxEff to receive the effective max x value for the cluster, including adjacent gaps
+     */
+    void CalculateEffectiveSpan(const pandora::Cluster *const pCluster, const float xMin, const float xMax, float &xMinEff, float &xMaxEff) const;
+
+    /**
      *  @brief  Identify unambiguous cluster overlaps and resolve ambiguous overlaps, creating new track particles
      *
      *  @param  overlapTensor the overlap tensor
@@ -162,6 +188,7 @@ private:
 
     bool                        m_includeTracks;                ///< Whether to include fixed tracks in selected cluster list
     bool                        m_includeShowers;               ///< Whether to include clusters not fixed as tracks in selected cluster list
+    bool                        m_checkGaps;                    ///< Whether to check for gaps in the calculation of the overlap
 
     unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
@@ -172,6 +199,9 @@ private:
     float                       m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
 
     float                       m_minXOverlapFraction;          ///< The min x overlap fraction required in order to id overlapping clusters
+    float                       m_minXOverlapFractionGaps;      ///< The min x overlap fraction when there are gaps involved
+    float                       m_sampleStepSize;               ///< The sampling step size used in association checks, units cm
+    unsigned int                m_slidingFitHalfWindow;         ///< The half window for the fit sliding result constructor
     float                       m_pseudoChi2Cut;                ///< The selection cut on the matched chi2
 };
 

@@ -26,6 +26,7 @@ namespace lar_content
 ParticleRecoveryAlgorithm::ParticleRecoveryAlgorithm() :
     m_includeTracks(true),
     m_includeShowers(true),
+    m_checkGaps(true),
     m_minClusterCaloHits(20),
     m_minClusterLengthSquared(5.f * 5.f),
     m_minClusterXSpan(0.25f),
@@ -33,6 +34,9 @@ ParticleRecoveryAlgorithm::ParticleRecoveryAlgorithm() :
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexTransverseDistance(1.5f),
     m_minXOverlapFraction(0.75f),
+    m_minXOverlapFractionGaps(0.75f),
+    m_sampleStepSize(0.5f),
+    m_slidingFitHalfWindow(10),
     m_pseudoChi2Cut(5.f)
 {
 }
@@ -215,10 +219,76 @@ bool ParticleRecoveryAlgorithm::IsOverlap(const Cluster *const pCluster1, const 
 
     const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
 
-    if (((xOverlap / xSpan1) < m_minXOverlapFraction) || ((xOverlap / xSpan2) < m_minXOverlapFraction))
+    float xOverlapFraction1(xOverlap / xSpan1), xOverlapFraction2(xOverlap / xSpan2);
+
+    if (m_checkGaps)
+        this->CalculateEffectiveOverlapFractions(pCluster1, xMin1, xMax1, pCluster2, xMin2, xMax2, xOverlapFraction1, xOverlapFraction2);
+
+    if ((xOverlapFraction1 < m_minXOverlapFraction) || (xOverlapFraction2 < m_minXOverlapFraction))
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParticleRecoveryAlgorithm::CalculateEffectiveOverlapFractions(const Cluster *const pCluster1, const float xMin1, const float xMax1,
+    const Cluster *const pCluster2, const float xMin2, const float xMax2, float &xOverlapFraction1, float &xOverlapFraction2) const
+{
+    if (PandoraContentApi::GetGeometry(*this)->GetDetectorGapList().empty())
+        return;
+
+    const float xMin(std::min(xMin1, xMin2));
+    const float xMax(std::max(xMax1, xMax2));
+    float xMinEff1(xMin1), xMaxEff1(xMax1), xMinEff2(xMin2), xMaxEff2(xMax2);
+
+    this->CalculateEffectiveSpan(pCluster1, xMin, xMax, xMinEff1, xMaxEff1);
+    this->CalculateEffectiveSpan(pCluster2, xMin, xMax, xMinEff2, xMaxEff2);
+
+    const float effectiveXSpan1(xMaxEff1 - xMinEff1), effectiveXSpan2(xMaxEff2 - xMinEff2);
+    const float effectiveXOverlapSpan(std::min(xMaxEff1, xMaxEff2) - std::max(xMinEff1, xMinEff2));
+
+    if ((effectiveXSpan1 > std::numeric_limits<float>::epsilon()) && (effectiveXSpan2 > std::numeric_limits<float>::epsilon()))
+    {
+        xOverlapFraction1 = std::min(1.f, (effectiveXOverlapSpan / effectiveXSpan1));
+        xOverlapFraction2 = std::min(1.f, (effectiveXOverlapSpan / effectiveXSpan2));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParticleRecoveryAlgorithm::CalculateEffectiveSpan(const pandora::Cluster *const pCluster, const float xMin, const float xMax, float &xMinEff, float &xMaxEff) const
+{
+    // TODO cache sliding linear fit results
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
+
+    const int nSamplingPointsLeft(1 + static_cast<int>((xMinEff - xMin) / m_sampleStepSize));
+    const int nSamplingPointsRight(1 + static_cast<int>((xMax - xMaxEff) / m_sampleStepSize));
+    float dxMin(0.f), dxMax(0.f);
+
+    for (int iSample = 1; iSample <= nSamplingPointsLeft; ++iSample)
+    {
+        const float xSample(std::max(xMin, xMinEff - static_cast<float>(iSample) * m_sampleStepSize));
+
+        if (!LArGeometryHelper::IsXSamplingPointInGap(this->GetPandora(), xSample, slidingFitResult, m_sampleStepSize))
+            break;
+
+        dxMin = xMinEff - xSample;
+    }
+
+    for (int iSample = 1; iSample <= nSamplingPointsRight; ++iSample)
+    {
+        const float xSample(std::min(xMax, xMaxEff + static_cast<float>(iSample) * m_sampleStepSize));
+
+        if (!LArGeometryHelper::IsXSamplingPointInGap(this->GetPandora(), xSample, slidingFitResult, m_sampleStepSize))
+            break;
+
+        dxMax = xSample - xMaxEff;
+    }
+
+    xMinEff = xMinEff - dxMin;
+    xMaxEff = xMaxEff + dxMax;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -253,6 +323,7 @@ void ParticleRecoveryAlgorithm::ExamineTensor(const SimpleOverlapTensor &overlap
         }
         else
         {
+            // TODO - check here whether there is a gap in the 2 in one view when 1:2:0
             // May later choose to resolve simple ambiguities, e.g. of form nU:nV:nW == 1:2:0
         }
     }
@@ -412,6 +483,9 @@ StatusCode ParticleRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IncludeShowers", m_includeShowers));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CheckGaps", m_checkGaps));
+
     float minClusterLength = std::sqrt(m_minClusterLengthSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLength", minClusterLength));
@@ -431,6 +505,21 @@ StatusCode ParticleRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinXOverlapFractionGaps", m_minXOverlapFractionGaps));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SampleStepSize", m_sampleStepSize));
+
+    if (m_sampleStepSize < std::numeric_limits<float>::epsilon())
+    {
+        std::cout << "ParticleRecoveryAlgorithm: Invalid value for SampleStepSize " << m_sampleStepSize << std::endl;
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));

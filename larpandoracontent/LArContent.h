@@ -85,6 +85,7 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TracksCrossingGapsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
@@ -249,6 +250,7 @@ public:
         d("LArMissingTrack",                        lar_content::MissingTrackTool::Factory)                                     \
         d("LArMissingTrackSegment",                 lar_content::MissingTrackSegmentTool::Factory)                              \
         d("LArOvershootTracks",                     lar_content::OvershootTracksTool::Factory)                                  \
+        d("LArTracksCrossingGaps",                  lar_content::TracksCrossingGapsTool::Factory)                               \
         d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
         d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
         d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)
