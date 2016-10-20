@@ -28,9 +28,6 @@ ShowerGrowingAlgorithm::ShowerGrowingAlgorithm() :
     m_remoteClusterDistance(10.f),
     m_directionTanAngle(1.732f),
     m_directionApexShift(0.333f),
-    m_recursiveMode(false),
-    m_useFirstImprovedSeed(false),
-    m_useMCFigureOfMerit(false),
     m_shouldRemoveShowerPfos(true),
     m_showerLikeNBranches(5),
     m_showerLikeCaloHitRatio(2.f),
@@ -53,7 +50,7 @@ StatusCode ShowerGrowingAlgorithm::Run()
     {
         try
         {
-            const ClusterList *pClusterList = NULL;
+            const ClusterList *pClusterList = nullptr;
             PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
 
             if (!pClusterList || pClusterList->empty())
@@ -64,17 +61,7 @@ StatusCode ShowerGrowingAlgorithm::Run()
                 continue;
             }
 
-            m_clusterDirectionMap.clear();
-
-            if (!m_recursiveMode)
-            {
-                this->SimpleModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
-            }
-            else
-            {
-                this->RecursiveModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
-            }
-
+            this->SimpleModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
             m_clusterDirectionMap.clear();
         }
         catch (StatusCodeException &statusCodeException)
@@ -95,14 +82,14 @@ StatusCode ShowerGrowingAlgorithm::Run()
 void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pClusterList, const std::string &clusterListName,
     PfoList &pfoList, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const
 {
-    const VertexList *pVertexList(NULL);
+    const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
     ClusterSet usedClusters;
 
     // Pick up all showers starting at vertex
-    if (NULL != pVertex)
+    if (pVertex)
     {
         ClusterVector seedClusters;
         this->GetAllVertexSeedCandidates(pClusterList, pVertex, seedClusters);
@@ -113,7 +100,7 @@ void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pC
     }
 
     // Non-vertex showers
-    const Cluster *pSeedCluster(NULL);
+    const Cluster *pSeedCluster(nullptr);
 
     while (this->GetNextSeedCandidate(pClusterList, usedClusters, pSeedCluster))
     {
@@ -125,29 +112,10 @@ void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::RecursiveModeShowerGrowing(const ClusterList *const pClusterList, const std::string &clusterListName,
-    PfoList &pfoList, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const
-{
-    ClusterSet usedClusters;
-    const Cluster *pSeedCluster(NULL);
-
-    while (this->GetNextSeedCandidate(pClusterList, usedClusters, pSeedCluster))
-    {
-        SeedAssociationList seedAssociationList;
-        this->GetSeedAssociationList(ClusterVector(1, pSeedCluster), pClusterList, seedAssociationList);
-
-        SeedAssociationList finalSeedAssociationList;
-        this->CheckSeedAssociationList(seedAssociationList.begin(), finalSeedAssociationList);
-        this->ProcessSeedAssociationDetails(finalSeedAssociationList, clusterListName, pfoList, usedClusters, nCaloHitsPerCluster, nBranchesPerCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClusterList, const ClusterSet &usedClusters,
     const Cluster *&pSeedCluster) const
 {
-    pSeedCluster = NULL;
+    pSeedCluster = nullptr;
 
     ClusterVector clusterVector;
     clusterVector.insert(clusterVector.end(), pClusterList->begin(), pClusterList->end());
@@ -246,62 +214,6 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::CheckSeedAssociationList(SeedAssociationList::const_iterator seedIter, SeedAssociationList &finalSeedAssociationList) const
-{
-    ClusterSet usedClusters;
-    usedClusters.insert(seedIter->first);
-    
-    ClusterList availableClusters(seedIter->second.begin(), seedIter->second.end());
-
-    SeedAssociationList seedAssociationList;
-    seedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
-    const float originalFigureOfMerit(this->GetFigureOfMerit(seedAssociationList));
-    float bestFigureOfMerit(originalFigureOfMerit);
-
-    const Cluster *pTrialSeedCluster = NULL;
-    bool betterConfigurationFound(false);
-    SeedAssociationList bestSeedAssociationList;
-
-    while (this->GetNextSeedCandidate(&availableClusters, usedClusters, pTrialSeedCluster))
-    {
-        usedClusters.insert(pTrialSeedCluster);
-
-        ClusterVector trialParticleSeedVector;
-        trialParticleSeedVector.push_back(seedIter->first);
-        trialParticleSeedVector.push_back(pTrialSeedCluster);
-
-        SeedAssociationList trialSeedAssociationList;
-        this->GetSeedAssociationList(trialParticleSeedVector, &availableClusters, trialSeedAssociationList);
-        const float trialFigureOfMerit(this->GetFigureOfMerit(trialSeedAssociationList));
-
-        if (trialFigureOfMerit > bestFigureOfMerit)
-        {
-            betterConfigurationFound = true;
-            bestFigureOfMerit = trialFigureOfMerit;
-            bestSeedAssociationList = trialSeedAssociationList;
-
-            if (m_useFirstImprovedSeed)
-                break;
-        }
-    }
-
-    if (betterConfigurationFound)
-    {
-        ClusterList clusterList;
-        for (const auto &mapEntry : bestSeedAssociationList) clusterList.push_back(mapEntry.first);
-        clusterList.sort(LArClusterHelper::SortByNHits);
-
-        for (const Cluster *const pCluster : clusterList)
-            this->CheckSeedAssociationList(bestSeedAssociationList.find(pCluster), finalSeedAssociationList);
-    }
-    else
-    {
-        finalSeedAssociationList.insert(SeedAssociationList::value_type(seedIter->first, seedIter->second));
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentCluster, const ClusterVector &branchClusters, const std::string &listName,
     PfoList &pfoList) const
 {
@@ -335,16 +247,16 @@ void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentC
 
 ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
-    const VertexList *pVertexList(NULL);
+    const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
     // Direction of seed cluster (cache for efficiency)
     ClusterDirectionMap::const_iterator seedIter = m_clusterDirectionMap.find(pClusterSeed);
 
     if (m_clusterDirectionMap.end() == seedIter)
     {
-        const LArVertexHelper::ClusterDirection direction((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
+        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
             LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pClusterSeed, m_directionTanAngle, m_directionApexShift));
         seedIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pClusterSeed, direction)).first;
     }
@@ -358,7 +270,7 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
 
     if (m_clusterDirectionMap.end() == candIter)
     {
-        const LArVertexHelper::ClusterDirection direction((NULL == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
+        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
             LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pCluster, m_directionTanAngle, m_directionApexShift));
         candIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pCluster, direction)).first;
     }
@@ -418,68 +330,14 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
 
 float ShowerGrowingAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAssociationList) const
 {
-    const VertexList *pVertexList(NULL);
+    const VertexList *pVertexList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
-    if (m_useMCFigureOfMerit)
-    {
-        return this->GetMCFigureOfMerit(seedAssociationList);
-    }
-    else if (NULL != pVertex)
-    {
-        return this->GetRecoFigureOfMerit(pVertex, seedAssociationList);
-    }
-    else
-    {
-        // ATTN Consistently returning same value will accept all candidate cluster merges
+    // ATTN Consistently returning same value will accept all candidate cluster merges
+    if (!pVertex)
         return -1.f;
-    }
-}
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float ShowerGrowingAlgorithm::GetMCFigureOfMerit(const SeedAssociationList &seedAssociationList) const
-{
-    unsigned int nMatchedClusters(0), nClusters(0);
-
-    ClusterList clusterList;
-    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
-    clusterList.sort(LArClusterHelper::SortByNHits);
-
-    for (const Cluster *const pParentCluster : clusterList)
-    {
-        ++nClusters;
-
-        const MCParticle *pParentMCParticle(NULL);
-        try {pParentMCParticle = MCParticleHelper::GetMainMCParticle(pParentCluster);} catch (StatusCodeException &) {}
-
-        ++nMatchedClusters;
-        const ClusterVector &associatedClusters(seedAssociationList.at(pParentCluster));
-
-        for (const Cluster *const pBranchCluster : associatedClusters)
-        {
-            ++nClusters;
-
-            const MCParticle *pDaughterMCParticle(NULL);
-            try {pDaughterMCParticle = MCParticleHelper::GetMainMCParticle(pBranchCluster);} catch (StatusCodeException &) {}
-
-            if (pParentMCParticle == pDaughterMCParticle)
-                ++nMatchedClusters;
-        }
-    }
-
-    if (0 == nClusters)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    const float figureOfMerit(static_cast<float>(nMatchedClusters) / static_cast<float>(nClusters));
-    return figureOfMerit;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float ShowerGrowingAlgorithm::GetRecoFigureOfMerit(const Vertex *const pVertex, const SeedAssociationList &seedAssociationList) const
-{
     unsigned int nVertexAssociatedSeeds(0), nVertexAssociatedNonSeeds(0);
 
     ClusterList clusterList;
@@ -489,7 +347,6 @@ float ShowerGrowingAlgorithm::GetRecoFigureOfMerit(const Vertex *const pVertex, 
     for (const Cluster *const pSeedCluster : clusterList)
     {
         const ClusterVector &associatedClusters(seedAssociationList.at(pSeedCluster));
-
         const HitType hitType(LArClusterHelper::GetClusterHitType(pSeedCluster));
         const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
@@ -556,7 +413,7 @@ void ShowerGrowingAlgorithm::GetInputPfoList(PfoList &pfoList) const
 {
     for (StringVector::const_iterator iter = m_inputPfoListNames.begin(), iterEnd = m_inputPfoListNames.end(); iter != iterEnd; ++iter)
     {
-        const PfoList *pPfoList = NULL;
+        const PfoList *pPfoList = nullptr;
 
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
         { 
@@ -633,7 +490,7 @@ void ShowerGrowingAlgorithm::RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPer
 {
     for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
     {
-        const ClusterList *pClusterList = NULL;
+        const ClusterList *pClusterList = nullptr;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -720,21 +577,6 @@ StatusCode ShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DirectionApexShift", m_directionApexShift));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RecursiveMode", m_recursiveMode));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseFirstImprovedSeed", m_useFirstImprovedSeed));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseMCFigureOfMerit", m_useMCFigureOfMerit));
-
-    if (m_useMCFigureOfMerit && !m_recursiveMode)
-    {
-        std::cout << "ShowerGrowingAlgorithm: UseMCFigureOfMerit available only in recursive mode - set RecursiveMode to true" << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
-    }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldRemoveShowerPfos", m_shouldRemoveShowerPfos));

@@ -59,18 +59,6 @@ private:
         ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
 
     /**
-     *  @brief  Detailed recursive shower-growing and checking mode
-     * 
-     *  @param  pClusterList the list of clusters
-     *  @param  clusterListName the cluster list name
-     *  @param  pfoList the pfo list
-     *  @param  nCaloHitsPerCluster the cluster info map
-     *  @param  nBranchesPerCluster the cluster info map
-     */
-    void RecursiveModeShowerGrowing(const pandora::ClusterList *const pClusterList, const std::string &clusterListName, pandora::PfoList &pfoList,
-        ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
-
-    /**
      *  @brief  Get the next seed candidate, using a list of available candidates and a list of those already used
      * 
      *  @param  pClusterList the list of available seed candidates
@@ -103,14 +91,6 @@ private:
         SeedAssociationList &seedAssociationList) const;
 
     /**
-     *  @brief  Check a provided seed association list for consistency, making changes as required
-     * 
-     *  @param  seedIter iterator to an element in the input seed association list
-     *  @param  finalSeedAssociationList to receive the output seed association list
-     */
-    void CheckSeedAssociationList(SeedAssociationList::const_iterator seedIter, SeedAssociationList &finalSeedAssociationList) const;
-
-    /**
      *  @brief  Process the list of branch clusters, merging with specified parent cluster, dealing with any existing pfos as required
      * 
      *  @param  pParentCluster the address of the parent cluster
@@ -131,25 +111,6 @@ private:
      *  @return the figure of merit
      */
     float GetFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
-
-     /**
-     *  @brief  Get a figure of merit using mc information to provide best values technically possible
-     *
-     *  @param  seedAssociationList the seed association list
-     *
-     *  @return the figure of merit
-     */
-    float GetMCFigureOfMerit(const SeedAssociationList &seedAssociationList) const;
-
-    /**
-     *  @brief  Get a figure of merit using purely reconstructed quantities
-     *
-     *  @param  pVertex the address of the reconstructed 3d event vertex
-     *  @param  seedAssociationList the seed association list
-     *
-     *  @return the figure of merit
-     */
-    float GetRecoFigureOfMerit(const pandora::Vertex *const pVertex, const SeedAssociationList &seedAssociationList) const;
 
     /**
      *  @brief  Get the number of clusters associated with the vertex
@@ -249,10 +210,6 @@ private:
 
     float                       m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
     float                       m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
-
-    bool                        m_recursiveMode;                ///< Whether to run in recursive shower-growing and checking mode (rather than a simple one-pass mode)
-    bool                        m_useFirstImprovedSeed;         ///< Recursive mode only: use the first daughter seed (from an ordered list) that offers an improved figure of merit
-    bool                        m_useMCFigureOfMerit;           ///< Recursive mode only: use a figure of merit based on mc particle information
 
     bool                        m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added
     unsigned int                m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
