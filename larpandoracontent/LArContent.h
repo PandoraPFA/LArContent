@@ -25,6 +25,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
@@ -143,6 +144,7 @@ class LArContent
 public:
     #define LAR_ALGORITHM_LIST(d)                                                                                               \
         d("LArEventValidation",                     lar_content::EventValidationAlgorithm::Factory)                             \
+        d("LArMCParticleMonitoring",                lar_content::MCParticleMonitoringAlgorithm::Factory)                        \
         d("LArVisualMonitoring",                    lar_content::VisualMonitoringAlgorithm::Factory)                            \
         d("LArEventReading",                        lar_content::EventReadingAlgorithm::Factory)                                \
         d("LArEventWriting",                        lar_content::EventWritingAlgorithm::Factory)                                \
