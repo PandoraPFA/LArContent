@@ -136,7 +136,7 @@ void MCParticleMonitoringAlgorithm::PrintAllOutput(const MCParticleVector &mcNeu
             if (pMCNeutrino != LArMCParticleHelper::GetParentNeutrino(pMCPrimary))
                 continue;
 
-            std::cout << std::endl << "--Primary " << simpleMCPrimary.m_id << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
+            std::cout << std::endl << "--Primary " << simpleMCPrimary.m_id << ", MCPDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
                       << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
             this->PrintMCParticle(pMCPrimary, simpleMCParticleMap, 1);
