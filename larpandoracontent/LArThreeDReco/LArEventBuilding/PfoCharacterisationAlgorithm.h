@@ -28,6 +28,17 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+
+    /**
+     *  @brief  Default constructor
+     */
+    PfoCharacterisationAlgorithm();
+
+    /**
+     *  @brief  Destructor
+     */
+    ~PfoCharacterisationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 
@@ -45,6 +56,10 @@ private:
     std::string             m_trackPfoListName;         ///< The track pfo list name
     std::string             m_showerPfoListName;        ///< The shower pfo list name
     pandora::StringVector   m_inputPfoListNames;        ///< The names of the input pfo lists
+
+    bool                    m_writeToTree;              ///< Whether to write monitoring details to tree
+    std::string             m_treeName;                 ///< Name of output tree
+    std::string             m_fileName;                 ///< Name of output file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
