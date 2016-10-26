@@ -20,6 +20,9 @@ namespace lar_content
 
 StatusCode CheatingPfoCharacterisationAlgorithm::Run()
 {
+    PfoList tracksToShowers, showersToTracks;
+    const std::string trackListName("TrackParticles3D"), showerListName("ShowerParticles3D"); // TODO
+
     for (const std::string &pfoListName : m_inputPfoListNames)
     {
         const PfoList *pPfoList(nullptr);
@@ -40,15 +43,27 @@ StatusCode CheatingPfoCharacterisationAlgorithm::Run()
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_particleId = MU_MINUS;
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+
+                if (showerListName == pfoListName)
+                    showersToTracks.push_back(pPfo);
             }
             else
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_particleId = E_MINUS;
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+
+                if (trackListName == pfoListName)
+                    tracksToShowers.push_back(pPfo);
             }
         }
     }
+
+    if (!tracksToShowers.empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, trackListName, showerListName, tracksToShowers));
+
+    if (!showersToTracks.empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, showerListName, trackListName, showersToTracks));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -91,7 +106,8 @@ bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject
     if (!pBestMCParticle)
         return false;
 
-    const int absParticleId(std::abs(pBestMCParticle->GetParticleId()));
+    const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pBestMCParticle));
+    const int absParticleId(std::abs(pPrimaryMCParticle->GetParticleId()));
     return ((MU_MINUS == absParticleId) || (PROTON == absParticleId) || (PI_PLUS == absParticleId));
 }
 

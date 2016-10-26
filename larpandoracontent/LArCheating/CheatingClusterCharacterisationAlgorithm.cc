@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h"
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -58,8 +60,9 @@ bool CheatingClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const
     {
         // ATTN Slightly curious definition of a clear track, but this is most-likely what is needed for shower-growing
         const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+        const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
 
-        if ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())))
+        if ((PHOTON != pPrimaryMCParticle->GetParticleId()) && (E_MINUS != std::abs(pPrimaryMCParticle->GetParticleId())))
             return true;
     }
     catch (StatusCodeException &)
