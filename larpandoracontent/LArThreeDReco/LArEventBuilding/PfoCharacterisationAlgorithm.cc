@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeReco/LArEventBuilding/PfoCharacterisationAlgorithm.cc
  * 
- *  @brief  Implementation of the cheating pfo characterisation algorithm class.
+ *  @brief  Implementation of the pfo characterisation algorithm class.
  * 
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/PfoCharacterisationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-StatusCode CheatingPfoCharacterisationAlgorithm::Run()
+StatusCode PfoCharacterisationAlgorithm::Run()
 {
     PfoList tracksToShowers, showersToTracks;
 
@@ -30,7 +30,7 @@ StatusCode CheatingPfoCharacterisationAlgorithm::Run()
         if (!pPfoList || pPfoList->empty())
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "CheatingPfoCharacterisationAlgorithm: unable to find pfo list " << pfoListName << std::endl;
+                std::cout << "PfoCharacterisationAlgorithm: unable to find pfo list " << pfoListName << std::endl;
 
             continue;
         }
@@ -69,7 +69,7 @@ StatusCode CheatingPfoCharacterisationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo) const
+bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo) const
 {
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList);
@@ -112,7 +112,7 @@ bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode PfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
     m_inputPfoListNames.push_back(m_trackPfoListName);

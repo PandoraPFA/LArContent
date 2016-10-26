@@ -51,6 +51,7 @@
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/PfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
@@ -164,6 +165,7 @@ public:
         d("LArNeutrinoCreation",                    lar_content::NeutrinoCreationAlgorithm::Factory)                            \
         d("LArNeutrinoDaughterVertices",            lar_content::NeutrinoDaughterVerticesAlgorithm::Factory)                    \
         d("LArNeutrinoHierarchy",                   lar_content::NeutrinoHierarchyAlgorithm::Factory)                           \
+        d("LArPfoCharacterisation",                 lar_content::PfoCharacterisationAlgorithm::Factory)                         \
         d("LArNeutrinoProperties",                  lar_content::NeutrinoPropertiesAlgorithm::Factory)                          \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \

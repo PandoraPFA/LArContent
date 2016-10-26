@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/PfoCharacterisationAlgorithm.h
  * 
- *  @brief  Header file for the cheating pfo characterisation algorithm class.
+ *  @brief  Header file for the pfo characterisation algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_CHEATING_PFO_CHARACTERISATION_ALGORITHM_H
-#define LAR_CHEATING_PFO_CHARACTERISATION_ALGORITHM_H 1
+#ifndef LAR_PFO_CHARACTERISATION_ALGORITHM_H
+#define LAR_PFO_CHARACTERISATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,9 +14,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  CheatingPfoCharacterisationAlgorithm class
+ *  @brief  PfoCharacterisationAlgorithm class
  */
-class CheatingPfoCharacterisationAlgorithm : public pandora::Algorithm
+class PfoCharacterisationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -49,11 +49,11 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *CheatingPfoCharacterisationAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *PfoCharacterisationAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new CheatingPfoCharacterisationAlgorithm();
+    return new PfoCharacterisationAlgorithm();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_CHEATING_PFO_CHARACTERISATION_ALGORITHM_H
+#endif // #ifndef LAR_PFO_CHARACTERISATION_ALGORITHM_H
