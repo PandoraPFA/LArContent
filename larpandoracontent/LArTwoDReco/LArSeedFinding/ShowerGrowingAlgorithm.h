@@ -44,19 +44,13 @@ public:
 private:
     pandora::StatusCode Run();
 
-    typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterInfoMap;
-
     /**
      *  @brief  Simple single-pass shower growing mode
      * 
      *  @param  pClusterList the list of clusters
      *  @param  clusterListName the cluster list name
-     *  @param  pfoList the pfo list
-     *  @param  nCaloHitsPerCluster the cluster info map
-     *  @param  nBranchesPerCluster the cluster info map
      */
-    void SimpleModeShowerGrowing(const pandora::ClusterList *const pClusterList, const std::string &clusterListName, pandora::PfoList &pfoList,
-        ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
+    void SimpleModeShowerGrowing(const pandora::ClusterList *const pClusterList, const std::string &clusterListName) const;
 
     /**
      *  @brief  Get the next seed candidate, using a list of available candidates and a list of those already used
@@ -91,6 +85,17 @@ private:
         SeedAssociationList &seedAssociationList) const;
 
     /**
+     *  @brief  Process the details stored in a specified seed association list
+     *
+     *  @param  seedAssociationList the seed association list
+     *  @param  clusterListName the cluster list name
+     *  @param  pfoList the pfo list
+     *  @param  usedClusters the list of candidates already considered
+     */
+    void ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
+        pandora::ClusterSet &usedClusters) const;
+
+    /**
      *  @brief  Process the list of branch clusters, merging with specified parent cluster, dealing with any existing pfos as required
      * 
      *  @param  pParentCluster the address of the parent cluster
@@ -98,8 +103,8 @@ private:
      *  @param  listName the cluster list name
      *  @param  pfoList the input pfo list
      */
-    void ProcessBranchClusters(const pandora::Cluster *const pParentCluster, const pandora::ClusterVector &branchClusters, const std::string &listName,
-        pandora::PfoList &pfoList) const;
+    void ProcessBranchClusters(const pandora::Cluster *const pParentCluster, const pandora::ClusterVector &branchClusters,
+        const std::string &listName) const;
 
     AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
 
@@ -140,68 +145,12 @@ private:
      */
     static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
-    /**
-     *  @brief  Get the list of all input pfos (possibly from a number of separate named lists)
-     *
-     *  @param  pfoList to receive the input pfo list
-     */
-    void GetInputPfoList(pandora::PfoList &pfoList) const;
-
-    /**
-     *  @brief  Process the details stored in a specified seed association list
-     *
-     *  @param  seedAssociationList the seed association list
-     *  @param  clusterListName the cluster list name
-     *  @param  pfoList the pfo list
-     *  @param  usedClusters the list of candidates already considered
-     *  @param  nCaloHitsPerCluster the cluster info map
-     *  @param  nBranchesPerCluster the cluster info map
-     */
-    void ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
-        pandora::PfoList &pfoList, pandora::ClusterSet &usedClusters, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const;
-
-    /**
-     *  @brief  Store the number of calo hits per cluster in a cluster info map
-     *
-     *  @param  pCluster address of the relevant cluster
-     *  @param  clusterInfoMap the cluster info map
-     */
-    void StoreNCaloHitsPerCluster(const pandora::Cluster *const pCluster, ClusterInfoMap &clusterInfoMap) const;
-
-    /**
-     *  @brief  Store the number of branches per cluster in a cluster info map
-     *
-     *  @param  pCluster address of the relevant cluster
-     *  @param  branchList the branch list
-     *  @param  clusterInfoMap the cluster info map
-     */
-    void StoreNBranchesPerCluster(const pandora::Cluster *const pCluster, const pandora::ClusterVector &branchList, ClusterInfoMap &clusterInfoMap) const;
-
-    /**
-     *  @brief  Remove pfos containing clusters to which many shower branches have been added
-     *
-     *  @param  nCaloHitsPerCluster the cluster info map
-     *  @param  nBranchesPerCluster the cluster info map
-     *  @param  pfoList the input pfo list
-     */
-    void RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster, pandora::PfoList &pfoList) const;
-
-    /**
-     *  @brief  Get the address of the pfo containing a specified cluster
-     *
-     *  @param  pCluster address of the relevant cluster
-     *  @param  pfoList the list of all input pfos
-     *  @param  targetIter to receive the relevant iterator
-     */
-    void FindTargetPfo(const pandora::Cluster *const pCluster, pandora::PfoList &pfoList, pandora::PfoList::iterator &targetIter) const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::unordered_map<const pandora::Cluster*, LArVertexHelper::ClusterDirection> ClusterDirectionMap;
     mutable ClusterDirectionMap m_clusterDirectionMap;          ///< The cluster direction map
 
     pandora::StringVector       m_inputClusterListNames;        ///< The names of the input cluster lists
-    pandora::StringVector       m_inputPfoListNames;            ///< The names of the input pfo lists
 
     unsigned int                m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
     float                       m_nearbyTrackDistance;          ///< Prevent track-track associations where the end-to-end separation is smaller than this distance
@@ -210,10 +159,6 @@ private:
 
     float                       m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
     float                       m_directionApexShift;           ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
-
-    bool                        m_shouldRemoveShowerPfos;       ///< Whether to delete any existing pfos to which many shower branches have been added
-    unsigned int                m_showerLikeNBranches;          ///< The minimum number of branches before cluster is declared shower like
-    float                       m_showerLikeCaloHitRatio;       ///< The minimum ratio of final to original calo hits before cluster is declared shower like
 
     float                       m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
     float                       m_maxVertexLongitudinalDistance;///< Vertex association check: max longitudinal distance cut

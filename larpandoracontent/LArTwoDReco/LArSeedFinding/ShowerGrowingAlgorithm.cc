@@ -29,9 +29,6 @@ ShowerGrowingAlgorithm::ShowerGrowingAlgorithm() :
     m_remoteClusterDistance(10.f),
     m_directionTanAngle(1.732f),
     m_directionApexShift(0.333f),
-    m_shouldRemoveShowerPfos(true),
-    m_showerLikeNBranches(5),
-    m_showerLikeCaloHitRatio(2.f),
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
     m_maxVertexTransverseDistance(1.5f),
@@ -43,26 +40,22 @@ ShowerGrowingAlgorithm::ShowerGrowingAlgorithm() :
 
 StatusCode ShowerGrowingAlgorithm::Run()
 {
-    PfoList pfoList;
-    this->GetInputPfoList(pfoList);
-    ClusterInfoMap nCaloHitsPerCluster, nBranchesPerCluster;
-
-    for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
+    for (const std::string &clusterListName : m_inputClusterListNames)
     {
         try
         {
             const ClusterList *pClusterList = nullptr;
-            PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
+            PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
             if (!pClusterList || pClusterList->empty())
             {
                 if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                    std::cout << "ShowerGrowingAlgorithm: unable to find cluster list " << *listIter << std::endl;
+                    std::cout << "ShowerGrowingAlgorithm: unable to find cluster list " << clusterListName << std::endl;
 
                 continue;
             }
 
-            this->SimpleModeShowerGrowing(pClusterList, *listIter, pfoList, nCaloHitsPerCluster, nBranchesPerCluster);
+            this->SimpleModeShowerGrowing(pClusterList, clusterListName);
             m_clusterDirectionMap.clear();
         }
         catch (StatusCodeException &statusCodeException)
@@ -72,16 +65,12 @@ StatusCode ShowerGrowingAlgorithm::Run()
         }
     }
 
-    if (m_shouldRemoveShowerPfos && !nCaloHitsPerCluster.empty() && !nBranchesPerCluster.empty())
-        this->RemoveShowerPfos(nCaloHitsPerCluster, nBranchesPerCluster, pfoList);
-
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pClusterList, const std::string &clusterListName,
-    PfoList &pfoList, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const
+void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pClusterList, const std::string &clusterListName) const
 {
     const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
@@ -97,7 +86,7 @@ void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pC
 
         SeedAssociationList vertexSeedAssociationList;
         this->GetSeedAssociationList(seedClusters, pClusterList, vertexSeedAssociationList);
-        this->ProcessSeedAssociationDetails(vertexSeedAssociationList, clusterListName, pfoList, usedClusters, nCaloHitsPerCluster, nBranchesPerCluster);
+        this->ProcessSeedAssociationDetails(vertexSeedAssociationList, clusterListName, usedClusters);
     }
 
     // Non-vertex showers
@@ -107,7 +96,7 @@ void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pC
     {
         SeedAssociationList seedAssociationList;
         this->GetSeedAssociationList(ClusterVector(1, pSeedCluster), pClusterList, seedAssociationList);
-        this->ProcessSeedAssociationDetails(seedAssociationList, clusterListName, pfoList, usedClusters, nCaloHitsPerCluster, nBranchesPerCluster);
+        this->ProcessSeedAssociationDetails(seedAssociationList, clusterListName, usedClusters);
     }
 }
 
@@ -124,9 +113,6 @@ bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClus
 
     for (const Cluster *const pCluster : clusterVector)
     {
-        if (usedClusters.count(pCluster))
-            continue;
-
         if (!pCluster->IsAvailable())
             continue;
 
@@ -134,6 +120,9 @@ bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClus
             continue;
 
         if (pCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
+            continue;
+
+        if (usedClusters.count(pCluster))
             continue;
 
         pSeedCluster = pCluster;
@@ -192,14 +181,9 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particl
     ClusterVector candidateClusters;
     const ClusterList clusterList(*pClusterList);
 
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCandidateCluster : clusterList)
     {
-        const Cluster *const pCandidateCluster = *iter;
-
         if (!pCandidateCluster->IsAvailable())
-            continue;
-
-        if (particleSeedVector.end() != std::find(particleSeedVector.begin(), particleSeedVector.end(), pCandidateCluster))
             continue;
 
         if (MU_MINUS == std::abs(pCandidateCluster->GetParticleId()))
@@ -208,15 +192,16 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particl
         if (pCandidateCluster->GetNCaloHits() < m_minCaloHitsPerCluster)
             continue;
 
-        candidateClusters.push_back(pCandidateCluster);
+        if (particleSeedVector.end() == std::find(particleSeedVector.begin(), particleSeedVector.end(), pCandidateCluster))
+            candidateClusters.push_back(pCandidateCluster);
     }
 
     std::sort(candidateClusters.begin(), candidateClusters.end(), ShowerGrowingAlgorithm::SortClusters);
     ClusterUsageMap forwardUsageMap, backwardUsageMap;
 
-    for (ClusterVector::const_iterator iter = particleSeedVector.begin(), iterEnd = particleSeedVector.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pSeedCluster : particleSeedVector)
     {
-        this->FindAssociatedClusters(*iter, candidateClusters, forwardUsageMap, backwardUsageMap);
+        this->FindAssociatedClusters(pSeedCluster, candidateClusters, forwardUsageMap, backwardUsageMap);
     }
 
     this->IdentifyClusterMerges(particleSeedVector, backwardUsageMap, seedAssociationList);
@@ -224,26 +209,31 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentCluster, const ClusterVector &branchClusters, const std::string &listName,
-    PfoList &pfoList) const
+void ShowerGrowingAlgorithm::ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
+    ClusterSet &usedClusters) const
+{
+    ClusterList clusterList;
+    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
+    clusterList.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : clusterList)
+    {
+        const ClusterVector &branchClusters(seedAssociationList.at(pParentCluster));
+        this->ProcessBranchClusters(pParentCluster, branchClusters, clusterListName);
+
+        usedClusters.insert(pParentCluster);
+        usedClusters.insert(branchClusters.begin(), branchClusters.end());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentCluster, const ClusterVector &branchClusters, const std::string &listName) const
 {
     m_clusterDirectionMap.erase(pParentCluster);
 
-    for (ClusterVector::const_iterator iter = branchClusters.begin(), iterEnd = branchClusters.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pBranchCluster : branchClusters)
     {
-        const Cluster *const pBranchCluster(*iter);
-
-        if (!pBranchCluster->IsAvailable() && m_shouldRemoveShowerPfos)
-        {
-            PfoList::iterator targetIter(pfoList.end());
-            this->FindTargetPfo(pBranchCluster, pfoList, targetIter);
-
-            const Pfo *const pTargetPfo(*targetIter);
-            pfoList.erase(targetIter);
-
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pTargetPfo));
-        }
-
         if (pBranchCluster->IsAvailable())
         {
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pBranchCluster, listName, listName));
@@ -437,156 +427,9 @@ bool ShowerGrowingAlgorithm::SortClusters(const Cluster *const pLhs, const Clust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::GetInputPfoList(PfoList &pfoList) const
-{
-    for (StringVector::const_iterator iter = m_inputPfoListNames.begin(), iterEnd = m_inputPfoListNames.end(); iter != iterEnd; ++iter)
-    {
-        const PfoList *pPfoList = nullptr;
-
-        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, *iter, pPfoList))
-        { 
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "ShowerGrowingAlgorithm : pfo list " << *iter << " unavailable." << std::endl;
-            continue;
-        }
-
-        pfoList.insert(pfoList.end(), pPfoList->begin(), pPfoList->end());
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerGrowingAlgorithm::ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
-    PfoList &pfoList, ClusterSet &usedClusters, ClusterInfoMap &nCaloHitsPerCluster, ClusterInfoMap &nBranchesPerCluster) const
-{
-    ClusterList clusterList;
-    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
-    clusterList.sort(LArClusterHelper::SortByNHits);
-
-    for (const Cluster *const pParentCluster : clusterList)
-    {
-        const ClusterVector &branchClusters(seedAssociationList.at(pParentCluster));
-
-        this->StoreNCaloHitsPerCluster(pParentCluster, nCaloHitsPerCluster);
-        this->StoreNBranchesPerCluster(pParentCluster, branchClusters, nBranchesPerCluster);
-        this->ProcessBranchClusters(pParentCluster, branchClusters, clusterListName, pfoList);
-
-        usedClusters.insert(pParentCluster);
-        usedClusters.insert(branchClusters.begin(), branchClusters.end());
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerGrowingAlgorithm::StoreNCaloHitsPerCluster(const Cluster *const pCluster, ClusterInfoMap &clusterInfoMap) const
-{
-    // ATTN Stores only first value provided per cluster
-    if (clusterInfoMap.count(pCluster))
-        return;
-
-    if (!clusterInfoMap.insert(ClusterInfoMap::value_type(pCluster, pCluster->GetNCaloHits())).second)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerGrowingAlgorithm::StoreNBranchesPerCluster(const Cluster *const pCluster, const ClusterVector &branchList,
-    ClusterInfoMap &clusterInfoMap) const
-{
-    // ATTN Stores total number of branches linked to eventual parent cluster
-    ClusterInfoMap::const_iterator iIter = clusterInfoMap.find(pCluster);
-    unsigned int nBranchesSum((clusterInfoMap.end() == iIter) ? 0 : iIter->second);
-
-    for (ClusterVector::const_iterator iter = branchList.begin(), iterEnd = branchList.end(); iter != iterEnd; ++iter)
-    {
-        const Cluster *const pBranchCluster = *iter;
-        ClusterInfoMap::iterator bIter = clusterInfoMap.find(pBranchCluster);
-
-        const unsigned int nBranches((clusterInfoMap.end() == bIter) ? 0 : bIter->second);
-        nBranchesSum += (1 + nBranches);
-
-        if (clusterInfoMap.end() != bIter)
-            clusterInfoMap.erase(bIter);
-    }
-
-    clusterInfoMap[pCluster] = nBranchesSum;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerGrowingAlgorithm::RemoveShowerPfos(const ClusterInfoMap &nCaloHitsPerCluster, const ClusterInfoMap &nBranchesPerCluster, PfoList &pfoList) const
-{
-    for (StringVector::const_iterator listIter = m_inputClusterListNames.begin(), listIterEnd = m_inputClusterListNames.end(); listIter != listIterEnd; ++listIter)
-    {
-        const ClusterList *pClusterList = nullptr;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *listIter, pClusterList));
-
-        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-        {
-            try
-            {
-                const Cluster *const pCluster = *iter;
-
-                if (pCluster->IsAvailable())
-                    continue;
-
-                ClusterInfoMap::const_iterator nCaloHitsIter = nCaloHitsPerCluster.find(pCluster);
-                ClusterInfoMap::const_iterator nBranchesIter = nBranchesPerCluster.find(pCluster);
-
-                if ((nCaloHitsPerCluster.end() == nCaloHitsIter) || (nBranchesPerCluster.end() == nBranchesIter))
-                    continue;
-
-                if (0 == nCaloHitsIter->second)
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                const float nCaloHitsRatio(static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(nCaloHitsIter->second));
-                const unsigned int nBranches(nBranchesIter->second);
-
-                if ((nBranches < m_showerLikeNBranches) && (nCaloHitsRatio < m_showerLikeCaloHitRatio))
-                    continue;
-
-                PfoList::iterator targetIter(pfoList.end());
-                this->FindTargetPfo(pCluster, pfoList, targetIter);
-
-                const Pfo *const pTargetPfo(*targetIter);
-                pfoList.erase(targetIter);
-
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pTargetPfo));
-            }
-            catch (StatusCodeException &)
-            {
-                std::cout << "ShowerGrowingAlgorithm: Unable to remove shower-like pfo." << std::endl;
-            }
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerGrowingAlgorithm::FindTargetPfo(const Cluster *const pCluster, PfoList &pfoList, PfoList::iterator &targetIter) const
-{
-    for (PfoList::iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; ++iter)
-    {
-        const ClusterList &clusterList((*iter)->GetClusterList());
-
-        if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
-        {
-            targetIter = iter;
-            return;
-        }
-    }
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputPfoListNames", m_inputPfoListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
@@ -605,15 +448,6 @@ StatusCode ShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DirectionApexShift", m_directionApexShift));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRemoveShowerPfos", m_shouldRemoveShowerPfos));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerLikeNBranches", m_showerLikeNBranches));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerLikeCaloHitRatio", m_showerLikeCaloHitRatio));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
