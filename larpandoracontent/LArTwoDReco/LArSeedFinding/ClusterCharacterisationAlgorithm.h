@@ -8,7 +8,7 @@
 #ifndef LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H
 #define LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  ClusterCharacterisationAlgorithm class
  */
-class ClusterCharacterisationAlgorithm : public pandora::Algorithm
+class ClusterCharacterisationAlgorithm : public SeedGrowingAlgorithm
 {
 public:
     /**
@@ -45,10 +45,13 @@ private:
      *  @brief  Whether cluster is identified as a clear track
      *
      *  @param  pCluster address of the relevant cluster
+     *  @param  pClusterList the address of the list of clusters in the same view
      *
      *  @return boolean
      */
-    bool IsClearTrack(const pandora::Cluster *const pCluster) const;
+    bool IsClearTrack(const pandora::Cluster *const pCluster, const pandora::ClusterList *const pClusterList) const;
+
+    AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

@@ -8,7 +8,7 @@
 #ifndef LAR_PFO_CHARACTERISATION_ALGORITHM_H
 #define LAR_PFO_CHARACTERISATION_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  PfoCharacterisationAlgorithm class
  */
-class PfoCharacterisationAlgorithm : public pandora::Algorithm
+class PfoCharacterisationAlgorithm : public SeedGrowingAlgorithm
 {
 public:
     /**
@@ -50,11 +50,17 @@ private:
      */
     bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
 
+    AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string             m_trackPfoListName;         ///< The track pfo list name
     std::string             m_showerPfoListName;        ///< The shower pfo list name
     pandora::StringVector   m_inputPfoListNames;        ///< The names of the input pfo lists
+
+    std::string             m_clusterListNameU;         ///< The u cluster list name
+    std::string             m_clusterListNameV;         ///< The v cluster list name
+    std::string             m_clusterListNameW;         ///< The w cluster list name
 
     bool                    m_writeToTree;              ///< Whether to write monitoring details to tree
     std::string             m_treeName;                 ///< Name of output tree

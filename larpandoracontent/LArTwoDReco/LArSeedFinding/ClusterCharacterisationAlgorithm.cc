@@ -12,6 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include "larpandoracontent/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
@@ -61,7 +62,7 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
         for (const Cluster *const pCluster : *pClusterList)
         {
-            if (this->IsClearTrack(pCluster))
+            if (this->IsClearTrack(pCluster, pClusterList))
             {
                 PandoraContentApi::Cluster::Metadata metadata;
                 metadata.m_particleId = MU_MINUS;
@@ -81,7 +82,7 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
+bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster, const ClusterList *const pClusterList) const
 {
     bool isTrueTrack(false);
 
@@ -109,7 +110,181 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     const int nHits(pCluster->GetNCaloHits());
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHits", nHits));
 
+    // vertexDistance
+    float vertexDistance(-1.f);
+    const VertexList *pVertexList = nullptr;
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
+    const Vertex *const pSelectedVertex((pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
+    if (pSelectedVertex)
+    {
+        const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pSelectedVertex->GetPosition(), LArClusterHelper::GetClusterHitType(pCluster)));
+        vertexDistance = LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster);
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vertexDistance", vertexDistance));
+
+    // hit positions and energy
+    FloatVector xPositions, zPositions;
+    float mipEnergy(0.f);
+
+    CaloHitList caloHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        xPositions.push_back(pCaloHit->GetPositionVector().GetX());
+        zPositions.push_back(pCaloHit->GetPositionVector().GetZ());
+        mipEnergy += pCaloHit->GetMipEquivalentEnergy();
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xPositions", &xPositions));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zPositions", &zPositions));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mipEnergy", mipEnergy));
+
+    // straight line length and integrated pathlength
+    float straightLineLength(-1.f), integratedPathLength(-1.f);
+
+    try
+    {
+        const TwoDSlidingFitResult slidingFitResult(pCluster, 5, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
+        const CartesianVector globalMaxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+        straightLineLength = (globalMaxLayerPosition - globalMinLayerPosition).GetMagnitude();
+
+        integratedPathLength = 0.f;
+        CartesianVector previousFitPosition(globalMinLayerPosition);
+        const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
+
+        for (const auto &mapEntry : layerFitResultMap)
+        {
+            CartesianVector thisFitPosition(0.f, 0.f, 0.f);
+            slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
+            integratedPathLength += (thisFitPosition - previousFitPosition).GetMagnitude();
+        }
+    }
+    catch (const StatusCodeException &)
+    {
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "straightLineLength", straightLineLength));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "integratedPathLength", integratedPathLength));
+
+    float straightLineLength10(-1.f), integratedPathLength10(-1.f);
+
+    try
+    {
+        const TwoDSlidingFitResult slidingFitResult(pCluster, 10, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
+        const CartesianVector globalMaxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+        straightLineLength10 = (globalMaxLayerPosition - globalMinLayerPosition).GetMagnitude();
+
+        integratedPathLength10 = 0.f;
+        CartesianVector previousFitPosition(globalMinLayerPosition);
+        const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
+
+        for (const auto &mapEntry : layerFitResultMap)
+        {
+            CartesianVector thisFitPosition(0.f, 0.f, 0.f);
+            slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
+            integratedPathLength10 += (thisFitPosition - previousFitPosition).GetMagnitude();
+        }
+    }
+    catch (const StatusCodeException &)
+    {
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "straightLineLength10", straightLineLength10));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "integratedPathLength10", integratedPathLength10));
+
+    // shower fit width and gap length
+    float showerFitWidth(-1.f), showerFitGapLength(-1.f);
+
+    try
+    {
+        const TwoDSlidingShowerFitResult showerFitResult(pCluster, 10, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
+        const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
+        const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
+
+        if (layerFitResultMapS.size() > 1)
+        {
+            CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);
+            showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);
+            showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);
+            const float straightLinePathLength((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());
+
+            if (straightLinePathLength > std::numeric_limits<float>::epsilon())
+            {
+                showerFitWidth = 0.f;
+                showerFitGapLength = 0.f;
+                CartesianVector previousLayerPosition(globalMinLayerPositionOnAxis);
+
+                for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
+                {
+                    CartesianVector thisLayerPosition(0.f, 0.f, 0.f);
+                    showerFitResult.GetShowerFitResult().GetGlobalPosition(iterS->second.GetL(), 0.f, thisLayerPosition);
+                    const float thisGapLength((thisLayerPosition - previousLayerPosition).GetMagnitude());
+
+                    if (thisGapLength > showerFitGapLength)
+                    {
+                        const float minZ(std::min(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
+                        const float maxZ(std::max(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
+
+                        if ((maxZ - minZ) < std::numeric_limits<float>::epsilon())
+                            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                        const float gapZ(LArGeometryHelper::CalculateGapDeltaZ(this->GetPandora(), minZ, maxZ, LArClusterHelper::GetClusterHitType(pCluster)));
+                        const float correctedGapLength(thisGapLength * (1.f - gapZ / (maxZ - minZ)));
+
+                        if (correctedGapLength > showerFitGapLength)
+                            showerFitGapLength = correctedGapLength;
+                    }
+
+                    previousLayerPosition = thisLayerPosition;
+
+                    LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
+                    LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
+
+                    if ((layerFitResultMapP.end() == iterP) || (layerFitResultMapN.end() == iterN))
+                        continue;
+
+                    showerFitWidth += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
+                }
+            }
+        }
+    }
+    catch (StatusCodeException &)
+    {
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "showerFitWidth", showerFitWidth));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "showerFitGapLength", showerFitGapLength));
+
+    // nPointsOfContact, nHitsInPrimaryBranches
+    int nPointsOfContact(0), nHitsInBranches(0);
+
+    ClusterVector candidateClusters;
+    for (const Cluster *const pCandidateCluster : *pClusterList)
+    {
+        if ((pCandidateCluster != pCluster) && (pCandidateCluster->GetNCaloHits() > 5))
+            candidateClusters.push_back(pCandidateCluster);
+    }
+
+    ClusterUsageMap forwardUsageMap, backwardUsageMap;
+    this->FindAssociatedClusters(pCluster, candidateClusters, forwardUsageMap, backwardUsageMap);
+
+    SeedAssociationList seedAssociationList;
+    this->IdentifyClusterMerges(ClusterVector(1, pCluster), backwardUsageMap, seedAssociationList);
+
+    for (const Cluster *const pBranchCluster : seedAssociationList.at(pCluster))
+    {
+        ++nPointsOfContact;
+        nHitsInBranches += pBranchCluster->GetNCaloHits();
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPointsOfContact", nPointsOfContact));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsInBranches", nHitsInBranches));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
@@ -119,87 +294,56 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     return isTrueTrack;
 }
 
-/*    if (pCluster->GetNCaloHits() < m_minHitsInCluster)
-        return false;
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    try
+ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
+{
+    const float m_nearbyClusterDistance(2.5f);
+    const float m_remoteClusterDistance(10.f);
+
+    // Calculate distances of association
+    const float sOuter(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetOuterPseudoLayer()), pCluster));
+    const float cOuter(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()), pClusterSeed));
+    const float sInner(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetInnerPseudoLayer()), pCluster));
+    const float cInner(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()), pClusterSeed));
+
+    // Association check 1(a), look for enclosed clusters
+    if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) &&
+        (sInner > m_nearbyClusterDistance) &&
+        (sOuter > m_nearbyClusterDistance))
     {
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
-
-        const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
-        const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
-        const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
-
-        if (layerFitResultMapS.size() < 2)
-            return false;
-
-        CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);
-        showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);
-        showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);
-        const float straightLinePathLength((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());
-
-        if (straightLinePathLength < std::numeric_limits<float>::epsilon())
-            return false;
-
-        // TODO: Improve on a straight selection cut above a certain distance
-        if (straightLinePathLength > m_maxShowerLength)
-            return true;
-
-        float widthSum(0.f);
-        CartesianVector previousLayerPosition(globalMinLayerPositionOnAxis);
-        float biggestGapLength(std::numeric_limits<float>::epsilon());
-
-        for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
-        {
-            CartesianVector thisLayerPosition(0.f, 0.f, 0.f);
-            showerFitResult.GetShowerFitResult().GetGlobalPosition(iterS->second.GetL(), 0.f, thisLayerPosition);
-            const float thisGapLength((thisLayerPosition - previousLayerPosition).GetMagnitude());
-
-            if (thisGapLength > biggestGapLength)
-            {
-                const float minZ(std::min(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
-                const float maxZ(std::max(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));
-
-                if ((maxZ - minZ) < std::numeric_limits<float>::epsilon())
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                const float gapZ(m_useDetectorGaps ? LArGeometryHelper::CalculateGapDeltaZ(this->GetPandora(), minZ, maxZ, LArClusterHelper::GetClusterHitType(pCluster)) : 0.f);
-                const float correctedGapLength(thisGapLength * (1.f - gapZ / (maxZ - minZ)));
-
-                if (correctedGapLength > biggestGapLength)
-                    biggestGapLength = correctedGapLength;
-            }
-
-            previousLayerPosition = thisLayerPosition;
-
-            LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
-            LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
-
-            if ((layerFitResultMapP.end() == iterP) || (layerFitResultMapN.end() == iterN))
-                continue;
-
-            widthSum += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
-        }
-
-        const float layerGapFraction(biggestGapLength / straightLinePathLength);
-
-        if (layerGapFraction > m_maxLayerGapFraction)
-            return false;
-
-        // ATTN: Could also try to recover long (sideways) tracks, with cuts on nHits and nHitsPerUnitLength
-        const float widthPerUnitLength(widthSum / straightLinePathLength);
-
-        if (widthPerUnitLength < m_maxWidthPerUnitLength)
-            return true;
-    }
-    catch (StatusCodeException &)
-    {
+        return STRONG;
     }
 
-    return false;
+    // Association check 1(b), look for overlapping clusters
+    if ((cInner < m_nearbyClusterDistance && sOuter < m_nearbyClusterDistance) &&
+        (sInner > m_nearbyClusterDistance) &&
+        (cOuter > m_nearbyClusterDistance))
+    {
+        return STRONG;
+    }
+
+    if ((cOuter < m_nearbyClusterDistance && sInner < m_nearbyClusterDistance) &&
+        (sOuter > m_nearbyClusterDistance) &&
+        (cInner > m_nearbyClusterDistance))
+    {
+        return STRONG;
+    }
+
+    // Association check 2, look for branching clusters
+    if (((sInner > m_remoteClusterDistance)) &&
+        ((sOuter > m_remoteClusterDistance)) &&
+        ((cInner < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance)))
+    {
+        return STANDARD;
+    }
+
+    // Association check 3, look any distance below threshold
+    if ((sOuter < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance) || (sInner < m_nearbyClusterDistance) || (cInner < m_nearbyClusterDistance))
+        return SINGLE_ORDER;
+
+    return NONE;
 }
-*/
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
