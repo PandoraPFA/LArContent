@@ -107,6 +107,7 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     }
 
     float bestWeight(0.f);
+    float bestMCParticleLength(-1.f);
     const MCParticle *pBestMCParticle(nullptr);
 
     MCParticleList mcParticleList;
@@ -131,6 +132,7 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
         const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pBestMCParticle));
         const int absParticleId(std::abs(pPrimaryMCParticle->GetParticleId()));
         isTrueTrack = ((MU_MINUS == absParticleId) || (PROTON == absParticleId) || (PI_PLUS == absParticleId));
+        bestMCParticleLength = (pBestMCParticle->GetEndpoint() - pBestMCParticle->GetVertex()).GetMagnitude();
     }
 
     // Tree variables here
@@ -140,6 +142,8 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
     const int inputParticleId(pPfo->GetParticleId());
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "inputParticleId", inputParticleId));
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMCParticleLength", bestMCParticleLength));
 
     int nHitsU(0), nHitsV(0), nHitsW(0);
     int nClustersU(0), nClustersV(0), nClustersW(0);
@@ -236,6 +240,7 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
                 CartesianVector thisFitPosition(0.f, 0.f, 0.f);
                 slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
                 integratedPathLength += (thisFitPosition - previousFitPosition).GetMagnitude();
+                previousFitPosition = thisFitPosition;
             }
         }
         catch (const StatusCodeException &)
@@ -264,6 +269,7 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
                 CartesianVector thisFitPosition(0.f, 0.f, 0.f);
                 slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
                 integratedPathLength10 += (thisFitPosition - previousFitPosition).GetMagnitude();
+                previousFitPosition = thisFitPosition;
             }
         }
         catch (const StatusCodeException &)

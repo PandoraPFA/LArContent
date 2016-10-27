@@ -161,6 +161,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
             CartesianVector thisFitPosition(0.f, 0.f, 0.f);
             slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
             integratedPathLength += (thisFitPosition - previousFitPosition).GetMagnitude();
+            previousFitPosition = thisFitPosition;
         }
     }
     catch (const StatusCodeException &)
@@ -188,6 +189,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
             CartesianVector thisFitPosition(0.f, 0.f, 0.f);
             slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
             integratedPathLength10 += (thisFitPosition - previousFitPosition).GetMagnitude();
+            previousFitPosition = thisFitPosition;
         }
     }
     catch (const StatusCodeException &)
