@@ -33,6 +33,11 @@ public:
      */
     ClusterCharacterisationAlgorithm();
 
+    /**
+     *  @brief  Destructor
+     */
+    ~ClusterCharacterisationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 
@@ -55,6 +60,10 @@ private:
     float                   m_maxWidthPerUnitLength;        ///< The maximum width per unit length for a clear track candidate
     float                   m_maxShowerLength;              ///< The maximum length for a cluster to be considered a shower candidate
     bool                    m_useDetectorGaps;              ///< Whether to account for registered detector gaps in characterisation
+
+    bool                    m_writeToTree;              ///< Whether to write monitoring details to tree
+    std::string             m_treeName;                 ///< Name of output tree
+    std::string             m_fileName;                 ///< Name of output file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

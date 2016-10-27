@@ -28,7 +28,6 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-
     /**
      *  @brief  Default constructor
      */

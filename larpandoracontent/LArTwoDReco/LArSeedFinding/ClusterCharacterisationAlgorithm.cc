@@ -10,6 +10,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
@@ -26,8 +27,19 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_maxLayerGapFraction(0.2f),
     m_maxWidthPerUnitLength(0.15f),
     m_maxShowerLength(1000.f),
-    m_useDetectorGaps(true)
+    m_useDetectorGaps(true),
+    m_writeToTree(false)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+ClusterCharacterisationAlgorithm::~ClusterCharacterisationAlgorithm()
+{
+    if (m_writeToTree)
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,7 +83,43 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
 bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
 {
-    if (pCluster->GetNCaloHits() < m_minHitsInCluster)
+    bool isTrueTrack(false);
+
+    try
+    {
+        // ATTN Slightly curious definition of a clear track, but this is most-likely what is needed for shower-growing
+        const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+        const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
+
+        isTrueTrack = (PHOTON != pPrimaryMCParticle->GetParticleId()) && (E_MINUS != std::abs(pPrimaryMCParticle->GetParticleId()));
+    }
+    catch (StatusCodeException &)
+    {
+    }
+
+    // Tree variables here
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    const int trueTrack(isTrueTrack ? 1 : 0);
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueTrack", trueTrack));
+
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const int hitTypeInt(static_cast<int>(hitType));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "hitType", hitTypeInt));
+
+    const int nHits(pCluster->GetNCaloHits());
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHits", nHits));
+
+
+
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
+
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // End tree variables calculations
+
+    return isTrueTrack;
+}
+
+/*    if (pCluster->GetNCaloHits() < m_minHitsInCluster)
         return false;
 
     try
@@ -151,6 +199,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
     return false;
 }
+*/
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -175,6 +224,15 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseDetectorGaps", m_useDetectorGaps));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "WriteToTree", m_writeToTree));
+
+    if (m_writeToTree)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputTree", m_treeName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
