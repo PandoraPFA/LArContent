@@ -42,6 +42,7 @@ PfoCharacterisationAlgorithm::~PfoCharacterisationAlgorithm()
 
 StatusCode PfoCharacterisationAlgorithm::Run()
 {
+    m_clusterDirectionMap.clear();
     PfoList tracksToShowers, showersToTracks;
 
     for (const std::string &pfoListName : m_inputPfoListNames)
@@ -86,6 +87,7 @@ StatusCode PfoCharacterisationAlgorithm::Run()
     if (!showersToTracks.empty())
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_showerPfoListName, m_trackPfoListName, showersToTracks));
 
+    m_clusterDirectionMap.clear();
     return STATUS_CODE_SUCCESS;
 }
 
@@ -129,8 +131,9 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
     if (pBestMCParticle)
     {
-        const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pBestMCParticle));
-        const int absParticleId(std::abs(pPrimaryMCParticle->GetParticleId()));
+        //const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pBestMCParticle));
+        //const int absParticleId(std::abs(pPrimaryMCParticle->GetParticleId()));
+        const int absParticleId(std::abs(pBestMCParticle->GetParticleId()));
         isTrueTrack = ((MU_MINUS == absParticleId) || (PROTON == absParticleId) || (PI_PLUS == absParticleId));
         bestMCParticleLength = (pBestMCParticle->GetEndpoint() - pBestMCParticle->GetVertex()).GetMagnitude();
     }
@@ -349,15 +352,27 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
         int &nHitsInBranches((TPC_VIEW_U == hitType) ? nHitsInBranchesU : (TPC_VIEW_V == hitType) ? nHitsInBranchesV : nHitsInBranchesW);
 
         const std::string &clusterListName((TPC_VIEW_U == hitType) ? m_clusterListNameU : (TPC_VIEW_V == hitType) ? m_clusterListNameV : m_clusterListNameW);
-        const ClusterList *pClusterList(nullptr);
+        const CartesianVector vertexPosition2D(pSelectedVertex ? LArGeometryHelper::ProjectPosition(this->GetPandora(), pSelectedVertex->GetPosition(), hitType) : CartesianVector(0.f, 0.f, 0.f));
 
+        const ClusterList *pClusterList(nullptr);
         if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, clusterListName, pClusterList))
         {
             ClusterVector candidateClusters;
             for (const Cluster *const pCandidateCluster : *pClusterList)
             {
-                if ((pCandidateCluster != pCluster) && (pCandidateCluster->GetNCaloHits() > 5))
-                    candidateClusters.push_back(pCandidateCluster);
+                if ((pCandidateCluster == pCluster) || (pCandidateCluster->GetNCaloHits() < 5))
+                    continue;
+
+                try
+                {
+                    if (pSelectedVertex && this->IsVertexAssociated(LArPointingCluster(pCluster), vertexPosition2D))
+                        continue;
+                }
+                catch (const StatusCodeException &)
+                {
+                }
+
+                candidateClusters.push_back(pCandidateCluster);
             }
 
             ClusterUsageMap forwardUsageMap, backwardUsageMap;
@@ -383,57 +398,6 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     // End tree variables calculations
 
     return isTrueTrack;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-PfoCharacterisationAlgorithm::AssociationType PfoCharacterisationAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
-{
-    const float m_nearbyClusterDistance(2.5f);
-    const float m_remoteClusterDistance(10.f);
-
-    // Calculate distances of association
-    const float sOuter(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetOuterPseudoLayer()), pCluster));
-    const float cOuter(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()), pClusterSeed));
-    const float sInner(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetInnerPseudoLayer()), pCluster));
-    const float cInner(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()), pClusterSeed));
-
-    // Association check 1(a), look for enclosed clusters
-    if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) &&
-        (sInner > m_nearbyClusterDistance) &&
-        (sOuter > m_nearbyClusterDistance))
-    {
-        return STRONG;
-    }
-
-    // Association check 1(b), look for overlapping clusters
-    if ((cInner < m_nearbyClusterDistance && sOuter < m_nearbyClusterDistance) &&
-        (sInner > m_nearbyClusterDistance) &&
-        (cOuter > m_nearbyClusterDistance))
-    {
-        return STRONG;
-    }
-
-    if ((cOuter < m_nearbyClusterDistance && sInner < m_nearbyClusterDistance) &&
-        (sOuter > m_nearbyClusterDistance) &&
-        (cInner > m_nearbyClusterDistance))
-    {
-        return STRONG;
-    }
-
-    // Association check 2, look for branching clusters
-    if (((sInner > m_remoteClusterDistance)) &&
-        ((sOuter > m_remoteClusterDistance)) &&
-        ((cInner < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance)))
-    {
-        return STANDARD;
-    }
-
-    // Association check 3, look any distance below threshold
-    if ((sOuter < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance) || (sInner < m_nearbyClusterDistance) || (cInner < m_nearbyClusterDistance))
-        return SINGLE_ORDER;
-
-    return NONE;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

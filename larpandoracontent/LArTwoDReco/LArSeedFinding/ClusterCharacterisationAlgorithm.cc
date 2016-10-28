@@ -47,6 +47,8 @@ ClusterCharacterisationAlgorithm::~ClusterCharacterisationAlgorithm()
 
 StatusCode ClusterCharacterisationAlgorithm::Run()
 {
+    m_clusterDirectionMap.clear();
+
     for (const std::string &clusterListName : m_inputClusterListNames)
     {
         const ClusterList *pClusterList = NULL;
@@ -77,6 +79,7 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
         }
     }
 
+    m_clusterDirectionMap.clear();
     return STATUS_CODE_SUCCESS;
 }
 
@@ -90,9 +93,10 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     {
         // ATTN Slightly curious definition of a clear track, but this is most-likely what is needed for shower-growing
         const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-        const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
+        //const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
 
-        isTrueTrack = (PHOTON != pPrimaryMCParticle->GetParticleId()) && (E_MINUS != std::abs(pPrimaryMCParticle->GetParticleId()));
+        isTrueTrack = (PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId()));
+        //isTrueTrack = (PHOTON != pPrimaryMCParticle->GetParticleId()) && (E_MINUS != std::abs(pPrimaryMCParticle->GetParticleId()));
     }
     catch (StatusCodeException &)
     {
@@ -265,12 +269,24 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
     // nPointsOfContact, nHitsInPrimaryBranches
     int nPointsOfContact(0), nHitsInBranches(0);
+    const CartesianVector vertexPosition2D(pSelectedVertex ? LArGeometryHelper::ProjectPosition(this->GetPandora(), pSelectedVertex->GetPosition(), hitType) : CartesianVector(0.f, 0.f, 0.f));
 
     ClusterVector candidateClusters;
     for (const Cluster *const pCandidateCluster : *pClusterList)
     {
-        if ((pCandidateCluster != pCluster) && (pCandidateCluster->GetNCaloHits() > 5))
-            candidateClusters.push_back(pCandidateCluster);
+        if ((pCandidateCluster == pCluster) || (pCandidateCluster->GetNCaloHits() < 5))
+            continue;
+
+        try
+        {
+            if (pSelectedVertex && this->IsVertexAssociated(LArPointingCluster(pCluster), vertexPosition2D))
+                continue;
+        }
+        catch (const StatusCodeException &)
+        {
+        }
+
+        candidateClusters.push_back(pCandidateCluster);
     }
 
     ClusterUsageMap forwardUsageMap, backwardUsageMap;
@@ -294,57 +310,6 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     // End tree variables calculations
 
     return isTrueTrack;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-ClusterCharacterisationAlgorithm::AssociationType ClusterCharacterisationAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
-{
-    const float m_nearbyClusterDistance(2.5f);
-    const float m_remoteClusterDistance(10.f);
-
-    // Calculate distances of association
-    const float sOuter(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetOuterPseudoLayer()), pCluster));
-    const float cOuter(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetOuterPseudoLayer()), pClusterSeed));
-    const float sInner(LArClusterHelper::GetClosestDistance(pClusterSeed->GetCentroid(pClusterSeed->GetInnerPseudoLayer()), pCluster));
-    const float cInner(LArClusterHelper::GetClosestDistance(pCluster->GetCentroid(pCluster->GetInnerPseudoLayer()), pClusterSeed));
-
-    // Association check 1(a), look for enclosed clusters
-    if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) &&
-        (sInner > m_nearbyClusterDistance) &&
-        (sOuter > m_nearbyClusterDistance))
-    {
-        return STRONG;
-    }
-
-    // Association check 1(b), look for overlapping clusters
-    if ((cInner < m_nearbyClusterDistance && sOuter < m_nearbyClusterDistance) &&
-        (sInner > m_nearbyClusterDistance) &&
-        (cOuter > m_nearbyClusterDistance))
-    {
-        return STRONG;
-    }
-
-    if ((cOuter < m_nearbyClusterDistance && sInner < m_nearbyClusterDistance) &&
-        (sOuter > m_nearbyClusterDistance) &&
-        (cInner > m_nearbyClusterDistance))
-    {
-        return STRONG;
-    }
-
-    // Association check 2, look for branching clusters
-    if (((sInner > m_remoteClusterDistance)) &&
-        ((sOuter > m_remoteClusterDistance)) &&
-        ((cInner < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance)))
-    {
-        return STANDARD;
-    }
-
-    // Association check 3, look any distance below threshold
-    if ((sOuter < m_nearbyClusterDistance) || (cOuter < m_nearbyClusterDistance) || (sInner < m_nearbyClusterDistance) || (cInner < m_nearbyClusterDistance))
-        return SINGLE_ORDER;
-
-    return NONE;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

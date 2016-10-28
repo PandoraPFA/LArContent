@@ -41,6 +41,20 @@ public:
      */
     ShowerGrowingAlgorithm();
 
+protected:
+    /**
+     *  @brief  Whether a pointing cluster is assciated with a provided 2D vertex projection
+     * 
+     *  @param  pointingCluster the pointing cluster
+     *  @param  vertexPosition2D the projected vertex position
+     * 
+     *  @return boolean
+     */
+    bool IsVertexAssociated(const LArPointingCluster &pointingCluster, const pandora::CartesianVector &vertexPosition2D) const;
+
+    typedef std::unordered_map<const pandora::Cluster*, LArVertexHelper::ClusterDirection> ClusterDirectionMap;
+    mutable ClusterDirectionMap m_clusterDirectionMap;          ///< The cluster direction map
+
 private:
     pandora::StatusCode Run();
 
@@ -128,16 +142,6 @@ private:
     unsigned int GetNVertexConnections(const pandora::CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const;
 
     /**
-     *  @brief  Whether a pointing cluster is assciated with a provided 2D vertex projection
-     * 
-     *  @param  pointingCluster the pointing cluster
-     *  @param  vertexPosition2D the projected vertex position
-     * 
-     *  @return boolean
-     */
-    bool IsVertexAssociated(const LArPointingCluster &pointingCluster, const pandora::CartesianVector &vertexPosition2D) const;
-
-    /**
      *  @brief  Sorting for clusters to determine order in which seeds are considered
      *
      *  @param  pLhs address of first cluster
@@ -146,9 +150,6 @@ private:
     static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    typedef std::unordered_map<const pandora::Cluster*, LArVertexHelper::ClusterDirection> ClusterDirectionMap;
-    mutable ClusterDirectionMap m_clusterDirectionMap;          ///< The cluster direction map
 
     pandora::StringVector       m_inputClusterListNames;        ///< The names of the input cluster lists
 

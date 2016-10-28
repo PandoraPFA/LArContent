@@ -8,7 +8,7 @@
 #ifndef LAR_PFO_CHARACTERISATION_ALGORITHM_H
 #define LAR_PFO_CHARACTERISATION_ALGORITHM_H 1
 
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  PfoCharacterisationAlgorithm class
  */
-class PfoCharacterisationAlgorithm : public SeedGrowingAlgorithm
+class PfoCharacterisationAlgorithm : public ShowerGrowingAlgorithm
 {
 public:
     /**
@@ -49,8 +49,6 @@ private:
      *  @return boolean
      */
     bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
-
-    AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
