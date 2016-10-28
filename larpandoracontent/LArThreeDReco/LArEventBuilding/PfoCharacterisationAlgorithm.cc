@@ -397,7 +397,31 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // End tree variables calculations
 
-    return isTrueTrack;
+    if (straightLineLengthW < std::numeric_limits<float>::epsilon())
+        return false;
+
+    if (straightLineLengthW > 80.f)
+        return true;
+
+    if (vertexDistanceW / straightLineLengthW > 0.4f)
+        return false;
+
+    if (nPointsOfContactW > 4)
+        return false;
+
+    if (0 == nHitsW)
+        return false;
+
+    if (static_cast<float>(nHitsInBranchesW) / static_cast<float>(nHitsW) > 5.f)
+        return false;
+
+    if (integratedPathLengthW / straightLineLengthW > 1.3f)
+        return false;
+
+    if (showerFitWidthW / straightLineLengthW > 1.7f)
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
