@@ -29,6 +29,8 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_maxWidthPerUnitLength(0.15f),
     m_maxShowerLength(1000.f),
     m_useDetectorGaps(true),
+    m_overwriteExistingId(false),
+    m_useUnavailableClusters(false),
     m_writeToTree(false)
 {
 }
@@ -64,18 +66,25 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
         for (const Cluster *const pCluster : *pClusterList)
         {
+            if (!m_overwriteExistingId && (UNKNOWN_PARTICLE_TYPE != pCluster->GetParticleId()))
+                continue;
+
+            if (!m_useUnavailableClusters && !PandoraContentApi::IsAvailable(*this, pCluster))
+                continue;
+
+            PandoraContentApi::Cluster::Metadata metadata;
+
             if (this->IsClearTrack(pCluster, pClusterList))
             {
-                PandoraContentApi::Cluster::Metadata metadata;
                 metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
             }
             else
             {
-                PandoraContentApi::Cluster::Metadata metadata;
                 metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
             }
+
+            if (pCluster->GetParticleId() != metadata.m_particleId.Get())
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
         }
     }
 
@@ -93,10 +102,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     {
         // ATTN Slightly curious definition of a clear track, but this is most-likely what is needed for shower-growing
         const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-        //const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
-
         isTrueTrack = (PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId()));
-        //isTrueTrack = (PHOTON != pPrimaryMCParticle->GetParticleId()) && (E_MINUS != std::abs(pPrimaryMCParticle->GetParticleId()));
     }
     catch (StatusCodeException &)
     {
@@ -309,7 +315,34 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     //--------------------------------------------------------------------------------------------------------------------------------------
     // End tree variables calculations
 
-    return isTrueTrack;
+    if (nHits < 6)
+        return false;
+
+    if (straightLineLength < std::numeric_limits<float>::epsilon())
+        return false;
+
+    if (straightLineLength > 80.f)
+        return true;
+
+    if (vertexDistance / straightLineLength > 0.4f)
+        return false;
+
+    if (nPointsOfContact > 4)
+        return false;
+
+    if (0 == nHits)
+        return false;
+
+    if (static_cast<float>(nHitsInBranches) / static_cast<float>(nHits) > 5.f)
+        return false;
+
+    if (integratedPathLength / straightLineLength > 1.3f)
+        return false;
+
+    if (showerFitWidth / straightLineLength > 1.7f)
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -335,6 +368,12 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseDetectorGaps", m_useDetectorGaps));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "OverwriteExistingId", m_overwriteExistingId));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseUnavailableClusters", m_useUnavailableClusters));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "WriteToTree", m_writeToTree));

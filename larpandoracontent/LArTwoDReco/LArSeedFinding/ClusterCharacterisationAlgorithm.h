@@ -62,9 +62,12 @@ private:
     float                   m_maxShowerLength;              ///< The maximum length for a cluster to be considered a shower candidate
     bool                    m_useDetectorGaps;              ///< Whether to account for registered detector gaps in characterisation
 
-    bool                    m_writeToTree;              ///< Whether to write monitoring details to tree
-    std::string             m_treeName;                 ///< Name of output tree
-    std::string             m_fileName;                 ///< Name of output file
+    bool                    m_overwriteExistingId;          ///< Whether to consider any clusters that already have an assigned particle id
+    bool                    m_useUnavailableClusters;       ///< Whether to consider clusters that are already constituents of a pfo
+
+    bool                    m_writeToTree;                  ///< Whether to write monitoring details to tree
+    std::string             m_treeName;                     ///< Name of output tree
+    std::string             m_fileName;                     ///< Name of output file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

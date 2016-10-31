@@ -18,6 +18,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+CheatingPfoCharacterisationAlgorithm::CheatingPfoCharacterisationAlgorithm() :
+    m_updateClusterIds(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingPfoCharacterisationAlgorithm::Run()
 {
     PfoList tracksToShowers, showersToTracks;
@@ -37,23 +44,40 @@ StatusCode CheatingPfoCharacterisationAlgorithm::Run()
 
         for (const ParticleFlowObject *const pPfo : *pPfoList)
         {
+            PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
+
             if (this->IsClearTrack(pPfo))
             {
-                PandoraContentApi::ParticleFlowObject::Metadata metadata;
-                metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+                pfoMetadata.m_particleId = MU_MINUS;
 
                 if (m_showerPfoListName == pfoListName)
                     showersToTracks.push_back(pPfo);
             }
             else
             {
-                PandoraContentApi::ParticleFlowObject::Metadata metadata;
-                metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+                pfoMetadata.m_particleId = E_MINUS;
 
                 if (m_trackPfoListName == pfoListName)
                     tracksToShowers.push_back(pPfo);
+            }
+
+            if (pPfo->GetParticleId() != pfoMetadata.m_particleId.Get())
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, pfoMetadata));
+
+            if (!m_updateClusterIds)
+                continue;
+
+            ClusterList twoDClusterList;
+            LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
+
+            for (const Cluster *const pCluster : twoDClusterList)
+            {
+                if (pCluster->GetParticleId() == pfoMetadata.m_particleId.Get())
+                    continue;
+
+                PandoraContentApi::Cluster::Metadata clusterMetadata;
+                clusterMetadata.m_particleId = pfoMetadata.m_particleId.Get();
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, clusterMetadata));
             }
         }
     }
@@ -119,6 +143,9 @@ StatusCode CheatingPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle 
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ShowerPfoListName", m_showerPfoListName));
     m_inputPfoListNames.push_back(m_showerPfoListName);
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UpdateClusterIds", m_updateClusterIds));
 
     return STATUS_CODE_SUCCESS;
 }

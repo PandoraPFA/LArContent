@@ -17,6 +17,14 @@ using namespace pandora;
 namespace lar_content
 {
 
+CheatingClusterCharacterisationAlgorithm::CheatingClusterCharacterisationAlgorithm() :
+    m_overwriteExistingId(false),
+    m_useUnavailableClusters(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingClusterCharacterisationAlgorithm::Run()
 {
     for (const std::string &clusterListName : m_inputClusterListNames)
@@ -34,18 +42,25 @@ StatusCode CheatingClusterCharacterisationAlgorithm::Run()
 
         for (const Cluster *const pCluster : *pClusterList)
         {
+            if (!m_overwriteExistingId && (UNKNOWN_PARTICLE_TYPE != pCluster->GetParticleId()))
+                continue;
+
+            if (!m_useUnavailableClusters && !PandoraContentApi::IsAvailable(*this, pCluster))
+                continue;
+
+            PandoraContentApi::Cluster::Metadata metadata;
+
             if (this->IsClearTrack(pCluster))
             {
-                PandoraContentApi::Cluster::Metadata metadata;
                 metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
             }
             else
             {
-                PandoraContentApi::Cluster::Metadata metadata;
                 metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
             }
+
+            if (pCluster->GetParticleId() != metadata.m_particleId.Get())
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
         }
     }
 
@@ -60,9 +75,8 @@ bool CheatingClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const
     {
         // ATTN Slightly curious definition of a clear track, but this is most-likely what is needed for shower-growing
         const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-        const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
 
-        if ((PHOTON != pPrimaryMCParticle->GetParticleId()) && (E_MINUS != std::abs(pPrimaryMCParticle->GetParticleId())))
+        if ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())))
             return true;
     }
     catch (StatusCodeException &)
@@ -77,6 +91,12 @@ bool CheatingClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const
 StatusCode CheatingClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "OverwriteExistingId", m_overwriteExistingId));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseUnavailableClusters", m_useUnavailableClusters));
 
     return STATUS_CODE_SUCCESS;
 }

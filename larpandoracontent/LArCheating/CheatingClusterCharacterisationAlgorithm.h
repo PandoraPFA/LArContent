@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    CheatingClusterCharacterisationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 
@@ -43,6 +48,9 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
+
+    bool                    m_overwriteExistingId;          ///< Whether to consider any clusters that already have an assigned particle id
+    bool                    m_useUnavailableClusters;       ///< Whether to consider clusters that are already constituents of a pfo
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

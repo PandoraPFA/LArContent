@@ -28,6 +28,11 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
+    /**
+     *  @brief  Default constructor
+     */
+    CheatingPfoCharacterisationAlgorithm();
+
 private:
     pandora::StatusCode Run();
 
@@ -45,6 +50,8 @@ private:
     std::string             m_trackPfoListName;         ///< The track pfo list name
     std::string             m_showerPfoListName;        ///< The shower pfo list name
     pandora::StringVector   m_inputPfoListNames;        ///< The names of the input pfo lists
+
+    bool                    m_updateClusterIds;         ///< Whether to update daughter cluster particle id labels to match pfo id.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

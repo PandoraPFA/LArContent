@@ -24,6 +24,7 @@ namespace lar_content
 {
 
 PfoCharacterisationAlgorithm::PfoCharacterisationAlgorithm() :
+    m_updateClusterIds(true),
     m_writeToTree(false)
 {
 }
@@ -60,23 +61,40 @@ StatusCode PfoCharacterisationAlgorithm::Run()
 
         for (const ParticleFlowObject *const pPfo : *pPfoList)
         {
+            PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
+
             if (this->IsClearTrack(pPfo))
             {
-                PandoraContentApi::ParticleFlowObject::Metadata metadata;
-                metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+                pfoMetadata.m_particleId = MU_MINUS;
 
                 if (m_showerPfoListName == pfoListName)
                     showersToTracks.push_back(pPfo);
             }
             else
             {
-                PandoraContentApi::ParticleFlowObject::Metadata metadata;
-                metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+                pfoMetadata.m_particleId = E_MINUS;
 
                 if (m_trackPfoListName == pfoListName)
                     tracksToShowers.push_back(pPfo);
+            }
+
+            if (pPfo->GetParticleId() != pfoMetadata.m_particleId.Get())
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, pfoMetadata));
+
+            if (!m_updateClusterIds)
+                continue;
+
+            ClusterList twoDClusterList;
+            LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
+
+            for (const Cluster *const pCluster : twoDClusterList)
+            {
+                if (pCluster->GetParticleId() == pfoMetadata.m_particleId.Get())
+                    continue;
+
+                PandoraContentApi::Cluster::Metadata clusterMetadata;
+                clusterMetadata.m_particleId = pfoMetadata.m_particleId.Get();
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, clusterMetadata));
             }
         }
     }
@@ -131,8 +149,6 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
     if (pBestMCParticle)
     {
-        //const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pBestMCParticle));
-        //const int absParticleId(std::abs(pPrimaryMCParticle->GetParticleId()));
         const int absParticleId(std::abs(pBestMCParticle->GetParticleId()));
         isTrueTrack = ((MU_MINUS == absParticleId) || (PROTON == absParticleId) || (PI_PLUS == absParticleId));
         bestMCParticleLength = (pBestMCParticle->GetEndpoint() - pBestMCParticle->GetVertex()).GetMagnitude();
@@ -437,6 +453,9 @@ StatusCode PfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListNameU", m_clusterListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListNameV", m_clusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListNameW", m_clusterListNameW));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UpdateClusterIds", m_updateClusterIds));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "WriteToTree", m_writeToTree));
