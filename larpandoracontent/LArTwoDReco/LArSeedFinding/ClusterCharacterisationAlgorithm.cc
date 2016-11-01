@@ -294,6 +294,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
         candidateClusters.push_back(pCandidateCluster);
     }
+    std::sort(candidateClusters.begin(), candidateClusters.end(), ShowerGrowingAlgorithm::SortClusters);
 
     ClusterUsageMap forwardUsageMap, backwardUsageMap;
     this->FindAssociatedClusters(pCluster, candidateClusters, forwardUsageMap, backwardUsageMap);

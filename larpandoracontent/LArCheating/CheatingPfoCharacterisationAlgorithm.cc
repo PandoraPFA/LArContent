@@ -129,8 +129,7 @@ bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject
     if (!pBestMCParticle)
         return false;
 
-    const MCParticle *const pPrimaryMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pBestMCParticle));
-    const int absParticleId(std::abs(pPrimaryMCParticle->GetParticleId()));
+    const int absParticleId(std::abs(pBestMCParticle->GetParticleId()));
     return ((MU_MINUS == absParticleId) || (PROTON == absParticleId) || (PI_PLUS == absParticleId));
 }
 

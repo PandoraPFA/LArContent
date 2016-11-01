@@ -52,6 +52,14 @@ protected:
      */
     bool IsVertexAssociated(const LArPointingCluster &pointingCluster, const pandora::CartesianVector &vertexPosition2D) const;
 
+    /**
+     *  @brief  Sorting for clusters to determine order in which seeds are considered
+     *
+     *  @param  pLhs address of first cluster
+     *  @param  pRhs address of second cluster
+     */
+    static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
     typedef std::unordered_map<const pandora::Cluster*, LArVertexHelper::ClusterDirection> ClusterDirectionMap;
     mutable ClusterDirectionMap m_clusterDirectionMap;          ///< The cluster direction map
 
@@ -140,14 +148,6 @@ private:
      *  @return the number of clusters associated with the vertex
      */
     unsigned int GetNVertexConnections(const pandora::CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const;
-
-    /**
-     *  @brief  Sorting for clusters to determine order in which seeds are considered
-     *
-     *  @param  pLhs address of first cluster
-     *  @param  pRhs address of second cluster
-     */
-    static bool SortClusters(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
