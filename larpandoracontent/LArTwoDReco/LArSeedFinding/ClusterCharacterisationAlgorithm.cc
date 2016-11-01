@@ -347,10 +347,10 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     if (static_cast<float>(nHitsInBranches) / static_cast<float>(nHits) > 5.f)
         return false;
 
-    if (integratedPathLength / straightLineLength > 1.3f)
+    if (widthDirectionX / straightLineLength > 0.08f)
         return false;
 
-    if (showerFitWidth / straightLineLength > 1.7f)
+    if (showerFitWidth / straightLineLength > 0.6f)
         return false;
 
     return true;
