@@ -171,12 +171,13 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
     FloatVector xPositionsU, xPositionsV, xPositionsW, zPositionsU, zPositionsV, zPositionsW;
     float mipEnergyU(0.f), mipEnergyV(0.f), mipEnergyW(0.f);
+    int nHitsOutsideLimitsU(0), nHitsOutsideLimitsV(0), nHitsOutsideLimitsW(0);
 
     float straightLineLengthU(-1.f), straightLineLengthV(-1.f), straightLineLengthW(-1.f);
     float integratedPathLengthU(-1.f), integratedPathLengthV(-1.f), integratedPathLengthW(-1.f);
 
-    float straightLineLength10U(-1.f), straightLineLength10V(-1.f), straightLineLength10W(-1.f);
-    float integratedPathLength10U(-1.f), integratedPathLength10V(-1.f), integratedPathLength10W(-1.f);
+    float widthDirectionXU(-1.f), widthDirectionXV(-1.f), widthDirectionXW(-1.f);
+    float widthDirectionZU(-1.f), widthDirectionZV(-1.f), widthDirectionZW(-1.f);
 
     float showerFitWidthU(-1.f), showerFitWidthV(-1.f), showerFitWidthW(-1.f);
     float showerFitGapLengthU(-1.f), showerFitGapLengthV(-1.f), showerFitGapLengthW(-1.f);
@@ -221,28 +222,16 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vertexDistance" + hitTypeLabel, vertexDistance));
 
-        // hit positions and energy
-        FloatVector &xPositions((TPC_VIEW_U == hitType) ? xPositionsU : (TPC_VIEW_V == hitType) ? xPositionsV : xPositionsW);
-        FloatVector &zPositions((TPC_VIEW_U == hitType) ? zPositionsU : (TPC_VIEW_V == hitType) ? zPositionsV : zPositionsW);
-        float &mipEnergy((TPC_VIEW_U == hitType) ? mipEnergyU : (TPC_VIEW_V == hitType) ? mipEnergyV : mipEnergyW);
-
-        CaloHitList clusterHitList;
-        pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);
-
-        for (const CaloHit *const pCaloHit : clusterHitList)
-        {
-            xPositions.push_back(pCaloHit->GetPositionVector().GetX());
-            zPositions.push_back(pCaloHit->GetPositionVector().GetZ());
-            mipEnergy += pCaloHit->GetMipEquivalentEnergy();
-        }
-
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xPositions" + hitTypeLabel, &xPositions));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zPositions" + hitTypeLabel, &zPositions));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mipEnergy" + hitTypeLabel, mipEnergy));
-
         // straight line length and integrated pathlength
         float &straightLineLength((TPC_VIEW_U == hitType) ? straightLineLengthU : (TPC_VIEW_V == hitType) ? straightLineLengthV : straightLineLengthW);
         float &integratedPathLength((TPC_VIEW_U == hitType) ? integratedPathLengthU : (TPC_VIEW_V == hitType) ? integratedPathLengthV : integratedPathLengthW);
+
+        bool slidingFitSuccess(false);
+        float xMin(0.f), xMax(0.f), zMin(0.f), zMax(0.f);
+
+        bool widthSet(false);
+        float minXDir(+std::numeric_limits<float>::max()), minZDir(+std::numeric_limits<float>::max());
+        float maxXDir(-std::numeric_limits<float>::max()), maxZDir(-std::numeric_limits<float>::max());
 
         try
         {
@@ -250,6 +239,12 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
             const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
             const CartesianVector globalMaxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
             straightLineLength = (globalMaxLayerPosition - globalMinLayerPosition).GetMagnitude();
+
+            slidingFitSuccess = true;
+            xMin = std::min(globalMinLayerPosition.GetX(), globalMaxLayerPosition.GetX());
+            xMax = std::max(globalMinLayerPosition.GetX(), globalMaxLayerPosition.GetX());
+            zMin = std::min(globalMinLayerPosition.GetZ(), globalMaxLayerPosition.GetZ());
+            zMax = std::max(globalMinLayerPosition.GetZ(), globalMaxLayerPosition.GetZ());
 
             integratedPathLength = 0.f;
             CartesianVector previousFitPosition(globalMinLayerPosition);
@@ -261,6 +256,16 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
                 slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
                 integratedPathLength += (thisFitPosition - previousFitPosition).GetMagnitude();
                 previousFitPosition = thisFitPosition;
+
+                CartesianVector thisFitDirection(0.f, 0.f, 0.f);
+                if (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitDirection(mapEntry.second.GetL(), thisFitDirection))
+                {
+                    minXDir = std::min(minXDir, thisFitDirection.GetX());
+                    maxXDir = std::max(maxXDir, thisFitDirection.GetX());
+                    minZDir = std::min(minZDir, thisFitDirection.GetZ());
+                    maxZDir = std::max(maxZDir, thisFitDirection.GetZ());
+                    widthSet = true;
+                }
             }
         }
         catch (const StatusCodeException &)
@@ -270,34 +275,42 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "straightLineLength" + hitTypeLabel, straightLineLength));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "integratedPathLength" + hitTypeLabel, integratedPathLength));
 
-        float &straightLineLength10((TPC_VIEW_U == hitType) ? straightLineLength10U : (TPC_VIEW_V == hitType) ? straightLineLength10V : straightLineLength10W);
-        float &integratedPathLength10((TPC_VIEW_U == hitType) ? integratedPathLength10U : (TPC_VIEW_V == hitType) ? integratedPathLength10V : integratedPathLength10W);
+        float &widthDirectionX((TPC_VIEW_U == hitType) ? widthDirectionXU : (TPC_VIEW_V == hitType) ? widthDirectionXV : widthDirectionXW);
+        float &widthDirectionZ((TPC_VIEW_U == hitType) ? widthDirectionZU : (TPC_VIEW_V == hitType) ? widthDirectionZV : widthDirectionZW);
 
-        try
+        widthDirectionX = widthSet ? maxXDir - minXDir : -1.f;
+        widthDirectionZ = widthSet ? maxZDir - minZDir : -1.f;
+
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionX" + hitTypeLabel, widthDirectionX));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionZ" + hitTypeLabel, widthDirectionZ));
+
+        // hit positions and energy
+        FloatVector &xPositions((TPC_VIEW_U == hitType) ? xPositionsU : (TPC_VIEW_V == hitType) ? xPositionsV : xPositionsW);
+        FloatVector &zPositions((TPC_VIEW_U == hitType) ? zPositionsU : (TPC_VIEW_V == hitType) ? zPositionsV : zPositionsW);
+        float &mipEnergy((TPC_VIEW_U == hitType) ? mipEnergyU : (TPC_VIEW_V == hitType) ? mipEnergyV : mipEnergyW);
+        int &nHitsOutsideLimits((TPC_VIEW_U == hitType) ? nHitsOutsideLimitsU : (TPC_VIEW_V == hitType) ?  nHitsOutsideLimitsV : nHitsOutsideLimitsW);
+
+        CaloHitList clusterHitList;
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);
+
+        for (const CaloHit *const pCaloHit : clusterHitList)
         {
-            const TwoDSlidingFitResult slidingFitResult(pCluster, 10, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-            const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
-            const CartesianVector globalMaxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
-            straightLineLength10 = (globalMaxLayerPosition - globalMinLayerPosition).GetMagnitude();
+            xPositions.push_back(pCaloHit->GetPositionVector().GetX());
+            zPositions.push_back(pCaloHit->GetPositionVector().GetZ());
+            mipEnergy += pCaloHit->GetMipEquivalentEnergy();
 
-            integratedPathLength10 = 0.f;
-            CartesianVector previousFitPosition(globalMinLayerPosition);
-            const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
-
-            for (const auto &mapEntry : layerFitResultMap)
+            if (slidingFitSuccess &&
+               ((pCaloHit->GetPositionVector().GetX() < xMin) || (pCaloHit->GetPositionVector().GetX() > xMax) ||
+                (pCaloHit->GetPositionVector().GetZ() < zMin) || (pCaloHit->GetPositionVector().GetX() > zMax)) )
             {
-                CartesianVector thisFitPosition(0.f, 0.f, 0.f);
-                slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
-                integratedPathLength10 += (thisFitPosition - previousFitPosition).GetMagnitude();
-                previousFitPosition = thisFitPosition;
+                ++nHitsOutsideLimits;
             }
         }
-        catch (const StatusCodeException &)
-        {
-        }
 
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "straightLineLength10" + hitTypeLabel, straightLineLength10));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "integratedPathLength10" + hitTypeLabel, integratedPathLength10));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xPositions" + hitTypeLabel, &xPositions));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zPositions" + hitTypeLabel, &zPositions));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mipEnergy" + hitTypeLabel, mipEnergy));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsOutsideLimits" + hitTypeLabel, nHitsOutsideLimits));
 
         // shower fit width and gap length
         float &showerFitWidth((TPC_VIEW_U == hitType) ? showerFitWidthU : (TPC_VIEW_V == hitType) ? showerFitWidthV : showerFitWidthW);
@@ -430,6 +443,9 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
             return false;
 
         if (showerFitWidthW / straightLineLengthW > 0.2f)
+            return false;
+
+        if (widthDirectionXW / straightLineLengthW > 0.04f)
             return false;
     }
     else

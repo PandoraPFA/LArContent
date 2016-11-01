@@ -134,26 +134,15 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vertexDistance", vertexDistance));
 
-    // hit positions and energy
-    FloatVector xPositions, zPositions;
-    float mipEnergy(0.f);
-
-    CaloHitList caloHitList;
-    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        xPositions.push_back(pCaloHit->GetPositionVector().GetX());
-        zPositions.push_back(pCaloHit->GetPositionVector().GetZ());
-        mipEnergy += pCaloHit->GetMipEquivalentEnergy();
-    }
-
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xPositions", &xPositions));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zPositions", &zPositions));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mipEnergy", mipEnergy));
-
     // straight line length and integrated pathlength
     float straightLineLength(-1.f), integratedPathLength(-1.f);
+
+    bool slidingFitSuccess(false);
+    float xMin(0.f), xMax(0.f), zMin(0.f), zMax(0.f);
+
+    bool widthSet(false);
+    float minXDir(+std::numeric_limits<float>::max()), minZDir(+std::numeric_limits<float>::max());
+    float maxXDir(-std::numeric_limits<float>::max()), maxZDir(-std::numeric_limits<float>::max());
 
     try
     {
@@ -161,6 +150,12 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
         const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
         const CartesianVector globalMaxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
         straightLineLength = (globalMaxLayerPosition - globalMinLayerPosition).GetMagnitude();
+
+        slidingFitSuccess = true;
+        xMin = std::min(globalMinLayerPosition.GetX(), globalMaxLayerPosition.GetX());
+        xMax = std::max(globalMinLayerPosition.GetX(), globalMaxLayerPosition.GetX());
+        zMin = std::min(globalMinLayerPosition.GetZ(), globalMaxLayerPosition.GetZ());
+        zMax = std::max(globalMinLayerPosition.GetZ(), globalMaxLayerPosition.GetZ());
 
         integratedPathLength = 0.f;
         CartesianVector previousFitPosition(globalMinLayerPosition);
@@ -172,6 +167,16 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
             slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
             integratedPathLength += (thisFitPosition - previousFitPosition).GetMagnitude();
             previousFitPosition = thisFitPosition;
+
+            CartesianVector thisFitDirection(0.f, 0.f, 0.f);
+            if (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitDirection(mapEntry.second.GetL(), thisFitDirection))
+            {
+                minXDir = std::min(minXDir, thisFitDirection.GetX());
+                maxXDir = std::max(maxXDir, thisFitDirection.GetX());
+                minZDir = std::min(minZDir, thisFitDirection.GetZ());
+                maxZDir = std::max(maxZDir, thisFitDirection.GetZ());
+                widthSet = true;
+            }
         }
     }
     catch (const StatusCodeException &)
@@ -181,33 +186,38 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "straightLineLength", straightLineLength));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "integratedPathLength", integratedPathLength));
 
-    float straightLineLength10(-1.f), integratedPathLength10(-1.f);
+    const float widthDirectionX = widthSet ? maxXDir - minXDir : -1.f;
+    const float widthDirectionZ = widthSet ? maxZDir - minZDir : -1.f;
 
-    try
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionX", widthDirectionX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionZ", widthDirectionZ));
+
+    // hit positions and energy
+    FloatVector xPositions, zPositions;
+    float mipEnergy(0.f);
+    int nHitsOutsideLimits(0);
+
+    CaloHitList caloHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    for (const CaloHit *const pCaloHit : caloHitList)
     {
-        const TwoDSlidingFitResult slidingFitResult(pCluster, 10, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
-        const CartesianVector globalMaxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
-        straightLineLength10 = (globalMaxLayerPosition - globalMinLayerPosition).GetMagnitude();
+        xPositions.push_back(pCaloHit->GetPositionVector().GetX());
+        zPositions.push_back(pCaloHit->GetPositionVector().GetZ());
+        mipEnergy += pCaloHit->GetMipEquivalentEnergy();
 
-        integratedPathLength10 = 0.f;
-        CartesianVector previousFitPosition(globalMinLayerPosition);
-        const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
-
-        for (const auto &mapEntry : layerFitResultMap)
+        if (slidingFitSuccess &&
+           ((pCaloHit->GetPositionVector().GetX() < xMin) || (pCaloHit->GetPositionVector().GetX() > xMax) ||
+            (pCaloHit->GetPositionVector().GetZ() < zMin) || (pCaloHit->GetPositionVector().GetX() > zMax)) )
         {
-            CartesianVector thisFitPosition(0.f, 0.f, 0.f);
-            slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
-            integratedPathLength10 += (thisFitPosition - previousFitPosition).GetMagnitude();
-            previousFitPosition = thisFitPosition;
+            ++nHitsOutsideLimits;
         }
     }
-    catch (const StatusCodeException &)
-    {
-    }
 
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "straightLineLength10", straightLineLength10));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "integratedPathLength10", integratedPathLength10));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xPositions", &xPositions));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zPositions", &zPositions));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mipEnergy", mipEnergy));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsOutsideLimits", nHitsOutsideLimits));
 
     // shower fit width and gap length
     float showerFitWidth(-1.f), showerFitGapLength(-1.f);
