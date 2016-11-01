@@ -25,6 +25,7 @@ namespace lar_content
 
 PfoCharacterisationAlgorithm::PfoCharacterisationAlgorithm() :
     m_updateClusterIds(true),
+    m_postBranchAddition(false),
     m_writeToTree(false)
 {
 }
@@ -420,23 +421,37 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     if (straightLineLengthW > 80.f)
         return true;
 
-    if (vertexDistanceW / straightLineLengthW > 0.4f)
-        return false;
+    if (m_postBranchAddition)
+    {
+        if (vertexDistanceW / straightLineLengthW > 2.2f)
+            return false;
 
-    if (nPointsOfContactW > 4)
-        return false;
+        if (integratedPathLengthW / straightLineLengthW > 1.1f)
+            return false;
 
-    if (0 == nHitsW)
-        return false;
+        if (showerFitWidthW / straightLineLengthW > 0.2f)
+            return false;
+    }
+    else
+    {
+        if (vertexDistanceW / straightLineLengthW > 0.4f)
+            return false;
 
-    if (static_cast<float>(nHitsInBranchesW) / static_cast<float>(nHitsW) > 5.f)
-        return false;
+        if (nPointsOfContactW > 4)
+            return false;
 
-    if (integratedPathLengthW / straightLineLengthW > 1.3f)
-        return false;
+        if (0 == nHitsW)
+            return false;
 
-    if (showerFitWidthW / straightLineLengthW > 1.7f)
-        return false;
+        if (static_cast<float>(nHitsInBranchesW) / static_cast<float>(nHitsW) > 5.f)
+            return false;
+
+        if (integratedPathLengthW / straightLineLengthW > 1.3f)
+            return false;
+
+        if (showerFitWidthW / straightLineLengthW > 1.7f)
+            return false;
+    }
 
     return true;
 }
@@ -457,6 +472,9 @@ StatusCode PfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UpdateClusterIds", m_updateClusterIds));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PostBranchAddition", m_postBranchAddition));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "WriteToTree", m_writeToTree));

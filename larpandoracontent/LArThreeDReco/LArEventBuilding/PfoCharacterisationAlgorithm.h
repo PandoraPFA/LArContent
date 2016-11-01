@@ -60,7 +60,8 @@ private:
     std::string             m_clusterListNameV;         ///< The v cluster list name
     std::string             m_clusterListNameW;         ///< The w cluster list name
 
-    bool                    m_updateClusterIds;         ///< Whether to update daughter cluster particle id labels to match pfo id.
+    bool                    m_updateClusterIds;         ///< Whether to update daughter cluster particle id labels to match pfo id
+    bool                    m_postBranchAddition;       ///< Whether to use configuration for shower clusters post branch addition
 
     bool                    m_writeToTree;              ///< Whether to write monitoring details to tree
     std::string             m_treeName;                 ///< Name of output tree
