@@ -179,6 +179,21 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     float widthDirectionXU(-1.f), widthDirectionXV(-1.f), widthDirectionXW(-1.f);
     float widthDirectionZU(-1.f), widthDirectionZV(-1.f), widthDirectionZW(-1.f);
 
+    float rTWidthU(-1.f), rTWidthV(-1.f), rTWidthW(-1.f);
+    float rLWidthU(-1.f), rLWidthV(-1.f), rLWidthW(-1.f);
+    float dTdLWidthU(-1.f), dTdLWidthV(-1.f), dTdLWidthW(-1.f);
+    float rmsWidthU(-1.f), rmsWidthV(-1.f), rmsWidthW(-1.f);
+
+    float rTMeanU(0.f), rTMeanV(0.f), rTMeanW(0.f);
+    float rLMeanU(0.f), rLMeanV(0.f), rLMeanW(0.f);
+    float dTdLMeanU(0.f), dTdLMeanV(0.f), dTdLMeanW(0.f);
+    float rmsMeanU(0.f), rmsMeanV(0.f), rmsMeanW(0.f);
+
+    float rTSigmaU(0.f), rTSigmaV(0.f), rTSigmaW(0.f);
+    float rLSigmaU(0.f), rLSigmaV(0.f), rLSigmaW(0.f);
+    float dTdLSigmaU(0.f), dTdLSigmaV(0.f), dTdLSigmaW(0.f);
+    float rmsSigmaU(0.f), rmsSigmaV(0.f), rmsSigmaW(0.f);
+
     float showerFitWidthU(-1.f), showerFitWidthV(-1.f), showerFitWidthW(-1.f);
     float showerFitGapLengthU(-1.f), showerFitGapLengthV(-1.f), showerFitGapLengthW(-1.f);
 
@@ -232,6 +247,9 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
         bool widthSet(false);
         float minXDir(+std::numeric_limits<float>::max()), minZDir(+std::numeric_limits<float>::max());
         float maxXDir(-std::numeric_limits<float>::max()), maxZDir(-std::numeric_limits<float>::max());
+        float rLMin(+std::numeric_limits<float>::max()), rTMin(+std::numeric_limits<float>::max()), dTdLMin(+std::numeric_limits<float>::max()), rmsMin(+std::numeric_limits<float>::max());
+        float rLMax(-std::numeric_limits<float>::max()), rTMax(-std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max()), rmsMax(-std::numeric_limits<float>::max());
+        FloatVector rLVector, rTVector, dTdLVector, rmsVector;
 
         try
         {
@@ -252,6 +270,21 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
             for (const auto &mapEntry : layerFitResultMap)
             {
+                rLMin = std::min(rLMin, static_cast<float>(mapEntry.second.GetL()));
+                rLMax = std::max(rLMax, static_cast<float>(mapEntry.second.GetL()));
+                rTMin = std::min(rTMin, static_cast<float>(mapEntry.second.GetFitT()));
+                rTMax = std::max(rTMax, static_cast<float>(mapEntry.second.GetFitT()));
+
+                dTdLMin = std::min(dTdLMin, static_cast<float>(mapEntry.second.GetGradient()));
+                dTdLMax = std::max(dTdLMax, static_cast<float>(mapEntry.second.GetGradient()));
+                rmsMin = std::min(rmsMin, static_cast<float>(mapEntry.second.GetRms()));
+                rmsMax = std::max(rmsMax, static_cast<float>(mapEntry.second.GetRms()));
+
+                rTVector.push_back(mapEntry.second.GetFitT());
+                rLVector.push_back(mapEntry.second.GetL());
+                dTdLVector.push_back(mapEntry.second.GetGradient());
+                rmsVector.push_back(mapEntry.second.GetRms());
+
                 CartesianVector thisFitPosition(0.f, 0.f, 0.f);
                 slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
                 integratedPathLength += (thisFitPosition - previousFitPosition).GetMagnitude();
@@ -283,6 +316,61 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionX" + hitTypeLabel, widthDirectionX));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionZ" + hitTypeLabel, widthDirectionZ));
+
+        float &rLWidth((TPC_VIEW_U == hitType) ? rLWidthU : (TPC_VIEW_V == hitType) ? rLWidthV : rLWidthW);
+        float &rTWidth((TPC_VIEW_U == hitType) ? rTWidthU : (TPC_VIEW_V == hitType) ? rTWidthV : rTWidthW);
+        float &dTdLWidth((TPC_VIEW_U == hitType) ? dTdLWidthU : (TPC_VIEW_V == hitType) ? dTdLWidthV : dTdLWidthW);
+        float &rmsWidth((TPC_VIEW_U == hitType) ? rmsWidthU : (TPC_VIEW_V == hitType) ? rmsWidthV : rmsWidthW);
+
+        rLWidth = slidingFitSuccess ? rLMax - rLMin : -1.f;
+        rTWidth = slidingFitSuccess ? rTMax - rTMin : -1.f;
+        dTdLWidth = slidingFitSuccess ? dTdLMax - dTdLMin : -1.f;
+        rmsWidth = slidingFitSuccess ? rmsMax - rmsMin : -1.f;
+
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rLWidth" + hitTypeLabel, rLWidth));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rTWidth" + hitTypeLabel, rTWidth));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "dTdLWidth" + hitTypeLabel, dTdLWidth));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rmsWidth" + hitTypeLabel, rmsWidth));
+
+        float &rLMean((TPC_VIEW_U == hitType) ? rLMeanU : (TPC_VIEW_V == hitType) ? rLMeanV : rLMeanW);
+        float &rTMean((TPC_VIEW_U == hitType) ? rTMeanU : (TPC_VIEW_V == hitType) ? rTMeanV : rTMeanW);
+        float &dTdLMean((TPC_VIEW_U == hitType) ? dTdLMeanU : (TPC_VIEW_V == hitType) ? dTdLMeanV : dTdLMeanW);
+        float &rmsMean((TPC_VIEW_U == hitType) ? rmsMeanU : (TPC_VIEW_V == hitType) ? rmsMeanV : rmsMeanW);
+
+        for (const float value : rLVector) rLMean += value;
+        for (const float value : rTVector) rTMean += value;
+        for (const float value : dTdLVector) dTdLMean += value;
+        for (const float value : rmsVector) rmsMean += value;
+
+        rLMean = !rLVector.empty() ? std::fabs(rLMean) / static_cast<float>(rLVector.size()) : -1.f;
+        rTMean = !rTVector.empty() ? std::fabs(rTMean) / static_cast<float>(rTVector.size()) : -1.f;
+        dTdLMean = !dTdLVector.empty() ? std::fabs(dTdLMean) / static_cast<float>(dTdLVector.size()) : -1.f;
+        rmsMean = !rmsVector.empty() ? std::fabs(rmsMean) / static_cast<float>(rmsVector.size()) : -1.f;
+
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rLMean" + hitTypeLabel, rLMean));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rTMean" + hitTypeLabel, rTMean));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "dTdLMean" + hitTypeLabel, dTdLMean));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rmsMean" + hitTypeLabel, rmsMean));
+
+        float &rLSigma((TPC_VIEW_U == hitType) ? rLSigmaU : (TPC_VIEW_V == hitType) ? rLSigmaV : rLSigmaW);
+        float &rTSigma((TPC_VIEW_U == hitType) ? rTSigmaU : (TPC_VIEW_V == hitType) ? rTSigmaV : rTSigmaW);
+        float &dTdLSigma((TPC_VIEW_U == hitType) ? dTdLSigmaU : (TPC_VIEW_V == hitType) ? dTdLSigmaV : dTdLSigmaW);
+        float &rmsSigma((TPC_VIEW_U == hitType) ? rmsSigmaU : (TPC_VIEW_V == hitType) ? rmsSigmaV : rmsSigmaW);
+
+        for (const float value : rLVector) rLSigma += (value - rLMean) * (value - rLMean);
+        for (const float value : rTVector) rTSigma += (value - rTMean) * (value - rTMean);
+        for (const float value : dTdLVector) dTdLSigma += (value - dTdLMean) * (value - dTdLMean);
+        for (const float value : rmsVector) rmsSigma += (value - rmsMean) * (value - rmsMean);
+
+        rLSigma = !rLVector.empty() ? std::sqrt(rLSigma / static_cast<float>(rLVector.size())) : -1.f;
+        rTSigma = !rTVector.empty() ? std::sqrt(rTSigma / static_cast<float>(rTVector.size())) : -1.f;
+        dTdLSigma = !dTdLVector.empty() ? std::sqrt(dTdLSigma / static_cast<float>(dTdLVector.size())) : -1.f;
+        rmsSigma = !rmsVector.empty() ? std::sqrt(rmsSigma / static_cast<float>(rmsVector.size())) : -1.f;
+
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rLSigma" + hitTypeLabel, rLSigma));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rTSigma" + hitTypeLabel, rTSigma));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "dTdLSigma" + hitTypeLabel, dTdLSigma));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rmsSigma" + hitTypeLabel, rmsSigma));
 
         // hit positions and energy
         FloatVector &xPositions((TPC_VIEW_U == hitType) ? xPositionsU : (TPC_VIEW_V == hitType) ? xPositionsV : xPositionsW);
@@ -450,22 +538,16 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     }
     else
     {
-        if (vertexDistanceW / straightLineLengthW > 0.4f)
+        if (showerFitWidthW / straightLineLengthW > 0.15f)
             return false;
 
-        if (nPointsOfContactW > 4)
+        if (vertexDistanceW / straightLineLengthW > 1.5f)
             return false;
 
-        if (0 == nHitsW)
+        if (nPointsOfContactW > 2)
             return false;
 
-        if (static_cast<float>(nHitsInBranchesW) / static_cast<float>(nHitsW) > 5.f)
-            return false;
-
-        if (integratedPathLengthW / straightLineLengthW > 1.3f)
-            return false;
-
-        if (showerFitWidthW / straightLineLengthW > 1.7f)
+        if (dTdLWidthW / straightLineLengthW > 0.015f)
             return false;
     }
 

@@ -143,6 +143,9 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     bool widthSet(false);
     float minXDir(+std::numeric_limits<float>::max()), minZDir(+std::numeric_limits<float>::max());
     float maxXDir(-std::numeric_limits<float>::max()), maxZDir(-std::numeric_limits<float>::max());
+    float rLMin(+std::numeric_limits<float>::max()), rTMin(+std::numeric_limits<float>::max()), dTdLMin(+std::numeric_limits<float>::max()), rmsMin(+std::numeric_limits<float>::max());
+    float rLMax(-std::numeric_limits<float>::max()), rTMax(-std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max()), rmsMax(-std::numeric_limits<float>::max());
+    FloatVector rLVector, rTVector, dTdLVector, rmsVector;
 
     try
     {
@@ -163,6 +166,21 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
         for (const auto &mapEntry : layerFitResultMap)
         {
+            rLMin = std::min(rLMin, static_cast<float>(mapEntry.second.GetL()));
+            rLMax = std::max(rLMax, static_cast<float>(mapEntry.second.GetL()));
+            rTMin = std::min(rTMin, static_cast<float>(mapEntry.second.GetFitT()));
+            rTMax = std::max(rTMax, static_cast<float>(mapEntry.second.GetFitT()));
+
+            dTdLMin = std::min(dTdLMin, static_cast<float>(mapEntry.second.GetGradient()));
+            dTdLMax = std::max(dTdLMax, static_cast<float>(mapEntry.second.GetGradient()));
+            rmsMin = std::min(rmsMin, static_cast<float>(mapEntry.second.GetRms()));
+            rmsMax = std::max(rmsMax, static_cast<float>(mapEntry.second.GetRms()));
+
+            rTVector.push_back(mapEntry.second.GetFitT());
+            rLVector.push_back(mapEntry.second.GetL());
+            dTdLVector.push_back(mapEntry.second.GetGradient());
+            rmsVector.push_back(mapEntry.second.GetRms());
+
             CartesianVector thisFitPosition(0.f, 0.f, 0.f);
             slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
             integratedPathLength += (thisFitPosition - previousFitPosition).GetMagnitude();
@@ -191,6 +209,48 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionX", widthDirectionX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "widthDirectionZ", widthDirectionZ));
+
+    const float rLWidth = slidingFitSuccess ? rLMax - rLMin : -1.f;
+    const float rTWidth = slidingFitSuccess ? rTMax - rTMin : -1.f;
+    const float dTdLWidth = slidingFitSuccess ? dTdLMax - dTdLMin : -1.f;
+    const float rmsWidth = slidingFitSuccess ? rmsMax - rmsMin : -1.f;
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rLWidth", rLWidth));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rTWidth", rTWidth));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "dTdLWidth", dTdLWidth));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rmsWidth", rmsWidth));
+
+    float rLMean(0.f), rTMean(0.f), dTdLMean(0.f), rmsMean(0.f);
+    for (const float value : rLVector) rLMean += value;
+    for (const float value : rTVector) rTMean += value;
+    for (const float value : dTdLVector) dTdLMean += value;
+    for (const float value : rmsVector) rmsMean += value;
+
+    rLMean = !rLVector.empty() ? std::fabs(rLMean) / static_cast<float>(rLVector.size()) : -1.f;
+    rTMean = !rTVector.empty() ? std::fabs(rTMean) / static_cast<float>(rTVector.size()) : -1.f;
+    dTdLMean = !dTdLVector.empty() ? std::fabs(dTdLMean) / static_cast<float>(dTdLVector.size()) : -1.f;
+    rmsMean = !rmsVector.empty() ? std::fabs(rmsMean) / static_cast<float>(rmsVector.size()) : -1.f;
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rLMean", rLMean));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rTMean", rTMean));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "dTdLMean", dTdLMean));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rmsMean", rmsMean));
+
+    float rLSigma(0.f), rTSigma(0.f), dTdLSigma(0.f), rmsSigma(0.f);
+    for (const float value : rLVector) rLSigma += (value - rLMean) * (value - rLMean);
+    for (const float value : rTVector) rTSigma += (value - rTMean) * (value - rTMean);
+    for (const float value : dTdLVector) dTdLSigma += (value - dTdLMean) * (value - dTdLMean);
+    for (const float value : rmsVector) rmsSigma += (value - rmsMean) * (value - rmsMean);
+
+    rLSigma = !rLVector.empty() ? std::sqrt(rLSigma / static_cast<float>(rLVector.size())) : -1.f;
+    rTSigma = !rTVector.empty() ? std::sqrt(rTSigma / static_cast<float>(rTVector.size())) : -1.f;
+    dTdLSigma = !dTdLVector.empty() ? std::sqrt(dTdLSigma / static_cast<float>(dTdLVector.size())) : -1.f;
+    rmsSigma = !rmsVector.empty() ? std::sqrt(rmsSigma / static_cast<float>(rmsVector.size())) : -1.f;
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rLSigma", rLSigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rTSigma", rTSigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "dTdLSigma", dTdLSigma));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rmsSigma", rmsSigma));
 
     // hit positions and energy
     FloatVector xPositions, zPositions;
@@ -335,22 +395,19 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     if (straightLineLength > 80.f)
         return true;
 
-    if (vertexDistance / straightLineLength > 0.4f)
+    if (vertexDistance / straightLineLength > 0.5f)
         return false;
 
-    if (nPointsOfContact > 4)
+    if (showerFitWidth / straightLineLength < 0.f)
         return false;
 
-    if (0 == nHits)
+    if (showerFitWidth / straightLineLength > 0.35f)
         return false;
 
-    if (static_cast<float>(nHitsInBranches) / static_cast<float>(nHits) > 5.f)
+    if (rTWidth / straightLineLength > 0.05f)
         return false;
 
-    if (widthDirectionX / straightLineLength > 0.08f)
-        return false;
-
-    if (showerFitWidth / straightLineLength > 0.6f)
+    if (integratedPathLength / straightLineLength > 1.005f)
         return false;
 
     return true;
