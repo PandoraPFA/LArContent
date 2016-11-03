@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/PfoCharacterisationAlgorithm.h
+ *  @file   larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.h
  * 
  *  @brief  Header file for the pfo characterisation algorithm class.
  * 
@@ -8,7 +8,7 @@
 #ifndef LAR_PFO_CHARACTERISATION_ALGORITHM_H
 #define LAR_PFO_CHARACTERISATION_ALGORITHM_H 1
 
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 
 namespace lar_content
 {

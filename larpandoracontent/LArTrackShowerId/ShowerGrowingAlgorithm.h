@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h
+ *  @file   larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h
  * 
  *  @brief  Header file for the shower growing algorithm class.
  * 
@@ -14,7 +14,7 @@
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.h"
 
 #include <unordered_map>
 
@@ -24,7 +24,7 @@ namespace lar_content
 /**
  *  @brief  ShowerGrowingAlgorithm class
  */
-class ShowerGrowingAlgorithm : public SeedGrowingAlgorithm
+class ShowerGrowingAlgorithm : public BranchGrowingAlgorithm
 {
 public:
     /**

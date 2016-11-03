@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.cc
+ *  @file   larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.cc
  *
  *  @brief  Implementation of the cluster characterisation algorithm class.
  *
@@ -15,7 +15,7 @@
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
 
 using namespace pandora;
 

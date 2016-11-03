@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.cc
  * 
  *  @brief  Implementation of the shower growing algorithm class.
  * 
@@ -15,7 +15,7 @@
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 
 using namespace pandora;
 
@@ -461,7 +461,7 @@ StatusCode ShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexAngularAllowance", m_vertexAngularAllowance));
 
-    return SeedGrowingAlgorithm::ReadSettings(xmlHandle);
+    return BranchGrowingAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

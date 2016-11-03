@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeReco/LArEventBuilding/PfoCharacterisationAlgorithm.cc
+ *  @file   larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.cc
  * 
  *  @brief  Implementation of the pfo characterisation algorithm class.
  * 
@@ -16,7 +16,7 @@
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArEventBuilding/PfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.h"
 
 using namespace pandora;
 

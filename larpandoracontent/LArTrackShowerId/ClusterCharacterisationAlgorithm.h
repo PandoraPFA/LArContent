@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h
+ *  @file   larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h
  *
  *  @brief  Header file for the cluster characterisation algorithm class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H
 #define LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H 1
 
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 
 namespace lar_content
 {

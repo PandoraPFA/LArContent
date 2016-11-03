@@ -52,7 +52,6 @@
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArEventBuilding/PfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h"
@@ -92,6 +91,10 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
+#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
+
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h"
@@ -120,8 +123,6 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/OvershootSplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/ShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 #include "larpandoracontent/LArUtility/ListChangingAlgorithm.h"
@@ -167,7 +168,6 @@ public:
         d("LArNeutrinoCreation",                    lar_content::NeutrinoCreationAlgorithm::Factory)                            \
         d("LArNeutrinoDaughterVertices",            lar_content::NeutrinoDaughterVerticesAlgorithm::Factory)                    \
         d("LArNeutrinoHierarchy",                   lar_content::NeutrinoHierarchyAlgorithm::Factory)                           \
-        d("LArPfoCharacterisation",                 lar_content::PfoCharacterisationAlgorithm::Factory)                         \
         d("LArNeutrinoProperties",                  lar_content::NeutrinoPropertiesAlgorithm::Factory)                          \
         d("LArDeltaRayIdentification",              lar_content::DeltaRayIdentificationAlgorithm::Factory)                      \
         d("LArDeltaRayMatching",                    lar_content::DeltaRayMatchingAlgorithm::Factory)                            \
@@ -182,6 +182,9 @@ public:
         d("LArThreeDShowers",                       lar_content::ThreeDShowersAlgorithm::Factory)                               \
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
         d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
+        d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \
+        d("LArPfoCharacterisation",                 lar_content::PfoCharacterisationAlgorithm::Factory)                         \
+        d("LArShowerGrowing",                       lar_content::ShowerGrowingAlgorithm::Factory)                               \
         d("LArCrossGapsAssociation",                lar_content::CrossGapsAssociationAlgorithm::Factory)                        \
         d("LArCrossGapsExtension",                  lar_content::CrossGapsExtensionAlgorithm::Factory)                          \
         d("LArLongitudinalAssociation",             lar_content::LongitudinalAssociationAlgorithm::Factory)                     \
@@ -210,8 +213,6 @@ public:
         d("LArOvershootSplitting",                  lar_content::OvershootSplittingAlgorithm::Factory)                          \
         d("LArTrackConsolidation",                  lar_content::TrackConsolidationAlgorithm::Factory)                          \
         d("LArVertexSplitting",                     lar_content::VertexSplittingAlgorithm::Factory)                             \
-        d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \
-        d("LArShowerGrowing",                       lar_content::ShowerGrowingAlgorithm::Factory)                               \
         d("LArTwoDParticleCreation",                lar_content::TwoDParticleCreationAlgorithm::Factory)                        \
         d("LArListChanging",                        lar_content::ListChangingAlgorithm::Factory)                                \
         d("LArListDeletion",                        lar_content::ListDeletionAlgorithm::Factory)                                \
