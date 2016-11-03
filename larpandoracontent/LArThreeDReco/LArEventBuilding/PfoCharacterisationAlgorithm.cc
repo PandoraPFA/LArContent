@@ -519,32 +519,32 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     if (straightLineLengthW < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (straightLineLengthW > 80.f)
-        return true;
-
     if (m_postBranchAddition)
     {
-        if (showerFitWidthW / straightLineLengthW > 0.3f)
+        if (straightLineLengthW > 80.f)
+            return true;
+
+        if (showerFitWidthW < 0.f || showerFitWidthW / straightLineLengthW > 0.3f)
             return false;
 
         if (vertexDistanceW / straightLineLengthW > 1.0f)
             return false;
 
-        if (dTdLWidthW / straightLineLengthW > 0.03f)
+        if (dTdLWidthW < 0.f || dTdLWidthW / straightLineLengthW > 0.03f)
             return false;
     }
     else
     {
-        if (showerFitWidthW / straightLineLengthW > 0.15f)
+        if (straightLineLengthW > 40.f && nPointsOfContactW < 4)
+            return true;
+
+        if (showerFitWidthW < 0.f || showerFitWidthW / straightLineLengthW > 0.2f)
             return false;
 
-        if (vertexDistanceW / straightLineLengthW > 1.5f)
+        if (vertexDistanceW / straightLineLengthW > 0.6f)
             return false;
 
-        if (nPointsOfContactW > 2)
-            return false;
-
-        if (dTdLWidthW / straightLineLengthW > 0.015f)
+        if (dTdLWidthW < 0.f || dTdLWidthW / straightLineLengthW > 0.04f)
             return false;
     }
 

@@ -398,16 +398,13 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     if (vertexDistance / straightLineLength > 0.5f)
         return false;
 
-    if (showerFitWidth / straightLineLength < 0.f)
+    if (showerFitWidth < 0.f || showerFitWidth / straightLineLength > 0.35f)
         return false;
 
-    if (showerFitWidth / straightLineLength > 0.35f)
+    if (rTWidth < 0.f || rTWidth / straightLineLength > 0.05f)
         return false;
 
-    if (rTWidth / straightLineLength > 0.05f)
-        return false;
-
-    if (integratedPathLength / straightLineLength > 1.005f)
+    if (integratedPathLength < 0.f || integratedPathLength / straightLineLength > 1.005f)
         return false;
 
     return true;
