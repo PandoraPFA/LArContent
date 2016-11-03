@@ -524,16 +524,13 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
     if (m_postBranchAddition)
     {
-        if (vertexDistanceW / straightLineLengthW > 2.2f)
+        if (showerFitWidthW / straightLineLengthW > 0.3f)
             return false;
 
-        if (integratedPathLengthW / straightLineLengthW > 1.1f)
+        if (vertexDistanceW / straightLineLengthW > 1.0f)
             return false;
 
-        if (showerFitWidthW / straightLineLengthW > 0.2f)
-            return false;
-
-        if (widthDirectionXW / straightLineLengthW > 0.04f)
+        if (dTdLWidthW / straightLineLengthW > 0.03f)
             return false;
     }
     else
