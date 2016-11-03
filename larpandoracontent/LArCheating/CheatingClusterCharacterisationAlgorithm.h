@@ -8,7 +8,7 @@
 #ifndef LAR_CHEATING_CLUSTER_CHARACTERISATION_ALGORITHM_H
 #define LAR_CHEATING_CLUSTER_CHARACTERISATION_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  CheatingClusterCharacterisationAlgorithm class
  */
-class CheatingClusterCharacterisationAlgorithm : public pandora::Algorithm
+class CheatingClusterCharacterisationAlgorithm : public ClusterCharacterisationAlgorithm
 {
 public:
     /**
@@ -28,29 +28,8 @@ public:
         pandora::Algorithm *CreateAlgorithm() const;
     };
 
-    /**
-     *  @brief  Default constructor
-     */
-    CheatingClusterCharacterisationAlgorithm();
-
 private:
-    pandora::StatusCode Run();
-
-    /**
-     *  @brief  Whether cluster is identified as a clear track
-     *
-     *  @param  pCluster address of the relevant cluster
-     * 
-     *  @return boolean
-     */
     bool IsClearTrack(const pandora::Cluster *const pCluster) const;
-
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
-
-    bool                    m_overwriteExistingId;          ///< Whether to consider any clusters that already have an assigned particle id
-    bool                    m_useUnavailableClusters;       ///< Whether to consider clusters that are already constituents of a pfo
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
