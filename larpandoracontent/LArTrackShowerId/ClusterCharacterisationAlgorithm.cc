@@ -86,14 +86,12 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     {
         const TwoDSlidingFitResult slidingFitResult(pCluster, 5, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
-        const CartesianVector globalMaxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
-        straightLineLength = (globalMaxLayerPosition - globalMinLayerPosition).GetMagnitude();
+        straightLineLength = (slidingFitResult.GetGlobalMaxLayerPosition() - globalMinLayerPosition).GetMagnitude();
 
         integratedPathLength = 0.f;
         CartesianVector previousFitPosition(globalMinLayerPosition);
-        const LayerFitResultMap &layerFitResultMap(slidingFitResult.GetLayerFitResultMap());
 
-        for (const auto &mapEntry : layerFitResultMap)
+        for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
         {
             rTMin = std::min(rTMin, static_cast<float>(mapEntry.second.GetFitT()));
             rTMax = std::max(rTMax, static_cast<float>(mapEntry.second.GetFitT()));
@@ -148,7 +146,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
         const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
 
-        if (layerFitResultMapS.size() > 1)
+        if (!layerFitResultMapS.empty())
         {
             showerFitWidth = 0.f;
 
@@ -157,10 +155,8 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
                 LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
                 LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
 
-                if ((layerFitResultMapP.end() == iterP) || (layerFitResultMapN.end() == iterN))
-                    continue;
-
-                showerFitWidth += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
+                if ((layerFitResultMapP.end() != iterP) && (layerFitResultMapN.end() != iterN))
+                    showerFitWidth += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
             }
         }
     }

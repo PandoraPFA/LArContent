@@ -8,7 +8,7 @@
 #ifndef LAR_PFO_CHARACTERISATION_ALGORITHM_H
 #define LAR_PFO_CHARACTERISATION_ALGORITHM_H 1
 
-#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
+#include "Pandora/Algorithm.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  PfoCharacterisationAlgorithm class
  */
-class PfoCharacterisationAlgorithm : public ShowerGrowingAlgorithm
+class PfoCharacterisationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -33,11 +33,6 @@ public:
      */
     PfoCharacterisationAlgorithm();
 
-    /**
-     *  @brief  Destructor
-     */
-    ~PfoCharacterisationAlgorithm();
-
 private:
     pandora::StatusCode Run();
 
@@ -48,7 +43,7 @@ private:
      * 
      *  @return boolean
      */
-    bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
+    virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -56,16 +51,8 @@ private:
     std::string             m_showerPfoListName;        ///< The shower pfo list name
     pandora::StringVector   m_inputPfoListNames;        ///< The names of the input pfo lists
 
-    std::string             m_clusterListNameU;         ///< The u cluster list name
-    std::string             m_clusterListNameV;         ///< The v cluster list name
-    std::string             m_clusterListNameW;         ///< The w cluster list name
-
     bool                    m_updateClusterIds;         ///< Whether to update daughter cluster particle id labels to match pfo id
     bool                    m_postBranchAddition;       ///< Whether to use configuration for shower clusters post branch addition
-
-    bool                    m_writeToTree;              ///< Whether to write monitoring details to tree
-    std::string             m_treeName;                 ///< Name of output tree
-    std::string             m_fileName;                 ///< Name of output file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
