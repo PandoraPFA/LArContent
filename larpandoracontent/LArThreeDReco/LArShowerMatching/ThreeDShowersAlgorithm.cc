@@ -21,6 +21,7 @@ namespace lar_content
 ThreeDShowersAlgorithm::ThreeDShowersAlgorithm() :
     m_nMaxTensorToolRepeats(5000),
     m_slidingFitWindow(20),
+    m_ignoreUnavailableClusters(true),
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f),
     m_minShowerMatchedFraction(0.2f),
