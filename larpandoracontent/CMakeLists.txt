@@ -19,13 +19,13 @@ set( subdir_list LArCheating
 		 LArThreeDReco/LArThreeDBase
 		 LArThreeDReco/LArTrackFragments
 		 LArThreeDReco/LArTransverseTrackMatching
+		 LArTrackShowerId
 		 LArTwoDReco
 		 LArTwoDReco/LArClusterAssociation
 		 LArTwoDReco/LArClusterCreation
 		 LArTwoDReco/LArClusterMopUp
 		 LArTwoDReco/LArClusterSplitting
 		 LArTwoDReco/LArCosmicRay
-		 LArTwoDReco/LArSeedFinding
 		 LArUtility
 		 LArVertex
 )

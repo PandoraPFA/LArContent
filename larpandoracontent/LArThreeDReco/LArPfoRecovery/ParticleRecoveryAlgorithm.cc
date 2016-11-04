@@ -24,8 +24,6 @@ namespace lar_content
 {
 
 ParticleRecoveryAlgorithm::ParticleRecoveryAlgorithm() :
-    m_includeTracks(true),
-    m_includeShowers(true),
     m_checkGaps(true),
     m_minClusterCaloHits(20),
     m_minClusterLengthSquared(5.f * 5.f),
@@ -118,9 +116,6 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
         const Cluster *const pCluster = *iter;
 
         if (!pCluster->IsAvailable())
-            continue;
-
-        if ((!m_includeTracks && (MU_MINUS == std::abs(pCluster->GetParticleId()))) || (!m_includeShowers && (MU_MINUS != std::abs(pCluster->GetParticleId()))))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
@@ -380,7 +375,7 @@ void ParticleRecoveryAlgorithm::CreateTrackParticle(const ClusterList &clusterLi
 
     // TODO Correct these placeholder parameters
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-    pfoParameters.m_particleId = (m_includeTracks ? MU_MINUS : E_MINUS); // ATTN : Need to ensure that PFO code matches PFO list name
+    pfoParameters.m_particleId = MU_MINUS;
     pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
@@ -476,12 +471,6 @@ StatusCode ParticleRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IncludeTracks", m_includeTracks));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IncludeShowers", m_includeShowers));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CheckGaps", m_checkGaps));

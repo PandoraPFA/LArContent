@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.cc
+ *  @file   larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.cc
  * 
- *  @brief  Implementation of the seed growing algorithm base class.
+ *  @brief  Implementation of the branch growing algorithm base class.
  * 
  *  $Log: $
  */
@@ -10,14 +10,14 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-void SeedGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pParticleSeed, ClusterVector &candidateClusters,
+void BranchGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pParticleSeed, ClusterVector &candidateClusters,
     ClusterUsageMap &forwardUsageMap, ClusterUsageMap &backwardUsageMap) const
 {
     ClusterVector currentSeedAssociations, newSeedAssociations;
@@ -70,7 +70,7 @@ void SeedGrowingAlgorithm::FindAssociatedClusters(const Cluster *const pParticle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SeedGrowingAlgorithm::IdentifyClusterMerges(const ClusterVector &particleSeedVector, const ClusterUsageMap &backwardUsageMap,
+void BranchGrowingAlgorithm::IdentifyClusterMerges(const ClusterVector &particleSeedVector, const ClusterUsageMap &backwardUsageMap,
     SeedAssociationList &seedAssociationList) const
 {
     ClusterVector sortedCandidates;
@@ -132,7 +132,7 @@ void SeedGrowingAlgorithm::IdentifyClusterMerges(const ClusterVector &particleSe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode SeedGrowingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode BranchGrowingAlgorithm::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }

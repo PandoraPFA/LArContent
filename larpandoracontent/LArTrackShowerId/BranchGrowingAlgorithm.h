@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h
+ *  @file   larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.h
  * 
- *  @brief  Header file for the seed growing algorithm base class.
+ *  @brief  Header file for the branch growing algorithm base class.
  * 
  *  $Log: $
  */
-#ifndef LAR_SEED_GROWING_ALGORITHM_H
-#define LAR_SEED_GROWING_ALGORITHM_H 1
+#ifndef LAR_BRANCH_GROWING_ALGORITHM_H
+#define LAR_BRANCH_GROWING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -16,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  SeedGrowingAlgorithm class
+ *  @brief  BranchGrowingAlgorithm class
  */
-class SeedGrowingAlgorithm : public pandora::Algorithm
+class BranchGrowingAlgorithm : public pandora::Algorithm
 {
 protected:
     /**
@@ -126,7 +126,7 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SeedGrowingAlgorithm::Association::Association() :
+inline BranchGrowingAlgorithm::Association::Association() :
     m_order(std::numeric_limits<unsigned int>::max()),
     m_type(NONE)
 {
@@ -134,7 +134,7 @@ inline SeedGrowingAlgorithm::Association::Association() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SeedGrowingAlgorithm::Association::Association(const unsigned int order, const AssociationType type) :
+inline BranchGrowingAlgorithm::Association::Association(const unsigned int order, const AssociationType type) :
     m_order(order),
     m_type(type)
 {
@@ -142,32 +142,32 @@ inline SeedGrowingAlgorithm::Association::Association(const unsigned int order, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void SeedGrowingAlgorithm::Association::SetOrder(const unsigned int order)
+inline void BranchGrowingAlgorithm::Association::SetOrder(const unsigned int order)
 {
     m_order = order;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void SeedGrowingAlgorithm::Association::SetType(const AssociationType associationType)
+inline void BranchGrowingAlgorithm::Association::SetType(const AssociationType associationType)
 {
     m_type = associationType;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline unsigned int SeedGrowingAlgorithm::Association::GetOrder() const
+inline unsigned int BranchGrowingAlgorithm::Association::GetOrder() const
 {
     return m_order;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SeedGrowingAlgorithm::AssociationType SeedGrowingAlgorithm::Association::GetType() const
+inline BranchGrowingAlgorithm::AssociationType BranchGrowingAlgorithm::Association::GetType() const
 {
     return m_type;
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_SEED_GROWING_ALGORITHM_H
+#endif // #ifndef LAR_BRANCH_GROWING_ALGORITHM_H

@@ -186,8 +186,6 @@ private:
     pandora::StringVector       m_inputClusterListNames;        ///< The list of cluster list names
     std::string                 m_outputPfoListName;            ///< The output pfo list name
 
-    bool                        m_includeTracks;                ///< Whether to include fixed tracks in selected cluster list
-    bool                        m_includeShowers;               ///< Whether to include clusters not fixed as tracks in selected cluster list
     bool                        m_checkGaps;                    ///< Whether to check for gaps in the calculation of the overlap
 
     unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
