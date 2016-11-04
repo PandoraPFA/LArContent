@@ -25,7 +25,13 @@ namespace lar_content
 
 PfoCharacterisationAlgorithm::PfoCharacterisationAlgorithm() :
     m_updateClusterIds(true),
-    m_postBranchAddition(false)
+    m_postBranchAddition(false),
+    m_slidingFitWindow(5),
+    m_slidingShowerFitWindow(10),
+    m_maxShowerLengthCut(40.f),
+    m_dTdLWidthRatioCut(0.045f),
+    m_vertexDistanceRatioCut(0.6f),
+    m_showerWidthRatioCut(0.2f)
 {
 }
 
@@ -123,11 +129,6 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     if (!pCluster)
         return false;
 
-    const float straightLineLengthCut(m_postBranchAddition ? 80.f : 40.f);
-    const float dTdLWidthCut(m_postBranchAddition ? 0.030f : 0.045f);
-    const float vertexDistanceCut(m_postBranchAddition ? 1.0f : 0.6f);
-    const float showerFitWidthCut(m_postBranchAddition ? 0.3f : 0.2f);
-
     // Quantities related to sliding linear fit
     float straightLineLength(-1.f);
     float dTdLMin(+std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max());
@@ -150,12 +151,10 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     if (straightLineLength < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (straightLineLength > straightLineLengthCut)
+    if (straightLineLength > m_maxShowerLengthCut)
         return true;
 
-    const float dTdLWidth(dTdLMax - dTdLMin);
-
-    if (dTdLWidth / straightLineLength > dTdLWidthCut)
+    if ((dTdLMax - dTdLMin) / straightLineLength > m_dTdLWidthRatioCut)
         return false;
 
     // Distance to interaction vertex
@@ -170,7 +169,7 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
         const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
         const float vertexDistance(LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster));
 
-        if (vertexDistance / straightLineLength > vertexDistanceCut)
+        if (vertexDistance / straightLineLength > m_vertexDistanceRatioCut)
             return false;
     }
 
@@ -205,7 +204,7 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     if (showerFitWidth < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (showerFitWidth / straightLineLength > showerFitWidthCut)
+    if (showerFitWidth / straightLineLength > m_showerWidthRatioCut)
         return false;
 
     return true;
@@ -226,6 +225,33 @@ StatusCode PfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PostBranchAddition", m_postBranchAddition));
+
+    // Allow change in default values via a single xml tag, can subsequently override all individual values below, if required
+    if (m_postBranchAddition)
+    {
+        m_maxShowerLengthCut = 80.f;
+        m_dTdLWidthRatioCut = 0.03f;
+        m_vertexDistanceRatioCut = 1.f;
+        m_showerWidthRatioCut = 0.3f;
+    }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitWindow", m_slidingFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingShowerFitWindow", m_slidingShowerFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxShowerLengthCut", m_maxShowerLengthCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DTDLWidthRatioCut", m_dTdLWidthRatioCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexDistanceRatioCut", m_vertexDistanceRatioCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowerWidthRatioCut", m_showerWidthRatioCut));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -23,7 +23,15 @@ namespace lar_content
 
 ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
     m_overwriteExistingId(false),
-    m_useUnavailableClusters(false)
+    m_useUnavailableClusters(false),
+    m_slidingFitWindow(5),
+    m_slidingShowerFitWindow(10),
+    m_minCaloHitsCut(6),
+    m_maxShowerLengthCut(80.f),
+    m_pathLengthRatioCut(1.005f),
+    m_rTWidthRatioCut(0.05f),
+    m_vertexDistanceRatioCut(0.5f),
+    m_showerWidthRatioCut(0.35f)
 {
 }
 
@@ -75,7 +83,7 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
 
 bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
 {
-    if (pCluster->GetNCaloHits() < 6)
+    if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
         return false;
 
     // Quantities related to sliding linear fit
@@ -84,7 +92,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
     try
     {
-        const TwoDSlidingFitResult slidingFitResult(pCluster, 5, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const CartesianVector globalMinLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
         straightLineLength = (slidingFitResult.GetGlobalMaxLayerPosition() - globalMinLayerPosition).GetMagnitude();
 
@@ -109,15 +117,13 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     if (straightLineLength < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (straightLineLength > 80.f)
+    if (straightLineLength > m_maxShowerLengthCut)
         return true;
 
-    if (integratedPathLength / straightLineLength > 1.005f)
+    if (integratedPathLength / straightLineLength > m_pathLengthRatioCut)
         return false;
 
-    const float rTWidth(rTMax - rTMin);
-
-    if (rTWidth / straightLineLength > 0.05f)
+    if ((rTMax - rTMin) / straightLineLength > m_rTWidthRatioCut)
         return false;
 
     // Distance to interaction vertex
@@ -132,7 +138,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
         const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
         const float vertexDistance(LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster));
 
-        if (vertexDistance / straightLineLength > 0.5f)
+        if (vertexDistance / straightLineLength > m_vertexDistanceRatioCut)
             return false;
     }
 
@@ -141,7 +147,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
     try
     {
-        const TwoDSlidingShowerFitResult showerFitResult(pCluster, 10, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingShowerFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
@@ -167,7 +173,7 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     if (showerFitWidth < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (showerFitWidth / straightLineLength > 0.35f)
+    if (showerFitWidth / straightLineLength > m_showerWidthRatioCut)
         return false;
 
     return true;
@@ -185,6 +191,33 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseUnavailableClusters", m_useUnavailableClusters));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseUnavailableClusters", m_useUnavailableClusters));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitWindow", m_slidingFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingShowerFitWindow", m_slidingShowerFitWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCaloHitsCut", m_minCaloHitsCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxShowerLengthCut", m_maxShowerLengthCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PathLengthRatioCut", m_pathLengthRatioCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RTWidthRatioCut", m_rTWidthRatioCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexDistanceRatioCut", m_vertexDistanceRatioCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowerWidthRatioCut", m_showerWidthRatioCut));
 
     return STATUS_CODE_SUCCESS;
 }

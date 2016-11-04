@@ -47,12 +47,19 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_trackPfoListName;         ///< The track pfo list name
-    std::string             m_showerPfoListName;        ///< The shower pfo list name
-    pandora::StringVector   m_inputPfoListNames;        ///< The names of the input pfo lists
+    std::string             m_trackPfoListName;             ///< The track pfo list name
+    std::string             m_showerPfoListName;            ///< The shower pfo list name
+    pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfo lists
 
-    bool                    m_updateClusterIds;         ///< Whether to update daughter cluster particle id labels to match pfo id
-    bool                    m_postBranchAddition;       ///< Whether to use configuration for shower clusters post branch addition
+    bool                    m_updateClusterIds;             ///< Whether to update daughter cluster particle id labels to match pfo id
+    bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
+
+    unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
+    unsigned int            m_slidingShowerFitWindow;       ///< The layer window for the sliding shower fits
+    float                   m_maxShowerLengthCut;           ///< The maximum cluster length to qualify as a shower
+    float                   m_dTdLWidthRatioCut;            ///< The maximum ratio of transverse fit gradient width to straight line length to qualify as a track
+    float                   m_vertexDistanceRatioCut;       ///< The maximum ratio of vertex separation to straight line length to qualify as a track
+    float                   m_showerWidthRatioCut;          ///< The maximum ratio of shower fit width to straight line length to qualify as a track
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
