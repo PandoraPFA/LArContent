@@ -45,6 +45,15 @@ private:
      */
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
 
+    /**
+     *  @brief  Select the cluster to use in order to characterise the pfo
+     *
+     *  @param  pPfo address of the pfo
+     * 
+     *  @return address of the cluster
+     */
+    const pandora::Cluster *SelectCluster(const pandora::ParticleFlowObject *const pPfo) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string             m_trackPfoListName;             ///< The track pfo list name

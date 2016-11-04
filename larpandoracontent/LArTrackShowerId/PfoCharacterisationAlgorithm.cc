@@ -8,14 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
-#include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
+#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.h"
 
 using namespace pandora;
@@ -107,29 +105,11 @@ StatusCode PfoCharacterisationAlgorithm::Run()
 
 bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo) const
 {
-    // TODO, methodise
-    const Cluster *pCluster(nullptr);
-
-    // Prefer w cluster, if available, then u, followed by v
-    for (const HitType hitType : {TPC_VIEW_W, TPC_VIEW_U, TPC_VIEW_V})
-    {
-        ClusterList clusterList;
-        LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
-
-        if (clusterList.size() > 1)
-            return false;
-
-        if (!clusterList.empty())
-        {
-            pCluster = clusterList.front();
-            break;
-        }
-    }
+    const Cluster *pCluster(this->SelectCluster(pPfo));
     
     if (!pCluster)
         return false;
 
-    // Quantities related to sliding linear fit
     float straightLineLength(-1.f);
     float dTdLMin(+std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max());
 
@@ -157,57 +137,36 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
     if ((dTdLMax - dTdLMin) / straightLineLength > m_dTdLWidthRatioCut)
         return false;
 
-    // Distance to interaction vertex
-    const VertexList *pVertexList = nullptr;
-    (void) PandoraContentApi::GetCurrentList(*this, pVertexList);
+    const float vertexDistance(ClusterCharacterisationAlgorithm::GetVertexDistance(this, pCluster));
 
-    if (pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
-    {
-        const Vertex *const pVertex(pVertexList->front());
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-
-        const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-        const float vertexDistance(LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster));
-
-        if (vertexDistance / straightLineLength > m_vertexDistanceRatioCut)
-            return false;
-    }
-
-    // Shower fit width
-    float showerFitWidth(-1.f);
-
-    try
-    {
-        const TwoDSlidingShowerFitResult showerFitResult(pCluster, 10, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());
-        const LayerFitResultMap &layerFitResultMapP(showerFitResult.GetPositiveEdgeFitResult().GetLayerFitResultMap());
-        const LayerFitResultMap &layerFitResultMapN(showerFitResult.GetNegativeEdgeFitResult().GetLayerFitResultMap());
-
-        if (!layerFitResultMapS.empty())
-        {
-            showerFitWidth = 0.f;
-
-            for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
-            {
-                LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
-                LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
-
-                if ((layerFitResultMapP.end() != iterP) && (layerFitResultMapN.end() != iterN))
-                    showerFitWidth += std::fabs(iterP->second.GetFitT() - iterN->second.GetFitT());
-            }
-        }
-    }
-    catch (const StatusCodeException &)
-    {
-    }
-
-    if (showerFitWidth < std::numeric_limits<float>::epsilon())
+    if ((vertexDistance < std::numeric_limits<float>::epsilon()) || ((vertexDistance / straightLineLength) > m_vertexDistanceRatioCut))
         return false;
 
-    if (showerFitWidth / straightLineLength > m_showerWidthRatioCut)
+    const float showerFitWidth(ClusterCharacterisationAlgorithm::GetShowerFitWidth(this, pCluster, m_slidingShowerFitWindow));
+
+    if ((showerFitWidth < std::numeric_limits<float>::epsilon()) || ((showerFitWidth / straightLineLength) > m_showerWidthRatioCut))
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const Cluster *PfoCharacterisationAlgorithm::SelectCluster(const ParticleFlowObject *const pPfo) const
+{
+    for (const HitType hitType : {TPC_VIEW_W, TPC_VIEW_U, TPC_VIEW_V})
+    {
+        ClusterList clusterList;
+        LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
+
+        if (clusterList.size() > 1)
+            return nullptr;
+
+        if (!clusterList.empty())
+            return clusterList.front();
+    }
+
+    return nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

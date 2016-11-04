@@ -33,6 +33,27 @@ public:
      */
     ClusterCharacterisationAlgorithm();
 
+    /**
+     *  @brief  Get the distance between the interaction vertex (if present in the current vertex list) and a provided cluster
+     *
+     *  @param  pAlgorithm the address of the calling algorithm
+     *  @param  pCluster address of the cluster
+     *
+     *  @return the vertex distance
+     */
+    static float GetVertexDistance(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Get a measure of the width of a cluster, using a sliding shower fit result
+     *
+     *  @param  pAlgorithm the address of the calling algorithm
+     *  @param  pCluster address of the cluster
+     *  @param  showerFitWindow the layer window used for the sliding shower fit
+     *
+     *  @return the shower fit width
+     */
+    static float GetShowerFitWidth(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const unsigned int showerFitWindow);
+
 private:
     pandora::StatusCode Run();
 
