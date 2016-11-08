@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
@@ -34,7 +35,9 @@ SlidingConePfoMopUpAlgorithm::SlidingConePfoMopUpAlgorithm() :
     m_coneTanHalfAngle1(0.5f),
     m_coneBoundedFraction1(0.5f),
     m_coneTanHalfAngle2(0.75f),
-    m_coneBoundedFraction2(0.75f)
+    m_coneBoundedFraction2(0.75f),
+    m_minVertexLongitudinalDistance(-2.5f),
+    m_maxVertexTransverseDistance(3.5f)
 {
 }
 
@@ -119,6 +122,7 @@ void SlidingConePfoMopUpAlgorithm::GetThreeDClusters(ClusterVector &clusters3D, 
 void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVertex, const ClusterVector &clusters3D,
     const ClusterToPfoMap &clusterToPfoMap, ClusterMergeMap &clusterMergeMap) const
 {
+    VertexAssociationMap vertexAssociationMap;
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (const Cluster *const pShowerCluster : clusters3D)
@@ -128,6 +132,7 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
 
         float coneLength(0.f);
         SimpleConeList simpleConeList;
+        bool isShowerVertexAssociated(false);
 
         try
         {
@@ -142,6 +147,7 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
             const ConeSelection coneSelection(!pVertex ? CONE_BOTH_DIRECTIONS : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY : CONE_BACKWARD_ONLY);
 
             slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList);
+            isShowerVertexAssociated = this->IsVertexAssociated(pShowerCluster, pVertex, vertexAssociationMap, &(slidingConeFitResult3D.GetSlidingFitResult()));
         }
         catch (const StatusCodeException &) {continue;}
 
@@ -162,6 +168,9 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
                     bestClusterMerge = clusterMerge;
             }
 
+            if (isShowerVertexAssociated && this->IsVertexAssociated(pNearbyCluster, pVertex, vertexAssociationMap))
+                continue;
+
             if (bestClusterMerge.GetParentCluster() && (bestClusterMerge.GetBoundedFraction1() > m_coneBoundedFraction1) && (bestClusterMerge.GetBoundedFraction2() > m_coneBoundedFraction2))
                 clusterMergeMap[pNearbyCluster].push_back(bestClusterMerge);
         }
@@ -169,6 +178,48 @@ void SlidingConePfoMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pVerte
 
     for (ClusterMergeMap::value_type &mapEntry : clusterMergeMap)
         std::sort(mapEntry.second.begin(), mapEntry.second.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SlidingConePfoMopUpAlgorithm::IsVertexAssociated(const Cluster *const pCluster, const Vertex *const pVertex,
+    VertexAssociationMap &vertexAssociationMap, const ThreeDSlidingFitResult *const pSlidingFitResult) const
+{
+    if (!pVertex)
+        return false;
+
+    VertexAssociationMap::const_iterator iter = vertexAssociationMap.find(pCluster);
+
+    if (vertexAssociationMap.end() != iter)
+        return iter->second;
+
+    const bool isVertexAssociated(this->IsVertexAssociated(pCluster, pVertex->GetPosition(), pSlidingFitResult));
+    (void) vertexAssociationMap.insert(VertexAssociationMap::value_type(pCluster, isVertexAssociated));
+
+    return isVertexAssociated;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SlidingConePfoMopUpAlgorithm::IsVertexAssociated(const Cluster *const pCluster, const CartesianVector &vertexPosition,
+    const ThreeDSlidingFitResult *const pSlidingFitResult) const
+{
+    try
+    {
+        const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const LArPointingCluster pointingCluster(pSlidingFitResult ? LArPointingCluster(*pSlidingFitResult) : LArPointingCluster(pCluster, m_halfWindowLayers, layerPitch));
+
+        const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - vertexPosition).GetMagnitudeSquared() <
+            (pointingCluster.GetOuterVertex().GetPosition() - vertexPosition).GetMagnitudeSquared());
+
+        const LArPointingCluster::Vertex &daughterVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
+        return LArPointingClusterHelper::IsNode(vertexPosition, daughterVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance);
+    }
+    catch (const StatusCodeException &)
+    {
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -286,6 +337,12 @@ StatusCode SlidingConePfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ConeBoundedFraction2", m_coneBoundedFraction2));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
 
     m_daughterListNames.insert(m_daughterListNames.end(), m_inputPfoListNames.begin(), m_inputPfoListNames.end());
 
