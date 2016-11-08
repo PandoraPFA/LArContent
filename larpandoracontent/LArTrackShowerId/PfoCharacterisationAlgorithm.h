@@ -46,15 +46,17 @@ private:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
 
     /**
-     *  @brief  Select the cluster to use in order to characterise the pfo
+     *  @brief  Whether cluster is identified as a clear track
      *
-     *  @param  pPfo address of the pfo
+     *  @param  pCluster address of the relevant cluster
      * 
-     *  @return address of the cluster
+     *  @return boolean
      */
-    const pandora::Cluster *SelectCluster(const pandora::ParticleFlowObject *const pPfo) const;
+    virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    typedef std::set<pandora::HitType> HitTypeSet;
 
     std::string             m_trackPfoListName;             ///< The track pfo list name
     std::string             m_showerPfoListName;            ///< The shower pfo list name
@@ -63,6 +65,7 @@ private:
     bool                    m_updateClusterIds;             ///< Whether to update daughter cluster particle id labels to match pfo id
     bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
 
+    unsigned int            m_minTrackLikeViews;            ///< The minimum number of track-like views to declare a pfo as track-like
     unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
     unsigned int            m_slidingShowerFitWindow;       ///< The layer window for the sliding shower fits
     float                   m_maxShowerLengthCut;           ///< The maximum cluster length to qualify as a shower
