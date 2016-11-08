@@ -187,7 +187,7 @@ bool MCParticleMonitoringAlgorithm::SortSimpleMCParticles(const SimpleMCParticle
 MCParticleMonitoringAlgorithm::SimpleMCParticle::SimpleMCParticle() :
     m_id(-1),
     m_pdgCode(0),
-    m_nMCHitsTotal(0),  
+    m_nMCHitsTotal(0),
     m_nMCHitsU(0),
     m_nMCHitsV(0),
     m_nMCHitsW(0),
