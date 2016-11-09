@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -24,9 +25,10 @@ namespace lar_content
 PfoCharacterisationAlgorithm::PfoCharacterisationAlgorithm() :
     m_updateClusterIds(true),
     m_postBranchAddition(false),
+    m_minTrackLikeViews(2),
     m_slidingFitWindow(5),
     m_slidingShowerFitWindow(10),
-    m_maxShowerLengthCut(40.f),
+    m_maxShowerLengthCut(80.f),
     m_dTdLWidthRatioCut(0.045f),
     m_vertexDistanceRatioCut(0.6f),
     m_showerWidthRatioCut(0.2f)
@@ -105,11 +107,33 @@ StatusCode PfoCharacterisationAlgorithm::Run()
 
 bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo) const
 {
-    const Cluster *pCluster(this->SelectCluster(pPfo));
-    
-    if (!pCluster)
-        return false;
+    ClusterList twoDClusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
 
+    unsigned int nTrackLikeViews(0);
+    HitTypeSet hitTypeSet;
+
+    for (const Cluster *const pCluster : twoDClusterList)
+    {
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+
+        if (!hitTypeSet.insert(hitType).second)
+            continue;
+
+        if (this->IsClearTrack(pCluster))
+            ++nTrackLikeViews;
+
+        if (nTrackLikeViews >= m_minTrackLikeViews)
+            return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool PfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
+{
     float straightLineLength(-1.f);
     float dTdLMin(+std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max());
 
@@ -152,25 +176,6 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *PfoCharacterisationAlgorithm::SelectCluster(const ParticleFlowObject *const pPfo) const
-{
-    for (const HitType hitType : {TPC_VIEW_W, TPC_VIEW_U, TPC_VIEW_V})
-    {
-        ClusterList clusterList;
-        LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
-
-        if (clusterList.size() > 1)
-            return nullptr;
-
-        if (!clusterList.empty())
-            return clusterList.front();
-    }
-
-    return nullptr;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode PfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
@@ -193,6 +198,9 @@ StatusCode PfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         m_vertexDistanceRatioCut = 1.f;
         m_showerWidthRatioCut = 0.3f;
     }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinTrackLikeViews", m_minTrackLikeViews));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
