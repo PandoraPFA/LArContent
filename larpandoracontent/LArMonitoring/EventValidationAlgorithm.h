@@ -137,6 +137,26 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
+     *  @brief  Select a subset of calo hits representing those that represent "reconstructible" regions of the event
+     * 
+     *  @param  pCaloHitList the address of the input calo hit list
+     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
+     *  @param  selectedCaloHitList to receive the populated selected calo hit list
+     */
+    void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+        pandora::CaloHitList &selectedCaloHitList) const;
+
+    /**
+     *  @brief  Whether it is possible to navigate from a primary mc particle to a downstream mc particle without "passing through" a neutron
+     * 
+     *  @param  pPrimaryParticle the address of the primary mc particle
+     *  @param  pHitParticle the address of the mc particle associated to a calo hit
+     * 
+     *  @return boolean
+     */
+    bool PassMCParticleChecks(const pandora::MCParticle *const pPrimaryParticle, const pandora::MCParticle *const pHitParticle) const;
+
+    /**
      *  @brief  Extract details of each mc primary (ordered by number of true hits)
      * 
      *  @param  mcPrimaryList the mc primary list

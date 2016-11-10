@@ -93,18 +93,21 @@ StatusCode EventValidationAlgorithm::Run()
     LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;            // [mc particles -> primary mc particle]
     LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
 
+    CaloHitList selectedCaloHitList;
+    this->SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList);
+
     LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
     LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+    LArMonitoringHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
 
     LArMonitoringHelper::CaloHitToPfoMap hitToPfoMap;               // [hit -> pfo]
     LArMonitoringHelper::PfoContributionMap pfoToHitListMap;        // [pfo -> reco hit list]
-    LArMonitoringHelper::GetPfoToCaloHitMatches(pCaloHitList, pfoList, m_collapseToPrimaryPfos, hitToPfoMap, pfoToHitListMap);
+    LArMonitoringHelper::GetPfoToCaloHitMatches(&selectedCaloHitList, pfoList, m_collapseToPrimaryPfos, hitToPfoMap, pfoToHitListMap);
 
     LArMonitoringHelper::MCToPfoMap mcToBestPfoMap;                 // [mc particle -> best matched pfo]
     LArMonitoringHelper::MCContributionMap mcToBestPfoHitsMap;      // [mc particle -> list of hits included in best pfo]
     LArMonitoringHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap; // [mc particle -> all matched pfos (and matched hits)]
-    LArMonitoringHelper::GetMCParticleToPfoMatches(pCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
+    LArMonitoringHelper::GetMCParticleToPfoMatches(&selectedCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
     SimpleMCPrimaryList simpleMCPrimaryList;
     this->GetSimpleMCPrimaryList(mcPrimaryVector, mcToTrueHitListMap, mcToFullPfoMatchingMap, simpleMCPrimaryList);
@@ -132,6 +135,88 @@ StatusCode EventValidationAlgorithm::Run()
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+    CaloHitList &selectedCaloHitList) const
+{
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        float bestWeight(0.f);
+        const MCParticle *pHitParticle(nullptr);
+
+        MCParticleWeightMap primaryWeightMap;
+
+        MCParticleVector mcParticleVector;
+        for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(mapEntry.first);
+        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+        for (const MCParticle *const pMCParticle : mcParticleVector)
+        {
+            const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
+
+            if (weight > bestWeight)
+            {
+                bestWeight = weight;
+                pHitParticle = pMCParticle;
+            }
+
+            LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
+
+            if (mcToPrimaryMCMap.end() != mcIter)
+                primaryWeightMap[mcIter->second] += weight;
+        }
+
+        if (!pHitParticle)
+            continue;
+
+        MCParticleVector mcPrimaryVector;
+        for (const auto &mapEntry : primaryWeightMap) mcPrimaryVector.push_back(mapEntry.first);
+        std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), PointerLessThan<MCParticle>());
+
+        float bestPrimaryWeight(0.f), primaryWeightSum(0.f);
+
+        for (const MCParticle *const pPrimaryMCParticle : mcPrimaryVector)
+        {
+            const float primaryWeight(primaryWeightMap.at(pPrimaryMCParticle));
+            primaryWeightSum += primaryWeight;
+            bestPrimaryWeight = std::max(bestPrimaryWeight, primaryWeight);
+        }
+
+        if ((primaryWeightSum < std::numeric_limits<float>::epsilon()) || ((bestPrimaryWeight / primaryWeightSum) < 0.9f)) // TODO
+            continue;
+
+        LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
+
+        if (mcToPrimaryMCMap.end() == mcIter)
+            continue;
+
+        const MCParticle *const pPrimaryParticle = mcIter->second;
+
+        if (this->PassMCParticleChecks(pPrimaryParticle, pHitParticle))
+            selectedCaloHitList.push_back(pCaloHit);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::PassMCParticleChecks(const MCParticle *const pPrimaryParticle, const MCParticle *const pHitParticle) const
+{
+    if (NEUTRON == std::abs(pPrimaryParticle->GetParticleId()))
+        return false;
+
+    if (pPrimaryParticle == pHitParticle)
+        return true;
+
+    for (const MCParticle *const pDaughterOfPrimary : pPrimaryParticle->GetDaughterList())
+    {
+        if (this->PassMCParticleChecks(pDaughterOfPrimary, pHitParticle))
+            return true;
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
