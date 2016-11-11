@@ -144,59 +144,23 @@ void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitL
 {
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        float bestWeight(0.f);
-        const MCParticle *pHitParticle(nullptr);
-
-        MCParticleWeightMap primaryWeightMap;
-
-        MCParticleVector mcParticleVector;
-        for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(mapEntry.first);
-        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
-
-        for (const MCParticle *const pMCParticle : mcParticleVector)
+        try
         {
-            const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
-
-            if (weight > bestWeight)
-            {
-                bestWeight = weight;
-                pHitParticle = pMCParticle;
-            }
+            const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
             LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
 
-            if (mcToPrimaryMCMap.end() != mcIter)
-                primaryWeightMap[mcIter->second] += weight;
+            if (mcToPrimaryMCMap.end() == mcIter)
+                continue;
+
+            const MCParticle *const pPrimaryParticle = mcIter->second;
+
+            if (this->PassMCParticleChecks(pPrimaryParticle, pHitParticle))
+                selectedCaloHitList.push_back(pCaloHit);
         }
-
-        if (!pHitParticle)
-            continue;
-
-        MCParticleVector mcPrimaryVector;
-        for (const auto &mapEntry : primaryWeightMap) mcPrimaryVector.push_back(mapEntry.first);
-        std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), PointerLessThan<MCParticle>());
-
-        float bestPrimaryWeight(0.f), primaryWeightSum(0.f);
-
-        for (const MCParticle *const pPrimaryMCParticle : mcPrimaryVector)
+        catch (const StatusCodeException &)
         {
-            const float primaryWeight(primaryWeightMap.at(pPrimaryMCParticle));
-            primaryWeightSum += primaryWeight;
-            bestPrimaryWeight = std::max(bestPrimaryWeight, primaryWeight);
         }
-
-        if ((primaryWeightSum < std::numeric_limits<float>::epsilon()) || ((bestPrimaryWeight / primaryWeightSum) < 0.9f)) // TODO
-            continue;
-
-        LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
-
-        if (mcToPrimaryMCMap.end() == mcIter)
-            continue;
-
-        const MCParticle *const pPrimaryParticle = mcIter->second;
-
-        if (this->PassMCParticleChecks(pPrimaryParticle, pHitParticle))
-            selectedCaloHitList.push_back(pCaloHit);
     }
 }
 
