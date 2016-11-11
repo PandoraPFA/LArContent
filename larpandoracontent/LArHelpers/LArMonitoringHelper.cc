@@ -194,7 +194,8 @@ void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloH
             }
         }
 
-        pfoToHitListMap[pPfo] = pfoHitList;
+        CaloHitList &caloHitListInMap(pfoToHitListMap[pPfo]);
+        caloHitListInMap.insert(caloHitListInMap.end(), pfoHitList.begin(), pfoHitList.end());
     }
 }
 

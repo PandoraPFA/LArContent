@@ -9,7 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-        //#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
@@ -272,24 +272,6 @@ void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentC
 
 ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssociated(const Cluster *const pClusterSeed, const Cluster *const pCluster) const
 {
-//    try
-//    {
-//        const MCParticle *const pSeedMCParticle(MCParticleHelper::GetMainMCParticle(pClusterSeed));
-//        const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-//
-//        const MCParticle *const pSeedMCPrimary(LArMCParticleHelper::GetPrimaryMCParticle(pSeedMCParticle));
-//        const MCParticle *const pMCPrimary(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
-//
-//        if (pSeedMCPrimary == pMCPrimary)
-//            return STRONG;
-//
-//        return NONE;
-//    }
-//    catch (const StatusCodeException &)
-//    {
-//        return NONE;
-//    }
-
     const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
     const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
