@@ -40,6 +40,9 @@ protected:
     virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, 
         pandora::CartesianVector& splitPosition) const = 0;
 
+    unsigned int    m_slidingFitHalfWindow;   ///<
+    float           m_minClusterLength;       ///<
+
 private:
     pandora::StatusCode DivideCaloHits(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
         pandora::CaloHitList &secondCaloHitList) const;
@@ -56,9 +59,6 @@ private:
      */
     pandora::StatusCode DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector& splitPosition, 
         pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
-
-    unsigned int    m_slidingFitHalfWindow;   ///<
-    float           m_minClusterLength;       ///<
 };
 
 } // namespace lar_content
