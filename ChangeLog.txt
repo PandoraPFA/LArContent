@@ -1,4 +1,13 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Overhauled track vs. shower identification, moving it into algorithms that deal with it explicitly, by characterising clusters and pfos.
+Added effective overlap treatment, considering detector gaps: new TracksCrossingGaps tensor tool and new ParticleRecovery alg functionality.
+Altered default parameters for VertexSplitting algorithm and added vertex association functionality to SlidingConePfoMopUp algorithm.
+Removed influence of any hits that are deemed post-neutron in the EventValidation algorithm performance metrics.
+Added MCParticleMonitoring algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_00_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Updated to reflect sdk interface changes.
