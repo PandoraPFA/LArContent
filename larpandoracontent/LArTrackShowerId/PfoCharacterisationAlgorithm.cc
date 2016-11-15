@@ -163,7 +163,7 @@ bool PfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) c
 
     const float vertexDistance(ClusterCharacterisationAlgorithm::GetVertexDistance(this, pCluster));
 
-    if ((vertexDistance < std::numeric_limits<float>::epsilon()) || ((vertexDistance / straightLineLength) > m_vertexDistanceRatioCut))
+    if ((vertexDistance > std::numeric_limits<float>::epsilon()) && ((vertexDistance / straightLineLength) > m_vertexDistanceRatioCut))
         return false;
 
     const float showerFitWidth(ClusterCharacterisationAlgorithm::GetShowerFitWidth(this, pCluster, m_slidingShowerFitWindow));
