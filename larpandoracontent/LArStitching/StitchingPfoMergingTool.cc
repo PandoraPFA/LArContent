@@ -15,6 +15,8 @@
 
 #include "larpandoracontent/LArStitching/StitchingPfoMergingTool.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lar_content
@@ -49,7 +51,12 @@ void StitchingPfoMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, St
     PfoList primaryPfos;
 
     for (const ParticleFlowObject *const pPfo : *pNewPfoList)
-        primaryPfos.push_back(LArPfoHelper::GetParentPfo(pPfo));
+    {
+        const ParticleFlowObject *const pParentPfo(LArPfoHelper::GetParentPfo(pPfo));
+
+        if (primaryPfos.end() == std::find(primaryPfos.begin(), primaryPfos.end(), pParentPfo))
+            primaryPfos.push_back(pParentPfo);
+    }
 
     if (2 != primaryPfos.size())
         return;
