@@ -262,6 +262,9 @@ void ListPreparationAlgorithm::ProcessMCParticles()
         }
     }
 
+    if (!mcParticleListU.empty() && !m_outputMCParticleListNameU.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleListU, m_outputMCParticleListNameU));
+
     if (!mcParticleListV.empty() && !m_outputMCParticleListNameV.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, mcParticleListV, m_outputMCParticleListNameV));
 
