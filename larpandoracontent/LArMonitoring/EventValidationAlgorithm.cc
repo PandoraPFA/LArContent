@@ -155,7 +155,7 @@ void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitL
 
             const MCParticle *const pPrimaryParticle = mcIter->second;
 
-            if (this->PassMCParticleChecks(pPrimaryParticle, pHitParticle))
+            if (this->PassMCParticleChecks(pPrimaryParticle, pPrimaryParticle, pHitParticle))
                 selectedCaloHitList.push_back(pCaloHit);
         }
         catch (const StatusCodeException &)
@@ -166,17 +166,22 @@ void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool EventValidationAlgorithm::PassMCParticleChecks(const MCParticle *const pPrimaryParticle, const MCParticle *const pHitParticle) const
+bool EventValidationAlgorithm::PassMCParticleChecks(const MCParticle *const pOriginalPrimary, const MCParticle *const pThisMCParticle,
+    const MCParticle *const pHitMCParticle) const
 {
-    if (NEUTRON == std::abs(pPrimaryParticle->GetParticleId()))
+    // TODO - Finalise hit rejection via downstream mc hierarchies
+    if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
         return false;
 
-    if (pPrimaryParticle == pHitParticle)
+    if (PROTON == std::abs(pOriginalPrimary->GetParticleId()) && (PHOTON == pThisMCParticle->GetParticleId()))
+        return false;
+
+    if (pThisMCParticle == pHitMCParticle)
         return true;
 
-    for (const MCParticle *const pDaughterOfPrimary : pPrimaryParticle->GetDaughterList())
+    for (const MCParticle *const pDaughterMCParticle : pThisMCParticle->GetDaughterList())
     {
-        if (this->PassMCParticleChecks(pDaughterOfPrimary, pHitParticle))
+        if (this->PassMCParticleChecks(pOriginalPrimary, pDaughterMCParticle, pHitMCParticle))
             return true;
     }
 

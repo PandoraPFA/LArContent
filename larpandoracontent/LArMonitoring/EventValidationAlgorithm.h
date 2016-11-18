@@ -149,12 +149,14 @@ private:
     /**
      *  @brief  Whether it is possible to navigate from a primary mc particle to a downstream mc particle without "passing through" a neutron
      * 
-     *  @param  pPrimaryParticle the address of the primary mc particle
-     *  @param  pHitParticle the address of the mc particle associated to a calo hit
+     *  @param  pOriginalPrimary the address of the original primary mc particle
+     *  @param  pThisMCParticle the address of the current mc particle in the primary decay chain
+     *  @param  pHitMCParticle the address of the mc particle associated to a calo hit
      * 
      *  @return boolean
      */
-    bool PassMCParticleChecks(const pandora::MCParticle *const pPrimaryParticle, const pandora::MCParticle *const pHitParticle) const;
+    bool PassMCParticleChecks(const pandora::MCParticle *const pOriginalPrimary, const pandora::MCParticle *const pThisMCParticle,
+        const pandora::MCParticle *const pHitMCParticle) const;
 
     /**
      *  @brief  Extract details of each mc primary (ordered by number of true hits)
