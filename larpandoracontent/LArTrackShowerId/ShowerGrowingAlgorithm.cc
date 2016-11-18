@@ -24,7 +24,6 @@ namespace lar_content
 
 ShowerGrowingAlgorithm::ShowerGrowingAlgorithm() :
     m_minCaloHitsPerCluster(5),
-    m_nearbyTrackDistance(1.f),
     m_nearbyClusterDistance(2.5f),
     m_remoteClusterDistance(10.f),
     m_directionTanAngle(1.732f),
@@ -415,9 +414,6 @@ StatusCode ShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NearbyTrackDistance", m_nearbyTrackDistance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NearbyClusterDistance", m_nearbyClusterDistance));
