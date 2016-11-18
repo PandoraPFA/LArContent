@@ -137,7 +137,7 @@ void MCParticleMonitoringAlgorithm::PrintAllOutput(const MCParticleVector &mcNeu
                 continue;
 
             std::cout << std::endl << "--Primary " << simpleMCPrimary.m_id << ", MCPDG " << simpleMCPrimary.m_pdgCode << ", Energy " << simpleMCPrimary.m_energy
-                      << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
+                      << ", Dist. " << (simpleMCPrimary.m_endpoint - simpleMCPrimary.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
                       << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
             this->PrintMCParticle(pMCPrimary, simpleMCParticleMap, 1);
@@ -164,7 +164,8 @@ void MCParticleMonitoringAlgorithm::PrintMCParticle(const MCParticle *const pMCP
             std::cout << "\\_ ";
         }
 
-        std::cout << "MCPDG " << simpleMCParticle.m_pdgCode << ", Energy " << simpleMCParticle.m_energy << ", nMCHits " << simpleMCParticle.m_nMCHitsTotal
+        std::cout << "MCPDG " << simpleMCParticle.m_pdgCode << ", Energy " << simpleMCParticle.m_energy 
+                  << ", Dist. " << (simpleMCParticle.m_endpoint - simpleMCParticle.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCParticle.m_nMCHitsTotal
                   << " (" << simpleMCParticle.m_nMCHitsU << ", " << simpleMCParticle.m_nMCHitsV << ", " << simpleMCParticle.m_nMCHitsW << ")" << std::endl;
     }
 

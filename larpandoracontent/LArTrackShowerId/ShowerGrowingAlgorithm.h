@@ -154,7 +154,6 @@ private:
     pandora::StringVector       m_inputClusterListNames;        ///< The names of the input cluster lists
 
     unsigned int                m_minCaloHitsPerCluster;        ///< The minimum number of calo hits per (seed or branch) cluster
-    float                       m_nearbyTrackDistance;          ///< Prevent track-track associations where the end-to-end separation is smaller than this distance
     float                       m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations
     float                       m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations
 
