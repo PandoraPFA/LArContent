@@ -27,6 +27,8 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_neutrinoInducedOnly(false),
     m_primaryPfosOnly(true),
     m_collapseToPrimaryPfos(true),
+    m_minHitSharingFraction(0.9f),
+    m_maxPhotonPropagation(2.5f),
     m_printAllToScreen(false),
     m_printMatchingToScreen(false),
     m_visualizeMatching(false),
@@ -61,7 +63,7 @@ StatusCode EventValidationAlgorithm::Run()
 {
     ++m_eventNumber;
 
-    // Input collections
+    // Extract input collections
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
@@ -71,64 +73,88 @@ StatusCode EventValidationAlgorithm::Run()
     const PfoList *pPfoList = nullptr;
     PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
 
+    // Obtain vector: target pfos
     PfoList pfoList;
     LArMonitoringHelper::ExtractTargetPfos(inputPfoList, m_primaryPfosOnly, pfoList);
 
-    // Extract monitoring information
-    PfoIdMap pfoIdMap;                                              // pfo -> unique identifier
+    // Obtain map: pfo -> unique identifier
+    PfoIdMap pfoIdMap;
     this->GetPfoIdMap(pfoList, pfoIdMap);
 
-    MCParticleVector mcNeutrinoVector;                              // true neutrinos
+    // Obtain vector: true neutrinos
+    MCParticleVector mcNeutrinoVector;
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
 
-    PfoList recoNeutrinoList;                                       // reco neutrinos
+    // Obtain vector: reco neutrinos
+    PfoList recoNeutrinoList;
     LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
-
     PfoVector recoNeutrinoVector(recoNeutrinoList.begin(), recoNeutrinoList.end());
     std::sort(recoNeutrinoVector.begin(), recoNeutrinoVector.end(), EventValidationAlgorithm::SortRecoNeutrinos);
 
-    MCParticleVector mcPrimaryVector;                               // primary mc particles
+    // Obtain vector: primary mc particles
+    MCParticleVector mcPrimaryVector;
     LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
 
-    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;            // [mc particles -> primary mc particle]
+    // Obtain map: [mc particle -> primary mc particle]
+    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
     LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
 
+    // Remove non-reconstructable hits, e.g. those downstream of a neutron
     CaloHitList selectedCaloHitList;
     this->SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList);
 
-    LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
-    LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
+    // Obtain maps: [hit -> primary mc particle], [primary mc particle -> list of hits]
+    LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;
+    LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
 
-    LArMonitoringHelper::CaloHitToPfoMap hitToPfoMap;               // [hit -> pfo]
-    LArMonitoringHelper::PfoContributionMap pfoToHitListMap;        // [pfo -> reco hit list]
+    // Obtain maps: [hit -> pfo], [pfo -> list of hits]
+    LArMonitoringHelper::CaloHitToPfoMap hitToPfoMap;
+    LArMonitoringHelper::PfoContributionMap pfoToHitListMap;
     LArMonitoringHelper::GetPfoToCaloHitMatches(&selectedCaloHitList, pfoList, m_collapseToPrimaryPfos, hitToPfoMap, pfoToHitListMap);
 
-    LArMonitoringHelper::MCToPfoMap mcToBestPfoMap;                 // [mc particle -> best matched pfo]
-    LArMonitoringHelper::MCContributionMap mcToBestPfoHitsMap;      // [mc particle -> list of hits included in best pfo]
-    LArMonitoringHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap; // [mc particle -> all matched pfos (and matched hits)]
+    // Obtain maps: [mc particle -> best matched pfo], [mc particle -> list of hits included in best pfo], [mc particle -> all matched pfos (and matched hits)]
+    LArMonitoringHelper::MCToPfoMap mcToBestPfoMap;
+    LArMonitoringHelper::MCContributionMap mcToBestPfoHitsMap;
+    LArMonitoringHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap;
     LArMonitoringHelper::GetMCParticleToPfoMatches(&selectedCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
-    SimpleMCPrimaryList simpleMCPrimaryList;
-    this->GetSimpleMCPrimaryList(mcPrimaryVector, mcToTrueHitListMap, mcToFullPfoMatchingMap, simpleMCPrimaryList);
+    // Remove shared hits where target particle deposits below threshold energy fraction
+    CaloHitList goodCaloHitList;
+    this->SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList);
 
+    // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
+    LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
+    LArMonitoringHelper::MCContributionMap mcToGoodTrueHitListMap;
+    LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
+
+    // Obtain vector: simple mc primaries
+    SimpleMCPrimaryList simpleMCPrimaryList;
+    this->GetSimpleMCPrimaryList(mcPrimaryVector, mcToTrueHitListMap, mcToGoodTrueHitListMap, mcToFullPfoMatchingMap, simpleMCPrimaryList);
+
+    // Obtain map: [simple mc primary -> list of simple matched pfos]
     MCPrimaryMatchingMap mcPrimaryMatchingMap;
     this->GetMCPrimaryMatchingMap(simpleMCPrimaryList, pfoIdMap, mcToFullPfoMatchingMap, pfoToHitListMap, mcPrimaryMatchingMap);
 
+    // Print raw matching information to terminal
     if (m_printAllToScreen)
         this->PrintAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
 
+    // Write raw matching information to root file
     if (m_writeToTree)
         this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
 
     if (m_printMatchingToScreen || m_visualizeMatching)
     {
+        // Obtain map: [simple mc primary -> interpreted list of simple matched pfos]
         MatchingDetailsMap matchingDetailsMap;
         this->PerformMatching(mcPrimaryMatchingMap, matchingDetailsMap);
 
+        // Print interpreted matching information to terminal
         if (m_printMatchingToScreen)
             this->PrintMatchingOutput(mcPrimaryMatchingMap, matchingDetailsMap);
 #ifdef MONITORING
+        // Visualize interpreted matching information
         if (m_visualizeMatching)
             this->VisualizeMatchingOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap, matchingDetailsMap);
 #endif
@@ -166,15 +192,77 @@ void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void EventValidationAlgorithm::SelectGoodCaloHits(const CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+    CaloHitList &selectedGoodCaloHitList) const
+{
+    for (const CaloHit *const pCaloHit : *pSelectedCaloHitList)
+    {
+        float bestWeight(0.f);
+        const MCParticle *pHitParticle(nullptr);
+        MCParticleWeightMap primaryWeightMap;
+
+        MCParticleVector mcParticleVector;
+        for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(mapEntry.first);
+        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+        for (const MCParticle *const pMCParticle : mcParticleVector)
+        {
+            const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
+
+            if (weight > bestWeight)
+            {
+                bestWeight = weight;
+                pHitParticle = pMCParticle;
+            }
+
+            LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pMCParticle);
+
+            if (mcToPrimaryMCMap.end() != mcIter)
+                primaryWeightMap[mcIter->second] += weight;
+        }
+
+        if (!pHitParticle)
+            continue;
+
+        MCParticleVector mcPrimaryVector;
+        for (const auto &mapEntry : primaryWeightMap) mcPrimaryVector.push_back(mapEntry.first);
+        std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), PointerLessThan<MCParticle>());
+
+        const MCParticle *pBestPrimaryParticle(nullptr);
+        float bestPrimaryWeight(0.f), primaryWeightSum(0.f);
+
+        for (const MCParticle *const pPrimaryMCParticle : mcPrimaryVector)
+        {
+            const float primaryWeight(primaryWeightMap.at(pPrimaryMCParticle));
+            primaryWeightSum += primaryWeight;
+
+            if (primaryWeight > bestPrimaryWeight)
+            {
+                bestPrimaryWeight = primaryWeight;
+                pBestPrimaryParticle = pPrimaryMCParticle;
+            }
+        }
+
+        if (!pBestPrimaryParticle || (primaryWeightSum < std::numeric_limits<float>::epsilon()) || ((bestPrimaryWeight / primaryWeightSum) < m_minHitSharingFraction))
+            continue;
+
+        selectedGoodCaloHitList.push_back(pCaloHit);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool EventValidationAlgorithm::PassMCParticleChecks(const MCParticle *const pOriginalPrimary, const MCParticle *const pThisMCParticle,
     const MCParticle *const pHitMCParticle) const
 {
-    // TODO - Finalise hit rejection via downstream mc hierarchies
     if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
         return false;
 
-    if (PROTON == std::abs(pOriginalPrimary->GetParticleId()) && (PHOTON == pThisMCParticle->GetParticleId()))
-        return false;
+    if ((PHOTON == pThisMCParticle->GetParticleId()) && (PHOTON != pOriginalPrimary->GetParticleId()) && (E_MINUS != std::abs(pOriginalPrimary->GetParticleId())))
+    {
+        if ((pThisMCParticle->GetEndpoint() - pThisMCParticle->GetVertex()).GetMagnitude() > m_maxPhotonPropagation)
+            return false;
+    }
 
     if (pThisMCParticle == pHitMCParticle)
         return true;
@@ -191,7 +279,8 @@ bool EventValidationAlgorithm::PassMCParticleChecks(const MCParticle *const pOri
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mcPrimaryVector, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
-    const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, SimpleMCPrimaryList &simpleMCPrimaryList) const
+    const LArMonitoringHelper::MCContributionMap &mcToGoodTrueHitListMap, const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap,
+    SimpleMCPrimaryList &simpleMCPrimaryList) const
 {
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
@@ -216,6 +305,17 @@ void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mc
             simpleMCPrimary.m_nMCHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList);
             simpleMCPrimary.m_nMCHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList);
             simpleMCPrimary.m_nMCHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList);
+        }
+
+        LArMonitoringHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCPrimary);
+
+        if (mcToGoodTrueHitListMap.end() != goodTrueHitsIter)
+        {
+            const CaloHitList &caloHitList(goodTrueHitsIter->second);
+            simpleMCPrimary.m_nGoodMCHitsTotal = caloHitList.size();
+            simpleMCPrimary.m_nGoodMCHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList);
+            simpleMCPrimary.m_nGoodMCHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList);
+            simpleMCPrimary.m_nGoodMCHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList);
         }
 
         LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(pMCPrimary);
@@ -330,7 +430,9 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
         std::cout << std::endl << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
-            << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
+            << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << "),"
+            << " [nGood " << simpleMCPrimary.m_nGoodMCHitsTotal << " (" << simpleMCPrimary.m_nGoodMCHitsU << ", " << simpleMCPrimary.m_nGoodMCHitsV
+            << ", " << simpleMCPrimary.m_nGoodMCHitsW << ")]" << std::endl;
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
         {
@@ -421,10 +523,15 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
 
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryId", simpleMCPrimary.m_id));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPdg", simpleMCPrimary.m_pdgCode));
+
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsTotal", simpleMCPrimary.m_nMCHitsTotal));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsU", simpleMCPrimary.m_nMCHitsU));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsV", simpleMCPrimary.m_nMCHitsV));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsW", simpleMCPrimary.m_nMCHitsW));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsTotal", simpleMCPrimary.m_nGoodMCHitsTotal));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsU", simpleMCPrimary.m_nGoodMCHitsU));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsV", simpleMCPrimary.m_nGoodMCHitsV));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsW", simpleMCPrimary.m_nGoodMCHitsW));
 
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryE", simpleMCPrimary.m_energy));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPX", simpleMCPrimary.m_momentum.GetX()));
@@ -530,7 +637,7 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCPrimaryMatchingMap &
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
-        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits))
+        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nGoodMCHitsTotal < m_matchingMinPrimaryHits))
             continue;
 
         if (usedMCIds.count(simpleMCPrimary.m_id))
@@ -573,7 +680,7 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
-        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nMCHitsTotal < m_matchingMinPrimaryHits))
+        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nGoodMCHitsTotal < m_matchingMinPrimaryHits))
             continue;
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
@@ -597,7 +704,7 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
 void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
     std::cout << "---PROCESSED-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
-    std::cout << "MinPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
+    std::cout << "MinGoodPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
               << m_useSmallPrimaries << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl;
 
     bool isCorrect(true), isCalculable(false);
@@ -606,14 +713,16 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
         const bool hasMatch(this->HasMatch(simpleMCPrimary, mapValue.second, matchingDetailsMap));
-        const bool isTargetPrimary((simpleMCPrimary.m_nMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
+        const bool isTargetPrimary((simpleMCPrimary.m_nGoodMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
 
         if (!hasMatch && !isTargetPrimary)
             continue;
 
         std::cout << std::endl << (!isTargetPrimary ? "(Non target) " : "")
                   << "Primary " << simpleMCPrimary.m_id << ", PDG " << simpleMCPrimary.m_pdgCode << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
-                  << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
+                  << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << "),"
+                  << " [nGood " << simpleMCPrimary.m_nGoodMCHitsTotal << " (" << simpleMCPrimary.m_nGoodMCHitsU << ", " << simpleMCPrimary.m_nGoodMCHitsV
+                  << ", " << simpleMCPrimary.m_nGoodMCHitsW << ")]" << std::endl;
 
         if (NEUTRON != simpleMCPrimary.m_pdgCode)
             isCalculable = true;
@@ -653,7 +762,7 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
     std::cout << "---VISUALIZE-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
-    std::cout << "MinPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
+    std::cout << "MinGoodPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
               << m_useSmallPrimaries << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl << std::endl;
 
     PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), m_visualizeGaps, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
@@ -670,7 +779,7 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
         {
             const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
             bool hasMatch(this->HasMatch(simpleMCPrimary, mapValue.second, matchingDetailsMap));
-            const bool isTargetPrimary((simpleMCPrimary.m_nMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
+            const bool isTargetPrimary((simpleMCPrimary.m_nGoodMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
 
             if (!hasMatch && !isTargetPrimary)
                 continue;
@@ -973,6 +1082,10 @@ EventValidationAlgorithm::SimpleMCPrimary::SimpleMCPrimary() :
     m_nMCHitsU(0),
     m_nMCHitsV(0),
     m_nMCHitsW(0),
+    m_nGoodMCHitsTotal(0),
+    m_nGoodMCHitsU(0),
+    m_nGoodMCHitsV(0),
+    m_nGoodMCHitsW(0),
     m_energy(0.f),
     m_momentum(0.f, 0.f, 0.f),
     m_vertex(-1.f, -1.f, -1.f),
@@ -1043,6 +1156,12 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CollapseToPrimaryPfos", m_collapseToPrimaryPfos));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitSharingFraction", m_minHitSharingFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxPhotonPropagation", m_maxPhotonPropagation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrintAllToScreen", m_printAllToScreen));
