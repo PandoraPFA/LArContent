@@ -1021,8 +1021,8 @@ void EventValidationAlgorithm::GetPfoIdMap(const PfoList &pfoList, PfoIdMap &pfo
 
 bool EventValidationAlgorithm::SortSimpleMCPrimaries(const SimpleMCPrimary &lhs, const SimpleMCPrimary &rhs)
 {
-    if (lhs.m_nMCHitsTotal != rhs.m_nMCHitsTotal)
-        return (lhs.m_nMCHitsTotal > rhs.m_nMCHitsTotal);
+    if (lhs.m_nGoodMCHitsTotal != rhs.m_nGoodMCHitsTotal)
+        return (lhs.m_nGoodMCHitsTotal > rhs.m_nGoodMCHitsTotal);
 
     return (lhs.m_energy > rhs.m_energy);
 }
