@@ -75,6 +75,10 @@ private:
         int                                 m_nMCHitsU;                 ///< The number of u mc hits
         int                                 m_nMCHitsV;                 ///< The number of v mc hits
         int                                 m_nMCHitsW;                 ///< The number of w mc hits
+        int                                 m_nGoodMCHitsTotal;         ///< The total number of good mc hits
+        int                                 m_nGoodMCHitsU;             ///< The number of good u mc hits
+        int                                 m_nGoodMCHitsV;             ///< The number of good v mc hits
+        int                                 m_nGoodMCHitsW;             ///< The number of good w mc hits
         float                               m_energy;                   ///< The energy
         pandora::CartesianVector            m_momentum;                 ///< The momentum (presumably at the vertex)
         pandora::CartesianVector            m_vertex;                   ///< The vertex
@@ -137,7 +141,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Select a subset of calo hits representing those that represent "reconstructible" regions of the event
+     *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
      * 
      *  @param  pCaloHitList the address of the input calo hit list
      *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
@@ -145,6 +149,17 @@ private:
      */
     void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
         pandora::CaloHitList &selectedCaloHitList) const;
+
+    /**
+     *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether
+     *          a target mc particle is reconstructable.
+     * 
+     *  @param  pSelectedCaloHitList the address of the calo hit list (typically already been through some selection procedure)
+     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
+     *  @param  selectedCaloHitList to receive the populated good selected calo hit list
+     */
+    void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+        pandora::CaloHitList &selectedGoodCaloHitList) const;
 
     /**
      *  @brief  Whether it is possible to navigate from a primary mc particle to a downstream mc particle without "passing through" a neutron
@@ -163,11 +178,13 @@ private:
      * 
      *  @param  mcPrimaryList the mc primary list
      *  @param  mcToTrueHitListMap the mc to true hit list map
+     *  @param  mcToGoodTrueHitListMap the mc to good true hit list map (vetoes hits with significant energy sharing)
      *  @param  mcToFullPfoMatchingMap the mc to full pfo matching map (to record number of matched pfos)
      *  @param  simpleMCPrimaryList to receive the populated simple mc primary list
      */
     void GetSimpleMCPrimaryList(const pandora::MCParticleVector &mcPrimaryList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
-        const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, SimpleMCPrimaryList &simpleMCPrimaryList) const;
+        const LArMonitoringHelper::MCContributionMap &mcToGoodTrueHitListMap, const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap,
+        SimpleMCPrimaryList &simpleMCPrimaryList) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject*, int> PfoIdMap;
     typedef std::map<SimpleMCPrimary, SimpleMatchedPfoList> MCPrimaryMatchingMap; // SimpleMCPrimary has a defined operator<
@@ -350,6 +367,9 @@ private:
     bool                    m_neutrinoInducedOnly;      ///< Whether to consider only mc particles that were neutrino induced
     bool                    m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
     bool                    m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
+
+    float                   m_minHitSharingFraction;    ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
+    float                   m_maxPhotonPropagation;     ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
 
     bool                    m_printAllToScreen;         ///< Whether to print all/raw matching details to screen
     bool                    m_printMatchingToScreen;    ///< Whether to print matching output to screen
