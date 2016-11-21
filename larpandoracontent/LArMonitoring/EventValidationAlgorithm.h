@@ -298,6 +298,15 @@ private:
     void VisualizeRemnants(const pandora::HitType hitType) const;
 #endif
     /**
+     *  @brief  Whether a provided mc primary passes selection, based on number of "good" hits
+     * 
+     *  @param  simpleMCPrimary the simple mc primary
+     * 
+     *  @return boolean
+     */
+    bool IsGoodMCPrimary(const SimpleMCPrimary &simpleMCPrimary) const;
+
+    /**
      *  @brief  Whether a provided mc primary has a match, of any quality (use simple matched pfo list and information in matching details map)
      * 
      *  @param  simpleMCPrimary the simple mc primary
@@ -358,42 +367,45 @@ private:
 
     typedef std::vector<pandora::HitType> HitTypeVector;
 
-    std::string             m_caloHitListName;          ///< Name of input calo hit list
-    std::string             m_mcParticleListName;       ///< Name of input MC particle list
-    std::string             m_pfoListName;              ///< Name of input Pfo list
+    std::string             m_caloHitListName;              ///< Name of input calo hit list
+    std::string             m_mcParticleListName;           ///< Name of input MC particle list
+    std::string             m_pfoListName;                  ///< Name of input Pfo list
 
-    pandora::StringVector   m_clusterListNames;         ///< Optional list of cluster list names to examine to find left-over, remnant clusters
+    pandora::StringVector   m_clusterListNames;             ///< Optional list of cluster list names to examine to find left-over, remnant clusters
 
-    bool                    m_neutrinoInducedOnly;      ///< Whether to consider only mc particles that were neutrino induced
-    bool                    m_primaryPfosOnly;          ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
-    bool                    m_collapseToPrimaryPfos;    ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
+    bool                    m_neutrinoInducedOnly;          ///< Whether to consider only mc particles that were neutrino induced
+    bool                    m_primaryPfosOnly;              ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
+    bool                    m_collapseToPrimaryPfos;        ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
 
-    float                   m_minHitSharingFraction;    ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
-    float                   m_maxPhotonPropagation;     ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
+    float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
+    float                   m_maxPhotonPropagation;         ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
 
-    bool                    m_printAllToScreen;         ///< Whether to print all/raw matching details to screen
-    bool                    m_printMatchingToScreen;    ///< Whether to print matching output to screen
+    bool                    m_printAllToScreen;             ///< Whether to print all/raw matching details to screen
+    bool                    m_printMatchingToScreen;        ///< Whether to print matching output to screen
 
-    bool                    m_visualizeMatching;        ///< Whether to use Pandora monitoring to visualize matching output
-    bool                    m_visualizeVertices;        ///< Whether to show vertices in visualization
-    bool                    m_visualizeRemnants;        ///< Whether to show remnants in visualization
-    bool                    m_visualizeGaps;            ///< Whether to show geometry (detector gaps) in visualization
+    bool                    m_visualizeMatching;            ///< Whether to use Pandora monitoring to visualize matching output
+    bool                    m_visualizeVertices;            ///< Whether to show vertices in visualization
+    bool                    m_visualizeRemnants;            ///< Whether to show remnants in visualization
+    bool                    m_visualizeGaps;                ///< Whether to show geometry (detector gaps) in visualization
 
-    bool                    m_writeToTree;              ///< Whether to write all/raw matching details to tree
+    bool                    m_writeToTree;                  ///< Whether to write all/raw matching details to tree
 
-    int                     m_matchingMinPrimaryHits;   ///< The minimum number of mc primary hits used in matching scheme
-    bool                    m_useSmallPrimaries;        ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
-    int                     m_matchingMinSharedHits;    ///< The minimum number of shared hits used in matching scheme
-    float                   m_matchingMinCompleteness;  ///< The minimum particle completeness to declare a match
-    float                   m_matchingMinPurity;        ///< The minimum particle purity to declare a match
+    int                     m_matchingMinPrimaryHits;       ///< The minimum number of good mc primary hits used in matching scheme
+    int                     m_matchingMinHitsForGoodView;   ///< The minimum number of good mc primary hits in given view to declare view to be good
+    int                     m_matchingMinPrimaryGoodViews;  ///< The minimum number of good views for a mc primary
 
-    float                   m_vertexVisualizationDeltaR;///< The vertex visualization delta r value, defining good and bad vertex matches
+    bool                    m_useSmallPrimaries;            ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
+    int                     m_matchingMinSharedHits;        ///< The minimum number of shared hits used in matching scheme
+    float                   m_matchingMinCompleteness;      ///< The minimum particle completeness to declare a match
+    float                   m_matchingMinPurity;            ///< The minimum particle purity to declare a match
 
-    std::string             m_treeName;                 ///< Name of output tree
-    std::string             m_fileName;                 ///< Name of output file
+    float                   m_vertexVisualizationDeltaR;    ///< The vertex visualization delta r value, defining good and bad vertex matches
 
-    int                     m_fileIdentifier;           ///< The input file identifier
-    int                     m_eventNumber;              ///< The event number
+    std::string             m_treeName;                     ///< Name of output tree
+    std::string             m_fileName;                     ///< Name of output file
+
+    int                     m_fileIdentifier;               ///< The input file identifier
+    int                     m_eventNumber;                  ///< The event number
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
