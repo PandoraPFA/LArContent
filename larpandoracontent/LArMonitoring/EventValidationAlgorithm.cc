@@ -37,6 +37,8 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_visualizeGaps(false),
     m_writeToTree(true),
     m_matchingMinPrimaryHits(15),
+    m_matchingMinHitsForGoodView(5),
+    m_matchingMinPrimaryGoodViews(2),
     m_useSmallPrimaries(true),
     m_matchingMinSharedHits(5),
     m_matchingMinCompleteness(0.1f),
@@ -637,7 +639,7 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCPrimaryMatchingMap &
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
-        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nGoodMCHitsTotal < m_matchingMinPrimaryHits))
+        if (!m_useSmallPrimaries && !this->IsGoodMCPrimary(simpleMCPrimary))
             continue;
 
         if (usedMCIds.count(simpleMCPrimary.m_id))
@@ -680,7 +682,7 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
 
-        if (!m_useSmallPrimaries && (simpleMCPrimary.m_nGoodMCHitsTotal < m_matchingMinPrimaryHits))
+        if (!m_useSmallPrimaries && !this->IsGoodMCPrimary(simpleMCPrimary))
             continue;
 
         for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
@@ -704,8 +706,8 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCPrimaryMatchingMap
 void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
     std::cout << "---PROCESSED-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
-    std::cout << "MinGoodPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
-              << m_useSmallPrimaries << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl;
+    std::cout << "MinPrimaryGoodHits " << m_matchingMinPrimaryHits << ", MinHitsForGoodView " << m_matchingMinHitsForGoodView << ", MinPrimaryGoodViews " << m_matchingMinPrimaryGoodViews << std::endl;
+    std::cout << "UseSmallPrimaries " << m_useSmallPrimaries << ", MinSharedHits " << m_matchingMinSharedHits << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl;
 
     bool isCorrect(true), isCalculable(false);
 
@@ -713,7 +715,7 @@ void EventValidationAlgorithm::PrintMatchingOutput(const MCPrimaryMatchingMap &m
     {
         const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
         const bool hasMatch(this->HasMatch(simpleMCPrimary, mapValue.second, matchingDetailsMap));
-        const bool isTargetPrimary((simpleMCPrimary.m_nGoodMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
+        const bool isTargetPrimary(this->IsGoodMCPrimary(simpleMCPrimary) && (NEUTRON != simpleMCPrimary.m_pdgCode));
 
         if (!hasMatch && !isTargetPrimary)
             continue;
@@ -762,8 +764,8 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const
 {
     std::cout << "---VISUALIZE-MATCHING-OUTPUT--------------------------------------------------------------------" << std::endl;
-    std::cout << "MinGoodPrimaryHits " << m_matchingMinPrimaryHits << ", MinSharedHits " << m_matchingMinSharedHits << ", UseSmallPrimaries "
-              << m_useSmallPrimaries << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl << std::endl;
+    std::cout << "MinPrimaryGoodHits " << m_matchingMinPrimaryHits << ", MinHitsForGoodView " << m_matchingMinHitsForGoodView << ", MinPrimaryGoodViews " << m_matchingMinPrimaryGoodViews << std::endl;
+    std::cout << "UseSmallPrimaries " << m_useSmallPrimaries << ", MinSharedHits " << m_matchingMinSharedHits << ", MinCompleteness " << m_matchingMinCompleteness << ", MinPurity " << m_matchingMinPurity << std::endl;
 
     PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), m_visualizeGaps, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
     const HitTypeVector hitTypeVector{TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
@@ -779,7 +781,7 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
         {
             const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
             bool hasMatch(this->HasMatch(simpleMCPrimary, mapValue.second, matchingDetailsMap));
-            const bool isTargetPrimary((simpleMCPrimary.m_nGoodMCHitsTotal >= m_matchingMinPrimaryHits) && (NEUTRON != simpleMCPrimary.m_pdgCode));
+            const bool isTargetPrimary(this->IsGoodMCPrimary(simpleMCPrimary) && (NEUTRON != simpleMCPrimary.m_pdgCode));
 
             if (!hasMatch && !isTargetPrimary)
                 continue;
@@ -980,6 +982,24 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
         PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &isolatedHits, "IsolatedHitsInParticles" + hitTypeString, LIGHTYELLOW);
 }
 #endif
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EventValidationAlgorithm::IsGoodMCPrimary(const SimpleMCPrimary &simpleMCPrimary) const
+{
+    if (simpleMCPrimary.m_nGoodMCHitsTotal < m_matchingMinPrimaryHits)
+        return false;
+
+    int nGoodViews(0);
+    if (simpleMCPrimary.m_nGoodMCHitsU >= m_matchingMinHitsForGoodView) ++nGoodViews;
+    if (simpleMCPrimary.m_nGoodMCHitsV >= m_matchingMinHitsForGoodView) ++nGoodViews;
+    if (simpleMCPrimary.m_nGoodMCHitsW >= m_matchingMinHitsForGoodView) ++nGoodViews;
+
+    if (nGoodViews < m_matchingMinPrimaryGoodViews)
+        return false;
+
+    return true;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool EventValidationAlgorithm::HasMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfoList &simpleMatchedPfoList,
@@ -1186,6 +1206,12 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MatchingMinPrimaryHits", m_matchingMinPrimaryHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MatchingMinHitsForGoodView", m_matchingMinHitsForGoodView));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MatchingMinPrimaryGoodViews", m_matchingMinPrimaryGoodViews));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseSmallPrimaries", m_useSmallPrimaries));
