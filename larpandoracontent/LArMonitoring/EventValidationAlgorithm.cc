@@ -199,32 +199,20 @@ void EventValidationAlgorithm::SelectGoodCaloHits(const CaloHitList *const pSele
 {
     for (const CaloHit *const pCaloHit : *pSelectedCaloHitList)
     {
-        float bestWeight(0.f);
-        const MCParticle *pHitParticle(nullptr);
-        MCParticleWeightMap primaryWeightMap;
-
         MCParticleVector mcParticleVector;
         for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(mapEntry.first);
         std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
 
+        MCParticleWeightMap primaryWeightMap;
+
         for (const MCParticle *const pMCParticle : mcParticleVector)
         {
             const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
-
-            if (weight > bestWeight)
-            {
-                bestWeight = weight;
-                pHitParticle = pMCParticle;
-            }
-
             LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pMCParticle);
 
             if (mcToPrimaryMCMap.end() != mcIter)
                 primaryWeightMap[mcIter->second] += weight;
         }
-
-        if (!pHitParticle)
-            continue;
 
         MCParticleVector mcPrimaryVector;
         for (const auto &mapEntry : primaryWeightMap) mcPrimaryVector.push_back(mapEntry.first);
@@ -1008,7 +996,7 @@ bool EventValidationAlgorithm::HasMatch(const SimpleMCPrimary &simpleMCPrimary, 
     for (const SimpleMatchedPfo &simpleMatchedPfo : simpleMatchedPfoList)
     {
         if (matchingDetailsMap.count(simpleMatchedPfo.m_id) && (simpleMCPrimary.m_id == matchingDetailsMap.at(simpleMatchedPfo.m_id).m_matchedPrimaryId))
-                return true;
+            return true;
     }
 
     return false;
