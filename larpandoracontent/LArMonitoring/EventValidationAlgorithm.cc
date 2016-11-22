@@ -24,6 +24,7 @@ namespace lar_content
 {
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
+    m_integrateOverSlices(false),
     m_neutrinoInducedOnly(false),
     m_primaryPfosOnly(true),
     m_collapseToPrimaryPfos(true),
@@ -73,11 +74,20 @@ StatusCode EventValidationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
     const PfoList *pPfoList = nullptr;
-    PfoList inputPfoList((STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_pfoListName, pPfoList)) ? PfoList(*pPfoList) : PfoList());
+    (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
+
+    // Obtain vector: reco neutrino(s)
+    PfoList allRecoNeutrinoList;
+    LArPfoHelper::GetRecoNeutrinos(pPfoList, allRecoNeutrinoList);
+    allRecoNeutrinoList.sort(EventValidationAlgorithm::SortRecoNeutrinos);
+
+    // Unless integrating over all slices, take only first reco neutrino after sorting. May need a more careful selection here cosmics bkg.
+    const PfoList recoNeutrinoList(m_integrateOverSlices ? allRecoNeutrinoList : !allRecoNeutrinoList.empty() ? PfoList(1, allRecoNeutrinoList.front()) : PfoList());
+    const PfoVector recoNeutrinoVector(recoNeutrinoList.begin(), recoNeutrinoList.end());
 
     // Obtain vector: target pfos
-    PfoList pfoList;
-    LArMonitoringHelper::ExtractTargetPfos(inputPfoList, m_primaryPfosOnly, pfoList);
+    PfoList pfoList; // TODO config
+    LArMonitoringHelper::ExtractTargetPfos(recoNeutrinoList, m_primaryPfosOnly, pfoList);
 
     // Obtain map: pfo -> unique identifier
     PfoIdMap pfoIdMap;
@@ -86,12 +96,6 @@ StatusCode EventValidationAlgorithm::Run()
     // Obtain vector: true neutrinos
     MCParticleVector mcNeutrinoVector;
     LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
-
-    // Obtain vector: reco neutrinos
-    PfoList recoNeutrinoList;
-    LArPfoHelper::GetRecoNeutrinos(pPfoList, recoNeutrinoList);
-    PfoVector recoNeutrinoVector(recoNeutrinoList.begin(), recoNeutrinoList.end());
-    std::sort(recoNeutrinoVector.begin(), recoNeutrinoVector.end(), EventValidationAlgorithm::SortRecoNeutrinos);
 
     // Obtain vector: primary mc particles
     MCParticleVector mcPrimaryVector;
@@ -1155,6 +1159,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
          "ClusterListNames", m_clusterListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IntegrateOverSlices", m_integrateOverSlices));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NeutrinoInducedOnly", m_neutrinoInducedOnly));

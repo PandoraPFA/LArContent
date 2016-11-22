@@ -373,6 +373,7 @@ private:
 
     pandora::StringVector   m_clusterListNames;             ///< Optional list of cluster list names to examine to find left-over, remnant clusters
 
+    bool                    m_integrateOverSlices;          ///< Whether to consider particles from all input slices
     bool                    m_neutrinoInducedOnly;          ///< Whether to consider only mc particles that were neutrino induced
     bool                    m_primaryPfosOnly;              ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
     bool                    m_collapseToPrimaryPfos;        ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
