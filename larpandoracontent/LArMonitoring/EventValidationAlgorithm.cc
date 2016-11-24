@@ -86,7 +86,7 @@ StatusCode EventValidationAlgorithm::Run()
     const PfoVector recoNeutrinoVector(recoNeutrinoList.begin(), recoNeutrinoList.end());
 
     // Obtain vector: target pfos
-    PfoList pfoList; // TODO config
+    PfoList pfoList;
     LArMonitoringHelper::ExtractTargetPfos(recoNeutrinoList, m_primaryPfosOnly, pfoList);
 
     // Obtain map: pfo -> unique identifier
