@@ -19,7 +19,8 @@ namespace lar_content
 {
 
 CheatingVertexCreationAlgorithm::CheatingVertexCreationAlgorithm() :
-    m_replaceCurrentVertexList(true)
+    m_replaceCurrentVertexList(true),
+    m_vertexXCorrection(0.f)
 {
 }
 
@@ -44,7 +45,7 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
             continue;
 
         PandoraContentApi::Vertex::Parameters parameters;
-        parameters.m_position = pMCParticle->GetEndpoint();
+        parameters.m_position = CartesianVector(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), pMCParticle->GetEndpoint().GetZ());
         parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
 
@@ -72,6 +73,9 @@ StatusCode CheatingVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexXCorrection", m_vertexXCorrection));
 
     return STATUS_CODE_SUCCESS;
 }
