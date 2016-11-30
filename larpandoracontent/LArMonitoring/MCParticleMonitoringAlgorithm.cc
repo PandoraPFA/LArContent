@@ -24,7 +24,7 @@ namespace lar_content
 {
 
 MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() :
-    m_neutrinoInducedOnly(false),
+    m_useTrueNeutrinosOnly(false),
     m_minHitsForDisplay(1)
 {
 }
@@ -84,7 +84,7 @@ void MCParticleMonitoringAlgorithm::GetSimpleMCParticleList(const MCParticleVect
 {
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        if (m_neutrinoInducedOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
+        if (m_useTrueNeutrinosOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
             continue;
 
         SimpleMCParticle simpleMCParticle;
@@ -220,7 +220,7 @@ StatusCode MCParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NeutrinoInducedOnly", m_neutrinoInducedOnly));
+        "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinHitsForDisplay", m_minHitsForDisplay));

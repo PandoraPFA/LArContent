@@ -18,16 +18,20 @@
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 #include "larpandoracontent/LArObjects/LArTrackPfo.h"
 
+#include <iomanip>
+
 using namespace pandora;
 
 namespace lar_content
 {
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
-    m_integrateOverSlices(false),
-    m_neutrinoInducedOnly(false),
+    m_integrateOverRecoNeutrinos(false),
+    m_useRecoNeutrinosOnly(true),
+    m_useTrueNeutrinosOnly(true),
     m_primaryPfosOnly(true),
     m_collapseToPrimaryPfos(true),
+    m_minHitNeutrinoWeight(0.1f),
     m_minHitSharingFraction(0.9f),
     m_maxPhotonPropagation(2.5f),
     m_printAllToScreen(false),
@@ -36,7 +40,7 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_visualizeVertices(false),
     m_visualizeRemnants(false),
     m_visualizeGaps(false),
-    m_writeToTree(true),
+    m_writeToTree(false),
     m_matchingMinPrimaryHits(15),
     m_matchingMinHitsForGoodView(5),
     m_matchingMinPrimaryGoodViews(2),
@@ -76,26 +80,32 @@ StatusCode EventValidationAlgorithm::Run()
     const PfoList *pPfoList = nullptr;
     (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
 
-    // Obtain vector: reco neutrino(s)
-    PfoList allRecoNeutrinoList;
-    LArPfoHelper::GetRecoNeutrinos(pPfoList, allRecoNeutrinoList);
-    allRecoNeutrinoList.sort(EventValidationAlgorithm::SortRecoNeutrinos);
+    // Obtain all reco particles
+    PfoList allRecoParticleList(pPfoList ? *pPfoList : PfoList());
 
-    // Unless integrating over all slices, take only first reco neutrino after sorting. May need a more careful selection here cosmics bkg.
-    const PfoList recoNeutrinoList(m_integrateOverSlices ? allRecoNeutrinoList : !allRecoNeutrinoList.empty() ? PfoList(1, allRecoNeutrinoList.front()) : PfoList());
+    // Obtain reco neutrino(s)
+    PfoList recoNeutrinoList;
+    this->SelectRecoNeutrinos(allRecoParticleList, recoNeutrinoList);
     const PfoVector recoNeutrinoVector(recoNeutrinoList.begin(), recoNeutrinoList.end());
 
     // Obtain vector: target pfos
     PfoList pfoList;
-    LArMonitoringHelper::ExtractTargetPfos(recoNeutrinoList, m_primaryPfosOnly, pfoList);
+    LArMonitoringHelper::ExtractTargetPfos(m_useRecoNeutrinosOnly ? recoNeutrinoList : allRecoParticleList, m_primaryPfosOnly, pfoList);
 
     // Obtain map: pfo -> unique identifier
     PfoIdMap pfoIdMap;
     this->GetPfoIdMap(pfoList, pfoIdMap);
 
     // Obtain vector: true neutrinos
+    MCParticleVector allMCNeutrinoVector;
+    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, allMCNeutrinoVector);
+
     MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
+    for (const MCParticle *const pMCNeutrino : allMCNeutrinoVector)
+    {
+        const LArMCParticle *const pLArMCNeutrino(dynamic_cast<const LArMCParticle*>(pMCNeutrino));
+        if (pLArMCNeutrino && (0 != pLArMCNeutrino->GetNuanceCode())) mcNeutrinoVector.push_back(pMCNeutrino);
+    }
 
     // Obtain vector: primary mc particles
     MCParticleVector mcPrimaryVector;
@@ -167,6 +177,51 @@ StatusCode EventValidationAlgorithm::Run()
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::SelectRecoNeutrinos(const PfoList &allRecoParticleList, PfoList &selectedRecoNeutrinoList) const
+{
+    PfoList allRecoNeutrinoList;
+    LArPfoHelper::GetRecoNeutrinos(&allRecoParticleList, allRecoNeutrinoList);
+    allRecoNeutrinoList.sort(EventValidationAlgorithm::SortRecoNeutrinos);
+
+    if (m_integrateOverRecoNeutrinos)
+    {
+        selectedRecoNeutrinoList = allRecoNeutrinoList;
+        return;
+    }
+
+    const Pfo *pBestNeutrino(nullptr);
+    float bestNeutrinoWeight(0.f);
+
+    for (const Pfo *const pNeutrinoPfo : allRecoNeutrinoList)
+    {
+        PfoList downstreamPfos;
+        LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
+        downstreamPfos.sort(LArPfoHelper::SortByNHits);
+        float neutrinoWeight(0.f);
+
+        for (const Pfo *const pDownstreamPfo : downstreamPfos)
+        {
+            ClusterList twoDClusters;
+            LArPfoHelper::GetTwoDClusterList(pDownstreamPfo, twoDClusters);
+            twoDClusters.sort(LArClusterHelper::SortByNHits);
+
+            for (const Cluster *const pCluster : twoDClusters)
+                neutrinoWeight += LArMCParticleHelper::GetNeutrinoWeight(pCluster) * static_cast<float>(pCluster->GetNCaloHits());
+        }
+
+        if (neutrinoWeight > bestNeutrinoWeight)
+        {
+            pBestNeutrino = pNeutrinoPfo;
+            bestNeutrinoWeight = neutrinoWeight;
+        }
+    }
+
+    if (pBestNeutrino)
+        selectedRecoNeutrinoList.push_back(pBestNeutrino);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,7 +333,7 @@ void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mc
 {
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        if (m_neutrinoInducedOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
+        if (m_useTrueNeutrinosOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
             continue;
 
         SimpleMCPrimary simpleMCPrimary;
@@ -413,7 +468,19 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 
     for (const ParticleFlowObject *const pPfo : recoNeutrinoVector)
     {
-        std::cout << "RecoNeutrino, PDG " << pPfo->GetParticleId() << std::endl;
+        std::cout << "RecoNeutrino, PDG " << pPfo->GetParticleId();
+
+        CaloHitList neutrinoHits, otherHits;
+        this->GetNeutrinoHitOrigins(pPfo, neutrinoHits, otherHits);
+
+        if (!(neutrinoHits.empty() && otherHits.empty()))
+        {
+            const std::streamsize ss(std::cout.precision());
+            std::cout << ", NeutrinoHitFraction " << std::setprecision(2) << (static_cast<float>(neutrinoHits.size()) / static_cast<float>(neutrinoHits.size() + otherHits.size()))
+                      << std::setprecision(ss) << " (" << neutrinoHits.size() << " / " << (neutrinoHits.size() + otherHits.size()) << ")";
+        }
+
+        std::cout << std::endl;
 
         if ((1 == pPfo->GetVertexList().size()) && (1 == mcNeutrinoVector.size()))
             std::cout << "VtxOffset" << ((*(pPfo->GetVertexList().begin()))->GetPosition() - mcNeutrinoVector.front()->GetEndpoint()) << std::endl;
@@ -451,9 +518,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
 {
 #ifdef MONITORING
-    int mcNeutrinoNuance(-1), mcNeutrinoPdg(0), recoNeutrinoPdg(0);
+    int mcNeutrinoNuance(-1), mcNeutrinoPdg(0);
     float mcNeutrinoVtxX(-1.f), mcNeutrinoVtxY(-1.f), mcNeutrinoVtxZ(-1.f);
-    float recoNeutrinoVtxX(-1.f), recoNeutrinoVtxY(-1.f), recoNeutrinoVtxZ(-1.f);
     float mcNeutrinoE(0.f), mcNeutrinoPX(0.f), mcNeutrinoPY(0.f), mcNeutrinoPZ(0.f);
     const int nMCNeutrinos(mcNeutrinoVector.size()), nRecoNeutrinos(recoNeutrinoVector.size()), nMCPrimaries(mcPrimaryMatchingMap.size());
 
@@ -477,11 +543,16 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             mcNeutrinoNuance = pLArMCNeutrino->GetNuanceCode();
     }
 
+    int recoNeutrinoPdg(0);
+    float recoNeutrinoVtxX(-1.f), recoNeutrinoVtxY(-1.f), recoNeutrinoVtxZ(-1.f);
+    int nNeutrinoHitsTotal(0), nNeutrinoHitsU(0), nNeutrinoHitsV(0), nNeutrinoHitsW(0);
+    int nOtherHitsTotal(0), nOtherHitsU(0), nOtherHitsV(0), nOtherHitsW(0);
+
     if (!recoNeutrinoVector.empty())
     {
         const ParticleFlowObject *const pPfo = recoNeutrinoVector.front();
-
         recoNeutrinoPdg = pPfo->GetParticleId();
+
         const Vertex *const pVertex(pPfo->GetVertexList().empty() ? nullptr : *(pPfo->GetVertexList().begin()));
 
         if (pVertex)
@@ -490,6 +561,19 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             recoNeutrinoVtxY = pVertex->GetPosition().GetY();
             recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
         }
+
+        CaloHitList neutrinoHits, otherHits;
+        this->GetNeutrinoHitOrigins(pPfo, neutrinoHits, otherHits);
+
+        nNeutrinoHitsTotal = neutrinoHits.size();
+        nNeutrinoHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, neutrinoHits);
+        nNeutrinoHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, neutrinoHits);
+        nNeutrinoHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, neutrinoHits);
+
+        nOtherHitsTotal = otherHits.size();
+        nOtherHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, otherHits);
+        nOtherHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, otherHits);
+        nOtherHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, otherHits);
     }
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
@@ -509,6 +593,14 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxX", recoNeutrinoVtxX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxY", recoNeutrinoVtxY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxZ", recoNeutrinoVtxZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nNeutrinoHitsTotal", nNeutrinoHitsTotal));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nNeutrinoHitsU", nNeutrinoHitsU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nNeutrinoHitsV", nNeutrinoHitsV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nNeutrinoHitsW", nNeutrinoHitsW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nOtherHitsTotal", nOtherHitsTotal));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nOtherHitsU", nOtherHitsU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nOtherHitsV", nOtherHitsV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nOtherHitsW", nOtherHitsW));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCPrimaries", nMCPrimaries));
 
     for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
@@ -605,6 +697,37 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoVector.size()
               << ", nRecoNeutrinos" << recoNeutrinoVector.size() << ", nMCPrimaries " << mcPrimaryMatchingMap.size() << std::endl;
 #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::GetNeutrinoHitOrigins(const Pfo *const pNeutrinoPfo, CaloHitList &neutrinoInducedHits, CaloHitList &otherHits) const
+{
+    PfoList downstreamPfos;
+    LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
+    downstreamPfos.sort(LArPfoHelper::SortByNHits);
+
+    for (const Pfo *const pDownstreamPfo : downstreamPfos)
+    {
+        ClusterList twoDClusters;
+        LArPfoHelper::GetTwoDClusterList(pDownstreamPfo, twoDClusters);
+        twoDClusters.sort(LArClusterHelper::SortByNHits);
+
+        CaloHitList caloHitList;
+        for (const Cluster *const pCluster : twoDClusters)
+        {
+            pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+            caloHitList.insert(caloHitList.begin(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+        }
+
+        for (const CaloHit *const pCaloHit : caloHitList)
+        {
+            bool isNeutrinoInduced(false);
+            try {isNeutrinoInduced = LArMCParticleHelper::IsNeutrinoInduced(pCaloHit, m_minHitNeutrinoWeight);} catch (const StatusCodeException &) {}
+            CaloHitList &outputList(isNeutrinoInduced ? neutrinoInducedHits : otherHits);
+            outputList.push_back(pCaloHit);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1161,16 +1284,22 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
          "ClusterListNames", m_clusterListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IntegrateOverSlices", m_integrateOverSlices));
+        "IntegrateOverRecoNeutrinos", m_integrateOverRecoNeutrinos));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NeutrinoInducedOnly", m_neutrinoInducedOnly));
+        "UseRecoNeutrinosOnly", m_useRecoNeutrinosOnly));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrimaryPfosOnly", m_primaryPfosOnly));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CollapseToPrimaryPfos", m_collapseToPrimaryPfos));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitNeutrinoWeight", m_minHitNeutrinoWeight));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinHitSharingFraction", m_minHitSharingFraction));
