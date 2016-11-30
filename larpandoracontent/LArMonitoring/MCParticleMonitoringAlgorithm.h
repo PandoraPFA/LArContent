@@ -118,7 +118,7 @@ private:
     std::string     m_caloHitListName;          ///< Name of input calo hit list
     std::string     m_mcParticleListName;       ///< Name of input MC particle list
 
-    bool            m_neutrinoInducedOnly;      ///< Whether to consider only mc particles that were neutrino induced
+    bool            m_useTrueNeutrinosOnly;     ///< Whether to consider only mc particles that were neutrino induced
     int             m_minHitsForDisplay;        ///< Min hits associated with mc particle to warrant display to terminal
 };
 

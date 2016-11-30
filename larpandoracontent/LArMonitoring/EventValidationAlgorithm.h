@@ -141,6 +141,15 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
+     *  @brief  Select a subset of reco neutrinos representing those that should be used in performance metrics (which will then
+     *          integrate over all neutrino daughter particles, regardless of neutrino origin)
+     * 
+     *  @param  allRecoParticleList the list of all reco particles
+     *  @param  selectedRecoNeutrinoList to receive the populated selected reco neutrino list
+     */
+    void SelectRecoNeutrinos(const pandora::PfoList &allRecoParticleList, pandora::PfoList &selectedRecoNeutrinoList) const;
+
+    /**
      *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
      * 
      *  @param  pCaloHitList the address of the input calo hit list
@@ -221,6 +230,15 @@ private:
      */
     void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
         const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+
+    /**
+     *  @brief  Get downstream hits from a neutrino pfo that are truly neutrino induced (and those that are not)
+     * 
+     *  @param  pNeutrinoPfo address of the neutrino pfo
+     *  @param  neutrinoInducedHits to receive the list of neutrino-induced downstream hits
+     *  @param  otherHits to receive the list of downstream hits with non-neutrino origin
+     */
+    void GetNeutrinoHitOrigins(const pandora::Pfo *const pNeutrinoPfo, pandora::CaloHitList &neutrinoInducedHits, pandora::CaloHitList &otherHits) const;
 
     /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
@@ -373,11 +391,13 @@ private:
 
     pandora::StringVector   m_clusterListNames;             ///< Optional list of cluster list names to examine to find left-over, remnant clusters
 
-    bool                    m_integrateOverSlices;          ///< Whether to consider particles from all input slices
-    bool                    m_neutrinoInducedOnly;          ///< Whether to consider only mc particles that were neutrino induced
-    bool                    m_primaryPfosOnly;              ///< Whether to extract only primary Pfos - top-level Pfos and top-level daughters of top-level neutrinos
+    bool                    m_integrateOverRecoNeutrinos;   ///< Whether to consider particles from all reco neutrinos
+    bool                    m_useRecoNeutrinosOnly;         ///< Whether to only consider pfos that are daughters of reco neutrinos
+    bool                    m_useTrueNeutrinosOnly;         ///< Whether to consider only mc particles that were neutrino induced
+    bool                    m_primaryPfosOnly;              ///< Whether to extract only primary Pfos - top-level pfos and top-level daughters of top-level neutrinos
     bool                    m_collapseToPrimaryPfos;        ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
 
+    float                   m_minHitNeutrinoWeight;         ///< Minimum fraction of energy deposited by neutrino-indiced products in a single hit
     float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
     float                   m_maxPhotonPropagation;         ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
 
