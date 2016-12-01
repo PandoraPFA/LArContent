@@ -150,6 +150,14 @@ private:
     void SelectRecoNeutrinos(const pandora::PfoList &allRecoParticleList, pandora::PfoList &selectedRecoNeutrinoList) const;
 
     /**
+     *  @brief  Select a subset of true neutrinos representing those that should be used in performance metrics
+     * 
+     *  @param  pAllMCParticleList address of the input mc particle list
+     *  @param  selectedMCNeutrinoVector to receive the populated selected true neutrino vector
+     */
+    void SelectTrueNeutrinos(const pandora::MCParticleList *const pAllMCParticleList, pandora::MCParticleVector &selectedMCNeutrinoVector) const;
+
+    /**
      *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
      * 
      *  @param  pCaloHitList the address of the input calo hit list
@@ -232,13 +240,21 @@ private:
         const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
 
     /**
-     *  @brief  Get downstream hits from a neutrino pfo that are truly neutrino induced (and those that are not)
+     *  @brief  Get hits, downstream from a neutrino pfo, that are truly neutrino induced (and those that are not)
      * 
      *  @param  pNeutrinoPfo address of the neutrino pfo
      *  @param  neutrinoInducedHits to receive the list of neutrino-induced downstream hits
      *  @param  otherHits to receive the list of downstream hits with non-neutrino origin
      */
     void GetNeutrinoHitOrigins(const pandora::Pfo *const pNeutrinoPfo, pandora::CaloHitList &neutrinoInducedHits, pandora::CaloHitList &otherHits) const;
+
+    /**
+     *  @brief  Get hits, from entire event, that are truly neutrino induced (and those that are not)
+     * 
+     *  @param  neutrinoInducedHits to receive the list of neutrino-induced hits
+     *  @param  otherHits to receive the list of hits with non-neutrino origin
+     */
+    void GetEventHitOrigins(pandora::CaloHitList &neutrinoInducedHits, pandora::CaloHitList &otherHits) const;
 
     /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
