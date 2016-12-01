@@ -50,7 +50,8 @@ StatusCode SlidingConePfoMopUpAlgorithm::Run()
 
     if (m_useVertex && !pVertex)
     {
-        std::cout << "SlidingConePfoMopUpAlgorithm - interaction vertex not available for use." << std::endl;
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "SlidingConePfoMopUpAlgorithm - interaction vertex not available for use." << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
