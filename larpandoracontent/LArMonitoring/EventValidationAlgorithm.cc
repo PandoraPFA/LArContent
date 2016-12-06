@@ -31,6 +31,7 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
     m_useTrueNeutrinosOnly(true),
     m_primaryPfosOnly(true),
     m_collapseToPrimaryPfos(true),
+    m_selectInputHits(true),
     m_minHitNeutrinoWeight(0.1f),
     m_minHitSharingFraction(0.9f),
     m_maxPhotonPropagation(2.5f),
@@ -242,6 +243,12 @@ void EventValidationAlgorithm::SelectTrueNeutrinos(const MCParticleList *const p
 void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
     CaloHitList &selectedCaloHitList) const
 {
+    if (!m_selectInputHits)
+    {
+        selectedCaloHitList.insert(selectedCaloHitList.end(), pCaloHitList->begin(), pCaloHitList->end());
+        return;
+    }
+
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         try
@@ -269,6 +276,12 @@ void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitL
 void EventValidationAlgorithm::SelectGoodCaloHits(const CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
     CaloHitList &selectedGoodCaloHitList) const
 {
+    if (!m_selectInputHits)
+    {
+        selectedGoodCaloHitList.insert(selectedGoodCaloHitList.end(), pSelectedCaloHitList->begin(), pSelectedCaloHitList->end());
+        return;
+    }
+
     for (const CaloHit *const pCaloHit : *pSelectedCaloHitList)
     {
         MCParticleVector mcParticleVector;
@@ -1363,6 +1376,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CollapseToPrimaryPfos", m_collapseToPrimaryPfos));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectInputHits", m_selectInputHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinHitNeutrinoWeight", m_minHitNeutrinoWeight));

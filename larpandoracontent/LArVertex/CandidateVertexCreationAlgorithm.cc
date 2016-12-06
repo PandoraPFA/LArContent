@@ -28,7 +28,7 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_chiSquaredCut(2.f),
     m_enableEndpointCandidates(true),
     m_maxEndpointXDiscrepancy(4.f),
-    m_enableCrossingCandidates(true),
+    m_enableCrossingCandidates(false),
     m_maxCrossingXDiscrepancy(0.5f),
     m_extrapolationNSteps(200),
     m_extrapolationStepSize(0.1f),
