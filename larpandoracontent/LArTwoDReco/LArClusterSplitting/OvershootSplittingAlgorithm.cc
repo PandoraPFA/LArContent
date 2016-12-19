@@ -100,7 +100,15 @@ void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResul
 
                 float rL2(0.f), rT2(0.f);
                 CartesianVector intersectPosition2(0.f, 0.f, 0.f);
-                LArPointingClusterHelper::GetIntersection(clusterVertex, pCluster1, intersectPosition2, rL2, rT2);
+
+                try
+                {
+                    LArPointingClusterHelper::GetIntersection(clusterVertex, pCluster1, intersectPosition2, rL2, rT2);
+                }
+                catch (const StatusCodeException &)
+                {
+                    continue;
+                }
 
                 if (rL2 < -m_maxIntersectDisplacement || rL2 > m_maxClusterSeparation)
                     continue;
@@ -124,8 +132,16 @@ void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResul
                 // Find intersection of pointing cluster and target cluster
                 float firstDisplacement(0.f), secondDisplacement(0.f);
                 CartesianVector intersectPosition1(0.f, 0.f, 0.f);
-                LArPointingClusterHelper::GetIntersection(projectedPosition1, projectedDirection1, projectedPosition2, projectedDirection2,
-                    intersectPosition1, firstDisplacement, secondDisplacement);
+
+                try
+                {
+                    LArPointingClusterHelper::GetIntersection(projectedPosition1, projectedDirection1, projectedPosition2, projectedDirection2,
+                        intersectPosition1, firstDisplacement, secondDisplacement);
+                }
+                catch (const StatusCodeException &)
+                {
+                    continue;
+                }
 
                 // Store intersections if they're sufficiently far along the cluster trajectory
                 const float closestDisplacement1(LArClusterHelper::GetClosestDistance(intersectPosition1, pCluster1));
