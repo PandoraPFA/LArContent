@@ -966,6 +966,7 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
 
     for (const HitType hitType : hitTypeVector)
     {
+        PfoSet allPrimaryMatchedPfos;
         const std::string hitTypeString((TPC_VIEW_U == hitType) ? "_U" : (TPC_VIEW_V == hitType) ? "_V" : "_W");
 
         if (m_visualizeVertices)
@@ -1035,7 +1036,11 @@ void EventValidationAlgorithm::VisualizeMatchingOutput(const MCParticleVector &m
                     }
                 }
             }
+
+            allPrimaryMatchedPfos.insert(primaryMatchedPfos.begin(), primaryMatchedPfos.end());
         }
+
+        this->VisualizeContaminants(recoNeutrinoVector, allPrimaryMatchedPfos, hitType);
 
         if (m_visualizeRemnants)
             this->VisualizeRemnants(hitType);
@@ -1130,6 +1135,33 @@ void EventValidationAlgorithm::GetPrimaryDetails(const SimpleMCPrimary &thisSimp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void EventValidationAlgorithm::VisualizeContaminants(const PfoVector &recoNeutrinoVector, const PfoSet &allPrimaryMatchedPfos,
+    const HitType hitType) const
+{
+    ClusterList contaminantClusters;
+    const std::string hitTypeString((TPC_VIEW_U == hitType) ? "_U" : (TPC_VIEW_V == hitType) ? "_V" : "_W");
+
+    for (const Pfo *const pNeutrinoPfo : recoNeutrinoVector)
+    {
+        const PfoList &daughterList(pNeutrinoPfo->GetDaughterPfoList());
+
+        for (const Pfo *const pPfo : daughterList)
+        {
+            if (allPrimaryMatchedPfos.count(pPfo))
+                continue;
+
+            PfoList downstreamPfos;
+            LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
+            LArPfoHelper::GetClusters(downstreamPfos, hitType, contaminantClusters);
+        }
+    }
+
+    if (!contaminantClusters.empty())
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &contaminantClusters, "ContaminantClusters" + hitTypeString, BLACK);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
 {
     const std::string hitTypeString((TPC_VIEW_U == hitType) ? "_U" : (TPC_VIEW_V == hitType) ? "_V" : "_W");
@@ -1146,7 +1178,7 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
     }
 
     if (!availableHits.empty())
-        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &availableHits, "RemnantHits" + hitTypeString, LIGHTCYAN);
+        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &availableHits, "AllRemnantHits" + hitTypeString, LIGHTCYAN);
 
     CaloHitList isolatedHits;
     ClusterList availableClusters;
@@ -1170,10 +1202,10 @@ void EventValidationAlgorithm::VisualizeRemnants(const HitType hitType) const
     }
 
     if (!availableClusters.empty())
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &availableClusters, "RemnantClusters" + hitTypeString, GRAY);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &availableClusters, "AllRemnantClusters" + hitTypeString, GRAY);
 
     if (!isolatedHits.empty())
-        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &isolatedHits, "IsolatedHitsInParticles" + hitTypeString, LIGHTYELLOW);
+        PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &isolatedHits, "AllIsolatedHitsInParticles" + hitTypeString, LIGHTYELLOW);
 }
 #endif
 //------------------------------------------------------------------------------------------------------------------------------------------
