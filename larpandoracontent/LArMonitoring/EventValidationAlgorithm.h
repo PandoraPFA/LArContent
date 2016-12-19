@@ -325,6 +325,15 @@ private:
     void GetPrimaryDetails(const SimpleMCPrimary &simpleMCPrimary, const MCPrimaryMatchingMap &mcPrimaryMatchingMap, std::string &name, Color &color) const;
 
     /**
+     *  @brief  Use Pandora monitoring to visualize particles of non-neutrino origin included as daughters of the neutrino
+     *
+     *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  allPrimaryMatchedPfos the set of all primary matched pfos
+     *  @param  hitType the hitType to visualize
+     */
+    void VisualizeContaminants(const pandora::PfoVector &recoNeutrinoVector, const pandora::PfoSet &allPrimaryMatchedPfos, const pandora::HitType hitType) const;
+
+    /**
      *  @brief  Use Pandora monitoring to visualize left over hits and clusters
      *
      *  @param  hitType the hitType to visualize, will examine all remnants of given hit type in provided hit and cluster list name(s)

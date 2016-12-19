@@ -123,6 +123,7 @@ void MCParticleMonitoringAlgorithm::PrintAllOutput(const MCParticleVector &mcNeu
     const SimpleMCParticleMap &simpleMCParticleMap) const
 {
     std::cout << "---MC-PARTICLE-MONITORING-----------------------------------------------------------------------" << std::endl;
+    MCParticleSet usedMCParticles;
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
     {
@@ -133,17 +134,45 @@ void MCParticleMonitoringAlgorithm::PrintAllOutput(const MCParticleVector &mcNeu
         {
             const MCParticle *const pMCPrimary(simpleMCPrimary.m_pPandoraAddress);
 
-            if (pMCNeutrino != LArMCParticleHelper::GetParentNeutrino(pMCPrimary))
+            try
+            {
+                if (pMCNeutrino != LArMCParticleHelper::GetParentNeutrino(pMCPrimary))
+                    continue;
+            }
+            catch (const StatusCodeException &)
+            {
                 continue;
+            }
 
-            std::cout << std::endl << "--Primary " << simpleMCPrimary.m_id << ", MCPDG " << simpleMCPrimary.m_pdgCode << ", Energy " << simpleMCPrimary.m_energy
+            if (simpleMCPrimary.m_nMCHitsTotal >= m_minHitsForDisplay)
+            {
+                std::cout << std::endl << "--NeutrinoPrimary " << simpleMCPrimary.m_id << ", MCPDG " << simpleMCPrimary.m_pdgCode << ", Energy " << simpleMCPrimary.m_energy
+                          << ", Dist. " << (simpleMCPrimary.m_endpoint - simpleMCPrimary.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
+                          << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
+
+                this->PrintMCParticle(pMCPrimary, simpleMCParticleMap, 1);
+                usedMCParticles.insert(pMCPrimary);
+            }
+        }
+
+        std::cout << std::endl;
+    }
+
+    for (const SimpleMCParticle &simpleMCPrimary : simpleMCPrimaryList)
+    {
+        const MCParticle *const pMCPrimary(simpleMCPrimary.m_pPandoraAddress);
+
+        if (usedMCParticles.count(pMCPrimary))
+            continue;
+
+        if (simpleMCPrimary.m_nMCHitsTotal >= m_minHitsForDisplay)
+        {
+            std::cout << std::endl << "--NonNeutrinoPrimary " << simpleMCPrimary.m_id << ", MCPDG " << simpleMCPrimary.m_pdgCode << ", Energy " << simpleMCPrimary.m_energy
                       << ", Dist. " << (simpleMCPrimary.m_endpoint - simpleMCPrimary.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
                       << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
 
             this->PrintMCParticle(pMCPrimary, simpleMCParticleMap, 1);
         }
-
-        std::cout << std::endl;
     }
 
     std::cout << "------------------------------------------------------------------------------------------------" << std::endl;

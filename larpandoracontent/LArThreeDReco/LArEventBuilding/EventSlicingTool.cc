@@ -302,7 +302,15 @@ bool EventSlicingTool::CheckClosestApproach(const LArPointingCluster::Vertex &ve
 {
     CartesianVector intersectionPoint(0.f, 0.f, 0.f);
     float displacement1(std::numeric_limits<float>::max()), displacement2(std::numeric_limits<float>::max());
-    LArPointingClusterHelper::GetIntersection(vertex1, vertex2, intersectionPoint, displacement1, displacement2);
+
+    try
+    {
+        LArPointingClusterHelper::GetIntersection(vertex1, vertex2, intersectionPoint, displacement1, displacement2);
+    }
+    catch (const StatusCodeException &)
+    {
+        return false;
+    }
 
     const CartesianVector approach1(vertex1.GetPosition() + vertex1.GetDirection() * displacement1);
     const CartesianVector approach2(vertex2.GetPosition() + vertex2.GetDirection() * displacement2);
