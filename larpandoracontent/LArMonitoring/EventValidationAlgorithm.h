@@ -224,20 +224,22 @@ private:
      * 
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      */
     void PrintAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-        const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+        const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
 
     /**
      *  @brief  Write all the raw matching output to a tree
      * 
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  recoNeutrinoVector the reco neutrino vector
+     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      */
     void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-        const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+        const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
 
     /**
      *  @brief  Get hits, downstream from a neutrino pfo, that are truly neutrino induced (and those that are not)

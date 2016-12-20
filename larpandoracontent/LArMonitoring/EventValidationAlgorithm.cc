@@ -148,11 +148,11 @@ StatusCode EventValidationAlgorithm::Run()
 
     // Print raw matching information to terminal
     if (m_printAllToScreen)
-        this->PrintAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
+        this->PrintAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcToPrimaryMCMap, mcPrimaryMatchingMap);
 
     // Write raw matching information to root file
     if (m_writeToTree)
-        this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcPrimaryMatchingMap);
+        this->WriteAllOutput(mcNeutrinoVector, recoNeutrinoVector, mcToPrimaryMCMap, mcPrimaryMatchingMap);
 
     if (m_printMatchingToScreen || m_visualizeMatching)
     {
@@ -482,7 +482,7 @@ void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
-    const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
+    const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
 {
     std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
 
@@ -497,8 +497,12 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
         std::cout << "RecoNeutrino, PDG " << pPfo->GetParticleId();
         const std::streamsize ss(std::cout.precision());
 
+        CaloHitList allRecoNeutrinoHits, allRecoOtherHits;
+        this->GetNeutrinoHitOrigins(pPfo, allRecoNeutrinoHits, allRecoOtherHits);
+
         CaloHitList recoNeutrinoHits, recoOtherHits;
-        this->GetNeutrinoHitOrigins(pPfo, recoNeutrinoHits, recoOtherHits);
+        this->SelectCaloHits(&allRecoNeutrinoHits, mcToPrimaryMCMap, recoNeutrinoHits);
+        this->SelectCaloHits(&allRecoOtherHits, mcToPrimaryMCMap, recoOtherHits);
 
         if (!(recoNeutrinoHits.empty() && recoOtherHits.empty()))
         {
@@ -506,8 +510,12 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
                       << std::setprecision(ss) << " (" << recoNeutrinoHits.size() << " / " << (recoNeutrinoHits.size() + recoOtherHits.size()) << ")";
         }
 
+        CaloHitList allEventNeutrinoHits, allEventOtherHits;
+        this->GetEventHitOrigins(allEventNeutrinoHits, allEventOtherHits);
+
         CaloHitList eventNeutrinoHits, eventOtherHits;
-        this->GetEventHitOrigins(eventNeutrinoHits, eventOtherHits);
+        this->SelectCaloHits(&allEventNeutrinoHits, mcToPrimaryMCMap, eventNeutrinoHits);
+        this->SelectCaloHits(&allEventOtherHits, mcToPrimaryMCMap, eventOtherHits);
 
         if (!eventNeutrinoHits.empty())
         {
@@ -550,7 +558,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
-    const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
+    const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
 {
 #ifdef MONITORING
     int mcNeutrinoNuance(-1), mcNeutrinoPdg(0);
@@ -597,8 +605,12 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
             recoNeutrinoVtxZ = pVertex->GetPosition().GetZ();
         }
 
+        CaloHitList allRecoNeutrinoHits, allRecoOtherHits;
+        this->GetNeutrinoHitOrigins(pPfo, allRecoNeutrinoHits, allRecoOtherHits);
+
         CaloHitList recoNeutrinoHits, recoOtherHits;
-        this->GetNeutrinoHitOrigins(pPfo, recoNeutrinoHits, recoOtherHits);
+        this->SelectCaloHits(&allRecoNeutrinoHits, mcToPrimaryMCMap, recoNeutrinoHits);
+        this->SelectCaloHits(&allRecoOtherHits, mcToPrimaryMCMap, recoOtherHits);
 
         nRecoNeutrinoHitsTotal = recoNeutrinoHits.size();
         nRecoNeutrinoHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, recoNeutrinoHits);
@@ -615,8 +627,12 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         recoNeutrinoNPrimaries = pfoList.size();
     }
 
+    CaloHitList allEventNeutrinoHits, allEventOtherHits;
+    this->GetEventHitOrigins(allEventNeutrinoHits, allEventOtherHits);
+
     CaloHitList eventNeutrinoHits, eventOtherHits;
-    this->GetEventHitOrigins(eventNeutrinoHits, eventOtherHits);
+    this->SelectCaloHits(&allEventNeutrinoHits, mcToPrimaryMCMap, eventNeutrinoHits);
+    this->SelectCaloHits(&allEventOtherHits, mcToPrimaryMCMap, eventOtherHits);
 
     const int nEventNeutrinoHitsTotal = eventNeutrinoHits.size();
     const int nEventNeutrinoHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, eventNeutrinoHits);
