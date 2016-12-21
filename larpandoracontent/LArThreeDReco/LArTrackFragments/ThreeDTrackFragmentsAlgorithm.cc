@@ -19,7 +19,7 @@ namespace lar_content
 {
 
 ThreeDTrackFragmentsAlgorithm::ThreeDTrackFragmentsAlgorithm() :
-    m_nMaxTensorToolRepeats(5000),
+    m_nMaxTensorToolRepeats(1000),
     m_minXOverlap(3.f),
     m_minXOverlapFraction(0.8f),
     m_maxPointDisplacementSquared(1.5f * 1.5f),

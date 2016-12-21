@@ -19,7 +19,7 @@ namespace lar_content
 {
 
 ThreeDTransverseTracksAlgorithm::ThreeDTransverseTracksAlgorithm() :
-    m_nMaxTensorToolRepeats(5000),
+    m_nMaxTensorToolRepeats(1000),
     m_pseudoChi2Cut(3.f),
     m_minSegmentMatchedFraction(0.1f),
     m_minSegmentMatchedPoints(3),

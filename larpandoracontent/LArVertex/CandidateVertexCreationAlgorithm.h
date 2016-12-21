@@ -108,9 +108,10 @@ private:
      *  @param  crossingPoints2 the crossing points in view 2
      *  @param  hitType1 the hit type of crossing points 1
      *  @param  hitType2 the hit type of crossing points 2
+     *  @param  nCrossingCandidates to count the number of crossing candidates created
      */
     void CreateCrossingVertices(const pandora::CartesianPointVector &crossingPoints1, const pandora::CartesianPointVector &crossingPoints2,
-        const pandora::HitType hitType1, const pandora::HitType hitType2) const;
+        const pandora::HitType hitType1, const pandora::HitType hitType2, unsigned int &nCrossingCandidates) const;
 
     /**
      *  @brief  Creates a 2D sliding fit of a cluster and stores it for later use
@@ -150,6 +151,7 @@ private:
     float                   m_maxEndpointXDiscrepancy;          ///< The max cluster endpoint discrepancy
 
     bool                    m_enableCrossingCandidates;         ///< Whether to create crossing vertex candidates
+    unsigned int            m_nMaxCrossingCandidates;           ///< The max number of crossing candidates to create
     float                   m_maxCrossingXDiscrepancy;          ///< The max cluster endpoint discrepancy
     unsigned int            m_extrapolationNSteps;              ///< Number of extrapolation steps, at each end of cluster, of specified size
     float                   m_extrapolationStepSize;            ///< The extrapolation step size in cm

@@ -19,7 +19,7 @@ namespace lar_content
 {
 
 ThreeDShowersAlgorithm::ThreeDShowersAlgorithm() :
-    m_nMaxTensorToolRepeats(5000),
+    m_nMaxTensorToolRepeats(1000),
     m_slidingFitWindow(20),
     m_ignoreUnavailableClusters(true),
     m_minClusterCaloHits(5),
