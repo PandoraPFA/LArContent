@@ -659,16 +659,27 @@ bool LArClusterHelper::SortByInnerLayer(const Cluster *const pLhs, const Cluster
 
 bool LArClusterHelper::SortByPosition(const Cluster *const pLhs, const Cluster *const pRhs)
 {
-    const CartesianVector deltaPosition(pRhs->GetCentroid(pRhs->GetInnerPseudoLayer()) - pLhs->GetCentroid(pLhs->GetInnerPseudoLayer()));
+    const CartesianVector deltaPositionIL(pRhs->GetCentroid(pRhs->GetInnerPseudoLayer()) - pLhs->GetCentroid(pLhs->GetInnerPseudoLayer()));
 
-    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
+    if (std::fabs(deltaPositionIL.GetZ()) > std::numeric_limits<float>::epsilon())
+        return (deltaPositionIL.GetZ() > std::numeric_limits<float>::epsilon());
 
-    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+    if (std::fabs(deltaPositionIL.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPositionIL.GetX() > std::numeric_limits<float>::epsilon());
 
-    if (std::fabs(deltaPosition.GetY()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
+    if (std::fabs(deltaPositionIL.GetY()) > std::numeric_limits<float>::epsilon())
+        return (deltaPositionIL.GetY() > std::numeric_limits<float>::epsilon());
+
+    const CartesianVector deltaPositionOL(pRhs->GetCentroid(pRhs->GetOuterPseudoLayer()) - pLhs->GetCentroid(pLhs->GetOuterPseudoLayer()));
+
+    if (std::fabs(deltaPositionOL.GetZ()) > std::numeric_limits<float>::epsilon())
+        return (deltaPositionOL.GetZ() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPositionOL.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPositionOL.GetX() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPositionOL.GetY()) > std::numeric_limits<float>::epsilon())
+        return (deltaPositionOL.GetY() > std::numeric_limits<float>::epsilon());
 
     // Use pulse height to resolve ties
     return SortByPulseHeight(pLhs, pRhs);
