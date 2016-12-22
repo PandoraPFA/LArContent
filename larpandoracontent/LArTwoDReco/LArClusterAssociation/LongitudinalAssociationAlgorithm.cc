@@ -79,13 +79,10 @@ bool LongitudinalAssociationAlgorithm::IsExtremalCluster(const bool isForward, c
     const unsigned int currentLayer(isForward ? pCurrentCluster->GetOuterPseudoLayer() : pCurrentCluster->GetInnerPseudoLayer());
     const unsigned int testLayer(isForward ? pTestCluster->GetOuterPseudoLayer() : pTestCluster->GetInnerPseudoLayer());
 
-    const float currentEnergy(pCurrentCluster->GetHadronicEnergy());
-    const float testEnergy(pTestCluster->GetHadronicEnergy());
-
-    if (isForward && ((testLayer > currentLayer) || ((testLayer == currentLayer) && (testEnergy > currentEnergy))))
+    if (isForward && ((testLayer > currentLayer) || ((testLayer == currentLayer) && LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster))))
         return true;
 
-    if (!isForward && ((testLayer < currentLayer) || ((testLayer == currentLayer) && (testEnergy > currentEnergy))))
+    if (!isForward && ((testLayer < currentLayer) || ((testLayer == currentLayer) && LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster))))
         return true;
 
     return false;
