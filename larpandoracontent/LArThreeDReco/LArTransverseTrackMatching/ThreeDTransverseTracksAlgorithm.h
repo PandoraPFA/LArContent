@@ -116,6 +116,7 @@ private:
     TensorToolVector            m_algorithmToolVector;      ///< The algorithm tool vector
 
     unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
+    unsigned int                m_maxFitSegmentIndex;       ///< The maximum number of fit segments used when identifying best overlap result
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
