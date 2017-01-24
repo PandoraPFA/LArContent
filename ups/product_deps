@@ -7,7 +7,7 @@ parent larpandoracontent v03_01_03
 defaultqual e10
 
 # larpandoracontent has no fcl files
-flcdir  -
+fcldir  -
 
 # With "product  version" table below, we now define depdendencies
 # Add the dependent product and version
