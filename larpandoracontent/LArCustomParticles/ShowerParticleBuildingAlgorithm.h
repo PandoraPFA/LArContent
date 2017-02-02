@@ -39,8 +39,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject*& pOutputPfo) const;
-
-    bool            m_cosmicMode;             ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
