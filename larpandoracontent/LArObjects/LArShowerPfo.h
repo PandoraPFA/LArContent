@@ -28,7 +28,6 @@ public:
     pandora::InputCartesianVector   m_showerMinLayerPosition;   ///< Shower min layer position from 3d shower fit
     pandora::InputCartesianVector   m_showerMaxLayerPosition;   ///< Shower max layer position from 3d shower fit
     pandora::InputCartesianVector   m_showerCentroid;           ///< Shower centroid from 3d shower fit
-    pandora::InputCartesianVector   m_showerPositionSigmas;     ///< Shower position standard deviation from 3d shower fit
     pandora::InputFloat             m_showerOpeningAngle;       ///< Shower opening angle
     pandora::InputCartesianVector   m_showerDirection;          ///< Shower direction, also the primary eigen vector
     pandora::InputCartesianVector   m_showerSecondaryVector;    ///< Shower secondary eigen vector
@@ -81,13 +80,6 @@ public:
     const pandora::CartesianVector &GetShowerCentroid() const;
 
     /**
-     *  @brief  Get the standard deviation of a shower position from the 3d shower fit
-     *
-     *  @return the standard deviation of a shower position from the 3d shower fit
-     */
-    const pandora::CartesianVector &GetShowerPositionSigmas() const;
-
-    /**
      *  @brief  Get the shower opening angle from 3d shower fit
      *
      *  @return the shower opening angle from 3d shower fit
@@ -134,7 +126,6 @@ private:
     pandora::CartesianVector    m_showerMinLayerPosition;   ///< Shower min layer position from 3d shower fit
     pandora::CartesianVector    m_showerMaxLayerPosition;   ///< Shower max layer position from 3d shower fit
     pandora::CartesianVector    m_showerCentroid;           ///< Shower centroid from 3d shower fit
-    pandora::CartesianVector    m_showerPositionSigmas;     ///< Shower position standard deviation from 3d shower fit
     float                       m_showerOpeningAngle;       ///< Shower opening angle
     pandora::CartesianVector    m_showerDirection;          ///< Shower direction, primary eigen vector
     pandora::CartesianVector    m_showerSecondaryVector;    ///< Shower secondary eigen vector
@@ -192,7 +183,6 @@ inline LArShowerPfo::LArShowerPfo(const LArShowerPfoParameters &parameters) :
     m_showerMinLayerPosition(parameters.m_showerMinLayerPosition.Get()),
     m_showerMaxLayerPosition(parameters.m_showerMaxLayerPosition.Get()),
     m_showerCentroid(parameters.m_showerCentroid.Get()),
-    m_showerPositionSigmas(parameters.m_showerPositionSigmas.Get()),
     m_showerOpeningAngle(parameters.m_showerOpeningAngle.Get()),
     m_showerDirection(parameters.m_showerDirection.Get()),
     m_showerSecondaryVector(parameters.m_showerSecondaryVector.Get()),
@@ -228,13 +218,6 @@ inline const pandora::CartesianVector &LArShowerPfo::GetShowerMaxLayerPosition()
 inline const pandora::CartesianVector &LArShowerPfo::GetShowerCentroid() const
 {
     return m_showerCentroid;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector &LArShowerPfo::GetShowerPositionSigmas() const
-{
-    return m_showerPositionSigmas;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
