@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArStitching/MultiPandoraApi.cc
- * 
+ *
  *  @brief  Implementation of the MultiPandoraApi class.
- * 
+ *
  *  $Log: $
  */
 
@@ -13,6 +13,13 @@
 #include "larpandoracontent/LArStitching/MultiPandoraApiImpl.h"
 
 MultiPandoraApiImpl MultiPandoraApi::m_multiPandoraApiImpl;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const VolumeIdList &MultiPandoraApi::GetVolumeIdList()
+{
+    return m_multiPandoraApiImpl.GetVolumeIdList();
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -48,7 +55,14 @@ const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const pandora::Pandora *const p
 {
     return m_multiPandoraApiImpl.GetVolumeInfo(pPandora);
 }
-    
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const int volumeID)
+{
+    return m_multiPandoraApiImpl.GetVolumeInfo(volumeID);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MultiPandoraApi::AddPrimaryPandoraInstance(const pandora::Pandora *const pPrimaryPandora)
@@ -94,10 +108,32 @@ void MultiPandoraApi::ClearParticleX0Map(const pandora::Pandora *const pPandora)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VolumeInfo::VolumeInfo(const int idNumber, const std::string &idString, const pandora::CartesianVector &center, const bool isDriftInPositiveX) :
+VolumeInfo::VolumeInfo(const int idNumber, const std::string &idString, const float centerX, const float centerY, const float centerZ,
+    const float widthX, const float widthY, const float widthZ, const bool isDriftInPositiveX) :
     m_idNumber(idNumber),
     m_idString(idString),
-    m_center(center),
+    m_centerX(centerX),
+    m_centerY(centerY),
+    m_centerZ(centerZ),
+    m_widthX(widthX),
+    m_widthY(widthY),
+    m_widthZ(widthZ),
+    m_isDriftInPositiveX(isDriftInPositiveX)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+VolumeInfo::VolumeInfo(const int idNumber, const std::string &idString, const float centerX, const float centerY, const float centerZ,
+    const bool isDriftInPositiveX) :
+    m_idNumber(idNumber),
+    m_idString(idString),
+    m_centerX(centerX),
+    m_centerY(centerY),
+    m_centerZ(centerZ),
+    m_widthX(0.f),
+    m_widthY(0.f),
+    m_widthZ(0.f),
     m_isDriftInPositiveX(isDriftInPositiveX)
 {
 }
@@ -118,9 +154,44 @@ const std::string &VolumeInfo::GetIdString() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::CartesianVector &VolumeInfo::GetCenter() const
+float VolumeInfo::GetCenterX() const
 {
-    return m_center;
+    return m_centerX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetCenterY() const
+{
+    return m_centerY;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetCenterZ() const
+{
+    return m_centerZ;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetWidthX() const
+{
+    return m_widthX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetWidthY() const
+{
+    return m_widthY;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetWidthZ() const
+{
+    return m_widthZ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

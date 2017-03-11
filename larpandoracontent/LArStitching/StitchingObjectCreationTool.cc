@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArStitching/StitchingObjectCreationTool.cc
- * 
+ *
  *  @brief  Implementation of the stitching object creation tool class.
- * 
+ *
  *  $Log: $
  */
 
@@ -48,7 +48,9 @@ void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm
     const PandoraInstanceList &pandoraInstances(MultiPandoraApi::GetDaughterPandoraInstanceList(&(this->GetPandora())));
 
     for (const Pandora *const pPandora : pandoraInstances)
+    {
         this->Recreate3DContent(pAlgorithm, pPandora, MultiPandoraApi::GetVolumeInfo(pPandora), stitchingInfo);
+    }
 
     if (!pClusterList->empty())
     {
@@ -74,7 +76,7 @@ void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgorithm, const Pandora *const pPandora, const VolumeInfo &volumeInfo,
+void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const Pandora *const pPandora, const VolumeInfo &volumeInfo,
     StitchingInfo &stitchingInfo) const
 {
     const PfoList *pPfoList = nullptr;
@@ -91,9 +93,19 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pInputPfo,
+void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const ParticleFlowObject *const pInputPfo,
     const ParticleFlowObject *const pNewParentPfo, const Pandora *const pPandora, const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const
 {
+    float x0(0.f);
+
+    try
+    {
+        x0 = volumeInfo.GetParticleX0(pInputPfo);
+    }
+    catch (pandora::StatusCodeException& )
+    {
+    }
+
     ClusterList inputClusterList, newClusterList;
 
     if (!m_recreateTwoDContent)
@@ -111,10 +123,10 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
         pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
-            newCaloHitList.push_back(this->CreateCaloHit(pAlgorithm, pInputCaloHit, pInputPfo, volumeInfo));
+          newCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, volumeInfo, x0));
 
         if (!newCaloHitList.empty())
-            newClusterList.push_back(this->CreateCluster(pAlgorithm, pInputCluster, newCaloHitList));
+            newClusterList.push_back(pAlgorithm->CreateCluster(pInputCluster, newCaloHitList));
     }
 
     VertexList newVertexList;
@@ -122,10 +134,10 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
     for (const Vertex *const pInputVertex : pInputPfo->GetVertexList())
     {
         if (VERTEX_3D == pInputVertex->GetVertexType())
-            newVertexList.push_back(this->CreateVertex(pAlgorithm, pInputVertex, pInputPfo, volumeInfo));
+          newVertexList.push_back(pAlgorithm->CreateVertex(pInputVertex, volumeInfo, x0));
     }
 
-    const ParticleFlowObject *const pNewPfo = this->CreatePfo(pAlgorithm, pInputPfo, newClusterList, newVertexList);
+    const ParticleFlowObject *const pNewPfo = pAlgorithm->CreatePfo(pInputPfo, newClusterList, newVertexList);
     this->AddStitchingInfo(pNewPfo, pPandora, volumeInfo, stitchingInfo);
 
     if (pNewParentPfo)
@@ -133,124 +145,6 @@ void StitchingObjectCreationTool::Recreate3DContent(const Algorithm *const pAlgo
 
     for (const ParticleFlowObject *const pInputDaughterPfo : pInputPfo->GetDaughterPfoList())
         this->Recreate3DContent(pAlgorithm, pInputDaughterPfo, pNewPfo, pPandora, volumeInfo, stitchingInfo);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const CaloHit *StitchingObjectCreationTool::CreateCaloHit(const Algorithm *const pAlgorithm, const CaloHit *const pInputCaloHit,
-    const ParticleFlowObject *const pInputPfo, const VolumeInfo &volumeInfo) const
-{
-    if (!m_recreateTwoDContent && (TPC_3D != pInputCaloHit->GetHitType()))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    PandoraContentApi::CaloHit::Parameters parameters;
-    parameters.m_positionVector = pInputCaloHit->GetPositionVector();
-
-    if (TPC_3D == pInputCaloHit->GetHitType())
-    {
-        const float x0(volumeInfo.GetParticleX0(pInputPfo));
-        const CartesianVector xOffset(volumeInfo.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f);
-        parameters.m_positionVector = pInputCaloHit->GetPositionVector() + volumeInfo.GetCenter() + xOffset;
-    }
-
-    parameters.m_expectedDirection = pInputCaloHit->GetExpectedDirection();
-    parameters.m_cellNormalVector = pInputCaloHit->GetCellNormalVector();
-    parameters.m_cellGeometry = pInputCaloHit->GetCellGeometry();
-    parameters.m_cellSize0 = pInputCaloHit->GetCellSize0();
-    parameters.m_cellSize1 = pInputCaloHit->GetCellSize1();
-    parameters.m_cellThickness = pInputCaloHit->GetCellThickness();
-    parameters.m_nCellRadiationLengths = pInputCaloHit->GetNCellRadiationLengths();
-    parameters.m_nCellInteractionLengths = pInputCaloHit->GetNCellInteractionLengths();
-    parameters.m_time = pInputCaloHit->GetTime();
-    parameters.m_inputEnergy = pInputCaloHit->GetInputEnergy();
-    parameters.m_mipEquivalentEnergy = pInputCaloHit->GetMipEquivalentEnergy();
-    parameters.m_electromagneticEnergy = pInputCaloHit->GetElectromagneticEnergy();
-    parameters.m_hadronicEnergy = pInputCaloHit->GetHadronicEnergy();
-    parameters.m_isDigital = pInputCaloHit->IsDigital();
-    parameters.m_hitType = pInputCaloHit->GetHitType();
-    parameters.m_hitRegion = pInputCaloHit->GetHitRegion();
-    parameters.m_layer = pInputCaloHit->GetLayer();
-    parameters.m_isInOuterSamplingLayer = pInputCaloHit->IsInOuterSamplingLayer();
-    parameters.m_pParentAddress = pInputCaloHit->GetParentAddress();
-
-    const CaloHit *pNewCaloHit(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*pAlgorithm, parameters, pNewCaloHit));
-
-    PandoraContentApi::CaloHit::Metadata metadata;
-    metadata.m_isIsolated = pInputCaloHit->IsIsolated();
-    metadata.m_isPossibleMip = pInputCaloHit->IsPossibleMip();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*pAlgorithm, pNewCaloHit, metadata));
-
-    return pNewCaloHit;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const Cluster *StitchingObjectCreationTool::CreateCluster(const Algorithm *const pAlgorithm, const Cluster *const pInputCluster,
-    const CaloHitList &newCaloHitList) const
-{
-    if (!m_recreateTwoDContent && (TPC_3D != LArClusterHelper::GetClusterHitType(pInputCluster)))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    PandoraContentApi::Cluster::Parameters parameters;
-    parameters.m_caloHitList = newCaloHitList;
-
-    const Cluster *pNewCluster(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, parameters, pNewCluster));
-
-    PandoraContentApi::Cluster::Metadata metadata;
-    metadata.m_particleId = pInputCluster->GetParticleId();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*pAlgorithm, pNewCluster, metadata));
-
-    return pNewCluster;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const Vertex *StitchingObjectCreationTool::CreateVertex(const Algorithm *const pAlgorithm, const Vertex *const pInputVertex,
-    const ParticleFlowObject *const pInputPfo, const VolumeInfo &volumeInfo) const
-{
-    if (!m_recreateTwoDContent && (VERTEX_3D != pInputVertex->GetVertexType()))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    PandoraContentApi::Vertex::Parameters parameters;
-    parameters.m_position = pInputVertex->GetPosition();
-
-    if (VERTEX_3D == pInputVertex->GetVertexType())
-    {
-        const float x0(volumeInfo.GetParticleX0(pInputPfo));
-        const CartesianVector xOffset(volumeInfo.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f);
-        parameters.m_position = pInputVertex->GetPosition() + volumeInfo.GetCenter() + xOffset;
-    }
-
-    parameters.m_vertexLabel = pInputVertex->GetVertexLabel();
-    parameters.m_vertexType = pInputVertex->GetVertexType();
-
-    const Vertex *pNewVertex(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*pAlgorithm, parameters, pNewVertex));
-
-    return pNewVertex;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const ParticleFlowObject *StitchingObjectCreationTool::CreatePfo(const Algorithm *const pAlgorithm, const ParticleFlowObject *const pInputPfo,
-    const ClusterList &newClusterList, const VertexList &newVertexList) const
-{
-    PandoraContentApi::ParticleFlowObject::Parameters parameters;
-    parameters.m_particleId = pInputPfo->GetParticleId();
-    parameters.m_charge = pInputPfo->GetCharge();
-    parameters.m_mass = pInputPfo->GetMass();
-    parameters.m_energy = pInputPfo->GetEnergy();
-    parameters.m_momentum = pInputPfo->GetMomentum();
-    parameters.m_clusterList = newClusterList;
-    parameters.m_trackList.clear();
-    parameters.m_vertexList = newVertexList;
-
-    const ParticleFlowObject *pNewPfo(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*pAlgorithm, parameters, pNewPfo));
-
-    return pNewPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
