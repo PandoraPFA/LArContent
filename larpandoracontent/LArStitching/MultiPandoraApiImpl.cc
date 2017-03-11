@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArStitching/MultiPandoraApiImpl.cc
- * 
+ *
  *  @brief  Implementation of the MultiPandoraApiImpl class.
- * 
+ *
  *  $Log: $
  */
 
@@ -10,6 +10,15 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArStitching/MultiPandoraApiImpl.h"
+
+#include <algorithm>
+
+const VolumeIdList &MultiPandoraApiImpl::GetVolumeIdList() const
+{
+    return m_volumeIdList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 const PandoraInstanceMap &MultiPandoraApiImpl::GetPandoraInstanceMap() const
 {
@@ -37,7 +46,7 @@ const pandora::Pandora *MultiPandoraApiImpl::GetDaughterPandoraInstance(const pa
     if (m_primaryToVolumeIdMap.end() == iter)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 
-    VolumeIdMap::const_iterator idIter = iter->second.find(idNumber);
+    VolumeIdToDaughterMap::const_iterator idIter = iter->second.find(idNumber);
 
     if (iter->second.end() == idIter)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
@@ -71,6 +80,18 @@ const VolumeInfo &MultiPandoraApiImpl::GetVolumeInfo(const pandora::Pandora *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const VolumeInfo &MultiPandoraApiImpl::GetVolumeInfo(const int volumeID) const
+{
+    VolumeIdMap::const_iterator iter = m_volumeIdMap.find(volumeID);
+
+    if (m_volumeIdMap.end() == iter)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+
+    return *(iter->second);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void MultiPandoraApiImpl::SetVolumeInfo(const pandora::Pandora *const pPandora, VolumeInfo *const pVolumeInfo)
 {
     if (m_volumeInfoMap.count(pPandora))
@@ -79,13 +100,22 @@ void MultiPandoraApiImpl::SetVolumeInfo(const pandora::Pandora *const pPandora, 
     if (!m_volumeInfoMap.insert(VolumeInfoMap::value_type(pPandora, pVolumeInfo)).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
+    if (m_volumeIdMap.count(pVolumeInfo->GetIdNumber()))
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_ALREADY_PRESENT);
+
+    if (!m_volumeIdMap.insert(VolumeIdMap::value_type(pVolumeInfo->GetIdNumber(), pVolumeInfo)).second)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+    if (m_volumeIdList.end() == std::find(m_volumeIdList.begin(), m_volumeIdList.end(), pVolumeInfo->GetIdNumber()))
+        m_volumeIdList.push_back(pVolumeInfo->GetIdNumber());
+
     const pandora::Pandora *const pPrimaryPandora((m_pandoraInstanceMap.count(pPandora)) ? pPandora : this->GetPrimaryPandoraInstance(pPandora));
     PrimaryToVolumeIdMap::iterator iter = m_primaryToVolumeIdMap.find(pPrimaryPandora);
 
     if (m_primaryToVolumeIdMap.end() == iter)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
-    if (!iter->second.insert(VolumeIdMap::value_type(pVolumeInfo->GetIdNumber(), pPandora)).second)
+    if (!iter->second.insert(VolumeIdToDaughterMap::value_type(pVolumeInfo->GetIdNumber(), pPandora)).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 }
 
@@ -138,8 +168,8 @@ void MultiPandoraApiImpl::AddPrimaryPandoraInstance(const pandora::Pandora *cons
 
     if (!m_pandoraInstanceMap.insert(PandoraInstanceMap::value_type(pPrimaryPandora, PandoraInstanceList())).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
-        
-    if (!m_primaryToVolumeIdMap.insert(PrimaryToVolumeIdMap::value_type(pPrimaryPandora, VolumeIdMap())).second)
+
+    if (!m_primaryToVolumeIdMap.insert(PrimaryToVolumeIdMap::value_type(pPrimaryPandora, VolumeIdToDaughterMap())).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 }
 
@@ -166,16 +196,30 @@ void MultiPandoraApiImpl::DeletePandoraInstances(const pandora::Pandora *const p
     pandoraInstanceList.push_back(pPrimaryPandora);
     m_pandoraInstanceMap.erase(pPrimaryPandora);
     m_primaryToVolumeIdMap.erase(pPrimaryPandora);
-    
+
     for (const pandora::Pandora *const pPandora : pandoraInstanceList)
     {
-        VolumeInfoMap::iterator volumeInfoIter = m_volumeInfoMap.find(pPandora);
+        VolumeInfoMap::iterator volumeInfoMapIter = m_volumeInfoMap.find(pPandora);
 
-        if (m_volumeInfoMap.end() != volumeInfoIter)
-        {
-            delete volumeInfoIter->second;
-            m_volumeInfoMap.erase(volumeInfoIter);
-        }
+        if (m_volumeInfoMap.end() == volumeInfoMapIter)
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+        const VolumeInfo *const pVolumeInfo = volumeInfoMapIter->second;
+
+        VolumeIdMap::iterator volumeIdMapIter = m_volumeIdMap.find(pVolumeInfo->GetIdNumber());
+
+        if (m_volumeIdMap.end() == volumeIdMapIter)
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+        VolumeIdList::iterator volumeIdListIter = std::find(m_volumeIdList.begin(), m_volumeIdList.end(), pVolumeInfo->GetIdNumber());
+
+        if (m_volumeIdList.end() == volumeIdListIter)
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+        m_volumeInfoMap.erase(volumeInfoMapIter);
+        m_volumeIdList.erase(volumeIdListIter);
+        m_volumeIdMap.erase(volumeIdMapIter);
+        delete pVolumeInfo;
 
         m_pandoraRelationMap.erase(pPandora);
         delete pPandora;
