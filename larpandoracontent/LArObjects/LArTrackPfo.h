@@ -24,28 +24,23 @@ namespace lar_content
 
 class LArTrackState : public pandora::TrackState
 {
-public:    
+public:
     /**
      *  @brief  Constructor
      *
      *  @param  position
      *  @param  direction
      *  @param  pCaloHit
-     *  @param  dQ
-     *  @param  dL
      */
-    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::CaloHit *const pCaloHit, const float dQ, const float dL);
+    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::CaloHit *const pCaloHit);
 
     /**
      *  @brief  Constructor
      *
      *  @param  position
      *  @param  direction
-     *  @param  HitType
-     *  @param  dQ
-     *  @param  dL
      */
-    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::HitType hitType, const float dQ, const float dL);
+    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction);
 
     /**
      *  @brief  Return direction at this trajectory point
@@ -53,38 +48,15 @@ public:
     const pandora::CartesianVector &GetDirection() const;
 
     /**
-     *  @brief  Return dQ at this trajectory point
-     */
-    float GetdQ() const;
-  
-    /**
-     *  @brief  Return dL at this trajectory point
-     */
-    float GetdL() const;
-  
-    /**
-     *  @brief Return dQ/dL at this trajectory point 
-     */
-    float GetdQdL() const;
- 
-    /**
-     *  @brief Return hit type of this trajectory point
-     */
-    pandora::HitType GetHitType() const;
-
-    /**
      *  @brief  Return calo hit at trajectory point
      */
     const pandora::CaloHit *GetCaloHit() const;
 
 private:
-    float                    m_dQ;
-    float                    m_dL;
-    pandora::HitType         m_hitType;
     const pandora::CaloHit  *m_pCaloHit;
 };
 
-typedef std::vector<LArTrackState> LArTrackStateVector; 
+typedef std::vector<LArTrackState> LArTrackStateVector;
 typedef std::pair<float, LArTrackState> LArTrackTrajectoryPoint;
 typedef std::vector<LArTrackTrajectoryPoint> LArTrackTrajectory;
 
@@ -116,14 +88,14 @@ public:
      *  @brief  Get vertex position
      */
     const pandora::CartesianVector &GetVertexPosition() const;
-  
+
     /**
      *  @brief  Get end position
      */
     const pandora::CartesianVector &GetEndPosition() const;
- 
+
     /**
-     *  @brief  Get vertex direction 
+     *  @brief  Get vertex direction
      */
     const pandora::CartesianVector &GetVertexDirection() const;
 

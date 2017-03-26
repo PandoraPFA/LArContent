@@ -172,19 +172,6 @@ public:
                const float widthX, const float widthY, const float widthZ, const bool isDriftInPositiveX);
 
     /**
-     *  @brief  Constructor (not including widths)
-     *
-     *  @param  idNumber the volume identifier number
-     *  @param  idString the volume identifier string or name
-     *  @param  centerX the centre of the drift volume (X)
-     *  @param  centerY the centre of the drift volume (Y)
-     *  @param  centerZ the centre of the drift volume (Z)
-     *  @param  isDriftInPositiveX whether the drift direction for electrons corresponds to positive X direction
-     */
-    VolumeInfo(const int idNumber, const std::string &idString, const float centerX, const float centerY, const float centerZ,
-               const bool isDriftInPositiveX);
-
-    /**
      *  @brief  Get the volume identifier number
      *
      *  @return the volume identifier number

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArStitching/StitchingPfoMergingTool.h
- * 
+ *
  *  @brief  Header file for the stitching pfo merging tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_STITCHING_PFO_MERGING_TOOL_H
@@ -25,7 +25,7 @@ public:
 private:
     /**
      *  @brief  Merge and delete a pair of pfos, with a specific set of conventions for cluster merging, vertex use, etc.
-     * 
+     *
      *  @param  pAlgorithm the address of the responsible algorithm
      *  @param  pPfoToEnlarge the address of the pfo to enlarge
      *  @param  pPfoToDelete the address of the pfo to delete (will become a dangling pointer)
@@ -35,10 +35,10 @@ private:
 
     /**
      *  @brief  Select the parent cluster (same hit type and most hits) using a provided cluster list and hit type
-     * 
+     *
      *  @param  clusterList the cluster list
      *  @param  hitType the hit type
-     * 
+     *
      *  @return the address of the parent cluster
      */
     const pandora::Cluster *GetParentCluster(const pandora::ClusterList &clusterList, const pandora::HitType hitType) const;

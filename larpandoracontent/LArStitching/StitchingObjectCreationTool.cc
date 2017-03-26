@@ -21,8 +21,7 @@ using namespace lar_content;
 namespace lar_content
 {
 
-StitchingObjectCreationTool::StitchingObjectCreationTool() :
-    m_recreateTwoDContent(true)
+StitchingObjectCreationTool::StitchingObjectCreationTool()
 {
 }
 
@@ -96,6 +95,7 @@ void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *co
 void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const ParticleFlowObject *const pInputPfo,
     const ParticleFlowObject *const pNewParentPfo, const Pandora *const pPandora, const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const
 {
+    // Get input X0 for this Pfo
     float x0(0.f);
 
     try
@@ -106,28 +106,73 @@ void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *co
     {
     }
 
-    ClusterList inputClusterList, newClusterList;
+    // Recreate clusters
+    typedef std::map<const CaloHit*, const CaloHit*> CaloHitMap;
+    CaloHitMap newParentAddresses;
 
-    if (!m_recreateTwoDContent)
-    {
-        LArPfoHelper::GetThreeDClusterList(pInputPfo, inputClusterList);
-    }
-    else
-    {
-        inputClusterList = pInputPfo->GetClusterList();
-    }
+    ClusterList inputClusterList2D, inputClusterList3D, newClusterList;
 
-    for (const Cluster *const pInputCluster : inputClusterList)
+    if (pAlgorithm->RecreateTwoDContent())
+        LArPfoHelper::GetTwoDClusterList(pInputPfo, inputClusterList2D);
+
+    LArPfoHelper::GetThreeDClusterList(pInputPfo, inputClusterList3D);
+
+    for (const Cluster *const pInputCluster : inputClusterList2D)
     {
-        CaloHitList inputCaloHitList, newCaloHitList;
+        CaloHitList inputCaloHitList, newCaloHitList, newIsolatedCaloHitList;
         pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
-          newCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, volumeInfo, x0));
+        {
+            const CaloHit *const pNewCaloHit = pAlgorithm->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            newCaloHitList.push_back(pNewCaloHit);
+            newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
+        }
+
+        for (const CaloHit *const pInputCaloHit : pInputCluster->GetIsolatedCaloHitList())
+        {
+            const CaloHit *const pNewCaloHit = pAlgorithm->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            newIsolatedCaloHitList.push_back(pNewCaloHit);
+            newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
+        }
 
         if (!newCaloHitList.empty())
-            newClusterList.push_back(pAlgorithm->CreateCluster(pInputCluster, newCaloHitList));
+            newClusterList.push_back(pAlgorithm->CreateCluster(pInputCluster, newCaloHitList, newIsolatedCaloHitList));
     }
+
+    for (const Cluster *const pInputCluster : inputClusterList3D)
+    {
+        CaloHitList inputCaloHitList, newCaloHitList, newIsolatedCaloHitList;
+        pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
+
+        for (const CaloHit *const pInputCaloHit : inputCaloHitList)
+        {
+            const CaloHit *const pParentCaloHit = static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress());
+
+            CaloHitMap::const_iterator iter = newParentAddresses.find(pParentCaloHit);
+            if (pAlgorithm->RecreateTwoDContent() && newParentAddresses.end() == iter)
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            const CaloHit *const pNewParentCaloHit = (pAlgorithm->RecreateTwoDContent() ? iter->second : pParentCaloHit);
+            newCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0));
+        }
+
+        for (const CaloHit *const pInputCaloHit : pInputCluster->GetIsolatedCaloHitList())
+        {
+            const CaloHit *const pParentCaloHit = static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress());
+
+            CaloHitMap::const_iterator iter = newParentAddresses.find(pParentCaloHit);
+            if (pAlgorithm->RecreateTwoDContent() && newParentAddresses.end() == iter)
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            const CaloHit *const pNewParentCaloHit = (pAlgorithm->RecreateTwoDContent() ? iter->second : pParentCaloHit);
+            newIsolatedCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0));
+        }
+
+        if (!newCaloHitList.empty())
+            newClusterList.push_back(pAlgorithm->CreateCluster(pInputCluster, newCaloHitList, newIsolatedCaloHitList));
+    }
+
 
     VertexList newVertexList;
 
@@ -159,11 +204,8 @@ void StitchingObjectCreationTool::AddStitchingInfo(const ParticleFlowObject *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode StitchingObjectCreationTool::ReadSettings(const TiXmlHandle xmlHandle)
+  StatusCode StitchingObjectCreationTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RecreateTwoDContent", m_recreateTwoDContent));
-
     return STATUS_CODE_SUCCESS;
 }
 

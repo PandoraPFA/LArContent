@@ -34,6 +34,14 @@ StatusCode StitchingAlgorithm::Run()
 
 const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCaloHit, const VolumeInfo &volumeInfo, const float x0) const
 {
+    return this->CreateCaloHit(pInputCaloHit, NULL, volumeInfo, x0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCaloHit, const CaloHit *const pParentCaloHit,
+    const VolumeInfo &volumeInfo, const float x0) const
+{
     PandoraContentApi::CaloHit::Parameters parameters;
     parameters.m_positionVector = LArStitchingHelper::GetCorrectedPosition(volumeInfo, x0, pInputCaloHit->GetPositionVector());
     parameters.m_expectedDirection = pInputCaloHit->GetExpectedDirection();
@@ -54,7 +62,15 @@ const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCalo
     parameters.m_hitRegion = pInputCaloHit->GetHitRegion();
     parameters.m_layer = pInputCaloHit->GetLayer();
     parameters.m_isInOuterSamplingLayer = pInputCaloHit->IsInOuterSamplingLayer();
-    parameters.m_pParentAddress = pInputCaloHit->GetParentAddress();
+
+    if (NULL == pParentCaloHit)
+    {
+        parameters.m_pParentAddress = pInputCaloHit->GetParentAddress();
+    }
+    else
+    {
+        parameters.m_pParentAddress = static_cast<const void*>(pParentCaloHit);
+    }
 
     const CaloHit *pNewCaloHit(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pNewCaloHit));
@@ -69,11 +85,12 @@ const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCalo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *StitchingAlgorithm::CreateCluster(const Cluster *const pInputCluster,
-    const CaloHitList &newCaloHitList) const
+const Cluster *StitchingAlgorithm::CreateCluster(const Cluster *const pInputCluster, const CaloHitList &newCaloHitList,
+    const CaloHitList &newIsolatedCaloHitList) const
 {
     PandoraContentApi::Cluster::Parameters parameters;
     parameters.m_caloHitList = newCaloHitList;
+    parameters.m_isolatedCaloHitList = newIsolatedCaloHitList;
 
     const Cluster *pNewCluster(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
@@ -151,10 +168,18 @@ void StitchingAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pPare
 
 void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, const VolumeInfo &volumeInfo, const float x0) const
 {
-    // Shift x positions of all calo  hits (need to recreate them first)
-    const ClusterList inputClusterList(pInputPfo->GetClusterList().begin(), pInputPfo->GetClusterList().end());
+    // Shift x positions of all calo hits associated with a Pfo. We do this by recreating the calo hits in their shifted positions.
+    // ATTN: need to keep careful track of parent addresses when recreating both 2D and 3D hits
 
-    for (const Cluster *const pInputCluster : inputClusterList)
+    typedef std::map<const CaloHit*, const CaloHit*> CaloHitMap;
+    CaloHitMap newParentAddresses;
+
+    ClusterList inputClusterList2D, inputClusterList3D;
+
+    LArPfoHelper::GetTwoDClusterList(pInputPfo, inputClusterList2D);
+    LArPfoHelper::GetThreeDClusterList(pInputPfo, inputClusterList3D);
+
+    for (const Cluster *const pInputCluster : inputClusterList2D)
     {
         CaloHitList inputCaloHitList;
         pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
@@ -162,9 +187,57 @@ void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, con
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
         {
             const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pInputCluster, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pInputCluster, pInputCaloHit));
-            // ATTN: We can't delete hits, so we simply remove the old hit from the cluster.
+        }
+
+        const CaloHitList isolatedCaloHitList(pInputCluster->GetIsolatedCaloHitList().begin(), pInputCluster->GetIsolatedCaloHitList().end());
+
+        for (const CaloHit *const pInputCaloHit : isolatedCaloHitList)
+        {
+            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pInputCluster, pNewCaloHit));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveIsolatedFromCluster(*this, pInputCluster, pInputCaloHit));
+        }
+    }
+
+    for (const Cluster *const pInputCluster : inputClusterList3D)
+    {
+        CaloHitList inputCaloHitList;
+        pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
+
+        for (const CaloHit *const pInputCaloHit : inputCaloHitList)
+        {
+            const CaloHit *const pParentCaloHit = static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress());
+
+            CaloHitMap::const_iterator iter = newParentAddresses.find(pParentCaloHit);
+            if (m_recreateTwoDContent && newParentAddresses.end() == iter)
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            const CaloHit *const pNewParentCaloHit = (m_recreateTwoDContent ? iter->second : pParentCaloHit);
+            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0);
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pInputCluster, pNewCaloHit));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pInputCluster, pInputCaloHit));
+        }
+
+        const CaloHitList isolatedCaloHitList(pInputCluster->GetIsolatedCaloHitList().begin(), pInputCluster->GetIsolatedCaloHitList().end());
+
+        for (const CaloHit *const pInputCaloHit : isolatedCaloHitList)
+        {
+            const CaloHit *const pParentCaloHit = static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress());
+
+            CaloHitMap::const_iterator iter = newParentAddresses.find(pParentCaloHit);
+            if (m_recreateTwoDContent && newParentAddresses.end() == iter)
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            const CaloHit *const pNewParentCaloHit = (m_recreateTwoDContent ? iter->second : pParentCaloHit);
+            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0);
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pInputCluster, pNewCaloHit));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveIsolatedFromCluster(*this, pInputCluster, pInputCaloHit));
         }
     }
 
@@ -221,6 +294,9 @@ StatusCode StitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
         m_algorithmToolVector.push_back(pStitchingTool);
     }
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "RecreateTwoDContent", m_recreateTwoDContent));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "NewClusterListName", m_newClusterListName));

@@ -60,6 +60,13 @@ public:
     const std::string &GetNewPfoListName() const;
 
     /**
+     *  @brief  Recreate the 2D objects in the stitching process
+     *
+     *  @return boolean
+     */
+    const bool &RecreateTwoDContent() const;
+
+    /**
      *  @brief  Create a new calo hit in the current pandora instance, based upon the provided input calo hit
      *
      *  @param  pInputCaloHit the address of the input calo hit
@@ -71,14 +78,28 @@ public:
     const pandora::CaloHit *CreateCaloHit(const pandora::CaloHit *const pInputCaloHit, const VolumeInfo &volumeInfo, const float x0) const;
 
     /**
+     *  @brief  Create a new calo hit in the current pandora instance, based upon the provided input calo hit
+     *
+     *  @param  pInputCaloHit the address of the input calo hit
+     *  @param  pParentCaloHit the address of the parent calo hit
+     *  @param  volumeInfo the volume information block for this drift volume
+     *  @param  x0 the x0 correction relative to the input hit
+     *
+     *  @return the address of the new calo hit
+     */
+    const pandora::CaloHit *CreateCaloHit(const pandora::CaloHit *const pInputCaloHit, const pandora::CaloHit *const pParentCaloHit, const VolumeInfo &volumeInfo, const float x0) const;
+
+    /**
      *  @brief  Create a new cluster in the current pandora instance, based upon the provided input cluster
      *
      *  @param  pInputCluster the address of the input cluster
      *  @param  newCaloHitList the list of calo hits for the new cluster
+     *  @param  newIsolatedCaloHitList the list of isolated calo hits for the new cluster
      *
      *  @return the address of the new cluster
      */
-    const pandora::Cluster *CreateCluster(const pandora::Cluster *const pInputCluster, const pandora::CaloHitList &newCaloHitList) const;
+    const pandora::Cluster *CreateCluster(const pandora::Cluster *const pInputCluster, const pandora::CaloHitList &newCaloHitList,
+        const pandora::CaloHitList &newIsolatedCaloHitList) const;
 
     /**
      *  @brief  Create a new vertex in the current pandora instance, based upon the provided input vertex
@@ -142,6 +163,8 @@ private:
     std::string             m_newClusterListName;       ///< The new/recreated cluster list name
     std::string             m_newVertexListName;        ///< The new/recreated vertex list name
     std::string             m_newPfoListName;           ///< The new/recreated pfo list name
+
+    bool                    m_recreateTwoDContent;      ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -180,6 +203,13 @@ inline const std::string &StitchingAlgorithm::GetNewVertexListName() const
 inline const std::string &StitchingAlgorithm::GetNewPfoListName() const
 {
     return m_newPfoListName;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const bool &StitchingAlgorithm::RecreateTwoDContent() const
+{
+  return m_recreateTwoDContent;
 }
 
 } // namespace lar_content
