@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArStitching/StitchingPfoMergingTool.cc
- * 
+ *
  *  @brief  Implementation of the stitching pfo merging tool class.
- * 
+ *
  *  $Log: $
  */
 

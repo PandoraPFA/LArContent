@@ -26,7 +26,7 @@ public:
     class Factory : public pandora::AlgorithmToolFactory
     {
     public:
-	pandora::AlgorithmTool *CreateAlgorithmTool() const;
+        pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
     /**
@@ -61,7 +61,7 @@ private:
      *  @param  stitchingInfo to receive any modifications to the stitching info
      */
     void Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo,
-        const pandora::ParticleFlowObject *const pNewParentPfo, const pandora::Pandora *const pPandora, const VolumeInfo &volumeInfo, 
+        const pandora::ParticleFlowObject *const pNewParentPfo, const pandora::Pandora *const pPandora, const VolumeInfo &volumeInfo,
         StitchingInfo &stitchingInfo) const;
 
     /**
@@ -72,12 +72,11 @@ private:
      *  @param  volumeInfo the volume information for the input pandora instance
      *  @param  stitchingInfo to receive any modifications to the stitching info
      */
-    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::Pandora *const pPandora, 
+    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::Pandora *const pPandora,
         const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool            m_recreateTwoDContent;          ///< Whether to also recreate two dimensional hits and clusters
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
