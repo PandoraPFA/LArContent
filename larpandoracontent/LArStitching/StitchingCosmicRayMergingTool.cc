@@ -125,17 +125,16 @@ void StitchingCosmicRayMergingTool::BuildVolumeMaps(const PfoList &inputPfoList,
         }
     }
 
-/*
-// Display volume maps here
-PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
-for (VolumeIdToPfoMap::const_iterator iter = volumeIdToPfoMap.begin(), iterEnd = volumeIdToPfoMap.end(); iter != iterEnd; ++iter)
-{
-const PfoList &pfoList(iter->second);
-PfoList myPfoList(pfoList.begin(), pfoList.end());
-PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList, "PrimaryPfos", BLUE));
-}
-PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-*/
+//////// Display volume maps here
+// PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
+// for (VolumeIdToPfoMap::const_iterator iter = volumeIdToPfoMap.begin(), iterEnd = volumeIdToPfoMap.end(); iter != iterEnd; ++iter)
+// {
+// const PfoList &pfoList(iter->second);
+// PfoList myPfoList(pfoList.begin(), pfoList.end());
+// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList, "PrimaryPfos", BLUE));
+// }
+// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+////////
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,6 +206,11 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const VolumeInfo &pfoVolume
     const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2,
     const ThreeDPointingClusterMap &pointingClusterMap, PfoAssociationMatrix &pfoAssociationMatrix) const
 {
+    // Get centre and width of boundary between drift volumes
+    const float boundaryCenterX(LArStitchingHelper::GetVolumeBoundaryCenterX(pfoVolume1, pfoVolume2));
+    const float boundaryWidthX(LArStitchingHelper::GetVolumeBoundaryWidthX(pfoVolume1, pfoVolume2));
+    const float maxLongitudinalDisplacementX(m_maxLongitudinalDisplacementX + boundaryWidthX);
+
     // Get the pointing cluster corresponding to each of these Pfos
     ThreeDPointingClusterMap::const_iterator iter1 = pointingClusterMap.find(pPfo1);
     ThreeDPointingClusterMap::const_iterator iter2 = pointingClusterMap.find(pPfo2);
@@ -246,6 +250,12 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const VolumeInfo &pfoVolume
     if (pX1 < std::numeric_limits<float>::epsilon() || pX2 < std::numeric_limits<float>::epsilon())
         return;
 
+    // Pointing clusters must intersect at a drift volume boundary
+    const float intersectX(0.5 * (pointingVertex1.GetPosition().GetX() + pointingVertex2.GetPosition().GetX()));
+
+    if (std::fabs(intersectX - boundaryCenterX) > maxLongitudinalDisplacementX)
+        return;
+
     // Impact parameters
     float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
 
@@ -273,8 +283,8 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const VolumeInfo &pfoVolume
         (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1) : minL);
     const float dXdL2(m_useXcoordinate ? pX2 :
         (1.f - pX2 * pX2 > std::numeric_limits<float>::epsilon()) ? pX2 / std::sqrt(1.f - pX2 * pX2) : minL);
-    const float maxL1(m_maxLongitudinalDisplacementX / dXdL1);
-    const float maxL2(m_maxLongitudinalDisplacementX / dXdL2);
+    const float maxL1(maxLongitudinalDisplacementX / dXdL1);
+    const float maxL2(maxLongitudinalDisplacementX / dXdL2);
 
     if (rL1 < minL || rL1 > maxL1 || rL2 < minL || rL2 > maxL2)
         return;
@@ -296,24 +306,24 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const VolumeInfo &pfoVolume
     pfoAssociationMatrix[pPfo1].insert(PfoAssociationMap::value_type(pPfo2, PfoAssociation(vertexType1, vertexType2, particleLength2)));
     pfoAssociationMatrix[pPfo2].insert(PfoAssociationMap::value_type(pPfo1, PfoAssociation(vertexType2, vertexType1, particleLength1)));
 
-
-/*
-//Display matches here
-std::cout << " *** StitchingCosmicRayMergingTool::MatchParticles(...) *** " << std::endl
-          << "     pPfo1=" << pPfo1 << " pPfo2=" << pPfo2 << std::endl
-          << "     cosTheta=" << cosRelativeAngle << std::endl
-          << "     rL1=" << rL1 << ", rT1=" << rT1 << ", rL2=" << rL2 << ", rT2=" << rT2 << std::endl
-          << "     Length1=" << std::sqrt(particleLength1) << " Length2=" << std::sqrt(particleLength2) << std::endl;
-PfoList myPfoList1, myPfoList2;
-myPfoList1.push_back(pPfo1);
-myPfoList2.push_back(pPfo2);
-PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
-PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList1, "Pfo1", BLUE));
-PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList2, "Pfo2", GREEN));
-PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex1.GetPosition(), "Vertex1", RED, 3.5f));
-PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex2.GetPosition(), "Vertex2", RED, 3.5f));
-PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-*/
+//////// Display possible matches
+// std::cout << " *** StitchingCosmicRayMergingTool::MatchParticles(...) *** " << std::endl
+//           << "     pPfo1=" << pPfo1 << ", pPfo2=" << pPfo2 << std::endl
+//           << "     cosTheta=" << cosRelativeAngle << std::endl
+//           << "     rL1=" << rL1 << ", rT1=" << rT1 << ", rL2=" << rL2 << ", rT2=" << rT2 << std::endl
+//           << "     Length1=" << std::sqrt(particleLength1) << ", Length2=" << std::sqrt(particleLength2) << std::endl
+//           << "     IntersectX=" << intersectX << ", BoundaryX=" << boundaryCenterX << std::endl;
+//
+// PfoList myPfoList1, myPfoList2;
+// myPfoList1.push_back(pPfo1);
+// myPfoList2.push_back(pPfo2);
+// PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
+// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList1, "Pfo1", BLUE));
+// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList2, "Pfo2", GREEN));
+// PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex1.GetPosition(), "Vertex1", RED, 3.5f));
+// PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex2.GetPosition(), "Vertex2", RED, 3.5f));
+// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+////////
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -572,25 +582,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const StitchingAlgorithm *const p
             {
                 continue;
             }
-/*
-// Display X0 information
-PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
-PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "PfoList", BLUE));
-for (PfoList::const_iterator iter = pfoList.begin(), iterEnd = pfoList.end(); iter != iterEnd; ++iter)
-{
-const ParticleFlowObject *const pPfo = *iter;
-PfoToVolumeIdMap::const_iterator iterA = pfoToVolumeIdMap.find(pPfo);
-ThreeDPointingClusterMap::const_iterator iterB = pointingClusterMap.find(pPfo);
-const VolumeInfo &pfoVolume(MultiPandoraApi::GetVolumeInfo(iterA->second));
-const LArPointingCluster &pointingCluster(iterB->second);
-const CartesianVector xOffset(pfoVolume.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f);
-const CartesianVector innerVertex((pointingCluster.GetInnerVertex().GetPosition() + xOffset));
-const CartesianVector outerVertex((pointingCluster.GetOuterVertex().GetPosition() + xOffset));
-PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &innerVertex, "Vertex1", RED, 3.5f));
-PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &outerVertex, "Vertex2", BLUE, 3.5f));
-}
-PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-*/
+
             for (PfoList::const_iterator iter2 = pfoList.begin(), iterEnd2 = pfoList.end(); iter2 != iterEnd2; ++iter2)
             {
                 const ParticleFlowObject *const pPfoToShift = *iter2;
@@ -605,24 +597,25 @@ PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
             if (pPfoToEnlarge == pPfoToDelete)
                 continue;
-/*
-//Display Pfos Before Merge
-PfoList enlargePfoList, deletePfoList;
-enlargePfoList.push_back(pPfoToEnlarge);
-deletePfoList.push_back(pPfoToDelete);
-PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
-PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &enlargePfoList, "enlargePfoList", BLUE));
-PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &deletePfoList, "deletePfoList", GREEN));
-PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-*/
+
+//////// Display Pfos Before Merge
+// PfoList enlargePfoList, deletePfoList;
+// enlargePfoList.push_back(pPfoToEnlarge);
+// deletePfoList.push_back(pPfoToDelete);
+// PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
+// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &enlargePfoList, "enlargePfoList", BLUE));
+// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &deletePfoList, "deletePfoList", GREEN));
+// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+////////
+
             pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, stitchingInfo);
-/*
-//Display Pfos After Merge
-PfoList mergedPfoList;
-mergedPfoList.push_back(pPfoToEnlarge);
-PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &mergedPfoList, "mergedPfoList", RED));
-PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-*/
+
+//////// Display Pfos After Merge
+// PfoList mergedPfoList;
+// mergedPfoList.push_back(pPfoToEnlarge);
+// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &mergedPfoList, "mergedPfoList", RED));
+// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+////////
         }
     }
 }

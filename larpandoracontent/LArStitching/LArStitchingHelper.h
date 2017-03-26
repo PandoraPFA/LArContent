@@ -51,7 +51,7 @@ public:
      *
      *  @return boolean
      */
-    static bool CanVolumesBeStitched_Method1(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static bool AreVolumesAdjacent(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
 
     /**
      *  @brief Check that a pair of drift volumes are adjacent to each other
@@ -61,7 +61,37 @@ public:
      *
      *  @return boolean
      */
-    static bool CanVolumesBeStitched_Method2(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static bool AreVolumesAdjacent_Method1(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+
+    /**
+     *  @brief Check that a pair of drift volumes are adjacent to each other
+     *
+     *  @param firstVolume the first drift volume
+     *  @param secondVolume the second drift volume
+     *
+     *  @return boolean
+     */
+    static bool AreVolumesAdjacent_Method2(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+
+    /**
+     *  @brief Determine centre in X at the boundary between a pair of drift volumes
+     *
+     *  @param firstVolume the first drift volume
+     *  @param secondVolume the second drift volume
+     *
+     *  @return Boundary X centre
+     */
+    static float GetVolumeBoundaryCenterX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+
+    /**
+     *  @brief Determine width in X at the boundary between a pair of drift volumes
+     *
+     *  @param firstVolume the first drift volume
+     *  @param secondVolume the second drift volume
+     *
+     *  @return Boundary X width
+     */
+    static float GetVolumeBoundaryWidthX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
 
     /**
      *  @brief Calculate distance between central positions of a pair of drift volumes
@@ -84,8 +114,8 @@ public:
      *  @param  closestVertex2 to receive the relevant vertex from the second pointing cluster
      */
     static void GetClosestVertices(const VolumeInfo &driftVolume1, const VolumeInfo &driftVolume2,
-	const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
-	LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
+        const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
+        LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
 
     /**
      *  @brief  Calculate X0 for a pair of vertices
@@ -98,7 +128,7 @@ public:
      *  @return X0 value for this pair of vertices
      */
     static float CalculateX0(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume,
-	const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex);
+        const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex);
 
     /**
      *  @brief  Apply the X0 correction to an input position vector
@@ -110,7 +140,7 @@ public:
      *  @return the output corrected position vector
      */
     static pandora::CartesianVector GetCorrectedPosition(const VolumeInfo &driftVolume, const float x0,
-	const pandora::CartesianVector &inputPosition);
+        const pandora::CartesianVector &inputPosition);
 
 };
 

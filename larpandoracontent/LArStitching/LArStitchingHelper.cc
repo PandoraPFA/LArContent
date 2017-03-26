@@ -69,12 +69,19 @@ bool LArStitchingHelper::CanVolumesBeStitched(const VolumeInfo &firstVolume, con
         return false;
 
     // Use second method by default (which doesn't require knowledge of volume widths)
-    return LArStitchingHelper::CanVolumesBeStitched_Method2(firstVolume, secondVolume);
+    return LArStitchingHelper::AreVolumesAdjacent(firstVolume, secondVolume);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArStitchingHelper::CanVolumesBeStitched_Method1(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+bool LArStitchingHelper::AreVolumesAdjacent(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+{
+    return LArStitchingHelper::AreVolumesAdjacent_Method2(firstVolume, secondVolume);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArStitchingHelper::AreVolumesAdjacent_Method1(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
 {
     // Check the relative positions of the centres of each drift volume
     const float maxDisplacement(30.f); // TODO: 30cm should be fine, but can we do better than a hard-coded number here?
@@ -91,7 +98,7 @@ bool LArStitchingHelper::CanVolumesBeStitched_Method1(const VolumeInfo &firstVol
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArStitchingHelper::CanVolumesBeStitched_Method2(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+bool LArStitchingHelper::AreVolumesAdjacent_Method2(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
 {
     // Check if first volume is just upstream of second volume
     try
@@ -121,6 +128,44 @@ bool LArStitchingHelper::CanVolumesBeStitched_Method2(const VolumeInfo &firstVol
 
     // Drift volumes aren't adjacent to each other
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArStitchingHelper::GetVolumeBoundaryCenterX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+{
+    if (!LArStitchingHelper::AreVolumesAdjacent(firstVolume, secondVolume))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    if (firstVolume.GetCenterX() < secondVolume.GetCenterX())
+    {
+        return 0.5 * ((firstVolume.GetCenterX() + 0.5 * firstVolume.GetWidthX()) +
+                      (secondVolume.GetCenterX() - 0.5 * secondVolume.GetWidthX()));
+    }
+    else
+    {
+        return 0.5 * ((firstVolume.GetCenterX() - 0.5 * firstVolume.GetWidthX()) +
+                      (secondVolume.GetCenterX() + 0.5 * secondVolume.GetWidthX()));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArStitchingHelper::GetVolumeBoundaryWidthX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+{
+    if (!LArStitchingHelper::AreVolumesAdjacent(firstVolume, secondVolume))
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    if (firstVolume.GetCenterX() < secondVolume.GetCenterX())
+    {
+        return ((secondVolume.GetCenterX() - 0.5 * secondVolume.GetWidthX()) -
+                (firstVolume.GetCenterX() + 0.5 * firstVolume.GetWidthX()));
+    }
+    else
+    {
+        return ((firstVolume.GetCenterX() - 0.5 * firstVolume.GetWidthX()) -
+                (secondVolume.GetCenterX() + 0.5 * secondVolume.GetWidthX()));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -124,22 +124,6 @@ VolumeInfo::VolumeInfo(const int idNumber, const std::string &idString, const fl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VolumeInfo::VolumeInfo(const int idNumber, const std::string &idString, const float centerX, const float centerY, const float centerZ,
-    const bool isDriftInPositiveX) :
-    m_idNumber(idNumber),
-    m_idString(idString),
-    m_centerX(centerX),
-    m_centerY(centerY),
-    m_centerZ(centerZ),
-    m_widthX(0.f),
-    m_widthY(0.f),
-    m_widthZ(0.f),
-    m_isDriftInPositiveX(isDriftInPositiveX)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 int VolumeInfo::GetIdNumber() const
 {
     return m_idNumber;
