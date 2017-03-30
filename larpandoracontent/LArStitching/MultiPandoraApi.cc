@@ -16,13 +16,6 @@ MultiPandoraApiImpl MultiPandoraApi::m_multiPandoraApiImpl;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const VolumeIdList &MultiPandoraApi::GetVolumeIdList()
-{
-    return m_multiPandoraApiImpl.GetVolumeIdList();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 const PandoraInstanceMap &MultiPandoraApi::GetPandoraInstanceMap()
 {
     return m_multiPandoraApiImpl.GetPandoraInstanceMap();
@@ -58,9 +51,16 @@ const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const pandora::Pandora *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const int volumeID)
+const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const pandora::Pandora *const pPrimaryPandora, const int idNumber)
 {
-    return m_multiPandoraApiImpl.GetVolumeInfo(volumeID);
+    return m_multiPandoraApiImpl.GetVolumeInfo(pPrimaryPandora, idNumber);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const VolumeIdList &MultiPandoraApi::GetVolumeIdList(const pandora::Pandora *const pPrimaryPandora)
+{
+    return m_multiPandoraApiImpl.GetVolumeIdList(pPrimaryPandora);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

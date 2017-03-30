@@ -154,7 +154,7 @@ void StitchingAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pPare
     if (pfoToVolumeIdMap.end() == iter)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const VolumeInfo &volumeInfo(MultiPandoraApi::GetVolumeInfo(iter->second));
+    const VolumeInfo &volumeInfo(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter->second));
 
     // Shift the Pfo hierarchy
     PfoList pfoList;

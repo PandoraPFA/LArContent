@@ -26,12 +26,13 @@ public:
    /**
      *  @brief Find neighbouring drift volume to a specified drift volume
      *
+     *  @param pandora  the pandora stitching instance
      *  @param inputVolume  the specified drift volume
      *  @param checkPositive  look in higher (lower) x positions if this is set to true (false)
      *
      *  @return volume information block
      */
-    static const VolumeInfo &FindClosestVolume(const VolumeInfo &inputVolume, const bool checkPositive);
+    static const VolumeInfo &FindClosestVolume(const pandora::Pandora &pandora, const VolumeInfo &inputVolume, const bool checkPositive);
 
     /**
      *  @brief Check that a pair of drift volumes are adjacent to each other
@@ -56,22 +57,13 @@ public:
     /**
      *  @brief Check that a pair of drift volumes are adjacent to each other
      *
-     *  @param firstVolume the first drift volume
-     *  @param secondVolume the second drift volume
+     *  @param pandora  the pandora stitching instance
+     *  @param firstVolume  the first drift volume
+     *  @param secondVolume  the second drift volume
      *
      *  @return boolean
      */
-    static bool AreVolumesAdjacent_Method1(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
-
-    /**
-     *  @brief Check that a pair of drift volumes are adjacent to each other
-     *
-     *  @param firstVolume the first drift volume
-     *  @param secondVolume the second drift volume
-     *
-     *  @return boolean
-     */
-    static bool AreVolumesAdjacent_Method2(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static bool AreVolumesAdjacent(const pandora::Pandora &pandora, const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
 
     /**
      *  @brief Determine centre in X at the boundary between a pair of drift volumes
