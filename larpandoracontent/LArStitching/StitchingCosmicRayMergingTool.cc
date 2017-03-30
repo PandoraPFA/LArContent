@@ -111,7 +111,7 @@ void StitchingCosmicRayMergingTool::BuildVolumeMaps(const PfoList &inputPfoList,
 
         try
         {
-            const VolumeInfo &checkVolume(MultiPandoraApi::GetVolumeInfo(volumeID));
+            const VolumeInfo &checkVolume(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), volumeID));
 
             if (volumeID != checkVolume.GetIdNumber())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -126,14 +126,14 @@ void StitchingCosmicRayMergingTool::BuildVolumeMaps(const PfoList &inputPfoList,
     }
 
 //////// Display volume maps here
-// PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
-// for (VolumeIdToPfoMap::const_iterator iter = volumeIdToPfoMap.begin(), iterEnd = volumeIdToPfoMap.end(); iter != iterEnd; ++iter)
-// {
-// const PfoList &pfoList(iter->second);
-// PfoList myPfoList(pfoList.begin(), pfoList.end());
-// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList, "PrimaryPfos", BLUE));
-// }
-// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+//PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
+//for (VolumeIdToPfoMap::const_iterator iter = volumeIdToPfoMap.begin(), iterEnd = volumeIdToPfoMap.end(); iter != iterEnd; ++iter)
+//{
+//const PfoList &pfoList(iter->second);
+//PfoList myPfoList(pfoList.begin(), pfoList.end());
+//PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList, "PrimaryPfos", BLUE));
+//}
+//PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 ////////
 }
 
@@ -174,12 +174,12 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const VolumeIdToPfoMap &vol
 {
     for (VolumeIdToPfoMap::const_iterator iter1A = volumeIdToPfoMap.begin(), iterEnd1A = volumeIdToPfoMap.end(); iter1A != iterEnd1A; ++iter1A)
     {
-        const VolumeInfo &pfoVolume1(MultiPandoraApi::GetVolumeInfo(iter1A->first));
+        const VolumeInfo &pfoVolume1(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter1A->first));
         const PfoList &pfoList1(iter1A->second);
 
         for (VolumeIdToPfoMap::const_iterator iter2A = iter1A, iterEnd2A = volumeIdToPfoMap.end(); iter2A != iterEnd2A; ++iter2A)
         {
-            const VolumeInfo &pfoVolume2(MultiPandoraApi::GetVolumeInfo(iter2A->first));
+            const VolumeInfo &pfoVolume2(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter2A->first));
             const PfoList &pfoList2(iter2A->second);
 
             if (!LArStitchingHelper::CanVolumesBeStitched(pfoVolume1, pfoVolume2))
@@ -307,22 +307,22 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const VolumeInfo &pfoVolume
     pfoAssociationMatrix[pPfo2].insert(PfoAssociationMap::value_type(pPfo1, PfoAssociation(vertexType2, vertexType1, particleLength1)));
 
 //////// Display possible matches
-// std::cout << " *** StitchingCosmicRayMergingTool::MatchParticles(...) *** " << std::endl
-//           << "     pPfo1=" << pPfo1 << ", pPfo2=" << pPfo2 << std::endl
-//           << "     cosTheta=" << cosRelativeAngle << std::endl
-//           << "     rL1=" << rL1 << ", rT1=" << rT1 << ", rL2=" << rL2 << ", rT2=" << rT2 << std::endl
-//           << "     Length1=" << std::sqrt(particleLength1) << ", Length2=" << std::sqrt(particleLength2) << std::endl
-//           << "     IntersectX=" << intersectX << ", BoundaryX=" << boundaryCenterX << std::endl;
+//std::cout << " *** StitchingCosmicRayMergingTool::MatchParticles(...) *** " << std::endl
+//          << "     pPfo1=" << pPfo1 << ", pPfo2=" << pPfo2 << std::endl
+//          << "     cosTheta=" << cosRelativeAngle << std::endl
+//          << "     rL1=" << rL1 << ", rT1=" << rT1 << ", rL2=" << rL2 << ", rT2=" << rT2 << std::endl
+//          << "     Length1=" << std::sqrt(particleLength1) << ", Length2=" << std::sqrt(particleLength2) << std::endl
+//          << "     IntersectX=" << intersectX << ", BoundaryX=" << boundaryCenterX << std::endl;
 //
-// PfoList myPfoList1, myPfoList2;
-// myPfoList1.push_back(pPfo1);
-// myPfoList2.push_back(pPfo2);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
-// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList1, "Pfo1", BLUE));
-// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList2, "Pfo2", GREEN));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex1.GetPosition(), "Vertex1", RED, 3.5f));
-// PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex2.GetPosition(), "Vertex2", RED, 3.5f));
-// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+//PfoList myPfoList1, myPfoList2;
+//myPfoList1.push_back(pPfo1);
+//myPfoList2.push_back(pPfo2);
+//PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
+//PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList1, "Pfo1", BLUE));
+//PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList2, "Pfo2", GREEN));
+//PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex1.GetPosition(), "Vertex1", RED, 3.5f));
+//PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pointingVertex2.GetPosition(), "Vertex2", RED, 3.5f));
+//PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 ////////
 }
 
@@ -504,7 +504,7 @@ void StitchingCosmicRayMergingTool::OrderPfoMerges(const PfoToVolumeIdMap &pfoTo
             if (pfoToVolumeIdMap.end() == iter1A || pointingClusterMap.end() == iter1B)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const VolumeInfo &pfoVolume1(MultiPandoraApi::GetVolumeInfo(iter1A->second));
+            const VolumeInfo &pfoVolume1(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter1A->second));
             const LArPointingCluster &pointingCluster1(iter1B->second);
 
             for (PfoList::const_iterator iter2 = iter1, iterEnd2 = pfoList.end(); iter2 != iterEnd2; ++iter2)
@@ -517,7 +517,7 @@ void StitchingCosmicRayMergingTool::OrderPfoMerges(const PfoToVolumeIdMap &pfoTo
                 if (pfoToVolumeIdMap.end() == iter2A || pointingClusterMap.end() == iter2B)
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                const VolumeInfo &pfoVolume2(MultiPandoraApi::GetVolumeInfo(iter2A->second));
+                const VolumeInfo &pfoVolume2(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter2A->second));
                 const LArPointingCluster &pointingCluster2(iter2B->second);
 
                 if (pfoVolume1.GetIdNumber() == pfoVolume2.GetIdNumber())
@@ -599,22 +599,22 @@ void StitchingCosmicRayMergingTool::StitchPfos(const StitchingAlgorithm *const p
                 continue;
 
 //////// Display Pfos Before Merge
-// PfoList enlargePfoList, deletePfoList;
-// enlargePfoList.push_back(pPfoToEnlarge);
-// deletePfoList.push_back(pPfoToDelete);
-// PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
-// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &enlargePfoList, "enlargePfoList", BLUE));
-// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &deletePfoList, "deletePfoList", GREEN));
-// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+//PfoList enlargePfoList, deletePfoList;
+//enlargePfoList.push_back(pPfoToEnlarge);
+//deletePfoList.push_back(pPfoToDelete);
+//PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f));
+//PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &enlargePfoList, "enlargePfoList", BLUE));
+//PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &deletePfoList, "deletePfoList", GREEN));
+//PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 ////////
 
             pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, stitchingInfo);
 
 //////// Display Pfos After Merge
-// PfoList mergedPfoList;
-// mergedPfoList.push_back(pPfoToEnlarge);
-// PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &mergedPfoList, "mergedPfoList", RED));
-// PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+//PfoList mergedPfoList;
+//mergedPfoList.push_back(pPfoToEnlarge);
+//PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &mergedPfoList, "mergedPfoList", RED));
+//PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 ////////
         }
     }
@@ -648,8 +648,8 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToVolumeIdMap &pfoToVol
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
             // Check that this pair of Pfos can be stitched
-            const VolumeInfo &pfoVolume1(MultiPandoraApi::GetVolumeInfo(iter1A->second));
-            const VolumeInfo &pfoVolume2(MultiPandoraApi::GetVolumeInfo(iter2A->second));
+            const VolumeInfo &pfoVolume1(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter1A->second));
+            const VolumeInfo &pfoVolume2(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter2A->second));
 
             if (!LArStitchingHelper::CanVolumesBeStitched(pfoVolume1, pfoVolume2))
                 continue;
