@@ -18,9 +18,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-const VolumeInfo &LArStitchingHelper::FindClosestVolume(const VolumeInfo &inputVolume, const bool checkPositive)
+const VolumeInfo &LArStitchingHelper::FindClosestVolume(const Pandora &pandora, const VolumeInfo &inputVolume, const bool checkPositive)
 {
-    const VolumeIdList &volumeIdList(MultiPandoraApi::GetVolumeIdList());
+    const VolumeIdList &volumeIdList(MultiPandoraApi::GetVolumeIdList(&pandora));
 
     int closestId(-1);
     float closestSeparation(std::numeric_limits<float>::max());
@@ -28,7 +28,7 @@ const VolumeInfo &LArStitchingHelper::FindClosestVolume(const VolumeInfo &inputV
 
     for (const int volumeId : volumeIdList)
     {
-        const VolumeInfo &checkVolume(MultiPandoraApi::GetVolumeInfo(volumeId));
+        const VolumeInfo &checkVolume(MultiPandoraApi::GetVolumeInfo(&pandora, volumeId));
 
         if (inputVolume.GetIdNumber() == checkVolume.GetIdNumber())
             continue;
@@ -53,7 +53,7 @@ const VolumeInfo &LArStitchingHelper::FindClosestVolume(const VolumeInfo &inputV
     if (closestId < 0)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return MultiPandoraApi::GetVolumeInfo(closestId);
+    return MultiPandoraApi::GetVolumeInfo(&pandora, closestId);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -76,13 +76,6 @@ bool LArStitchingHelper::CanVolumesBeStitched(const VolumeInfo &firstVolume, con
 
 bool LArStitchingHelper::AreVolumesAdjacent(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
 {
-    return LArStitchingHelper::AreVolumesAdjacent_Method2(firstVolume, secondVolume);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArStitchingHelper::AreVolumesAdjacent_Method1(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
-{
     // Check the relative positions of the centres of each drift volume
     const float maxDisplacement(30.f); // TODO: 30cm should be fine, but can we do better than a hard-coded number here?
     const float widthX(0.5f * (firstVolume.GetWidthX() + secondVolume.GetWidthX()));
@@ -98,13 +91,13 @@ bool LArStitchingHelper::AreVolumesAdjacent_Method1(const VolumeInfo &firstVolum
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArStitchingHelper::AreVolumesAdjacent_Method2(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+bool LArStitchingHelper::AreVolumesAdjacent(const Pandora &pandora, const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
 {
     // Check if first volume is just upstream of second volume
     try
     {
-        const VolumeInfo &firstVolumeCheck(LArStitchingHelper::FindClosestVolume(secondVolume, true));
-        const VolumeInfo &secondVolumeCheck(LArStitchingHelper::FindClosestVolume(firstVolume, false));
+        const VolumeInfo &firstVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, secondVolume, true));
+        const VolumeInfo &secondVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, firstVolume, false));
 
         if (firstVolumeCheck.GetIdNumber() == firstVolume.GetIdNumber() && secondVolumeCheck.GetIdNumber() == secondVolume.GetIdNumber())
             return true;
@@ -116,8 +109,8 @@ bool LArStitchingHelper::AreVolumesAdjacent_Method2(const VolumeInfo &firstVolum
     // Check if second volume is just upstream of first volume
     try
     {
-        const VolumeInfo &firstVolumeCheck(LArStitchingHelper::FindClosestVolume(secondVolume, false));
-        const VolumeInfo &secondVolumeCheck(LArStitchingHelper::FindClosestVolume(firstVolume, true));
+        const VolumeInfo &firstVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, secondVolume, false));
+        const VolumeInfo &secondVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, firstVolume, true));
 
         if (firstVolumeCheck.GetIdNumber() == firstVolume.GetIdNumber() && secondVolumeCheck.GetIdNumber() == secondVolume.GetIdNumber())
             return true;

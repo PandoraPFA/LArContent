@@ -25,7 +25,9 @@ class VolumeInfo;
 
 typedef std::vector<const pandora::Pandora *> PandoraInstanceList;
 typedef std::unordered_map<const pandora::Pandora *, PandoraInstanceList> PandoraInstanceMap;
+
 typedef std::vector<int> VolumeIdList;
+typedef std::unordered_map<const pandora::Pandora *, VolumeIdList> PandoraVolumeIdMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -35,13 +37,6 @@ typedef std::vector<int> VolumeIdList;
 class MultiPandoraApi
 {
 public:
-    /**
-     *  @brief  Get the list of unique identifiers of all drift volumes
-     *
-     *  @return the list of unique identifiers of all drift volumes
-     */
-    static const VolumeIdList &GetVolumeIdList();
-
     /**
      *  @brief  Get the pandora instance map
      *
@@ -78,6 +73,16 @@ public:
     static const pandora::Pandora *GetPrimaryPandoraInstance(const pandora::Pandora *const pDaughterPandora);
 
     /**
+     *  @brief  Get the volume info block associated with a given pandora stitching instance and volume ID number
+     *
+     *  @param  pPrimaryPandora the address of the primary pandora instance
+     *  @param  idNumber the volume identifier number
+     *
+     *  @return the volume info block
+     */
+    static const VolumeInfo &GetVolumeInfo(const pandora::Pandora *const pPrimaryPandora, const int idNumber);
+
+    /**
      *  @brief  Get the volume info block associated with a given pandora instance
      *
      *  @param  pPandora the address of the pandora instance
@@ -87,13 +92,13 @@ public:
     static const VolumeInfo &GetVolumeInfo(const pandora::Pandora *const pPandora);
 
     /**
-     *  @brief  Get the volume info block associated with a given volume ID number
+     *  @brief  Get the list of volume IDs associated with a given primary pandora instance
      *
-     *  @param  volumeID the unique identifier for the drift volume
+     *  @param  pPrimaryPandora the address of the primary pandora instance
      *
-     *  @return the volume info block
+     *  @return the volume ID list
      */
-    static const VolumeInfo &GetVolumeInfo(const int volumeID);
+    static const VolumeIdList &GetVolumeIdList(const pandora::Pandora *const pPrimaryPandora);
 
     /**
      *  @brief  Declare a new primary pandora instance and receive the relevant multi pandora book-keeping instance
@@ -147,6 +152,7 @@ private:
     static MultiPandoraApiImpl      m_multiPandoraApiImpl;          ///< The multi pandora api implementation
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
