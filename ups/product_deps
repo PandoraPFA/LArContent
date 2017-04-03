@@ -3,7 +3,7 @@
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
 # ATTN This package supports two build systems; please ensure version is specified here *and* in non-cetbuildtools section of CMakeLists.txt
-parent larpandoracontent v03_03_00_rc1
+parent larpandoracontent v03_03_00
 defaultqual e10
 
 # larpandoracontent has no fcl files
@@ -12,7 +12,7 @@ fcldir  -
 # With "product  version" table below, we now define depdendencies
 # Add the dependent product and version
 product		version
-pandora		v03_00_00a
+pandora		v03_00_00b
 gcc		v4_9_3a
 cetbuildtools	v5_06_07	-	only_for_build
 end_product_list
