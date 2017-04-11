@@ -4,7 +4,7 @@
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
 # ATTN This package supports two build systems; please ensure version is specified here *and* in non-cetbuildtools section of CMakeLists.txt
 parent larpandoracontent v03_03_00
-defaultqual e10
+defaultqual e14
 
 # larpandoracontent has no fcl files
 fcldir  -
@@ -13,16 +13,18 @@ fcldir  -
 # Add the dependent product and version
 product		version
 pandora		v03_00_00b
-gcc		v4_9_3a
 cetbuildtools	v5_06_07	-	only_for_build
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
-qualifier	pandora 	gcc	notes
-e10:debug	e10:nu:debug	-nq-
-e10:opt		e10:nu:opt	-nq-
-e10:prof	e10:nu:prof	-nq-
+qualifier	pandora 	notes
+e14:debug	e14:nu:debug
+e14:opt		e14:nu:opt
+e14:prof	e14:nu:prof
+e10:debug	e10:nu:debug
+e10:opt		e10:nu:opt
+e10:prof	e10:nu:prof
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:
