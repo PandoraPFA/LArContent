@@ -456,7 +456,10 @@ void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList
                 simpleMatchedPfo.m_nPfoHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoCaloHitList);
                 simpleMatchedPfo.m_nPfoHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoCaloHitList);
 
-                // ATTN vertex and end positions/directions currently only filled for track pfos
+                try {simpleMatchedPfo.m_vertex = LArPfoHelper::GetVertex(pMatchedPfo)->GetPosition();}
+                catch (const StatusCodeException &) {}
+
+                // ATTN vertex direction and end positions/directions currently only filled for track pfos
                 const LArTrackPfo *const pLArTrackPfo = dynamic_cast<const LArTrackPfo*>(pMatchedPfo);
 
                 if (pLArTrackPfo)
@@ -489,7 +492,7 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
     for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
     {
         const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
-        std::cout << "MCNeutrino, PDG " << pMCNeutrino->GetParticleId() << ", Nuance " << (pLArMCNeutrino ? pLArMCNeutrino->GetNuanceCode() : -1) << std::endl;
+        std::cout << "MCNeutrino, PDG " << pMCNeutrino->GetParticleId() << ", E " << pMCNeutrino->GetEnergy() << ", Nuance " << (pLArMCNeutrino ? pLArMCNeutrino->GetNuanceCode() : -1) << std::endl;
     }
 
     for (const ParticleFlowObject *const pPfo : recoNeutrinoVector)
