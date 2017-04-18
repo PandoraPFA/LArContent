@@ -9,12 +9,11 @@
 #define LAR_SUPPORT_VECTOR_MACHINE_H 1
 
 #include "Pandora/AlgorithmTool.h"
-
-#include "Helpers/XmlHelper.h"
+#include "Pandora/StatusCodes.h"
 
 #include <functional>
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace lar_content
 {
@@ -22,7 +21,7 @@ namespace lar_content
 /**
  *  @brief  SVMFeatureTool class template
  */
-template<typename ...Ts>
+template <typename ...Ts>
 class SVMFeatureTool : public pandora::AlgorithmTool
 {
 public:
@@ -45,7 +44,7 @@ public:
     virtual void Run(DoubleVector &featureVector, Ts... args) = 0;
 };
 
-template<typename ...Ts>
+template <typename ...Ts>
 using SVMFeatureToolVector = std::vector<SVMFeatureTool<Ts...> *>;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,7 +57,7 @@ class SupportVectorMachine
 public:
     typedef std::vector<double> DoubleVector;
     typedef std::function<double(const DoubleVector &, const DoubleVector &, const double)> KernelFunction;
-    
+
     /**
      *  @brief  KernelType enum
      */
@@ -105,7 +104,7 @@ public:
     double CalculateClassificationScore(const DoubleVector &features) const;
 
     /**
-     *  @brief  Get whether this SVM is initialized
+     *  @brief  Query whether this SVM is initialized
      *
      *  @return whether the model is initialized
      */
@@ -116,12 +115,12 @@ public:
      *
      *  @return the number of features
      */
-    std::size_t GetNumFeatures() const;
+    unsigned int GetNFeatures() const;
 
     /**
      *  @brief  Set the kernel function to use
      *
-     *  @param kernelFunction the kernel function
+     *  @param  kernelFunction the kernel function
      */
     void SetKernelFunction(KernelFunction kernelFunction);
 
@@ -136,7 +135,7 @@ private:
          *  @brief  Constructor
          *
          *  @param  yAlpha the alpha value multiplied by the y-value for the support vector
-         *  @param  supportVector the support vector
+         *  @param  supportVector the support vector, passed by value then uses move semantics for efficiency
          */
         SupportVectorInfo(const double yAlpha, DoubleVector supportVector);
 
@@ -184,7 +183,7 @@ private:
     bool              m_isInitialized;       ///< Whether this SVM has been initialized
 
     bool              m_standardizeFeatures; ///< Whether to standardize the features
-    std::size_t       m_nFeatures;           ///< The number of features
+    unsigned int      m_nFeatures;           ///< The number of features
     double            m_bias;                ///< The bias term
     double            m_scaleFactor;         ///< The kernel scale factor
 
@@ -257,7 +256,7 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double QuadraticKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.f);
+    static double QuadraticKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  An inhomogeneous cubic kernel
@@ -268,7 +267,7 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double CubicKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.f);
+    static double CubicKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  A linear kernel
@@ -279,7 +278,7 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double LinearKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.f);
+    static double LinearKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  A gaussian RBF kernel
@@ -290,14 +289,14 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double GaussianRbfKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.f);
+    static double GaussianRbfKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool SupportVectorMachine::Classify(const DoubleVector &features) const
 {
-    return (this->CalculateClassificationScoreImpl(features) > 0.0);
+    return (this->CalculateClassificationScoreImpl(features) > 0.);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -316,7 +315,7 @@ inline bool SupportVectorMachine::IsInitialized() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::size_t SupportVectorMachine::GetNumFeatures() const
+inline unsigned int SupportVectorMachine::GetNFeatures() const
 {
     return m_nFeatures;
 }
@@ -332,22 +331,30 @@ inline void SupportVectorMachine::SetKernelFunction(KernelFunction kernelFunctio
 
 inline double SupportVectorMachine::LinearKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
 {
-    double total(0.0);
-    for (std::size_t i = 0; i < features.size(); ++i)
+    const double denominator(scaleFactor * scaleFactor);
+    if (denominator < std::numeric_limits<double>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    double total(0.);
+    for (unsigned int i = 0; i < features.size(); ++i)
         total += supportVector.at(i) * features.at(i);
 
-    return total / (scaleFactor * scaleFactor);
+    return total / denominator;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline double SupportVectorMachine::QuadraticKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
 {
-    double total(0.0);
-    for (std::size_t i = 0; i < features.size(); ++i)
+    const double denominator(scaleFactor * scaleFactor);
+    if (denominator < std::numeric_limits<double>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    double total(0.);
+    for (unsigned int i = 0; i < features.size(); ++i)
         total += supportVector.at(i) * features.at(i);
 
-    total = total / (scaleFactor * scaleFactor) + 1.0;
+    total = total / denominator + 1.;
     return total * total;
 }
 
@@ -355,11 +362,15 @@ inline double SupportVectorMachine::QuadraticKernel(const DoubleVector &supportV
 
 inline double SupportVectorMachine::CubicKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
 {
-    double total(0.0);
-    for (std::size_t i = 0; i < features.size(); ++i)
+    const double denominator(scaleFactor * scaleFactor);
+    if (denominator < std::numeric_limits<double>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    double total(0.);
+    for (unsigned int i = 0; i < features.size(); ++i)
         total += supportVector.at(i) * features.at(i);
 
-    total = total / (scaleFactor * scaleFactor) + 1.0;
+    total = total / denominator + 1.;
     return total * total * total;
 }
 
@@ -367,8 +378,8 @@ inline double SupportVectorMachine::CubicKernel(const DoubleVector &supportVecto
 
 inline double SupportVectorMachine::GaussianRbfKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
 {
-    double total(0.0);
-    for (std::size_t i = 0; i < features.size(); ++i)
+    double total(0.);
+    for (unsigned int i = 0; i < features.size(); ++i)
         total += (supportVector.at(i) - features.at(i)) * (supportVector.at(i) - features.at(i));
 
     return std::exp(-scaleFactor * total);
@@ -392,9 +403,9 @@ inline SupportVectorMachine::FeatureInfo::FeatureInfo(const double muValue, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SupportVectorMachine::FeatureInfo::FeatureInfo() : 
-    m_muValue(0.0), 
-    m_sigmaValue(0.0) 
+inline SupportVectorMachine::FeatureInfo::FeatureInfo() :
+    m_muValue(0.),
+    m_sigmaValue(0.)
 {
 }
 
@@ -402,7 +413,10 @@ inline SupportVectorMachine::FeatureInfo::FeatureInfo() :
 
 inline double SupportVectorMachine::FeatureInfo::StandardizeParameter(const double parameter) const
 {
-    return (parameter - m_muValue) / m_sigmaValue; // sigma size already checked
+    if (m_sigmaValue < std::numeric_limits<double>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    return (parameter - m_muValue) / m_sigmaValue;
 }
 
 } // namespace lar_content

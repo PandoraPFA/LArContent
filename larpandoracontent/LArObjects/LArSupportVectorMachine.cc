@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Helpers/XmlHelper.h"
+
 #include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
 
 namespace lar_content
@@ -15,15 +17,12 @@ SupportVectorMachine::SupportVectorMachine() :
     m_isInitialized(false),
     m_standardizeFeatures(true),
     m_nFeatures(0),
-    m_bias(0.0),
-    m_scaleFactor(1.0),
+    m_bias(0.),
+    m_scaleFactor(1.),
     m_kernelType(QUADRATIC),
-    m_kernelFunction(QuadraticKernel)
+    m_kernelFunction(QuadraticKernel),
+    m_kernelMap{{LINEAR, LinearKernel}, {QUADRATIC, QuadraticKernel}, {CUBIC, CubicKernel}, {GAUSSIAN_RBF, GaussianRbfKernel}}
 {
-    m_kernelMap = {{LINEAR,       LinearKernel},
-                   {QUADRATIC,    QuadraticKernel},
-                   {CUBIC,        CubicKernel},
-                   {GAUSSIAN_RBF, GaussianRbfKernel}};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -50,10 +49,10 @@ pandora::StatusCode SupportVectorMachine::Initialize(const std::string &paramete
             }
         }
     }
-    
+
     // Check the number of features is consistent.
     m_nFeatures = m_featureInfoList.size();
-    
+
     for (const SupportVectorInfo &svInfo : m_svInfoList)
     {
         if (svInfo.m_supportVector.size() != m_nFeatures)
@@ -158,11 +157,11 @@ pandora::StatusCode SupportVectorMachine::ReadMachine(const pandora::TiXmlHandle
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
         "KernelType", kernelType));
 
-    double bias(0.0);
+    double bias(0.);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
         "Bias", bias));
 
-    double scaleFactor(0.0);
+    double scaleFactor(0.);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
         "ScaleFactor", scaleFactor));
 
@@ -241,14 +240,14 @@ double SupportVectorMachine::CalculateClassificationScoreImpl(const DoubleVector
 
     DoubleVector standardizedFeatures;
     standardizedFeatures.reserve(m_nFeatures);
-    
+
     if (m_standardizeFeatures)
     {
         for (std::size_t i = 0; i < m_nFeatures; ++i)
             standardizedFeatures.push_back(m_featureInfoList.at(i).StandardizeParameter(features.at(i)));
     }
 
-    double classScore(0.0);
+    double classScore(0.);
     for (const SupportVectorInfo &supportVectorInfo : m_svInfoList)
     {
         classScore += supportVectorInfo.m_yAlpha *

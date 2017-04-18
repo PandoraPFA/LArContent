@@ -29,7 +29,7 @@ public:
      *  @param  trainingOutputFile the file to which to append the example
      *  @param  featureLists the lists of features
      *
-     *  @return  success
+     *  @return success
      */
     template <typename ...TLISTS>
     static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists);
@@ -66,7 +66,7 @@ public:
      */
     template <typename ...Ts, typename ...TARGS>
     static SupportVectorMachine::DoubleVector CalculateFeatures(const SVMFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
-    
+
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
      *
@@ -77,7 +77,7 @@ public:
      */
     template <typename T, typename ...Ts, typename ...TARGS>
     static SupportVectorMachine::DoubleVector CalculateFeaturesOfType(const SVMFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
-    
+
     /**
      *  @brief  Add a feature tool to a vector of feature tools
      *
@@ -145,7 +145,7 @@ private:
      *
      *  @param  featureList a list of features to write
      *  @param  featureLists optional further lists of features to write
-     * 
+     *
      *  @return the vector of features
      */
     template <typename TLIST, typename ...TLISTS>
@@ -202,7 +202,7 @@ template <typename ...Ts, typename ...TARGS>
 SupportVectorMachine::DoubleVector SVMHelper::CalculateFeatures(const SVMFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
     SupportVectorMachine::DoubleVector featureVector;
-    
+
     for (const SVMFeatureTool<Ts...> &featureTool : featureToolVector)
         featureTool.Run(featureVector, std::forward<TARGS>(args)...);
 
@@ -215,7 +215,7 @@ template <typename T, typename ...Ts, typename ...TARGS>
 SupportVectorMachine::DoubleVector SVMHelper::CalculateFeaturesOfType(const SVMFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
     SupportVectorMachine::DoubleVector featureVector;
-    
+
     for (SVMFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
     {
         if (T *const pCastFeatureTool = dynamic_cast<T *const>(pFeatureTool))
@@ -292,7 +292,7 @@ template <typename TLIST, typename ...TLISTS>
 SupportVectorMachine::DoubleVector SVMHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
 {
     SupportVectorMachine::DoubleVector featureVector;
-    
+
     for (const double feature : featureList)
         featureVector.push_back(feature);
 
