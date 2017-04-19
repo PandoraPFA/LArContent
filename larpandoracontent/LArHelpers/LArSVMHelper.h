@@ -98,17 +98,6 @@ private:
     static std::string GetTimestampString();
 
     /**
-     *  @brief  Calculate the vector of features from a set of algorithm tools
-     *
-     *  @param  featureToolVector the feature tool vector
-     *  @param  args arguments to pass to the algorithm tool
-     *
-     *  @return the vector of features
-     */
-    template <typename ...Ts, typename ...TARGS>
-    static SupportVectorMachine::DoubleVector CalculateFeaturesImpl(std::false_type, const SVMFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
-
-    /**
      *  @brief  Recursively write the features of the given lists to file
      *
      *  @param  outfile the std::ofstream object to use
@@ -141,18 +130,18 @@ private:
     static pandora::StatusCode WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList);
 
     /**
-     *  @brief  Recursively concatenate sets of feature lists into an array
+     *  @brief  Recursively concatenate vectors of features
      *
-     *  @param  featureList a list of features to write
-     *  @param  featureLists optional further lists of features to write
+     *  @param  featureList a list of features
+     *  @param  featureLists optional further lists of features
      *
-     *  @return the vector of features
+     *  @return the concatenated vector of features
      */
     template <typename TLIST, typename ...TLISTS>
     static SupportVectorMachine::DoubleVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
 
     /**
-     *  @brief  Recursively concatenate sets of feature lists into an array (terminating method)
+     *  @brief  Recursively concatenate vectors of features (terminating method)
      */
     static SupportVectorMachine::DoubleVector ConcatenateFeatureLists();
 };
@@ -203,8 +192,8 @@ SupportVectorMachine::DoubleVector SVMHelper::CalculateFeatures(const SVMFeature
 {
     SupportVectorMachine::DoubleVector featureVector;
 
-    for (const SVMFeatureTool<Ts...> &featureTool : featureToolVector)
-        featureTool.Run(featureVector, std::forward<TARGS>(args)...);
+    for (SVMFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
+        pFeatureTool->Run(featureVector, std::forward<TARGS>(args)...);
 
     return featureVector;
 }
@@ -214,11 +203,12 @@ SupportVectorMachine::DoubleVector SVMHelper::CalculateFeatures(const SVMFeature
 template <typename T, typename ...Ts, typename ...TARGS>
 SupportVectorMachine::DoubleVector SVMHelper::CalculateFeaturesOfType(const SVMFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
+    using TD = typename std::decay<T>::type;
     SupportVectorMachine::DoubleVector featureVector;
 
     for (SVMFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
     {
-        if (T *const pCastFeatureTool = dynamic_cast<T *const>(pFeatureTool))
+        if (TD *const pCastFeatureTool = dynamic_cast<TD *const>(pFeatureTool))
             pCastFeatureTool->Run(featureVector, std::forward<TARGS>(args)...);
     }
 
@@ -245,11 +235,11 @@ inline std::string SVMHelper::GetTimestampString()
 {
     std::time_t timestampNow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
-    struct tm * timeinfo;
+    struct tm *pTimeInfo(NULL);
     char buffer[80];
 
-    timeinfo = localtime (&timestampNow);
-    strftime(buffer, 80, "%x_%X", timeinfo);
+    pTimeInfo = localtime(&timestampNow);
+    strftime(buffer, 80, "%x_%X", pTimeInfo);
 
     std::string timeString(buffer);
 
@@ -264,6 +254,9 @@ inline std::string SVMHelper::GetTimestampString()
 template <typename TLIST, typename ...TLISTS>
 inline pandora::StatusCode SVMHelper::WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
 {
+    static_assert(std::is_same<typename std::decay<TLIST>::type, SupportVectorMachine::DoubleVector>::value, 
+        "SVMHelper: Could not write training set example because a passed parameter was not a vector of doubles");
+    
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFileImpl(outfile, delimiter, featureList));
     return WriteFeaturesToFile(outfile, delimiter, featureLists...);
 }
@@ -291,6 +284,9 @@ pandora::StatusCode SVMHelper::WriteFeaturesToFileImpl(std::ofstream &outfile, c
 template <typename TLIST, typename ...TLISTS>
 SupportVectorMachine::DoubleVector SVMHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
 {
+    static_assert(std::is_same<typename std::decay<TLIST>::type, SupportVectorMachine::DoubleVector>::value,
+        "SVMHelper: Could not concatenate feature lists because one or more lists was not a vector of doubles");
+    
     SupportVectorMachine::DoubleVector featureVector;
 
     for (const double feature : featureList)
