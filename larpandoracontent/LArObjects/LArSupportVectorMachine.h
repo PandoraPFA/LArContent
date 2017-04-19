@@ -36,10 +36,8 @@ public:
     /**
      *  @brief  Run the algorithm tool
      *
-     *  @param  pAlg address of the calling algorithm
+     *  @param  featureVector the vector of features to append
      *  @param  args arguments to pass to the tool
-     *
-     *  @return the feature
      */
     virtual void Run(DoubleVector &featureVector, Ts... args) = 0;
 };
