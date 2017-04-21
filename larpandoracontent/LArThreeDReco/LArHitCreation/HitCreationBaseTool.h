@@ -10,12 +10,10 @@
 
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+
 namespace lar_content
 {
-
-class ThreeDHitCreationAlgorithm;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  HitCreationBaseTool class
@@ -23,16 +21,19 @@ class ThreeDHitCreationAlgorithm;
 class HitCreationBaseTool : public pandora::AlgorithmTool
 {
 public:
+    typedef ThreeDHitCreationAlgorithm::ProtoHit ProtoHit;
+    typedef ThreeDHitCreationAlgorithm::ProtoHitVector ProtoHitVector;
+
     /**
      *  @brief  Run the algorithm tool
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pPfo the address of the pfo
      *  @param  inputTwoDHits the vector of input two dimensional hits
-     *  @param  newThreeDHits to receive the new three dimensional hits
+     *  @param  newThreeDHits to receive the new three dimensional proto hits
      */
     virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
-        pandora::CaloHitVector &newThreeDHits) = 0;
+        ProtoHitVector &protoHitVector) = 0;
 
     /**
      *  @brief  Default constructor
@@ -53,11 +54,10 @@ protected:
      *  @param  hitType2 the hit type identifying the second view
      *  @param  fitPositionList1 the candidate sliding fit position in the first view
      *  @param  fitPositionList2 the candidate sliding fit position in the second view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
+     *  @param  protoHit to receive the populated proto hit
      */
     virtual void GetBestPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::HitType hitType1, const pandora::HitType hitType2,
-        const pandora::CartesianPointVector &fitPositionList1, const pandora::CartesianPointVector &fitPositionList2, pandora::CartesianVector &position3D, float &chiSquared) const;
+        const pandora::CartesianPointVector &fitPositionList1, const pandora::CartesianPointVector &fitPositionList2, ProtoHit &protoHit) const;
 
     /**
      *  @brief  Get the three dimensional position using a provided two dimensional calo hit and candidate fit positions from the other two views
@@ -67,23 +67,21 @@ protected:
      *  @param  hitType2 the hit type identifying the second view
      *  @param  fitPosition1 the candidate sliding fit position in the first view
      *  @param  fitPosition2 the candidate sliding fit position in the second view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
+     *  @param  protoHit to receive the populated proto hit
      */
     virtual void GetPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::HitType hitType1, const pandora::HitType hitType2,
-        const pandora::CartesianVector &fitPosition1, const pandora::CartesianVector &fitPosition2, pandora::CartesianVector &position3D, float &chiSquared) const;
+        const pandora::CartesianVector &fitPosition1, const pandora::CartesianVector &fitPosition2, ProtoHit &protoHit) const;
 
     /**
-     *  @brief  Get the three dimensional position using a provided two dimensional calo hit and a candidate fit position from another views
+     *  @brief  Get the three dimensional position using a provided two dimensional calo hit and a candidate fit position from another view
      *
      *  @param  pCaloHit2D address of the two dimensional calo hit
      *  @param  hitType the hit type identifying the other view
      *  @param  fitPosition the candidate sliding fit position in the other view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
+     *  @param  protoHit to receive the populated proto hit
      */
     virtual void GetPosition3D(const pandora::CaloHit *const pCaloHit2D, const pandora::HitType hitType, const pandora::CartesianVector &fitPosition,
-        pandora::CartesianVector &position3D, float &chiSquared) const;
+        ProtoHit &protoHit) const;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
