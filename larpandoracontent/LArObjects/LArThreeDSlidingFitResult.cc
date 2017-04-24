@@ -23,15 +23,15 @@ using namespace pandora;
 namespace lar_content
 {
 
-ThreeDSlidingFitResult::ThreeDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerWindow, const float layerPitch) :
-    m_pCluster(pCluster),
-    m_primaryAxis(ThreeDSlidingFitResult::GetPrimaryAxis(m_pCluster)),
+template <typename T>
+ThreeDSlidingFitResult::ThreeDSlidingFitResult(const T *const pT, const unsigned int layerWindow, const float layerPitch) :
+    m_primaryAxis(ThreeDSlidingFitResult::GetPrimaryAxis(pT)),
     m_axisIntercept(m_primaryAxis.GetPosition()),
     m_axisDirection(m_primaryAxis.GetMomentum()),
     m_firstOrthoDirection(ThreeDSlidingFitResult::GetSeedDirection(m_axisDirection).GetCrossProduct(m_axisDirection).GetUnitVector()),
     m_secondOrthoDirection(m_axisDirection.GetCrossProduct(m_firstOrthoDirection).GetUnitVector()),
-    m_firstFitResult(TwoDSlidingFitResult(pCluster, layerWindow, layerPitch, m_axisIntercept, m_axisDirection, m_firstOrthoDirection)),
-    m_secondFitResult(TwoDSlidingFitResult(pCluster, layerWindow, layerPitch, m_axisIntercept, m_axisDirection, m_secondOrthoDirection)),
+    m_firstFitResult(TwoDSlidingFitResult(pT, layerWindow, layerPitch, m_axisIntercept, m_axisDirection, m_firstOrthoDirection)),
+    m_secondFitResult(TwoDSlidingFitResult(pT, layerWindow, layerPitch, m_axisIntercept, m_axisDirection, m_secondOrthoDirection)),
     m_minLayer(std::max(m_firstFitResult.GetMinLayer(), m_secondFitResult.GetMinLayer())),
     m_maxLayer(std::min(m_firstFitResult.GetMaxLayer(), m_secondFitResult.GetMaxLayer())),
     m_minLayerPosition(0.f, 0.f, 0.f),
@@ -52,13 +52,10 @@ ThreeDSlidingFitResult::ThreeDSlidingFitResult(const Cluster *const pCluster, co
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- 
-float ThreeDSlidingFitResult::GetMinLayerRms() const
-{
-    const float firstRms(m_firstFitResult.GetMinLayerRms());
-    const float secondRms(m_secondFitResult.GetMinLayerRms());
 
-    return std::sqrt(firstRms * firstRms + secondRms * secondRms);
+const pandora::Cluster *ThreeDSlidingFitResult::GetCluster() const
+{
+    return m_firstFitResult.GetCluster();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -83,6 +80,16 @@ int ThreeDSlidingFitResult::GetMaxLayer() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
  
+float ThreeDSlidingFitResult::GetMinLayerRms() const
+{
+    const float firstRms(m_firstFitResult.GetMinLayerRms());
+    const float secondRms(m_secondFitResult.GetMinLayerRms());
+
+    return std::sqrt(firstRms * firstRms + secondRms * secondRms);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float ThreeDSlidingFitResult::GetMaxLayerRms() const
 {
     const float firstRms(m_firstFitResult.GetMaxLayerRms());
@@ -99,6 +106,13 @@ float ThreeDSlidingFitResult::GetFitRms(const float rL) const
     const float secondRms(m_secondFitResult.GetFitRms(rL));
 
     return std::sqrt(firstRms * firstRms + secondRms * secondRms);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ThreeDSlidingFitResult::GetLongitudinalDisplacement(const CartesianVector &position) const
+{
+    return m_axisDirection.GetDotProduct(position - m_axisIntercept);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,13 +203,6 @@ void ThreeDSlidingFitResult::GetGlobalDirection(const float dTdL1, const float d
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ThreeDSlidingFitResult::GetLongitudinalDisplacement(const CartesianVector &position) const
-{
-    return m_axisDirection.GetDotProduct(position - m_axisIntercept);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
 {
     if (pCluster->GetNCaloHits() < 2)
@@ -211,21 +218,23 @@ TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
     ClusterFitResult clusterFitResult;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitFullCluster(pCluster, clusterFitResult));
 
-    const CartesianVector &fitDirection(clusterFitResult.GetDirection()), &fitIntercept(clusterFitResult.GetIntercept());
     float minProjection(std::numeric_limits<float>::max());
+    const CartesianVector &fitDirection(clusterFitResult.GetDirection()), &fitIntercept(clusterFitResult.GetIntercept());
 
     CartesianPointVector coordinateVector;
     LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
 
     for (const CartesianVector &coordinate : coordinateVector)
-    {
-        const float projection(fitDirection.GetDotProduct(coordinate - fitIntercept));
-
-        if (projection < minProjection)
-            minProjection = projection;
-    }
+        minProjection = std::min(minProjection, fitDirection.GetDotProduct(coordinate - fitIntercept));
 
     return TrackState(fitIntercept + (fitDirection * minProjection), fitDirection);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *const /*pPointVector*/)
+{
+    throw; // TODO
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -253,5 +262,11 @@ CartesianVector ThreeDSlidingFitResult::GetSeedDirection(const CartesianVector &
 
     throw StatusCodeException(STATUS_CODE_FAILURE);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template ThreeDSlidingFitResult::ThreeDSlidingFitResult<pandora::Cluster>(const pandora::Cluster *const, const unsigned int, const float);
+template ThreeDSlidingFitResult::ThreeDSlidingFitResult<pandora::CartesianPointVector>(const pandora::CartesianPointVector *const, const unsigned int, const float);
 
 } // namespace lar_content

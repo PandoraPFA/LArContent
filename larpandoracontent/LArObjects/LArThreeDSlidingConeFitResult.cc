@@ -65,10 +65,12 @@ float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster, const flo
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const Cluster *const pCluster, const unsigned int slidingFitWindow,
+template <typename T>
+ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const T *const pT, const unsigned int slidingFitWindow,
         const float slidingFitLayerPitch) :
-    m_slidingFitResult(ThreeDSlidingFitResult(pCluster, slidingFitWindow, slidingFitLayerPitch))
+    m_slidingFitResult(ThreeDSlidingFitResult(pT, slidingFitWindow, slidingFitLayerPitch))
 {
     const CartesianVector &minLayerPosition3D(m_slidingFitResult.GetGlobalMinLayerPosition());
     const CartesianVector &maxLayerPosition3D(m_slidingFitResult.GetGlobalMaxLayerPosition());
@@ -165,5 +167,11 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersFor
         trackStateList.pop_front();
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult<pandora::Cluster>(const pandora::Cluster *const, const unsigned int, const float);
+template ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult<pandora::CartesianPointVector>(const pandora::CartesianPointVector *const, const unsigned int, const float);
 
 } // namespace lar_content

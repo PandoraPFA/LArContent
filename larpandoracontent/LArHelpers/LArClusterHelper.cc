@@ -589,15 +589,10 @@ void LArClusterHelper::GetExtremalCoordinates(const CartesianPointVector &coordi
 
 void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, CartesianPointVector &coordinateVector)
 {
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
+    for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
     {
-        for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-        {
-            const CaloHit *const pCaloHit = *hitIter;
+        for (const CaloHit *const pCaloHit : *layerEntry.second)
             coordinateVector.push_back(pCaloHit->GetPositionVector());
-        }
     }
 
     std::sort(coordinateVector.begin(), coordinateVector.end(), LArClusterHelper::SortCoordinatesByPosition);

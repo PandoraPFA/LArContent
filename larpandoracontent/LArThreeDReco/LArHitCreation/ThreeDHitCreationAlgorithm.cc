@@ -115,9 +115,18 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::IterativeTreatment(const ProtoHitVector &/*protoHitVector*/) const
+void ThreeDHitCreationAlgorithm::IterativeTreatment(const ProtoHitVector &protoHitVector) const
 {
-    // TODO Iterative stuff here
+    double initialChi2(0.f);
+    CartesianPointVector initialPoints3D;
+
+    for (const ProtoHit &protoHit : protoHitVector)
+    {
+        initialChi2 += protoHit.GetChi2();
+        initialPoints3D.push_back(protoHit.GetPosition3D());
+    }
+
+    std::cout << " initialChi2 " << initialChi2 << ", nInitialPoints3D " << initialPoints3D.size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
