@@ -50,7 +50,7 @@ protected:
      *  @param  position2D the calculated two dimensional position
      *  @param  fitResult the sliding fit to the track
      */
-    virtual float GetTransverseChi2(const pandora::CartesianVector &position2D, const TwoDSlidingFitResult &fitResult) const;
+    virtual double GetTransverseChi2(const pandora::CartesianVector &position2D, const TwoDSlidingFitResult &fitResult) const;
 };
 
 } // namespace lar_content

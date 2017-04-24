@@ -117,7 +117,7 @@ void HitCreationBaseTool::GetPosition3D(const HitType hitType1, const HitType hi
     {
         const float deltaX1(pCaloHit2D->GetPositionVector().GetX() - fitPosition1.GetX());
         const float deltaX2(pCaloHit2D->GetPositionVector().GetX() - fitPosition2.GetX());
-        chi2 += ((deltaX1 * deltaX1) / (m_sigmaX * m_sigmaX)) + ((deltaX2 * deltaX2) / (m_sigmaX * m_sigmaX));
+        chi2 += static_cast<double>(((deltaX1 * deltaX1) / (m_sigmaX * m_sigmaX)) + ((deltaX2 * deltaX2) / (m_sigmaX * m_sigmaX)));
     }
 
     protoHit.SetPosition3D(position3D, chi2);
@@ -137,17 +137,16 @@ void HitCreationBaseTool::GetPosition3D(const HitType hitType, const CartesianVe
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     CartesianVector position3D(0.f, 0.f, 0.f);
-    float chi2F(std::numeric_limits<float>::max()); // TODO single float vs double float
-
+    float chi2F(std::numeric_limits<float>::max());
     LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), pCaloHit2D->GetHitType(), hitType, pCaloHit2D->GetPositionVector(),
         fitPosition, position3D, chi2F);
 
-    double chi2(static_cast<double>(chi2F));
+    double chi2 = static_cast<double>(chi2F);
 
     if (m_useDeltaXCorrection)
     {
         const float deltaX(pCaloHit2D->GetPositionVector().GetX() - fitPosition.GetX());
-        chi2 += ((deltaX * deltaX) / (m_sigmaX * m_sigmaX));
+        chi2 += static_cast<double>(((deltaX * deltaX) / (m_sigmaX * m_sigmaX)));
     }
 
     protoHit.SetPosition3D(position3D, chi2);

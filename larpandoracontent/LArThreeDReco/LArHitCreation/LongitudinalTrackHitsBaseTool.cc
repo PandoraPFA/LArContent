@@ -176,7 +176,6 @@ void LongitudinalTrackHitsBaseTool::GetVertexAndEndPositions(const MatchedSlidin
         }
     }
 
-    // TODO Do I really have to do this ?
     if (useU)
         outputSlidingFitMap.insert(MatchedSlidingFitMap::value_type(iterU->first, iterU->second));
 

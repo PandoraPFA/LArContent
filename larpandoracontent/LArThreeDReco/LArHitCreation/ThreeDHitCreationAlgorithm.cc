@@ -66,13 +66,13 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
         }
 
         if (LArPfoHelper::IsTrack(pPfo))
-        {
-            // TODO Iterative stuff here
-        }
+            this->IterativeTreatment(protoHitVector);
 
         CaloHitList newThreeDHits;
-        this->CreateThreeDHits(protoHitVector, newThreeDHits, allNewThreeDHits);
+        this->CreateThreeDHits(protoHitVector, newThreeDHits);
         this->AddThreeDHitsToPfo(pPfo, newThreeDHits);
+
+        allNewThreeDHits.insert(allNewThreeDHits.end(), newThreeDHits.begin(), newThreeDHits.end());
     }
 
     if (!allNewThreeDHits.empty())
@@ -115,7 +115,14 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::CreateThreeDHits(const ProtoHitVector &protoHitVector, CaloHitList &newThreeDHits, CaloHitList &allNewThreeDHits) const
+void ThreeDHitCreationAlgorithm::IterativeTreatment(const ProtoHitVector &/*protoHitVector*/) const
+{
+    // TODO Iterative stuff here
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::CreateThreeDHits(const ProtoHitVector &protoHitVector, CaloHitList &newThreeDHits) const
 {
     for (const ProtoHit &protoHit : protoHitVector)
     {
@@ -127,8 +134,6 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHits(const ProtoHitVector &protoHit
 
         newThreeDHits.push_back(pCaloHit3D);
     }
-
-    allNewThreeDHits.insert(allNewThreeDHits.end(), newThreeDHits.begin(), newThreeDHits.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

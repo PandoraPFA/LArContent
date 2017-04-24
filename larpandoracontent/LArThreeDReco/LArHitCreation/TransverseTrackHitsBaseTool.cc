@@ -53,7 +53,7 @@ void TransverseTrackHitsBaseTool::GetTransverseChi2(const MatchedSlidingFitMap &
             continue;
 
         const CartesianVector inputPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), inputPosition3D, mapEntry.first));
-        chiSquared += static_cast<double>(this->GetTransverseChi2(inputPosition2D, mapEntry.second));
+        chiSquared += this->GetTransverseChi2(inputPosition2D, mapEntry.second);
     }
 
     protoHit.SetPosition3D(inputPosition3D, chiSquared);
@@ -61,9 +61,8 @@ void TransverseTrackHitsBaseTool::GetTransverseChi2(const MatchedSlidingFitMap &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TransverseTrackHitsBaseTool::GetTransverseChi2(const CartesianVector &position2D, const TwoDSlidingFitResult &fitResult) const
+double TransverseTrackHitsBaseTool::GetTransverseChi2(const CartesianVector &position2D, const TwoDSlidingFitResult &fitResult) const
 {
-    // TODO single float vs. double float
     const float minLayerX(fitResult.GetGlobalMinLayerPosition().GetX());
     const float maxLayerX(fitResult.GetGlobalMaxLayerPosition().GetX());
 
@@ -72,27 +71,27 @@ float TransverseTrackHitsBaseTool::GetTransverseChi2(const CartesianVector &posi
 
     if (((position2D.GetX() - minX) > -std::numeric_limits<float>::epsilon()) && 
         ((position2D.GetX() - maxX) < +std::numeric_limits<float>::epsilon()))
-        return 0.f;
+        return 0.;
 
     const float minLayerDistanceSquared((position2D - fitResult.GetGlobalMinLayerPosition()).GetMagnitudeSquared());
     const float maxLayerDistanceSquared((position2D - fitResult.GetGlobalMaxLayerPosition()).GetMagnitudeSquared());
 
-    float px(0.f), pz(0.f);
+    double px(0.), pz(0.);
 
     if (minLayerDistanceSquared < maxLayerDistanceSquared)
     {
         px = fitResult.GetGlobalMinLayerDirection().GetX();
         pz = fitResult.GetGlobalMinLayerDirection().GetZ();
     }
-    else if(maxLayerDistanceSquared < minLayerDistanceSquared)
+    else if (maxLayerDistanceSquared < minLayerDistanceSquared)
     {
         px = fitResult.GetGlobalMaxLayerDirection().GetX();
         pz = fitResult.GetGlobalMaxLayerDirection().GetZ();
     }
 
-    if (std::fabs(px) > std::numeric_limits<float>::epsilon())
+    if (std::fabs(px) > std::numeric_limits<double>::epsilon())
     {
-        return (0.5f * (pz * pz) / (px * px)); // TODO: Figure out the appropriate scale factor
+        return (0.5 * (pz * pz) / (px * px)); // TODO: Figure out the appropriate scale factor
     }
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);

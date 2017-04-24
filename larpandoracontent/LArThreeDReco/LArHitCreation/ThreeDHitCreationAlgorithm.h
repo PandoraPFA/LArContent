@@ -187,19 +187,25 @@ private:
      *  @brief  Get the list of 2D calo hits in a pfo for which 3D hits have and have not been created
      *
      *  @param  pPfo the address of the pfo
-     *  @param  protoHitVector the vector of proto hits, describing current state of 2D hit construction
+     *  @param  protoHitVector the vector of proto hits, describing current state of 3D hit construction
      *  @param  remainingHitVector to receive the vector of two dimensional calo hits for which three dimensional hits have not been created
      */
     void SeparateTwoDHits(const pandora::ParticleFlowObject *const pPfo, const ProtoHitVector &protoHitVector, pandora::CaloHitVector &remainingHitVector) const;
+
+    /**
+     *  @brief  Improve initial 3D hits by fitting proto hits and iteratively creating consisted 3D hit trajectory
+     *
+     *  @param  protoHitVector the vector of proto hits, describing current state of 3D hit construction
+     */
+    void IterativeTreatment(const ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Create new three dimensional hits from two dimensional hits
      *
      *  @param  protoHitVector the input proto hit vector
      *  @param  newThreeDHits to receive the addresses of the new three dimensional calo hits
-     *  @param  allNewThreeDHits to record the addresses of all new three dimensional calo hits
      */
-    void CreateThreeDHits(const ProtoHitVector &protoHitVector, pandora::CaloHitList &newThreeDHits, pandora::CaloHitList &allNewThreeDHits) const;
+    void CreateThreeDHits(const ProtoHitVector &protoHitVector, pandora::CaloHitList &newThreeDHits) const;
 
     /**
      *  @brief  Create a new three dimensional hit from a two dimensional hit
