@@ -26,8 +26,8 @@ LongitudinalTrackHitsBaseTool::LongitudinalTrackHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitVector &inputTwoDHits,
-    const MatchedSlidingFitMap &inputSlidingFitMap, CaloHitVector &newThreeDHits) const
+void LongitudinalTrackHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &inputSlidingFitMap,
+    ProtoHitVector &protoHitVector) const
 {
     MatchedSlidingFitMap matchedSlidingFitMap;
     CartesianVector vtx3D(0.f, 0.f, 0.f), end3D(0.f, 0.f, 0.f);
@@ -37,16 +37,11 @@ void LongitudinalTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm 
     {
         try
         {
-            CartesianVector position3D(0.f, 0.f, 0.f);
-            float chiSquared(std::numeric_limits<float>::max());
-            this->GetThreeDPosition(pCaloHit2D, matchedSlidingFitMap, vtx3D, end3D, position3D, chiSquared);
+            ProtoHit protoHit(pCaloHit2D);
+            this->GetThreeDPosition(matchedSlidingFitMap, vtx3D, end3D, protoHit);
 
-            if (chiSquared > m_chiSquaredCut)
-                throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
-
-            const CaloHit *pCaloHit3D(NULL);
-            pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
-            newThreeDHits.push_back(pCaloHit3D);
+            if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
+                protoHitVector.push_back(protoHit);
         }
         catch (StatusCodeException &)
         {

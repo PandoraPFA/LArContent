@@ -204,7 +204,7 @@ void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(const ParticleFlowObject *co
     parameters.m_caloHitList.insert(parameters.m_caloHitList.end(), caloHitList.begin(), caloHitList.end());
 
     const Cluster *pCluster3D(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster3D));
 
     if (!pCluster3D || !pClusterList || pClusterList->empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);

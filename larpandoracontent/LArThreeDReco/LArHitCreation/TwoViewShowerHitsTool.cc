@@ -15,16 +15,15 @@ using namespace pandora;
 namespace lar_content
 {
 
-void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2,
-    CartesianVector &position3D, float &chiSquared) const
+void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2, ProtoHit &protoHit) const
 {
     if (!caloHitVector1.empty() && caloHitVector2.empty())
     {
-        this->GetThreeDPosition(pCaloHit2D, caloHitVector1, position3D, chiSquared);
+        this->GetThreeDPosition(caloHitVector1, protoHit);
     }
     else if (caloHitVector1.empty() && !caloHitVector2.empty())
     {
-        this->GetThreeDPosition(pCaloHit2D, caloHitVector2, position3D, chiSquared);
+        this->GetThreeDPosition(caloHitVector2, protoHit);
     }
     else
     {
@@ -34,12 +33,12 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const CaloHitVector &caloHitVector, CartesianVector &position3D,
-    float &chiSquared) const
+void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVector, ProtoHit &protoHit) const
 {
     if (caloHitVector.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
+    const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
     const HitType hitType(caloHitVector.at(0)->GetHitType());
 
     if (pCaloHit2D->GetHitType() == hitType)
@@ -58,7 +57,7 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, c
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const CartesianVector position(static_cast<float>(Sqx / Sq), 0.f, static_cast<float>(Sqz / Sq));
-    this->GetPosition3D(pCaloHit2D, hitType, position, position3D, chiSquared);
+    this->GetPosition3D(hitType, position, protoHit);
 }
 
 } // namespace lar_content

@@ -33,7 +33,7 @@ public:
     TrackHitsBaseTool();
 
     virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
-        pandora::CaloHitVector &newThreeDHits);
+        ProtoHitVector &protoHitVector);
 
 protected:
     typedef std::map<pandora::HitType, TwoDSlidingFitResult> MatchedSlidingFitMap;
@@ -52,10 +52,9 @@ protected:
      *  @param  pAlgorithm the hit creation algorithm
      *  @param  inputTwoDHits the input vector of 2D hits
      *  @param  matchedSlidingFitMap the group of sliding fit results
-     *  @param  newThreeDHits the output vector of 3D hits
+     *  @param  protoHitVector to receive the new three dimensional proto hits
      */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitVector &inputTwoDHits,
-        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitVector &newThreeDHits) const = 0;
+    virtual void CreateThreeDHits(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHitVector &protoHitVector) const = 0;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

@@ -18,24 +18,19 @@ using namespace pandora;
 namespace lar_content
 {
 
-void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitVector &inputTwoDHits, 
-    const MatchedSlidingFitMap &matchedSlidingFitMap, CaloHitVector &newThreeDHits) const
+void TransverseTrackHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
+    ProtoHitVector &protoHitVector) const
 {   
     for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
         try
         {
-            CartesianVector position3D(0.f, 0.f, 0.f);
-            float chiSquared1(std::numeric_limits<float>::max()), chiSquared2(0.f);
-            this->GetThreeDPosition(pCaloHit2D, matchedSlidingFitMap, position3D, chiSquared1);
-            this->GetTransverseChi2(pCaloHit2D, matchedSlidingFitMap, position3D, chiSquared2);
+            ProtoHit protoHit(pCaloHit2D);
+            this->GetThreeDPosition(matchedSlidingFitMap, protoHit);
+            this->GetTransverseChi2(matchedSlidingFitMap, protoHit);
 
-            if (chiSquared1 + chiSquared2 > m_chiSquaredCut)
-                throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
-
-            const CaloHit *pCaloHit3D(NULL);
-            pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
-            newThreeDHits.push_back(pCaloHit3D);
+            if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
+                protoHitVector.push_back(protoHit);
         }
         catch (StatusCodeException &)
         {
@@ -45,29 +40,30 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseTrackHitsBaseTool::GetTransverseChi2(const CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-    const CartesianVector &position3D, float &chiSquared) const
+void TransverseTrackHitsBaseTool::GetTransverseChi2(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const
 {  
     // TODO Develop a proper treatment of the |dz/dx| * sigmaX uncertainty
-    chiSquared = 0.f;
+    double chiSquared(protoHit.GetChi2());
+    const HitType inputHitType(protoHit.GetParentCaloHit2D()->GetHitType());
+    const CartesianVector &inputPosition3D(protoHit.GetPosition3D());
 
     for (const MatchedSlidingFitMap::value_type &mapEntry : matchedSlidingFitMap)
     {
-        const HitType hitType(mapEntry.first);
-
-        if (pCaloHit2D->GetHitType() == hitType)
+        if (mapEntry.first == inputHitType)
             continue;
 
-        const CartesianVector position2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, hitType));
-        const TwoDSlidingFitResult &fitResult(mapEntry.second);
-        chiSquared += this->GetTransverseChi2(position2D, fitResult);
+        const CartesianVector inputPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), inputPosition3D, mapEntry.first));
+        chiSquared += static_cast<double>(this->GetTransverseChi2(inputPosition2D, mapEntry.second));
     }
+
+    protoHit.SetPosition3D(inputPosition3D, chiSquared);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float TransverseTrackHitsBaseTool::GetTransverseChi2(const CartesianVector &position2D, const TwoDSlidingFitResult &fitResult) const
 {
+    // TODO single float vs. double float
     const float minLayerX(fitResult.GetGlobalMinLayerPosition().GetX());
     const float maxLayerX(fitResult.GetGlobalMaxLayerPosition().GetX());
 

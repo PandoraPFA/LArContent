@@ -29,20 +29,16 @@ public:
     };
 
 private:
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2,
-        pandora::CartesianVector &position3D, float &chiSquared) const;
+    void GetThreeDPosition(const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2, ProtoHit &protoHit) const;
 
     /**
      *  @brief  Get the three dimensional position for to a two dimensional calo hit, using the hit and a list of candidate matched
      *          hits in one of the other two views
      *
-     *  @param  pCaloHit2D address of the two dimensional calo hit
      *  @param  caloHitVector the vector of candidate hits in another view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
+     *  @param  protoHit to receive the populated proto hit
      */
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const pandora::CaloHitVector &caloHitVector, pandora::CartesianVector &position3D,
-        float &chiSquared) const;
+    void GetThreeDPosition(const pandora::CaloHitVector &caloHitVector, ProtoHit &protoHit) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

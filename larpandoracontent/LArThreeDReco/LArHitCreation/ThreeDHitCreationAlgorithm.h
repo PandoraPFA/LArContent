@@ -77,9 +77,8 @@ public:
          *  @brief  Constructor
          * 
          *  @param  pParentCaloHit2D the address of the parent 2D calo hit
-         *  @param  sigmaHit the hit sigma
          */
-        ProtoHit(const pandora::CaloHit *const pParentCaloHit2D, const double sigmaHit);
+        ProtoHit(const pandora::CaloHit *const pParentCaloHit2D);
 
         /**
          *  @brief  Get the address of the parent 2D calo hit
@@ -87,13 +86,6 @@ public:
          *  @return the address of the parent 2D calo hit
          */
         const pandora::CaloHit *GetParentCaloHit2D() const;
-
-        /**
-         *  @brief  Get the hit sigma
-         * 
-         *  @return the hit sigma
-         */
-        double GetSigmaHit() const;
 
         /**
          *  @brief  Whether the proto hit position is set
@@ -162,7 +154,6 @@ public:
 
     private:
         const pandora::CaloHit     *m_pParentCaloHit2D;         ///< The address of the parent 2D calo hit
-        double                      m_sigmaHit;                 ///< The hit sigma
         bool                        m_isPositionSet;            ///< Whether the output 3D position has been set
         pandora::CartesianVector    m_position3D;               ///< The output 3D position
         double                      m_chi2;                     ///< The output chi squared value
@@ -286,9 +277,8 @@ inline double ThreeDHitCreationAlgorithm::TrajectorySample::GetSigma() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *const pParentCaloHit2D, const double sigmaHit) :
+inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *const pParentCaloHit2D) :
     m_pParentCaloHit2D(pParentCaloHit2D),
-    m_sigmaHit(sigmaHit),
     m_isPositionSet(false),
     m_position3D(0.f, 0.f, 0.f),
     m_chi2(std::numeric_limits<double>::max())
@@ -300,13 +290,6 @@ inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *co
 inline const pandora::CaloHit *ThreeDHitCreationAlgorithm::ProtoHit::GetParentCaloHit2D() const
 {
     return m_pParentCaloHit2D;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline double ThreeDHitCreationAlgorithm::ProtoHit::GetSigmaHit() const
-{
-    return m_sigmaHit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -21,31 +21,28 @@ namespace lar_content
 {
 
 void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
-    CaloHitVector &newThreeDHits)
+    ProtoHitVector &protoHitVector)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     try
     {
-        if (!LArPfoHelper::IsShower(pPfo))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        if (!LArPfoHelper::IsShower(pPfo) || (1 != pPfo->GetParentPfoList().size()))
+            return;
 
-        if (pPfo->GetParentPfoList().size() != 1)
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        const ParticleFlowObject *const pParentPfo(pPfo->GetParentPfoList().front());
 
-        const ParticleFlowObject *const pParentPfo = *(pPfo->GetParentPfoList().begin());
+        CaloHitList parentHitList3D;
+        LArPfoHelper::GetCaloHits(pParentPfo, TPC_3D, parentHitList3D);
 
-        CaloHitList caloHitList3D;
-        LArPfoHelper::GetCaloHits(pParentPfo, TPC_3D, caloHitList3D);
+        if (parentHitList3D.empty())
+            return;
 
-        if (caloHitList3D.empty())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        CaloHitVector parentHitVector3D(parentHitList3D.begin(), parentHitList3D.end());
+        std::sort(parentHitVector3D.begin(), parentHitVector3D.end(), LArClusterHelper::SortHitsByPosition);
 
-        CaloHitVector caloHitVector3D(caloHitList3D.begin(), caloHitList3D.end());
-        std::sort(caloHitVector3D.begin(), caloHitVector3D.end(), LArClusterHelper::SortHitsByPosition);
-
-        this->CreateThreeDHits(pAlgorithm, inputTwoDHits, caloHitVector3D, newThreeDHits);
+        this->CreateThreeDHits(inputTwoDHits, parentHitVector3D, protoHitVector);
     }
     catch (StatusCodeException &)
     {
@@ -54,8 +51,7 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const CaloHitVector &inputTwoDHits, const CaloHitVector &caloHitList3D, 
-    CaloHitVector &newThreeDHits) const
+void DeltaRayShowerHitsTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, const CaloHitVector &parentHits3D, ProtoHitVector &protoHitVector) const
 {
     for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
@@ -69,7 +65,7 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const 
             float closestDistanceSquared(std::numeric_limits<float>::max());
             CartesianVector closestPosition3D(0.f, 0.f, 0.f);
 
-            for (const CaloHit *const pCaloHit3D : caloHitList3D)
+            for (const CaloHit *const pCaloHit3D : parentHits3D)
             {
                 const CartesianVector thisPosition3D(pCaloHit3D->GetPositionVector());
                 const CartesianVector thisPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), thisPosition3D, hitType));
@@ -84,18 +80,16 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(ThreeDHitCreationAlgorithm *const 
             }
 
             if (!foundClosestPosition)
-                throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+                continue;
 
             const CartesianVector position1(LArGeometryHelper::ProjectPosition(this->GetPandora(), closestPosition3D, hitType1));
             const CartesianVector position2(LArGeometryHelper::ProjectPosition(this->GetPandora(), closestPosition3D, hitType2));
 
-            CartesianVector position3D(0.f, 0.f, 0.f);
-            float chiSquared(std::numeric_limits<float>::max());
-            this->GetPosition3D(pCaloHit2D, hitType1, hitType2, position1, position2, position3D, chiSquared);
+            ProtoHit protoHit(pCaloHit2D);
+            this->GetPosition3D(hitType1, hitType2, position1, position2, protoHit);
 
-            const CaloHit *pCaloHit3D(NULL);
-            pAlgorithm->CreateThreeDHit(pCaloHit2D, position3D, pCaloHit3D);
-            newThreeDHits.push_back(pCaloHit3D);
+            if (protoHit.IsPositionSet())
+                protoHitVector.push_back(protoHit);
         }
         catch (StatusCodeException &)
         {

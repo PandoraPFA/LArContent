@@ -29,8 +29,7 @@ public:
     };
 
 private:
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        pandora::CartesianVector &position3D, float &chiSquared) const;
+    void GetThreeDPosition(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

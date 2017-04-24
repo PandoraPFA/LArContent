@@ -22,35 +22,27 @@ protected:
     /**
      *  @brief  Create three dimensional hits, using an input list of two dimensional hits and two associated sliding fit results
      * 
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  inputTwoDHits the list of input two dimensional hits
      *  @param  matchedSlidingFitMap map of sliding fit results from each view
-     *  @param  newThreeDHits to receive the new three dimensional hits
+     *  @param  protoHitVector to receive the new three dimensional proto hits
      */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitVector &inputTwoDHits, 
-        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitVector &newThreeDHits) const;
+    virtual void CreateThreeDHits(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Get the three dimensional position using a provided two dimensional calo hit and sliding linear fits in the other two views
      * 
-     *  @param  pCaloHit2D address of the two dimensional calo hit
      *  @param  matchedSlidingFitMap map of sliding fit results from each view
-     *  @param  position3D to receive the three dimensional position
-     *  @param  chiSquared to receive the chi squared value
+     *  @param  protoHit to receive the populated proto hit
      */
-    virtual void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        pandora::CartesianVector &position3D, float &chiSquared) const = 0;
+    virtual void GetThreeDPosition(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const = 0;
 
     /**
      *  @brief  Calculate an additional contribution to the chi-squared based on the steepness of the track
      * 
-     *  @param  pCaloHit2D address of the two dimensional calo hit
      *  @param  matchedSlidingFitMap map of sliding fit results from each view
-     *  @param  position3D the calculated three dimensional position
-     *  @param  chiSquared to receive the chi squared value
+     *  @param  protoHit to receive the modified proto hit
      */
-    virtual void GetTransverseChi2(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        const pandora::CartesianVector &position3D, float &chiSquared) const;
+    virtual void GetTransverseChi2(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const;
         
     /**
      *  @brief  Calculate an additional contribution to the chi-squared based on the steepness of the track
