@@ -143,9 +143,9 @@ public:
      */
     virtual double GetSigmaUVW() const = 0;
 
-    /** 
+    /**
      *  @brief  Get the y, z position that yields the minimum chi squared value with respect to specified u, v and w coordinates
-     * 
+     *
      *  @param  u the u coordinate
      *  @param  v the v coordinate
      *  @param  w the w coordinate
@@ -159,11 +159,32 @@ public:
     virtual void GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV, const double sigmaW,
         double &y, double &z, double &chiSquared) const = 0;
 
+    /** 
+     *  @brief  Get the y, z position that yields the minimum chi squared value with respect to specified u, v and w coordinates
+     *          and a provided fit to an overall trajectory in 3D
+     *
+     *  @param  u the u coordinate
+     *  @param  v the v coordinate
+     *  @param  w the w coordinate
+     *  @param  sigmaU the uncertainty in the u coordinate
+     *  @param  sigmaV the uncertainty in the v coordinate
+     *  @param  sigmaW the uncertainty in the w coordinate
+     *  @param  uFit the u coordinate from a fit to an overall trajectory
+     *  @param  vFit the v coordinate from a fit to an overall trajectory
+     *  @param  wFit the w coordinate from a fit to an overall trajectory
+     *  @param  sigmaFit the uncertainty in coordinates extracted from the fit to an overall trajectory
+     *  @param  y to receive the y coordinate
+     *  @param  z to receive the z coordinate
+     *  @param  chiSquared to receive the chi squared value
+     */
+    virtual void GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV, const double sigmaW,
+        const double uFit, const double vFit, const double wFit, const double sigmaFit, double &y, double &z, double &chiSquared) const = 0;
+
     typedef std::pair<double, pandora::HitType> PositionAndType;
 
     /** 
      *  @brief  Get the y, z position that corresponds to a projection of two fit positions onto the specific wire associated with a hit
-     * 
+     *
      *  @param  hitPositionAndType the hit position and hit type
      *  @param  fitPositionAndType1 the first fit position and hit type
      *  @param  fitPositionAndType2 the second fit position and hit type
