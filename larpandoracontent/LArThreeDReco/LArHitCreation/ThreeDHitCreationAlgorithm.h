@@ -199,7 +199,7 @@ private:
      *
      *  @param  protoHitVector the vector of proto hits, describing current state of 3D hit construction
      */
-    void IterativeTreatment(const ProtoHitVector &protoHitVector) const;
+    void IterativeTreatment(ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Create new three dimensional hits from two dimensional hits
