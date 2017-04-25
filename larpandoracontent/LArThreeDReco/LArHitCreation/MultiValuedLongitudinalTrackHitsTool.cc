@@ -17,7 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const MatchedSlidingFitMap &matchedSlidingFitMap, const CartesianVector &vtx3D,
+void MultiValuedLongitudinalTrackHitsTool::GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const CartesianVector &vtx3D,
     const CartesianVector &end3D, ProtoHit &protoHit) const
 {
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());

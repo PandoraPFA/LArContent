@@ -178,7 +178,8 @@ public:
      *  @param  hitType the hit type to filter upon
      *  @param  outputCaloHitVector to receive the output calo hit vector
      */
-    void FilterCaloHitsByType(const pandora::CaloHitVector &inputCaloHitVector, const pandora::HitType hitType, pandora::CaloHitVector &outputCaloHitVector) const;
+    void FilterCaloHitsByType(const pandora::CaloHitVector &inputCaloHitVector, const pandora::HitType hitType,
+        pandora::CaloHitVector &outputCaloHitVector) const;
 
 private:
     pandora::StatusCode Run();
@@ -188,9 +189,10 @@ private:
      *
      *  @param  pPfo the address of the pfo
      *  @param  protoHitVector the vector of proto hits, describing current state of 3D hit construction
-     *  @param  remainingHitVector to receive the vector of two dimensional calo hits for which three dimensional hits have not been created
+     *  @param  remainingHitVector to receive the vector of 2D calo hits for which 3D hits have not been created
      */
-    void SeparateTwoDHits(const pandora::ParticleFlowObject *const pPfo, const ProtoHitVector &protoHitVector, pandora::CaloHitVector &remainingHitVector) const;
+    void SeparateTwoDHits(const pandora::ParticleFlowObject *const pPfo, const ProtoHitVector &protoHitVector,
+        pandora::CaloHitVector &remainingHitVector) const;
 
     /**
      *  @brief  Improve initial 3D hits by fitting proto hits and iteratively creating consisted 3D hit trajectory

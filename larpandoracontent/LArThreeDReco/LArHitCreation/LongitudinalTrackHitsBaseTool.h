@@ -26,16 +26,6 @@ public:
 
 protected:
     /**
-     *  @brief  Create three dimensional hits, using an input list of two dimensional hits and two associated sliding fit results
-     *
-     *  @param  inputTwoDHits the list of input two dimensional hits
-     *  @param  matchedSlidingFitMap the sliding fit results for each view
-     *  @param  protoHitVector to receive the new three dimensional proto hits
-     */
-    virtual void CreateThreeDHits(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        ProtoHitVector &protoHitVector) const;
-
-    /**
      *  @brief  Get the three dimensional position using a provided two dimensional calo hit and sliding linear fits in the other two views
      *
      *  @param  matchedSlidingFitMap map of sliding fit results from each view
@@ -43,8 +33,11 @@ protected:
      *  @param  end3D the 3D end position
      *  @param  protoHit to receive the populated proto hit
      */
-    virtual void GetThreeDPosition(const MatchedSlidingFitMap &matchedSlidingFitMap, const pandora::CartesianVector &vtx3D,
+    virtual void GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const pandora::CartesianVector &vtx3D,
         const pandora::CartesianVector &end3D, ProtoHit &protoHit) const = 0;
+
+    virtual void GetTrackHits3D(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
+        ProtoHitVector &protoHitVector) const;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

@@ -31,8 +31,8 @@ TrackHitsBaseTool::TrackHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
-    ProtoHitVector &protoHitVector)
+void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
+    const CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -48,7 +48,7 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const 
         if (matchedSlidingFitMap.size() < 2)
             return;
 
-        this->CreateThreeDHits(inputTwoDHits, matchedSlidingFitMap, protoHitVector);
+        this->GetTrackHits3D(inputTwoDHits, matchedSlidingFitMap, protoHitVector);
     }
     catch (StatusCodeException &)
     {

@@ -15,15 +15,15 @@ using namespace pandora;
 namespace lar_content
 {
 
-void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2, ProtoHit &protoHit) const
+void TwoViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2, ProtoHit &protoHit) const
 {
     if (!caloHitVector1.empty() && caloHitVector2.empty())
     {
-        this->GetThreeDPosition(caloHitVector1, protoHit);
+        this->GetShowerHit3D(caloHitVector1, protoHit);
     }
     else if (caloHitVector1.empty() && !caloHitVector2.empty())
     {
-        this->GetThreeDPosition(caloHitVector2, protoHit);
+        this->GetShowerHit3D(caloHitVector2, protoHit);
     }
     else
     {
@@ -33,7 +33,7 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVector, ProtoHit &protoHit) const
+void TwoViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector, ProtoHit &protoHit) const
 {
     if (caloHitVector.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -57,7 +57,7 @@ void TwoViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVector
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const CartesianVector position(static_cast<float>(Sqx / Sq), 0.f, static_cast<float>(Sqz / Sq));
-    this->GetPosition3D(hitType, position, protoHit);
+    this->GetBestPosition3D(hitType, position, protoHit);
 }
 
 } // namespace lar_content

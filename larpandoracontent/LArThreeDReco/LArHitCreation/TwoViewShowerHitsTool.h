@@ -29,7 +29,7 @@ public:
     };
 
 private:
-    void GetThreeDPosition(const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2, ProtoHit &protoHit) const;
+    void GetShowerHit3D(const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2, ProtoHit &protoHit) const;
 
     /**
      *  @brief  Get the three dimensional position for to a two dimensional calo hit, using the hit and a list of candidate matched
@@ -38,7 +38,7 @@ private:
      *  @param  caloHitVector the vector of candidate hits in another view
      *  @param  protoHit to receive the populated proto hit
      */
-    void GetThreeDPosition(const pandora::CaloHitVector &caloHitVector, ProtoHit &protoHit) const;
+    void GetShowerHit3D(const pandora::CaloHitVector &caloHitVector, ProtoHit &protoHit) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

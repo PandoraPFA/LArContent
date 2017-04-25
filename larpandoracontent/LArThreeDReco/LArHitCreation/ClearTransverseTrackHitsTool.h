@@ -29,7 +29,7 @@ public:
     };
 
 private:
-    void GetThreeDPosition(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const;
+    void GetTransverseTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

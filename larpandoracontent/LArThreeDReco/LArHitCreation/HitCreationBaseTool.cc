@@ -46,14 +46,14 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
         if (fitPositionList2.size() != 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        this->GetPosition3D(hitType2, fitPositionList2.front(), protoHit);
+        this->GetBestPosition3D(hitType2, fitPositionList2.front(), protoHit);
     }
     else if (fitPositionList2.empty())
     {
         if (fitPositionList1.size() != 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        this->GetPosition3D(hitType1, fitPositionList1.front(), protoHit);
+        this->GetBestPosition3D(hitType1, fitPositionList1.front(), protoHit);
     }
     else
     {
@@ -62,7 +62,7 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
             for (const CartesianVector &fitPosition2 : fitPositionList2)
             {
                 ProtoHit thisProtoHit(protoHit.GetParentCaloHit2D());
-                this->GetPosition3D(hitType1, hitType2, fitPosition1, fitPosition2, thisProtoHit);
+                this->GetBestPosition3D(hitType1, hitType2, fitPosition1, fitPosition2, thisProtoHit);
 
                 if (!protoHit.IsPositionSet() || (thisProtoHit.GetChi2() < protoHit.GetChi2()))
                     protoHit = thisProtoHit;
@@ -75,7 +75,7 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HitCreationBaseTool::GetPosition3D(const HitType hitType1, const HitType hitType2, const CartesianVector &fitPosition1,
+void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitType hitType2, const CartesianVector &fitPosition1,
     const CartesianVector &fitPosition2, ProtoHit &protoHit) const
 {
     // TODO Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
@@ -127,7 +127,7 @@ void HitCreationBaseTool::GetPosition3D(const HitType hitType1, const HitType hi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HitCreationBaseTool::GetPosition3D(const HitType hitType, const CartesianVector &fitPosition, ProtoHit &protoHit) const
+void HitCreationBaseTool::GetBestPosition3D(const HitType hitType, const CartesianVector &fitPosition, ProtoHit &protoHit) const
 {
     // TODO Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());

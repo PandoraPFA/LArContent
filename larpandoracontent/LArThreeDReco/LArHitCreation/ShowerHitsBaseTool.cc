@@ -26,8 +26,8 @@ ShowerHitsBaseTool::ShowerHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
-    ProtoHitVector &protoHitVector)
+void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
+    const CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -42,9 +42,9 @@ void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const
         pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_V, caloHitVectorV);
         pAlgorithm->FilterCaloHitsByType(inputTwoDHits, TPC_VIEW_W, caloHitVectorW);
 
-        this->CreateThreeDHits(caloHitVectorU, caloHitVectorV, caloHitVectorW, protoHitVector);
-        this->CreateThreeDHits(caloHitVectorV, caloHitVectorU, caloHitVectorW, protoHitVector);
-        this->CreateThreeDHits(caloHitVectorW, caloHitVectorU, caloHitVectorV, protoHitVector);
+        this->GetShowerHits3D(caloHitVectorU, caloHitVectorV, caloHitVectorW, protoHitVector);
+        this->GetShowerHits3D(caloHitVectorV, caloHitVectorU, caloHitVectorW, protoHitVector);
+        this->GetShowerHits3D(caloHitVectorW, caloHitVectorU, caloHitVectorV, protoHitVector);
     }
     catch (StatusCodeException &)
     {
@@ -53,8 +53,8 @@ void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2,
-    ProtoHitVector &protoHitVector) const
+void ShowerHitsBaseTool::GetShowerHits3D(const CaloHitVector &inputTwoDHits, const CaloHitVector &caloHitVector1,
+    const CaloHitVector &caloHitVector2, ProtoHitVector &protoHitVector) const
 {
     for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
@@ -65,7 +65,7 @@ void ShowerHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, co
             this->FilterCaloHits(pCaloHit2D->GetPositionVector().GetX(), m_xTolerance, caloHitVector2, filteredHits2);
 
             ProtoHit protoHit(pCaloHit2D);
-            this->GetThreeDPosition(filteredHits1, filteredHits2, protoHit);
+            this->GetShowerHit3D(filteredHits1, filteredHits2, protoHit);
 
             if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
                 protoHitVector.push_back(protoHit);
@@ -78,7 +78,8 @@ void ShowerHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, const CaloHitVector &inputCaloHitVector, CaloHitVector &outputCaloHitVector) const
+void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, const CaloHitVector &inputCaloHitVector,
+    CaloHitVector &outputCaloHitVector) const
 {
     for (const CaloHit *const pCaloHit : inputCaloHitVector)
     {

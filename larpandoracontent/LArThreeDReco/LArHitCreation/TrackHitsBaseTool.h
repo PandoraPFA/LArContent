@@ -17,10 +17,6 @@
 namespace lar_content
 {
 
-class ThreeDHitCreationAlgorithm;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 /**
  *  @brief  TrackHitsBaseTool class
  */
@@ -32,19 +28,11 @@ public:
      */
     TrackHitsBaseTool();
 
-    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
-        ProtoHitVector &protoHitVector);
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector);
 
 protected:
     typedef std::map<pandora::HitType, TwoDSlidingFitResult> MatchedSlidingFitMap;
-
-    /**
-     *  @brief  Calculate sliding fit results for clusters from each view
-     *
-     *  @param  pPfo  the input particle flow object
-     *  @param  matchedSlidingFitMap  the group of sliding fit results
-     */
-    virtual void BuildSlidingFitMap(const pandora::ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const;
 
     /**
      *  @brief  Calculate 3D hits from an input list of 2D hits
@@ -54,7 +42,16 @@ protected:
      *  @param  matchedSlidingFitMap the group of sliding fit results
      *  @param  protoHitVector to receive the new three dimensional proto hits
      */
-    virtual void CreateThreeDHits(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHitVector &protoHitVector) const = 0;
+    virtual void GetTrackHits3D(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
+        ProtoHitVector &protoHitVector) const = 0;
+
+    /**
+     *  @brief  Calculate sliding fit results for clusters from each view
+     *
+     *  @param  pPfo  the input particle flow object
+     *  @param  matchedSlidingFitMap  the group of sliding fit results
+     */
+    virtual void BuildSlidingFitMap(const pandora::ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

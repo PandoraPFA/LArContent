@@ -18,7 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-void TransverseTrackHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
+void TransverseTrackHitsBaseTool::GetTrackHits3D(const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
     ProtoHitVector &protoHitVector) const
 {   
     for (const CaloHit *const pCaloHit2D : inputTwoDHits)
@@ -26,8 +26,8 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwo
         try
         {
             ProtoHit protoHit(pCaloHit2D);
-            this->GetThreeDPosition(matchedSlidingFitMap, protoHit);
-            this->GetTransverseChi2(matchedSlidingFitMap, protoHit);
+            this->GetTransverseTrackHit3D(matchedSlidingFitMap, protoHit);
+            this->AddTransverseChi2(matchedSlidingFitMap, protoHit);
 
             if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
                 protoHitVector.push_back(protoHit);
@@ -40,7 +40,7 @@ void TransverseTrackHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseTrackHitsBaseTool::GetTransverseChi2(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const
+void TransverseTrackHitsBaseTool::AddTransverseChi2(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const
 {  
     // TODO Develop a proper treatment of the |dz/dx| * sigmaX uncertainty
     double chiSquared(protoHit.GetChi2());

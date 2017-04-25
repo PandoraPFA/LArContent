@@ -26,17 +26,6 @@ public:
     typedef ThreeDHitCreationAlgorithm::TrajectorySample TrajectorySample;
 
     /**
-     *  @brief  Run the algorithm tool
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pPfo the address of the pfo
-     *  @param  inputTwoDHits the vector of input two dimensional hits
-     *  @param  protoHitVector to receive the new three dimensional proto hits
-     */
-    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
-        ProtoHitVector &protoHitVector) = 0;
-
-    /**
      *  @brief  Default constructor
      */
     HitCreationBaseTool();
@@ -45,6 +34,17 @@ public:
      *  @brief  Destructor
      */
     virtual ~HitCreationBaseTool();
+
+    /**
+     *  @brief  Run the algorithm tool
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  pPfo the address of the pfo
+     *  @param  inputTwoDHits the vector of input two dimensional hits
+     *  @param  protoHitVector to receive the new three dimensional proto hits
+     */
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector) = 0;
 
 protected:
     /**
@@ -68,7 +68,7 @@ protected:
      *  @param  fitPosition2 the candidate sliding fit position in the second view
      *  @param  protoHit to receive the populated proto hit
      */
-    virtual void GetPosition3D(const pandora::HitType hitType1, const pandora::HitType hitType2, const pandora::CartesianVector &fitPosition1,
+    virtual void GetBestPosition3D(const pandora::HitType hitType1, const pandora::HitType hitType2, const pandora::CartesianVector &fitPosition1,
         const pandora::CartesianVector &fitPosition2, ProtoHit &protoHit) const;
 
     /**
@@ -78,7 +78,7 @@ protected:
      *  @param  fitPosition the candidate sliding fit position in the other view
      *  @param  protoHit to receive the populated proto hit
      */
-    virtual void GetPosition3D(const pandora::HitType hitType, const pandora::CartesianVector &fitPosition, ProtoHit &protoHit) const;
+    virtual void GetBestPosition3D(const pandora::HitType hitType, const pandora::CartesianVector &fitPosition, ProtoHit &protoHit) const;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

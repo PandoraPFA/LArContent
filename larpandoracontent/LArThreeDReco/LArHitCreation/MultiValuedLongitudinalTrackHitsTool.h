@@ -29,8 +29,8 @@ public:
     };
 
 private:
-    void GetThreeDPosition(const MatchedSlidingFitMap &matchedSlidingFitMap, const pandora::CartesianVector &vtx3D, const pandora::CartesianVector &end3D,
-        ProtoHit &protoHit) const;
+    void GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const pandora::CartesianVector &vtx3D,
+        const pandora::CartesianVector &end3D, ProtoHit &protoHit) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

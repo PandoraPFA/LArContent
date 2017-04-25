@@ -24,7 +24,7 @@ ThreeViewShowerHitsTool::ThreeViewShowerHitsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2, ProtoHit &protoHit) const
+void ThreeViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector1, const CaloHitVector &caloHitVector2, ProtoHit &protoHit) const
 {
     if (caloHitVector1.empty() || caloHitVector2.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -49,7 +49,7 @@ void ThreeViewShowerHitsTool::GetThreeDPosition(const CaloHitVector &caloHitVect
                 continue;
 
             ProtoHit thisProtoHit(pCaloHit2D);
-            this->GetPosition3D(hitType1, hitType2, position1, position2, thisProtoHit); 
+            this->GetBestPosition3D(hitType1, hitType2, position1, position2, thisProtoHit); 
 
             if (!protoHit.IsPositionSet() || (thisProtoHit.GetChi2() < protoHit.GetChi2()))
                 protoHit = thisProtoHit;

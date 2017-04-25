@@ -15,7 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
  
-void MultiValuedTransverseTrackHitsTool::GetThreeDPosition(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const
+void MultiValuedTransverseTrackHitsTool::GetTransverseTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const
 {
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
     const HitType hitType(pCaloHit2D->GetHitType());

@@ -26,7 +26,7 @@ LongitudinalTrackHitsBaseTool::LongitudinalTrackHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LongitudinalTrackHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &inputSlidingFitMap,
+void LongitudinalTrackHitsBaseTool::GetTrackHits3D(const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &inputSlidingFitMap,
     ProtoHitVector &protoHitVector) const
 {
     MatchedSlidingFitMap matchedSlidingFitMap;
@@ -38,7 +38,7 @@ void LongitudinalTrackHitsBaseTool::CreateThreeDHits(const CaloHitVector &inputT
         try
         {
             ProtoHit protoHit(pCaloHit2D);
-            this->GetThreeDPosition(matchedSlidingFitMap, vtx3D, end3D, protoHit);
+            this->GetLongitudinalTrackHit3D(matchedSlidingFitMap, vtx3D, end3D, protoHit);
 
             if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
                 protoHitVector.push_back(protoHit);

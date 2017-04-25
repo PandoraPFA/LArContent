@@ -20,8 +20,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
-    ProtoHitVector &protoHitVector)
+void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
+    const CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -42,7 +42,7 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, c
         CaloHitVector parentHitVector3D(parentHitList3D.begin(), parentHitList3D.end());
         std::sort(parentHitVector3D.begin(), parentHitVector3D.end(), LArClusterHelper::SortHitsByPosition);
 
-        this->CreateThreeDHits(inputTwoDHits, parentHitVector3D, protoHitVector);
+        this->CreateDeltaRayShowerHits3D(inputTwoDHits, parentHitVector3D, protoHitVector);
     }
     catch (StatusCodeException &)
     {
@@ -51,7 +51,8 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayShowerHitsTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits, const CaloHitVector &parentHits3D, ProtoHitVector &protoHitVector) const
+void DeltaRayShowerHitsTool::CreateDeltaRayShowerHits3D(const CaloHitVector &inputTwoDHits, const CaloHitVector &parentHits3D,
+    ProtoHitVector &protoHitVector) const
 {
     for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
@@ -86,7 +87,7 @@ void DeltaRayShowerHitsTool::CreateThreeDHits(const CaloHitVector &inputTwoDHits
             const CartesianVector position2(LArGeometryHelper::ProjectPosition(this->GetPandora(), closestPosition3D, hitType2));
 
             ProtoHit protoHit(pCaloHit2D);
-            this->GetPosition3D(hitType1, hitType2, position1, position2, protoHit);
+            this->GetBestPosition3D(hitType1, hitType2, position1, position2, protoHit);
 
             if (protoHit.IsPositionSet())
                 protoHitVector.push_back(protoHit);

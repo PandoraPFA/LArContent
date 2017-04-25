@@ -13,10 +13,6 @@
 namespace lar_content
 {
 
-class ThreeDHitCreationAlgorithm;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 /**
  *  @brief  DeltaRayShowerHitsTool class
  */
@@ -32,8 +28,8 @@ public:
         pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
 
-    void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
-        ProtoHitVector &protoHitVector);
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector);
 
 private:
      /**
@@ -43,7 +39,8 @@ private:
      *  @param  parentHits3D the vector of 3D hits from the parent particle
      *  @param  protoHitVector to receive the new three dimensional proto hits
      */
-    void CreateThreeDHits(const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &parentHits3D, ProtoHitVector &protoHitVector) const;
+    void CreateDeltaRayShowerHits3D(const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &parentHits3D,
+        ProtoHitVector &protoHitVector) const;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
