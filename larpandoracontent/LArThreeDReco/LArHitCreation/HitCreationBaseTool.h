@@ -82,7 +82,6 @@ protected:
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool    m_useChiSquaredApproach;    ///< Whether to obtain y, z positions via chi2 approach, or projected position approach
     bool    m_useDeltaXCorrection;      ///< Whether to add a term to chi squared accounting for hit combination delta x values
     float   m_sigmaX;                   ///< Resolution in x dimension, used for delta x correction to chi squared
 };

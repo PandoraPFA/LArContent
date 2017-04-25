@@ -20,7 +20,6 @@ namespace lar_content
 {
 
 HitCreationBaseTool::HitCreationBaseTool() :
-    m_useChiSquaredApproach(true),
     m_useDeltaXCorrection(true),
     m_sigmaX(1.f)
 {
@@ -88,30 +87,17 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     CartesianVector position3D(0.f, 0.f, 0.f);
     double chi2(std::numeric_limits<double>::max());
 
-    if (m_useChiSquaredApproach)
-    {
-        const double u((TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-        const double v((TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
-        const double w((TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+    const double u((TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_U == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+    const double v((TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_V == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
+    const double w((TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_W == hitType1) ? fitPosition1.GetZ() : fitPosition2.GetZ());
 
-        const double sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
-        const double sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);
-        const double sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
+    const double sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
+    const double sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);
+    const double sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
 
-        double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
-        LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chi2);
-        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
-    }
-    else
-    {
-        const LArTransformationPlugin::PositionAndType hitPositionAndType(pCaloHit2D->GetPositionVector().GetZ(), hitType);
-        const LArTransformationPlugin::PositionAndType fitPositionAndType1(fitPosition1.GetZ(), hitType1);
-        const LArTransformationPlugin::PositionAndType fitPositionAndType2(fitPosition2.GetZ(), hitType2);
-
-        double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
-        LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetProjectedYZ(hitPositionAndType, fitPositionAndType1, fitPositionAndType2, sigmaHit, sigmaFit, bestY, bestZ, chi2);
-        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
-    }
+    double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
+    LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chi2);
+    position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
 
     if (m_useDeltaXCorrection)
     {
@@ -157,9 +143,6 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType, const Cartesi
 
 StatusCode HitCreationBaseTool::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseChiSquaredApproach", m_useChiSquaredApproach));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseDeltaXCorrection", m_useDeltaXCorrection));
 
