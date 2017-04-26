@@ -17,6 +17,7 @@ namespace lar_content
 {
 
 class HitCreationBaseTool;
+class ThreeDSlidingFitResult;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -200,6 +201,33 @@ private:
      *  @param  protoHitVector the vector of proto hits, describing current state of 3D hit construction
      */
     void IterativeTreatment(ProtoHitVector &protoHitVector) const;
+
+    /**
+     *  @brief  Extract key results from a provided proto hit vector
+     *
+     *  @param  protoHitVector the proto hit vector
+     *  @param  chi2 to receive the sum of the proto hit chi2 values
+     *  @param  pointVector to receive a vector of proto hit 3D positions
+     */
+    void ExtractResults(const ProtoHitVector &protoHitVector, double &chi2, pandora::CartesianPointVector &pointVector) const;
+
+    /**
+     *  @brief  Receive a chi2 value indicating conistency of a list of proto hits with a provided 3D sliding fit trajectory
+     *
+     *  @param  slidingFitResult the 3D sliding fit result
+     *  @param  protoHitVector the proto hit vector
+     *
+     *  @return the chi2 value
+     */
+    double GetChi2WrtFit(const ThreeDSlidingFitResult &slidingFitResult, const ProtoHitVector &protoHitVector) const;
+
+    /**
+     *  @brief  Refine the 3D hit positions (and chi2) for a list of proto hits, in accordance with a provided 3D sliding fit trajectory
+     *
+     *  @param  slidingFitResult the 3D sliding fit result
+     *  @param  protoHitVector the proto hit vector, non const as proto hit properties will be updated
+     */
+    void RefineHitPositions(const ThreeDSlidingFitResult &slidingFitResult, ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Create new three dimensional hits from two dimensional hits

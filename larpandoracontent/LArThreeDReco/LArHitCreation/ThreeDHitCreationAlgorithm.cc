@@ -123,128 +123,153 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
 void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVector) const
 {
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
-    const float sigmaFit(sigmaUVW); // TODO
-    const float sigmaHit(sigmaUVW); // TODO
-    const float sigma3DFit(sigmaUVW / 5.f); // TODO
     const unsigned int layerWindow(10); // m_slidingFitHalfWindow TODO
 
     double originalChi2(0.);
     CartesianPointVector currentPoints3D;
-    const ProtoHitVector originalProtoHitVector(protoHitVector);
-
-    for (const ProtoHit &protoHit : protoHitVector)
-    {
-        originalChi2 += protoHit.GetChi2();
-        currentPoints3D.push_back(protoHit.GetPosition3D());
-    }
+    this->ExtractResults(protoHitVector, originalChi2, currentPoints3D);
 
     try
     {
-        double originalChi2Fit(0.);
-        const ThreeDSlidingFitResult slidingFitResult(&currentPoints3D, layerWindow, layerPitch);
+        const ThreeDSlidingFitResult originalSlidingFitResult(&currentPoints3D, layerWindow, layerPitch);
+        const double originalChi2WrtFit(this->GetChi2WrtFit(originalSlidingFitResult, protoHitVector));
+        double currentChi2(originalChi2 + originalChi2WrtFit);
 
-        for (const ProtoHit &protoHit : protoHitVector)
-        {
-            CartesianVector pointOnFit(0.f, 0.f, 0.f);
-            const double rL(slidingFitResult.GetLongitudinalDisplacement(protoHit.GetPosition3D()));
-
-            if (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
-            {
-                const double uFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
-                const double vFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
-                const double wFit(pointOnFit.GetZ());
-
-                const double outputU(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
-                const double outputV(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
-                const double outputW(protoHit.GetPosition3D().GetZ());
-
-                const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
-                originalChi2Fit += ((deltaUFit * deltaUFit) / (sigma3DFit * sigma3DFit)) + ((deltaVFit * deltaVFit) / (sigma3DFit * sigma3DFit)) + ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
-            }
-        }
-
-        originalChi2 += originalChi2Fit;
         unsigned int nIterations(0);
-std::cout << " originalChi2 " << originalChi2 << ", originalChi2Fit " << originalChi2Fit << ", nOriginalPoints3D " << currentPoints3D.size() << std::endl;
+std::cout << " originalChi2 " << originalChi2 << ", originalChi2WrtFit " << originalChi2WrtFit << ", originalTotalChi2 " << currentChi2 << ", nOriginalPoints3D " << currentPoints3D.size() << std::endl;
 for (const CartesianVector &point : currentPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "OriginalPoint", BLUE, 1);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
         while (nIterations++ < 10) // TODO
         {
+            ProtoHitVector newProtoHitVector(protoHitVector);
+            const ThreeDSlidingFitResult newSlidingFitResult(&currentPoints3D, layerWindow, layerPitch);
+            this->RefineHitPositions(newSlidingFitResult, newProtoHitVector);
+
             double newChi2(0.);
             CartesianPointVector newPoints3D;
-            ProtoHitVector newProtoHitVector(protoHitVector);
-
-            const ThreeDSlidingFitResult newSlidingFitResult(&currentPoints3D, layerWindow, layerPitch);
-
-            for (ProtoHit &protoHit : newProtoHitVector)
-            {
-                CartesianVector pointOnFit(0.f, 0.f, 0.f);
-                const double rL(newSlidingFitResult.GetLongitudinalDisplacement(protoHit.GetPosition3D()));
-
-                if (STATUS_CODE_SUCCESS == newSlidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
-                {
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnFit, "FitPoint", ORANGE, 1);
-                    const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
-                    const HitType hitType(pCaloHit2D->GetHitType());
-
-                    const double uFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
-                    const double vFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
-                    const double wFit(pointOnFit.GetZ());
-
-                    const double sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
-                    const double sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);
-                    const double sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
-
-                    CartesianVector position3D(0.f, 0.f, 0.f);
-                    double chi2(std::numeric_limits<double>::max());
-                    double u(std::numeric_limits<double>::max()), v(std::numeric_limits<double>::max()), w(std::numeric_limits<double>::max());
-
-                    if (protoHit.GetNTrajectorySamples() == 2)
-                    {
-                        u = (TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
-                        v = (TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
-                        w = (TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
-                    }
-                    else if (protoHit.GetNTrajectorySamples() == 1)
-                    {
-                        u = LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
-                        v = LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
-                        w = protoHit.GetPosition3D().GetZ();
-                    }
-                    else
-                    {
-                        std::cout << "ThreeDHitCreationAlgorithm::IterativeTreatment - Unexpected number of trajectory samples" << std::endl;
-                        throw StatusCodeException(STATUS_CODE_FAILURE);
-                    }
-
-                    double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
-                    LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, uFit, vFit, wFit, sigma3DFit, bestY, bestZ, chi2);
-                    position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
-
-                    protoHit.SetPosition3D(position3D, chi2);
-                }
-
-                newChi2 += protoHit.GetChi2();
-                newPoints3D.push_back(protoHit.GetPosition3D());
-            }
-
-std::cout << " Iteration " << nIterations << " newChi2 " << newChi2 << ", nCurrentPoints3D " << newProtoHitVector.size() << ", prevChi2 " << originalChi2 << ", prevNHits " << protoHitVector.size() << std::endl;
+            this->ExtractResults(newProtoHitVector, newChi2, newPoints3D);
+std::cout << " Iteration " << nIterations << " newChi2 " << newChi2 << ", nCurrentPoints3D " << newProtoHitVector.size() << ", prevChi2 " << currentChi2 << ", prevNHits " << protoHitVector.size() << std::endl;
 for (const CartesianVector &point : newPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "NewPoint", RED, 1);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
-            if (newChi2 > 1. * originalChi2) // TODO
-            {
-                std::cout << "Iteration terminated " << std::endl;
+            if (newChi2 > 1. * currentChi2) // TODO
                 break;
-            }
 
-            originalChi2 = newChi2;
-            protoHitVector = newProtoHitVector;
+            currentChi2 = newChi2;
             currentPoints3D = newPoints3D;
+            protoHitVector = newProtoHitVector;
         }
     }
     catch (const StatusCodeException &)
     {
+    }
+double chosenChi2(0.);
+CartesianPointVector tmp;
+this->ExtractResults(protoHitVector, chosenChi2, tmp);
+std::cout << " chosenChi2 " << chosenChi2 << " tmp.size() " << tmp.size() << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::ExtractResults(const ProtoHitVector &protoHitVector, double &chi2, CartesianPointVector &pointVector) const
+{
+    chi2 = 0.;
+    pointVector.clear();
+
+    for (const ProtoHit &protoHit : protoHitVector)
+    {
+        chi2 += protoHit.GetChi2();
+        pointVector.push_back(protoHit.GetPosition3D());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &slidingFitResult, const ProtoHitVector &protoHitVector) const
+{
+    const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const float sigma3DFit(sigmaUVW / 5.f); // TODO
+
+    double chi2WrtFit(0.);
+
+    for (const ProtoHit &protoHit : protoHitVector)
+    {
+        CartesianVector pointOnFit(0.f, 0.f, 0.f);
+        const double rL(slidingFitResult.GetLongitudinalDisplacement(protoHit.GetPosition3D()));
+
+        if (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
+            continue;
+
+        const double uFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double vFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double wFit(pointOnFit.GetZ());
+
+        const double outputU(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
+        const double outputV(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
+        const double outputW(protoHit.GetPosition3D().GetZ());
+
+        const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
+        chi2WrtFit += ((deltaUFit * deltaUFit) / (sigma3DFit * sigma3DFit)) + ((deltaVFit * deltaVFit) / (sigma3DFit * sigma3DFit)) + ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
+    }
+
+    return chi2WrtFit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult &slidingFitResult, ProtoHitVector &protoHitVector) const
+{
+    const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const float sigmaFit(sigmaUVW); // TODO
+    const float sigmaHit(sigmaUVW); // TODO
+    const float sigma3DFit(sigmaUVW / 5.f); // TODO
+
+    for (ProtoHit &protoHit : protoHitVector)
+    {
+        CartesianVector pointOnFit(0.f, 0.f, 0.f);
+        const double rL(slidingFitResult.GetLongitudinalDisplacement(protoHit.GetPosition3D()));
+
+        if (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
+            continue;
+
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnFit, "FitPoint", ORANGE, 1);
+        const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
+        const HitType hitType(pCaloHit2D->GetHitType());
+
+        const double uFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double vFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double wFit(pointOnFit.GetZ());
+
+        const double sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
+        const double sigmaV((TPC_VIEW_V == hitType) ? sigmaHit : sigmaFit);
+        const double sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
+
+        CartesianVector position3D(0.f, 0.f, 0.f);
+        double chi2(std::numeric_limits<double>::max());
+        double u(std::numeric_limits<double>::max()), v(std::numeric_limits<double>::max()), w(std::numeric_limits<double>::max());
+
+        if (protoHit.GetNTrajectorySamples() == 2)
+        {
+            u = (TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+            v = (TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+            w = (TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+        }
+        else if (protoHit.GetNTrajectorySamples() == 1)
+        {
+            u = LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
+            v = LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
+            w = protoHit.GetPosition3D().GetZ();
+        }
+        else
+        {
+            std::cout << "ThreeDHitCreationAlgorithm::IterativeTreatment - Unexpected number of trajectory samples" << std::endl;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+
+        double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
+        LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, uFit, vFit, wFit, sigma3DFit, bestY, bestZ, chi2);
+        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
+
+        protoHit.SetPosition3D(position3D, chi2);
     }
 }
 

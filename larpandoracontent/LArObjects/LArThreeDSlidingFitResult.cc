@@ -124,7 +124,7 @@ StatusCode ThreeDSlidingFitResult::GetGlobalFitPosition(const float rL, Cartesia
     const int layer2(m_secondFitResult.GetLayer(rL));
 
     if (std::min(layer1, layer2) < m_minLayer || std::max(layer1, layer2) > m_maxLayer)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        return STATUS_CODE_INVALID_PARAMETER;
 
     // Get local positions from each sliding fit (TODO: Make this more efficient)
     CartesianVector firstPosition(0.f, 0.f, 0.f), secondPosition(0.f, 0.f, 0.f);
@@ -157,7 +157,7 @@ StatusCode ThreeDSlidingFitResult::GetGlobalFitDirection(const float rL, Cartesi
     const int layer2(m_secondFitResult.GetLayer(rL));
 
     if (std::min(layer1, layer2) < m_minLayer || std::max(layer1, layer2) > m_maxLayer)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        return STATUS_CODE_INVALID_PARAMETER;
 
     // Get local directions from each sliding fit (TODO: Make this more efficient)
     CartesianVector firstDirection(0.f, 0.f, 0.f), secondDirection(0.f, 0.f, 0.f);
@@ -205,6 +205,7 @@ void ThreeDSlidingFitResult::GetGlobalDirection(const float dTdL1, const float d
 
 TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
 {
+    // TODO Reroute to CartesianPointVector function
     if (pCluster->GetNCaloHits() < 2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
@@ -232,9 +233,12 @@ TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *const /*pPointVector*/)
+TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *const pPointVector)
 {
-    throw; // TODO
+    // TODO Use Eigen to extract principal axis and centroid position
+    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
+    LArClusterHelper::GetExtremalCoordinates(*pPointVector, innerCoordinate, outerCoordinate);
+    return TrackState(innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
