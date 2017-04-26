@@ -47,7 +47,7 @@ void MultiValuedTransverseTrackHitsTool::GetTransverseTrackHit3D(const MatchedSl
     if (nViews < m_minViews)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    if (nViews <= 2 && !m_useDeltaXCorrection)
+    if (nViews <= 2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     this->GetBestPosition3D(hitType1, hitType2, fitPositionList1, fitPositionList2, protoHit);

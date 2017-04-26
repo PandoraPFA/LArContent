@@ -19,9 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-HitCreationBaseTool::HitCreationBaseTool() :
-    m_useDeltaXCorrection(true),
-    m_sigmaX(1.f)
+HitCreationBaseTool::HitCreationBaseTool()
 {
 }
 
@@ -99,13 +97,6 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chi2);
     position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
 
-    if (m_useDeltaXCorrection)
-    {
-        const float deltaX1(pCaloHit2D->GetPositionVector().GetX() - fitPosition1.GetX());
-        const float deltaX2(pCaloHit2D->GetPositionVector().GetX() - fitPosition2.GetX());
-        chi2 += static_cast<double>(((deltaX1 * deltaX1) / (m_sigmaX * m_sigmaX)) + ((deltaX2 * deltaX2) / (m_sigmaX * m_sigmaX)));
-    }
-
     protoHit.SetPosition3D(position3D, chi2);
     protoHit.AddTrajectorySample(TrajectorySample(fitPosition1, hitType1, sigmaFit));
     protoHit.AddTrajectorySample(TrajectorySample(fitPosition2, hitType2, sigmaFit));
@@ -123,32 +114,22 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType, const Cartesi
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     CartesianVector position3D(0.f, 0.f, 0.f);
-    float chi2F(std::numeric_limits<float>::max());
+    float chi2(std::numeric_limits<float>::max());
     LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), pCaloHit2D->GetHitType(), hitType, pCaloHit2D->GetPositionVector(),
-        fitPosition, position3D, chi2F);
+        fitPosition, position3D, chi2);
 
-    double chi2 = static_cast<double>(chi2F);
+    // ATTN Chi2 returned by MergeTwoPositions3D is purely a measure of delta x - remove here for consistency with three-view treatment
+    chi2 = 0.f;
+    position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), position3D.GetY(), position3D.GetZ());
 
-    if (m_useDeltaXCorrection)
-    {
-        const float deltaX(pCaloHit2D->GetPositionVector().GetX() - fitPosition.GetX());
-        chi2 += static_cast<double>(((deltaX * deltaX) / (m_sigmaX * m_sigmaX)));
-    }
-
-    protoHit.SetPosition3D(position3D, chi2);
+    protoHit.SetPosition3D(position3D, static_cast<double>(chi2));
     protoHit.AddTrajectorySample(TrajectorySample(fitPosition, hitType, sigmaFit));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode HitCreationBaseTool::ReadSettings(const pandora::TiXmlHandle xmlHandle)
+StatusCode HitCreationBaseTool::ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseDeltaXCorrection", m_useDeltaXCorrection));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SigmaX", m_sigmaX));
-
     return STATUS_CODE_SUCCESS;
 }
 
