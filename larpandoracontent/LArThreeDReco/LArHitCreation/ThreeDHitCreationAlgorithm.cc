@@ -126,8 +126,8 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
     const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
     const float sigmaFit(sigmaUVW); // TODO
     const float sigmaHit(sigmaUVW); // TODO
-    const float sigma3DFit(sigmaUVW / 2.f); // TODO
-    const unsigned int layerWindow(20); // m_slidingFitHalfWindow TODO
+    const float sigma3DFit(sigmaUVW / 5.f); // TODO
+    const unsigned int layerWindow(10); // m_slidingFitHalfWindow TODO
 
     double originalChi2(0.);
     CartesianPointVector currentPoints3D;
@@ -139,10 +139,9 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
         currentPoints3D.push_back(protoHit.GetPosition3D());
     }
 
-    double originalChi2Fit(0.);
-
     try
     {
+        double originalChi2Fit(0.);
         const ThreeDSlidingFitResult slidingFitResult(&currentPoints3D, layerWindow, layerPitch);
 
         for (const ProtoHit &protoHit : protoHitVector)
@@ -164,36 +163,28 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
                 originalChi2Fit += ((deltaUFit * deltaUFit) / (sigma3DFit * sigma3DFit)) + ((deltaVFit * deltaVFit) / (sigma3DFit * sigma3DFit)) + ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
             }
         }
-    }
-    catch (const StatusCodeException &statusCodeException)
-    {
-        std::cout << "Initial fit, StatusCodeException " << statusCodeException.GetBackTrace() << std::endl;
-    }
 
-std::cout << " originalChi2 " << originalChi2 << ", originalChi2Fit " << originalChi2Fit << ", originalChi2Total " << (originalChi2 + originalChi2Fit) << ", nOriginalPoints3D " << currentPoints3D.size() << std::endl;
-for (const CartesianVector &point : currentPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "Initial", BLUE, 1);
+        originalChi2 += originalChi2Fit;
+        unsigned int nIterations(0);
+std::cout << " originalChi2 " << originalChi2 << ", originalChi2Fit " << originalChi2Fit << ", nOriginalPoints3D " << currentPoints3D.size() << std::endl;
+for (const CartesianVector &point : currentPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "OriginalPoint", BLUE, 1);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-    const double initialChi2(originalChi2 + originalChi2Fit);
-    const ProtoHitVector initialProtoHitVector(protoHitVector);
-
-    try
-    {
-        for (int i = 0; i < 10; ++i)
+        while (nIterations++ < 10) // TODO
         {
-            const ThreeDSlidingFitResult slidingFitResult(&currentPoints3D, layerWindow, layerPitch);
-
             double newChi2(0.);
             CartesianPointVector newPoints3D;
+            ProtoHitVector newProtoHitVector(protoHitVector);
 
-            for (ProtoHit &protoHit : protoHitVector)
+            const ThreeDSlidingFitResult newSlidingFitResult(&currentPoints3D, layerWindow, layerPitch);
+
+            for (ProtoHit &protoHit : newProtoHitVector)
             {
                 CartesianVector pointOnFit(0.f, 0.f, 0.f);
-                const double rL(slidingFitResult.GetLongitudinalDisplacement(protoHit.GetPosition3D()));
+                const double rL(newSlidingFitResult.GetLongitudinalDisplacement(protoHit.GetPosition3D()));
 
-                if (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
+                if (STATUS_CODE_SUCCESS == newSlidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
                 {
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnFit, "pointOnFit", ORANGE, 1);
+PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnFit, "FitPoint", ORANGE, 1);
                     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
                     const HitType hitType(pCaloHit2D->GetHitType());
 
@@ -238,15 +229,22 @@ PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnFit, 
                 newPoints3D.push_back(protoHit.GetPosition3D());
             }
 
-            currentPoints3D = newPoints3D;
-std::cout << " Iteration " << i << " initialChi2 " << initialChi2 << ", nCurrentPoints3D " << currentPoints3D.size() << ", newChi2 " << newChi2 << std::endl;
-for (const CartesianVector &point : currentPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "Current", RED, 1);
+std::cout << " Iteration " << nIterations << " newChi2 " << newChi2 << ", nCurrentPoints3D " << newProtoHitVector.size() << ", prevChi2 " << originalChi2 << ", prevNHits " << protoHitVector.size() << std::endl;
+for (const CartesianVector &point : newPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "NewPoint", RED, 1);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            if (newChi2 > 1. * originalChi2) // TODO
+            {
+                std::cout << "Iteration terminated " << std::endl;
+                break;
+            }
+
+            originalChi2 = newChi2;
+            protoHitVector = newProtoHitVector;
+            currentPoints3D = newPoints3D;
         }
     }
-    catch (const StatusCodeException &statusCodeException)
+    catch (const StatusCodeException &)
     {
-        std::cout << "Iterative fits, StatusCodeException " << statusCodeException.GetBackTrace() << std::endl;
     }
 }
 
