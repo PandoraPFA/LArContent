@@ -79,8 +79,8 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
     const HitType hitType(pCaloHit2D->GetHitType());
 
-    const float sigmaFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
-    const float sigmaHit(sigmaFit);
+    const double sigmaFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaHit(sigmaFit);
 
     CartesianVector position3D(0.f, 0.f, 0.f);
     double chi2(std::numeric_limits<double>::max());
@@ -108,7 +108,7 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType, const Cartesi
 {
     // TODO Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
-    const float sigmaFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
 
     if (pCaloHit2D->GetHitType() == hitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

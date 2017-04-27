@@ -27,7 +27,6 @@ class ThreeDSlidingFitResult;
 class ThreeDHitCreationAlgorithm : public pandora::Algorithm
 {
 public:
-
     /**
      *  @brief  Trajectory samples record the results of sampling a particles in a particular view
      */
@@ -164,6 +163,11 @@ public:
     typedef std::vector<ProtoHit> ProtoHitVector;
 
     /**
+     *  @brief  Default constructor
+     */
+    ThreeDHitCreationAlgorithm();
+
+    /**
      *  @brief  Factory class for instantiating algorithm
      */
     class Factory : public pandora::AlgorithmFactory
@@ -270,6 +274,11 @@ private:
     std::string             m_inputPfoListName;         ///< The name of the input pfo list
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
     std::string             m_outputClusterListName;    ///< The name of the output cluster list
+
+    unsigned int            m_slidingFitHalfWindow;     ///< The sliding linear fit half window
+    unsigned int            m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
+    double                  m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
+    double                  m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

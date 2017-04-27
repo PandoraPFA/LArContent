@@ -26,6 +26,16 @@ using namespace pandora;
 namespace lar_content
 {
 
+ThreeDHitCreationAlgorithm::ThreeDHitCreationAlgorithm() :
+    m_slidingFitHalfWindow(10),
+    m_nHitRefinementIterations(10),
+    m_sigma3DFitMultiplier(0.2),
+    m_iterationMaxChi2Ratio(1.)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDHitCreationAlgorithm::FilterCaloHitsByType(const CaloHitVector &inputCaloHitVector, const HitType hitType, CaloHitVector &outputCaloHitVector) const
 {
     for (const CaloHit *const pCaloHit : inputCaloHitVector)
@@ -123,7 +133,7 @@ void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *cons
 void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVector) const
 {
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    const unsigned int layerWindow(10); // m_slidingFitHalfWindow TODO
+    const unsigned int layerWindow(m_slidingFitHalfWindow);
 
     double originalChi2(0.);
     CartesianPointVector currentPoints3D;
@@ -139,7 +149,7 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
 std::cout << " originalChi2 " << originalChi2 << ", originalChi2WrtFit " << originalChi2WrtFit << ", originalTotalChi2 " << currentChi2 << ", nOriginalPoints3D " << currentPoints3D.size() << std::endl;
 for (const CartesianVector &point : currentPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "OriginalPoint", BLUE, 1);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        while (nIterations++ < 10) // TODO
+        while (nIterations++ < m_nHitRefinementIterations)
         {
             ProtoHitVector newProtoHitVector(protoHitVector);
             const ThreeDSlidingFitResult newSlidingFitResult(&currentPoints3D, layerWindow, layerPitch);
@@ -151,7 +161,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
 std::cout << " Iteration " << nIterations << " newChi2 " << newChi2 << ", nCurrentPoints3D " << newProtoHitVector.size() << ", prevChi2 " << currentChi2 << ", prevNHits " << protoHitVector.size() << std::endl;
 for (const CartesianVector &point : newPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "NewPoint", RED, 1);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
-            if (newChi2 > 1. * currentChi2) // TODO
+            if (newChi2 > m_iterationMaxChi2Ratio * currentChi2)
                 break;
 
             currentChi2 = newChi2;
@@ -186,8 +196,8 @@ void ThreeDHitCreationAlgorithm::ExtractResults(const ProtoHitVector &protoHitVe
 
 double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &slidingFitResult, const ProtoHitVector &protoHitVector) const
 {
-    const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
-    const float sigma3DFit(sigmaUVW / 5.f); // TODO
+    const double sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
 
     double chi2WrtFit(0.);
 
@@ -218,10 +228,10 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
 
 void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult &slidingFitResult, ProtoHitVector &protoHitVector) const
 {
-    const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
-    const float sigmaFit(sigmaUVW); // TODO
-    const float sigmaHit(sigmaUVW); // TODO
-    const float sigma3DFit(sigmaUVW / 5.f); // TODO
+    const double sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaFit(sigmaUVW); // ATTN sigmaFit and sigmaHit here should agree with treatment in HitCreation tools
+    const double sigmaHit(sigmaUVW);
+    const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
 
     for (ProtoHit &protoHit : protoHitVector)
     {
@@ -434,6 +444,18 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListName", m_outputCaloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_outputClusterListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SlidingFitHalfWindow", m_slidingFitHalfWindow));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NHitRefinementIterations", m_nHitRefinementIterations));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Sigma3DFitMultiplier", m_sigma3DFitMultiplier));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IterationMaxChi2Ratio", m_iterationMaxChi2Ratio));
 
     return STATUS_CODE_SUCCESS;
 }
