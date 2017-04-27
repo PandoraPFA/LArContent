@@ -146,9 +146,7 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
         double currentChi2(originalChi2 + originalChi2WrtFit);
 
         unsigned int nIterations(0);
-std::cout << " originalChi2 " << originalChi2 << ", originalChi2WrtFit " << originalChi2WrtFit << ", originalTotalChi2 " << currentChi2 << ", nOriginalPoints3D " << currentPoints3D.size() << std::endl;
-for (const CartesianVector &point : currentPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "OriginalPoint", BLUE, 1);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
         while (nIterations++ < m_nHitRefinementIterations)
         {
             ProtoHitVector newProtoHitVector(protoHitVector);
@@ -158,9 +156,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
             double newChi2(0.);
             CartesianPointVector newPoints3D;
             this->ExtractResults(newProtoHitVector, newChi2, newPoints3D);
-std::cout << " Iteration " << nIterations << " newChi2 " << newChi2 << ", nCurrentPoints3D " << newProtoHitVector.size() << ", prevChi2 " << currentChi2 << ", prevNHits " << protoHitVector.size() << std::endl;
-for (const CartesianVector &point : newPoints3D) PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "NewPoint", RED, 1);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
             if (newChi2 > m_iterationMaxChi2Ratio * currentChi2)
                 break;
 
@@ -172,10 +168,6 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
     catch (const StatusCodeException &)
     {
     }
-double chosenChi2(0.);
-CartesianPointVector tmp;
-this->ExtractResults(protoHitVector, chosenChi2, tmp);
-std::cout << " chosenChi2 " << chosenChi2 << " tmp.size() " << tmp.size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -241,7 +233,6 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         if (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
             continue;
 
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnFit, "FitPoint", ORANGE, 1);
         const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
         const HitType hitType(pCaloHit2D->GetHitType());
 
