@@ -25,8 +25,8 @@ namespace lar_content
 {
 
 SVMClusterCharacterisationAlgorithm::SVMClusterCharacterisationAlgorithm() :
- //   m_trainingSetMode(false),
- //   m_allowClassifyDuringTraining(false),  
+  //  m_trainingSetMode(false),
+  //  m_allowClassifyDuringTraining(false),  
     m_isPfoLevel(false),
     m_postBranchAddition(false),
     m_overwriteExistingId(false),
@@ -63,11 +63,7 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
             {
 
               if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
-                continue;
-
-            //produce training sets                                                                                                                                                       
-            //      SVMHelper::ProduceTraining                                                                                                                                            
-            //trueTrack                                                                                                                                                                   
+                continue;                                                                                                                                                               
 
             bool isTrueTrack(false);
             try
@@ -79,10 +75,10 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
               {
               }
               
-   //     std::cout << "isTrueTrack = " << isTrueTrack << std::endl;
+
             //PandoraContentApi::Cluster::Metadata metadata;
 	    ClusterFeatureInfoMap clusterFeatureInfoMap;
-	    this->PopulateVertexFeatureInfoMap(pCluster,clusterFeatureInfoMap);
+	    this->PopulateClusterFeatureInfoMap(pCluster,clusterFeatureInfoMap);
 
       //  const bool allowedToClassify(!m_trainingSetMode || m_allowClassifyDuringTraining);
 
@@ -121,11 +117,16 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
 
      if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
          continue;
-	    
-	    //produce training sets
-	    //	    SVMHelper::ProduceTraining
-	    //trueTrack
+  
+ 
+            //PandoraContentApi::Cluster::Metadata metadata;
+	    ClusterFeatureInfoMap clusterFeatureInfoMap;
+	    this->PopulateClusterFeatureInfoMap(pCluster,clusterFeatureInfoMap);
 
+	    SupportVectorMachine::DoubleVector featureList = this->GenerateFeatureList(pCluster, clusterFeatureInfoMap);
+	
+
+	    
 	    bool isTrueTrack(false);  
 	    try
 	      { 
@@ -134,31 +135,10 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
 	      }
 	    catch (StatusCodeException &)                                                                      
 	      {	
-	      }      
-   // std::cout << "isTrueTrack = " << isTrueTrack << std::endl;
-            //PandoraContentApi::Cluster::Metadata metadata;
-	    ClusterFeatureInfoMap clusterFeatureInfoMap;
-	    this->PopulateVertexFeatureInfoMap(pCluster,clusterFeatureInfoMap);
-
-	    SupportVectorMachine::DoubleVector featureList = this->GenerateFeatureList(pCluster, clusterFeatureInfoMap);
-	    SVMHelper::ProduceTrainingExample(m_trainingOutputFile + ".txt", isTrueTrack, featureList);
-
-	    // divide events 
-	    
-            
-           //  then classify, decide whether track or shower like
-
-      /*      if (this->IsClearTrack(pCluster))
-            {
-                metadata.m_particleId = MU_MINUS;
-            }
-            else
-            {
-                metadata.m_particleId = E_MINUS;
-            }
-
-            if (pCluster->GetParticleId() != metadata.m_particleId.Get())
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));*/
+	      }    
+          
+     SVMHelper::ProduceTrainingExample(m_trainingOutputFile + ".txt", isTrueTrack, featureList);
+     
         }
     }
     
@@ -170,7 +150,7 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-void SVMClusterCharacterisationAlgorithm::PopulateVertexFeatureInfoMap(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap) const
+void SVMClusterCharacterisationAlgorithm::PopulateClusterFeatureInfoMap(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap) const
 {
     // TODO: Reorganize this, use CalculateFeatures, and deal with different numbers of features in the feature vector if some are dropped off the xml file
     

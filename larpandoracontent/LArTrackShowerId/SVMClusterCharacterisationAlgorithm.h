@@ -76,7 +76,7 @@ private:
     pandora::StatusCode Run();
 
 
-  void PopulateVertexFeatureInfoMap(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap) const;
+  void PopulateClusterFeatureInfoMap(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap) const;
   SupportVectorMachine::DoubleVector GenerateFeatureList(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap);
   
     ClusterCharacterisationFeatureTool::FeatureToolVector m_featureToolVector; ///< The feature tool map
