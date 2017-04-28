@@ -51,6 +51,13 @@ protected:
     virtual void GetShowerHits3D(const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &caloHitVector1,
         const pandora::CaloHitVector &caloHitVector2, ProtoHitVector &protoHitVector) const;
 
+    /**
+     *  @brief  Get the sigmaX squared value, for calculation of chi2 deltaX term
+     *
+     *  @return the sigmaX squared value
+     */
+    double GetSigmaX2() const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
@@ -65,9 +72,17 @@ private:
     void FilterCaloHits(const float x, const float xTolerance, const pandora::CaloHitVector &inputCaloHitVector,
         pandora::CaloHitVector &outputCaloHitVector) const;
 
-    float     m_xTolerance;          ///< The x tolerance to use when looking for associated calo hits between views
-    float     m_chiSquaredCut;       ///< The chi squared cut (accept only values below the cut value)
+    float       m_xTolerance;           ///< The x tolerance to use when looking for associated calo hits between views
+    double      m_chiSquaredCut;        ///< The chi squared cut (accept only values below the cut value)
+    double      m_sigmaX2;              ///< The sigmaX squared value, for calculation of chi2 deltaX term
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline double ShowerHitsBaseTool::GetSigmaX2() const
+{
+    return m_sigmaX2;
+}
 
 } // namespace lar_content
 

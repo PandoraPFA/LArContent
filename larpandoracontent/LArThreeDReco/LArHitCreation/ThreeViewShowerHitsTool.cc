@@ -51,6 +51,12 @@ void ThreeViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector1
             ProtoHit thisProtoHit(pCaloHit2D);
             this->GetBestPosition3D(hitType1, hitType2, position1, position2, thisProtoHit); 
 
+            // ATTN For this treatment of showers, deltaX term in chi2 is important and is added here
+            const double deltaX1(pCaloHit2D->GetPositionVector().GetX() - position1.GetX());
+            const double deltaX2(pCaloHit2D->GetPositionVector().GetX() - position2.GetX());
+            const double chi2X(((deltaX1 * deltaX1) / this->GetSigmaX2()) + ((deltaX2 * deltaX2) / this->GetSigmaX2()));
+            thisProtoHit.SetPosition3D(thisProtoHit.GetPosition3D(), thisProtoHit.GetChi2() + chi2X);
+
             if (!protoHit.IsPositionSet() || (thisProtoHit.GetChi2() < protoHit.GetChi2()))
                 protoHit = thisProtoHit;
         }
