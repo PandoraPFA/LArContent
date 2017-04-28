@@ -20,7 +20,7 @@ namespace lar_content
  */
 class BranchGrowingAlgorithm : public pandora::Algorithm
 {
-protected:
+ public:
     /**
      *  @brief  AssociationType enum
      */
@@ -119,7 +119,7 @@ protected:
      */
     void IdentifyClusterMerges(const pandora::ClusterVector &particleSeedVector, const ClusterUsageMap &backwardUsageMap,
         SeedAssociationList &seedAssociationList) const;
-
+protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 

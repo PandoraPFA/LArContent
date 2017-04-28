@@ -92,8 +92,11 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
 #include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/SVMClusterCharacterisationAlgorithm.h"
+//#include "larpandoracontent/LArTrackShowerId/SVMPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h"
@@ -183,6 +186,7 @@ public:
         d("LArThreeDTrackFragments",                lar_content::ThreeDTrackFragmentsAlgorithm::Factory)                        \
         d("LArThreeDTransverseTracks",              lar_content::ThreeDTransverseTracksAlgorithm::Factory)                      \
         d("LArClusterCharacterisation",             lar_content::ClusterCharacterisationAlgorithm::Factory)                     \
+        d("LArSVMClusterCharacterisation",          lar_content::SVMClusterCharacterisationAlgorithm::Factory)                  \
         d("LArPfoCharacterisation",                 lar_content::PfoCharacterisationAlgorithm::Factory)                         \
         d("LArShowerGrowing",                       lar_content::ShowerGrowingAlgorithm::Factory)                               \
         d("LArCrossGapsAssociation",                lar_content::CrossGapsAssociationAlgorithm::Factory)                        \
@@ -258,7 +262,15 @@ public:
         d("LArTracksCrossingGaps",                  lar_content::TracksCrossingGapsTool::Factory)                               \
         d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
         d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
-        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)
+        d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)                                 \
+        d("LArShowerFitWidthFeatureTool",           lar_content::TrackShowerIdFeatureTool::ShowerFitWidthFeatureTool::Factory)  \
+        d("LArNHitsFeatureTool",                    lar_content::TrackShowerIdFeatureTool::NHitsFeatureTool::Factory)           \
+        d("LArShowerFitGapLengthFeatureTool",       lar_content::TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::Factory)\
+        d("LArStraightLineLengthFeatureTool",       lar_content::TrackShowerIdFeatureTool::StraightLineLengthFeatureTool::Factory)\
+        d("LArPointsOfContactFeatureTool",          lar_content::TrackShowerIdFeatureTool::PointsOfContactFeatureTool::Factory) \
+        d("LArNNearbyClustersFeatureTool",          lar_content::TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::Factory) \
+        d("LArMipEnergyFeatureTool",                lar_content::TrackShowerIdFeatureTool::MipEnergyFeatureTool::Factory)    
+ 
 
     #define LAR_PARTICLE_ID_LIST(d)                                                                                             \
         d("LArMuonId",                              lar_content::LArParticleIdPlugins::LArMuonId)

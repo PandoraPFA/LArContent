@@ -9,6 +9,7 @@
 #define LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
+#include "larpandoracontent/LArHelpers/LArSVMHelper.h"
 
 namespace lar_content
 {
@@ -54,6 +55,7 @@ public:
      */
     static float GetShowerFitWidth(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const unsigned int showerFitWindow);
 
+ 
 private:
     pandora::StatusCode Run();
 
@@ -81,6 +83,8 @@ private:
     float                   m_rTWidthRatioCut;              ///< The maximum ratio of transverse fit position width to straight line length to qualify as a track
     float                   m_vertexDistanceRatioCut;       ///< The maximum ratio of vertex separation to straight line length to qualify as a track
     float                   m_showerWidthRatioCut;          ///< The maximum ratio of shower fit width to straight line length to qualify as a track
+    
+  
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
