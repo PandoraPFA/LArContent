@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 
-#include "larpandoracontent/LArStitching/LArStitchingHelper.h"
 #include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
 
 using namespace pandora;
@@ -34,7 +34,7 @@ StatusCode StitchingAlgorithm::Run()
 
 const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCaloHit, const VolumeInfo &volumeInfo, const float x0) const
 {
-    return this->CreateCaloHit(pInputCaloHit, NULL, volumeInfo, x0);
+    return this->CreateCaloHit(pInputCaloHit, nullptr, volumeInfo, x0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCalo
     parameters.m_layer = pInputCaloHit->GetLayer();
     parameters.m_isInOuterSamplingLayer = pInputCaloHit->IsInOuterSamplingLayer();
 
-    if (NULL == pParentCaloHit)
+    if (nullptr == pParentCaloHit)
     {
         parameters.m_pParentAddress = pInputCaloHit->GetParentAddress();
     }
@@ -289,7 +289,7 @@ StatusCode StitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         StitchingTool *const pStitchingTool(dynamic_cast<StitchingTool*>(*iter));
 
-        if (NULL == pStitchingTool)
+        if (nullptr == pStitchingTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pStitchingTool);

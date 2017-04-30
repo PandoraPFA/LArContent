@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArStitching/LArStitchingHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArStitchingHelper.h
  *
  *  @brief  Header file for the helper class for multiple drift volumes.
  *
