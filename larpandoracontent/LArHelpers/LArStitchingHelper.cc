@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArStitching/LArStitchingHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArStitchingHelper.cc
  *
  *  @brief  Implementation of the helper class for multiple drift volumes
  *
@@ -8,7 +8,7 @@
 
 #include "larpandoracontent/LArStitching/MultiPandoraApi.h"
 
-#include "larpandoracontent/LArStitching/LArStitchingHelper.h"
+#include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 
 #include <cmath>
 #include <limits>
@@ -68,7 +68,7 @@ bool LArStitchingHelper::CanVolumesBeStitched(const VolumeInfo &firstVolume, con
     if (firstVolume.IsDriftInPositiveX() == secondVolume.IsDriftInPositiveX())
         return false;
 
-    // Use second method by default (which doesn't require knowledge of volume widths)
+    // Check if volumes are adjacent
     return LArStitchingHelper::AreVolumesAdjacent(firstVolume, secondVolume);
 }
 
@@ -258,10 +258,16 @@ float LArStitchingHelper::CalculateX0(const VolumeInfo &firstVolume, const Volum
     const CartesianVector secondPositionYZ(0.f, secondVertex.GetPosition().GetY(), secondVertex.GetPosition().GetZ());
     const CartesianVector secondDirectionYZ(0.f, secondVertex.GetDirection().GetY(), secondVertex.GetDirection().GetZ());
 
-    const float R1(firstDirectionYZ.GetUnitVector().GetDotProduct(firstPositionYZ - secondPositionYZ) / firstDirectionYZ.GetMagnitude());
+    const float firstDirectionYZmag(firstDirectionYZ.GetMagnitude());
+    const float secondDirectionYZmag(secondDirectionYZ.GetMagnitude());
+
+    if (firstDirectionYZmag < std::numeric_limits<float>::epsilon() || secondDirectionYZmag < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float R1(firstDirectionYZ.GetUnitVector().GetDotProduct(firstPositionYZ - secondPositionYZ) / firstDirectionYZmag);
     const float X1(-1.f * firstDirectionX.GetUnitVector().GetDotProduct(secondVertex.GetPosition() - (firstVertex.GetPosition() - firstVertex.GetDirection() * R1)));
 
-    const float R2(secondDirectionYZ.GetUnitVector().GetDotProduct(secondPositionYZ - firstPositionYZ) / secondDirectionYZ.GetMagnitude());
+    const float R2(secondDirectionYZ.GetUnitVector().GetDotProduct(secondPositionYZ - firstPositionYZ) / secondDirectionYZmag);
     const float X2(-1.f * secondDirectionX.GetUnitVector().GetDotProduct(firstVertex.GetPosition() - (secondVertex.GetPosition() - secondVertex.GetDirection() * R2)));
 
     // ATTN: By convention, X0 is half the displacement in x (because both Pfos will be corrected)

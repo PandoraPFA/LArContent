@@ -209,11 +209,11 @@ private:
      *
      *  @param  pfoToVolumeIdMap  the mapping between pfos and drift volume IDs
      *  @param  pointingClusterMap  the mapping between Pfos and their corresponding 3D pointing clusters
-     *  @param  pfoList  the list of parent Pfos to stitch together
+     *  @param  pfoVector  the vector of parent Pfos to stitch together
      *  @param  x0  the output x0 value
      */
     void CalculateX0(const PfoToVolumeIdMap &pfoToVolumeIdMap, const ThreeDPointingClusterMap &pointingClusterMap,
-        const pandora::PfoList &pfoList, float &x0) const;
+        const pandora::PfoVector &pfoVector, float &x0) const;
 
     bool  m_useXcoordinate;
     int   m_halfWindowLayers;
