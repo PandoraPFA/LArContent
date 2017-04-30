@@ -37,7 +37,6 @@
 
 #include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
 #include "larpandoracontent/LArStitching/StitchingObjectCreationTool.h"
-#include "larpandoracontent/LArStitching/StitchingPfoMergingTool.h"
 #include "larpandoracontent/LArStitching/StitchingCosmicRayMergingTool.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
@@ -229,7 +228,6 @@ public:
     #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                          \
         d("LArStitchingCosmicRayMerging",           lar_content::StitchingCosmicRayMergingTool::Factory)                        \
         d("LArStitchingObjectCreation",             lar_content::StitchingObjectCreationTool::Factory)                          \
-        d("LArStitchingPfoMerging",                 lar_content::StitchingPfoMergingTool::Factory)                              \
         d("LArCheatingEventSlicing",                lar_content::CheatingEventSlicingTool::Factory)                             \
         d("LArBranchAssociatedPfos",                lar_content::BranchAssociatedPfosTool::Factory)                             \
         d("LArEndAssociatedPfos",                   lar_content::EndAssociatedPfosTool::Factory)                                \
