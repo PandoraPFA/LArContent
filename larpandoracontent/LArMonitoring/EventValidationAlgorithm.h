@@ -150,47 +150,6 @@ private:
     void SelectRecoNeutrinos(const pandora::PfoList &allRecoParticleList, pandora::PfoList &selectedRecoNeutrinoList) const;
 
     /**
-     *  @brief  Select a subset of true neutrinos representing those that should be used in performance metrics
-     * 
-     *  @param  pAllMCParticleList address of the input mc particle list
-     *  @param  selectedMCNeutrinoVector to receive the populated selected true neutrino vector
-     */
-    void SelectTrueNeutrinos(const pandora::MCParticleList *const pAllMCParticleList, pandora::MCParticleVector &selectedMCNeutrinoVector) const;
-
-    /**
-     *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
-     * 
-     *  @param  pCaloHitList the address of the input calo hit list
-     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
-     *  @param  selectedCaloHitList to receive the populated selected calo hit list
-     */
-    void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
-        pandora::CaloHitList &selectedCaloHitList) const;
-
-    /**
-     *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether
-     *          a target mc particle is reconstructable.
-     * 
-     *  @param  pSelectedCaloHitList the address of the calo hit list (typically already been through some selection procedure)
-     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
-     *  @param  selectedCaloHitList to receive the populated good selected calo hit list
-     */
-    void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
-        pandora::CaloHitList &selectedGoodCaloHitList) const;
-
-    /**
-     *  @brief  Whether it is possible to navigate from a primary mc particle to a downstream mc particle without "passing through" a neutron
-     * 
-     *  @param  pOriginalPrimary the address of the original primary mc particle
-     *  @param  pThisMCParticle the address of the current mc particle in the primary decay chain
-     *  @param  pHitMCParticle the address of the mc particle associated to a calo hit
-     * 
-     *  @return boolean
-     */
-    bool PassMCParticleChecks(const pandora::MCParticle *const pOriginalPrimary, const pandora::MCParticle *const pThisMCParticle,
-        const pandora::MCParticle *const pHitMCParticle) const;
-
-    /**
      *  @brief  Extract details of each mc primary (ordered by number of true hits)
      * 
      *  @param  mcPrimaryList the mc primary list

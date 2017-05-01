@@ -31,6 +31,15 @@ public:
      *  @param  layerPitch the layer pitch, units cm
      */
     TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch);
+    
+    /**
+     *  @brief  Constructor using cluster list's extremal x-z positions to define primary axis
+     *
+     *  @param  clusterList the cluster list
+     *  @param  layerFitHalfWindow the layer fit half window
+     *  @param  layerPitch the layer pitch, units cm
+     */
+    TwoDSlidingFitResult(const pandora::ClusterList &clusterList, const unsigned int layerFitHalfWindow, const float layerPitch);
 
     /**
      *  @brief  Constructor using specified primary axis. The orthogonal axis must be perpendicular to the primary axis.
@@ -547,7 +556,10 @@ typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingFitResult> TwoDSl
 
 inline const pandora::Cluster *TwoDSlidingFitResult::GetCluster() const
 {
-    return m_pCluster;
+    if (m_pCluster)
+        return m_pCluster;
+        
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

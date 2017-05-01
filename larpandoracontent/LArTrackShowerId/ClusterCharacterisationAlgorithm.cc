@@ -22,6 +22,7 @@ namespace lar_content
 {
 
 ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
+    m_zeroMode(false),
     m_overwriteExistingId(false),
     m_useUnavailableClusters(false),
     m_slidingFitWindow(5),
@@ -102,6 +103,18 @@ StatusCode ClusterCharacterisationAlgorithm::Run()
                 std::cout << "ClusterCharacterisationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
 
             continue;
+        }
+
+        if (m_zeroMode)
+        {
+            for (const Cluster *const pCluster : *pClusterList)
+            {
+                PandoraContentApi::Cluster::Metadata metadata;
+                metadata.m_particleId = UNKNOWN_PARTICLE_TYPE;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
+            }
+
+            return STATUS_CODE_SUCCESS;
         }
 
         for (const Cluster *const pCluster : *pClusterList)
@@ -198,6 +211,9 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
         "InputClusterListNames", m_inputClusterListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ZeroMode", m_zeroMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OverwriteExistingId", m_overwriteExistingId));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -234,3 +250,4 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 }
 
 } // namespace lar_content
+

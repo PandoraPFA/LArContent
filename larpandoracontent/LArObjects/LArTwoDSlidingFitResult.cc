@@ -41,6 +41,33 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+TwoDSlidingFitResult::TwoDSlidingFitResult(const ClusterList &clusterList, const unsigned int layerFitHalfWindow, const float layerPitch) :
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(0.f, 0.f, 0.f),
+    m_axisDirection(0.f, 0.f, 0.f),
+    m_orthoDirection(0.f, 0.f, 0.f)
+{
+    // Get a list of hits coordinates from the cluster
+    CartesianPointVector coordinateVector;
+    for (const Cluster * const pCluster : clusterList)
+    {
+        CartesianPointVector clusterCoordinateVector;
+        LArClusterHelper::GetCoordinateVector(pCluster, clusterCoordinateVector);
+        
+        coordinateVector.insert(coordinateVector.end(), std::make_move_iterator(clusterCoordinateVector.begin()), 
+                                std::make_move_iterator(clusterCoordinateVector.end()));
+    }
+
+    // Calculate the sliding fit result
+    this->CalculateAxes(coordinateVector);
+    this->FillLayerFitContributionMap(coordinateVector);
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
         const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
     m_pCluster(pCluster),
