@@ -81,6 +81,9 @@ protected:
     virtual void GetBestPosition3D(const pandora::HitType hitType, const pandora::CartesianVector &fitPosition, ProtoHit &protoHit) const;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    double      m_sigmaX2;              ///< The sigmaX squared value, for calculation of chi2 deltaX term
+    double      m_chiSquaredCut;        ///< The chi squared cut (accept only values below the cut value)
 };
 
 } // namespace lar_content

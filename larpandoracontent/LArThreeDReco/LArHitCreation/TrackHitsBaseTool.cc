@@ -24,8 +24,7 @@ namespace lar_content
 
 TrackHitsBaseTool::TrackHitsBaseTool() :
     m_minViews(2),
-    m_slidingFitWindow(20),
-    m_chiSquaredCut(5.f)
+    m_slidingFitWindow(20)
 {
 }
 
@@ -100,9 +99,6 @@ StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ChiSquaredCut", m_chiSquaredCut));
 
     return HitCreationBaseTool::ReadSettings(xmlHandle);
 }

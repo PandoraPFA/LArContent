@@ -216,7 +216,7 @@ private:
     void ExtractResults(const ProtoHitVector &protoHitVector, double &chi2, pandora::CartesianPointVector &pointVector) const;
 
     /**
-     *  @brief  Receive a chi2 value indicating conistency of a list of proto hits with a provided 3D sliding fit trajectory
+     *  @brief  Receive a chi2 value indicating consistency of a list of proto hits with a provided 3D sliding fit trajectory
      *
      *  @param  slidingFitResult the 3D sliding fit result
      *  @param  protoHitVector the proto hit vector
@@ -224,6 +224,15 @@ private:
      *  @return the chi2 value
      */
     double GetChi2WrtFit(const ThreeDSlidingFitResult &slidingFitResult, const ProtoHitVector &protoHitVector) const;
+
+    /**
+     *  @brief  Receive a chi2 value indicating consistency of a list of proto hits with the original, input hit positions
+     *
+     *  @param  protoHitVector the proto hit vector
+     *
+     *  @return the chi2 value
+     */
+    double GetHitMovementChi2(const ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Refine the 3D hit positions (and chi2) for a list of proto hits, in accordance with a provided 3D sliding fit trajectory
@@ -275,7 +284,8 @@ private:
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
     std::string             m_outputClusterListName;    ///< The name of the output cluster list
 
-    bool                    m_iterativeTreatment;       ///< Whether to enable iterative improvement of 3D hits for track trajectories
+    bool                    m_iterateTrackHits;         ///< Whether to enable iterative improvement of 3D hits for track trajectories
+    bool                    m_iterateShowerHits;        ///< Whether to enable iterative improvement of 3D hits for showers
     unsigned int            m_slidingFitHalfWindow;     ///< The sliding linear fit half window
     unsigned int            m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
     double                  m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit

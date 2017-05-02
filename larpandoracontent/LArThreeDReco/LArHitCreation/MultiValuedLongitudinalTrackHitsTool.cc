@@ -75,7 +75,7 @@ void MultiValuedLongitudinalTrackHitsTool::GetLongitudinalTrackHit3D(const Match
     if (nViews < m_minViews)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    this->GetBestPosition3D(hitType1, hitType2, fitPositionList1, fitPositionList2, protoHit);  
+    this->GetBestPosition3D(hitType1, hitType2, fitPositionList1, fitPositionList2, protoHit);
 }
 
 } // namespace lar_content

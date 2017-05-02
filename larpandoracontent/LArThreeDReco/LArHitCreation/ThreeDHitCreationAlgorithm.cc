@@ -27,7 +27,8 @@ namespace lar_content
 {
 
 ThreeDHitCreationAlgorithm::ThreeDHitCreationAlgorithm() :
-    m_iterativeTreatment(true),
+    m_iterateTrackHits(true),
+    m_iterateShowerHits(false),
     m_slidingFitHalfWindow(10),
     m_nHitRefinementIterations(10),
     m_sigma3DFitMultiplier(0.2),
@@ -81,7 +82,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
             pHitCreationTool->Run(this, pPfo, remainingTwoDHits, protoHitVector);
         }
 
-        if (m_iterativeTreatment && LArPfoHelper::IsTrack(pPfo))
+        if ((m_iterateTrackHits && LArPfoHelper::IsTrack(pPfo)) || (m_iterateShowerHits && LArPfoHelper::IsShower(pPfo)))
             this->IterativeTreatment(protoHitVector);
 
         CaloHitList newThreeDHits;
@@ -215,6 +216,27 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
     }
 
     return chi2WrtFit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+double ThreeDHitCreationAlgorithm::GetHitMovementChi2(const ProtoHitVector &protoHitVector) const
+{
+    const double sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    double hitMovementChi2(0.);
+
+    for (const ProtoHit &protoHit : protoHitVector)
+    {
+        const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
+        const HitType hitType(pCaloHit2D->GetHitType());
+
+        const CartesianVector projectedPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), protoHit.GetPosition3D(), hitType));
+        const double delta(static_cast<double>(pCaloHit2D->GetPositionVector().GetZ() - projectedPosition.GetZ()));
+
+        hitMovementChi2 += (delta * delta) / (sigmaUVW * sigmaUVW);
+    }
+
+    return hitMovementChi2;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -438,7 +460,10 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_outputClusterListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IterativeTreatment", m_iterativeTreatment));
+        "IterateTrackHits", m_iterateTrackHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IterateShowerHits", m_iterateShowerHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_slidingFitHalfWindow));

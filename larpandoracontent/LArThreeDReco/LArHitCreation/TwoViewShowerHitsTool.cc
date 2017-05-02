@@ -58,11 +58,6 @@ void TwoViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector, P
 
     const CartesianVector position(static_cast<float>(Sqx / Sq), 0.f, static_cast<float>(Sqz / Sq));
     this->GetBestPosition3D(hitType, position, protoHit);
-
-    // ATTN For this treatment of showers, deltaX term in chi2 is important and is added here
-    const double deltaX(pCaloHit2D->GetPositionVector().GetX() - position.GetX());
-    const double chi2X((deltaX * deltaX) / this->GetSigmaX2());
-    protoHit.SetPosition3D(protoHit.GetPosition3D(), protoHit.GetChi2() + chi2X);
 }
 
 } // namespace lar_content

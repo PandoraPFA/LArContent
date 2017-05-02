@@ -57,7 +57,6 @@ protected:
 
     unsigned int    m_minViews;                 ///< The minimum number of views required for building hits
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    float           m_chiSquaredCut;            ///< The chi squared cut (accept only values below the cut value)
 };
 
 } // namespace lar_content

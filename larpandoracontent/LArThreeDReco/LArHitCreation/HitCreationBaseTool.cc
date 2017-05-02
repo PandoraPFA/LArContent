@@ -19,7 +19,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-HitCreationBaseTool::HitCreationBaseTool()
+HitCreationBaseTool::HitCreationBaseTool() :
+    m_sigmaX2(1.),
+    m_chiSquaredCut(1.)
 {
 }
 
@@ -97,7 +99,11 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chi2);
     position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
 
-    protoHit.SetPosition3D(position3D, chi2);
+    const double deltaX1(pCaloHit2D->GetPositionVector().GetX() - fitPosition1.GetX());
+    const double deltaX2(pCaloHit2D->GetPositionVector().GetX() - fitPosition2.GetX());
+    const double chi2X(((deltaX1 * deltaX1) / m_sigmaX2) + ((deltaX2 * deltaX2) / m_sigmaX2));
+
+    protoHit.SetPosition3D(position3D, chi2 + chi2X);
     protoHit.AddTrajectorySample(TrajectorySample(fitPosition1, hitType1, sigmaFit));
     protoHit.AddTrajectorySample(TrajectorySample(fitPosition2, hitType2, sigmaFit));
 }
@@ -118,18 +124,34 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType, const Cartesi
     LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), pCaloHit2D->GetHitType(), hitType, pCaloHit2D->GetPositionVector(),
         fitPosition, position3D, chi2);
 
-    // ATTN Chi2 returned by MergeTwoPositions3D is purely a measure of delta x - remove here for consistency with three-view treatment
-    chi2 = 0.f;
-    position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), position3D.GetY(), position3D.GetZ());
+    // ATTN Replace chi2 from LArGeometryHelper for consistency with three-view treatment (purely a measure of delta x)
+    const double deltaX(pCaloHit2D->GetPositionVector().GetX() - fitPosition.GetX());
+    const double chi2X((deltaX * deltaX) / m_sigmaX2);
 
-    protoHit.SetPosition3D(position3D, static_cast<double>(chi2));
+    protoHit.SetPosition3D(position3D, chi2X);
     protoHit.AddTrajectorySample(TrajectorySample(fitPosition, hitType, sigmaFit));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode HitCreationBaseTool::ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/)
+StatusCode HitCreationBaseTool::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
+    double sigmaX(std::sqrt(m_sigmaX2));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SigmaX", sigmaX));
+
+    m_sigmaX2 = sigmaX * sigmaX;
+
+    if (m_sigmaX2 < std::numeric_limits<double>::epsilon())
+    {
+        std::cout << "HitCreationBaseTool - Invalid parameter, SigmaX: " << sigmaX << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ChiSquaredCut", m_chiSquaredCut));
+
     return STATUS_CODE_SUCCESS;
 }
 

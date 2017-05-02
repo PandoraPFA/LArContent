@@ -19,9 +19,7 @@ namespace lar_content
 {
 
 ShowerHitsBaseTool::ShowerHitsBaseTool() :
-    m_xTolerance(1.f),
-    m_chiSquaredCut(1.),
-    m_sigmaX2(1.)
+    m_xTolerance(1.f)
 {
 }
 
@@ -95,24 +93,8 @@ void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, c
 
 StatusCode ShowerHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    double sigmaX(std::sqrt(m_sigmaX2));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SigmaX", sigmaX));
-
-    m_sigmaX2 = sigmaX * sigmaX;
-
-    if (m_sigmaX2 < std::numeric_limits<double>::epsilon())
-    {
-        std::cout << "ShowerHitsBaseTool - Invalid parameter, SigmaX: " << sigmaX << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
-    }
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "XTolerance", m_xTolerance));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ChiSquaredCut", m_chiSquaredCut));
 
     return HitCreationBaseTool::ReadSettings(xmlHandle);
 }
