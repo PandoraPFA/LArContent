@@ -6,7 +6,8 @@ else
 endif
 
 CC = g++
-CFLAGS = -c -g -fPIC -O2 -Wall -Wextra -pedantic -Wshadow -Werror -std=c++11
+CFLAGS = -c -g -fPIC -O2 -Wall -Wextra -pedantic -Werror -std=c++11
+#-Wshadow removed for Eigen
 ifdef BUILD_32BIT_COMPATIBLE
     CFLAGS += -m32
 endif
@@ -27,6 +28,7 @@ INCLUDES += -I$(PANDORA_DIR)/PandoraSDK/include
 ifdef MONITORING
     INCLUDES += -I$(PANDORA_DIR)/PandoraMonitoring/include
 endif
+INCLUDES += -I$(EIGEN_INC)/
 
 ifdef MONITORING
     DEFINES = -DMONITORING=1
