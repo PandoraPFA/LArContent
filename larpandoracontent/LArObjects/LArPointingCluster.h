@@ -173,7 +173,6 @@ public:
     float GetLength() const;
 
 private:
- 
     /**
      *  @brief Build the pointing cluster object from the sliding fit result
      * 

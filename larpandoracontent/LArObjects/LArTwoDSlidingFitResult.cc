@@ -20,6 +20,7 @@ using namespace pandora;
 namespace lar_content
 {
 
+template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
@@ -28,19 +29,32 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(0.f, 0.f, 0.f),
     m_orthoDirection(0.f, 0.f, 0.f)
 {
-    // Get a list of hits coordinates from the cluster
-    CartesianPointVector coordinateVector;
-    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
+    CartesianPointVector pointVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+    this->CalculateAxes(pointVector);
+    this->FillLayerFitContributionMap(pointVector);
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
 
-    // Calculate the sliding fit result
-    this->CalculateAxes(coordinateVector);
-    this->FillLayerFitContributionMap(coordinateVector);
+template <>
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch) :
+    m_pCluster(nullptr),
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(0.f, 0.f, 0.f),
+    m_axisDirection(0.f, 0.f, 0.f),
+    m_orthoDirection(0.f, 0.f, 0.f)
+{
+    this->CalculateAxes(*pPointVector);
+    this->FillLayerFitContributionMap(*pPointVector);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
         const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
     m_pCluster(pCluster),
@@ -50,22 +64,34 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(axisDirection),
     m_orthoDirection(orthoDirection)
 {
-    // Get a list of hits coordinates from the cluster
-    CartesianPointVector coordinateVector;
-    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
+    CartesianPointVector pointVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+    this->FillLayerFitContributionMap(pointVector);
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
 
-    // Calculate the sliding fit result
-    this->FillLayerFitContributionMap(coordinateVector);
+template <>
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
+    m_pCluster(nullptr),
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(axisIntercept),
+    m_axisDirection(axisDirection),
+    m_orthoDirection(orthoDirection)
+{
+    this->FillLayerFitContributionMap(*pPointVector);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
+TwoDSlidingFitResult::TwoDSlidingFitResult(const unsigned int layerFitHalfWindow, const float layerPitch,
         const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, 
         const LayerFitContributionMap &layerFitContributionMap) :
-    m_pCluster(pCluster),
+    m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
     m_axisIntercept(axisIntercept),
@@ -75,6 +101,16 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 {
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const pandora::Cluster *TwoDSlidingFitResult::GetCluster() const
+{
+    if (!m_pCluster)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    return m_pCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

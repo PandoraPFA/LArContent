@@ -26,11 +26,12 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  pCluster address of the candidate cluster
+     *  @param  pT describing the positions to be fitted
      *  @param  slidingFitWindow the sliding fit window
      *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
      */
-    ThreeDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
+    template <typename T>
+    ThreeDSlidingFitResult(const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
 
     /**
      *  @brief  Get the address of the cluster
@@ -133,6 +134,15 @@ public:
     float GetFitRms(const float rL) const;
 
     /**
+     *  @brief  Get longitudinal projection onto primary axis
+     *
+     *  @param  position the input coordinates
+     *
+     *  @return the longitudinal distance along the axis direction from the axis intercept
+     */
+    float GetLongitudinalDisplacement(const pandora::CartesianVector &position) const;
+
+    /**
      *  @brief  Get global fit position for a given longitudinal coordinate
      *
      *  @param  rL the longitudinal coordinate
@@ -151,33 +161,6 @@ public:
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
-
-    /**
-     *  @brief  Get longitudinal projection onto primary axis
-     *
-     *  @param  position the input coordinates
-     *
-     *  @return the longitudinal distance along the axis direction from the axis intercept
-     */
-    float GetLongitudinalDisplacement(const pandora::CartesianVector &position) const;
-
-    /**
-     *  @brief  Calculate the position and direction of the primary axis
-     *
-     *  @param  pCluster the address of the input cluster
-     *
-     *  @return pandora::TrackState object containing the position and direction
-     */
-    static pandora::TrackState GetPrimaryAxis(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Generate a seed vector to be used in calculating the orthogonal axes
-     *
-     *  @param  axisDirection  the primary axis
-     *
-     *  @return the seed direction vector
-     */
-    static pandora::CartesianVector GetSeedDirection(const pandora::CartesianVector &axisDirection);
 
 private:
     /**
@@ -199,7 +182,33 @@ private:
      */
     void GetGlobalDirection(const float dTdL1, const float dTdL2, pandora::CartesianVector &direction) const;
 
-    const pandora::Cluster           *m_pCluster;               ///< The address of the cluster
+    /**
+     *  @brief  Calculate the position and direction of the primary axis
+     *
+     *  @param  pCluster the address of the input cluster
+     *
+     *  @return pandora::TrackState object containing the position and direction
+     */
+    static pandora::TrackState GetPrimaryAxis(const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Calculate the position and direction of the primary axis
+     *
+     *  @param  pPointVector the address of the input point vector
+     *
+     *  @return pandora::TrackState object containing the position and direction
+     */
+    static pandora::TrackState GetPrimaryAxis(const pandora::CartesianPointVector *const pPointVector);
+
+    /**
+     *  @brief  Generate a seed vector to be used in calculating the orthogonal axes
+     *
+     *  @param  axisDirection  the primary axis
+     *
+     *  @return the seed direction vector
+     */
+    static pandora::CartesianVector GetSeedDirection(const pandora::CartesianVector &axisDirection);
+
     const pandora::TrackState         m_primaryAxis;            ///< The primary axis position and direction
     const pandora::CartesianVector    m_axisIntercept;          ///< The axis intercept position
     const pandora::CartesianVector    m_axisDirection;          ///< The axis direction vector
@@ -220,13 +229,6 @@ typedef std::vector<ThreeDSlidingFitResult> ThreeDSlidingFitResultList;
 typedef std::unordered_map<const pandora::Cluster*, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Cluster *ThreeDSlidingFitResult::GetCluster() const
-{
-    return m_pCluster;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::CartesianVector &ThreeDSlidingFitResult::GetAxisIntercept() const

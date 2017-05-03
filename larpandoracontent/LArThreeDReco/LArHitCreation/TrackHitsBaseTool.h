@@ -17,10 +17,6 @@
 namespace lar_content
 {
 
-class ThreeDHitCreationAlgorithm;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 /**
  *  @brief  TrackHitsBaseTool class
  */
@@ -32,11 +28,22 @@ public:
      */
     TrackHitsBaseTool();
 
-    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo, const pandora::CaloHitVector &inputTwoDHits,
-        pandora::CaloHitVector &newThreeDHits);
+    virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+        const pandora::CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector);
 
 protected:
     typedef std::map<pandora::HitType, TwoDSlidingFitResult> MatchedSlidingFitMap;
+
+    /**
+     *  @brief  Calculate 3D hits from an input list of 2D hits
+     *
+     *  @param  pAlgorithm the hit creation algorithm
+     *  @param  inputTwoDHits the input vector of 2D hits
+     *  @param  matchedSlidingFitMap the group of sliding fit results
+     *  @param  protoHitVector to receive the new three dimensional proto hits
+     */
+    virtual void GetTrackHits3D(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
+        ProtoHitVector &protoHitVector) const = 0;
 
     /**
      *  @brief  Calculate sliding fit results for clusters from each view
@@ -46,22 +53,10 @@ protected:
      */
     virtual void BuildSlidingFitMap(const pandora::ParticleFlowObject *const pPfo, MatchedSlidingFitMap &matchedSlidingFitMap) const;
 
-    /**
-     *  @brief  Calculate 3D hits from an input list of 2D hits
-     *
-     *  @param  pAlgorithm the hit creation algorithm
-     *  @param  inputTwoDHits the input vector of 2D hits
-     *  @param  matchedSlidingFitMap the group of sliding fit results
-     *  @param  newThreeDHits the output vector of 3D hits
-     */
-    virtual void CreateThreeDHits(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::CaloHitVector &inputTwoDHits,
-        const MatchedSlidingFitMap &matchedSlidingFitMap, pandora::CaloHitVector &newThreeDHits) const = 0;
-
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int    m_minViews;                 ///< The minimum number of views required for building hits
     unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    float           m_chiSquaredCut;            ///< The chi squared cut (accept only values below the cut value)
 };
 
 } // namespace lar_content

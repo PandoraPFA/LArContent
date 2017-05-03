@@ -97,21 +97,101 @@ double LArRotationalTransformationPlugin::GetSigmaUVW() const
 void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV,
     const double sigmaW, double &y, double &z, double &chiSquared) const
 {
-    // Obtain expression for chi2, differentiate wrt y and z, set both results to zero and solve simultaneously.
-    y = ((sigmaU * v * m_sinV) - (sigmaU * w * m_cosV * m_sinV) - (sigmaV * u * m_sinU) + (sigmaV * w * m_cosU * m_sinU) -
-         (sigmaW * u * m_cosV * m_sinUplusV) + (sigmaW * v * m_cosU * m_sinUplusV)) /
-        ((sigmaV * m_sinU * m_sinU) + (sigmaW * m_cosV * m_cosV * m_sinU * m_sinU) + (2. * sigmaW * m_cosU * m_cosV * m_sinU * m_sinV) +
-         (sigmaU * m_sinV * m_sinV) + (sigmaW * m_cosU * m_cosU * m_sinV * m_sinV));
+    const double sigmaU2(sigmaU * sigmaU), sigmaV2(sigmaV * sigmaV), sigmaW2(sigmaW * sigmaW);
 
-    z = ((sigmaU * w * m_sinV * m_sinV) + (sigmaV * w * m_sinU * m_sinU) +
-         (sigmaW * u * m_sinV * m_sinUplusV) + (sigmaW * v * m_sinU * m_sinUplusV)) /
-        ((sigmaV * m_sinU * m_sinU) + (sigmaW * m_cosV * m_cosV * m_sinU * m_sinU) + (2. * sigmaW * m_cosU * m_cosV * m_sinU * m_sinV) +
-         (sigmaU * m_sinV * m_sinV) + (sigmaW * m_cosU * m_cosU * m_sinV * m_sinV));
+    // Obtain expression for chi2, differentiate wrt y and z, set both results to zero and solve simultaneously. Here just paste-in result.
+    y = ((sigmaU2 * v * m_sinV) - (sigmaU2 * w * m_cosV * m_sinV) - (sigmaV2 * u * m_sinU) + (sigmaV2 * w * m_cosU * m_sinU) -
+         (sigmaW2 * u * m_cosV * m_sinUplusV) + (sigmaW2 * v * m_cosU * m_sinUplusV)) /
+        ((sigmaV2 * m_sinU * m_sinU) + (sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU) + (2. * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV) +
+         (sigmaU2 * m_sinV * m_sinV) + (sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV));
+
+    z = ((sigmaU2 * w * m_sinV * m_sinV) + (sigmaV2 * w * m_sinU * m_sinU) +
+         (sigmaW2 * u * m_sinV * m_sinUplusV) + (sigmaW2 * v * m_sinU * m_sinUplusV)) /
+        ((sigmaV2 * m_sinU * m_sinU) + (sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU) + (2. * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV) +
+         (sigmaU2 * m_sinV * m_sinV) + (sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV));
 
     const double deltaU(u - LArRotationalTransformationPlugin::YZtoU(y, z));
     const double deltaV(v - LArRotationalTransformationPlugin::YZtoV(y, z));
     const double deltaW(w - z);
-    chiSquared = ((deltaU * deltaU) / (sigmaU * sigmaU)) + ((deltaV * deltaV) / (sigmaV * sigmaV)) + ((deltaW * deltaW) / (sigmaW * sigmaW));
+    chiSquared = ((deltaU * deltaU) / sigmaU2) + ((deltaV * deltaV) / sigmaV2) + ((deltaW * deltaW) / sigmaW2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV,
+    const double sigmaW, const double uFit, const double vFit, const double wFit, const double sigmaFit, double &y, double &z, double &chiSquared) const
+{
+    const double sigmaU2(sigmaU * sigmaU), sigmaV2(sigmaV * sigmaV), sigmaW2(sigmaW * sigmaW), sigmaFit2(sigmaFit * sigmaFit);
+
+    // Obtain expression for chi2, differentiate wrt y and z, set both results to zero and solve simultaneously. Here just paste-in result.
+    y = (-uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_sinU - uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_sinU - sigmaV2 * sigmaW2 * sigmaFit2 * u * m_sinU -
+        sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_sinU + wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinU +
+        wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinU + sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosU * m_sinU +
+        sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosU * m_sinU + vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU +
+        vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU +
+        sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_cosV * m_sinU +
+        sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_cosV * m_sinU - uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinU -
+        uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU - sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosV * m_cosV * m_sinU -
+        sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosV * m_cosV * m_sinU + vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_sinV +
+        vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * v * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_sinV +
+        vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV + vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV +
+        sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_cosU * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_cosU * m_sinV -
+        wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinV - wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinV -
+        sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosV * m_sinV - sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosV * m_sinV -
+        uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinV -
+        uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinV -
+        sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_cosV * m_sinV -
+        sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_cosV * m_sinV)
+        /
+        (sigmaU2 * sigmaV2 * sigmaW2 * m_sinU * m_sinU +
+        sigmaU2 * sigmaV2 * sigmaFit2 * m_sinU * m_sinU + sigmaV2 * sigmaW2 * sigmaFit2 * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * m_sinU * m_sinU +
+        sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
+        sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
+        2 * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV +
+        2 * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV +
+        2 * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV +
+        2 * sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV + sigmaU2 * sigmaV2 * sigmaW2 * m_sinV * m_sinV +
+        sigmaU2 * sigmaV2 * sigmaFit2 * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_sinV * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * m_sinV * m_sinV +
+        sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
+        sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV);
+
+    z = (wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_sinU * m_sinU + wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_sinU * m_sinU +
+        sigmaU2 * sigmaV2 * sigmaFit2 * w * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_sinU * m_sinU +
+        vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinU * m_sinU + vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinU * m_sinU +
+        sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosV * m_sinU * m_sinU +
+        vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinU * m_sinV +
+        vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinU * m_sinV +
+        sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_sinU * m_sinV +
+        sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_sinU * m_sinV +
+        uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinU * m_sinV +
+        uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinU * m_sinV +
+        sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosV * m_sinU * m_sinV +
+        sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosV * m_sinU * m_sinV + wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_sinV * m_sinV +
+        wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_sinV * m_sinV + sigmaU2 * sigmaV2 * sigmaFit2 * w * m_sinV * m_sinV +
+        sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_sinV * m_sinV + uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinV * m_sinV +
+        uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinV * m_sinV + sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_sinV * m_sinV +
+        sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_sinV * m_sinV)
+        /
+        (sigmaU2 * sigmaV2 * sigmaW2 * m_sinU * m_sinU +
+        sigmaU2 * sigmaV2 * sigmaFit2 * m_sinU * m_sinU + sigmaV2 * sigmaW2 * sigmaFit2 * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * m_sinU * m_sinU +
+        sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
+        sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
+        2 * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV +
+        2 * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV +
+        2 * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV +
+        2 * sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV + sigmaU2 * sigmaV2 * sigmaW2 * m_sinV * m_sinV +
+        sigmaU2 * sigmaV2 * sigmaFit2 * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_sinV * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * m_sinV * m_sinV +
+        sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
+        sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV);
+
+    const double outputU(LArRotationalTransformationPlugin::YZtoU(y, z));
+    const double outputV(LArRotationalTransformationPlugin::YZtoV(y, z));
+
+    const double deltaU(u - outputU), deltaV(v - outputV), deltaW(w - z);
+    const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - z);
+
+    chiSquared = ((deltaU * deltaU) / sigmaU2) + ((deltaV * deltaV) / sigmaV2) + ((deltaW * deltaW) / sigmaW2) +
+        ((deltaUFit * deltaUFit) / sigmaFit2) + ((deltaVFit * deltaVFit) / sigmaFit2) + ((deltaWFit * deltaWFit) / sigmaFit2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

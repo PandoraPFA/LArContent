@@ -125,11 +125,12 @@ public:
     /**
      *  @brief  Constructor
      * 
-     *  @param  pCluster address of the candidate cluster
+     *  @param  pT describing the positions to be fitted
      *  @param  slidingFitWindow the sliding fit window
      *  @param  slidingFitLayerPitch the sliding fit pitch, units cm
      */
-    ThreeDSlidingConeFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
+    template <typename T>
+    ThreeDSlidingConeFitResult(const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
 
     /**
      *  @brief  Get the sliding fit result for the full cluster

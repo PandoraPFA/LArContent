@@ -28,7 +28,8 @@ EndAssociatedPfosTool::EndAssociatedPfosTool() :
     m_minVertexLongitudinalDistance(-2.5f),
     m_maxVertexLongitudinalDistance(20.f),
     m_maxVertexTransverseDistance(3.5f),
-    m_vertexAngularAllowance(3.f)
+    m_vertexAngularAllowance(3.f),
+    m_maxParentEndpointDistance(2.5f)
 {
 }
 
@@ -58,8 +59,8 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
             PfoInfo *const pParentPfoInfo(pfoInfoMap.at(pParentPfo));
             const LArPointingCluster parentPointingCluster(*(pParentPfoInfo->GetSlidingFitResult3D()));
 
-            const LArPointingCluster::Vertex &parentVertex(pParentPfoInfo->IsInnerLayerAssociated() ? parentPointingCluster.GetOuterVertex() : parentPointingCluster.GetInnerVertex());
-            const float neutrinoVertexDistance((parentVertex.GetPosition() - pNeutrinoVertex->GetPosition()).GetMagnitude());
+            const LArPointingCluster::Vertex &parentEndpoint(pParentPfoInfo->IsInnerLayerAssociated() ? parentPointingCluster.GetOuterVertex() : parentPointingCluster.GetInnerVertex());
+            const float neutrinoVertexDistance((parentEndpoint.GetPosition() - pNeutrinoVertex->GetPosition()).GetMagnitude());
 
             if (neutrinoVertexDistance < m_minNeutrinoVertexDistance)
                 continue;
@@ -72,15 +73,16 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
                 PfoInfo *const pPfoInfo(pfoInfoMap.at(pPfo));
 
                 const LArPointingCluster pointingCluster(*(pPfoInfo->GetSlidingFitResult3D()));
-                const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - parentVertex.GetPosition()).GetMagnitudeSquared() <
-                    (pointingCluster.GetOuterVertex().GetPosition() - parentVertex.GetPosition()).GetMagnitudeSquared());
+                const bool useInner((pointingCluster.GetInnerVertex().GetPosition() - parentEndpoint.GetPosition()).GetMagnitudeSquared() <
+                    (pointingCluster.GetOuterVertex().GetPosition() - parentEndpoint.GetPosition()).GetMagnitudeSquared());
 
                 const LArPointingCluster::Vertex &daughterVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
 
-                if (LArPointingClusterHelper::IsNode(parentVertex.GetPosition(), daughterVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-                    LArPointingClusterHelper::IsNode(daughterVertex.GetPosition(), parentVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-                    LArPointingClusterHelper::IsEmission(parentVertex.GetPosition(), daughterVertex,  m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
-                    LArPointingClusterHelper::IsEmission(daughterVertex.GetPosition(), parentVertex,  m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance))
+                if (LArPointingClusterHelper::IsNode(parentEndpoint.GetPosition(), daughterVertex, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+                    LArPointingClusterHelper::IsNode(daughterVertex.GetPosition(), parentEndpoint, m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+                    LArPointingClusterHelper::IsEmission(parentEndpoint.GetPosition(), daughterVertex, m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+                    LArPointingClusterHelper::IsEmission(daughterVertex.GetPosition(), parentEndpoint, m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+                    this->IsCloseToParentEndpoint(parentEndpoint.GetPosition(), pParentPfoInfo->GetCluster3D(), pPfoInfo->GetCluster3D()) )
                 {
                     associationsMade = true;
                     pParentPfoInfo->AddDaughterPfo(pPfoInfo->GetThisPfo());
@@ -91,6 +93,26 @@ void EndAssociatedPfosTool::Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, co
             }
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EndAssociatedPfosTool::IsCloseToParentEndpoint(const CartesianVector &parentEndpoint, const Cluster *const pParentCluster3D,
+    const Cluster *const pDaughterCluster3D) const
+{
+    try
+    {
+        CartesianVector parentPosition3D(0.f, 0.f, 0.f), daughterPosition3D(0.f, 0.f, 0.f);
+        LArClusterHelper::GetClosestPositions(pParentCluster3D, pDaughterCluster3D, parentPosition3D, daughterPosition3D);
+
+        if (((parentPosition3D - parentEndpoint).GetMagnitude() < m_maxParentEndpointDistance) && ((parentPosition3D - daughterPosition3D).GetMagnitude() < m_maxParentEndpointDistance))
+            return true;
+    }
+    catch (const StatusCodeException &)
+    {
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -111,6 +133,9 @@ StatusCode EndAssociatedPfosTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexAngularAllowance", m_vertexAngularAllowance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxParentEndpointDistance", m_maxParentEndpointDistance));
 
     return STATUS_CODE_SUCCESS;
 }

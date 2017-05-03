@@ -37,12 +37,13 @@ public:
     /**
      *  @brief  Constructor
      * 
-     *  @param  pCluster address of the candidate shower cluster
+     *  @param  pT describing the positions to be fitted
      *  @param  slidingFitWindow the sliding fit window
      *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
      *  @param  showerEdgeMultiplier artificially tune width of shower envelope so as to make it more/less inclusive
      */
-    TwoDSlidingShowerFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch,
+    template <typename T>
+    TwoDSlidingShowerFitResult(const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch,
         const float showerEdgeMultiplier = 1.f);
 
     /**
@@ -79,14 +80,28 @@ private:
     /**
      *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
      *
+     *  @param  pCluster the address of the input cluster
      *  @param  fullShowerFit the result of fitting the full shower
      *  @param  showerEdge the shower edge
      *  @param  showerEdgeMultiplier artificially tune width of shower envelope so as to make it more/less inclusive
-     * 
+     *
      *  @return the shower edge fit result
      */
-    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
-        const float showerEdgeMultiplier);
+    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const pandora::Cluster *const pCluster, const TwoDSlidingFitResult &fullShowerFit,
+        const ShowerEdge showerEdge, const float showerEdgeMultiplier);
+
+    /**
+     *  @brief  Perform two dimensional sliding fit to shower edge, using specified primary axis
+     *
+     *  @param  pPointVector the address of the input point vector
+     *  @param  fullShowerFit the result of fitting the full shower
+     *  @param  showerEdge the shower edge
+     *  @param  showerEdgeMultiplier artificially tune width of shower envelope so as to make it more/less inclusive
+     *
+     *  @return the shower edge fit result
+     */
+    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const pandora::CartesianPointVector *const pPointVector, const TwoDSlidingFitResult &fullShowerFit,
+        const ShowerEdge showerEdge, const float showerEdgeMultiplier);
 
     typedef std::pair<float, float> FitCoordinate;
     typedef std::vector<FitCoordinate> FitCoordinateList;

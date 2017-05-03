@@ -158,13 +158,13 @@ void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowO
                     const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
 
                     if (positionStatusCode != STATUS_CODE_SUCCESS)
-                        throw positionStatusCode;
+                        throw StatusCodeException(positionStatusCode);
 
                     CartesianVector direction(0.f, 0.f, 0.f);
                     const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
  
                     if (directionStatusCode != STATUS_CODE_SUCCESS)
-                        throw directionStatusCode;
+                        throw StatusCodeException(directionStatusCode);
 
                     const HitType hitType(pCaloHit2D->GetHitType());
                     const float wirePitch((TPC_VIEW_U == hitType) ? wirePitchU : (TPC_VIEW_V == hitType) ? wirePitchV : wirePitchW);

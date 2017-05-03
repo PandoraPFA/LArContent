@@ -47,12 +47,17 @@ LArPointingCluster::LArPointingCluster(const ThreeDSlidingFitResult &slidingFitR
 
 void LArPointingCluster::BuildPointingCluster(const TwoDSlidingFitResult &slidingFitResult)
 {
-    m_pCluster = slidingFitResult.GetCluster();
+    const HitType hitType(LArClusterHelper::GetClusterHitType(slidingFitResult.GetCluster()));
+
+    if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     if (slidingFitResult.GetMinLayer() >= slidingFitResult.GetMaxLayer())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const bool isInner((slidingFitResult.GetGlobalMinLayerPosition().GetZ() < slidingFitResult.GetGlobalMaxLayerPosition().GetZ()));
+
+    m_pCluster = slidingFitResult.GetCluster();
 
     const Vertex minVertex(m_pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
         slidingFitResult.GetMinLayerRms(), isInner);
@@ -67,13 +72,16 @@ void LArPointingCluster::BuildPointingCluster(const TwoDSlidingFitResult &slidin
 
 void LArPointingCluster::BuildPointingCluster(const ThreeDSlidingFitResult &slidingFitResult)
 {
-    m_pCluster = slidingFitResult.GetCluster();
+    if (TPC_3D != LArClusterHelper::GetClusterHitType(slidingFitResult.GetCluster()))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     if (slidingFitResult.GetMinLayer() >= slidingFitResult.GetMaxLayer())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const bool isInner((slidingFitResult.GetGlobalMinLayerPosition().GetZ() < slidingFitResult.GetGlobalMaxLayerPosition().GetZ()) && 
         (slidingFitResult.GetMinLayer() < slidingFitResult.GetMaxLayer()));
+
+    m_pCluster = slidingFitResult.GetCluster();
 
     const Vertex minVertex(m_pCluster, slidingFitResult.GetGlobalMinLayerPosition(), slidingFitResult.GetGlobalMinLayerDirection(),
         slidingFitResult.GetMinLayerRms(), isInner);
