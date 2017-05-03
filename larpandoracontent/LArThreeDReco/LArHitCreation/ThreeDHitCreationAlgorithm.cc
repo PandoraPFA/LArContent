@@ -85,6 +85,9 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
         if ((m_iterateTrackHits && LArPfoHelper::IsTrack(pPfo)) || (m_iterateShowerHits && LArPfoHelper::IsShower(pPfo)))
             this->IterativeTreatment(protoHitVector);
 
+        if (protoHitVector.empty())
+            continue;
+
         CaloHitList newThreeDHits;
         this->CreateThreeDHits(protoHitVector, newThreeDHits);
         this->AddThreeDHitsToPfo(pPfo, newThreeDHits);
