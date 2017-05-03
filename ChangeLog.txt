@@ -1,4 +1,44 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_05_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Restructured 3D spacepoint creation algorithm and tools, including new iterative refinement of output spacepoints.
+Added new rule for identifying end-associations to build particle hierarchy.
+Added support vector machine interface.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_03_00, v03_04_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Changes to the in-LArSoft build mechanics, from the LArSoft team.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_02_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added LArShowerPfo properties, to hold shower additional/derived shower properties whilst in Pandora.
+New LArPCAShowerParticleBuilding algorithm, currently build as part of larpandora translation module, populates LArShowerPfo properties.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_03
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added MaxFitSegmentIndex parameter to ThreeDTransverseTracks algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_02
+--------------------------------------------------------------------------------------------------------------------------------------------
+Improved tie-breaker conditions for extremal cluster definitions in ClusterAssociation algorithms.
+Reduced default value for NMaxTensorToolRepeats.
+Added configurable parameter to control max number of crossing vertex candidates.
+Protect against calls to calculate intersection of parallel lines, which raises an exception.
+Updated EventValidation algorithm to handle environment where neutrino-induced events are overlaid with cosmic-ray muon background.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Improved hit-association mechanics and identification of good primary particles in EventValidation algorithm.
+Added integrate over slices functionality to EventValidation algorithm.
+Changed default setting for crossing vertex candidates to off.
+Added ability to provide a cheated vertex x offset.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_01_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Overhauled track vs. shower identification, moving it into algorithms that deal with it explicitly, by characterising clusters and pfos.
