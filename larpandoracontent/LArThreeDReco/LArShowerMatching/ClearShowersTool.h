@@ -20,15 +20,6 @@ class ClearShowersTool : public ShowerTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ClearShowersTool();
@@ -84,13 +75,6 @@ private:
     unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
     float           m_minXOverlapSpanRatio;             ///< The min ratio between 1st and 2nd highest x-overlap spans for simple ambiguity resolution
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ClearShowersTool::Factory::CreateAlgorithmTool() const
-{
-    return new ClearShowersTool();
-}
 
 } // namespace lar_content
 

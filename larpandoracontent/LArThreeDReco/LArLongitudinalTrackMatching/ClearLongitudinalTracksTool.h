@@ -20,15 +20,6 @@ class ClearLongitudinalTracksTool : public LongitudinalTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ClearLongitudinalTracksTool();
@@ -49,13 +40,6 @@ private:
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ClearLongitudinalTracksTool::Factory::CreateAlgorithmTool() const
-{
-    return new ClearLongitudinalTracksTool();
-}
 
 } // namespace lar_content
 

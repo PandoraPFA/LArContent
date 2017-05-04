@@ -22,15 +22,6 @@ class VertexSplittingAlgorithm : public TwoDSlidingFitSplittingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     VertexSplittingAlgorithm();
@@ -42,13 +33,6 @@ private:
     float           m_splitDisplacementSquared;     ///< Maximum displacement squared
     float           m_vertexDisplacementSquared;    ///< Maximum displacement squared
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *VertexSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new VertexSplittingAlgorithm();
-}
 
 } // namespace lar_content
 

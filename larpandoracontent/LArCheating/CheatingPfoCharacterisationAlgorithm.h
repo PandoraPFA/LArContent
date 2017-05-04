@@ -18,26 +18,9 @@ namespace lar_content
  */
 class CheatingPfoCharacterisationAlgorithm : public PfoCharacterisationAlgorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingPfoCharacterisationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingPfoCharacterisationAlgorithm();
-}
 
 } // namespace lar_content
 

@@ -20,15 +20,6 @@ class ThreeViewShowerHitsTool : public ShowerHitsBaseTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeViewShowerHitsTool();
@@ -40,13 +31,6 @@ private:
 
     float     m_zTolerance;          ///< The z tolerance to use when looking for associated calo hits between views
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ThreeViewShowerHitsTool::Factory::CreateAlgorithmTool() const
-{
-    return new ThreeViewShowerHitsTool();
-}
 
 } // namespace lar_content
 

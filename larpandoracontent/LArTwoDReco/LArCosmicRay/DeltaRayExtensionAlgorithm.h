@@ -22,15 +22,6 @@ class DeltaRayExtensionAlgorithm : public ClusterExtensionAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     DeltaRayExtensionAlgorithm();
@@ -74,13 +65,6 @@ private:
     float    m_maxLongitudinalDisplacement;     ///<
     float    m_maxTransverseDisplacement;       ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *DeltaRayExtensionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new DeltaRayExtensionAlgorithm();
-}
 
 } // namespace lar_content
 

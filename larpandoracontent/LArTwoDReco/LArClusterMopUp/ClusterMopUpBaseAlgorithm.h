@@ -23,15 +23,6 @@ class ClusterMopUpBaseAlgorithm : public MopUpBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ClusterMopUpBaseAlgorithm();

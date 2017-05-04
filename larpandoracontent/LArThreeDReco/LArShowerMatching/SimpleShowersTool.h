@@ -20,15 +20,6 @@ class SimpleShowersTool : public ShowerTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     SimpleShowersTool();
@@ -57,13 +48,6 @@ private:
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *SimpleShowersTool::Factory::CreateAlgorithmTool() const
-{
-    return new SimpleShowersTool();
-}
 
 } // namespace lar_content
 

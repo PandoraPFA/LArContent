@@ -23,15 +23,6 @@ class NearbyClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     NearbyClusterMopUpAlgorithm();
@@ -46,13 +37,6 @@ private:
     float           m_minClusterSeparation;     ///< Minimum distance between parent and daughter clusters to declare clusters associated
     float           m_touchingDistance;         ///< Threshold (small) distance below which parent and daughter clusters are declated touching
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *NearbyClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new NearbyClusterMopUpAlgorithm();
-}
 
 } // namespace lar_content
 

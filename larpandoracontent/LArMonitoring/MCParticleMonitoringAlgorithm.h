@@ -22,15 +22,6 @@ class MCParticleMonitoringAlgorithm: public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     MCParticleMonitoringAlgorithm();
@@ -121,13 +112,6 @@ private:
     bool            m_useTrueNeutrinosOnly;     ///< Whether to consider only mc particles that were neutrino induced
     int             m_minHitsForDisplay;        ///< Min hits associated with mc particle to warrant display to terminal
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *MCParticleMonitoringAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new MCParticleMonitoringAlgorithm();
-}
 
 } // namespace lar_content
 

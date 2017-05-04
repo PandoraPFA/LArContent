@@ -20,15 +20,6 @@ class TwoDParticleCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TwoDParticleCreationAlgorithm();
@@ -52,13 +43,6 @@ private:
     unsigned int    m_minHitsInCluster;                     ///< Min number of hits for clusters to form pfos
     float           m_minClusterEnergy;                     ///< Min energy for clusters to form pfos
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TwoDParticleCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TwoDParticleCreationAlgorithm();
-}
 
 } // namespace lar_content
 

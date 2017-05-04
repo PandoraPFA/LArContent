@@ -22,15 +22,6 @@ class MissingTrackSegmentTool : public TransverseTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     MissingTrackSegmentTool();
@@ -202,15 +193,6 @@ private:
     float           m_mergeXContainmentTolerance;       ///< The tolerance in determining whether candidate cluster is contained in x window
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *MissingTrackSegmentTool::Factory::CreateAlgorithmTool() const
-{
-    return new MissingTrackSegmentTool();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline MissingTrackSegmentTool::SegmentOverlap::SegmentOverlap() :

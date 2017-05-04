@@ -20,15 +20,6 @@ class LayerSplittingAlgorithm : public ClusterSplittingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     LayerSplittingAlgorithm();
@@ -72,13 +63,6 @@ private:
     float           m_maxScatterCosTheta;     ///<
     float           m_maxSlidingCosTheta;     ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *LayerSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new LayerSplittingAlgorithm();
-}
 
 } // namespace lar_content
 

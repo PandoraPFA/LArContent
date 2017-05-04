@@ -21,15 +21,6 @@ class TracksCrossingGapsTool : public TransverseTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TracksCrossingGapsTool();
@@ -135,13 +126,6 @@ private:
     float           m_sampleStepSize;                   ///< The sampling step size used in association checks, units cm
     unsigned int    m_maxAngleRatio;                    ///< The max ratio allowed in the angle
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *TracksCrossingGapsTool::Factory::CreateAlgorithmTool() const
-{
-    return new TracksCrossingGapsTool();
-}
 
 } // namespace lar_content
 

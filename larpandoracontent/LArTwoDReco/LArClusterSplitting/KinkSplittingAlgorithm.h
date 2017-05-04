@@ -20,15 +20,6 @@ class KinkSplittingAlgorithm : public TwoDSlidingFitSplittingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     KinkSplittingAlgorithm();
@@ -50,13 +41,6 @@ private:
     float           m_maxScatterCosTheta;     ///<
     float           m_maxSlidingCosTheta;     ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *KinkSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new KinkSplittingAlgorithm();
-}
 
 } // namespace lar_content
 

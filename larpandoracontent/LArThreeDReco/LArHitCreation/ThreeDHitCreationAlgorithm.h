@@ -168,15 +168,6 @@ public:
     ThreeDHitCreationAlgorithm();
 
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Get the subset of a provided calo hit vector corresponding to a specified hit type
      *
      *  @param  inputCaloHitVector the input calo hit vector
@@ -292,14 +283,6 @@ private:
     double                  m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDHitCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDHitCreationAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ThreeDHitCreationAlgorithm::TrajectorySample::TrajectorySample(const pandora::CartesianVector &position, const pandora::HitType hitType, const double sigma) :

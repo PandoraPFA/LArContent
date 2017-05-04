@@ -27,15 +27,6 @@ class CrossedTrackSplittingAlgorithm : public TwoDSlidingFitSplittingAndSwitchin
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CrossedTrackSplittingAlgorithm();
@@ -71,13 +62,6 @@ private:
     float                   m_searchRegion1D;                   ///< Search region, applied to each dimension, for look-up from kd-trees
     ClusterToClustersMap    m_nearbyClusters;                   ///< The nearby clusters map
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CrossedTrackSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CrossedTrackSplittingAlgorithm();
-}
 
 } // namespace lar_content
 

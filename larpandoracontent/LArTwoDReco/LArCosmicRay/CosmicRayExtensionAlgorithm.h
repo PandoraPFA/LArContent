@@ -24,15 +24,6 @@ class CosmicRayExtensionAlgorithm : public ClusterExtensionAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CosmicRayExtensionAlgorithm();
@@ -71,13 +62,6 @@ private:
     float    m_minCosRelativeAngle;             ///<
     float    m_maxAverageRms;                   ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CosmicRayExtensionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CosmicRayExtensionAlgorithm();
-}
 
 } // namespace lar_content
 

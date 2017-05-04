@@ -29,15 +29,6 @@ class ThreeDTransverseTracksAlgorithm : public ThreeDTracksBaseAlgorithm<Transve
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeDTransverseTracksAlgorithm();
@@ -146,14 +137,6 @@ public:
      */
     virtual bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDTransverseTracksAlgorithm();
-}
 
 } // namespace lar_content
 

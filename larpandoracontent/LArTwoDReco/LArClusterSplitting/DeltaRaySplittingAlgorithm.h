@@ -20,15 +20,6 @@ class DeltaRaySplittingAlgorithm : public TwoDSlidingFitSplittingAndSplicingAlgo
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     DeltaRaySplittingAlgorithm();
@@ -45,13 +36,6 @@ private:
     float         m_maxLongitudinalDisplacement;    ///<
     float         m_minCosRelativeAngle;            ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *DeltaRaySplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new DeltaRaySplittingAlgorithm();
-}
 
 } // namespace lar_content
 

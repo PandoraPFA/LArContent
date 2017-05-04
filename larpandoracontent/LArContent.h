@@ -8,10 +8,9 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
-#include "Pandora/Pandora.h"
+namespace pandora { class Pandora; }
 
-#include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
-#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
+namespace lar_content { class LArPseudoLayerPlugin; class LArTransformationPlugin; }
 
 /**
  *  @brief  LArContent class

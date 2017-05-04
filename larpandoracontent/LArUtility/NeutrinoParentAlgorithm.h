@@ -25,15 +25,6 @@ class NeutrinoParentAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     NeutrinoParentAlgorithm();
@@ -121,14 +112,6 @@ public:
     virtual void Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const NeutrinoParentAlgorithm::HitTypeToNameMap &caloHitListNames,
         const NeutrinoParentAlgorithm::HitTypeToNameMap &clusterListNames, NeutrinoParentAlgorithm::SliceList &sliceList) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *NeutrinoParentAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new NeutrinoParentAlgorithm();
-}
 
 } // namespace lar_content
 

@@ -20,15 +20,6 @@ class OvershootSplittingAlgorithm : public TwoDSlidingFitMultiSplitAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     OvershootSplittingAlgorithm();
@@ -82,13 +73,6 @@ private:
     float           m_maxIntersectDisplacement;
     float           m_minSplitDisplacement;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *OvershootSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new OvershootSplittingAlgorithm();
-}
 
 } // namespace lar_content
 

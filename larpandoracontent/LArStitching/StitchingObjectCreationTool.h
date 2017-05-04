@@ -21,15 +21,6 @@ class StitchingObjectCreationTool : public StitchingTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     StitchingObjectCreationTool();
@@ -129,13 +120,6 @@ private:
 
     bool            m_recreateTwoDContent;          ///< Whether to also recreate two dimensional hits and clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *StitchingObjectCreationTool::Factory::CreateAlgorithmTool() const
-{
-    return new StitchingObjectCreationTool();
-}
 
 } // namespace lar_content
 

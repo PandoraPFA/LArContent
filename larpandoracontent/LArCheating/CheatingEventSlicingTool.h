@@ -21,15 +21,6 @@ namespace lar_content
 class CheatingEventSlicingTool : public SlicingTool
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
     void Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const NeutrinoParentAlgorithm::HitTypeToNameMap &caloHitListNames,
         const NeutrinoParentAlgorithm::HitTypeToNameMap &clusterListNames, NeutrinoParentAlgorithm::SliceList &sliceList);
 
@@ -51,13 +42,6 @@ private:
 
     std::string     m_mcParticleListName;           ///< The name of the three d mc particle list name
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *CheatingEventSlicingTool::Factory::CreateAlgorithmTool() const
-{
-    return new CheatingEventSlicingTool();
-}
 
 } // namespace lar_content
 

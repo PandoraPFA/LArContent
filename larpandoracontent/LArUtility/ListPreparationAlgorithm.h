@@ -25,15 +25,6 @@ class ListPreparationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ListPreparationAlgorithm();
@@ -87,13 +78,6 @@ private:
     bool            m_selectNeutrinos;                  ///< Select MC particles and hits associated with neutrinos
     bool            m_selectCosmics;                    ///< Select MC particles and hits associated with cosmics
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ListPreparationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ListPreparationAlgorithm();
-}
 
 } // namespace lar_content
 

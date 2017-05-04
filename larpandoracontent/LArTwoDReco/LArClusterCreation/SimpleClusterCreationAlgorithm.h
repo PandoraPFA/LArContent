@@ -22,15 +22,6 @@ class SimpleClusterCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     SimpleClusterCreationAlgorithm();
@@ -80,13 +71,6 @@ private:
 
     float   m_clusteringWindowSquared;      ///< Maximum distance (squared) for two hits to be joined
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SimpleClusterCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SimpleClusterCreationAlgorithm();
-}
 
 } // namespace lar_content
 

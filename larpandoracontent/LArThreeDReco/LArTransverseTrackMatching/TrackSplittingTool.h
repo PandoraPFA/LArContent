@@ -20,15 +20,6 @@ class TrackSplittingTool : public TransverseTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TrackSplittingTool();
@@ -113,13 +104,6 @@ private:
     float           m_minSplitToVertexProjection;       ///< Min projected distance between split position and either inner or outer vertex of long cluster
     float           m_maxSplitVsFitPositionDistance;    ///< Max allowed distance between split position and sliding linear fit position at the split x coordinate
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *TrackSplittingTool::Factory::CreateAlgorithmTool() const
-{
-    return new TrackSplittingTool();
-}
 
 } // namespace lar_content
 

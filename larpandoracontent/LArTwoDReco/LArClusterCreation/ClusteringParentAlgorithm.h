@@ -20,15 +20,6 @@ class ClusteringParentAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ClusteringParentAlgorithm();
@@ -46,13 +37,6 @@ private:
     std::string     m_clusterListName;              ///< The name under which to save the new cluster list
     bool            m_replaceCurrentClusterList;    ///< Whether to subsequently use the new cluster list as the "current" list
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ClusteringParentAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ClusteringParentAlgorithm();
-}
 
 } // namespace lar_content
 

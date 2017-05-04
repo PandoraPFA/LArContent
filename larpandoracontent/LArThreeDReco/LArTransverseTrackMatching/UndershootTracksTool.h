@@ -20,15 +20,6 @@ class UndershootTracksTool : public ThreeDKinkBaseTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     UndershootTracksTool();
@@ -75,13 +66,6 @@ private:
     float           m_minImpactParameterCosTheta;       ///< The minimum cos theta (angle between vertex directions) for connecting broken clusters
     float           m_cosThetaCutForKinkSearch;         ///< The cos theta cut used for the kink search in three dimensions
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *UndershootTracksTool::Factory::CreateAlgorithmTool() const
-{
-    return new UndershootTracksTool();
-}
 
 } // namespace lar_content
 

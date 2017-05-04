@@ -22,15 +22,6 @@ class TrackConsolidationAlgorithm : public TwoDSlidingFitConsolidationAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TrackConsolidationAlgorithm();
@@ -64,13 +55,6 @@ private:
     float        m_minAssociatedSpan;          ///<
     float        m_minAssociatedFraction;      ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackConsolidationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TrackConsolidationAlgorithm();
-}
 
 } // namespace lar_content
 

@@ -29,15 +29,6 @@ class ThreeDShowersAlgorithm : public ThreeDBaseAlgorithm<ShowerOverlapResult>
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeDShowersAlgorithm();
@@ -197,14 +188,6 @@ public:
      */
     virtual bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDShowersAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDShowersAlgorithm();
-}
 
 } // namespace lar_content
 

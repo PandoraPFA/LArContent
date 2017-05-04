@@ -22,15 +22,6 @@ class ConeClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ConeClusterMopUpAlgorithm();
@@ -59,13 +50,6 @@ private:
     float           m_maxConeLengthMultiplier;  ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
     float           m_minBoundedFraction;       ///< The minimum cluster bounded fraction for merging
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ConeClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ConeClusterMopUpAlgorithm();
-}
 
 } // namespace lar_content
 

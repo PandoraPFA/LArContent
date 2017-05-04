@@ -16,18 +16,9 @@ namespace lar_content
 /**
  *  @brief  CosmicRayTrackMatchingAlgorithm class
  */
-class CosmicRayTrackMatchingAlgorithm : CosmicRayBaseMatchingAlgorithm
+class CosmicRayTrackMatchingAlgorithm : public CosmicRayBaseMatchingAlgorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -49,13 +40,6 @@ private:
     float          m_minXOverlapFraction;          ///< requirement on minimum X overlap fraction for associated clusters
     float          m_maxDisplacement;              ///< requirement on 3D consistency checks
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CosmicRayTrackMatchingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CosmicRayTrackMatchingAlgorithm();
-}
 
 } // namespace lar_content
 

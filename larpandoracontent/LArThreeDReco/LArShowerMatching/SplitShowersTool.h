@@ -20,15 +20,6 @@ class SplitShowersTool : public ShowerTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     SplitShowersTool();
@@ -153,13 +144,6 @@ private:
     float           m_vetoMergeXDifference;             ///< The x distance between split positions in two views below which may refuse a merge
     float           m_vetoMergeXOverlap;                ///< The x overlap between candidate cluster sliding fits below which may refuse a merge
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *SplitShowersTool::Factory::CreateAlgorithmTool() const
-{
-    return new SplitShowersTool();
-}
 
 } // namespace lar_content
 

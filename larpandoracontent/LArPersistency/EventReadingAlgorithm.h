@@ -26,15 +26,6 @@ class EventReadingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     EventReadingAlgorithm();
@@ -60,13 +51,6 @@ private:
     unsigned int            m_skipToEvent;                  ///< Index of first event to consider in input file
     pandora::FileReader    *m_pEventFileReader;             ///< Address of the event file reader
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *EventReadingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new EventReadingAlgorithm();
-}
 
 } // namespace lar_content
 

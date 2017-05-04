@@ -23,15 +23,6 @@ class CosmicRayTrackRecoveryAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CosmicRayTrackRecoveryAlgorithm();
@@ -187,13 +178,6 @@ private:
     std::string    m_inputClusterListNameW;     ///<
     std::string    m_outputPfoListName;         ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CosmicRayTrackRecoveryAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CosmicRayTrackRecoveryAlgorithm();
-}
 
 } // namespace lar_content
 

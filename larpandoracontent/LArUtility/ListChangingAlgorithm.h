@@ -18,16 +18,6 @@ namespace lar_content
  */
 class ListChangingAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -37,13 +27,6 @@ private:
     std::string     m_vertexListName;   ///< The vertex list name to set as the current vertex list
     std::string     m_pfoListName;      ///< The pfo list name to set as the current pfo list
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ListChangingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ListChangingAlgorithm();
-}
 
 } // namespace lar_content
 

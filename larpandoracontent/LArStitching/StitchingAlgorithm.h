@@ -25,15 +25,6 @@ class StitchingTool;
 class StitchingAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     typedef std::unordered_map<const pandora::ParticleFlowObject*, int> PfoToVolumeIdMap;
 
     /**
@@ -96,15 +87,6 @@ public:
     virtual void Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &stitchingInfo) = 0;
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *StitchingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new StitchingAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const std::string &StitchingAlgorithm::GetNewClusterListName() const

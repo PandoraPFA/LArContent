@@ -20,15 +20,6 @@ class ShowerTensorVisualizationTool : public ShowerTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ShowerTensorVisualizationTool();
@@ -43,13 +34,6 @@ private:
     bool            m_showEachIndividualElement;    ///< Whether to draw each individual tensor element
     bool            m_showContext;                  ///< Whether to show input cluster lists to add context to tensor elements
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ShowerTensorVisualizationTool::Factory::CreateAlgorithmTool() const
-{
-    return new ShowerTensorVisualizationTool();
-}
 
 } // namespace lar_content
 

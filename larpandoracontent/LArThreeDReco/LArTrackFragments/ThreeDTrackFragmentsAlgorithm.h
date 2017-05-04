@@ -31,15 +31,6 @@ class ThreeDTrackFragmentsAlgorithm : public ThreeDTracksBaseAlgorithm<FragmentO
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeDTrackFragmentsAlgorithm();
@@ -182,13 +173,6 @@ public:
      */
     virtual bool Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDTrackFragmentsAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDTrackFragmentsAlgorithm();
-}
 
 } // namespace lar_content
 

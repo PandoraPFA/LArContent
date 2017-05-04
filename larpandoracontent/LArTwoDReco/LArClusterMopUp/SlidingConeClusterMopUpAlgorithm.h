@@ -22,15 +22,6 @@ class SlidingConeClusterMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     SlidingConeClusterMopUpAlgorithm();
@@ -153,14 +144,6 @@ private:
     float                   m_coneBoundedFraction;          ///< The minimum cluster bounded fraction for association
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SlidingConeClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SlidingConeClusterMopUpAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction, const float meanRT) :

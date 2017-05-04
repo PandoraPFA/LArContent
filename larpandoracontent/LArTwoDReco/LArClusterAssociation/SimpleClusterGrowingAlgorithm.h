@@ -22,15 +22,6 @@ class SimpleClusterGrowingAlgorithm : public ClusterGrowingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     SimpleClusterGrowingAlgorithm();
@@ -43,13 +34,6 @@ private:
 
     unsigned int m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per seed cluster
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SimpleClusterGrowingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SimpleClusterGrowingAlgorithm();
-}
 
 } // namespace lar_content
 

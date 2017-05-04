@@ -22,15 +22,6 @@ class SlidingConePfoMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     SlidingConePfoMopUpAlgorithm();
@@ -180,14 +171,6 @@ private:
     float                   m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SlidingConePfoMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SlidingConePfoMopUpAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline SlidingConePfoMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2) :
