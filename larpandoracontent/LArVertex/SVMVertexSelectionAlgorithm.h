@@ -267,9 +267,15 @@ private:
      *  @param  bestRegionVertices the best region vertices
      *  @param  vertexFeatureInfoMap the vertex feature info map
      *  @param  eventFeatureList the list of event features
+     *  @param  kdTreeMap
      */
     void ProduceTrainingSets(const pandora::VertexVector &vertexVector, const pandora::VertexVector &bestRegionVertices,
-        const VertexFeatureInfoMap &vertexFeatureInfoMap, const SupportVectorMachine::DoubleVector &eventFeatureList) const;
+        VertexFeatureInfoMap &vertexFeatureInfoMap, const SupportVectorMachine::DoubleVector &eventFeatureList,const KDTreeMap &kdTreeMap) const;
+
+    /**
+     *  @brief  ...
+     */
+    void CalculateRPhiScores(const pandora::VertexVector &vertexVector, VertexFeatureInfoMap &vertexFeatureInfoMap, const KDTreeMap &kdTreeMap) const;
 
     /**
      *  @brief  Get the interaction type string
@@ -291,12 +297,13 @@ private:
      *  @param  trainingOutputFile the training set output file
      *  @param  eventFeatureList the event feature list
      *  @param  maxRadius the maximum allowed radius for the 'best' vertex
+     *  @param  useRPhi whether to include the r/phi feature
      *
      *  @return address of the vertex used as the 'best' vertex in the classifier
      */
     const pandora::Vertex * ProduceTrainingExamples(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
         std::bernoulli_distribution &coinFlip, std::mt19937 &generator, const std::string &interactionType, const std::string &trainingOutputFile,
-        const SupportVectorMachine::DoubleVector &eventFeatureList, const float maxRadius) const;
+        const SupportVectorMachine::DoubleVector &eventFeatureList, const float maxRadius, const bool useRPhi) const;
 
     /**
      *  @brief  Use the MC information to get the best vertex from a list
@@ -312,8 +319,9 @@ private:
      *
      *  @param  vertexFeatureInfo the vertex feature info
      *  @param  featureVector the vector of floats to append
+     *  @param  useRPhi whether to include the r/phi feature
      */
-    void AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo, SupportVectorMachine::DoubleVector &featureVector) const;
+    void AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo, SupportVectorMachine::DoubleVector &featureVector, const bool useRPhi) const;
 
     /**
      *  @brief  Used a binary classifier to compare a set of vertices and pick the best one
@@ -322,11 +330,12 @@ private:
      *  @param  vertexFeatureInfoMap the vertex feature info map
      *  @param  eventFeatureList the event feature list
      *  @param  supportVectorMachine the support vector machine classifier
+     *  @param  useRPhi whether to include the r/phi feature
      *
      *  @return address of the best vertex
      */
     const pandora::Vertex * CompareVertices(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-        const SupportVectorMachine::DoubleVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine) const;
+        const SupportVectorMachine::DoubleVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const;
 
     /**
      *  @brief  Populate the final vertex score list using the r/phi score to find the best vertex in the vicinity
@@ -377,6 +386,7 @@ private:
     float                 m_regionRadius;                        ///< The radius for a vertex region
     float                 m_rPhiFineTuningRadius;                ///< The maximum distance the RPhi tune can move a vertex
     float                 m_maxTrueVertexRadius;                 ///< The maximum distance at which a vertex candidate can be considered the 'true' vertex
+    bool                  m_useRPhiFeatureForRegion;             ///< Whether to use the r/phi feature for the region vertex
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -389,8 +399,8 @@ inline pandora::Algorithm *SVMVertexSelectionAlgorithm::Factory::CreateAlgorithm
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SVMVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature,
-    const float energyKick, const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
+inline SVMVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, 
+    const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
     m_energyKick(energyKick),
