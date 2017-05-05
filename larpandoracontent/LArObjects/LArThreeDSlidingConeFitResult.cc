@@ -171,7 +171,7 @@ void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersFor
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult<pandora::Cluster>(const pandora::Cluster *const, const unsigned int, const float);
-template ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult<pandora::CartesianPointVector>(const pandora::CartesianPointVector *const, const unsigned int, const float);
+template ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const pandora::Cluster *const, const unsigned int, const float);
+template ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const pandora::CartesianPointVector *const, const unsigned int, const float);
 
 } // namespace lar_content
