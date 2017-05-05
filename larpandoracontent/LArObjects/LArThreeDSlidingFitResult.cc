@@ -270,7 +270,7 @@ CartesianVector ThreeDSlidingFitResult::GetSeedDirection(const CartesianVector &
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template ThreeDSlidingFitResult::ThreeDSlidingFitResult<pandora::Cluster>(const pandora::Cluster *const, const unsigned int, const float);
-template ThreeDSlidingFitResult::ThreeDSlidingFitResult<pandora::CartesianPointVector>(const pandora::CartesianPointVector *const, const unsigned int, const float);
+template ThreeDSlidingFitResult::ThreeDSlidingFitResult(const pandora::Cluster *const, const unsigned int, const float);
+template ThreeDSlidingFitResult::ThreeDSlidingFitResult(const pandora::CartesianPointVector *const, const unsigned int, const float);
 
 } // namespace lar_content

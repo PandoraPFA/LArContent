@@ -155,7 +155,7 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const Cart
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult<pandora::Cluster>(const pandora::Cluster *const, const unsigned int, const float, const float);
-template TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult<pandora::CartesianPointVector>(const pandora::CartesianPointVector *const, const unsigned int, const float, const float);
+template TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const pandora::Cluster *const, const unsigned int, const float, const float);
+template TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const pandora::CartesianPointVector *const, const unsigned int, const float, const float);
 
 } // namespace lar_content
