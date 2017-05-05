@@ -19,6 +19,7 @@
 
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
 
 
 using namespace pandora;
@@ -779,6 +780,37 @@ StatusCode TrackShowerIdFeatureTool::MipEnergyFeatureTool::ReadSettings(const Ti
     return STATUS_CODE_SUCCESS;
 }
     
+//------------------------------------------------------------------------------------------------------------------------------------------
+ //------------------------------------------------------------------------------------------------------------------------------------------   
+ TrackShowerIdFeatureTool::VertexDistanceFeatureTool::MipEnergyFeatureTool() 
+{
+}
+//------------------------------------------------------------------------------------------------------------------------------------------   
+
+void TrackShowerIdFeatureTool::VertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm *const pAlgorithm, 
+           const pandora::Cluster * const pCluster) 
+{
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        
+  
+    float vertexDistancethis->CalculateVertexDistance(pCluster));
+  
+    featureVector.push_back(vertexDistance); 
+    
+} 
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+float TrackShowerIdFeatureTool::VertexDistanceFeatureTool::CalculateVertexDistance(const pandora::Cluster * const pCluster) const
+{
+    
+    CartesianVector vertexPosition2D(0.f, 0.f, 0.f);
+    //this is copied from ClusterCharacterisation, remove from one 
+    float vertexDistance = ClusterCharacterisationAlgorithm::GetVertexDistance(this, pCluster, vertexPosition2D);
+
+  return vertexDistance;                                                               
+}
 
 } // namespace lar_content
 

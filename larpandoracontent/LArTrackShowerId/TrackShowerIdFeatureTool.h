@@ -144,6 +144,44 @@ float     m_slidingShowerFitWindow;
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
+class VertexDistanceFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
+{
+public:
+
+    /**
+    *  @brief  Factory class for instantiating algorithm tool
+    */
+    class Factory : public pandora::AlgorithmToolFactory
+    {
+    public:
+    pandora::AlgorithmTool *CreateAlgorithmTool() const;
+    };
+//--------------------------------------------------------------------------------------------------------------------------------------
+
+    /**
+    *  @brief  Default constructor
+*/
+VertexDistanceFeatureTool();
+
+/**
+*  @brief  Run the tool
+* 
+*  @param  pAlgorithm address of the calling algorithm
+*  @param  pCluster, the cluster we are characterizing
+*  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
+* 
+*  @return the global asymmetry feature
+*/
+void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
+
+private:
+pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+float CalculateVertexDistance(const pandora::Cluster * const pCluster) const;
+
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------------------
 
 class StraightLineLengthFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
@@ -320,6 +358,11 @@ float m_mipCorrectionPerHit;
 };
 
 };
+
+
+//--------------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------------------
+
 
 /*inline pandora::Algorithm *TrackShowerIdFeatureTool::Factory::CreateAlgorithm() const
 {
