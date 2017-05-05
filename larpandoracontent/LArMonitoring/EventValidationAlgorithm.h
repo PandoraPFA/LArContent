@@ -30,15 +30,6 @@ class EventValidationAlgorithm: public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     EventValidationAlgorithm();
@@ -456,13 +447,6 @@ private:
     int                     m_fileIdentifier;               ///< The input file identifier
     int                     m_eventNumber;                  ///< The event number
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *EventValidationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new EventValidationAlgorithm();
-}
 
 } // namespace lar_content
 

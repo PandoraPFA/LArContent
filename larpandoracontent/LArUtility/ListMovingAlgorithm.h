@@ -18,16 +18,6 @@ namespace lar_content
  */
 class ListMovingAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -38,13 +28,6 @@ private:
 
     std::string             m_prefix;               ///< The prefix to add to the list names, in order to yield the output list names
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ListMovingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ListMovingAlgorithm();
-}
 
 } // namespace lar_content
 

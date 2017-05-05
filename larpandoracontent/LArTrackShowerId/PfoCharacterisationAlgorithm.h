@@ -20,15 +20,6 @@ class PfoCharacterisationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     PfoCharacterisationAlgorithm();
@@ -73,13 +64,6 @@ private:
     float                   m_vertexDistanceRatioCut;       ///< The maximum ratio of vertex separation to straight line length to qualify as a track
     float                   m_showerWidthRatioCut;          ///< The maximum ratio of shower fit width to straight line length to qualify as a track
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *PfoCharacterisationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new PfoCharacterisationAlgorithm();
-}
 
 } // namespace lar_content
 

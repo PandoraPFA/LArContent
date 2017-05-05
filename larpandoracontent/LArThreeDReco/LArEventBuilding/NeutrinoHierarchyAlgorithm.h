@@ -28,15 +28,6 @@ class NeutrinoHierarchyAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     NeutrinoHierarchyAlgorithm();
@@ -260,15 +251,6 @@ public:
     virtual void Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *NeutrinoHierarchyAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new NeutrinoHierarchyAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::ParticleFlowObject *NeutrinoHierarchyAlgorithm::PfoInfo::GetThisPfo() const

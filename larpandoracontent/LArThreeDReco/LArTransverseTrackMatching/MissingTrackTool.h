@@ -20,15 +20,6 @@ class MissingTrackTool : public TransverseTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     MissingTrackTool();
@@ -51,13 +42,6 @@ private:
     float           m_maxReducedChiSquared;         ///< The max reduced chi squared value for the unavailable tensor element
     float           m_minXOverlapFraction;          ///< The min x overlap fraction for the two available clusters in the tensor element
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *MissingTrackTool::Factory::CreateAlgorithmTool() const
-{
-    return new MissingTrackTool();
-}
 
 } // namespace lar_content
 

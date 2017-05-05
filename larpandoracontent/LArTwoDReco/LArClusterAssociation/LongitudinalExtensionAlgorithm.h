@@ -22,15 +22,6 @@ class LongitudinalExtensionAlgorithm : public ClusterExtensionAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     LongitudinalExtensionAlgorithm();
@@ -59,13 +50,6 @@ private:
     float   m_emissionMaxTransverseDisplacement;    ///<
     float   m_emissionMaxCosRelativeAngle;          ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *LongitudinalExtensionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new LongitudinalExtensionAlgorithm();
-}
 
 } // namespace lar_content
 

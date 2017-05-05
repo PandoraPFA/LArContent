@@ -20,15 +20,6 @@ class VertexAssociatedPfosTool : public PfoRelationTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     VertexAssociatedPfosTool();
@@ -43,13 +34,6 @@ private:
     float       m_maxVertexTransverseDistance;          ///< Vertex association check: max transverse distance cut
     float       m_vertexAngularAllowance;               ///< Vertex association check: pointing angular allowance in degrees
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *VertexAssociatedPfosTool::Factory::CreateAlgorithmTool() const
-{
-    return new VertexAssociatedPfosTool();
-}
 
 } // namespace lar_content
 

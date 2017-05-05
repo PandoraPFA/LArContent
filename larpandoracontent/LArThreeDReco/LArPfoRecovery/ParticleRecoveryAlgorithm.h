@@ -22,15 +22,6 @@ class ParticleRecoveryAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ParticleRecoveryAlgorithm();
@@ -203,14 +194,6 @@ private:
     float                       m_pseudoChi2Cut;                ///< The selection cut on the matched chi2
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ParticleRecoveryAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ParticleRecoveryAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::ClusterList &ParticleRecoveryAlgorithm::SimpleOverlapTensor::GetKeyClusters() const

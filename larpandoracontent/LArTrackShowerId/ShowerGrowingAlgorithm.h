@@ -28,15 +28,6 @@ class ShowerGrowingAlgorithm : public BranchGrowingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ShowerGrowingAlgorithm();
@@ -165,13 +156,6 @@ private:
     float                       m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
     float                       m_vertexAngularAllowance;       ///< Vertex association check: pointing angular allowance in degrees
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ShowerGrowingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ShowerGrowingAlgorithm();
-}
 
 } // namespace lar_content
 

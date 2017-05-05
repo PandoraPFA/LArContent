@@ -24,15 +24,6 @@ class LongitudinalAssociationAlgorithm : public ClusterAssociationAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     LongitudinalAssociationAlgorithm();
@@ -76,13 +67,6 @@ private:
     float        m_hitSizeZ;                    ///< estimated hit size in z (wire number) dimension, units cm
     float        m_hitSizeX;                    ///< estimated hit size in x (drift time) dimension, units cm
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *LongitudinalAssociationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new LongitudinalAssociationAlgorithm();
-}
 
 } // namespace lar_content
 

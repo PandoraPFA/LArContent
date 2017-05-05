@@ -20,15 +20,6 @@ class EnergyKickVertexSelectionAlgorithm : public VertexSelectionBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     EnergyKickVertexSelectionAlgorithm();
@@ -172,14 +163,6 @@ private:
     unsigned int            m_maxAsymmetryNClusters;        ///< The max number of associated clusters to calculate the asymmetry
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *EnergyKickVertexSelectionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new EnergyKickVertexSelectionAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::CartesianVector &EnergyKickVertexSelectionAlgorithm::SlidingFitData::GetMinLayerDirection() const

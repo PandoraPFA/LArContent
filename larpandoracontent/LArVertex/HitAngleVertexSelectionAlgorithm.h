@@ -20,15 +20,6 @@ class HitAngleVertexSelectionAlgorithm : public VertexSelectionBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     HitAngleVertexSelectionAlgorithm();
@@ -169,14 +160,6 @@ private:
     bool            m_enableFolding;                ///< Whether to enable folding of -pi -> +pi phi distribution into 0 -> +pi region only
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *HitAngleVertexSelectionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new HitAngleVertexSelectionAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline HitAngleVertexSelectionAlgorithm::KernelEstimate::KernelEstimate(const float sigma) :

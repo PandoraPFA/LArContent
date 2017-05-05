@@ -22,15 +22,6 @@ class DeltaRayIdentificationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     DeltaRayIdentificationAlgorithm();
@@ -125,13 +116,6 @@ private:
     float        m_minParentLengthSquared;     ///< Minimum allowed length of parent cosmic ray
     float        m_maxDaughterLengthSquared;   ///< Maximum allowed length of daughter delta ray
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *DeltaRayIdentificationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new DeltaRayIdentificationAlgorithm();
-}
 
 } // namespace lar_content
 

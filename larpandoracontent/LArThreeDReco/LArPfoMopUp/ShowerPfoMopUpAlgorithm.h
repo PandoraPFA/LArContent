@@ -20,15 +20,6 @@ class ShowerPfoMopUpAlgorithm : public VertexBasedPfoMopUpAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ShowerPfoMopUpAlgorithm();
@@ -41,13 +32,6 @@ private:
     float                   m_maxVertexLongitudinalDistance;    ///< Vertex association check: max longitudinal distance cut
     float                   m_vertexAngularAllowance;           ///< Vertex association check: pointing angular allowance in degrees
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ShowerPfoMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ShowerPfoMopUpAlgorithm();
-}
 
 } // namespace lar_content
 

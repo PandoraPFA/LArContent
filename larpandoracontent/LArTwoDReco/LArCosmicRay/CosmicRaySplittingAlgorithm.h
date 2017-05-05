@@ -22,15 +22,6 @@ class CosmicRaySplittingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CosmicRaySplittingAlgorithm();
@@ -177,13 +168,6 @@ private:
     float          m_maxLongitudinalDisplacement;          ///< maximum longitudinal displacement of associated clusters
     float          m_maxLongitudinalDisplacementSquared;   ///< longitudinal displacement squared
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CosmicRaySplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CosmicRaySplittingAlgorithm();
-}
 
 } // namespace lar_content
 

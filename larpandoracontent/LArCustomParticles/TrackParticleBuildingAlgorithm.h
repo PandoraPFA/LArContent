@@ -26,15 +26,6 @@ public:
      */
     TrackParticleBuildingAlgorithm();
 
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -60,13 +51,6 @@ private:
     bool            m_cosmicMode;             ///<
     unsigned int    m_slidingFitHalfWindow;   ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackParticleBuildingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TrackParticleBuildingAlgorithm();
-}
 
 } // namespace lar_content
 

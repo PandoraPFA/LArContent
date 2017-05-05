@@ -22,15 +22,6 @@ class EndAssociatedPfosTool : public PfoRelationTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     EndAssociatedPfosTool();
@@ -59,13 +50,6 @@ private:
     float       m_vertexAngularAllowance;               ///< Vertex association check: pointing angular allowance in degrees
     float       m_maxParentEndpointDistance;            ///< Max distance between candidate parent endpoint and candidate daughter
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *EndAssociatedPfosTool::Factory::CreateAlgorithmTool() const
-{
-    return new EndAssociatedPfosTool();
-}
 
 } // namespace lar_content
 

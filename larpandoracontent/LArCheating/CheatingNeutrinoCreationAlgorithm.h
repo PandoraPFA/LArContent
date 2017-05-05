@@ -24,15 +24,6 @@ class CheatingNeutrinoCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CheatingNeutrinoCreationAlgorithm();
@@ -112,13 +103,6 @@ private:
 
     float                   m_vertexTolerance;              ///< Tolerance, 3d displacement, allowed between reco neutrino vertex and mc neutrino endpoint
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingNeutrinoCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingNeutrinoCreationAlgorithm();
-}
 
 } // namespace lar_content
 

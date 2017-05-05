@@ -20,15 +20,6 @@ class NeutrinoPropertiesAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     NeutrinoPropertiesAlgorithm();
@@ -58,13 +49,6 @@ private:
 
     bool            m_includeIsolatedHits;      ///< Whether to include isolated hits when counting 2d hits in pfo chain
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *NeutrinoPropertiesAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new NeutrinoPropertiesAlgorithm();
-}
 
 } // namespace lar_content
 

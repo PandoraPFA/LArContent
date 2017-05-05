@@ -24,15 +24,6 @@ class TransverseExtensionAlgorithm : public ClusterExtensionAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TransverseExtensionAlgorithm();
@@ -57,13 +48,6 @@ private:
     float m_maxLongitudinalDisplacement;   ///<
     float m_maxTransverseDisplacement;     ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TransverseExtensionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TransverseExtensionAlgorithm();
-}
 
 } // namespace lar_content
 

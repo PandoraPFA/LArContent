@@ -22,15 +22,6 @@ class SimpleClusterMergingAlgorithm : public ClusterMergingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     SimpleClusterMergingAlgorithm();
@@ -54,13 +45,6 @@ private:
     unsigned int m_minCaloHitsPerCluster;    ///< The min number of calo hits per candidate cluster
     float        m_maxClusterSeparation;     ///< Maximum distance at which clusters can be joined
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SimpleClusterMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SimpleClusterMergingAlgorithm();
-}
 
 } // namespace lar_content
 

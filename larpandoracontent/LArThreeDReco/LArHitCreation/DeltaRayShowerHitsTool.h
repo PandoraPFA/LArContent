@@ -19,15 +19,6 @@ namespace lar_content
 class DeltaRayShowerHitsTool : public HitCreationBaseTool
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
     virtual void Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
         const pandora::CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector);
 
@@ -42,13 +33,6 @@ private:
     void CreateDeltaRayShowerHits3D(const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &parentHits3D,
         ProtoHitVector &protoHitVector) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *DeltaRayShowerHitsTool::Factory::CreateAlgorithmTool() const
-{
-    return new DeltaRayShowerHitsTool();
-}
 
 } // namespace lar_content
 

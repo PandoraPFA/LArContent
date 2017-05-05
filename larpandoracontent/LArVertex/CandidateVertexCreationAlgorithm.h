@@ -24,15 +24,6 @@ class CandidateVertexCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CandidateVertexCreationAlgorithm();
@@ -158,13 +149,6 @@ private:
     float                   m_maxCrossingSeparationSquared;     ///< The separation (squared) between spacepoints below which a crossing can be identified
     float                   m_minNearbyCrossingDistanceSquared; ///< The minimum allowed distance between identified crossing positions
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CandidateVertexCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CandidateVertexCreationAlgorithm();
-}
 
 } // namespace lar_content
 

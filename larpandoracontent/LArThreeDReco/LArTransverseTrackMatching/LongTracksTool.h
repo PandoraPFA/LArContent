@@ -20,15 +20,6 @@ class LongTracksTool : public TransverseTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     LongTracksTool();
@@ -82,13 +73,6 @@ private:
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
     unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *LongTracksTool::Factory::CreateAlgorithmTool() const
-{
-    return new LongTracksTool();
-}
 
 } // namespace lar_content
 

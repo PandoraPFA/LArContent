@@ -20,15 +20,6 @@ class BranchSplittingAlgorithm : public TwoDSlidingFitSplittingAndSplicingAlgori
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     BranchSplittingAlgorithm();
@@ -46,13 +37,6 @@ private:
     float           m_minCosRelativeAngle;              ///< 
     float           m_projectionAngularAllowance;       ///< 
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *BranchSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new BranchSplittingAlgorithm();
-}
 
 } // namespace lar_content
 

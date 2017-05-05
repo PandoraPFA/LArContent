@@ -18,16 +18,6 @@ namespace lar_content
  */
 class ListMergingAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -38,13 +28,6 @@ private:
     pandora::StringVector   m_sourcePfoListNames;       ///< The source pfo list names
     pandora::StringVector   m_targetPfoListNames;       ///< The target pfo list names
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ListMergingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ListMergingAlgorithm();
-}
 
 } // namespace lar_content
 

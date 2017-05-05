@@ -25,15 +25,6 @@ class CheatingPfoCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CheatingPfoCreationAlgorithm();
@@ -103,13 +94,6 @@ private:
     unsigned int    m_nHitsForGoodHitType;          ///< The min number of hits of a particular hit type in order to declare the hit type is good
     ParticleIdList  m_particleIdList;               ///< The list of particle ids to consider for pfo creation; will consider all ids if empty
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingPfoCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingPfoCreationAlgorithm();
-}
 
 } // namespace lar_content
 

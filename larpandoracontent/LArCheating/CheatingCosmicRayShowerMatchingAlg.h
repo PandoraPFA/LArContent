@@ -18,16 +18,6 @@ namespace lar_content
  */
 class CheatingCosmicRayShowerMatchingAlg : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -48,13 +38,6 @@ private:
     pandora::StringVector   m_inputClusterListNamesV;     ///< The input cluster list names for the v view
     pandora::StringVector   m_inputClusterListNamesW;     ///< The input cluster list names for the w view
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingCosmicRayShowerMatchingAlg::Factory::CreateAlgorithm() const
-{
-    return new CheatingCosmicRayShowerMatchingAlg();
-}
 
 } // namespace lar_content
 

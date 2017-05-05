@@ -20,15 +20,6 @@ namespace lar_content
 class StitchingPfoMergingTool : public StitchingTool
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
     void Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &stitchingInfo);
 
 private:
@@ -54,13 +45,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *StitchingPfoMergingTool::Factory::CreateAlgorithmTool() const
-{
-    return new StitchingPfoMergingTool();
-}
 
 } // namespace lar_content
 

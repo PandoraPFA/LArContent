@@ -29,15 +29,6 @@ class ThreeDRemnantsAlgorithm : public ThreeDBaseAlgorithm<float>
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeDRemnantsAlgorithm();
@@ -81,14 +72,6 @@ public:
      */
     virtual bool Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDRemnantsAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDRemnantsAlgorithm();
-}
 
 } // namespace lar_content
 

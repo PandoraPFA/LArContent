@@ -20,15 +20,6 @@ class ClearTracksTool : public TransverseTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ClearTracksTool();
@@ -50,13 +41,6 @@ private:
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ClearTracksTool::Factory::CreateAlgorithmTool() const
-{
-    return new ClearTracksTool();
-}
 
 } // namespace lar_content
 

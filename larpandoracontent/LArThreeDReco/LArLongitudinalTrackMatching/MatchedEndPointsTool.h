@@ -20,15 +20,6 @@ class MatchedEndPointsTool : public LongitudinalTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     MatchedEndPointsTool();
@@ -59,13 +50,6 @@ private:
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     float           m_maxEndPointChi2;                    ///< The max chi2 of matched vertex and end points for particle creation
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *MatchedEndPointsTool::Factory::CreateAlgorithmTool() const
-{
-    return new MatchedEndPointsTool();
-}
 
 } // namespace lar_content
 

@@ -29,15 +29,6 @@ class IsolatedClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     IsolatedClusterMopUpAlgorithm();
@@ -74,13 +65,6 @@ private:
     float           m_maxHitClusterDistance;    ///< The maximum hit to cluster distance for isolated hit merging
     bool            m_addHitsAsIsolated;        ///< Whether to add hits to clusters as "isolated" (don't contribute to spatial properties)
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *IsolatedClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new IsolatedClusterMopUpAlgorithm();
-}
 
 } // namespace lar_content
 

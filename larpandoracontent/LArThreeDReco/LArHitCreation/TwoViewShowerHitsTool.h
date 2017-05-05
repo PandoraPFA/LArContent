@@ -18,16 +18,6 @@ namespace lar_content
  */
 class TwoViewShowerHitsTool : public ShowerHitsBaseTool
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
 private:
     void GetShowerHit3D(const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2, ProtoHit &protoHit) const;
 
@@ -40,13 +30,6 @@ private:
      */
     void GetShowerHit3D(const pandora::CaloHitVector &caloHitVector, ProtoHit &protoHit) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *TwoViewShowerHitsTool::Factory::CreateAlgorithmTool() const
-{
-    return new TwoViewShowerHitsTool();
-}
 
 } // namespace lar_content
 

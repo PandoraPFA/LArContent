@@ -27,15 +27,6 @@ class TransverseAssociationAlgorithm : public ClusterAssociationAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TransverseAssociationAlgorithm();
@@ -363,7 +354,6 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::Cluster *TransverseAssociationAlgorithm::LArTransverseCluster::GetSeedCluster() const
 {
@@ -396,14 +386,6 @@ inline const pandora::CartesianVector &TransverseAssociationAlgorithm::LArTransv
 inline const pandora::CartesianVector &TransverseAssociationAlgorithm::LArTransverseCluster::GetDirection() const
 {
     return m_direction;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TransverseAssociationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TransverseAssociationAlgorithm();
 }
 
 } // namespace lar_content

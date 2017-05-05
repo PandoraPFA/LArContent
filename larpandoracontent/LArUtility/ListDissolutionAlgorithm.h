@@ -20,15 +20,6 @@ class ListDissolutionAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ListDissolutionAlgorithm();
@@ -41,13 +32,6 @@ private:
     pandora::StringVector   m_clusterListNames;             ///< The cluster list names
     bool                    m_warnIfClustersUnavailable;    ///< Whether to print warning if attempt made to delete unavailable clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ListDissolutionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ListDissolutionAlgorithm();
-}
 
 } // namespace lar_content
 

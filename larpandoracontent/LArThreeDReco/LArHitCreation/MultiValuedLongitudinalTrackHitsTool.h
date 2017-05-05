@@ -18,27 +18,10 @@ namespace lar_content
  */
 class MultiValuedLongitudinalTrackHitsTool : public LongitudinalTrackHitsBaseTool
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
 private:
     void GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const pandora::CartesianVector &vtx3D,
         const pandora::CartesianVector &end3D, ProtoHit &protoHit) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *MultiValuedLongitudinalTrackHitsTool::Factory::CreateAlgorithmTool() const
-{
-    return new MultiValuedLongitudinalTrackHitsTool();
-}
 
 } // namespace lar_content
 

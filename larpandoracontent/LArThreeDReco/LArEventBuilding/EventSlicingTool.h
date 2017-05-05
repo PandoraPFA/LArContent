@@ -31,15 +31,6 @@ class EventSlicingTool : public SlicingTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     EventSlicingTool();
@@ -298,13 +289,6 @@ private:
 
     bool            m_use3DProjectionsInHitPickUp;      ///< Whether to include 3D cluster projections when assigning remaining clusters to slices
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *EventSlicingTool::Factory::CreateAlgorithmTool() const
-{
-    return new EventSlicingTool();
-}
 
 } // namespace lar_content
 

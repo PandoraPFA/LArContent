@@ -20,15 +20,6 @@ class BranchAssociatedPfosTool : public PfoRelationTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     BranchAssociatedPfosTool();
@@ -42,13 +33,6 @@ private:
     float       m_trackBranchAdditionFraction;      ///< Branch association: min fraction of length along parent track before association allowed
     float       m_maxParentClusterDistance;         ///< Branch association: max distance from branch vertex to a hit in parent 3D cluster
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *BranchAssociatedPfosTool::Factory::CreateAlgorithmTool() const
-{
-    return new BranchAssociatedPfosTool();
-}
 
 } // namespace lar_content
 

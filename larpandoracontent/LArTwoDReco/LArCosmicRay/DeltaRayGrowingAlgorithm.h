@@ -22,15 +22,6 @@ class DeltaRayGrowingAlgorithm : public ClusterGrowingAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     DeltaRayGrowingAlgorithm();
@@ -57,13 +48,6 @@ private:
     float        m_maxSeedClusterLength;            ///< The maximum length of a parent clusters
     float        m_maxSeedClusterDisplacement;      ///< The maximum distance between parent and daughter clusters
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *DeltaRayGrowingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new DeltaRayGrowingAlgorithm();
-}
 
 } // namespace lar_content
 

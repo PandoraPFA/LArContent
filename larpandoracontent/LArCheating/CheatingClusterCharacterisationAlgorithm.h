@@ -18,26 +18,9 @@ namespace lar_content
  */
 class CheatingClusterCharacterisationAlgorithm : public ClusterCharacterisationAlgorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     bool IsClearTrack(const pandora::Cluster *const pCluster) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingClusterCharacterisationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingClusterCharacterisationAlgorithm();
-}
 
 } // namespace lar_content
 

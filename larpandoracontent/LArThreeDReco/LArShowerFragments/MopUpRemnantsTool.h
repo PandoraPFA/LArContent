@@ -20,15 +20,6 @@ class MopUpRemnantsTool : public RemnantTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     MopUpRemnantsTool();
@@ -65,13 +56,6 @@ private:
     void SelectBestElement(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters,
         TensorType::ElementList::const_iterator &bestIter) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *MopUpRemnantsTool::Factory::CreateAlgorithmTool() const
-{
-    return new MopUpRemnantsTool();
-}
 
 } // namespace lar_content
 

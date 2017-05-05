@@ -26,15 +26,6 @@ class EventWritingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     EventWritingAlgorithm();
@@ -114,13 +105,6 @@ private:
     float                   m_selectedBorderY;              ///< Required distance from detector edge in y dimension
     float                   m_selectedBorderZ;              ///< Required distance from detector edge in z dimension
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *EventWritingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new EventWritingAlgorithm();
-}
 
 } // namespace lar_content
 

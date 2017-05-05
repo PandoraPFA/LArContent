@@ -24,15 +24,6 @@ class CrossGapsAssociationAlgorithm : public ClusterAssociationAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CrossGapsAssociationAlgorithm();
@@ -87,13 +78,6 @@ private:
     float           m_minMatchedSamplingFraction;   ///< Minimum ratio between matched sampling points and expectation to declare association
     float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CrossGapsAssociationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CrossGapsAssociationAlgorithm();
-}
 
 } // namespace lar_content
 
