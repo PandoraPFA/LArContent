@@ -25,12 +25,14 @@ namespace lar_content
 {
 
 SVMClusterCharacterisationAlgorithm::SVMClusterCharacterisationAlgorithm() :
-    m_produceSamplesMode(true),
+    m_produceSamplesMode(false),
     m_isPfoLevel(false),
     m_postBranchAddition(false),
+    m_ratioVariables(true),   
     m_overwriteExistingId(false),
+    m_updateClusterIds(true),
     m_useUnavailableClusters(false),
-   // m_minTrackLikeViews(2),
+    m_minTrackLikeViews(2),
     m_minCaloHitsCut(6)
 {
 }
@@ -40,10 +42,11 @@ SVMClusterCharacterisationAlgorithm::SVMClusterCharacterisationAlgorithm() :
 StatusCode SVMClusterCharacterisationAlgorithm::Run()
 {
     //TODO: learn to indent correctly in codelite... 
-  //  bool isTrackLike(false);
-    
+    //TODO: factorize this below...
     if (m_isPfoLevel)
     {
+        
+        PfoList tracksToShowers, showersToTracks;
     
        for (const std::string &pfoListName : m_inputPfoListNames)
         {
@@ -60,7 +63,7 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
         for (const ParticleFlowObject *const pPfo : *pPfoList)
         {
           PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;  
-         // unsigned int nTrackLikeViews(0);  
+            unsigned int nTrackLikeViews(0);  
           ClusterList twoDClusterList;
           LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
 
@@ -69,10 +72,8 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
 
               if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
                 continue;     
-
-                ClusterFeatureInfoMap clusterFeatureInfoMap;
-                this->PopulateClusterFeatureInfoMap(pCluster,clusterFeatureInfoMap);
-                SupportVectorMachine::DoubleVector featureList = this->GenerateFeatureList(pCluster, clusterFeatureInfoMap);                                                                                                                                                 
+                
+            SupportVectorMachine::DoubleVector featureList = this->GenerateFeatureVector(pCluster);                                                                                                                                              
 
         if(m_produceSamplesMode)
         {
@@ -88,21 +89,23 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
               
             SVMHelper::ProduceTrainingExample(m_trainingOutputFile + ".txt", isTrueTrack, featureList);
         }     
-       /* else    
+        else    
         {
-            if (this->IsTrackLike(pCluster))
+            if (this->IsClearTrack(featureList))
                 ++nTrackLikeViews;
-        }*/
+        }
 
-       }//each cluster
+       }//each cluster in a pfo
        
-      /* if(!m_produceSamplesMode)
+       if(!m_produceSamplesMode)
        {
-       if (nTrackLikeViews >= m_minTrackLikeViews)
-            isTrackLike = true;
-       else
-            isTrackLike = false;
-        //TODO: convert into: this->Characterise()
+           
+            bool isTrackLike(false);
+            if (nTrackLikeViews >= m_minTrackLikeViews)
+                isTrackLike = true;
+            else
+                isTrackLike = false;
+        //TODO: convert below into: this->Characterise(pfo)
         if(isTrackLike)
         {
             pfoMetadata.m_particleId = MU_MINUS;
@@ -123,9 +126,6 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
             if (!m_updateClusterIds)
                 continue;
 
-            ClusterList twoDClusterList;
-            LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
-
             for (const Cluster *const pCluster : twoDClusterList)
             {
                 if (pCluster->GetParticleId() == pfoMetadata.m_particleId.Get())
@@ -135,19 +135,22 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
                 clusterMetadata.m_particleId = pfoMetadata.m_particleId.Get();
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, clusterMetadata));
             }
-       }*/
+       }
 
         }//each pfo
+    
+    } //pfo list
+    
        
-   /* if(!m_produceSamplesMode)
+    if(!m_produceSamplesMode)
     { 
         if (!tracksToShowers.empty())
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_trackPfoListName, m_showerPfoListName, tracksToShowers));
 
         if (!showersToTracks.empty())
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_showerPfoListName, m_trackPfoListName, showersToTracks));
-    }*/
-    } //pfo list
+    }
+    
     }   // if pfo level 
     else
     {
@@ -174,28 +177,39 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
 
      if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
          continue;
-  
- 
-            //PandoraContentApi::Cluster::Metadata metadata;
-	    ClusterFeatureInfoMap clusterFeatureInfoMap;
-	    this->PopulateClusterFeatureInfoMap(pCluster,clusterFeatureInfoMap);
+    
+        SupportVectorMachine::DoubleVector featureList = this->GenerateFeatureVector(pCluster);
 
-	    SupportVectorMachine::DoubleVector featureList = this->GenerateFeatureList(pCluster, clusterFeatureInfoMap);
-	
-
-	    
+	    if(m_produceSamplesMode)
+        {
 	    bool isTrueTrack(false);  
 	    try
 	      { 
 		const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster)); 
+
 		isTrueTrack = ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId()))); 
 	      }
 	    catch (StatusCodeException &)                                                                      
 	      {	
 	      }    
           
-     SVMHelper::ProduceTrainingExample(m_trainingOutputFile + ".txt", isTrueTrack, featureList);
-     
+        SVMHelper::ProduceTrainingExample(m_trainingOutputFile + ".txt", isTrueTrack, featureList);
+        }
+        else
+        {
+            PandoraContentApi::Cluster::Metadata metadata;
+            if (this->IsClearTrack(featureList))
+            {
+                metadata.m_particleId = MU_MINUS;
+            }
+            else
+            {
+                metadata.m_particleId = E_MINUS;
+            }
+
+	    if (pCluster->GetParticleId() != metadata.m_particleId.Get())
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
+        }
         }
     }
     
@@ -205,89 +219,44 @@ StatusCode SVMClusterCharacterisationAlgorithm::Run()
     return STATUS_CODE_SUCCESS;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
-void SVMClusterCharacterisationAlgorithm::PopulateClusterFeatureInfoMap(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap) const
+SupportVectorMachine::DoubleVector SVMClusterCharacterisationAlgorithm::GenerateFeatureVector(const pandora::Cluster *const pCluster) const
 {
-    // TODO: Reorganize this, use CalculateFeatures, and deal with different numbers of features in the feature vector if some are dropped off the xml file
+    SupportVectorMachine::DoubleVector featureVector;
+  
+    featureVector = SVMHelper::CalculateFeatures(m_featureToolVector, this, pCluster);
     
- //   const double hitType(static_cast<double>(LArClusterHelper::GetClusterHitType(pCluster)));
-    const double showerFitWidth(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::ShowerFitWidthFeatureTool>(m_featureToolVector, this, pCluster).at(0));
-    //std::cout << " showerFitWidth = " << showerFitWidth << std::endl;
-  //  const double nHits(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::NHitsFeatureTool>(m_featureToolVector, this, pCluster).at(0));
-    //std::cout << " nHits = " << nHits << std::endl;
-    //const double nGoodHits(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::NHitsFeatureTool>(m_featureToolVector, this, pCluster).at(1));
-//std::cout << " nGoodHits = " << nGoodHits << std::endl;   
-    const double showerFitGapLength(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool>(m_featureToolVector, this, pCluster).at(0));
-//std::cout << " showerFitGapLength = " << showerFitGapLength << std::endl; 
- //  const double straightLineLength(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::StraightLineLengthFeatureTool>(m_featureToolVector, this, pCluster).at(0));
-//std::cout << " straightLineLength = " << straightLineLength << std::endl; 
-   const double straightLineLengthLarge(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::StraightLineLengthFeatureTool>(m_featureToolVector, this, pCluster).at(1));
-//std::cout <<  " straightLineLengthLarge " << std::endl;
-    const double diffWithStraigthLine(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::StraightLineLengthFeatureTool>(m_featureToolVector, this, pCluster).at(2));
-//std::cout << "diffWithStraigthLine = " << diffWithStraigthLine << std::endl;
-    const double widthDirectionX(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::StraightLineLengthFeatureTool>(m_featureToolVector, this, pCluster).at(3));
-//std::cout << "widthDirectionX = " << widthDirectionX << std::endl;
-  //  const double pointsOfContact(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::PointsOfContactFeatureTool>(m_featureToolVector, this, pCluster).at(0));
-//std::cout << "pointsOfContact = " << pointsOfContact << std::endl; 
-  const double nNearbyClusters(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::NNearbyClustersFeatureTool>(m_featureToolVector, this, pCluster).at(0));
-//std::cout << "nNearbyClusters = " << nNearbyClusters << std::endl; 
-  // const double mipEnergy(SVMHelper::CalculateFeaturesOfType<TrackShowerIdFeatureTool::MipEnergyFeatureTool>(m_featureToolVector, this, pCluster).at(0));
- //  std::cout <<  "mipEnergy = " << mipEnergy << std::endl;
-    
-    //ClusterFeatureInfo clusterFeatureInfo(/*hitType, nHits,*/ nGoodHits, /*straightLineLength,*/ straightLineLengthLarge, showerFitWidth, showerFitGapLength, 
-                        //  diffWithStraigthLine, widthDirectionX, nNearbyClusters, mipEnergy);
-                                                    
-    ClusterFeatureInfo clusterFeatureInfo( straightLineLengthLarge, showerFitWidth/straightLineLengthLarge, showerFitGapLength/straightLineLengthLarge, 
-                          diffWithStraigthLine/straightLineLengthLarge, widthDirectionX/straightLineLengthLarge, nNearbyClusters/straightLineLengthLarge);
-                          
-    clusterFeatureInfoMap.emplace(pCluster, clusterFeatureInfo);
-    // TODO - need to have one calculate features and read when there are less features calculated if we dont use all the variables... 
+    if(m_ratioVariables)
+    {
+        SupportVectorMachine::DoubleVector processedFeatureVector(this->ProcessFeatureVector(featureVector));
+        return processedFeatureVector;
+    }
+    return featureVector;
+  
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-/*SupportVectorMachine::DoubleVector SVMClusterCharacterisationAlgorithm::GenerateFeatureList(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap)
+SupportVectorMachine::DoubleVector SVMClusterCharacterisationAlgorithm::ProcessFeatureVector(const SupportVectorMachine::DoubleVector &featureVector) const
 {
-    ClusterFeatureInfo clusterFeatureInfo(clusterFeatureInfoMap.at(pCluster));
+    //This is in case we need to do any work on the variables (like doing ratios)...
+    //TODO check that the linear tool has been included - also, it should be the first one, think about how to check that or make it independent...
+    SupportVectorMachine::DoubleVector processedFeatureVector;
+    double straightLineLength = featureVector.at(0);
+    processedFeatureVector.push_back(straightLineLength);
     
-    SupportVectorMachine::DoubleVector featureVector;
-   // ATTN: temporary, first tried with 11 features, but has redundant information 
- 
- //  featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_hitType));
- //  featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_nHits));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_nGoodHits));
-  //  featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_straightLineLength));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_straightLineLengthLarge));  
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_showerFitWidth));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_showerFitGapLength));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_diffWithStraigthLine));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_widthDirectionX));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_nNearbyClusters));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_mipEnergy));
+    for (unsigned int i=1; i<featureVector.size(); ++i)
+    {
+        double variable(featureVector.at(i));
+        processedFeatureVector.push_back(variable/straightLineLength);
+    }
+        return processedFeatureVector;
     
-    return featureVector;
-}*/
+}
 //------------------------------------------------------------------------------------------------------------------------------------------
-SupportVectorMachine::DoubleVector SVMClusterCharacterisationAlgorithm::GenerateFeatureList(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap)
+bool SVMClusterCharacterisationAlgorithm::IsClearTrack(const SupportVectorMachine::DoubleVector &featureVector) const
 {
-    ClusterFeatureInfo clusterFeatureInfo(clusterFeatureInfoMap.at(pCluster));
-    
-    SupportVectorMachine::DoubleVector featureVector;
-   // ATTN: temporary, first tried with 11 features, but has redundant information 
- 
- //  featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_hitType));
- //  featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_nHits));
-   // featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_nGoodHits));
-  //  featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_straightLineLength));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_straightLineLengthLarge));  
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_showerFitWidthRatio));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_showerFitGapLengthRatio));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_diffWithStraigthLineRatio));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_widthDirectionXRatio));
-    featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_nNearbyClustersRatio));
-  //  featureVector.push_back(static_cast<double>(clusterFeatureInfo.m_mipEnergy));
-    
-    return featureVector;
+    //Track is defined as true (signal) in the training, so nothing to change, but potentially could give more instructions here for classification
+    return SVMHelper::Classify(m_svMachine, featureVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -296,7 +265,7 @@ StatusCode SVMClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle x
 {
     //same algorithm used for cluster/pfo characterisation, provide information about which stage we are (different SVMs to be read)
       PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-    "IsPfoLevel", m_isPfoLevel));  
+        "IsPfoLevel", m_isPfoLevel));  
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PostBranchAddition", m_postBranchAddition));
@@ -304,6 +273,9 @@ StatusCode SVMClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle x
     // for cluster/pfo characterisation 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OverwriteExistingId", m_overwriteExistingId));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UpdateClusterIds", m_updateClusterIds));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseUnavailableClusters", m_useUnavailableClusters));
@@ -311,18 +283,21 @@ StatusCode SVMClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle x
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsCut", m_minCaloHitsCut));
         
-  //  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-    //    "MinTrackLikeViews", m_minTrackLikeViews));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinTrackLikeViews", m_minTrackLikeViews));
     
     //SVM specific options
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ProduceSamplesMode", m_produceSamplesMode));
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ParameterInputFile", m_parameterInputFile));
+        "SVMFileName", m_svmFileName));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SVMName", m_svmName));
+        
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "RatioVariables", m_ratioVariables));  
     
     //to read depending on options above
    if(m_isPfoLevel)
@@ -349,13 +324,13 @@ StatusCode SVMClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle x
     }
 	else
     {
-        if (m_parameterInputFile.empty() || m_svmName.empty())
+        if (m_svmFileName.empty() || m_svmName.empty())
         {
-            std::cout << "SVMClusterCharacterisationAlgorithm: ParameterInputFile and SVMName must be set if in classification mode " << std::endl;
+            std::cout << "SVMClusterCharacterisationAlgorithm: SVMFileName and SVMName must be set if in classification mode " << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
         
-        m_svMachine.Initialize(m_parameterInputFile, m_svmName);
+        m_svMachine.Initialize(m_svmFileName, m_svmName);
     }								    
    
     //Read tool vector
@@ -364,8 +339,6 @@ StatusCode SVMClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle x
     
     for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SVMHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
-
-    std::cout << " End of Read Settings" << std::endl;
     
     return STATUS_CODE_SUCCESS;
 }

@@ -26,13 +26,13 @@ class TrackShowerIdFeatureTool
 //#define LAR_SHOWER_FIT_WIDTH_FEATURE_TOOL_H 1
 
 /**
-*   @brief  Feature tool to calculate shower fit width
+*   @brief  
 */
-class ShowerFitWidthFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
+class ShowerFitFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
    /**
-    *  @brief  Factory class for instantiating algorithm tool
+    *  @brief  Factory class for instantiating algorithm tool to calculate variables related to sliding shower fit 
     */
     class Factory : public pandora::AlgorithmToolFactory
     {
@@ -43,25 +43,32 @@ public:
    /**
     *  @brief  Default constructor
     */
-    ShowerFitWidthFeatureTool();
+    ShowerFitFeatureTool();
 
    /**
-    *  @brief  Run the tool
+    *  @brief  Run the tool, add the feature(s) calculated through sliding shower fit to the featureVector
     * 
     *  @param  pAlgorithm address of the calling algorithm
     *  @param  pCluster, the cluster we are characterizing
-    *  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
     * 
-    *  @return the global asymmetry feature
     */
     void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float CalculateShowerFitWidth(const pandora::Cluster *const pCluster) const;
 
-    float   m_slidingShowerFitWindow;       ///< 
+   /**
+    *  @brief  Calculation of the shower fit width variable
+    * 
+    *  @param  pAlgorithm, address of the calling algorithm
+    *  @param  pCluster, the cluster we are characterizing
+    * 
+    *  @return shower fit width
+    */
+    float CalculateShowerFitWidth(const SVMClusterCharacterisationAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster) const;
+
+    float   m_slidingShowerFitWindow;       ///<  
 };
 
 //#endif
@@ -173,17 +180,16 @@ VertexDistanceFeatureTool();
 *  @return the global asymmetry feature
 */
 void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
-
-private:
+private: 
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-float CalculateVertexDistance(const pandora::Cluster * const pCluster) const;
-
+float CalculateVertexDistance(const SVMClusterCharacterisationAlgorithm *const pAlgorithm, const pandora::Cluster * const pCluster) const;
+bool m_addVertexDistance;
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-class StraightLineLengthFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
+class LinearFitFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
 
@@ -199,7 +205,7 @@ public:
     /**
     *  @brief  Default constructor
     */
-    StraightLineLengthFeatureTool();
+    LinearFitFeatureTool();
     
 /**
 *  @brief  Run the tool
@@ -214,68 +220,13 @@ void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterChar
 
 private:
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-void CalculateVariablesSlidingFit(const pandora::Cluster * const pCluster, float &straightLineLength, float &straightLineLengthLarge, float &diffWithStraigthLine, float &widthDirectionX) const;
+void CalculateVariablesSlidingLinearFit(const pandora::Cluster * const pCluster, float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, float &maxFitGapLength) const;
 
 float     m_slidingLinearFitWindow; 
 bool      m_addDiffWithStraightLine;
-bool      m_addWidthDirectionX;
+bool      m_adddTdLWidth;
+bool      m_addMaxFitGapLength;
 };
-
-
-
-//--------------------------------------------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------------------------------------------
-
-class PointsOfContactFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
-{
-public:
-
-    /**
-    *  @brief  Factory class for instantiating algorithm tool
-    */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-    pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-    
-    /**
-    *  @brief  Default constructor
-    */
-    PointsOfContactFeatureTool();
-    
-/**
-*  @brief  Run the tool
-* 
-*  @param  pAlgorithm address of the calling algorithm
-*  @param  pCluster, the cluster we are characterizing
-*  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
-* 
-*  @return the global asymmetry feature
-*/
-void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
-private:
-pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-int CalculatePointsOfContact(const pandora::Cluster * const pCluster, const SVMClusterCharacterisationAlgorithm *const pAlgorithm) const;
-void FindAssociatedClusters(const pandora::Cluster *const pParticleSeed, pandora::ClusterVector &candidateClusters, 
-     BranchGrowingAlgorithm::ClusterUsageMap &forwardUsageMap, BranchGrowingAlgorithm::ClusterUsageMap &backwardUsageMap, const SVMClusterCharacterisationAlgorithm *const pAlgorithm) const;
-void IdentifyClusterMerges(const pandora::ClusterVector &particleSeedVector, const BranchGrowingAlgorithm::ClusterUsageMap &backwardUsageMap, 
-     BranchGrowingAlgorithm::SeedAssociationList &seedAssociationList) const;
-BranchGrowingAlgorithm::AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, 
-     const pandora::Cluster *const pCluster, const SVMClusterCharacterisationAlgorithm *const pAlgorithm) const; 
-     
-  typedef std::unordered_map<const pandora::Cluster*, LArVertexHelper::ClusterDirection> ClusterDirectionMap;                                                
-  mutable ClusterDirectionMap m_clusterDirectionMap;          ///< The cluster direction map 
-
-pandora::StringVector             m_clusterListNames;           ///< Name of input MC particle list 
-   float                       m_nearbyClusterDistance;        ///< The nearby cluster distance, used for determining cluster associations                
-    float                       m_remoteClusterDistance;        ///< The remote cluster distance, used for determining cluster associations           
-    float                       m_directionTanAngle;            ///< Direction determination, look for vertex inside triangle with apex shifted along the clus
-    float                       m_directionApexShift;  
-
-
-};
-
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
@@ -369,9 +320,9 @@ float m_mipCorrectionPerHit;
     return new TrackShowerIdFeatureTool();
 }*/
 
-inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::ShowerFitWidthFeatureTool::Factory::CreateAlgorithmTool() const
+inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::ShowerFitFeatureTool::Factory::CreateAlgorithmTool() const
 {
-    return new TrackShowerIdFeatureTool::ShowerFitWidthFeatureTool();
+    return new TrackShowerIdFeatureTool::ShowerFitFeatureTool();
 }
 
 inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::NHitsFeatureTool::Factory::CreateAlgorithmTool() const
@@ -384,14 +335,9 @@ inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::ShowerFitGapLengthFeatu
     return new TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool();
 }
 
-inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::StraightLineLengthFeatureTool::Factory::CreateAlgorithmTool() const
+inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::LinearFitFeatureTool::Factory::CreateAlgorithmTool() const
 {
-    return new TrackShowerIdFeatureTool::StraightLineLengthFeatureTool();
-}
-
-inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::PointsOfContactFeatureTool::Factory::CreateAlgorithmTool() const
-{
-    return new TrackShowerIdFeatureTool::PointsOfContactFeatureTool();
+    return new TrackShowerIdFeatureTool::LinearFitFeatureTool();
 }
 
 inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::Factory::CreateAlgorithmTool() const
@@ -402,6 +348,11 @@ inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::NNearbyClustersFeatureT
 inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::MipEnergyFeatureTool::Factory::CreateAlgorithmTool() const
 {
     return new TrackShowerIdFeatureTool::MipEnergyFeatureTool();
+}
+
+inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::VertexDistanceFeatureTool::Factory::CreateAlgorithmTool() const
+{
+    return new TrackShowerIdFeatureTool::VertexDistanceFeatureTool();
 }
 
 } // namespace lar_content

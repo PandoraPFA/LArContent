@@ -37,47 +37,14 @@ public:
 
     typedef SVMFeatureTool<const SVMClusterCharacterisationAlgorithm *const, const pandora::Cluster * const>  ClusterCharacterisationFeatureTool; 
     
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    
-    /**
-     *  @brief Event feature info class
-     */
-    class ClusterFeatureInfo
-    {
-    public:
-      /**
-       *  @brief  Constructor
-       * 
-       *  @param  showerFitWidth 
-       *  @param  showerFitWidth 
-       */
-      ClusterFeatureInfo(const float straightLineLengthLarge,  
-        const float showerFitWidthRatio,  const float showerFitGapLengthRatio, const float diffWithStraigthLineRatio, 
-        const float widthDirectionXRatio, const float nNearbyClustersRatio);
-    
- float m_hitType;  
- float           m_nHits;             ///<  
-      float           m_nGoodHits;             ///<      
-      float           m_straightLineLength;                   ///
-    float m_straightLineLengthLarge;                  
-      float           m_showerFitWidthRatio;        ///< 
-      float           m_showerFitGapLengthRatio;         ///< 
-    float m_diffWithStraigthLineRatio;
-    float m_widthDirectionXRatio;
-    float m_nNearbyClustersRatio;
-    float m_mipEnergy;
-    
-    };
-    
-     typedef std::map<const pandora::Cluster *const, ClusterFeatureInfo> ClusterFeatureInfoMap;
-  
 
 private:
     pandora::StatusCode Run();
 
 
-  void PopulateClusterFeatureInfoMap(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap) const;
-  SupportVectorMachine::DoubleVector GenerateFeatureList(const pandora::Cluster *const pCluster, ClusterFeatureInfoMap &clusterFeatureInfoMap);
+    SupportVectorMachine::DoubleVector GenerateFeatureVector(const pandora::Cluster *const pCluster) const;
+    SupportVectorMachine::DoubleVector ProcessFeatureVector(const SupportVectorMachine::DoubleVector &featureVector) const; 
+    bool IsClearTrack(const SupportVectorMachine::DoubleVector &featureVector) const;   
   
     ClusterCharacterisationFeatureTool::FeatureToolVector m_featureToolVector; ///< The feature tool map
     SupportVectorMachine                 m_svMachine;         ///< The support vector machine
@@ -87,9 +54,10 @@ private:
     bool                    m_produceSamplesMode;           ///< Whether to run for training samples production
     bool                    m_isPfoLevel;                   ///< Whether to use configuration for pfo vs cluster characterisation
     bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
+    bool                    m_ratioVariables;               ///< Whether to use variables as they are or their ratio over the straight line length
     
     std::string             m_trainingOutputFile;           ///< The training output file
-    std::string             m_parameterInputFile;           ///< The parameter input file
+    std::string             m_svmFileName;                  ///< The SVM input file
     std::string             m_svmName;                      ///< The name of the SVM to find
 
     pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfos lists
@@ -98,8 +66,11 @@ private:
     pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
     
     bool                    m_overwriteExistingId;          ///< Whether to consider any clusters that already have an assigned particle id
+    bool                    m_updateClusterIds;             ///< Whether to update daughter cluster particle id labels to match pfo id
     bool                    m_useUnavailableClusters;       ///< Whether to consider clusters that are already constituents of a pfo
+    unsigned int            m_minTrackLikeViews;            ///< The minimum number of clusters (views) to be track-like to label the pfo as track
     unsigned int            m_minCaloHitsCut;               ///< The minimum number of calo hits to qualify as a track
+    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -108,25 +79,6 @@ inline pandora::Algorithm *SVMClusterCharacterisationAlgorithm::Factory::CreateA
 {
     return new SVMClusterCharacterisationAlgorithm();
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline SVMClusterCharacterisationAlgorithm::ClusterFeatureInfo::ClusterFeatureInfo(const float straightLineLengthLarge, const float showerFitWidthRatio, const float showerFitGapLengthRatio, 
-            const float diffWithStraigthLineRatio, const float widthDirectionXRatio, const float nNearbyClustersRatio) :
-   // m_hitType(hitType),
-   // m_nHits(nHits),
-   // m_nGoodHits(nGoodHits), 
-     //   m_straightLineLength(straightLineLength),
-    m_straightLineLengthLarge(straightLineLengthLarge),
-    m_showerFitWidthRatio(showerFitWidthRatio),
-    m_showerFitGapLengthRatio(showerFitGapLengthRatio),
-    m_diffWithStraigthLineRatio(diffWithStraigthLineRatio),
-    m_widthDirectionXRatio(widthDirectionXRatio),
-    m_nNearbyClustersRatio(nNearbyClustersRatio)
-{
-}
-
 
 
 } // namespace lar_content

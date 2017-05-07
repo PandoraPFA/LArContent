@@ -263,11 +263,11 @@ public:
         d("LArTrackSplitting",                      lar_content::TrackSplittingTool::Factory)                                   \
         d("LArTransverseTensorVisualization",       lar_content::TransverseTensorVisualizationTool::Factory)                    \
         d("LArUndershootTracks",                    lar_content::UndershootTracksTool::Factory)                                 \
-        d("LArShowerFitWidthFeatureTool",           lar_content::TrackShowerIdFeatureTool::ShowerFitWidthFeatureTool::Factory)  \
+        d("LArShowerFitFeatureTool",                lar_content::TrackShowerIdFeatureTool::ShowerFitFeatureTool::Factory)       \
+        d("LArVertexDistanceFeatureTool",           lar_content::TrackShowerIdFeatureTool::VertexDistanceFeatureTool::Factory)  \
         d("LArNHitsFeatureTool",                    lar_content::TrackShowerIdFeatureTool::NHitsFeatureTool::Factory)           \
         d("LArShowerFitGapLengthFeatureTool",       lar_content::TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::Factory)\
-        d("LArStraightLineLengthFeatureTool",       lar_content::TrackShowerIdFeatureTool::StraightLineLengthFeatureTool::Factory)\
-        d("LArPointsOfContactFeatureTool",          lar_content::TrackShowerIdFeatureTool::PointsOfContactFeatureTool::Factory) \
+        d("LArLinearFitFeatureTool",                lar_content::TrackShowerIdFeatureTool::LinearFitFeatureTool::Factory)       \
         d("LArNNearbyClustersFeatureTool",          lar_content::TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::Factory) \
         d("LArMipEnergyFeatureTool",                lar_content::TrackShowerIdFeatureTool::MipEnergyFeatureTool::Factory)    
  
