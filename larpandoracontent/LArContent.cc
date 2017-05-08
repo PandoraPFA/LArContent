@@ -40,8 +40,8 @@
 #include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
 
 #include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
+#include "larpandoracontent/LArStitching/StitchingCosmicRayMergingTool.h"
 #include "larpandoracontent/LArStitching/StitchingObjectCreationTool.h"
-#include "larpandoracontent/LArStitching/StitchingPfoMergingTool.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
@@ -240,8 +240,8 @@
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArStitchingObjectCreation",             StitchingObjectCreationTool)                                                    \
-    d("LArStitchingPfoMerging",                 StitchingPfoMergingTool)                                                        \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
     d("LArBranchAssociatedPfos",                BranchAssociatedPfosTool)                                                       \
     d("LArEndAssociatedPfos",                   EndAssociatedPfosTool)                                                          \
