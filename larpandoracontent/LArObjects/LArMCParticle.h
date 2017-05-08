@@ -53,13 +53,13 @@ public:
     int GetNuanceCode() const;
 
 private:
-    int             m_nuanceCode;               ///< The nuance code
+    int                 m_nuanceCode;               ///< The nuance code
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  LArMCParticle responsible for object creation
+ *  @brief  LArMCParticleFactory responsible for object creation
  */
 class LArMCParticleFactory : public pandora::ObjectFactory<object_creation::MCParticle::Parameters, object_creation::MCParticle::Object>
 {

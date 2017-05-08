@@ -11,6 +11,7 @@
 #include "Persistency/BinaryFileReader.h"
 #include "Persistency/XmlFileReader.h"
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
@@ -26,7 +27,9 @@ EventReadingAlgorithm::EventReadingAlgorithm() :
     m_shouldReadGeometry(false),
     m_shouldReadEvents(true),
     m_skipToEvent(0),
-    m_pEventFileReader(NULL)
+    m_useLArCaloHits(false),
+    m_useLArMCParticles(true),
+    m_pEventFileReader(nullptr)
 {
 }
 
@@ -74,7 +77,12 @@ StatusCode EventReadingAlgorithm::Initialize()
             return STATUS_CODE_FAILURE;
         }
 
-        m_pEventFileReader->SetFactory(new LArMCParticleFactory);
+        if (m_useLArCaloHits)
+            m_pEventFileReader->SetFactory(new LArCaloHitFactory);
+
+        if (m_useLArMCParticles)
+            m_pEventFileReader->SetFactory(new LArMCParticleFactory);
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->GoToEvent(m_skipToEvent));
     }
 
@@ -85,7 +93,7 @@ StatusCode EventReadingAlgorithm::Initialize()
 
 StatusCode EventReadingAlgorithm::Run()
 {
-    if ((NULL != m_pEventFileReader) && m_shouldReadEvents)
+    if ((nullptr != m_pEventFileReader) && m_shouldReadEvents)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadEvent());
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RepeatEventPreparation(*this));
@@ -152,6 +160,12 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SkipToEvent", m_skipToEvent));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseLArCaloHits", m_useLArCaloHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseLArMCParticles", m_useLArMCParticles));
 
     return STATUS_CODE_SUCCESS;
 }
