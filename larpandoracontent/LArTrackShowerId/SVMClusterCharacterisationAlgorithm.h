@@ -41,13 +41,66 @@ public:
 private:
     pandora::StatusCode Run();
 
-
+    
+    /**
+	*  @brief  Generate the feature vector
+	* 
+	*  @param  pCluster, the cluster we are characterizing
+	* 
+	*  @return a SVM feature vector with the relevant variables for the cluster
+	*/
     SupportVectorMachine::DoubleVector GenerateFeatureVector(const pandora::Cluster *const pCluster) const;
+	
+	
+	/**
+	*  @brief  Process the feature vector, if something (like normalisation) needs to be done to the variables from the tools
+	* 
+	*  @param  featureVector, the SVM feature vector to process
+	* 
+	*  @return the processed feature vector
+	*/	
     SupportVectorMachine::DoubleVector ProcessFeatureVector(const SupportVectorMachine::DoubleVector &featureVector) const; 
+	
+	/**
+	*  @brief  Address whether a cluster is track-like based on the feature vector provided
+	* 
+	*  @param  featureVector, the SVM feature vector for the cluster
+	* 
+	*  @return yes or no
+	*/	
     bool IsClearTrack(const SupportVectorMachine::DoubleVector &featureVector) const;   
+	
+	/**
+	*  @brief  If in writing training samples mode, add features from this cluster to the output file
+	* 
+	*  @param  pCluster, the cluster we are characterizing
+	*  @param  featureList, the SVM feature vector for the cluster
+	*/	
+	void AddClusterToTrainingSample(const pandora::Cluster *const pCluster, const SupportVectorMachine::DoubleVector &featureList);
+	
+	/**
+	*  @brief  Address whether we need to alter the metadata for the cluster accordingly to its track/shower id
+	* 
+	*  @param  pCluster, the cluster we are characterizing
+	*  @param  featureList, the SVM feature vector for the cluster
+	*/		
+	pandora::StatusCode CharacteriseCluster(const pandora::Cluster *const pCluster, const SupportVectorMachine::DoubleVector &featureList) const;
+	
+	/**
+	*  @brief  Address whether we need to alter the metadata for the pfo accordingly to its track/shower id
+	* 
+	*  @param  pPfo, the ParticleFlowObject we are characterizing
+	*  @param  nTrackLikeViews, number of views that are track-like
+	*  @param  pfoListName, name of the list in which this Pfo is at the moment
+	*  @param  tracksToShowers, pfolist of tracks that will become showers after the characterisation
+	*  @param  showersToTracks, pfolist of showers that will become tracks after the characterisation
+	*  @param  twoDClusterList, the list of 2D clusters of this Pfo 
+	*/
+	pandora::StatusCode CharacterisePfo(const pandora::ParticleFlowObject *const pPfo, const unsigned int nTrackLikeViews, const std::string &pfoListName, 
+	pandora::PfoList &tracksToShowers, pandora::PfoList &showersToTracks, const pandora::ClusterList &twoDClusterList);
   
-    ClusterCharacterisationFeatureTool::FeatureToolVector m_featureToolVector; ///< The feature tool map
-    SupportVectorMachine                 m_svMachine;         ///< The support vector machine
+    ClusterCharacterisationFeatureTool::FeatureToolVector 			m_featureToolVector;			 ///< The feature tool map
+    SupportVectorMachine              							    m_svMachine;   				     ///< The support vector machine
   
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

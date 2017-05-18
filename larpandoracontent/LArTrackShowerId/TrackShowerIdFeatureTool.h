@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 /**
-*  @brief  TrackShowerIdFeatureTool class
+*  @brief  TrackShowerIdFeatureTool class, encompassing different tools calculating cunning variables 
 */
 class TrackShowerIdFeatureTool 
 {
@@ -26,7 +26,7 @@ class TrackShowerIdFeatureTool
 //#define LAR_SHOWER_FIT_WIDTH_FEATURE_TOOL_H 1
 
 /**
-*   @brief  
+*   @brief  ShowerFitFeatureTool to calculate variables related to sliding shower fit
 */
 class ShowerFitFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
@@ -68,13 +68,14 @@ private:
     */
     float CalculateShowerFitWidth(const SVMClusterCharacterisationAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster) const;
 
-    float   m_slidingShowerFitWindow;       ///<  
+    float 			m_slidingShowerFitWindow;		///<  The sliding shower fit window
 };
 
-//#endif
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
-
+/**
+*   @brief  NHitsFeatureTool class for the calculation of number of hits
+*/
 class NHitsFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
@@ -96,23 +97,41 @@ public:
     /**
     *  @brief  Run the tool
     * 
-    *   @param  pAlgorithm address of the calling algorithm
+    *  @param  pAlgorithm address of the calling algorithm
     *  @param  pCluster, the cluster we are characterizing
-    *  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
     * 
-    *  @return the global asymmetry feature
     */
     void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster *const pCluster);
 
-    private:
+private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+	
+	/**
+    *  @brief  Calculation of number of hits
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+    * 
+    *  @return number of hits
+    */
     int CalculateNHits(const pandora::Cluster * const pCluster) const;
+	
+	/**
+    *  @brief  Calculation of number of good hits: ATTN - this will go, in MCHelper now
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+    * 
+    *  @return number of good hits
+    */
     int CalculateNGoodHits(const pandora::Cluster * const pCluster,const SVMClusterCharacterisationAlgorithm * const pAlgorithm) const;
-    std::string             m_mcParticleListName;           ///< Name of input MC particle list 
+	
+    std::string			m_mcParticleListName;		///< Name of input MC particle list 
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
+/**
+*   @brief  ShowerFitGapLengthFeatureTool class for the shower fit gap length
+*/
 class ShowerFitGapLengthFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
@@ -123,34 +142,41 @@ public:
     class Factory : public pandora::AlgorithmToolFactory
     {
     public:
-    pandora::AlgorithmTool *CreateAlgorithmTool() const;
+		pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
-//--------------------------------------------------------------------------------------------------------------------------------------
-
     /**
     *  @brief  Default constructor
-*/
-ShowerFitGapLengthFeatureTool();
+	*/
+	ShowerFitGapLengthFeatureTool();
 
-/**
-*  @brief  Run the tool
-* 
-*  @param  pAlgorithm address of the calling algorithm
-*  @param  pCluster, the cluster we are characterizing
-*  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
-* 
-*  @return the global asymmetry feature
-*/
-void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
+	/**
+	*  @brief  Run the tool
+	* 
+	*  @param  pAlgorithm address of the calling algorithm
+	*  @param  pCluster, the cluster we are characterizing
+	*/
+	void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
 
 private:
-pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-float CalculateShowerFitGapLength(const pandora::Cluster * const pCluster) const;
-float     m_slidingShowerFitWindow; 
+	pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+	/**
+    *  @brief  Calculation of shower fit gap length 
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+    * 
+    *  @return shower fit gap length 
+    */	
+	float CalculateShowerFitGapLength(const pandora::Cluster * const pCluster) const;
+	
+	float 			m_slidingShowerFitWindow; 		///<  The sliding shower fit window
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
+/**
+*   @brief  VertexDistanceFeatureTool class for the calculation of distance to neutrino vertex
+*/
 class VertexDistanceFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
@@ -161,34 +187,42 @@ public:
     class Factory : public pandora::AlgorithmToolFactory
     {
     public:
-    pandora::AlgorithmTool *CreateAlgorithmTool() const;
+		pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
-//--------------------------------------------------------------------------------------------------------------------------------------
 
     /**
     *  @brief  Default constructor
-*/
-VertexDistanceFeatureTool();
+	*/
+	VertexDistanceFeatureTool();
 
-/**
-*  @brief  Run the tool
-* 
-*  @param  pAlgorithm address of the calling algorithm
-*  @param  pCluster, the cluster we are characterizing
-*  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
-* 
-*  @return the global asymmetry feature
-*/
-void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
+	/**
+	*  @brief  Run the tool
+	* 
+	*  @param  pAlgorithm address of the calling algorithm
+	*  @param  pCluster, the cluster we are characterizing
+	*/
+	void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
+
 private: 
-pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-float CalculateVertexDistance(const SVMClusterCharacterisationAlgorithm *const pAlgorithm, const pandora::Cluster * const pCluster) const;
-bool m_addVertexDistance;
+	pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+	
+	/**
+    *  @brief  Calculation of vertex distance
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+    * 
+    *  @return distance to neutrino vertex 
+    */	
+	float CalculateVertexDistance(const SVMClusterCharacterisationAlgorithm *const pAlgorithm, const pandora::Cluster * const pCluster) const;
+	
+	bool 			m_addVertexDistance; 		///<  decide whether to add the vertex distance variable to the feature list 
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
-
+/**
+*   @brief  LinearFitFeatureTool class for the calculation of variables related to sliding linear fit
+*/
 class LinearFitFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
@@ -207,30 +241,35 @@ public:
     */
     LinearFitFeatureTool();
     
-/**
-*  @brief  Run the tool
-* 
-*  @param  pAlgorithm address of the calling algorithm
-*  @param  pCluster, the cluster we are characterizing
-*  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
-* 
-*  @return the global asymmetry feature
-*/
-void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
+	/**
+	*  @brief  Run the tool
+	* 
+	*  @param  pAlgorithm address of the calling algorithm
+	*  @param  pCluster, the cluster we are characterizing
+	*/
+	void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
 
 private:
-pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-void CalculateVariablesSlidingLinearFit(const pandora::Cluster * const pCluster, float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, float &maxFitGapLength) const;
+	pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+			
+	/**
+    *  @brief  Calculation of several variables related to sliding linear fit
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+    */	
+	void CalculateVariablesSlidingLinearFit(const pandora::Cluster * const pCluster, float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, float &maxFitGapLength) const;
 
-float     m_slidingLinearFitWindow; 
-bool      m_addDiffWithStraightLine;
-bool      m_adddTdLWidth;
-bool      m_addMaxFitGapLength;
+	float			m_slidingLinearFitWindow;     	///<  The sliding linear fit window
+	bool			m_addDiffWithStraightLine; 		///<  decide whether to add the difference with straight line variable to the feature list
+	bool			m_adddTdLWidth; 				///<  decide whether to add the dTdL variable to the feature list
+	bool			m_addMaxFitGapLength;			///<  decide whether to add the max fit gap length variable to the feature list
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
-
+/**
+*   @brief  NNearbyClustersFeatureTool class for the calculation of number of clusters nearby
+*/
 class NNearbyClustersFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
@@ -241,7 +280,7 @@ public:
     class Factory : public pandora::AlgorithmToolFactory
     {
     public:
-    pandora::AlgorithmTool *CreateAlgorithmTool() const;
+		pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
     
     /**
@@ -249,30 +288,46 @@ public:
     */
     NNearbyClustersFeatureTool();
     
-/**
-*  @brief  Run the tool
-* 
-*  @param  pAlgorithm address of the calling algorithm
-*  @param  pCluster, the cluster we are characterizing
-*  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
-* 
-*  @return the global asymmetry feature
-*/
-void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
+	/**
+	*  @brief  Run the tool
+	* 
+	*  @param  pAlgorithm address of the calling algorithm
+	*  @param  pCluster, the cluster we are characterizing
+	*/
+	void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster);
 private:
-pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-int CalculatePointsOfContact(const pandora::Cluster * const pCluster, const SVMClusterCharacterisationAlgorithm *const pAlgorithm) const;
-bool IsClusterNearby(const pandora::Cluster *const pCluster,const pandora::Cluster *const pCandidateCluster) const;    
+	pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-pandora::StringVector             m_clusterListNames;           ///< Name of input MC particle list 
-float m_nearbyClusterDistance;
+	/**
+    *  @brief  Calculation of number of points of contact, i.e. number of clusters nearby
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+	*  @param  pAlgorithm address of the calling algorithm
+	*     
+    *  @return number of clusters nearby pCluster
+    */	
+	int CalculatePointsOfContact(const pandora::Cluster * const pCluster, const SVMClusterCharacterisationAlgorithm *const pAlgorithm) const;
+
+	/**
+    *  @brief  Address whether pCandidateCluster can be considered nearby pCluster
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+	*  @param  pCandidateCluster, the cluster we are asking whether it is nearby pCluster 
+	*     
+    *  @return yes or no
+    */
+	bool IsClusterNearby(const pandora::Cluster *const pCluster,const pandora::Cluster *const pCandidateCluster) const;    
+
+	pandora::StringVector             m_clusterListNames;           ///< Name of input MC particle list 
+	float 							  m_nearbyClusterDistance;      ///< Distance to decide whether a cluster is considered nearby
 };
 
 
-
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
-
+/**
+*   @brief  MipEnergyFeatureTool class for the calculation of mip energy
+*/
 class MipEnergyFeatureTool : public SVMClusterCharacterisationAlgorithm::ClusterCharacterisationFeatureTool
 {
 public:
@@ -283,7 +338,7 @@ public:
     class Factory : public pandora::AlgorithmToolFactory
     {
     public:
-    pandora::AlgorithmTool *CreateAlgorithmTool() const;
+		pandora::AlgorithmTool *CreateAlgorithmTool() const;
     };
     
     /**
@@ -292,19 +347,26 @@ public:
     MipEnergyFeatureTool();
     
     /**
-*  @brief  Run the tool
-* 
-*  @param  pAlgorithm address of the calling algorithm
-*  @param  pCluster, the cluster we are characterizing
-*  @param  pClusterList, list of clusters in the relevant view (for some of the variables)
-* 
-*  @return the global asymmetry feature
-*/
-void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster); 
+	*  @brief  Run the tool
+	* 
+	*  @param  pAlgorithm address of the calling algorithm
+	*  @param  pCluster, the cluster we are characterizing
+	*/
+	void Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster); 
+
 private:
-pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-float CalculateMipEnergy(const pandora::Cluster * const pCluster) const;
-float m_mipCorrectionPerHit;
+	pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+	
+	/**
+    *  @brief  Calculate the mip energy of the cluster
+    * 
+    *  @param  pCluster, the cluster we are characterizing
+	*     
+    *  @return the mip energy of the cluster 
+    */
+	float CalculateMipEnergy(const pandora::Cluster * const pCluster) const;
+
+	float		m_mipCorrectionPerHit;		///< Mip correction per hit
 
 };
 
@@ -313,12 +375,6 @@ float m_mipCorrectionPerHit;
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------
-
-
-/*inline pandora::Algorithm *TrackShowerIdFeatureTool::Factory::CreateAlgorithm() const
-{
-    return new TrackShowerIdFeatureTool();
-}*/
 
 inline pandora::AlgorithmTool *TrackShowerIdFeatureTool::ShowerFitFeatureTool::Factory::CreateAlgorithmTool() const
 {

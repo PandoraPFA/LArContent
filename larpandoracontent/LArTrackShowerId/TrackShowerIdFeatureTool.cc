@@ -29,10 +29,12 @@ namespace lar_content
   
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------ 
+
 TrackShowerIdFeatureTool::ShowerFitFeatureTool::ShowerFitFeatureTool() :
     m_slidingShowerFitWindow(3)
 {
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
     
 void TrackShowerIdFeatureTool::ShowerFitFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm * const pAlgorithm, const pandora::Cluster * const pCluster)
@@ -72,10 +74,12 @@ StatusCode TrackShowerIdFeatureTool::ShowerFitFeatureTool::ReadSettings(const Ti
 }
     
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------   
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+  
  TrackShowerIdFeatureTool::NHitsFeatureTool::NHitsFeatureTool()
 {
 }  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
  
 void TrackShowerIdFeatureTool::NHitsFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm *const pAlgorithm,
@@ -87,7 +91,6 @@ void TrackShowerIdFeatureTool::NHitsFeatureTool::Run(SupportVectorMachine::Doubl
   int nHits(this->CalculateNHits(pCluster));
   int nGoodHits(this->CalculateNGoodHits(pCluster, pAlgorithm));
   float nHitsF(nHits), nGoodHitsF(nGoodHits);
-  //check this
   featureVector.push_back(nHitsF); 
   featureVector.push_back(nGoodHitsF); 
 }
@@ -100,17 +103,17 @@ int TrackShowerIdFeatureTool::NHitsFeatureTool::CalculateNHits(const pandora::Cl
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 int TrackShowerIdFeatureTool::NHitsFeatureTool::CalculateNGoodHits(const pandora::Cluster * const pCluster, const SVMClusterCharacterisationAlgorithm *const pAlgorithm) const
-   // Obtain map: [mc particle -> primary mc particle]                    
-    {
-        
-   const MCParticleList *pMCParticleList = nullptr;
-   PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList));
-   // Obtain map: [mc particle -> primary mc particle]                                  
-   LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
-   LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+   // TODO: NGoodHits could be used for true track/shower definition only, and it is now available in MCHelper - so this needs to change                   
+{
+	const MCParticleList *pMCParticleList = nullptr;
+	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList));
+	// Obtain map: [mc particle -> primary mc particle]                                  
+	LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+	LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
   
-                //first get the list of calo hits
+	//first get the list of calo hits
     CaloHitList caloHitList;
     pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
@@ -122,47 +125,47 @@ int TrackShowerIdFeatureTool::NHitsFeatureTool::CalculateNGoodHits(const pandora
       {
         MCParticleVector mcParticleVector;
         for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(mapEntry.first);
-	std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+		std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
 
         MCParticleWeightMap primaryWeightMap;
 
         for (const MCParticle *const pMCParticle : mcParticleVector)
-	  {
-            const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
-	    LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pMCParticle);
+		{
+			const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
+			LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pMCParticle);
 
             if (mcToPrimaryMCMap.end() != mcIter)
-	      primaryWeightMap[mcIter->second] += weight;
-	  }
+				primaryWeightMap[mcIter->second] += weight;
+		}
 
-	MCParticleVector mcPrimaryVector;
-	for (const auto &mapEntry : primaryWeightMap) mcPrimaryVector.push_back(mapEntry.first);
-	std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), PointerLessThan<MCParticle>());
+		MCParticleVector mcPrimaryVector;
+		for (const auto &mapEntry : primaryWeightMap) mcPrimaryVector.push_back(mapEntry.first);
+		std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), PointerLessThan<MCParticle>());
 
-        const MCParticle *pBestPrimaryParticle(nullptr);
-        float bestPrimaryWeight(0.f), primaryWeightSum(0.f);
+		const MCParticle *pBestPrimaryParticle(nullptr);
+		float bestPrimaryWeight(0.f), primaryWeightSum(0.f);
+	
+		for (const MCParticle *const pPrimaryMCParticle : mcPrimaryVector)
+		{
+			const float primaryWeight(primaryWeightMap.at(pPrimaryMCParticle));
+			primaryWeightSum += primaryWeight;
 
-	for (const MCParticle *const pPrimaryMCParticle : mcPrimaryVector)
-	  {
-            const float primaryWeight(primaryWeightMap.at(pPrimaryMCParticle));
-            primaryWeightSum += primaryWeight;
+			if (primaryWeight > bestPrimaryWeight)
+			{
+				bestPrimaryWeight = primaryWeight;
+				pBestPrimaryParticle = pPrimaryMCParticle;
+			}
+		}
 
-            if (primaryWeight > bestPrimaryWeight)
-	      {
-                bestPrimaryWeight = primaryWeight;
-                pBestPrimaryParticle = pPrimaryMCParticle;
-	      }
-	  }
+		if (!pBestPrimaryParticle || (primaryWeightSum < std::numeric_limits<float>::epsilon()) || ((bestPrimaryWeight / primaryWeightSum) < m_minHitSharingFraction))
+			continue;
 
-	if (!pBestPrimaryParticle || (primaryWeightSum < std::numeric_limits<float>::epsilon()) || ((bestPrimaryWeight / primaryWeightSum) < m_minHitSharingFraction))
-	  continue;
+			nGoodHits++;
+	}
 
-	nGoodHits++;
-      }
-
-    return nGoodHits;
+	return nGoodHits;
         
-    }   
+}   
 
 //------------------------------------------------------------------------------------------------------------------------------------------          
    
@@ -175,10 +178,10 @@ StatusCode TrackShowerIdFeatureTool::NHitsFeatureTool::ReadSettings(const TiXmlH
 }
  
   
- //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------ 
     
-    TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::ShowerFitGapLengthFeatureTool() :
+TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::ShowerFitGapLengthFeatureTool() :
     m_slidingShowerFitWindow(3)
 {
 }
@@ -196,37 +199,37 @@ void TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::Run(SupportVectorM
  
 } 
    
- //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    float TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::CalculateShowerFitGapLength(const pandora::Cluster * const pCluster) const
-    {
-        float showerFitGapLength(-1.f);
-     CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);                                   
+float TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::CalculateShowerFitGapLength(const pandora::Cluster * const pCluster) const
+{
+	float showerFitGapLength(-1.f);
+	CartesianVector globalMinLayerPositionOnAxis(0.f, 0.f, 0.f), globalMaxLayerPositionOnAxis(0.f, 0.f, 0.f);                                   
     try                                                                                                                                                      
-      {                                                                                                                                                    
-        const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingShowerFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));                            
+	{                                                                                                                                                    
+		const TwoDSlidingShowerFitResult showerFitResult(pCluster, m_slidingShowerFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));                            
         const LayerFitResultMap &layerFitResultMapS(showerFitResult.GetShowerFitResult().GetLayerFitResultMap());                                            
         if (layerFitResultMapS.size() > 1)                                                                                                              
-          {                                                                                                                                           
+		{                                                                                                                                           
   
-            showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);       
+			showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.begin()->second.GetL(), 0.f, globalMinLayerPositionOnAxis);       
             showerFitResult.GetShowerFitResult().GetGlobalPosition(layerFitResultMapS.rbegin()->second.GetL(), 0.f, globalMaxLayerPositionOnAxis);       
 
             float straightLinePathLength=((globalMaxLayerPositionOnAxis - globalMinLayerPositionOnAxis).GetMagnitude());                                 
             if (straightLinePathLength > std::numeric_limits<float>::epsilon())                                                                           
-              {                                                                                                                                            
+			{                                                                                                                                            
                 showerFitGapLength = 0.f;                                                                                                                    
                 CartesianVector previousLayerPosition(globalMinLayerPositionOnAxis);                                                                         
                                                                                                                                                        
                 for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)                      
-                  {                                                                                                                                        
-                    CartesianVector thisLayerPosition(0.f, 0.f, 0.f);                                                                                    
+				{                                                                                                                                        
+					CartesianVector thisLayerPosition(0.f, 0.f, 0.f);                                                                                    
                     showerFitResult.GetShowerFitResult().GetGlobalPosition(iterS->second.GetL(), 0.f, thisLayerPosition);     
                 
                     const float thisGapLength((thisLayerPosition - previousLayerPosition).GetMagnitude());                                              
 
-		    if (thisGapLength > showerFitGapLength)                                                                                          
-                      {                                                                                                                                
+					if (thisGapLength > showerFitGapLength)                                                                                          
+					{                                                                                                                                
                         const float minZ(std::min(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));                                             
                         const float maxZ(std::max(thisLayerPosition.GetZ(), previousLayerPosition.GetZ()));                                            
                         if ((maxZ - minZ) < std::numeric_limits<float>::epsilon())                                                                        
@@ -235,21 +238,20 @@ void TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::Run(SupportVectorM
                         const float correctedGapLength(thisGapLength * (1.f - gapZ / (maxZ - minZ)));                                                        
                         if (correctedGapLength > showerFitGapLength)                                                                                     
                           showerFitGapLength = correctedGapLength;                                                                                        
-                      }                                                                                                                                 
-                  }                                                                                                                                     
-              }                                                                                                                                         
+					}                                                                                                                                 
+				}                                                                                                                                     
+			}                                                                                                                                         
                                                                                                                                                          
-	  }
+		}
            
-      }
+	}
     catch (StatusCodeException &)                                                                                                                           
       {                                                                                                                                                   
       }                         
   
   return showerFitGapLength;
       
-    }
-
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -264,6 +266,7 @@ StatusCode TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::ReadSettings
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
+
     TrackShowerIdFeatureTool::LinearFitFeatureTool::LinearFitFeatureTool() :
     m_slidingLinearFitWindow(3),
     m_addDiffWithStraightLine(true),
@@ -272,9 +275,10 @@ StatusCode TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::ReadSettings
 {
 }
 
- //------------------------------------------------------------------------------------------------------------------------------------------   
+//------------------------------------------------------------------------------------------------------------------------------------------   
+ 
 void TrackShowerIdFeatureTool::LinearFitFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm *const pAlgorithm, 
-           const pandora::Cluster * const pCluster) 
+const pandora::Cluster * const pCluster) 
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -282,15 +286,15 @@ void TrackShowerIdFeatureTool::LinearFitFeatureTool::Run(SupportVectorMachine::D
   
     float dTdLWidth(-1.f), straightLineLengthLarge(-1.f), diffWithStraigthLine(0.f), maxFitGapLength(-std::numeric_limits<float>::max());
     this->CalculateVariablesSlidingLinearFit(pCluster,straightLineLengthLarge,diffWithStraigthLine,dTdLWidth,maxFitGapLength);
-   //TODO: try with a larget fit window if fails...
+	//TODO: try with a larget fit window if fails?
   
     //featureVector.push_back(straightLineLength); 
     featureVector.push_back(straightLineLengthLarge); 
-    if(m_addDiffWithStraightLine)
+    if (m_addDiffWithStraightLine)
         featureVector.push_back(diffWithStraigthLine);
-    if(m_adddTdLWidth)
+    if (m_adddTdLWidth)
         featureVector.push_back(dTdLWidth);
-    if(m_addMaxFitGapLength)
+    if (m_addMaxFitGapLength)
         featureVector.push_back(maxFitGapLength);
     
 } 
@@ -301,12 +305,12 @@ void TrackShowerIdFeatureTool::LinearFitFeatureTool::CalculateVariablesSlidingLi
 float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, float &maxFitGapLength) const
 {
     
-  float dTdLMin(+std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max());                                       
-  CartesianVector globalMinLayerPositionLarge(0.f,0.f,0.f), globalMaxLayerPositionLarge(0.f,0.f,0.f);
+	float dTdLMin(+std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max());                                       
+	CartesianVector globalMinLayerPositionLarge(0.f,0.f,0.f), globalMaxLayerPositionLarge(0.f,0.f,0.f);
 
-  try
-    {
-        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+	try
+	{
+		const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const TwoDSlidingFitResult slidingFitResultLarge(pCluster, 10000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         
         straightLineLengthLarge = (slidingFitResultLarge.GetGlobalMaxLayerPosition() - slidingFitResultLarge.GetGlobalMinLayerPosition()).GetMagnitude();
@@ -349,7 +353,6 @@ float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, f
     catch (const StatusCodeException &)
     {
     }
-
     
 }
 
@@ -371,18 +374,20 @@ StatusCode TrackShowerIdFeatureTool::LinearFitFeatureTool::ReadSettings(const Ti
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- //------------------------------------------------------------------------------------------------------------------------------------------   
+//------------------------------------------------------------------------------------------------------------------------------------------
+   
  TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::NNearbyClustersFeatureTool() :
     m_nearbyClusterDistance(2.5f)
 {
 }
- //------------------------------------------------------------------------------------------------------------------------------------------   
+
+//------------------------------------------------------------------------------------------------------------------------------------------   
 
 void TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm *const pAlgorithm, 
-           const pandora::Cluster * const pCluster) 
+const pandora::Cluster * const pCluster) 
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+	if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+		std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
         
   
     int pointsOfContact(this->CalculatePointsOfContact(pCluster,pAlgorithm));
@@ -392,60 +397,52 @@ void TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::Run(SupportVectorMach
 } 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 int TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::CalculatePointsOfContact(const pandora::Cluster * const pCluster, const SVMClusterCharacterisationAlgorithm *const pAlgorithm) const
 {
-  pandora::ClusterVector candidateClusters;  
+	pandora::ClusterVector candidateClusters;  
 
- for (const std::string &clusterListName : m_clusterListNames) 
- {      
-   const pandora::ClusterList *pClusterList = nullptr;
-   PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, clusterListName, pClusterList));
+	for (const std::string &clusterListName : m_clusterListNames) 
+	{      
+		const pandora::ClusterList *pClusterList = nullptr;
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, clusterListName, pClusterList));
                                                                                                           
-    for (const Cluster *const pCandidateCluster : *pClusterList)                                                                                       
-      { 
-        if((LArClusterHelper::GetClusterHitType(pCluster))!=(LArClusterHelper::GetClusterHitType(pCandidateCluster)))
-            continue;                                                                                                                                                 
-        if ((pCandidateCluster != pCluster) && (pCandidateCluster->GetNCaloHits() > 5)) //LORENA: check this
-            candidateClusters.push_back(pCandidateCluster);                                                                                                     
-      }   
- }
+		for (const Cluster *const pCandidateCluster : *pClusterList)                                                                                       
+		{ 
+			if ((LArClusterHelper::GetClusterHitType(pCluster))!=(LArClusterHelper::GetClusterHitType(pCandidateCluster)))
+				continue;                                                                                                                                                 
+			if ((pCandidateCluster != pCluster) && (pCandidateCluster->GetNCaloHits() > 5)) 
+				candidateClusters.push_back(pCandidateCluster);                                                                                                     
+		}   
+	}
     int nPointsOfContact(0);
     
     for (ClusterVector::iterator iterI = candidateClusters.begin(), iterIEnd = candidateClusters.end(); iterI != iterIEnd; ++iterI)    
     {
-      const Cluster *const pCandidateCluster = *iterI;                                                                                                 
-	  if (NULL == pCandidateCluster)                                                                                                                  
-	    continue;
+		const Cluster *const pCandidateCluster = *iterI;                                                                                                 
+		if (NULL == pCandidateCluster)                                                                                                                  
+			continue;
         
-      if(this->IsClusterNearby(pCluster,pCandidateCluster))
-        ++nPointsOfContact;
+		if (this->IsClusterNearby(pCluster,pCandidateCluster))
+			++nPointsOfContact;
     }
  return nPointsOfContact;
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 bool TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::IsClusterNearby(const pandora::Cluster *const pCluster,const pandora::Cluster *const pCandidateCluster) const
 {
-       
-    /*pandora::CartesianVector innerCoordinate(0.f,0.f,0.f), outerCoordinate(0.f,0.f,0.f); 
-    LArClusterHelper::GetExtremalCoordinates(pCandidateCluster,innerCoordinate,outerCoordinate);
-    pandora::CartesianVector minimumCoordinate(0.f,0.f,0.f), maximumCoordinate(0.f,0.f,0.f); 
-    LArClusterHelper::GetClusterBoundingBox(pCluster, minimumCoordinate, maximumCoordinate);
-    
-    if(((innerCoordinate.GetX()<=maximumCoordinate.GetX()) && (innerCoordinate.GetX()>=minimumCoordinate.GetX()) && 
-        (innerCoordinate.GetZ()<=maximumCoordinate.GetZ()) && (innerCoordinate.GetZ()>=minimumCoordinate.GetZ())) ||
-        ((outerCoordinate.GetX()<=maximumCoordinate.GetX()) && (outerCoordinate.GetX()>=minimumCoordinate.GetX()) && 
-        (outerCoordinate.GetZ()<=maximumCoordinate.GetZ()) && (outerCoordinate.GetZ()>=minimumCoordinate.GetZ())))
-        return true;*/
-        
-        
-        float closestDistance(LArClusterHelper::GetClosestDistance(pCluster, pCandidateCluster));
-        if (closestDistance<=m_nearbyClusterDistance)
-			return true;
+
+	float closestDistance(LArClusterHelper::GetClosestDistance(pCluster, pCandidateCluster));
+	if (closestDistance<=m_nearbyClusterDistance)
+		return true;
             
-return false;
-           
+	return false;           
 }
-//------------------------------------------------------------------------------------------------------------------------------------------          
+
+//------------------------------------------------------------------------------------------------------------------------------------------   
+       
 StatusCode TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
   
@@ -455,12 +452,15 @@ StatusCode TrackShowerIdFeatureTool::NNearbyClustersFeatureTool::ReadSettings(co
 
   return STATUS_CODE_SUCCESS;
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
- //------------------------------------------------------------------------------------------------------------------------------------------   
+//------------------------------------------------------------------------------------------------------------------------------------------   
+
  TrackShowerIdFeatureTool::MipEnergyFeatureTool::MipEnergyFeatureTool() :
     m_mipCorrectionPerHit(1.0f)
 {
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------   
 
 void TrackShowerIdFeatureTool::MipEnergyFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm *const pAlgorithm, 
@@ -476,32 +476,34 @@ void TrackShowerIdFeatureTool::MipEnergyFeatureTool::Run(SupportVectorMachine::D
     
 } 
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 float TrackShowerIdFeatureTool::MipEnergyFeatureTool::CalculateMipEnergy(const pandora::Cluster * const pCluster) const
 {
 
-    float mipEnergy(0.f);
+	float mipEnergy(0.f);
  
-  CaloHitList clusterHitList; 
-  pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);                                                           
+	CaloHitList clusterHitList; 
+	pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);                                                           
 
-  for (const CaloHit *const pCaloHit : clusterHitList)                                                                                                                                                                                                 
-      mipEnergy += pCaloHit->GetMipEquivalentEnergy()*m_mipCorrectionPerHit;     
+	for (const CaloHit *const pCaloHit : clusterHitList)                                                                                                                                                                                                 
+		mipEnergy += pCaloHit->GetMipEquivalentEnergy()*m_mipCorrectionPerHit;     
 
-  return mipEnergy;                                                               
+	return mipEnergy;                                                               
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
-//LORENA: why do I need this?
+
 StatusCode TrackShowerIdFeatureTool::MipEnergyFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-      PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
                 "MipCorrectionPerHit", m_mipCorrectionPerHit));  
     return STATUS_CODE_SUCCESS;
 }
     
 //------------------------------------------------------------------------------------------------------------------------------------------
- //------------------------------------------------------------------------------------------------------------------------------------------   
+//------------------------------------------------------------------------------------------------------------------------------------------   
+ 
  TrackShowerIdFeatureTool::VertexDistanceFeatureTool::VertexDistanceFeatureTool() :
  m_addVertexDistance(true)
 {
@@ -509,26 +511,26 @@ StatusCode TrackShowerIdFeatureTool::MipEnergyFeatureTool::ReadSettings(const Ti
 //------------------------------------------------------------------------------------------------------------------------------------------   
 
 void TrackShowerIdFeatureTool::VertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const SVMClusterCharacterisationAlgorithm *const pAlgorithm, 
-           const pandora::Cluster * const pCluster) 
+const pandora::Cluster * const pCluster) 
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+	if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
         
   
     float vertexDistance(this->CalculateVertexDistance(pAlgorithm, pCluster));
   
-  if(m_addVertexDistance)
-    featureVector.push_back(vertexDistance); 
-    
+	if (m_addVertexDistance)
+		featureVector.push_back(vertexDistance); 
 } 
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 
+
 float TrackShowerIdFeatureTool::VertexDistanceFeatureTool::CalculateVertexDistance(const SVMClusterCharacterisationAlgorithm *const pAlgorithm, const pandora::Cluster * const pCluster) const
 {
 
-    float vertexDistance(ClusterCharacterisationAlgorithm::GetVertexDistance(pAlgorithm, pCluster));
+	float vertexDistance(ClusterCharacterisationAlgorithm::GetVertexDistance(pAlgorithm, pCluster));
  
-  return vertexDistance;                                                               
+	return vertexDistance;                                                               
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
