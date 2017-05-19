@@ -8,10 +8,9 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPCAHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
-
-#include <Eigen/Dense>
 
 #include <algorithm>
 #include <cmath>
@@ -558,92 +557,15 @@ void TwoDSlidingFitResult::CalculateAxes(const CartesianPointVector &coordinateV
     if (coordinateVector.size() < 2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    double meanPosition[3] = {0., 0., 0.};
-
-    for (const CartesianVector &coordinate : coordinateVector)
-    {
-        meanPosition[0] += coordinate.GetX();
-        meanPosition[1] += coordinate.GetY();
-        meanPosition[2] += coordinate.GetZ();
-    }
-
-    const double nThreeDHitsAsDouble(static_cast<double>(coordinateVector.size()));
-    meanPosition[0] /= nThreeDHitsAsDouble;
-    meanPosition[1] /= nThreeDHitsAsDouble;
-    meanPosition[2] /= nThreeDHitsAsDouble;
-    const CartesianVector centroid(meanPosition[0], meanPosition[1], meanPosition[2]);
-
-    // Define elements of our covariance matrix
-    double xi2(0.);
-    double xiyi(0.);
-    double xizi(0.);
-    double yi2(0.);
-    double yizi(0.);
-    double zi2(0.);
-    double weightSum(0.);
-
-    for (const CartesianVector &coordinate : coordinateVector)
-    {
-        const double weight(1.);
-        const double x((coordinate.GetX() - meanPosition[0]) * weight);
-        const double y((coordinate.GetY() - meanPosition[1]) * weight);
-        const double z((coordinate.GetZ() - meanPosition[2]) * weight);
-
-        xi2  += x * x;
-        xiyi += x * y;
-        xizi += x * z;
-        yi2  += y * y;
-        yizi += y * z;
-        zi2  += z * z;
-        weightSum += weight * weight;
-    }
-
-    Eigen::Matrix3f sig;
-
-    sig <<  xi2, xiyi, xizi,
-           xiyi,  yi2, yizi,
-           xizi, yizi,  zi2;
-
-    if (std::fabs(weightSum) < std::numeric_limits<double>::epsilon())
-    {
-        std::cout << "ThreeDSlidingFitResult::GetPrimaryAxis - The total weight of three dimensional hits is 0!" << std::endl;
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
-
-    sig *= 1. / weightSum;
-
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigenMat(sig);
-
-    if (eigenMat.info() != Eigen::ComputationInfo::Success)
-    {
-        std::cout << "ThreeDSlidingFitResult::GetPrimaryAxis - PCA decompose failure, number of three D hits = " << coordinateVector.size() << std::endl;
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
-
-    typedef std::pair<float,size_t> EigenValColPair;
-    typedef std::vector<EigenValColPair> EigenValColVector;
-
-    EigenValColVector eigenValColVector;
-    const auto &resultEigenMat(eigenMat.eigenvalues());
-    eigenValColVector.emplace_back(resultEigenMat(0), 0);
-    eigenValColVector.emplace_back(resultEigenMat(1), 1);
-    eigenValColVector.emplace_back(resultEigenMat(2), 2);
-
-    std::sort(eigenValColVector.begin(), eigenValColVector.end(), [](const EigenValColPair &left, const EigenValColPair &right){return left.first > right.first;} );
-
-    // Get the eigen values
-    const CartesianVector outputEigenValues(eigenValColVector.at(0).first, eigenValColVector.at(1).first, eigenValColVector.at(2).first);
-
-    // Grab the principal axes
-    CartesianPointVector outputEigenVecs;
-    const Eigen::Matrix3f &eigenVecs(eigenMat.eigenvectors());
-
-    for (const EigenValColPair &pair : eigenValColVector)
-        outputEigenVecs.emplace_back(eigenVecs(0, pair.second), eigenVecs(1, pair.second), eigenVecs(2, pair.second));
+    CartesianVector centroid(0.f, 0.f, 0.f);
+    LArPCAHelper::EigenVectors eigenVecs;
+    LArPCAHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPCAHelper::RunPCA(coordinateVector, centroid, eigenValues, eigenVecs);
 
     float minProjection(std::numeric_limits<float>::max());
-    CartesianVector fitDirection(outputEigenVecs.at(0));
+    CartesianVector fitDirection(eigenVecs.at(0));
 
+    // ATTN TwoDSlidingFitResult convention is to point in direction of increasing z
     if (fitDirection.GetZ() < 0.f)
         fitDirection *= -1.f;
 

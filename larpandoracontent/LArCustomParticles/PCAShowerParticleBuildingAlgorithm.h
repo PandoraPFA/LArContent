@@ -38,12 +38,24 @@ public:
 private:
     void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject *&pOutputPfo) const;
 
-    typedef std::vector<pandora::CartesianVector> EigenVectors;
-
-    void RunPCA(const pandora::CaloHitList &threeDCaloHitList, pandora::CartesianVector &centroid, pandora::CartesianVector &outputEigenValues, EigenVectors &outputEigenVecs) const;
-
+    /**
+     *  @brief  Get the shower length from its eigen values
+     *
+     *  @param  eigenValues the shower eigen values
+     *
+     *  @return the shower length
+     */
     pandora::CartesianVector ShowerLength(const pandora::CartesianVector &eigenValues) const;
 
+    /**
+     *  @brief  Get the opening angle
+     *
+     *  @param  principal the principal axis
+     *  @param  secondary the secondary axis
+     *  @param  eigenValues the eigen values
+     *
+     *  @return the opening angle
+     */
     float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
