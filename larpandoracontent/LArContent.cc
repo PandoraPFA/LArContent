@@ -23,6 +23,7 @@
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
 
+#include "larpandoracontent/LArCustomParticles/PCAShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/ShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
@@ -172,6 +173,7 @@
     d("LArCheatingPfoCharacterisation",         CheatingPfoCharacterisationAlgorithm)                                           \
     d("LArCheatingPfoCreation",                 CheatingPfoCreationAlgorithm)                                                   \
     d("LArCheatingVertexCreation",              CheatingVertexCreationAlgorithm)                                                \
+    d("LArPCAShowerParticleBuilding",           PCAShowerParticleBuildingAlgorithm)                                             \
     d("LArShowerParticleBuilding",              ShowerParticleBuildingAlgorithm)                                                \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
     d("LArStitching",                           StitchingAlgorithm)                                                             \
