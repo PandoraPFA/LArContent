@@ -81,8 +81,11 @@ void PCAShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
         pfoParameters.m_showerVertex = pInputVertex->GetPosition();
         pfoParameters.m_showerCentroid = centroid;
 
-        const float principalAxisScaleFactor((pfoParameters.m_showerVertex.Get().GetX() < pfoParameters.m_showerCentroid.Get().GetX()) ? 1.f : -1.f);
-        pfoParameters.m_showerDirection = eigenVecs.at(0) * principalAxisScaleFactor;
+        // Convention: principal axis always points away from vertex (which is assumed to be closer to start of shower than centroid)
+        const float testProjection(eigenVecs.at(0).GetDotProduct(pfoParameters.m_showerVertex.Get() - pfoParameters.m_showerCentroid.Get()));
+        const float directionScaleFactor((testProjection > std::numeric_limits<float>::epsilon()) ? -1.f : 1.f);
+
+        pfoParameters.m_showerDirection = eigenVecs.at(0) * directionScaleFactor;
         pfoParameters.m_showerSecondaryVector = eigenVecs.at(1);
         pfoParameters.m_showerTertiaryVector = eigenVecs.at(2);
         pfoParameters.m_showerEigenValues = eigenValues;
