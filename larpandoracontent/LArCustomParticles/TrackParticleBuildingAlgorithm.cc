@@ -44,7 +44,7 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
             if(!LArPfoHelper::IsFinalState(pInputPfo))
                 return;
         }
-        else 
+        else
         {
             if (!LArPfoHelper::IsTrack(pInputPfo))
                 return;
@@ -126,14 +126,6 @@ void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowO
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const unsigned int layerWindow(m_slidingFitHalfWindow);
 
-    const float wirePitchU(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U));
-    const float wirePitchV(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V));
-    const float wirePitchW(LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W));
-
-    const CartesianVector wireAxisU(LArGeometryHelper::GetWireAxis(this->GetPandora(), TPC_VIEW_U));
-    const CartesianVector wireAxisV(LArGeometryHelper::GetWireAxis(this->GetPandora(), TPC_VIEW_V));
-    const CartesianVector wireAxisW(LArGeometryHelper::GetWireAxis(this->GetPandora(), TPC_VIEW_W));
-
     for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = *cIter;
@@ -162,22 +154,14 @@ void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowO
 
                     CartesianVector direction(0.f, 0.f, 0.f);
                     const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
- 
+
                     if (directionStatusCode != STATUS_CODE_SUCCESS)
                         throw StatusCodeException(directionStatusCode);
 
-                    const HitType hitType(pCaloHit2D->GetHitType());
-                    const float wirePitch((TPC_VIEW_U == hitType) ? wirePitchU : (TPC_VIEW_V == hitType) ? wirePitchV : wirePitchW);
-                    const CartesianVector wireAxis((TPC_VIEW_U == hitType) ? wireAxisU : (TPC_VIEW_V == hitType) ? wireAxisV : wireAxisW);
-
                     const float projection(seedDirection.GetDotProduct(position - seedPosition));
-                    const float cosTheta(std::fabs(wireAxis.GetDotProduct(direction)));
-                    const float inverse_dL(cosTheta / wirePitch);
-                    const float dL((inverse_dL > std::numeric_limits<float>::epsilon()) ? (1.0 / inverse_dL) : std::numeric_limits<float>::max());
-                    const float dQ(pCaloHit2D->GetInputEnergy());
 
                     trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
-                    LArTrackState(position, direction * scaleFactor, pCaloHit2D, dQ, dL)));
+                        LArTrackState(position, direction * scaleFactor, pCaloHit2D)));
                 }
                 catch (StatusCodeException &statusCodeException1)
                 {
@@ -209,7 +193,13 @@ bool TrackParticleBuildingAlgorithm::SortByHitProjection(const LArTrackTrajector
     if (lhs.first != rhs.first)
         return (lhs.first < rhs.first);
 
-    return (lhs.second.GetdQ() > rhs.second.GetdQ());
+    if (lhs.second.GetCaloHit() && rhs.second.GetCaloHit())
+        return (lhs.second.GetCaloHit()->GetInputEnergy() > rhs.second.GetCaloHit()->GetInputEnergy());
+
+    const float dx(lhs.second.GetPosition().GetX() - rhs.second.GetPosition().GetX());
+    const float dy(lhs.second.GetPosition().GetY() - rhs.second.GetPosition().GetY());
+    const float dz(lhs.second.GetPosition().GetZ() - rhs.second.GetPosition().GetZ());
+    return (dx + dy + dz > 0.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

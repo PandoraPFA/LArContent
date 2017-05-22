@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArStitching/MultiPandoraApi.cc
- * 
+ *
  *  @brief  Implementation of the MultiPandoraApi class.
- * 
+ *
  *  $Log: $
  */
 
@@ -48,7 +48,21 @@ const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const pandora::Pandora *const p
 {
     return m_multiPandoraApiImpl.GetVolumeInfo(pPandora);
 }
-    
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const pandora::Pandora *const pPrimaryPandora, const int idNumber)
+{
+    return m_multiPandoraApiImpl.GetVolumeInfo(pPrimaryPandora, idNumber);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const VolumeIdList &MultiPandoraApi::GetVolumeIdList(const pandora::Pandora *const pPrimaryPandora)
+{
+    return m_multiPandoraApiImpl.GetVolumeIdList(pPrimaryPandora);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MultiPandoraApi::AddPrimaryPandoraInstance(const pandora::Pandora *const pPrimaryPandora)
@@ -94,10 +108,16 @@ void MultiPandoraApi::ClearParticleX0Map(const pandora::Pandora *const pPandora)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VolumeInfo::VolumeInfo(const int idNumber, const std::string &idString, const pandora::CartesianVector &center, const bool isDriftInPositiveX) :
+VolumeInfo::VolumeInfo(const int idNumber, const std::string &idString, const float centerX, const float centerY, const float centerZ,
+    const float widthX, const float widthY, const float widthZ, const bool isDriftInPositiveX) :
     m_idNumber(idNumber),
     m_idString(idString),
-    m_center(center),
+    m_centerX(centerX),
+    m_centerY(centerY),
+    m_centerZ(centerZ),
+    m_widthX(widthX),
+    m_widthY(widthY),
+    m_widthZ(widthZ),
     m_isDriftInPositiveX(isDriftInPositiveX)
 {
 }
@@ -118,9 +138,44 @@ const std::string &VolumeInfo::GetIdString() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::CartesianVector &VolumeInfo::GetCenter() const
+float VolumeInfo::GetCenterX() const
 {
-    return m_center;
+    return m_centerX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetCenterY() const
+{
+    return m_centerY;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetCenterZ() const
+{
+    return m_centerZ;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetWidthX() const
+{
+    return m_widthX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetWidthY() const
+{
+    return m_widthY;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VolumeInfo::GetWidthZ() const
+{
+    return m_widthZ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
