@@ -105,6 +105,12 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
+#include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
+#include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
+#include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
+#include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
+#include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
+
 #include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
@@ -155,6 +161,7 @@
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
+#include "larpandoracontent/LArVertex/SVMVertexSelectionAlgorithm.h"
 
 #include "larpandoracontent/LArContent.h"
 
@@ -239,7 +246,8 @@
     d("LArNeutrinoParent",                      NeutrinoParentAlgorithm)                                                        \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
-    d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)
+    d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
+    d("LArSVMVertexSelection",                  SVMVertexSelectionAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
@@ -274,7 +282,12 @@
     d("LArTracksCrossingGaps",                  TracksCrossingGapsTool)                                                         \
     d("LArTrackSplitting",                      TrackSplittingTool)                                                             \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
-    d("LArUndershootTracks",                    UndershootTracksTool)
+    d("LArUndershootTracks",                    UndershootTracksTool)                                                           \
+    d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
+    d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
+    d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \
+    d("LArRPhiFeature",                         RPhiFeatureTool)                                                                \
+    d("LArShowerAsymmetryFeature",              ShowerAsymmetryFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
