@@ -8,7 +8,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPCAHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -558,9 +558,9 @@ void TwoDSlidingFitResult::CalculateAxes(const CartesianPointVector &coordinateV
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     CartesianVector centroid(0.f, 0.f, 0.f);
-    LArPCAHelper::EigenVectors eigenVecs;
-    LArPCAHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-    LArPCAHelper::RunPCA(coordinateVector, centroid, eigenValues, eigenVecs);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(coordinateVector, centroid, eigenValues, eigenVecs);
 
     float minProjection(std::numeric_limits<float>::max());
     CartesianVector fitDirection(eigenVecs.at(0));

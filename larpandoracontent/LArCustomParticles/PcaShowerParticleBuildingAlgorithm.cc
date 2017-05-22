@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArCustomParticles/PCAShowerParticleBuildingAlgorithm.cc
+ *  @file   larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.cc
  *
  *  @brief  Implementation of the 3D shower building algorithm class.
  *
@@ -10,20 +10,20 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPCAHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArShowerPfo.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "larpandoracontent/LArCustomParticles/PCAShowerParticleBuildingAlgorithm.h"
+#include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-PCAShowerParticleBuildingAlgorithm::PCAShowerParticleBuildingAlgorithm() :
+PcaShowerParticleBuildingAlgorithm::PcaShowerParticleBuildingAlgorithm() :
     m_cosmicMode(false),
     m_layerFitHalfWindow(20)
 {
@@ -31,7 +31,7 @@ PCAShowerParticleBuildingAlgorithm::PCAShowerParticleBuildingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PCAShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject*& pOutputPfo) const
+void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject*& pOutputPfo) const
 {
     try
     {
@@ -66,9 +66,9 @@ void PCAShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
 
         // Run the PCA analysis
         CartesianVector centroid(0.f, 0.f, 0.f);
-        LArPCAHelper::EigenVectors eigenVecs;
-        LArPCAHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-        LArPCAHelper::RunPCA(threeDCaloHitList, centroid, eigenValues, eigenVecs);
+        LArPcaHelper::EigenVectors eigenVecs;
+        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+        LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
 
         // Build a new pfo
         LArShowerPfoFactory pfoFactory;
@@ -126,7 +126,7 @@ void PCAShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector PCAShowerParticleBuildingAlgorithm::ShowerLength(const CartesianVector &eigenValues) const
+CartesianVector PcaShowerParticleBuildingAlgorithm::ShowerLength(const CartesianVector &eigenValues) const
 {
     float sl[3] = {0.f, 0.f, 0.f};
 
@@ -151,7 +151,7 @@ CartesianVector PCAShowerParticleBuildingAlgorithm::ShowerLength(const Cartesian
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float PCAShowerParticleBuildingAlgorithm::OpeningAngle(const CartesianVector &principal, const CartesianVector &secondary,
+float PcaShowerParticleBuildingAlgorithm::OpeningAngle(const CartesianVector &principal, const CartesianVector &secondary,
     const CartesianVector &eigenValues) const
 {
     const float principalMagnitude(principal.GetMagnitude());
@@ -159,7 +159,7 @@ float PCAShowerParticleBuildingAlgorithm::OpeningAngle(const CartesianVector &pr
 
     if (std::fabs(principalMagnitude) < std::numeric_limits<float>::epsilon())
     {
-        std::cout << "PCAShowerParticleBuildingAlgorithm::OpeningAngle - The principal eigenvector is 0." << std::endl;
+        std::cout << "PcaShowerParticleBuildingAlgorithm::OpeningAngle - The principal eigenvector is 0." << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
     else if (std::fabs(secondaryMagnitude) < std::numeric_limits<float>::epsilon())
@@ -171,7 +171,7 @@ float PCAShowerParticleBuildingAlgorithm::OpeningAngle(const CartesianVector &pr
 
     if (cosTheta > 1.f)
     {
-        std::cout << "PCAShowerParticleBuildingAlgorithm::OpeningAngle - cos(theta) reportedly greater than 1." << std::endl;
+        std::cout << "PcaShowerParticleBuildingAlgorithm::OpeningAngle - cos(theta) reportedly greater than 1." << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
@@ -179,7 +179,7 @@ float PCAShowerParticleBuildingAlgorithm::OpeningAngle(const CartesianVector &pr
 
     if (std::fabs(eigenValues.GetX()) < std::numeric_limits<float>::epsilon())
     {
-        std::cout << "PCAShowerParticleBuildingAlgorithm::OpeningAngle - principal eigenvalue less than or equal to 0." << std::endl;
+        std::cout << "PcaShowerParticleBuildingAlgorithm::OpeningAngle - principal eigenvalue less than or equal to 0." << std::endl;
         throw StatusCodeException( STATUS_CODE_INVALID_PARAMETER );
     }
     else if (std::fabs(eigenValues.GetY()) < std::numeric_limits<float>::epsilon())
@@ -192,7 +192,7 @@ float PCAShowerParticleBuildingAlgorithm::OpeningAngle(const CartesianVector &pr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PCAShowerParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode PcaShowerParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CosmicMode", m_cosmicMode));

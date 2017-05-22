@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArHelpers/LArPCAHelper.cc
+ *  @file   larpandoracontent/LArHelpers/LArPcaHelper.cc
  *
  *  @brief  Implementation of the principal curve analysis helper class.
  *
@@ -7,7 +7,7 @@
  */
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArPCAHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include <Eigen/Dense>
 
@@ -16,19 +16,19 @@ using namespace pandora;
 namespace lar_content
 {
 
-void LArPCAHelper::RunPCA(const CaloHitList &caloHitList, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
+void LArPcaHelper::RunPca(const CaloHitList &caloHitList, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
     CartesianPointVector pointVector;
 
     for (const CaloHit *const pCaloHit : caloHitList)
         pointVector.push_back(pCaloHit->GetPositionVector());
 
-    return LArPCAHelper::RunPCA(pointVector, centroid, outputEigenValues, outputEigenVectors);
+    return LArPcaHelper::RunPca(pointVector, centroid, outputEigenValues, outputEigenVectors);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPCAHelper::RunPCA(const CartesianPointVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
+void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
     // The steps are:
     // 1) do a mean normalization of the input vec points
@@ -39,7 +39,7 @@ void LArPCAHelper::RunPCA(const CartesianPointVector &pointVector, CartesianVect
     // Run through the point vector and get the mean position of all points
     if (pointVector.empty())
     {
-        std::cout << "LArPCAHelper::RunPCA - No three dimensional hit found!" << std::endl;
+        std::cout << "LArPcaHelper::RunPca - no three dimensional hits provided" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
@@ -92,7 +92,7 @@ void LArPCAHelper::RunPCA(const CartesianPointVector &pointVector, CartesianVect
 
     if (std::fabs(weightSum) < std::numeric_limits<double>::epsilon())
     {
-        std::cout << "LArPCAHelper::RunPCA - The total weight of three dimensional hits is 0!" << std::endl;
+        std::cout << "LArPcaHelper::RunPca - weight of three dimensional hits = " << weightSum << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
@@ -102,7 +102,7 @@ void LArPCAHelper::RunPCA(const CartesianPointVector &pointVector, CartesianVect
 
     if (eigenMat.info() != Eigen::ComputationInfo::Success)
     {
-        std::cout << "PCAShowerParticleBuildingAlgorithm::RunPCA - PCA decompose failure, number of three D hits = " << pointVector.size() << std::endl;
+        std::cout << "LArPcaHelper::RunPca - decomposition failure, nThreeDHits = " << pointVector.size() << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
