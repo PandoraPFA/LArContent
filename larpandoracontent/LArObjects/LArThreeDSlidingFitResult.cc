@@ -11,6 +11,7 @@
 #include "Objects/Cluster.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
@@ -205,40 +206,30 @@ void ThreeDSlidingFitResult::GetGlobalDirection(const float dTdL1, const float d
 
 TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
 {
-    // TODO Reroute to CartesianPointVector function
-    if (pCluster->GetNCaloHits() < 2)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    if (pCluster->GetOrderedCaloHitList().size() < 2)
-    {
-        CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-        LArClusterHelper::GetExtremalCoordinates(pCluster, innerCoordinate, outerCoordinate);
-        return TrackState(innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector());
-    }
-
-    ClusterFitResult clusterFitResult;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, ClusterFitHelper::FitFullCluster(pCluster, clusterFitResult));
-
-    float minProjection(std::numeric_limits<float>::max());
-    const CartesianVector &fitDirection(clusterFitResult.GetDirection()), &fitIntercept(clusterFitResult.GetIntercept());
-
-    CartesianPointVector coordinateVector;
-    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
-
-    for (const CartesianVector &coordinate : coordinateVector)
-        minProjection = std::min(minProjection, fitDirection.GetDotProduct(coordinate - fitIntercept));
-
-    return TrackState(fitIntercept + (fitDirection * minProjection), fitDirection);
+    CartesianPointVector pointVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+    return ThreeDSlidingFitResult::GetPrimaryAxis(&pointVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *const pPointVector)
 {
-    // TODO Use Eigen to extract principal axis and centroid position
-    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(*pPointVector, innerCoordinate, outerCoordinate);
-    return TrackState(innerCoordinate, (outerCoordinate - innerCoordinate).GetUnitVector());
+    if (pPointVector->size() < 2)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    CartesianVector centroid(0.f, 0.f, 0.f);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(*pPointVector, centroid, eigenValues, eigenVecs);
+
+    float minProjection(std::numeric_limits<float>::max());
+    const CartesianVector &fitDirection(eigenVecs.at(0));
+
+    for (const CartesianVector &coordinate : *pPointVector)
+        minProjection = std::min(minProjection, fitDirection.GetDotProduct(coordinate - centroid));
+
+    return TrackState(centroid + (fitDirection * minProjection), fitDirection);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

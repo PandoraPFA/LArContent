@@ -39,6 +39,7 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     cet_report_compiler_flags()
 
     find_ups_product( pandora )
+    find_ups_product( eigen )
 
     cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
     cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
@@ -94,6 +95,13 @@ else()
         add_definitions(${PandoraMonitoring_DEFINITIONS})
         add_definitions("-DMONITORING")
     endif()
+
+    find_package( Eigen3 REQUIRED )
+    set(EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}")
+    if(NOT EIGEN3_INCLUDE_DIR)
+        message(FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
+    endif()
+    include_directories(${EIGEN3_INCLUDE_DIR})
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc

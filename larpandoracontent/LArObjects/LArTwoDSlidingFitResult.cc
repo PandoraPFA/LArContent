@@ -8,6 +8,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -553,11 +554,26 @@ const FitSegment &TwoDSlidingFitResult::GetFitSegment(const float rL) const
 
 void TwoDSlidingFitResult::CalculateAxes(const CartesianPointVector &coordinateVector)
 {
-    // Use extremal coordinates to define axis intercept and direction
-    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(coordinateVector, innerCoordinate, outerCoordinate);
-    m_axisIntercept = innerCoordinate;
-    m_axisDirection = (outerCoordinate - innerCoordinate).GetUnitVector();
+    if (coordinateVector.size() < 2)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    CartesianVector centroid(0.f, 0.f, 0.f);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(coordinateVector, centroid, eigenValues, eigenVecs);
+
+    float minProjection(std::numeric_limits<float>::max());
+    CartesianVector fitDirection(eigenVecs.at(0));
+
+    // ATTN TwoDSlidingFitResult convention is to point in direction of increasing z
+    if (fitDirection.GetZ() < 0.f)
+        fitDirection *= -1.f;
+
+    for (const CartesianVector &coordinate : coordinateVector)
+        minProjection = std::min(minProjection, fitDirection.GetDotProduct(coordinate - centroid));
+
+    m_axisIntercept = centroid + (fitDirection * minProjection);
+    m_axisDirection = fitDirection;
 
     // Use y-axis to generate an orthogonal axis (assuming that cluster occupies X-Z plane)
     CartesianVector yAxis(0.f, 1.f, 0.f);
