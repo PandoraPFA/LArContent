@@ -61,6 +61,8 @@ private:
 
     pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
 
+    bool                    m_zeroMode;                     ///< Whether to zero all existing cluster particle id, overrides all other parameters
+
     bool                    m_overwriteExistingId;          ///< Whether to consider any clusters that already have an assigned particle id
     bool                    m_useUnavailableClusters;       ///< Whether to consider clusters that are already constituents of a pfo
 
@@ -77,3 +79,4 @@ private:
 } // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_CHARACTERISATION_ALGORITHM_H
+

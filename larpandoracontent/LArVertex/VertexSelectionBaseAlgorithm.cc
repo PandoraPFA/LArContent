@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArVertex/VertexSelectionBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the vertex selection base algorithm class.
- * 
+ *
  *  $Log: $
  */
 #include "Pandora/AlgorithmHeaders.h"
@@ -21,7 +21,7 @@ namespace lar_content
 
 VertexSelectionBaseAlgorithm::VertexSelectionBaseAlgorithm() :
     m_replaceCurrentVertexList(true),
-    m_beamMode(false),
+    m_beamMode(true),
     m_nDecayLengthsInZSpan(2.f),
     m_selectSingleVertex(true),
     m_maxTopScoreSelections(3),
@@ -84,6 +84,55 @@ void VertexSelectionBaseAlgorithm::GetBeamConstants(const VertexVector &vertexVe
     const float zSpan(maxZCoordinate - minZCoordinate);
     const float decayConstant((zSpan < std::numeric_limits<float>::epsilon()) ? 0.f : (m_nDecayLengthsInZSpan / zSpan));
     beamConstants.SetConstants(minZCoordinate, decayConstant);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionBaseAlgorithm::GetClusterLists(const StringVector &inputClusterListNames, ClusterList &clusterListU, ClusterList &clusterListV,
+    ClusterList &clusterListW) const
+{
+    for (const std::string &clusterListName : inputClusterListNames)
+    {
+        const ClusterList *pClusterList(NULL);
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+        if (!pClusterList || pClusterList->empty())
+        {
+             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                 std::cout << "EnergyKickVertexSelectionAlgorithm: unable to find cluster list " << clusterListName << std::endl;
+
+            continue;
+        }
+
+        const HitType hitType(LArClusterHelper::GetClusterHitType(*(pClusterList->begin())));
+
+        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
+        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VertexSelectionBaseAlgorithm::CalculateClusterSlidingFits(const ClusterList &inputClusterList, const unsigned int minClusterCaloHits,
+    const unsigned int slidingFitWindow, SlidingFitDataList &slidingFitDataList) const
+{
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+    ClusterVector sortedClusters(inputClusterList.begin(), inputClusterList.end());
+    std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
+
+    for (const Cluster * const pCluster : sortedClusters)
+    {
+        if (pCluster->GetNCaloHits() < minClusterCaloHits)
+            continue;
+
+        // Make sure the window size is such that there are not more layers than hits (following TwoDSlidingLinearFit calculation).
+        const unsigned int newSlidingFitWindow(std::min(static_cast<int>(pCluster->GetNCaloHits()), static_cast<int>(slidingFitPitch * slidingFitWindow)));
+        slidingFitDataList.emplace_back(pCluster, newSlidingFitWindow, slidingFitPitch);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,6 +296,51 @@ bool VertexSelectionBaseAlgorithm::SortByVertexZPosition(const pandora::Vertex *
 
     // ATTN No way to distinguish between vertices if still have a tie in y coordinate
     return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+VertexSelectionBaseAlgorithm::SlidingFitData::SlidingFitData(const pandora::Cluster *const pCluster, const int slidingFitWindow,
+        const float slidingFitPitch) :
+    m_minLayerDirection(0.f, 0.f, 0.f),
+    m_maxLayerDirection(0.f, 0.f, 0.f),
+    m_minLayerPosition(0.f, 0.f, 0.f),
+    m_maxLayerPosition(0.f, 0.f, 0.f),
+    m_pCluster(pCluster)
+{
+    const TwoDSlidingFitResult slidingFitResult(pCluster, slidingFitWindow, slidingFitPitch);
+    m_minLayerDirection = slidingFitResult.GetGlobalMinLayerDirection();
+    m_maxLayerDirection = slidingFitResult.GetGlobalMaxLayerDirection();
+    m_minLayerPosition = slidingFitResult.GetGlobalMinLayerPosition();
+    m_maxLayerPosition = slidingFitResult.GetGlobalMaxLayerPosition();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+VertexSelectionBaseAlgorithm::ShowerCluster::ShowerCluster(const pandora::ClusterList &clusterList, const int slidingFitWindow,
+        const float slidingFitPitch) :
+    m_clusterList(clusterList),
+    m_coordinateVector(this->GetClusterListCoordinateVector(clusterList)),
+    m_twoDSlidingFitResult(&m_coordinateVector, slidingFitWindow, slidingFitPitch)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::CartesianPointVector VertexSelectionBaseAlgorithm::ShowerCluster::GetClusterListCoordinateVector(const pandora::ClusterList &clusterList) const
+{
+    CartesianPointVector coordinateVector;
+    
+    for (const Cluster * const pCluster : clusterList)
+    {
+        CartesianPointVector clusterCoordinateVector;
+        LArClusterHelper::GetCoordinateVector(pCluster, clusterCoordinateVector);
+        
+        coordinateVector.insert(coordinateVector.end(), std::make_move_iterator(clusterCoordinateVector.begin()), 
+                                std::make_move_iterator(clusterCoordinateVector.end()));
+    }
+    
+    return coordinateVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
