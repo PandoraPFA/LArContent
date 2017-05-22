@@ -49,6 +49,10 @@ private:
     bool                    m_shouldReadEvents;             ///< Whether to read events from a specified file
     std::string             m_eventFileName;                ///< Name of the file containing event information
     unsigned int            m_skipToEvent;                  ///< Index of first event to consider in input file
+
+    bool                    m_useLArCaloHits;               ///< Whether to read lar calo hits, or standard pandora calo hits
+    bool                    m_useLArMCParticles;            ///< Whether to read lar mc particles, or standard pandora mc particles
+
     pandora::FileReader    *m_pEventFileReader;             ///< Address of the event file reader
 };
 
