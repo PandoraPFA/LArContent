@@ -11,7 +11,7 @@
 #include "Objects/Cluster.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArPCAHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
@@ -219,9 +219,9 @@ TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *co
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     CartesianVector centroid(0.f, 0.f, 0.f);
-    LArPCAHelper::EigenVectors eigenVecs;
-    LArPCAHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-    LArPCAHelper::RunPCA(*pPointVector, centroid, eigenValues, eigenVecs);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(*pPointVector, centroid, eigenValues, eigenVecs);
 
     float minProjection(std::numeric_limits<float>::max());
     const CartesianVector &fitDirection(eigenVecs.at(0));

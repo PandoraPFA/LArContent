@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArCustomParticles/PCAShowerParticleBuildingAlgorithm.h
+ *  @file   larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h
  *
  *  @brief  Header file for the neutrino event creation algorithm class.
  *
@@ -16,15 +16,15 @@ namespace lar_content
 {
 
 /**
- *  @brief  PCAShowerParticleBuildingAlgorithm class
+ *  @brief  PcaShowerParticleBuildingAlgorithm class
  */
-class PCAShowerParticleBuildingAlgorithm : public CustomParticleCreationAlgorithm
+class PcaShowerParticleBuildingAlgorithm : public CustomParticleCreationAlgorithm
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    PCAShowerParticleBuildingAlgorithm();
+    PcaShowerParticleBuildingAlgorithm();
 
     /**
      *  @brief  Factory class for instantiating algorithm
@@ -66,9 +66,9 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Algorithm *PCAShowerParticleBuildingAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *PcaShowerParticleBuildingAlgorithm::Factory::CreateAlgorithm() const
 {
-    return new PCAShowerParticleBuildingAlgorithm();
+    return new PcaShowerParticleBuildingAlgorithm();
 }
 
 } // namespace lar_content
