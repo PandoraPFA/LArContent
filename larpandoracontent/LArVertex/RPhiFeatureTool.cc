@@ -51,6 +51,8 @@ void RPhiFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, con
     this->FillKernelEstimate(pVertex, TPC_VIEW_V, kdTreeMap.at(TPC_VIEW_V), kernelEstimateV);
     this->FillKernelEstimate(pVertex, TPC_VIEW_W, kdTreeMap.at(TPC_VIEW_W), kernelEstimateW);
 
+    const float expBeamDeweightingScore = std::exp(beamDeweightingScore);
+
     if (m_fastScoreCheck || m_fastScoreOnly)
     {
         const float fastScore(this->GetFastScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
@@ -61,14 +63,14 @@ void RPhiFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, con
             return;
         }
 
-        if (beamDeweightingScore * fastScore < m_minFastScoreFraction * bestFastScore)
+        if (expBeamDeweightingScore * fastScore < m_minFastScoreFraction * bestFastScore)
         {
             featureVector.push_back(std::numeric_limits<float>::min());
             return;
         }
 
-        if (beamDeweightingScore * fastScore > bestFastScore)
-            bestFastScore = beamDeweightingScore * fastScore;
+        if (expBeamDeweightingScore * fastScore > bestFastScore)
+            bestFastScore = expBeamDeweightingScore * fastScore;
     }
 
     featureVector.push_back(m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :

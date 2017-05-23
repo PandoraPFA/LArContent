@@ -387,7 +387,7 @@ void SvmVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamConstan
     const SlidingFitDataListMap &slidingFitDataListMap, const ShowerClusterListMap &showerClusterListMap, const KDTreeMap &kdTreeMap,
     const Vertex *const pVertex, VertexFeatureInfoMap &vertexFeatureInfoMap) const
 {
-    float bestFastScore(0.f); // not actually used - artefact of toolizing RPhi score and still using performance trick
+    float bestFastScore(std::numeric_limits<float>::min()); // not actually used - artefact of toolizing RPhi score and still using performance trick
 
     const double beamDeweighting(this->GetBeamDeweightingScore(beamConstants, pVertex));
 
@@ -504,7 +504,7 @@ void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertex
 void SvmVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector, VertexFeatureInfoMap &vertexFeatureInfoMap,
     const KDTreeMap &kdTreeMap) const
 {
-    float bestFastScore(0.f);
+    float bestFastScore(std::numeric_limits<float>::min());
 
     for (auto iter = vertexVector.begin(); iter != vertexVector.end(); /* no increment */)
     {
