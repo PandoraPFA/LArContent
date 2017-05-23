@@ -53,9 +53,9 @@ private:
 
         /**
          *  @brief  operator <
-         * 
+         *
          *  @param  rhs object for comparison
-         * 
+         *
          *  @return boolean
          */
         bool operator<(const SimpleMCPrimary &rhs) const;
@@ -134,7 +134,7 @@ private:
     /**
      *  @brief  Select a subset of reco neutrinos representing those that should be used in performance metrics (which will then
      *          integrate over all neutrino daughter particles, regardless of neutrino origin)
-     * 
+     *
      *  @param  allRecoParticleList the list of all reco particles
      *  @param  selectedRecoNeutrinoList to receive the populated selected reco neutrino list
      */
@@ -142,7 +142,7 @@ private:
 
     /**
      *  @brief  Extract details of each mc primary (ordered by number of true hits)
-     * 
+     *
      *  @param  mcPrimaryList the mc primary list
      *  @param  mcToTrueHitListMap the mc to true hit list map
      *  @param  mcToGoodTrueHitListMap the mc to good true hit list map (vetoes hits with significant energy sharing)
@@ -158,7 +158,7 @@ private:
 
     /**
      *  @brief  Obtain a sorted list of matched pfos for each mc primary
-     * 
+     *
      *  @param  simpleMCPrimaryList the simple mc primary list
      *  @param  pfoIdMap the pfo id map
      *  @param  mcToFullPfoMatchingMap the mc to full pfo matching map
@@ -171,7 +171,7 @@ private:
 
     /**
      *  @brief  Print all the raw matching output to screen
-     * 
+     *
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  recoNeutrinoVector the reco neutrino vector
      *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
@@ -182,7 +182,7 @@ private:
 
     /**
      *  @brief  Write all the raw matching output to a tree
-     * 
+     *
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  recoNeutrinoVector the reco neutrino vector
      *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
@@ -193,7 +193,7 @@ private:
 
     /**
      *  @brief  Get hits, downstream from a neutrino pfo, that are truly neutrino induced (and those that are not)
-     * 
+     *
      *  @param  pNeutrinoPfo address of the neutrino pfo
      *  @param  neutrinoInducedHits to receive the list of neutrino-induced downstream hits
      *  @param  otherHits to receive the list of downstream hits with non-neutrino origin
@@ -202,7 +202,7 @@ private:
 
     /**
      *  @brief  Get hits, from entire event, that are truly neutrino induced (and those that are not)
-     * 
+     *
      *  @param  neutrinoInducedHits to receive the list of neutrino-induced hits
      *  @param  otherHits to receive the list of hits with non-neutrino origin
      */
@@ -210,7 +210,7 @@ private:
 
     /**
      *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
-     * 
+     *
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      *  @param  matchingDetailsMap the matching details map, to be populated
      */
@@ -220,7 +220,7 @@ private:
 
     /**
      *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
-     * 
+     *
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      *  @param  usedMCIds the list of mc primary ids with an existing match
      *  @param  usedPfoIds the list of pfo ids with an existing match
@@ -230,7 +230,7 @@ private:
 
     /**
      *  @brief  Get the best matches for any pfos left-over after the strong matching procedure
-     * 
+     *
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      *  @param  usedPfoIds the list of pfo ids with an existing match
      *  @param  matchingDetailsMap the matching details map, to be populated
@@ -239,7 +239,7 @@ private:
 
     /**
      *  @brief  Print the results of the matching procedure
-     * 
+     *
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
      *  @param  matchingDetailsMap the matching details map
      */
@@ -248,7 +248,7 @@ private:
 #ifdef MONITORING
     /**
      *  @brief  Use Pandora monitoring to visualize results of the matching procedure
-     * 
+     *
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  recoNeutrinoVector the reco neutrino vector
      *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
@@ -259,7 +259,7 @@ private:
 
     /**
      *  @brief  Use Pandora monitoring to visualize vertex matches
-     * 
+     *
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  recoNeutrinoVector the reco neutrino vector
      *  @param  hitType the hitType to visualize (used for projections of 3D vertex positions)
@@ -294,37 +294,37 @@ private:
 #endif
     /**
      *  @brief  Whether a provided mc primary passes selection, based on number of "good" hits
-     * 
+     *
      *  @param  simpleMCPrimary the simple mc primary
-     * 
+     *
      *  @return boolean
      */
     bool IsGoodMCPrimary(const SimpleMCPrimary &simpleMCPrimary) const;
 
     /**
      *  @brief  Whether a provided mc primary has a match, of any quality (use simple matched pfo list and information in matching details map)
-     * 
+     *
      *  @param  simpleMCPrimary the simple mc primary
      *  @param  simpleMatchedPfoList the list of simple matched pfos
      *  @param  matchingDetailsMap the matching details map
-     * 
+     *
      *  @return boolean
      */
     bool HasMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfoList &simpleMatchedPfoList, const MatchingDetailsMap &matchingDetailsMap) const;
 
     /**
      *  @brief  Whether a provided mc primary and pfo are deemed to be a good match
-     * 
+     *
      *  @param  simpleMCPrimary the simple mc primary
      *  @param  simpleMatchedPfo the simple matched pfo
-     * 
+     *
      *  @return boolean
      */
     bool IsGoodMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfo &simpleMatchedPfo) const;
 
     /**
      *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
-     * 
+     *
      *  @param  pfoList the input pfo list
      *  @param  pfoIdMap to receive the pfo id map
      */
@@ -332,30 +332,30 @@ private:
 
     /**
      *  @brief  Sort simple mc primaries by number of mc hits
-     * 
+     *
      *  @param  lhs the left-hand side
      *  @param  rhs the right-hand side
-     * 
+     *
      *  @return boolean
      */
     static bool SortSimpleMCPrimaries(const SimpleMCPrimary &lhs, const SimpleMCPrimary &rhs);
 
     /**
      *  @brief  Sort simple matched pfos by number of matched hits
-     * 
+     *
      *  @param  lhs the left-hand side
      *  @param  rhs the right-hand side
-     * 
+     *
      *  @return boolean
      */
     static bool SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs);
 
     /**
      *  @brief  Sort reco neutrinos by number of hits in their largest daughter particle
-     * 
+     *
      *  @param  pLhs address the left-hand side instance
      *  @param  pRhs address the right-hand side instance
-     * 
+     *
      *  @return boolean
      */
     static bool SortRecoNeutrinos(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);

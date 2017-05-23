@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArVertex/SVMVertexSelectionAlgorithm.h
+ *  @file   larpandoracontent/LArVertex/SvmVertexSelectionAlgorithm.h
  *
- *  @brief  Header file for the SVM vertex selection algorithm class.
+ *  @brief  Header file for the svm vertex selection algorithm class.
  *
  *  $Log: $
  */
@@ -20,9 +20,9 @@
 namespace lar_content
 {
 /**
- *  @brief  SVMVertexSelectionAlgorithm class
+ *  @brief  SvmVertexSelectionAlgorithm class
  */
-class SVMVertexSelectionAlgorithm : public VertexSelectionBaseAlgorithm
+class SvmVertexSelectionAlgorithm : public VertexSelectionBaseAlgorithm
 {
 public:
     /**
@@ -90,7 +90,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    SVMVertexSelectionAlgorithm();
+    SvmVertexSelectionAlgorithm();
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -263,7 +263,7 @@ private:
 
     /**
      *  @brief  Calculate the r/phi scores for the vertices in a vector, possibly erasing those that fail the fast score test
-     * 
+     *
      *  @param  vertexVector the vector of vertices
      *  @param  vertexFeatureInfoMap the vertex feature info map
      *  @param  kdTreeMap the kd tree map
@@ -342,9 +342,9 @@ private:
         const pandora::VertexVector &vertexVector, VertexScoreList &finalVertexScoreList) const;
 
     VertexFeatureTool::FeatureToolVector    m_featureToolVector;    ///< The feature tool vector
-    std::string                             m_svmFileName;          ///< The SVM file name
-    std::string                             m_regionSvmName;        ///< The name of the region SVM to find
-    std::string                             m_vertexSvmName;        ///< The name of the vertex SVM to find
+    std::string                             m_svmFileName;          ///< The Svm file name
+    std::string                             m_regionSvmName;        ///< The name of the region Svm to find
+    std::string                             m_vertexSvmName;        ///< The name of the vertex Svm to find
     SupportVectorMachine                    m_svMachineRegion;      ///< The region support vector machine
     SupportVectorMachine                    m_svMachineVertex;      ///< The vertex support vector machine
 
@@ -357,22 +357,22 @@ private:
     unsigned int          m_minHitsForGoodView;                   ///< Minimum number of Hits for a view to be considered "good"
     unsigned int          m_minPrimaryGoodHits;                   ///< Minimum number of primary good Hits
     unsigned int          m_minPrimaryGoodViews;                  ///< Minimum number of primary good views
-    std::string           m_trainingOutputFileRegion;             ///< The training output file for the region SVM
-    std::string           m_trainingOutputFileVertex;             ///< The training output file for the vertex SVM
+    std::string           m_trainingOutputFileRegion;             ///< The training output file for the region Svm
+    std::string           m_trainingOutputFileVertex;             ///< The training output file for the vertex Svm
     std::string           m_mcParticleListName;                   ///< The MC particle list for creating training examples
     std::string           m_caloHitListName;                      ///< The 2D CaloHit list name
-                                                                  
+
     pandora::StringVector m_inputClusterListNames;                ///< The list of cluster list names
     unsigned int          m_minClusterCaloHits;                   ///< The min number of hits parameter in the energy score
     unsigned int          m_slidingFitWindow;                     ///< The layer window for the sliding linear fits
     float                 m_minShowerSpineLength;                 ///< The minimum length at which all are considered to be tracks
-                                                                  
+
     float                 m_beamDeweightingConstant;              ///< The beam deweighting constant for the initial region score list
     float                 m_localAsymmetryConstant;               ///< The local asymmetry constant for the initial region score list
     float                 m_globalAsymmetryConstant;              ///< The global asymmetry constant for the initial region score list
     float                 m_showerAsymmetryConstant;              ///< The shower asymmetry constant for the initial region score list
     float                 m_energyKickConstant;                   ///< The energy kick constant for the initial region score list
-                                                                  
+
     float                 m_showerClusteringDistance;             ///< The shower clustering distance
     unsigned int          m_minShowerClusterHits;                 ///< The minimum number of shower cluster hits
     bool                  m_useShowerClusteringApproximation;     ///< Whether to use the shower clustering distance approximation
@@ -385,7 +385,7 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SVMVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, 
+inline SvmVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
     const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
@@ -398,7 +398,7 @@ inline SVMVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const f
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SVMVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const float eventShoweryness, const float eventEnergy,
+inline SvmVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const float eventShoweryness, const float eventEnergy,
     const float eventVolume, const float longitudinality, const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates) :
     m_eventShoweryness(eventShoweryness),
     m_eventEnergy(eventEnergy),

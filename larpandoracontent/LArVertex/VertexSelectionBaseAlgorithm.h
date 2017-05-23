@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArSVMHelper.h"
+#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -32,8 +32,6 @@ public:
      *  @brief  Default constructor
      */
     VertexSelectionBaseAlgorithm();
-
-    //--------------------------------------------------------------------------------------------------------------------------------------
 
     /**
      *  @brief  VertexScore class
@@ -79,8 +77,6 @@ public:
 
     typedef std::vector<VertexScore> VertexScoreList;
 
-    //--------------------------------------------------------------------------------------------------------------------------------------
-
     /**
      *  @brief Beam constants class
      */
@@ -113,8 +109,6 @@ public:
         pandora::InputFloat     m_minZCoordinate;   ///< The min z coordinate
         pandora::InputFloat     m_decayConstant;    ///< The decay constant
     };
-
-    //--------------------------------------------------------------------------------------------------------------------------------------
 
     /**
      *  @brief Sliding fit data class.
@@ -176,8 +170,6 @@ public:
 
     typedef std::vector<SlidingFitData> SlidingFitDataList;
 
-    //--------------------------------------------------------------------------------------------------------------------------------------
-
     /**
      *  @brief Shower cluster class
      */
@@ -206,12 +198,12 @@ public:
          *  @return the fit
          */
         const TwoDSlidingFitResult &GetFit() const;
-        
+
         /**
          *  @brief  Get the coordinate vector for a cluster list
-         * 
+         *
          *  @param  clusterList the cluster list
-         * 
+         *
          *  @return the coordinate vector
          */
         pandora::CartesianPointVector GetClusterListCoordinateVector(const pandora::ClusterList &clusterList) const;
@@ -224,11 +216,17 @@ public:
 
     typedef std::vector<ShowerCluster> ShowerClusterList;
 
-    //--------------------------------------------------------------------------------------------------------------------------------------
-
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
     typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+
+    typedef std::map<pandora::HitType, const pandora::ClusterList &>              ClusterListMap;        ///< Map array of cluster lists for passing to tools
+    typedef std::map<pandora::HitType, const SlidingFitDataList>                  SlidingFitDataListMap; ///< Map of sliding fit data lists for passing to tools
+    typedef std::map<pandora::HitType, const ShowerClusterList>                   ShowerClusterListMap;  ///< Map of shower cluster lists for passing to tools
+    typedef std::map<pandora::HitType, const std::reference_wrapper<HitKDTree2D> > KDTreeMap;             ///< Map array of hit kd trees for passing to tools
+
+    typedef SvmFeatureTool<const VertexSelectionBaseAlgorithm *const, const pandora::Vertex * const, const SlidingFitDataListMap &,
+        const ClusterListMap &, const KDTreeMap &, const ShowerClusterListMap &, const float, float &>  VertexFeatureTool; ///< The base type for the vertex feature tools
 
 protected:
     /**
@@ -303,6 +301,8 @@ protected:
      */
     bool IsBeamModeOn() const;
 
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
 private:
     pandora::StatusCode Run();
 
@@ -363,17 +363,6 @@ private:
      *  @return whether lhs should precedes rhs
      */
     static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
-
-public:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    typedef std::map<pandora::HitType, const pandora::ClusterList &>              ClusterListMap;        ///< Map array of cluster lists for passing to tools
-    typedef std::map<pandora::HitType, const SlidingFitDataList>                  SlidingFitDataListMap; ///< Map of sliding fit data lists for passing to tools
-    typedef std::map<pandora::HitType, const ShowerClusterList>                   ShowerClusterListMap;  ///< Map of shower cluster lists for passing to tools
-    typedef std::map<pandora::HitType, const std::reference_wrapper<HitKDTree2D>> KDTreeMap;             ///< Map array of hit kd trees for passing to tools
-
-    typedef SVMFeatureTool<const VertexSelectionBaseAlgorithm *const, const pandora::Vertex * const, const SlidingFitDataListMap &,
-        const ClusterListMap &, const KDTreeMap &, const ShowerClusterListMap &, const float, float &>  VertexFeatureTool; ///< The base type for the vertex feature tools
 
 private:
     pandora::StringVector   m_inputCaloHitListNames;        ///< The list of calo hit list names

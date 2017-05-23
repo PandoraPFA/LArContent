@@ -330,16 +330,16 @@ VertexSelectionBaseAlgorithm::ShowerCluster::ShowerCluster(const pandora::Cluste
 pandora::CartesianPointVector VertexSelectionBaseAlgorithm::ShowerCluster::GetClusterListCoordinateVector(const pandora::ClusterList &clusterList) const
 {
     CartesianPointVector coordinateVector;
-    
+
     for (const Cluster * const pCluster : clusterList)
     {
         CartesianPointVector clusterCoordinateVector;
         LArClusterHelper::GetCoordinateVector(pCluster, clusterCoordinateVector);
-        
-        coordinateVector.insert(coordinateVector.end(), std::make_move_iterator(clusterCoordinateVector.begin()), 
+
+        coordinateVector.insert(coordinateVector.end(), std::make_move_iterator(clusterCoordinateVector.begin()),
                                 std::make_move_iterator(clusterCoordinateVector.end()));
     }
-    
+
     return coordinateVector;
 }
 
