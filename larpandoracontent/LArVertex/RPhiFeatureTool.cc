@@ -65,7 +65,7 @@ void RPhiFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, con
 
         if (expBeamDeweightingScore * fastScore < m_minFastScoreFraction * bestFastScore)
         {
-            featureVector.push_back(std::numeric_limits<float>::min());
+            featureVector.push_back(0.);
             return;
         }
 

@@ -195,8 +195,8 @@ private:
      *  @param  minCoord the current min coordinate
      *  @param  maxCoord the current max coordinate
      */
-    void UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, float &minCoord,
-        float &maxCoord) const;
+    void UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, pandora::InputFloat &minCoord,
+        pandora::InputFloat &maxCoord) const;
 
     /**
      *  @brief  Get the coordinate span
@@ -206,7 +206,7 @@ private:
      *
      *  @return the coordinate span
      */
-    float GetCoordinateSpan(const float minCoord, const float maxCoord) const;
+    float GetCoordinateSpan(const pandora::InputFloat &minCoord, const pandora::InputFloat &maxCoord) const;
 
     /**
      *  @brief  Add the event features to a vector in the correct order

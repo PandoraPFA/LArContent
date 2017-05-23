@@ -308,8 +308,7 @@ inline bool SvmVertexSelectionAlgorithm::IsClusterShowerLike(const Cluster *cons
 
 void SvmVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &clusterList, float &eventVolume, float &longitudinality) const
 {
-    float xMin(std::numeric_limits<float>::max()), yMin(std::numeric_limits<float>::max()), zMin(std::numeric_limits<float>::max());
-    float xMax(std::numeric_limits<float>::min()), yMax(std::numeric_limits<float>::min()), zMax(std::numeric_limits<float>::min());
+    InputFloat xMin, yMin, zMin, xMax, yMax, zMax;
 
     for (const Cluster *const pCluster : clusterList)
     {
@@ -347,22 +346,22 @@ void SvmVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &clust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void SvmVertexSelectionAlgorithm::UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, float &minCoord,
-    float &maxCoord) const
+inline void SvmVertexSelectionAlgorithm::UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, InputFloat &minCoord,
+    InputFloat &maxCoord) const
 {
-    if (minPositionCoord < minCoord)
+    if (!minCoord.IsInitialized() || minPositionCoord < minCoord.Get())
         minCoord = minPositionCoord;
 
-    if (maxPositionCoord > maxCoord)
+    if (!maxCoord.IsInitialized() || maxPositionCoord > maxCoord.Get())
         maxCoord = maxPositionCoord;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float SvmVertexSelectionAlgorithm::GetCoordinateSpan(const float minCoord, const float maxCoord) const
+inline float SvmVertexSelectionAlgorithm::GetCoordinateSpan(const InputFloat &minCoord, const InputFloat &maxCoord) const
 {
-   if ((minCoord < std::numeric_limits<float>::max()) && (maxCoord > std::numeric_limits<float>::min()))
-        return std::fabs(maxCoord - minCoord);
+   if (minCoord.IsInitialized() && maxCoord.IsInitialized())
+        return std::fabs(maxCoord.Get() - minCoord.Get());
 
     return 0.f;
 }
@@ -387,7 +386,7 @@ void SvmVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamConstan
     const SlidingFitDataListMap &slidingFitDataListMap, const ShowerClusterListMap &showerClusterListMap, const KDTreeMap &kdTreeMap,
     const Vertex *const pVertex, VertexFeatureInfoMap &vertexFeatureInfoMap) const
 {
-    float bestFastScore(std::numeric_limits<float>::min()); // not actually used - artefact of toolizing RPhi score and still using performance trick
+    float bestFastScore(-std::numeric_limits<float>::max()); // not actually used - artefact of toolizing RPhi score and still using performance trick
 
     const double beamDeweighting(this->GetBeamDeweightingScore(beamConstants, pVertex));
 
@@ -504,14 +503,14 @@ void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertex
 void SvmVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector, VertexFeatureInfoMap &vertexFeatureInfoMap,
     const KDTreeMap &kdTreeMap) const
 {
-    float bestFastScore(std::numeric_limits<float>::min());
+    float bestFastScore(-std::numeric_limits<float>::max());
 
     for (auto iter = vertexVector.begin(); iter != vertexVector.end(); /* no increment */)
     {
         VertexFeatureInfo &vertexFeatureInfo = vertexFeatureInfoMap.at(*iter);
-        vertexFeatureInfo.m_rPhiFeature = LArSvmHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, *iter,
+        vertexFeatureInfo.m_rPhiFeature = static_cast<float>(LArSvmHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, *iter,
             SlidingFitDataListMap(), ClusterListMap(), kdTreeMap, ShowerClusterListMap(), vertexFeatureInfo.m_beamDeweighting,
-            bestFastScore).at(0);
+            bestFastScore).at(0));
 
         if (m_dropFailedRPhiFastScoreCandidates && (vertexFeatureInfo.m_rPhiFeature <= std::numeric_limits<float>::epsilon()))
             iter = vertexVector.erase(iter);
