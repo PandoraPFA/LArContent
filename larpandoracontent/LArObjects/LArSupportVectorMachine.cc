@@ -31,7 +31,7 @@ pandora::StatusCode SupportVectorMachine::Initialize(const std::string &paramete
 {
     if (m_isInitialized)
     {
-        std::cout << "SupportVectorMachine: SVM was already initialized" << std::endl;
+        std::cout << "SupportVectorMachine: svm was already initialized" << std::endl;
         return pandora::STATUS_CODE_FAILURE;
     }
 
@@ -88,7 +88,7 @@ void SupportVectorMachine::ReadXmlFile(const std::string &svmFileName, const std
     const pandora::TiXmlHandle xmlDocumentHandle(&xmlDocument);
     pandora::TiXmlNode *pContainerXmlNode(pandora::TiXmlHandle(xmlDocumentHandle).FirstChildElement().Element());
 
-    // Try to find the SVM container with the required name
+    // Try to find the svm container with the required name
     while (pContainerXmlNode)
     {
         if (pContainerXmlNode->ValueStr() != "SupportVectorMachine")
@@ -107,11 +107,11 @@ void SupportVectorMachine::ReadXmlFile(const std::string &svmFileName, const std
 
     if (!pContainerXmlNode)
     {
-        std::cout << "SupportVectorMachine: Could not find an SVM by the name " << svmName << std::endl;
+        std::cout << "SupportVectorMachine: Could not find an svm by the name " << svmName << std::endl;
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
     }
 
-    // Read the components of this SVM container
+    // Read the components of this svm container
     pandora::TiXmlHandle localHandle(pContainerXmlNode);
     pandora::TiXmlElement *pCurrentXmlElement = localHandle.FirstChild().Element();
 
@@ -228,13 +228,13 @@ double SupportVectorMachine::CalculateClassificationScoreImpl(const DoubleVector
 {
     if (!m_isInitialized)
     {
-        std::cout << "SupportVectorMachine: could not perform classification because the SVM was uninitialized" << std::endl;
+        std::cout << "SupportVectorMachine: could not perform classification because the svm was uninitialized" << std::endl;
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
     }
 
     if (m_svInfoList.empty())
     {
-        std::cout << "SupportVectorMachine: could not perform classification because the initialized SVM had no support vectors in the model" << std::endl;
+        std::cout << "SupportVectorMachine: could not perform classification because the initialized svm had no support vectors in the model" << std::endl;
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
     }
 
