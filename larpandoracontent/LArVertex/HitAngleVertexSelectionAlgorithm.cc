@@ -7,7 +7,7 @@
  */
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArSVMHelper.h"
+#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
 
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
 
@@ -36,7 +36,7 @@ void HitAngleVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &ve
     {
         const float beamDeweightingScore(this->IsBeamModeOn() ? std::exp(this->GetBeamDeweightingScore(beamConstants, pVertex)) : 1.f);
 
-        const float rPhiScore(SVMHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex, SlidingFitDataListMap(),
+        const float rPhiScore(LArSvmHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex, SlidingFitDataListMap(),
             ClusterListMap(), kdTreeMap, ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0));
 
         vertexScoreList.emplace_back(pVertex, beamDeweightingScore * rPhiScore);
@@ -52,7 +52,7 @@ StatusCode HitAngleVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
 
     for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, SVMHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }

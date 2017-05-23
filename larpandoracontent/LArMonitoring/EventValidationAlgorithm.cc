@@ -1213,7 +1213,7 @@ bool EventValidationAlgorithm::SortRecoNeutrinos(const ParticleFlowObject *const
 EventValidationAlgorithm::SimpleMCPrimary::SimpleMCPrimary() :
     m_id(-1),
     m_pdgCode(0),
-    m_nMCHitsTotal(0),  
+    m_nMCHitsTotal(0),
     m_nMCHitsU(0),
     m_nMCHitsV(0),
     m_nMCHitsW(0),
@@ -1246,7 +1246,7 @@ bool EventValidationAlgorithm::SimpleMCPrimary::operator<(const SimpleMCPrimary 
 EventValidationAlgorithm::SimpleMatchedPfo::SimpleMatchedPfo() :
     m_id(-1),
     m_parentId(-1),
-    m_pdgCode(0), 
+    m_pdgCode(0),
     m_nPfoHitsTotal(0),
     m_nPfoHitsU(0),
     m_nPfoHitsV(0),

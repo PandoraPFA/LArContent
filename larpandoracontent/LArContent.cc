@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArContent.cc
- * 
+ *
  *  @brief  Factory implementations for content intended for use with particle flow reconstruction at liquid argon time projection chambers
- * 
+ *
  *  $Log: $
  */
 
@@ -161,7 +161,7 @@
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
-#include "larpandoracontent/LArVertex/SVMVertexSelectionAlgorithm.h"
+#include "larpandoracontent/LArVertex/SvmVertexSelectionAlgorithm.h"
 
 #include "larpandoracontent/LArContent.h"
 
@@ -247,7 +247,7 @@
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
-    d("LArSVMVertexSelection",                  SVMVertexSelectionAlgorithm)
+    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \

@@ -19,19 +19,19 @@ namespace lar_content
 {
 
 /**
- *  @brief  SVMFeatureTool class template
+ *  @brief  SvmFeatureTool class template
  */
 template <typename ...Ts>
-class SVMFeatureTool : public pandora::AlgorithmTool
+class SvmFeatureTool : public pandora::AlgorithmTool
 {
 public:
     typedef std::vector<double> DoubleVector;
-    typedef std::vector<SVMFeatureTool<Ts...> *> FeatureToolVector;
+    typedef std::vector<SvmFeatureTool<Ts...> *> FeatureToolVector;
 
     /**
      *  @brief  Default constructor.
      */
-    SVMFeatureTool() = default;
+    SvmFeatureTool() = default;
 
     /**
      *  @brief  Run the algorithm tool
@@ -43,7 +43,7 @@ public:
 };
 
 template <typename ...Ts>
-using SVMFeatureToolVector = std::vector<SVMFeatureTool<Ts...> *>;
+using SvmFeatureToolVector = std::vector<SvmFeatureTool<Ts...> *>;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ public:
     SupportVectorMachine();
 
     /**
-     *  @brief  Initialize the SVM using a serialized model.
+     *  @brief  Initialize the svm using a serialized model.
      *
      *  @param  parameterLocation the location of the model
      *  @param  svmName the name of the model
@@ -93,7 +93,7 @@ public:
     bool Classify(const DoubleVector &features) const;
 
     /**
-     *  @brief  Calculate the classification score for a set of input features, based on the trained model 
+     *  @brief  Calculate the classification score for a set of input features, based on the trained model
      *
      *  @param  features the input features
      *
@@ -102,7 +102,7 @@ public:
     double CalculateClassificationScore(const DoubleVector &features) const;
 
     /**
-     *  @brief  Query whether this SVM is initialized
+     *  @brief  Query whether this svm is initialized
      *
      *  @return whether the model is initialized
      */
@@ -156,7 +156,7 @@ private:
         FeatureInfo(const double muValue, const double sigmaValue);
 
         /**
-         *  @brief  Default constructor to allow default-construction of (uninitialized) SVMs.
+         *  @brief  Default constructor to allow default-construction of (uninitialized) svms.
          */
         FeatureInfo();
 
@@ -178,7 +178,7 @@ private:
 
     typedef std::map<KernelType, KernelFunction> KernelMap;
 
-    bool              m_isInitialized;       ///< Whether this SVM has been initialized
+    bool              m_isInitialized;       ///< Whether this svm has been initialized
 
     bool              m_standardizeFeatures; ///< Whether to standardize the features
     unsigned int      m_nFeatures;           ///< The number of features
@@ -193,10 +193,10 @@ private:
     KernelMap         m_kernelMap;           ///< Map from the kernel types to the kernel functions
 
     /**
-     *  @brief  Read the SVM parameters from an xml file
+     *  @brief  Read the svm parameters from an xml file
      *
      *  @param  svmFileName the sml file name
-     *  @param  svmName the name of the SVM
+     *  @param  svmName the name of the svm
      */
     void ReadXmlFile(const std::string &svmFileName, const std::string &svmName);
 

@@ -67,7 +67,7 @@ public:
 
     /**
      *  @brief  Get neutrino MC particles from an input MC particle list
-     * 
+     *
      *  @param  pMCParticleList the input MC particle list
      *  @param  trueNeutrinos to receive the vector of neutrino MC particles
      */
@@ -186,7 +186,7 @@ public:
      *  @brief  Find the mc particle making the largest contribution to 2D clusters in a specified pfo
      *
      *  @param  pT address of the pfo to examine
-     * 
+     *
      *  @return address of the main mc particle
      */
     static const pandora::MCParticle *GetMainMCParticle(const pandora::ParticleFlowObject *const pPfo);
@@ -196,7 +196,7 @@ public:
      *
      *  @param  pT address of the pfo to examine
      *  @param  mcPrimaryMap the provided mapping between mc particles and their parents
-     * 
+     *
      *  @return address of the main mc primary
      */
     static const pandora::MCParticle *GetMainMCPrimary(const pandora::ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap);
@@ -208,10 +208,10 @@ public:
      *  @param  pRhs address of second mc particle
      */
     static bool SortByMomentum(const pandora::MCParticle *const pLhs, const pandora::MCParticle *const pRhs);
-        
+
     /**
      *  @brief  Select a subset of true neutrinos representing those that should be used in performance metrics
-     * 
+     *
      *  @param  pAllMCParticleList address of the input mc particle list
      *  @param  selectedMCNeutrinoVector to receive the populated selected true neutrino vector
      */
@@ -219,7 +219,7 @@ public:
 
     /**
      *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
-     * 
+     *
      *  @param  pCaloHitList the address of the input calo hit list
      *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
      *  @param  selectedCaloHitList to receive the populated selected calo hit list
@@ -232,20 +232,20 @@ public:
     /**
      *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether
      *          a target mc particle is reconstructable.
-     * 
+     *
      *  @param  pSelectedCaloHitList the address of the calo hit list (typically already been through some selection procedure)
      *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
      *  @param  selectedGoodCaloHitList to receive the populated good selected calo hit list
      *  @param  selectInputHits whether to select input hits
      *  @param  minHitSharingFraction the minimum Hit sharing fraction
-     *  
+     *
      */
     static void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
         pandora::CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction);
-        
+
     /**
      *  @brief  Get the interaction type of an event
-     * 
+     *
      *  @param  pLArMCNeutrino the address of the LArMCParticle object
      *  @param  pMCParticleList the address of the list of MCParticles
      *  @param  pCaloHitList the address of the list of CaloHits
@@ -255,24 +255,24 @@ public:
      *  @param  selectInputHits whether to select input hits
      *  @param  maxPhotonPropagation the maximum photon propagation length
      *  @param  minHitSharingFraction the minimum Hit sharing fraction
-     * 
+     *
      *  @return interaction type
      */
-    static InteractionType GetInteractionType(const LArMCParticle *const pLArMCNeutrino, const pandora::MCParticleList *pMCParticleList, 
-        const pandora::CaloHitList *pCaloHitList, const unsigned int minPrimaryGoodHits, const unsigned int minHitsForGoodView, 
+    static InteractionType GetInteractionType(const LArMCParticle *const pLArMCNeutrino, const pandora::MCParticleList *pMCParticleList,
+        const pandora::CaloHitList *pCaloHitList, const unsigned int minPrimaryGoodHits, const unsigned int minHitsForGoodView,
         const unsigned int minPrimaryGoodViews, const bool selectInputHits, const float maxPhotonPropagation, const float minHitSharingFraction);
-    
+
     /**
      *  @brief  Get a string representation of an interaction type
-     * 
+     *
      *  @param  interactionType the interaction type
-     * 
+     *
      *  @return string
      */
     static std::string ToString(const InteractionType interactionType);
-    
+
     //--------------------------------------------------------------------------------------------------------------------------------------
-    
+
     /**
      *  @brief   InteractionType enum
      */
@@ -379,16 +379,16 @@ public:
         OTHER_INTERACTION,
         ALL_INTERACTIONS
     };
-    
+
 private:
     /**
      *  @brief  Whether it is possible to navigate from a primary mc particle to a downstream mc particle without "passing through" a neutron
-     * 
+     *
      *  @param  pOriginalPrimary the address of the original primary mc particle
      *  @param  pThisMCParticle the address of the current mc particle in the primary decay chain
      *  @param  pHitMCParticle the address of the mc particle associated to a calo hit
      *  @param  maxPhotonPropagation the maximum photon propagation length
-     * 
+     *
      *  @return boolean
      */
     static bool PassMCParticleChecks(const pandora::MCParticle *const pOriginalPrimary, const pandora::MCParticle *const pThisMCParticle,
