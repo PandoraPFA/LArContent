@@ -99,7 +99,7 @@ StatusCode EventValidationAlgorithm::Run()
 
     // Obtain vector: true neutrinos
     MCParticleVector mcNeutrinoVector;
-    this->SelectTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
+    LArMCParticleHelper::SelectTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
 
     // Obtain vector: primary mc particles
     MCParticleVector mcPrimaryVector;
@@ -111,7 +111,7 @@ StatusCode EventValidationAlgorithm::Run()
 
     // Remove non-reconstructable hits, e.g. those downstream of a neutron
     CaloHitList selectedCaloHitList;
-    this->SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList);
+    LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, m_selectInputHits, m_maxPhotonPropagation);
 
     // Obtain maps: [hit -> primary mc particle], [primary mc particle -> list of hits]
     LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;
@@ -131,7 +131,7 @@ StatusCode EventValidationAlgorithm::Run()
 
     // Remove shared hits where target particle deposits below threshold energy fraction
     CaloHitList goodCaloHitList;
-    this->SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList);
+    LArMCParticleHelper::SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList, m_selectInputHits, m_minHitSharingFraction);
 
     // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
     LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
@@ -219,136 +219,6 @@ void EventValidationAlgorithm::SelectRecoNeutrinos(const PfoList &allRecoParticl
 
     if (pBestNeutrino)
         selectedRecoNeutrinoList.push_back(pBestNeutrino);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EventValidationAlgorithm::SelectTrueNeutrinos(const MCParticleList *const pAllMCParticleList, MCParticleVector &selectedMCNeutrinoVector) const
-{
-    MCParticleVector allMCNeutrinoVector;
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pAllMCParticleList, allMCNeutrinoVector);
-
-    for (const MCParticle *const pMCNeutrino : allMCNeutrinoVector)
-    {
-        // ATTN Now demand that input mc neutrinos LArMCParticles, with addition of interaction type
-        const LArMCParticle *const pLArMCNeutrino(dynamic_cast<const LArMCParticle*>(pMCNeutrino));
-
-        if (pLArMCNeutrino && (0 != pLArMCNeutrino->GetNuanceCode()))
-            selectedMCNeutrinoVector.push_back(pMCNeutrino);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EventValidationAlgorithm::SelectCaloHits(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
-    CaloHitList &selectedCaloHitList) const
-{
-    if (!m_selectInputHits)
-    {
-        selectedCaloHitList.insert(selectedCaloHitList.end(), pCaloHitList->begin(), pCaloHitList->end());
-        return;
-    }
-
-    for (const CaloHit *const pCaloHit : *pCaloHitList)
-    {
-        try
-        {
-            const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
-
-            LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
-
-            if (mcToPrimaryMCMap.end() == mcIter)
-                continue;
-
-            const MCParticle *const pPrimaryParticle = mcIter->second;
-
-            if (this->PassMCParticleChecks(pPrimaryParticle, pPrimaryParticle, pHitParticle))
-                selectedCaloHitList.push_back(pCaloHit);
-        }
-        catch (const StatusCodeException &)
-        {
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EventValidationAlgorithm::SelectGoodCaloHits(const CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
-    CaloHitList &selectedGoodCaloHitList) const
-{
-    if (!m_selectInputHits)
-    {
-        selectedGoodCaloHitList.insert(selectedGoodCaloHitList.end(), pSelectedCaloHitList->begin(), pSelectedCaloHitList->end());
-        return;
-    }
-
-    for (const CaloHit *const pCaloHit : *pSelectedCaloHitList)
-    {
-        MCParticleVector mcParticleVector;
-        for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(mapEntry.first);
-        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
-
-        MCParticleWeightMap primaryWeightMap;
-
-        for (const MCParticle *const pMCParticle : mcParticleVector)
-        {
-            const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
-            LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pMCParticle);
-
-            if (mcToPrimaryMCMap.end() != mcIter)
-                primaryWeightMap[mcIter->second] += weight;
-        }
-
-        MCParticleVector mcPrimaryVector;
-        for (const auto &mapEntry : primaryWeightMap) mcPrimaryVector.push_back(mapEntry.first);
-        std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), PointerLessThan<MCParticle>());
-
-        const MCParticle *pBestPrimaryParticle(nullptr);
-        float bestPrimaryWeight(0.f), primaryWeightSum(0.f);
-
-        for (const MCParticle *const pPrimaryMCParticle : mcPrimaryVector)
-        {
-            const float primaryWeight(primaryWeightMap.at(pPrimaryMCParticle));
-            primaryWeightSum += primaryWeight;
-
-            if (primaryWeight > bestPrimaryWeight)
-            {
-                bestPrimaryWeight = primaryWeight;
-                pBestPrimaryParticle = pPrimaryMCParticle;
-            }
-        }
-
-        if (!pBestPrimaryParticle || (primaryWeightSum < std::numeric_limits<float>::epsilon()) || ((bestPrimaryWeight / primaryWeightSum) < m_minHitSharingFraction))
-            continue;
-
-        selectedGoodCaloHitList.push_back(pCaloHit);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool EventValidationAlgorithm::PassMCParticleChecks(const MCParticle *const pOriginalPrimary, const MCParticle *const pThisMCParticle,
-    const MCParticle *const pHitMCParticle) const
-{
-    if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
-        return false;
-
-    if ((PHOTON == pThisMCParticle->GetParticleId()) && (PHOTON != pOriginalPrimary->GetParticleId()) && (E_MINUS != std::abs(pOriginalPrimary->GetParticleId())))
-    {
-        if ((pThisMCParticle->GetEndpoint() - pThisMCParticle->GetVertex()).GetMagnitude() > m_maxPhotonPropagation)
-            return false;
-    }
-
-    if (pThisMCParticle == pHitMCParticle)
-        return true;
-
-    for (const MCParticle *const pDaughterMCParticle : pThisMCParticle->GetDaughterList())
-    {
-        if (this->PassMCParticleChecks(pOriginalPrimary, pDaughterMCParticle, pHitMCParticle))
-            return true;
-    }
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -504,8 +374,8 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
         this->GetNeutrinoHitOrigins(pPfo, allRecoNeutrinoHits, allRecoOtherHits);
 
         CaloHitList recoNeutrinoHits, recoOtherHits;
-        this->SelectCaloHits(&allRecoNeutrinoHits, mcToPrimaryMCMap, recoNeutrinoHits);
-        this->SelectCaloHits(&allRecoOtherHits, mcToPrimaryMCMap, recoOtherHits);
+        LArMCParticleHelper::SelectCaloHits(&allRecoNeutrinoHits, mcToPrimaryMCMap, recoNeutrinoHits, m_selectInputHits, m_maxPhotonPropagation);
+        LArMCParticleHelper::SelectCaloHits(&allRecoOtherHits, mcToPrimaryMCMap, recoOtherHits, m_selectInputHits, m_maxPhotonPropagation);
 
         if (!(recoNeutrinoHits.empty() && recoOtherHits.empty()))
         {
@@ -517,8 +387,8 @@ void EventValidationAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrino
         this->GetEventHitOrigins(allEventNeutrinoHits, allEventOtherHits);
 
         CaloHitList eventNeutrinoHits, eventOtherHits;
-        this->SelectCaloHits(&allEventNeutrinoHits, mcToPrimaryMCMap, eventNeutrinoHits);
-        this->SelectCaloHits(&allEventOtherHits, mcToPrimaryMCMap, eventOtherHits);
+        LArMCParticleHelper::SelectCaloHits(&allEventNeutrinoHits, mcToPrimaryMCMap, eventNeutrinoHits, m_selectInputHits, m_maxPhotonPropagation);
+        LArMCParticleHelper::SelectCaloHits(&allEventOtherHits, mcToPrimaryMCMap, eventOtherHits, m_selectInputHits, m_maxPhotonPropagation);
 
         if (!eventNeutrinoHits.empty())
         {
@@ -612,8 +482,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         this->GetNeutrinoHitOrigins(pPfo, allRecoNeutrinoHits, allRecoOtherHits);
 
         CaloHitList recoNeutrinoHits, recoOtherHits;
-        this->SelectCaloHits(&allRecoNeutrinoHits, mcToPrimaryMCMap, recoNeutrinoHits);
-        this->SelectCaloHits(&allRecoOtherHits, mcToPrimaryMCMap, recoOtherHits);
+        LArMCParticleHelper::SelectCaloHits(&allRecoNeutrinoHits, mcToPrimaryMCMap, recoNeutrinoHits, m_selectInputHits, m_maxPhotonPropagation);
+        LArMCParticleHelper::SelectCaloHits(&allRecoOtherHits, mcToPrimaryMCMap, recoOtherHits, m_selectInputHits, m_maxPhotonPropagation);
 
         nRecoNeutrinoHitsTotal = recoNeutrinoHits.size();
         nRecoNeutrinoHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, recoNeutrinoHits);
@@ -634,8 +504,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
     this->GetEventHitOrigins(allEventNeutrinoHits, allEventOtherHits);
 
     CaloHitList eventNeutrinoHits, eventOtherHits;
-    this->SelectCaloHits(&allEventNeutrinoHits, mcToPrimaryMCMap, eventNeutrinoHits);
-    this->SelectCaloHits(&allEventOtherHits, mcToPrimaryMCMap, eventOtherHits);
+    LArMCParticleHelper::SelectCaloHits(&allEventNeutrinoHits, mcToPrimaryMCMap, eventNeutrinoHits, m_selectInputHits, m_maxPhotonPropagation);
+    LArMCParticleHelper::SelectCaloHits(&allEventOtherHits, mcToPrimaryMCMap, eventOtherHits, m_selectInputHits, m_maxPhotonPropagation);
 
     const int nEventNeutrinoHitsTotal = eventNeutrinoHits.size();
     const int nEventNeutrinoHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, eventNeutrinoHits);
@@ -1343,7 +1213,7 @@ bool EventValidationAlgorithm::SortRecoNeutrinos(const ParticleFlowObject *const
 EventValidationAlgorithm::SimpleMCPrimary::SimpleMCPrimary() :
     m_id(-1),
     m_pdgCode(0),
-    m_nMCHitsTotal(0),  
+    m_nMCHitsTotal(0),
     m_nMCHitsU(0),
     m_nMCHitsV(0),
     m_nMCHitsW(0),
@@ -1376,7 +1246,7 @@ bool EventValidationAlgorithm::SimpleMCPrimary::operator<(const SimpleMCPrimary 
 EventValidationAlgorithm::SimpleMatchedPfo::SimpleMatchedPfo() :
     m_id(-1),
     m_parentId(-1),
-    m_pdgCode(0), 
+    m_pdgCode(0),
     m_nPfoHitsTotal(0),
     m_nPfoHitsU(0),
     m_nPfoHitsV(0),
