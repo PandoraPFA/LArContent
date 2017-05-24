@@ -1,3 +1,4 @@
+include_directories( $ENV{EIGEN_INC} )
 
 set( subdir_list LArCheating
 		 LArCustomParticles
