@@ -5,9 +5,12 @@ else
     PROJECT_LIBRARY_DIR = $(PROJECT_DIR)/lib
 endif
 
+ifndef EIGEN_INC
+    EIGEN_INC = $(PANDORA_DIR)/Eigen3
+endif
+
 CC = g++
-CFLAGS = -c -g -fPIC -O2 -Wall -Wextra -pedantic -Werror -std=c++11
-#-Wshadow removed for Eigen
+CFLAGS = -c -g -fPIC -O2 -Wall -Wextra -pedantic -Werror -Wshadow -std=c++11
 ifdef BUILD_32BIT_COMPATIBLE
     CFLAGS += -m32
 endif
@@ -25,10 +28,10 @@ PROJECT_LIBRARY = $(PROJECT_LIBRARY_DIR)/libLArContent.so
 
 INCLUDES  = -I$(PROJECT_INCLUDE_DIR)
 INCLUDES += -I$(PANDORA_DIR)/PandoraSDK/include
+INCLUDES += -isystem $(EIGEN_INC)/
 ifdef MONITORING
     INCLUDES += -I$(PANDORA_DIR)/PandoraMonitoring/include
 endif
-INCLUDES += -I$(EIGEN_INC)/
 
 ifdef MONITORING
     DEFINES = -DMONITORING=1
