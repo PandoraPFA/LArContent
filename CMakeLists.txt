@@ -96,12 +96,8 @@ else()
         add_definitions("-DMONITORING")
     endif()
 
-    find_package( Eigen3 REQUIRED )
-    set(EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}")
-    if(NOT EIGEN3_INCLUDE_DIR)
-        message(FATAL_ERROR "Please point the environment variable EIGEN3_INCLUDE_DIR to the include directory of your Eigen3 installation.")
-    endif()
-    include_directories(${EIGEN3_INCLUDE_DIR})
+    find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+    include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
