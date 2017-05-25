@@ -111,9 +111,12 @@
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
 #include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
 
-#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
-#include "larpandoracontent/LArTrackShowerId/PfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/SvmClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/SvmPfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h"
@@ -205,9 +208,11 @@
     d("LArThreeDShowers",                       ThreeDShowersAlgorithm)                                                         \
     d("LArThreeDTrackFragments",                ThreeDTrackFragmentsAlgorithm)                                                  \
     d("LArThreeDTransverseTracks",              ThreeDTransverseTracksAlgorithm)                                                \
-    d("LArClusterCharacterisation",             ClusterCharacterisationAlgorithm)                                               \
-    d("LArPfoCharacterisation",                 PfoCharacterisationAlgorithm)                                                   \
+    d("LArCutClusterCharacterisation",          CutClusterCharacterisationAlgorithm)                                            \
+    d("LArCutPfoCharacterisation",              CutPfoCharacterisationAlgorithm)                                                \
     d("LArShowerGrowing",                       ShowerGrowingAlgorithm)                                                         \
+    d("LArSvmClusterCharacterisation",          SvmClusterCharacterisationAlgorithm)                                            \
+    d("LArSvmPfoCharacterisation",              SvmPfoCharacterisationAlgorithm)                                                \
     d("LArCrossGapsAssociation",                CrossGapsAssociationAlgorithm)                                                  \
     d("LArCrossGapsExtension",                  CrossGapsExtensionAlgorithm)                                                    \
     d("LArLongitudinalAssociation",             LongitudinalAssociationAlgorithm)                                               \
@@ -287,7 +292,13 @@
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
     d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \
     d("LArRPhiFeature",                         RPhiFeatureTool)                                                                \
-    d("LArShowerAsymmetryFeature",              ShowerAsymmetryFeatureTool)
+    d("LArShowerAsymmetryFeature",              ShowerAsymmetryFeatureTool)                                                     \
+    d("LArShowerFitFeatureTool",                ShowerFitFeatureTool)                                                           \
+    d("LArNHitsFeatureTool",                    NHitsFeatureTool)                                                               \
+    d("LArLinearFitFeatureTool",                LinearFitFeatureTool)                                                           \
+    d("LArNNearbyClustersFeatureTool",          NNearbyClustersFeatureTool)                                                     \
+    d("LArMipEnergyFeatureTool",                MipEnergyFeatureTool)                                                           \
+    d("LArVertexDistanceFeatureTool",           VertexDistanceFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)

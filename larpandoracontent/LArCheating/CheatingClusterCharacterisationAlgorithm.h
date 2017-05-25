@@ -8,7 +8,7 @@
 #ifndef LAR_CHEATING_CLUSTER_CHARACTERISATION_ALGORITHM_H
 #define LAR_CHEATING_CLUSTER_CHARACTERISATION_ALGORITHM_H 1
 
-#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationBaseAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  CheatingClusterCharacterisationAlgorithm class
  */
-class CheatingClusterCharacterisationAlgorithm : public ClusterCharacterisationAlgorithm
+class CheatingClusterCharacterisationAlgorithm : public ClusterCharacterisationBaseAlgorithm
 {
 private:
     bool IsClearTrack(const pandora::Cluster *const pCluster) const;

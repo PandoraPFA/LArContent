@@ -54,8 +54,14 @@ bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject
     if (!pBestMCParticle)
         return false;
 
-    const int absParticleId(std::abs(pBestMCParticle->GetParticleId()));
-    return ((MU_MINUS == absParticleId) || (PROTON == absParticleId) || (PI_PLUS == absParticleId));
+    return ((PHOTON != pBestMCParticle->GetParticleId()) && (E_MINUS != std::abs(pBestMCParticle->GetParticleId())));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const /*pCluster*/) const
+{
+    throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 } // namespace lar_content

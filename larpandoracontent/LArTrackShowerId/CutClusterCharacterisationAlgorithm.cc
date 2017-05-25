@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.cc
+ *  @file   larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.cc
  *
- *  @brief  Implementation of the cluster characterisation algorithm class.
+ *  @brief  Implementation of the cut based cluster characterisation algorithm class.
  *
  *  $Log: $
  */
@@ -14,17 +14,14 @@
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArTrackShowerId/ClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
-    m_zeroMode(false),
-    m_overwriteExistingId(false),
-    m_useUnavailableClusters(false),
+CutClusterCharacterisationAlgorithm::CutClusterCharacterisationAlgorithm() :
     m_slidingFitWindow(5),
     m_slidingShowerFitWindow(10),
     m_minCaloHitsCut(6),
@@ -38,7 +35,7 @@ ClusterCharacterisationAlgorithm::ClusterCharacterisationAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ClusterCharacterisationAlgorithm::GetVertexDistance(const Algorithm *const pAlgorithm, const Cluster *const pCluster)
+float CutClusterCharacterisationAlgorithm::GetVertexDistance(const Algorithm *const pAlgorithm, const Cluster *const pCluster)
 {
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
@@ -55,7 +52,7 @@ float ClusterCharacterisationAlgorithm::GetVertexDistance(const Algorithm *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ClusterCharacterisationAlgorithm::GetShowerFitWidth(const Algorithm *const pAlgorithm, const Cluster *const pCluster,
+float CutClusterCharacterisationAlgorithm::GetShowerFitWidth(const Algorithm *const pAlgorithm, const Cluster *const pCluster,
     const unsigned int showerFitWindow)
 {
     try
@@ -90,63 +87,7 @@ float ClusterCharacterisationAlgorithm::GetShowerFitWidth(const Algorithm *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterCharacterisationAlgorithm::Run()
-{
-    for (const std::string &clusterListName : m_inputClusterListNames)
-    {
-        const ClusterList *pClusterList = NULL;
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
-
-        if (!pClusterList || pClusterList->empty())
-        {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "ClusterCharacterisationAlgorithm: unable to find cluster list " << clusterListName << std::endl;
-
-            continue;
-        }
-
-        if (m_zeroMode)
-        {
-            for (const Cluster *const pCluster : *pClusterList)
-            {
-                PandoraContentApi::Cluster::Metadata metadata;
-                metadata.m_particleId = UNKNOWN_PARTICLE_TYPE;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
-            }
-
-            return STATUS_CODE_SUCCESS;
-        }
-
-        for (const Cluster *const pCluster : *pClusterList)
-        {
-            if (!m_overwriteExistingId && (UNKNOWN_PARTICLE_TYPE != pCluster->GetParticleId()))
-                continue;
-
-            if (!m_useUnavailableClusters && !PandoraContentApi::IsAvailable(*this, pCluster))
-                continue;
-
-            PandoraContentApi::Cluster::Metadata metadata;
-
-            if (this->IsClearTrack(pCluster))
-            {
-                metadata.m_particleId = MU_MINUS;
-            }
-            else
-            {
-                metadata.m_particleId = E_MINUS;
-            }
-
-            if (pCluster->GetParticleId() != metadata.m_particleId.Get())
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pCluster, metadata));
-        }
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
+bool CutClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
 {
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
         return false;
@@ -190,12 +131,12 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
     if ((rTMax - rTMin) / straightLineLength > m_rTWidthRatioCut)
         return false;
 
-    const float vertexDistance(ClusterCharacterisationAlgorithm::GetVertexDistance(this, pCluster));
+    const float vertexDistance(CutClusterCharacterisationAlgorithm::GetVertexDistance(this, pCluster));
 
     if ((vertexDistance > std::numeric_limits<float>::epsilon()) && ((vertexDistance / straightLineLength) > m_vertexDistanceRatioCut))
         return false;
 
-    const float showerFitWidth(ClusterCharacterisationAlgorithm::GetShowerFitWidth(this, pCluster, m_slidingShowerFitWindow));
+    const float showerFitWidth(CutClusterCharacterisationAlgorithm::GetShowerFitWidth(this, pCluster, m_slidingShowerFitWindow));
 
     if ((showerFitWidth < std::numeric_limits<float>::epsilon()) || ((showerFitWidth / straightLineLength) > m_showerWidthRatioCut))
         return false;
@@ -205,23 +146,8 @@ bool ClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CutClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ZeroMode", m_zeroMode));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OverwriteExistingId", m_overwriteExistingId));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseUnavailableClusters", m_useUnavailableClusters));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseUnavailableClusters", m_useUnavailableClusters));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 
@@ -246,8 +172,7 @@ StatusCode ClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerWidthRatioCut", m_showerWidthRatioCut));
 
-    return STATUS_CODE_SUCCESS;
+    return ClusterCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content
-
