@@ -271,7 +271,8 @@ StatusCode TrackShowerIdFeatureTool::ShowerFitGapLengthFeatureTool::ReadSettings
     m_slidingLinearFitWindow(3),
     m_addDiffWithStraightLine(true),
     m_adddTdLWidth(true),
-    m_addMaxFitGapLength(true)
+    m_addMaxFitGapLength(true),
+    m_addRMSLinearFit(true)
 {
 }
 
@@ -284,32 +285,40 @@ const pandora::Cluster * const pCluster)
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
   
   
-    float dTdLWidth(-1.f), straightLineLengthLarge(-1.f), diffWithStraigthLine(0.f), maxFitGapLength(-std::numeric_limits<float>::max());
-    this->CalculateVariablesSlidingLinearFit(pCluster,straightLineLengthLarge,diffWithStraigthLine,dTdLWidth,maxFitGapLength);
+    float dTdLWidth(-1.f), straightLineLengthLarge(-1.f), diffWithStraightLine(0.f), diffWithStraightLineMean(0.f),diffWithStraightLineSigma(0.f) maxFitGapLength(-std::numeric_limits<float>::max()), rmsSlidingLinearFit(0.f);
+      
+    this->CalculateVariablesSlidingLinearFit(pCluster,straightLineLengthLarge,diffWithStraightLine,diffWithStraightLineMean,diffWithStraightLineSigma,dTdLWidth,maxFitGapLength, rmsSlidingLinearFit);
+					     
 	//TODO: try with a larget fit window if fails?
   
-    //featureVector.push_back(straightLineLength); 
     featureVector.push_back(straightLineLengthLarge); 
     if (m_addDiffWithStraightLine)
-        featureVector.push_back(diffWithStraigthLine);
+      {
+	featureVector.push_back(diffWithStraightLineMean);                                                       
+	featureVector.push_back(diffWithStraightLineSigma);
+	//        featureVector.push_back(diffWithStraightLine);
+      }
     if (m_adddTdLWidth)
         featureVector.push_back(dTdLWidth);
     if (m_addMaxFitGapLength)
         featureVector.push_back(maxFitGapLength);
+    if (m_addRMSLinearFit)                                                                                           
+      featureVector.push_back(rmsSlidingLinearFit); 
     
 } 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackShowerIdFeatureTool::LinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster * const pCluster, 
-float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, float &maxFitGapLength) const
+void TrackShowerIdFeatureTool::LinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster * const pCluster, float &straightLineLengthLarge, float &diffWithStraightLine, float &diffWithStraightLineMean, float &diffWithStraightLineSigma, float &dTdLWidth, float &maxFitGapLength, float &rmsSlidingLinearFit) const
 {
     
-	float dTdLMin(+std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max());                                       
+       float dTdLMin(+std::numeric_limits<float>::max()), dTdLMax(-std::numeric_limits<float>::max());                         
+       FloatVector dTdLVector, diffWithStraightLineVector; 
 	CartesianVector globalMinLayerPositionLarge(0.f,0.f,0.f), globalMaxLayerPositionLarge(0.f,0.f,0.f);
 
 	try
 	{
+	  diffWithStraightLine = 0.f;                                                                              
+	  rmsSlidingLinearFit = 0.f;
 		const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const TwoDSlidingFitResult slidingFitResultLarge(pCluster, 10000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         
@@ -328,7 +337,10 @@ float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, f
             LayerFitResultMap::const_iterator iterLarge = layerFitResultMapLarge.find(slidingFitResultLarge.GetLayer(mapEntry.second.GetL()));
             float diff(std::abs(mapEntry.second.GetFitT()-iterLarge->second.GetFitT()));  
             
-            diffWithStraigthLine += diff; 
+            diffWithStraightLine += diff; 
+	    diffWithStraightLineVector.push_back(diff);                                                      
+	    rmsSlidingLinearFit += mapEntry.second.GetRms();
+
             const float thisGapLength((thisFitPosition - previousFitPosition).GetMagnitude());
   
             const float minZ(std::min(thisFitPosition.GetZ(), previousFitPosition.GetZ()));                                             
@@ -344,11 +356,18 @@ float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, f
                                                                                                           
             dTdLMin = std::min(dTdLMin, static_cast<float>(mapEntry.second.GetGradient()));
             dTdLMax = std::max(dTdLMax, static_cast<float>(mapEntry.second.GetGradient()));
-            
+	    dTdLVector.push_back(static_cast<float>(mapEntry.second.GetGradient()));
+
             previousFitPosition = thisFitPosition;     
                                                                         
         }               
         dTdLWidth = dTdLMax - dTdLMin;
+	for (unsigned i=0; i < diffWithStraightLineVector.size(); i++)                                           
+	  diffWithStraightLineMean += diffWithStraightLineVector[i];                                       
+	diffWithStraightLineMean = std::abs(diffWithStraightLineMean/diffWithStraightLineVector.size());         
+	for (unsigned i=0; i < diffWithStraightLineVector.size(); i++)                                           
+	  diffWithStraightLineSigma += (diffWithStraightLineVector[i]-diffWithStraightLineMean)*(diffWithStraightLineVector[i]-diffWithStraightLineMean);                                                                                  
+	diffWithStraightLineSigma = std::sqrt(diffWithStraightLineSigma/diffWithStraightLineVector.size()); 
     }
     catch (const StatusCodeException &)
     {
@@ -368,7 +387,9 @@ StatusCode TrackShowerIdFeatureTool::LinearFitFeatureTool::ReadSettings(const Ti
   PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
                 "AddDTdLWidth", m_adddTdLWidth));
   PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-                "AddMaxFitGapLength", m_addMaxFitGapLength));              
+                "AddMaxFitGapLength", m_addMaxFitGapLength));      
+  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,        
+		"AddRMSLinearFit", m_addRMSLinearFit));        
   
   return STATUS_CODE_SUCCESS;
 }

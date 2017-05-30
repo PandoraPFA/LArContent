@@ -257,12 +257,13 @@ private:
     * 
     *  @param  pCluster, the cluster we are characterizing
     */	
-	void CalculateVariablesSlidingLinearFit(const pandora::Cluster * const pCluster, float &straightLineLengthLarge, float &diffWithStraigthLine, float &dTdLWidth, float &maxFitGapLength) const;
+	void CalculateVariablesSlidingLinearFit(const pandora::Cluster * const pCluster, float &straightLineLengthLarge, float &diffWithStraightLine,float &diffWithStraightLineMean, float &diffWithStraightLineSigma, float &dTdLWidth, float &maxFitGapLength, float &rmsSlidingLinearFit) const;
 
 	float			m_slidingLinearFitWindow;     	///<  The sliding linear fit window
 	bool			m_addDiffWithStraightLine; 		///<  decide whether to add the difference with straight line variable to the feature list
 	bool			m_adddTdLWidth; 				///<  decide whether to add the dTdL variable to the feature list
 	bool			m_addMaxFitGapLength;			///<  decide whether to add the max fit gap length variable to the feature list
+	bool                    m_addRMSLinearFit;                      ///<  decide whether to add the RMS from the linear fit
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------
