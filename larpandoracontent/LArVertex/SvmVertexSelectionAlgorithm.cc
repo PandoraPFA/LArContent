@@ -5,6 +5,10 @@
  *
  *  $Log: $
  */
+#ifdef CETLIB_AVAILABLE
+#include "cetlib/search_path.h"
+#endif
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArSvmHelper.h"
@@ -742,8 +746,18 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
             return STATUS_CODE_INVALID_PARAMETER;
         }
 
-        m_svMachineRegion.Initialize(m_svmFileName, m_regionSvmName);
-        m_svMachineVertex.Initialize(m_svmFileName, m_vertexSvmName);
+        std::string fullSvmFileName(m_svmFileName);
+#ifdef CETLIB_AVAILABLE
+        cet::search_path sp("FW_SEARCH_PATH");
+
+        if (!sp.find_file(m_svmFileName, fullSvmFileName))
+        {
+            std::cout << " SvmVertexSelectionAlgorithm::ReadSettings - Failed to find svm file " << m_svmFileName << " in FW search path" << std::endl;
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
+#endif
+        m_svMachineRegion.Initialize(fullSvmFileName, m_regionSvmName);
+        m_svMachineVertex.Initialize(fullSvmFileName, m_vertexSvmName);
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
