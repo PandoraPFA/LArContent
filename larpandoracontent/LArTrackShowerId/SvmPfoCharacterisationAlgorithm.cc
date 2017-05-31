@@ -5,6 +5,9 @@
  * 
  *  $Log: $
  */
+#ifdef CETLIB_AVAILABLE
+#include "cetlib/search_path.h"
+#endif
 
 #include "Pandora/AlgorithmHeaders.h"
 
@@ -90,11 +93,21 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     {
         if (m_svmFileName.empty() || m_svmName.empty())
         {
-            std::cout << "SvmClusterCharacterisationAlgorithm: SvmFileName and SvmName must be set if in classification mode " << std::endl;
+            std::cout << "SvmPfoCharacterisationAlgorithm: SvmFileName and SvmName must be set if in classification mode " << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
 
-        m_supportVectorMachine.Initialize(m_svmFileName, m_svmName);
+        std::string fullSvmFileName(m_svmFileName);
+#ifdef CETLIB_AVAILABLE
+        cet::search_path sp("FW_SEARCH_PATH");
+
+        if (!sp.find_file(m_svmFileName, fullSvmFileName))
+        {
+            std::cout << " SvmPfoCharacterisationAlgorithm::ReadSettings - Failed to find svm file " << m_svmFileName << " in FW search path" << std::endl;
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
+#endif
+        m_supportVectorMachine.Initialize(fullSvmFileName, m_svmName);
     }
 
     AlgorithmToolVector algorithmToolVector;
