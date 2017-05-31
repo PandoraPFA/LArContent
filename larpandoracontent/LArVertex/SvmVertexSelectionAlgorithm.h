@@ -17,6 +17,8 @@
 
 #include "larpandoracontent/LArVertex/VertexSelectionBaseAlgorithm.h"
 
+#include <random>
+
 namespace lar_content
 {
 /**
