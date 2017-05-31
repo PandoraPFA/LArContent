@@ -1,4 +1,21 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_07_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added Eigen dependency and handled this in build tools.
+Brought PcaShowerParticleBuilding algorithm into LArContent, from LArPandora.
+Used Eigen to determine coordinate system for 2D and 3D sliding linear fits.
+Updated shower direction convention: principal axis points away from vertex (which is assumed to be closer to start of shower than centroid).
+Added LArCaloHit, holding track, shower, michel and other classification probabilities.
+Introduced new vertex selection procedure using svm approach.
+Introduced new track vs. shower identification using svm approach.
+Used cet search_path functionality to find svm data files in FW_SEARCH_PATH.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_06_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Functionality for cosmic-ray stitching and neutrino reconstruction using detectors that have multiple drift volumes
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_05_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Restructured 3D spacepoint creation algorithm and tools, including new iterative refinement of output spacepoints.
