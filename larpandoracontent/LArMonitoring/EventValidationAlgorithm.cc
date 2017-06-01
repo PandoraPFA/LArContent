@@ -644,8 +644,8 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
     }
 #else
-    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoVector.size()
-              << ", nRecoNeutrinos" << recoNeutrinoVector.size() << ", nMCPrimaries " << mcPrimaryMatchingMap.size() << std::endl;
+    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoVector.size() << ", nRecoNeutrinos" << recoNeutrinoVector.size()
+              << ", nMCPrimaries " << mcPrimaryMatchingMap.size() << ", nMCParticles " << mcToPrimaryMCMap.size() << std::endl;
 #endif
 }
 
