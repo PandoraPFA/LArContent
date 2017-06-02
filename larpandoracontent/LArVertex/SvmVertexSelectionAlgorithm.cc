@@ -24,6 +24,8 @@
 
 #include "larpandoracontent/LArVertex/SvmVertexSelectionAlgorithm.h"
 
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
+
 #include <random>
 
 using namespace pandora;
@@ -157,6 +159,12 @@ void SvmVertexSelectionAlgorithm::CalculateShowerClusterList(const ClusterList &
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     ClusterList availableShowerLikeClusters(showerLikeClusters.begin(), showerLikeClusters.end());
 
+    HitKDTree2D kdTree;
+    HitToClusterMap hitToClusterMap;
+
+    if (!m_useShowerClusteringApproximation)
+        this->PopulateKdTree(availableShowerLikeClusters, kdTree, hitToClusterMap);
+
     while (!availableShowerLikeClusters.empty())
     {
         ClusterList showerCluster;
@@ -169,7 +177,14 @@ void SvmVertexSelectionAlgorithm::CalculateShowerClusterList(const ClusterList &
             addedCluster = false;
             for (const Cluster *const pCluster : showerCluster)
             {
-                addedCluster = this->AddClusterToShower(clusterEndPointsMap, availableShowerLikeClusters, pCluster, showerCluster);
+                if (!m_useShowerClusteringApproximation)
+                {
+                    addedCluster = this->AddClusterToShower(kdTree, hitToClusterMap, availableShowerLikeClusters, pCluster, showerCluster);
+                }
+                else
+                {
+                    addedCluster = this->AddClusterToShower(clusterEndPointsMap, availableShowerLikeClusters, pCluster, showerCluster);
+                }
 
                 if (addedCluster)
                     break;
@@ -216,6 +231,27 @@ void SvmVertexSelectionAlgorithm::GetShowerLikeClusterEndPoints(const ClusterLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void SvmVertexSelectionAlgorithm::PopulateKdTree(const ClusterList &clusterList, HitKDTree2D &kdTree, HitToClusterMap &hitToClusterMap) const
+{
+    CaloHitList allCaloHits;
+
+    for (const Cluster *const pCluster : clusterList)
+    {
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
+        allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
+
+        for (const CaloHit *const pCaloHit : daughterHits)
+            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+    }
+
+    HitKDNode2DList hitKDNode2DList;
+    KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool SvmVertexSelectionAlgorithm::AddClusterToShower(const ClusterEndPointsMap &clusterEndPointsMap, ClusterList &availableShowerLikeClusters,
     const Cluster *const pCluster, ClusterList &showerCluster) const
 {
@@ -225,37 +261,63 @@ bool SvmVertexSelectionAlgorithm::AddClusterToShower(const ClusterEndPointsMap &
 
     const ClusterEndPoints &existingClusterEndPoints(existingEndPointsIter->second);
 
-    for (auto iter = availableShowerLikeClusters.begin(); iter != availableShowerLikeClusters.end(); /* no increment */)
+    for (auto iter = availableShowerLikeClusters.begin(); iter != availableShowerLikeClusters.end(); ++iter)
     {
-        const auto &newEndPointsIter(clusterEndPointsMap.find(*iter));
+        const Cluster *const pAvailableShowerLikeCluster(*iter);
+        const auto &newEndPointsIter(clusterEndPointsMap.find(pAvailableShowerLikeCluster));
+
         if (newEndPointsIter == clusterEndPointsMap.end())
             continue;
 
         const ClusterEndPoints &newClusterEndPoints(newEndPointsIter->second);
-        bool satisfiesClosestDistance(true);
+        const float startStartDistance((newClusterEndPoints.first - existingClusterEndPoints.first).GetMagnitude());
+        const float startEndDistance((newClusterEndPoints.first - existingClusterEndPoints.second).GetMagnitude());
+        const float endStartDistance((newClusterEndPoints.second - existingClusterEndPoints.first).GetMagnitude());
+        const float endEndDistance((newClusterEndPoints.second - existingClusterEndPoints.second).GetMagnitude());
 
-        if (m_useShowerClusteringApproximation)
+        const float smallestDistance(std::min(std::min(startStartDistance, startEndDistance), std::min(endStartDistance, endEndDistance)));
+
+        if (smallestDistance < m_showerClusteringDistance)
         {
-            const float startStartDistance((newClusterEndPoints.first - existingClusterEndPoints.first).GetMagnitude());
-            const float startEndDistance((newClusterEndPoints.first - existingClusterEndPoints.second).GetMagnitude());
-            const float endStartDistance((newClusterEndPoints.second - existingClusterEndPoints.first).GetMagnitude());
-            const float endEndDistance((newClusterEndPoints.second - existingClusterEndPoints.second).GetMagnitude());
-
-            const float smallestDistance(std::min(std::min(startStartDistance, startEndDistance), std::min(endStartDistance, endEndDistance)));
-            satisfiesClosestDistance = (smallestDistance < m_showerClusteringDistance);
-        }
-
-        else
-            satisfiesClosestDistance = (LArClusterHelper::GetClosestDistance(pCluster, *iter) < m_showerClusteringDistance);
-
-        if (satisfiesClosestDistance)
-        {
-            showerCluster.push_back(*iter);
-            availableShowerLikeClusters.erase(iter);
+            showerCluster.push_back(pAvailableShowerLikeCluster);
+            availableShowerLikeClusters.erase(iter); // Now must return, after invalidating current iterator
             return true;
         }
+    }
 
-        ++iter;
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SvmVertexSelectionAlgorithm::AddClusterToShower(HitKDTree2D &kdTree, const HitToClusterMap &hitToClusterMap,
+    ClusterList &availableShowerLikeClusters, const Cluster *const pCluster, ClusterList &showerCluster) const
+{
+    ClusterSet nearbyClusters;
+    CaloHitList daughterHits;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
+
+    for (const CaloHit *const pCaloHit : daughterHits)
+    {
+        KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_showerClusteringDistance, m_showerClusteringDistance);
+
+        HitKDNode2DList found;
+        kdTree.search(searchRegionHits, found);
+
+        for (const auto &hit : found)
+            (void) nearbyClusters.insert(hitToClusterMap.at(hit.data));
+    }
+
+    for (auto iter = availableShowerLikeClusters.begin(); iter != availableShowerLikeClusters.end(); ++iter)
+    {
+        const Cluster *const pAvailableShowerLikeCluster(*iter);
+
+        if ((pAvailableShowerLikeCluster != pCluster) && nearbyClusters.count(pAvailableShowerLikeCluster))
+        {
+            showerCluster.push_back(pAvailableShowerLikeCluster);
+            availableShowerLikeClusters.erase(iter); // Now must return, after invalidating current iterator
+            return true;
+        }
     }
 
     return false;

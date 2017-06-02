@@ -21,6 +21,12 @@
 
 namespace lar_content
 {
+
+template<typename, unsigned int> class KDTreeLinkerAlgo;
+template<typename, unsigned int> class KDTreeNodeInfoT;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  SvmVertexSelectionAlgorithm class
  */
@@ -134,8 +140,23 @@ private:
     void GetShowerLikeClusterEndPoints(const pandora::ClusterList &clusterList, pandora::ClusterList &showerLikeClusters,
         ClusterEndPointsMap &clusterEndPointsMap) const;
 
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef std::vector<HitKDNode2D> HitKDNode2DList;
+
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+
     /**
-     *  @brief  Try to add an available cluster to a given shower cluster, considering distances from a given member of that shower cluster
+     * @brief   Populate kd tree with information about hits in a provided list of clusters
+     *
+     * @param   clusterList the list of clusters
+     * @param   kdTree to receive the populated kd tree
+     * @param   hitToClusterMap to receive the populated hit to cluster map
+     */
+    void PopulateKdTree(const pandora::ClusterList &clusterList, HitKDTree2D &kdTree, HitToClusterMap &hitToClusterMap) const;
+
+    /**
+     *  @brief  Try to add an available cluster to a given shower cluster, using shower clustering approximation
      *
      *  @param  clusterEndPointsMap the map of shower-like cluster endpoints
      *  @param  availableShowerLikeClusters the list of shower-like clusters still available
@@ -145,6 +166,20 @@ private:
      *  @return boolean
      */
     bool AddClusterToShower(const ClusterEndPointsMap &clusterEndPointsMap, pandora::ClusterList &availableShowerLikeClusters,
+        const pandora::Cluster *const pCluster, pandora::ClusterList &showerCluster) const;
+
+    /**
+     *  @brief  Try to add an available cluster to a given shower cluster, using cluster hit positions cached in kd tree
+     *
+     *  @param  kdTree the kd tree, used purely for efficiency in events with large hit multiplicity
+     *  @param  hitToClusterMap the hit to cluster map, used to interpret kd tree findings
+     *  @param  availableShowerLikeClusters the list of shower-like clusters still available
+     *  @param  pCluster the cluster in the shower cluster from which to consider distances
+     *  @param  showerCluster the shower cluster
+     *
+     *  @return boolean
+     */
+    bool AddClusterToShower(HitKDTree2D &kdTree, const HitToClusterMap &hitToClusterMap, pandora::ClusterList &availableShowerLikeClusters,
         const pandora::Cluster *const pCluster, pandora::ClusterList &showerCluster) const;
 
     /**
