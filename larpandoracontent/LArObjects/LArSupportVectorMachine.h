@@ -100,6 +100,15 @@ public:
      *  @return the classification score
      */
     double CalculateClassificationScore(const DoubleVector &features) const;
+    
+    /**
+     *  @brief  Calculate the classification probability for a set of input features, based on the trained model
+     *
+     *  @param  features the input features
+     *
+     *  @return the classification probability
+     */
+    double CalculateProbability(const DoubleVector &features) const;
 
     /**
      *  @brief  Query whether this svm is initialized
@@ -179,6 +188,10 @@ private:
     typedef std::map<KernelType, KernelFunction> KernelMap;
 
     bool              m_isInitialized;       ///< Whether this svm has been initialized
+    
+    bool              m_enableProbability;   ///< Whether to enable probability calculations
+    double            m_probAParameter;      ///< The 'A' parameter for mapping to probailities
+    double            m_probBParameter;      ///< The 'B' parameter for mapping to probailities
 
     bool              m_standardizeFeatures; ///< Whether to standardize the features
     unsigned int      m_nFeatures;           ///< The number of features
@@ -302,6 +315,24 @@ inline bool SupportVectorMachine::Classify(const DoubleVector &features) const
 inline double SupportVectorMachine::CalculateClassificationScore(const DoubleVector &features) const
 {
     return this->CalculateClassificationScoreImpl(features);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline double SupportVectorMachine::CalculateProbability(const DoubleVector &features) const
+{
+    if (!m_enableProbability)
+    {
+        std::cout << "LArSupportVectorMachine: cannot calculate probabilities for this SVM" << std::endl;
+        return pandora::STATUS_CODE_NOT_INITIALIZED;
+    }
+    
+    const double scaledScore = m_probAParameter * this->CalculateClassificationScoreImpl(features) + m_probBParameter;
+    
+    if (scaledScore >= 0.)
+        return std::exp(-scaledScore) / (1. + std::exp(-scaledScore));
+        
+    return 1./(1. + std::exp(scaledScore));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

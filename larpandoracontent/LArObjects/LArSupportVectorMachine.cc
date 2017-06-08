@@ -15,6 +15,9 @@ namespace lar_content
 
 SupportVectorMachine::SupportVectorMachine() :
     m_isInitialized(false),
+    m_enableProbability(false),
+    m_probAParameter(0.),
+    m_probBParameter(0.),
     m_standardizeFeatures(true),
     m_nFeatures(0),
     m_bias(0.),
@@ -168,10 +171,25 @@ pandora::StatusCode SupportVectorMachine::ReadMachine(const pandora::TiXmlHandle
     bool standardize(true);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
         "Standardize", standardize));
+        
+    bool enableProbability(false);
+    PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
+        "EnableProbability", enableProbability));
+        
+    double probAParameter(0.);
+    PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
+        "ProbAParameter", probAParameter));
+        
+    double probBParameter(0.);
+    PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
+        "ProbBParameter", probBParameter));
 
     m_kernelType = static_cast<KernelType>(kernelType);
     m_bias = bias;
     m_scaleFactor = scaleFactor;
+    m_enableProbability = enableProbability;
+    m_probAParameter = probAParameter;
+    m_probBParameter = probBParameter;
 
     if (kernelType != USER_DEFINED) // if user-defined, leave it so it alone can be set before/after initialization
         m_kernelFunction = m_kernelMap.at(m_kernelType);
