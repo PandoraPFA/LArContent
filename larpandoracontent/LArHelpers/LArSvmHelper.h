@@ -62,7 +62,7 @@ public:
      *  @param  sVMachine the support vector machine
      *  @param  featureLists the lists of features
      *
-     *  @return the classification score
+     *  @return the classification probability
      */
     template <typename ...TLISTS>
     static double CalculateProbability(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists);
