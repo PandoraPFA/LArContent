@@ -29,7 +29,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
-    unsigned int            m_minTrackLikeViews;            ///< The minimum number of track-like views to declare a pfo as track-like
     unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
     unsigned int            m_slidingShowerFitWindow;       ///< The layer window for the sliding shower fits
     float                   m_maxShowerLengthCut;           ///< The maximum cluster length to qualify as a shower
