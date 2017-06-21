@@ -55,6 +55,17 @@ public:
      */
     template <typename ...TLISTS>
     static double CalculateClassificationScore(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists);
+    
+    /**
+     *  @brief  Use the trained svm to calculate a classification probability for an example
+     *
+     *  @param  sVMachine the support vector machine
+     *  @param  featureLists the lists of features
+     *
+     *  @return the classification probability
+     */
+    template <typename ...TLISTS>
+    static double CalculateProbability(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists);
 
     /**
      *  @brief  Calculate the features in a given feature tool vector
@@ -183,6 +194,14 @@ template <typename ...TLISTS>
 double LArSvmHelper::CalculateClassificationScore(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists)
 {
     return sVMachine.CalculateClassificationScore(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename ...TLISTS>
+double LArSvmHelper::CalculateProbability(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists)
+{
+    return sVMachine.CalculateProbability(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
