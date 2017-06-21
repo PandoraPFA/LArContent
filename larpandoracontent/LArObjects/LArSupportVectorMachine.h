@@ -190,8 +190,8 @@ private:
     bool              m_isInitialized;       ///< Whether this svm has been initialized
     
     bool              m_enableProbability;   ///< Whether to enable probability calculations
-    double            m_probAParameter;      ///< The 'A' parameter for mapping to probailities
-    double            m_probBParameter;      ///< The 'B' parameter for mapping to probailities
+    double            m_probAParameter;      ///< The first-order score coefficient for mapping to a probability using the logistic function
+    double            m_probBParameter;      ///< The score offset parameter for mapping to a probability using the logistic function
 
     bool              m_standardizeFeatures; ///< Whether to standardize the features
     unsigned int      m_nFeatures;           ///< The number of features
@@ -324,9 +324,11 @@ inline double SupportVectorMachine::CalculateProbability(const DoubleVector &fea
     if (!m_enableProbability)
     {
         std::cout << "LArSupportVectorMachine: cannot calculate probabilities for this SVM" << std::endl;
-        return pandora::STATUS_CODE_NOT_INITIALIZED;
+        throw pandora::STATUS_CODE_NOT_INITIALIZED;
     }
     
+    // Use the logistic function to map the linearly-transformed score on the interval (-inf,inf) to a probability on [0,1] - the two free
+    // parameters in the linear transformation are trained such that the logistic map produces an accurate probability
     const double scaledScore = m_probAParameter * this->CalculateClassificationScoreImpl(features) + m_probBParameter;
     
     if (scaledScore >= 0.)
