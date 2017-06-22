@@ -104,9 +104,7 @@ else()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
-    if (NOT CMAKE_CXX_FLAGS)
-        set(CMAKE_CXX_FLAGS "-std=c++11")
-    endif()
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing -std=c++11 ${CMAKE_CXX_FLAGS}")
 
     include(CheckCXXCompilerFlag)
     unset(COMPILER_SUPPORTS_CXX_FLAGS CACHE)
@@ -114,12 +112,6 @@ else()
 
     if(NOT COMPILER_SUPPORTS_CXX_FLAGS)
         message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}")
-    endif()
-
-    if(APPLE)
-        set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}")
-    else()
-        set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}")
     endif()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
