@@ -1,2 +1,2 @@
 # LArContent
-[![Build Status](https://travis-ci.org/jaw86/LArContent.svg?branch=TravisCI)](https://travis-ci.org/jaw86/LArContent)
+[![Build Status](https://travis-ci.org/pandorapfa/LArContent.svg?branch=master)](https://travis-ci.org/pandorapfa/LArContent)
