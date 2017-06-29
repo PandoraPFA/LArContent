@@ -1,5 +1,6 @@
 # LArContent
 [![Build Status](https://travis-ci.org/PandoraPFA/LArContent.svg?branch=master)](https://travis-ci.org/PandoraPFA/LArContent)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/13057/badge.svg)](https://scan.coverity.com/projects/pandorapfa-larcontent)
 
 Pandora algorithms and tools for LAr TPC event reconstruction
 
