@@ -61,7 +61,14 @@ EventValidationAlgorithm::~EventValidationAlgorithm()
 {
     if (m_writeToTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+        }
+        catch (const StatusCodeException &)
+        {
+            std::cout << "EventValidationAlgorithm: Unable to write tree " << m_treeName << " to file " << m_fileName << std::endl;
+        }
     }
 }
 

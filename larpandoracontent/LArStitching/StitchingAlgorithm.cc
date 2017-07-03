@@ -18,6 +18,13 @@ using namespace pandora;
 namespace lar_content
 {
 
+StitchingAlgorithm::StitchingAlgorithm() :
+    m_recreateTwoDContent(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode StitchingAlgorithm::Run()
 {
     StitchingInfo stitchingInfo;
