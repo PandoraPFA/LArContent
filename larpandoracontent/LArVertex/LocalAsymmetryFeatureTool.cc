@@ -86,7 +86,7 @@ float LocalAsymmetryFeatureTool::GetLocalAsymmetryForView(const CartesianVector 
         return 1.f;
 
     const CartesianVector &localWeightedDirectionSum(useEnergy ? energyWeightedDirectionSum : hitWeightedDirectionSum);
-    return useAsymmetry ? this->CalculateLocalAsymmetry(useEnergy, vertexPosition2D, asymmetryClusters, localWeightedDirectionSum) : 1.f;
+    return this->CalculateLocalAsymmetry(useEnergy, vertexPosition2D, asymmetryClusters, localWeightedDirectionSum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
