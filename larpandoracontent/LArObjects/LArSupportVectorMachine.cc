@@ -102,6 +102,12 @@ void SupportVectorMachine::ReadXmlFile(const std::string &svmFileName, const std
         std::string currentName;
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, pandora::XmlHelper::ReadValue(currentHandle, "Name", currentName));
 
+        if (currentName.empty() || (currentName.size() > 1000))
+        {
+            std::cout << "SupportVectorMachine::Initialize - Implausible svm name extracted from xml." << std::endl;
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+        }
+
         if (currentName == svmName)
             break;
 

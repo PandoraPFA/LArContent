@@ -216,8 +216,19 @@ void MultiPandoraApiImpl::AddDaughterPandoraInstance(const pandora::Pandora *con
 
 void MultiPandoraApiImpl::DeletePandoraInstances(const pandora::Pandora *const pPrimaryPandora)
 {
-    PandoraInstanceList pandoraInstanceList(this->GetDaughterPandoraInstanceList(pPrimaryPandora));
+    PandoraInstanceList pandoraInstanceList;
+
+    try
+    {
+        pandoraInstanceList = this->GetDaughterPandoraInstanceList(pPrimaryPandora);
+    }
+    catch (const pandora::StatusCodeException &)
+    {
+        std::cout << "MultiPandoraApiImpl::DeletePandoraInstances - unable to find daughter instances associated with primary " << pPrimaryPandora << std::endl;
+    }
+
     pandoraInstanceList.push_back(pPrimaryPandora);
+
     m_pandoraInstanceMap.erase(pPrimaryPandora);
     m_pandoraVolumeIdMap.erase(pPrimaryPandora);
     m_primaryToDaughterMap.erase(pPrimaryPandora);
