@@ -592,10 +592,10 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &
 {
     // Extract input collections
     const MCParticleList *pMCParticleList(nullptr);
-    PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
     const CaloHitList *pCaloHitList(nullptr);
-    PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
     // Obtain vector: true neutrinos
     MCParticleVector mcNeutrinoVector;
@@ -681,7 +681,7 @@ void SvmVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVector
 {
     // Extract input collections
     const MCParticleList *pMCParticleList(nullptr);
-    PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
     // Obtain vector: true neutrinos
     MCParticleVector mcNeutrinoVector;
