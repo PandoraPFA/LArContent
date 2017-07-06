@@ -20,6 +20,7 @@ before_install:
         export CRON_GCC_BUILD=false;
     fi
   - if [[ "${CRON_GCC_BUILD}" == true ]]; then
+      docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
       docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa_data:latest /bin/bash;
     else
       docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa:latest /bin/bash;
