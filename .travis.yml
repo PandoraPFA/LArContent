@@ -12,7 +12,7 @@ env:
     - COMPILER=clang
 
 before_install:
-  - docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa:latest /bin/bash
+  - docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa_data:latest /bin/bash
   - if [[ "${TRAVIS_EVENT_TYPE}" == "cron" && "${COMPILER}" == "g++" ]]; then
         export COVERITY_BUILD=true;
         export COVERITY_DESC=`date`;
@@ -29,18 +29,25 @@ install:
   - docker exec -it pandora /bin/bash -c "source pull_pandora_pfa.sh"
   - docker exec -it pandora /bin/bash -c "source install_pandora_sdk.sh"
   - docker exec -it pandora /bin/bash -c "source install_pandora_monitoring.sh"
-  - docker exec -it pandora /bin/bash -c "source install_eigen.sh"
 
 script:
   - if [[ "${COVERITY_BUILD}" == true ]]; then
         docker exec -it pandora /bin/bash -c "cd /pandora/package && source /pandora/build_larcontent.sh coverity";
     elif [[ "${TRAVIS_EVENT_TYPE}" == "cron" ]]; then
         echo "Coverity does not use this build";
-    else 
+    elif [[ "${COMPILER}" == "g++" ]]; then
+        docker exec -it pandora /bin/bash -c "cd /pandora/package && source /pandora/build_larcontent.sh coverage";
+        docker exec -it pandora /bin/bash -c "ln -s /pandora/package /pandora/LArContent && source /pandora/install_larreco.sh coverage";
+    else
         docker exec -it pandora /bin/bash -c "cd /pandora/package && source /pandora/build_larcontent.sh";
     fi
   - if [[ "${COVERITY_BUILD}" == true ]]; then
-      curl --form token=${COVERITY_SCAN_TOKEN} --form email=marshall@hep.phy.cam.ac.uk --form file=@build/coverity_build.tgz --form version="master" --form description="${COVERITY_DESC}" https://scan.coverity.com/builds?project=${COVERITY_REPO};
+        curl --form token=${COVERITY_SCAN_TOKEN} --form email=marshall@hep.phy.cam.ac.uk --form file=@build/coverity_build.tgz --form version="master" --form description="${COVERITY_DESC}" https://scan.coverity.com/builds?project=${COVERITY_REPO};
+    fi
+
+after_success:
+  - if [[ "${COVERITY_BUILD}" == false && "${COMPILER}" == "g++" ]]; then
+        docker exec -it pandora /bin/bash -c "cd /pandora/LArContent/build && source /pandora/run_tests.sh && source /pandora/upload_codecov_report.sh";
     fi
 
 notifications:
