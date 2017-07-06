@@ -38,7 +38,7 @@ install:
 script:
   - if [[ "${CRON_GCC_BUILD}" == true ]]; then
         docker exec -it pandora /bin/bash -c "cd /pandora/package && source /pandora/build_larcontent.sh coverity";
-        curl --form token=${COVERITY_SCAN_TOKEN} --form email=marshall@hep.phy.cam.ac.uk --form file=@build/coverity_build.tgz --form version="master" --form description="${COVERITY_DESC}" https://scan.coverity.com/builds?project=${COVERITY_REPO};
+        curl --form token=${COVERITY_SCAN_TOKEN} --form email=${COVERITY_TARGET_EMAIL} --form file=@build/coverity_build.tgz --form version="master" --form description="${COVERITY_DESC}" https://scan.coverity.com/builds?project=${COVERITY_REPO};
         docker exec -it pandora /bin/bash -c "cd /pandora/package && rm -rf build && source /pandora/build_larcontent.sh coverage";
         docker exec -it pandora /bin/bash -c "ln -s /pandora/package /pandora/LArContent && source /pandora/install_larreco.sh coverage";
         docker exec -it pandora /bin/bash -c "cd /pandora/LArContent/build && source /pandora/run_tests.sh && source /pandora/upload_codecov_report.sh";
