@@ -4,7 +4,7 @@
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
 # ATTN This package supports two build systems; please ensure version is specified here *and* in non-cetbuildtools section of CMakeLists.txt
 parent larpandoracontent v03_07_02
-defaultqual e14
+defaultqual e10
 
 # larpandoracontent has no fcl files
 fcldir  -
@@ -12,18 +12,18 @@ fcldir  -
 # With "product  version" table below, we now define depdendencies
 # Add the dependent product and version
 product		version
-cetlib		v3_00_01
-eigen		v3_3_3
-pandora		v03_00_00d
-cetbuildtools	v5_09_01	-	only_for_build
+cetlib		v1_21_00
+eigen		v3_2_9a
+pandora		v03_00_00
+cetbuildtools	v5_06_07	-	only_for_build
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
 qualifier	pandora		cetlib 		eigen notes
-e14:debug	e14:nu:debug	e14:debug	-nq-
-e14:opt		e14:nu:opt	e14:opt		-nq-
-e14:prof	e14:nu:prof	e14:prof	-nq-
+e10:debug	e10:nu:debug	e10:debug	-nq-
+e10:opt		e10:nu:opt	e10:opt		-nq-
+e10:prof	e10:nu:prof	e10:prof	-nq-
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:
