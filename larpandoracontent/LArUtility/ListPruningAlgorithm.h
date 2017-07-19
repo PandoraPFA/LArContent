@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArUtility/ListDissolutionAlgorithm.h
- * 
- *  @brief  Header file for the list dissolution algorithm class.
- * 
+ *  @file   larpandoracontent/LArUtility/ListPruningAlgorithm.h
+ *
+ *  @brief  Header file for the list pruning algorithm class.
+ *
  *  $Log: $
  */
-#ifndef LAR_LIST_DISSOLUTION_ALGORITHM_H
-#define LAR_LIST_DISSOLUTION_ALGORITHM_H 1
+#ifndef LAR_LIST_PRUNING_ALGORITHM_H
+#define LAR_LIST_PRUNING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,15 +14,15 @@ namespace lar_content
 {
 
 /**
- *  @brief  ListDissolutionAlgorithm class
+ *  @brief  ListPruningAlgorithm class
  */
-class ListDissolutionAlgorithm : public pandora::Algorithm
+class ListPruningAlgorithm : public pandora::Algorithm
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ListDissolutionAlgorithm();
+    ListPruningAlgorithm();
 
 private:
     pandora::StatusCode Run();
@@ -35,4 +35,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_LIST_DISSOLUTION_ALGORITHM_H
+#endif // #ifndef LAR_LIST_PRUNING_ALGORITHM_H

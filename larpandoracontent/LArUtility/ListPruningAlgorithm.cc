@@ -1,28 +1,28 @@
 /**
- *  @file   larpandoracontent/LArUtility/ListDissolutionAlgorithm.cc
- * 
- *  @brief  Implementation of the list dissolution algorithm class.
- * 
+ *  @file   larpandoracontent/LArUtility/ListPruningAlgorithm.cc
+ *
+ *  @brief  Implementation of the list pruning algorithm class.
+ *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArUtility/ListDissolutionAlgorithm.h"
+#include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ListDissolutionAlgorithm::ListDissolutionAlgorithm() :
+ListPruningAlgorithm::ListPruningAlgorithm() :
     m_warnIfClustersUnavailable(true)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ListDissolutionAlgorithm::Run()
+StatusCode ListPruningAlgorithm::Run()
 {
     for (StringVector::const_iterator iter = m_pfoListNames.begin(), iterEnd = m_pfoListNames.end(); iter != iterEnd; ++iter)
     {
@@ -42,13 +42,13 @@ StatusCode ListDissolutionAlgorithm::Run()
             {
                 if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, *pIter, listName))
                 {
-                    std::cout << "ListDissolutionAlgorithm: Could not delete Pfo." << std::endl;
+                    std::cout << "ListPruningAlgorithm: Could not delete Pfo." << std::endl;
                 }
             }
         }
         catch (StatusCodeException &)
         {
-            std::cout << "ListDissolutionAlgorithm: pfo list " << listName << " unavailable." << std::endl;
+            std::cout << "ListPruningAlgorithm: pfo list " << listName << " unavailable." << std::endl;
         }
     }
 
@@ -74,14 +74,14 @@ StatusCode ListDissolutionAlgorithm::Run()
                 if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, *cIter, listName))
                 {
                     if (m_warnIfClustersUnavailable)
-                        std::cout << "ListDissolutionAlgorithm: Could not delete Pfo." << std::endl;
+                        std::cout << "ListPruningAlgorithm: Could not delete Pfo." << std::endl;
                 }
             }
         }
         catch (StatusCodeException &)
-        { 
+        {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "ListDissolutionAlgorithm: cluster list " << listName << " unavailable." << std::endl;
+                std::cout << "ListPruningAlgorithm: cluster list " << listName << " unavailable." << std::endl;
         }
     }
 
@@ -90,7 +90,7 @@ StatusCode ListDissolutionAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ListDissolutionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ListPruningAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "PfoListNames", m_pfoListNames));

@@ -154,12 +154,14 @@
 #include "larpandoracontent/LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 #include "larpandoracontent/LArUtility/ListChangingAlgorithm.h"
-#include "larpandoracontent/LArUtility/ListDissolutionAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListDeletionAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListMergingAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListMovingAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListPreparationAlgorithm.h"
-#include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
+#include "larpandoracontent/LArUtility/ParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/ParentCosmicRayAlgorithm.h"
+#include "larpandoracontent/LArUtility/ParentNeutrinoAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
@@ -244,11 +246,13 @@
     d("LArTwoDParticleCreation",                TwoDParticleCreationAlgorithm)                                                  \
     d("LArListChanging",                        ListChangingAlgorithm)                                                          \
     d("LArListDeletion",                        ListDeletionAlgorithm)                                                          \
-    d("LArListDissolution",                     ListDissolutionAlgorithm)                                                       \
     d("LArListMerging",                         ListMergingAlgorithm)                                                           \
     d("LArListMoving",                          ListMovingAlgorithm)                                                            \
     d("LArListPreparation",                     ListPreparationAlgorithm)                                                       \
-    d("LArNeutrinoParent",                      NeutrinoParentAlgorithm)                                                        \
+    d("LArListPruning",                         ListPruningAlgorithm)                                                           \
+    d("LArParent",                              ParentAlgorithm)                                                                \
+    d("LArParentCosmicRay",                     ParentCosmicRayAlgorithm)                                                       \
+    d("LArParentNeutrino",                      ParentNeutrinoAlgorithm)                                                        \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \

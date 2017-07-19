@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h
- * 
+ *
  *  @brief  Header file for the event slicing tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_EVENT_SLICING_TOOL_H
@@ -10,7 +10,7 @@
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
-#include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/ParentSlicingBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -35,11 +35,8 @@ public:
      */
     EventSlicingTool();
 
-    typedef NeutrinoParentAlgorithm::SliceList SliceList;
-    typedef NeutrinoParentAlgorithm::HitTypeToNameMap HitTypeToNameMap;
-
-    void Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, const HitTypeToNameMap &clusterListNames,
-        SliceList &sliceList);
+    void Slice(const ParentSlicingBaseAlgorithm *const pAlgorithm, const ParentSlicingBaseAlgorithm::HitTypeToNameMap &caloHitListNames,
+        const ParentSlicingBaseAlgorithm::HitTypeToNameMap &clusterListNames, ParentSlicingBaseAlgorithm::SliceList &sliceList);
 
 private:
     typedef std::unordered_map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
@@ -87,7 +84,7 @@ private:
      *  @param  pClusterInSlice address of a cluster already in the slice
      *  @param  pCandidateCluster address of the candidate cluster
      *  @param  trackFitResults the map of sliding fit results for track candidate clusters
-     * 
+     *
      *  @return whether an addition to the cluster slice should be made
      */
     bool PassPointing(const pandora::Cluster *const pClusterInSlice, const pandora::Cluster *const pCandidateCluster, const ThreeDSlidingFitResultMap &trackFitResults) const;
@@ -97,7 +94,7 @@ private:
      *
      *  @param  pClusterInSlice address of a cluster already in the slice
      *  @param  pCandidateCluster address of the candidate cluster
-     * 
+     *
      *  @return whether an addition to the cluster slice should be made
      */
     bool PassProximity(const pandora::Cluster *const pClusterInSlice, const pandora::Cluster *const pCandidateCluster) const;
@@ -108,7 +105,7 @@ private:
      *  @param  pClusterInSlice address of a cluster already in the slice
      *  @param  pCandidateCluster address of the candidate cluster
      *  @param  showerConeFitResults the map of sliding cone fit results for shower candidate clusters
-     * 
+     *
      *  @return whether an addition to the cluster slice should be made
      */
     bool PassShowerCone(const pandora::Cluster *const pConeCluster, const pandora::Cluster *const pNearbyCluster, const ThreeDSlidingConeFitResultMap &showerConeFitResults) const;
@@ -118,7 +115,7 @@ private:
      *
      *  @param  cluster1 the first pointing cluster
      *  @param  cluster2 the second pointing cluster
-     * 
+     *
      *  @return whether the pointing clusters are declared to be in the same slice
      */
     bool CheckClosestApproach(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
@@ -128,7 +125,7 @@ private:
      *
      *  @param  vertex1 the first pointing cluster vertex
      *  @param  vertex2 the second pointing cluster vertex
-     * 
+     *
      *  @return whether the pointing clusters are declared to be in the same slice
      */
     bool CheckClosestApproach(const LArPointingCluster::Vertex &vertex1, const LArPointingCluster::Vertex &vertex2) const;
@@ -138,7 +135,7 @@ private:
      *
      *  @param  cluster1 the first pointing cluster
      *  @param  cluster2 the second pointing cluster
-     * 
+     *
      *  @return whether the pointing clusters are declared to be in the same slice
      */
     bool IsNode(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
@@ -148,7 +145,7 @@ private:
      *
      *  @param  cluster1 the first pointing cluster
      *  @param  cluster2 the second pointing cluster
-     * 
+     *
      *  @return whether the pointing clusters are declared to be in the same slice
      */
     bool IsEmission(const LArPointingCluster &cluster1, const LArPointingCluster &cluster2) const;
@@ -162,7 +159,7 @@ private:
      *  @param  sliceList the slice list to receive the new slices
      *  @param  clusterToSliceIndexMap to receive the mapping from 3D clusters to index in the slice list
      */
-    void CreateSlices(const ClusterSliceList &clusterSliceList, SliceList &sliceList, ClusterToSliceIndexMap &clusterToSliceIndexMap) const;
+    void CreateSlices(const ClusterSliceList &clusterSliceList, ParentSlicingBaseAlgorithm::SliceList &sliceList, ClusterToSliceIndexMap &clusterToSliceIndexMap) const;
 
     /**
      *  @brief  Use 3D clusters in the cluster slice list, find their parent pfos and assign all hits in all 2D clusters in the pfos
@@ -173,7 +170,7 @@ private:
      *  @param  sliceList the list containing slices to be populated with 2D hits
      *  @param  assignedClusters to receive the list of 2D clusters with hits assigned to slices
      */
-    void CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap, SliceList &sliceList,
+    void CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap, ParentSlicingBaseAlgorithm::SliceList &sliceList,
         pandora::ClusterSet &assignedClusters) const;
 
     /**
@@ -184,7 +181,7 @@ private:
      *  @param  assignedClusters the list of 2D clusters with hits assigned to slices
      *  @param  remainingClusters to receive the list of 2D clusters with hits yet to be assigned to slices
      */
-    void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &clusterListNames,
+    void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const ParentSlicingBaseAlgorithm::HitTypeToNameMap &clusterListNames,
         const pandora::ClusterSet &assignedClusters, pandora::ClusterList &remainingClusters) const;
 
     /**
@@ -206,7 +203,7 @@ private:
      *  @param  sliceList the list containing slices to be populated with 2D hits
      */
     void AssignRemainingHitsToSlices(const pandora::ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
-        SliceList &sliceList) const;
+        ParentSlicingBaseAlgorithm::SliceList &sliceList) const;
 
     typedef KDTreeLinkerAlgo<const pandora::CartesianVector*, 2> PointKDTree2D;
     typedef KDTreeNodeInfoT<const pandora::CartesianVector*, 2> PointKDNode2D;
@@ -224,7 +221,7 @@ private:
      *  @param  pointsW to receive the points in the w view
      *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
      */
-    void GetKDTreeEntries2D(const SliceList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
+    void GetKDTreeEntries2D(const ParentSlicingBaseAlgorithm::SliceList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
         PointToSliceIndexMap &pointToSliceIndexMap) const;
 
     /**
@@ -244,7 +241,7 @@ private:
      *
      *  @param  pCluster2D the address of the 2D cluster
      *  @param  kdTree the kd tree
-     * 
+     *
      *  @return the nearest-neighbour point identified by the kd tree
      */
     const PointKDNode2D *MatchClusterToSlice(const pandora::Cluster *const pCluster2D, PointKDTree2D &kdTree) const;

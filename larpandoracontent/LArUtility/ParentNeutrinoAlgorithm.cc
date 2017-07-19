@@ -1,48 +1,21 @@
 /**
- *  @file   larpandoracontent/LArUtility/NeutrinoParentAlgorithm.cc
- * 
- *  @brief  Implementation of the neutrino parent algorithm class.
- * 
+ *  @file   larpandoracontent/LArUtility/ParentNeutrinoAlgorithm.cc
+ *
+ *  @brief  Implementation of the parent neutrino algorithm class.
+ *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/ParentNeutrinoAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-NeutrinoParentAlgorithm::NeutrinoParentAlgorithm() :
-    m_shouldPerformSlicing(true),
-    m_pSlicingTool(nullptr)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode NeutrinoParentAlgorithm::Initialize()
-{
-    m_hitTypeList.push_back(TPC_VIEW_U);
-    m_hitTypeList.push_back(TPC_VIEW_V);
-    m_hitTypeList.push_back(TPC_VIEW_W);
-
-    m_caloHitListNames[TPC_VIEW_U] = m_caloHitListNameU;
-    m_caloHitListNames[TPC_VIEW_V] = m_caloHitListNameV;
-    m_caloHitListNames[TPC_VIEW_W] = m_caloHitListNameW;
-
-    m_clusterListNames[TPC_VIEW_U] = m_clusterListNameU;
-    m_clusterListNames[TPC_VIEW_V] = m_clusterListNameV;
-    m_clusterListNames[TPC_VIEW_W] = m_clusterListNameW;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode NeutrinoParentAlgorithm::Run()
+StatusCode ParentNeutrinoAlgorithm::Run()
 {
     SliceList sliceList;
 
@@ -102,7 +75,7 @@ StatusCode NeutrinoParentAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoParentAlgorithm::PerformSlicing(SliceList &sliceList) const
+void ParentNeutrinoAlgorithm::PerformSlicing(SliceList &sliceList) const
 {
     for (const HitType hitType : m_hitTypeList)
     {
@@ -147,79 +120,10 @@ void NeutrinoParentAlgorithm::PerformSlicing(SliceList &sliceList) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoParentAlgorithm::CopyAllHitsToSingleSlice(SliceList &sliceList) const
+StatusCode ParentNeutrinoAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    if (!sliceList.empty())
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    const CaloHitList *pCaloHitListU(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        m_caloHitListNames.at(TPC_VIEW_U), pCaloHitListU));
-
-    const CaloHitList *pCaloHitListV(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        m_caloHitListNames.at(TPC_VIEW_V), pCaloHitListV));
-
-    const CaloHitList *pCaloHitListW(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        m_caloHitListNames.at(TPC_VIEW_W), pCaloHitListW));
-
-    if (pCaloHitListU || pCaloHitListV || pCaloHitListW)
-    {
-        sliceList.push_back(Slice());
-        Slice &slice(sliceList.at(0));
-
-        if (pCaloHitListU) slice.m_caloHitListU = *pCaloHitListU;
-        if (pCaloHitListV) slice.m_caloHitListV = *pCaloHitListV;
-        if (pCaloHitListW) slice.m_caloHitListW = *pCaloHitListW;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode NeutrinoParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CaloHitListNameU", m_caloHitListNameU));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CaloHitListNameV", m_caloHitListNameV));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CaloHitListNameW", m_caloHitListNameW));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterListNameU", m_clusterListNameU));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterListNameV", m_clusterListNameV));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterListNameW", m_clusterListNameW));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "TwoDClustering", m_clusteringAlgorithm));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldPerformSlicing", m_shouldPerformSlicing));
-
-    if (m_shouldPerformSlicing)
-    {
-        AlgorithmTool *pAlgorithmTool(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-            "Slicing", pAlgorithmTool));
-
-        m_pSlicingTool = dynamic_cast<SlicingTool*>(pAlgorithmTool);
-
-        if (!m_pSlicingTool)
-            return STATUS_CODE_INVALID_PARAMETER;
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-            "ListDeletion", m_listDeletionAlgorithm));
-    }
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ListMoving", m_listMovingAlgorithm));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
         "TwoDAlgorithms", m_twoDAlgorithms));
@@ -242,7 +146,7 @@ StatusCode NeutrinoParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
         "NeutrinoAlgorithms", m_neutrinoAlgorithms));
 
-    return STATUS_CODE_SUCCESS;
+    return ParentSlicingBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content
