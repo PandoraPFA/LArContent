@@ -24,7 +24,6 @@
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
 
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
-#include "larpandoracontent/LArCustomParticles/ShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
@@ -186,7 +185,6 @@
     d("LArCheatingPfoCreation",                 CheatingPfoCreationAlgorithm)                                                   \
     d("LArCheatingVertexCreation",              CheatingVertexCreationAlgorithm)                                                \
     d("LArPcaShowerParticleBuilding",           PcaShowerParticleBuildingAlgorithm)                                             \
-    d("LArShowerParticleBuilding",              ShowerParticleBuildingAlgorithm)                                                \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
     d("LArStitching",                           StitchingAlgorithm)                                                             \
     d("LArCosmicRayTrackRecovery",              CosmicRayTrackRecoveryAlgorithm)                                                \
