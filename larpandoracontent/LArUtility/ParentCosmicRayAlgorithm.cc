@@ -31,7 +31,10 @@ StatusCode ParentCosmicRayAlgorithm::Run()
     unsigned int sliceIndex(0);
 
     for (const Slice &slice : sliceList)
-        this->CosmicRayReconstruction(slice, sliceIndex++);
+    {
+        const std::string sliceIndexString(TypeToString(sliceIndex++));
+        this->CosmicRayReconstruction(slice, sliceIndexString);
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -40,16 +43,14 @@ StatusCode ParentCosmicRayAlgorithm::Run()
 
 void ParentCosmicRayAlgorithm::FastReconstruction() const
 {
-    // TODO
-    throw;
+    std::cout << "Fast reconstruction not implemented for dedicated cosmic-ray reconstruction." << std::endl;
+    throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ParentCosmicRayAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const
+void ParentCosmicRayAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const
 {
-    const std::string sliceIndexString(TypeToString(sliceIndex));
-
     for (const HitType hitType : m_hitTypeList)
     {
         const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);

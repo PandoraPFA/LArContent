@@ -31,7 +31,10 @@ StatusCode ParentNeutrinoAlgorithm::Run()
     unsigned int sliceIndex(0);
 
     for (const Slice &slice : sliceList)
-        this->NeutrinoReconstruction(slice, sliceIndex++);
+    {
+        const std::string sliceIndexString(TypeToString(sliceIndex++));
+        this->NeutrinoReconstruction(slice, sliceIndexString);
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -47,10 +50,8 @@ void ParentNeutrinoAlgorithm::FastReconstruction() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ParentNeutrinoAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const
+void ParentNeutrinoAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const
 {
-    const std::string sliceIndexString(TypeToString(sliceIndex));
-
     for (const HitType hitType : m_hitTypeList)
     {
         const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);

@@ -26,9 +26,9 @@ private:
      *  @brief  Perform neutrino reconstruction using the provided slice and its index
      *
      *  @param  slice the slice
-     *  @param  sliceIndex the slice index
+     *  @param  sliceIndexString the slice index string/identifier
      */
-    void NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const;
+    void NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

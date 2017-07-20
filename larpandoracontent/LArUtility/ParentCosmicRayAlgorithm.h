@@ -26,9 +26,9 @@ private:
      *  @brief  Perform cosmic-ray reconstruction using the provided slice and its index
      *
      *  @param  slice the slice
-     *  @param  sliceIndex the slice index
+     *  @param  sliceIndexString the slice index string/identifier
      */
-    void CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const;
+    void CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const;
 
     /**
      *  @brief  Run two dimensional remnant reconstruction using list names provided via algorithm config
