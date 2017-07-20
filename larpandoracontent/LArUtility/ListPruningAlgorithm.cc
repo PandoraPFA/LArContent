@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 ListPruningAlgorithm::ListPruningAlgorithm() :
-    m_warnIfClustersUnavailable(true)
+    m_warnIfObjectsUnavailable(true)
 {
 }
 
@@ -24,13 +24,11 @@ ListPruningAlgorithm::ListPruningAlgorithm() :
 
 StatusCode ListPruningAlgorithm::Run()
 {
-    for (StringVector::const_iterator iter = m_pfoListNames.begin(), iterEnd = m_pfoListNames.end(); iter != iterEnd; ++iter)
+    for (const std::string &listName : m_pfoListNames)
     {
-        const std::string &listName(*iter);
-
         try
         {
-            const PfoList *pPfoList = NULL;
+            const PfoList *pPfoList(nullptr);
             const StatusCode statusCode(PandoraContentApi::GetList(*this, listName, pPfoList));
 
             if (STATUS_CODE_SUCCESS != statusCode)
@@ -38,27 +36,24 @@ StatusCode ListPruningAlgorithm::Run()
 
             const PfoList pfoList(*pPfoList);
 
-            for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
+            for (const ParticleFlowObject *const pPfo : pfoList)
             {
-                if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, *pIter, listName))
-                {
+                if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, pPfo, listName))
                     std::cout << "ListPruningAlgorithm: Could not delete Pfo." << std::endl;
-                }
             }
         }
         catch (StatusCodeException &)
         {
-            std::cout << "ListPruningAlgorithm: pfo list " << listName << " unavailable." << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPruningAlgorithm: pfo list " << listName << " unavailable." << std::endl;
         }
     }
 
-    for (StringVector::const_iterator iter = m_clusterListNames.begin(), iterEnd = m_clusterListNames.end(); iter != iterEnd; ++iter)
+    for (const std::string &listName : m_clusterListNames)
     {
-        const std::string &listName(*iter);
-
         try
         {
-            const ClusterList *pClusterList = NULL;
+            const ClusterList *pClusterList(nullptr);
             const StatusCode statusCode(PandoraContentApi::GetList(*this, listName, pClusterList));
 
             if (STATUS_CODE_SUCCESS != statusCode)
@@ -66,22 +61,47 @@ StatusCode ListPruningAlgorithm::Run()
 
             const ClusterList clusterList(*pClusterList);
 
-            for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
+            for (const Cluster *const pCluster : clusterList)
             {
-                if (!m_warnIfClustersUnavailable && !(*cIter)->IsAvailable())
+                if (!m_warnIfObjectsUnavailable && !pCluster->IsAvailable())
                     continue;
 
-                if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, *cIter, listName))
-                {
-                    if (m_warnIfClustersUnavailable)
-                        std::cout << "ListPruningAlgorithm: Could not delete Pfo." << std::endl;
-                }
+                if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, pCluster, listName) && m_warnIfObjectsUnavailable)
+                    std::cout << "ListPruningAlgorithm: Could not delete Cluster." << std::endl;
             }
         }
         catch (StatusCodeException &)
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "ListPruningAlgorithm: cluster list " << listName << " unavailable." << std::endl;
+        }
+    }
+
+    for (const std::string &listName : m_vertexListNames)
+    {
+        try
+        {
+            const VertexList *pVertexList(nullptr);
+            const StatusCode statusCode(PandoraContentApi::GetList(*this, listName, pVertexList));
+
+            if (STATUS_CODE_SUCCESS != statusCode)
+                throw StatusCodeException(statusCode);
+
+            const VertexList vertexList(*pVertexList);
+
+            for (const Vertex *const pVertex : vertexList)
+            {
+                if (!m_warnIfObjectsUnavailable && !pVertex->IsAvailable())
+                    continue;
+
+                if (STATUS_CODE_SUCCESS != PandoraContentApi::Delete(*this, pVertex, listName) && m_warnIfObjectsUnavailable)
+                    std::cout << "ListPruningAlgorithm: Could not delete Vertex." << std::endl;
+            }
+        }
+        catch (StatusCodeException &)
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ListPruningAlgorithm: vertex list " << listName << " unavailable." << std::endl;
         }
     }
 
@@ -98,8 +118,11 @@ StatusCode ListPruningAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "ClusterListNames", m_clusterListNames));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "VertexListNames", m_vertexListNames));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "WarnIfClustersUnavailable", m_warnIfClustersUnavailable));
+        "WarnIfObjectsUnavailable", m_warnIfObjectsUnavailable));
 
     return STATUS_CODE_SUCCESS;
 }
