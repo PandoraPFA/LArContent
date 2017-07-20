@@ -22,7 +22,6 @@ namespace lar_content
 {
 
 TrackParticleBuildingAlgorithm::TrackParticleBuildingAlgorithm() :
-    m_cosmicMode(false),
     m_slidingFitHalfWindow(20)
 {
 
@@ -38,14 +37,14 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         const Vertex *const pInputVertex = LArPfoHelper::GetVertex(pInputPfo);
 
         // In cosmic mode, build tracks from all parent pfos, otherwise require that pfo is track-like
-        if (m_cosmicMode)
+        if (LArPfoHelper::IsNeutrinoFinalState(pInputPfo))
         {
-            if(!LArPfoHelper::IsFinalState(pInputPfo))
+            if (!LArPfoHelper::IsTrack(pInputPfo))
                 return;
         }
         else
         {
-            if (!LArPfoHelper::IsTrack(pInputPfo))
+            if (!LArPfoHelper::IsFinalState(pInputPfo))
                 return;
         }
 
@@ -100,9 +99,6 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
 
 StatusCode TrackParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CosmicMode", m_cosmicMode));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
