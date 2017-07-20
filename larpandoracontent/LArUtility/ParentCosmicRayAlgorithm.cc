@@ -17,92 +17,105 @@ namespace lar_content
 
 StatusCode ParentCosmicRayAlgorithm::Run()
 {
-    // Track oriented cosmic-ray muon reconstruction
-    for (const HitType hitType : m_hitTypeList)
-    {
-        const StatusCode caloHitStatusCode(PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
-
-        if (STATUS_CODE_NOT_FOUND == caloHitStatusCode)
-            continue;
-
-        if (STATUS_CODE_SUCCESS != caloHitStatusCode)
-            throw StatusCodeException(caloHitStatusCode);
-
-        std::string clusterListName;
-        const ClusterList *pClusterList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_trackClusteringAlgorithm, pClusterList, clusterListName));
-
-        if (pClusterList->empty())
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Cluster>(*this));
-            continue;
-        }
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
-
-        for (const std::string &algorithmName : m_twoDAlgorithms)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
-    }
-
-    for (const std::string &algorithmName : m_threeDAlgorithms)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
-
-    // For clusters not in track particles, start again and form delta-ray clusters
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, m_listPruningAlgorithm));
-
-    for (const HitType hitType : m_hitTypeList) // TODO refactor
-    {
-        const StatusCode caloHitStatusCode(PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
-
-        if (STATUS_CODE_NOT_FOUND == caloHitStatusCode)
-            continue;
-
-        if (STATUS_CODE_SUCCESS != caloHitStatusCode)
-            throw StatusCodeException(caloHitStatusCode);
-
-        std::string clusterListName;
-        const ClusterList *pClusterList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_deltaRayClusteringAlgorithm, pClusterList, clusterListName));
-
-        if (pClusterList->empty())
-        {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType))); // NOTE, different to above
-            continue;
-        }
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
-    }
-
-    // Messy section
-    for (const std::string &algorithmName : m_deltaRayAlgorithms)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
-
-    for (const HitType hitType : m_hitTypeList) // TODO refactor
-    {
-        const StatusCode clusterStatusCode(PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
-
-        if (STATUS_CODE_NOT_FOUND == clusterStatusCode)
-            continue;
-
-        if (STATUS_CODE_SUCCESS != clusterStatusCode)
-            throw StatusCodeException(clusterStatusCode);
-
-        for (const std::string &algorithmName : m_twoDRemnantAlgorithms)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
-    }
-
-    // Complete the reconstruction
-    StringVector algorithms;
-    algorithms.insert(algorithms.end(), m_threeDRemnantAlgorithms.begin(), m_threeDRemnantAlgorithms.end());
-    algorithms.insert(algorithms.end(), m_threeDHitAlgorithms.begin(), m_threeDHitAlgorithms.end());
-    algorithms.insert(algorithms.end(), m_vertexAlgorithms.begin(), m_vertexAlgorithms.end());
-
-    for (const std::string &algorithmName : algorithms)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+    this->CosmicRayReconstruction();
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentCosmicRayAlgorithm::CosmicRayReconstruction()
+{
+    this->TwoDTrackReconstruction();
+    this->RunAlgorithms(m_threeDAlgorithms);
+    this->RunAlgorithms(StringVector(1, m_listPruningAlgorithm));
+    this->TwoDDeltaRayReconstruction();
+    this->RunAlgorithms(m_deltaRayAlgorithms);
+    this->TwoDRemnantReconstruction();
+    this->RunAlgorithms(m_threeDRemnantAlgorithms);
+    this->RunAlgorithms(m_threeDHitAlgorithms);
+    this->RunAlgorithms(m_vertexAlgorithms);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentCosmicRayAlgorithm::RunAlgorithms(const StringVector &algorithmNames) const
+{
+    for (const std::string &algorithmName : algorithmNames)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentCosmicRayAlgorithm::TwoDTrackReconstruction() const
+{
+    for (const HitType hitType : m_hitTypeList)
+    {
+        try
+        {
+            this->RunTwoDClustering(hitType, m_trackClusteringAlgorithm, false);
+            this->RunAlgorithms(m_twoDAlgorithms);
+        }
+        catch (const StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentCosmicRayAlgorithm::TwoDDeltaRayReconstruction() const
+{
+    for (const HitType hitType : m_hitTypeList)
+    {
+        try
+        {
+            this->RunTwoDClustering(hitType, m_deltaRayClusteringAlgorithm, true);
+        }
+        catch (const StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentCosmicRayAlgorithm::RunTwoDClustering(const HitType hitType, const std::string &clusteringAlgName, const bool existingClusterList) const
+{
+    const StatusCode listStatusCode(PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType)));
+
+    if (STATUS_CODE_SUCCESS != listStatusCode)
+        throw StatusCodeException(listStatusCode);
+
+    std::string clusterListName;
+    const ClusterList *pClusterList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, clusteringAlgName, pClusterList, clusterListName));
+
+    if (pClusterList->empty())
+    {
+        if (!existingClusterList || (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType))))
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Cluster>(*this));
+    }
+    else
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentCosmicRayAlgorithm::TwoDRemnantReconstruction() const
+{
+    for (const HitType hitType : m_hitTypeList)
+    {
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, (PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType))));
+        this->RunAlgorithms(m_twoDRemnantAlgorithms);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

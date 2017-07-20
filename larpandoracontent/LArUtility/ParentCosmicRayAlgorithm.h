@@ -20,6 +20,43 @@ class ParentCosmicRayAlgorithm : public ParentBaseAlgorithm
 {
 private:
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Perform cosmic ray reconstruction using list names provided via algorithm config
+     */
+    void CosmicRayReconstruction();
+
+    /**
+     *  @brief  Run algorithms in provided list
+     *
+     *  @param  algorithmNames
+     */
+    void RunAlgorithms(const pandora::StringVector &algorithmNames) const;
+
+    /**
+     *  @brief  Run two dimensional track reconstruction using list names provided via algorithm config
+     */
+    void TwoDTrackReconstruction() const;
+
+    /**
+     *  @brief  Run two dimensional delta-ray reconstruction using list names provided via algorithm config
+     */
+    void TwoDDeltaRayReconstruction() const;
+
+    /**
+     *  @brief  Run two dimensional clustering, using hit list name provided, for given hit type, via algorithm config
+     *
+     *  @param  hitType the hit type
+     *  @param  clusteringAlgName the clustering algorithm name
+     *  @param  existingClusterList whether the intent is to add clusters to an existing output list, or fill this list for first time
+     */
+    void RunTwoDClustering(const pandora::HitType hitType, const std::string &clusteringAlgName, const bool existingClusterList) const;
+
+    /**
+     *  @brief  Run two dimensional remnant reconstruction using list names provided via algorithm config
+     */
+    void TwoDRemnantReconstruction() const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string                 m_trackClusteringAlgorithm;         ///< The name of the two dimensional track clustering algorithm
