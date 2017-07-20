@@ -75,10 +75,26 @@ StatusCode ParentCosmicRayAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
     }
 
+    // Messy section
+    for (const std::string &algorithmName : m_deltaRayAlgorithms)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+
+    for (const HitType hitType : m_hitTypeList) // TODO refactor
+    {
+        const StatusCode clusterStatusCode(PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
+
+        if (STATUS_CODE_NOT_FOUND == clusterStatusCode)
+            continue;
+
+        if (STATUS_CODE_SUCCESS != clusterStatusCode)
+            throw StatusCodeException(clusterStatusCode);
+
+        for (const std::string &algorithmName : m_twoDRemnantAlgorithms)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+    }
+
     // Complete the reconstruction
     StringVector algorithms;
-    algorithms.insert(algorithms.end(), m_deltaRayAlgorithms.begin(), m_deltaRayAlgorithms.end());
-    algorithms.insert(algorithms.end(), m_twoDRemnantAlgorithms.begin(), m_twoDRemnantAlgorithms.end());
     algorithms.insert(algorithms.end(), m_threeDRemnantAlgorithms.begin(), m_threeDRemnantAlgorithms.end());
     algorithms.insert(algorithms.end(), m_threeDHitAlgorithms.begin(), m_threeDHitAlgorithms.end());
     algorithms.insert(algorithms.end(), m_vertexAlgorithms.begin(), m_vertexAlgorithms.end());
